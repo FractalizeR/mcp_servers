@@ -15,9 +15,9 @@ describe('get-issues integration tests', () => {
   let client: TestMCPClient;
   let mockServer: MockServer;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Создаём MCP клиент с тестовой конфигурацией
-    client = createTestClient({
+    client = await createTestClient({
       logLevel: 'silent', // Отключаем логи в тестах
     });
 

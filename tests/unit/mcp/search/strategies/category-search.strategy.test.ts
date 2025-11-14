@@ -97,15 +97,15 @@ describe('CategorySearchStrategy', () => {
       const results = strategy.search('url-generation', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0].toolName).toBe('yandex_tracker_get_issue_url');
-      expect(results[0].score).toBe(1.0);
+      expect(results[0]!.toolName).toBe('yandex_tracker_get_issue_url');
+      expect(results[0]!.score).toBe(1.0);
     });
 
     it('должен игнорировать пробелы', () => {
       const results = strategy.search('  users  ', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0].score).toBe(1.0);
+      expect(results[0]!.score).toBe(1.0);
     });
   });
 
@@ -114,9 +114,9 @@ describe('CategorySearchStrategy', () => {
       const results = strategy.search('url', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0].toolName).toBe('yandex_tracker_get_issue_url');
-      expect(results[0].score).toBe(0.8);
-      expect(results[0].matchReason).toContain('Category match');
+      expect(results[0]!.toolName).toBe('yandex_tracker_get_issue_url');
+      expect(results[0]!.score).toBe(0.8);
+      expect(results[0]!.matchReason).toContain('Category match');
     });
 
     it('должен найти категории, где query является частью', () => {
@@ -247,15 +247,15 @@ describe('CategorySearchStrategy', () => {
       const results = strategy.search('demo', toolsWithoutTags);
 
       expect(results).toHaveLength(1);
-      expect(results[0].score).toBe(1.0);
-      expect(results[0].matchReason).toContain('Category match');
+      expect(results[0]!.score).toBe(1.0);
+      expect(results[0]!.matchReason).toContain('Category match');
     });
 
     it('должен обработать query с дефисами', () => {
       const results = strategy.search('url-generation', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0].score).toBe(1.0);
+      expect(results[0]!.score).toBe(1.0);
     });
 
     it('должен найти первый matching тег', () => {

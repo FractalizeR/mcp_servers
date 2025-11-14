@@ -153,6 +153,7 @@ export class SearchToolsTool {
           ),
         },
       ],
+      isError: false,
     };
   }
 

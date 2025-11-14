@@ -55,6 +55,20 @@ describe('ToolRegistry', () => {
         if (symbolStr.includes('DemoTool')) {
           return new DemoTool(mockFacade, mockLogger);
         }
+        if (symbolStr.includes('SearchToolsTool')) {
+          // Mock SearchToolsTool (имеет другой конструктор)
+          return {
+            getDefinition: () => ({
+              name: 'yandex_tracker_search_tools',
+              description: 'Search tools',
+              inputSchema: { type: 'object', properties: {}, required: [] },
+            }),
+            execute: vi.fn(async () => ({
+              content: [{ type: 'text', text: '{"success":true}' }],
+              isError: false,
+            })),
+          };
+        }
         throw new Error(`Unknown symbol: ${symbolStr}`);
       }),
     } as unknown as Container;
@@ -68,14 +82,18 @@ describe('ToolRegistry', () => {
 
   describe('constructor', () => {
     it('должна зарегистрировать все доступные инструменты', () => {
-      // Assert - теперь у нас 5 tools (включая FindIssuesTool, IssueUrlTool, DemoTool)
+      // Lazy initialization - проверяем после первого вызова
+      const definitions = registry.getDefinitions();
+
+      // Assert - теперь у нас 6 tools (включая FindIssuesTool, IssueUrlTool, DemoTool, SearchToolsTool)
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Зарегистрирован инструмент: yandex_tracker_ping'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Зарегистрирован инструмент: yandex_tracker_get_issues'
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрировано инструментов: 5');
+      expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрировано инструментов: 6');
+      expect(definitions.length).toBe(6);
     });
   });
 
@@ -84,8 +102,8 @@ describe('ToolRegistry', () => {
       // Act
       const definitions = registry.getDefinitions();
 
-      // Assert - теперь 5 tools
-      expect(definitions).toHaveLength(5);
+      // Assert - теперь 6 tools
+      expect(definitions).toHaveLength(6);
 
       const pingDef = definitions.find((d) => d.name === 'yandex_tracker_ping');
       const getIssuesDef = definitions.find((d) => d.name === 'yandex_tracker_get_issues');

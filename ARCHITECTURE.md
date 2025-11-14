@@ -76,9 +76,18 @@ handlers/
   - `tools/` — MCP инструменты
     - `base-tool.ts` — базовый класс
     - `*.tool.ts` — конкретные инструменты (ping, get-issues, etc.)
+  - `search/` — Tool Search System (compile-time индексирование + runtime поиск)
+    - `tool-search-engine.ts` — движок поиска с LRU кешем
+    - `strategies/` — 5 стратегий поиска (Name, Description, Category, Fuzzy, WeightedCombined)
+    - `generated-index.ts` — статический индекс (auto-generated при build)
   - `utils/` — MCP утилиты
     - `response-field-filter.ts` — фильтрация полей ответа (экономия токенов)
-  - `tool-registry.ts` — регистрация и маршрутизация tools
+  - `tool-registry.ts` — регистрация и маршрутизация tools (lazy initialization)
+
+- **`composition-root/`** — DI контейнер (высший слой архитектуры)
+  - `definitions/` — декларативные определения tools и operations
+  - `container.ts` — конфигурация InversifyJS контейнера
+  - `types.ts` — Symbol-based токены для DI
 
 **Тесты:** `tests/unit/` зеркалирует структуру `src/`
 

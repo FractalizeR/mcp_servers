@@ -71,6 +71,7 @@
 - **Vitest** (тесты, покрытие ≥80%)
 - **dependency-cruiser** (валидация архитектурных правил)
 - **MCP SDK** (Model Context Protocol)
+- **Tool Search System** (compile-time индексирование, 5 стратегий поиска, LRU кеш)
 - **API:** Яндекс.Трекер v3 (ТОЛЬКО `/v3/*` endpoints)
 
 ---
@@ -161,7 +162,14 @@ if (!result.success) { return this.formatError(...); }
 - ✅ Type inference: `type Params = z.infer<typeof ParamsSchema>`
 - ❌ НЕ пиши кастомные валидаторы
 
-### 7. Логирование (Pino)
+### 7. Статические метаданные для Tool Search
+
+- ✅ ОБЯЗАТЕЛЬНО добавляй `static readonly METADATA: StaticToolMetadata` во все tools
+- ✅ Используется для compile-time индексирования (`npm run generate:index`)
+- ✅ Позволяет SearchToolsTool находить tools без загрузки всего кода
+- ⚠️ При добавлении нового tool — запусти `npm run build` (автоматически обновит индекс)
+
+### 8. Логирование (Pino)
 
 ```typescript
 // ❌ НЕ ТАК (console.log)

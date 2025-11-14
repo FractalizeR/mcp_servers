@@ -24,21 +24,34 @@ import { TOOL_CLASSES } from '@composition-root/definitions/tool-definitions.js'
  * Централизованное управление всеми инструментами проекта
  */
 export class ToolRegistry {
-  private tools: Map<string, BaseTool>;
-  private logger: Logger;
+  private tools: Map<string, BaseTool> | null = null; // Lazy initialization
+  private readonly container: Container;
+  private readonly logger: Logger;
 
   /**
    * @param container - DI контейнер с зарегистрированными tools
    * @param logger - Logger для логирования
    */
   constructor(container: Container, logger: Logger) {
+    this.container = container;
     this.logger = logger;
+    // Не инициализируем tools сразу — делаем это lazy
+  }
+
+  /**
+   * Lazy initialization всех tools из DI контейнера
+   */
+  private ensureInitialized(): void {
+    if (this.tools !== null) {
+      return; // Уже инициализировано
+    }
+
     this.tools = new Map();
 
     // АВТОМАТИЧЕСКАЯ регистрация всех tools из DI контейнера
     for (const ToolClass of TOOL_CLASSES) {
       const symbol = Symbol.for(ToolClass.name);
-      const tool = container.get<BaseTool>(symbol);
+      const tool = this.container.get<BaseTool>(symbol);
       this.registerTool(tool);
     }
 
@@ -49,15 +62,21 @@ export class ToolRegistry {
    * Регистрация нового инструмента
    */
   private registerTool(tool: BaseTool): void {
-    const definition = tool.getDefinition();
-    this.tools.set(definition.name, tool);
-    this.logger.debug(`Зарегистрирован инструмент: ${definition.name}`);
+    // tools всегда не null здесь, т.к. вызывается только из ensureInitialized
+    if (this.tools) {
+      this.tools.set(tool.getDefinition().name, tool);
+      this.logger.debug(`Зарегистрирован инструмент: ${tool.getDefinition().name}`);
+    }
   }
 
   /**
    * Получить определения всех зарегистрированных инструментов
    */
   getDefinitions(): ToolDefinition[] {
+    this.ensureInitialized();
+    if (!this.tools) {
+      return [];
+    }
     return Array.from(this.tools.values()).map((tool) => tool.getDefinition());
   }
 
@@ -65,13 +84,18 @@ export class ToolRegistry {
    * Получить tool по имени
    */
   getTool(name: string): BaseTool | undefined {
-    return this.tools.get(name);
+    this.ensureInitialized();
+    return this.tools?.get(name);
   }
 
   /**
    * Получить все зарегистрированные tools
    */
   getAllTools(): BaseTool[] {
+    this.ensureInitialized();
+    if (!this.tools) {
+      return [];
+    }
     return Array.from(this.tools.values());
   }
 
@@ -79,10 +103,12 @@ export class ToolRegistry {
    * Выполнить инструмент по имени
    */
   async execute(name: string, params: ToolCallParams): Promise<ToolResult> {
+    this.ensureInitialized();
+
     this.logger.info(`Вызов инструмента: ${name}`);
     this.logger.debug('Параметры:', params);
 
-    const tool = this.tools.get(name);
+    const tool = this.tools?.get(name);
 
     if (!tool) {
       this.logger.error(`Инструмент не найден: ${name}`);
@@ -94,7 +120,7 @@ export class ToolRegistry {
               {
                 success: false,
                 message: `Инструмент "${name}" не найден`,
-                availableTools: Array.from(this.tools.keys()),
+                availableTools: this.tools ? Array.from(this.tools.keys()) : [],
               },
               null,
               2

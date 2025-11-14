@@ -63,25 +63,25 @@ describe('NameSearchStrategy', () => {
       const results = strategy.search('yandex_tracker_ping', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0].toolName).toBe('yandex_tracker_ping');
-      expect(results[0].score).toBe(1.0);
-      expect(results[0].strategyType).toBe('name');
-      expect(results[0].matchReason).toContain('Exact');
+      expect(results[0]!.toolName).toBe('yandex_tracker_ping');
+      expect(results[0]!.score).toBe(1.0);
+      expect(results[0]!.strategyType).toBe('name');
+      expect(results[0]!.matchReason).toContain('Exact');
     });
 
     it('должен быть case-insensitive', () => {
       const results = strategy.search('YANDEX_TRACKER_PING', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0].toolName).toBe('yandex_tracker_ping');
-      expect(results[0].score).toBe(1.0);
+      expect(results[0]!.toolName).toBe('yandex_tracker_ping');
+      expect(results[0]!.score).toBe(1.0);
     });
 
     it('должен игнорировать пробелы', () => {
       const results = strategy.search('  yandex_tracker_ping  ', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0].score).toBe(1.0);
+      expect(results[0]!.score).toBe(1.0);
     });
   });
 
@@ -115,8 +115,8 @@ describe('NameSearchStrategy', () => {
       const results = strategy.search('ping', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0].toolName).toBe('yandex_tracker_ping');
-      expect(results[0].score).toBe(0.5); // Имя содержит query, но не точное совпадение
+      expect(results[0]!.toolName).toBe('yandex_tracker_ping');
+      expect(results[0]!.score).toBe(0.5); // Имя содержит query, но не точное совпадение
     });
 
     it('должен найти tools по части имени', () => {
@@ -207,7 +207,7 @@ describe('NameSearchStrategy', () => {
       const results = strategy.search('with', specialTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0].toolName).toBe('tool_with_underscore');
+      expect(results[0]!.toolName).toBe('tool_with_underscore');
     });
 
     it('должен обработать query с специальными символами', () => {

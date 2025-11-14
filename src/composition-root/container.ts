@@ -250,10 +250,10 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
   bindCacheLayer(container);
   bindOperations(container);
   bindFacade(container);
-  bindToolRegistry(container); // ToolRegistry первым (для SearchEngine)
+  bindToolRegistry(container); // ToolRegistry первым (lazy initialization)
   bindSearchEngine(container); // SearchEngine после ToolRegistry
   bindTools(container); // Стандартные tools (facade, logger)
-  await bindSearchToolsTool(container); // SearchToolsTool отдельно (searchEngine, logger)
+  await bindSearchToolsTool(container); // SearchToolsTool последним (searchEngine, logger)
 
   return container;
 }

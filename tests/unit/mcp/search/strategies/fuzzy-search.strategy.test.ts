@@ -169,7 +169,7 @@ describe('FuzzySearchStrategy', () => {
       expect(lowerResults.length).toBe(upperResults.length);
 
       if (lowerResults.length > 0) {
-        expect(lowerResults[0].score).toBe(upperResults[0].score);
+        expect(lowerResults[0]!.score).toBe(upperResults[0]!.score);
       }
     });
 
@@ -275,7 +275,7 @@ describe('FuzzySearchStrategy', () => {
       const results = strategy.search('pong', singleTokenTool);
 
       expect(results).toHaveLength(1);
-      expect(results[0].score).toBeGreaterThan(0);
+      expect(results[0]!.score).toBeGreaterThan(0);
     });
 
     it('должен обработать tool с пустыми nameTokens', () => {

@@ -27,9 +27,18 @@ export class TestMCPClient {
   private container: Container;
   private toolRegistry: ToolRegistry;
 
-  constructor(config: ServerConfig) {
-    this.container = createContainer(config);
-    this.toolRegistry = this.container.get<ToolRegistry>(TYPES.ToolRegistry);
+  private constructor(container: Container, toolRegistry: ToolRegistry) {
+    this.container = container;
+    this.toolRegistry = toolRegistry;
+  }
+
+  /**
+   * Создать экземпляр TestMCPClient (async factory)
+   */
+  static async create(config: ServerConfig): Promise<TestMCPClient> {
+    const container = await createContainer(config);
+    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+    return new TestMCPClient(container, toolRegistry);
   }
 
   /**
@@ -65,7 +74,9 @@ export class TestMCPClient {
 /**
  * Создать тестовый MCP клиент с переопределённой конфигурацией
  */
-export function createTestClient(configOverrides: Partial<ServerConfig> = {}): TestMCPClient {
+export async function createTestClient(
+  configOverrides: Partial<ServerConfig> = {}
+): Promise<TestMCPClient> {
   const defaultConfig: ServerConfig = {
     apiBase: 'https://api.tracker.yandex.net',
     orgId: 'test-org-id',
@@ -82,5 +93,5 @@ export function createTestClient(configOverrides: Partial<ServerConfig> = {}): T
 
   const config: ServerConfig = { ...defaultConfig, ...configOverrides };
 
-  return new TestMCPClient(config);
+  return await TestMCPClient.create(config);
 }
