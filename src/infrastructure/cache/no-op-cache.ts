@@ -25,7 +25,6 @@ export class NoOpCache implements CacheManager {
   /**
    * Всегда возвращает undefined (cache miss)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   get<T>(_key: string): T | undefined {
     return undefined;
   }
@@ -33,7 +32,6 @@ export class NoOpCache implements CacheManager {
   /**
    * Ничего не делает (не сохраняет)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   set<T>(_key: string, _value: T, _ttl?: number): void {
     // Ничего не делаем
   }
@@ -41,7 +39,6 @@ export class NoOpCache implements CacheManager {
   /**
    * Ничего не делает (нечего удалять)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   delete(_key: string): void {
     // Ничего не делаем
   }

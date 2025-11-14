@@ -38,8 +38,6 @@ export class ErrorMapper {
     // Случай 3: Ошибка при настройке запроса
     return {
       statusCode: HttpStatusCode.NETWORK_ERROR,
-      // Используем || для fallback с пустой строкой
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       message: error.message || 'Неизвестная ошибка',
     };
   }
@@ -58,8 +56,7 @@ export class ErrorMapper {
     }
 
     // Извлекаем сообщение об ошибке из различных форматов ответа
-    // Используем || для fallback chain (пропускаем пустые строки)
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    // Используем || для fallback chain (пропускаем пустые строки из API)
     const errorMessages = data['errorMessages'] as string[] | undefined;
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     const message = errorMessages?.[0] || (data['message'] as string) || error.message;

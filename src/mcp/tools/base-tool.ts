@@ -115,7 +115,6 @@ export abstract class BaseTool {
       return `Параметр "${paramName}" обязателен`;
     }
 
-    // eslint-disable-next-line valid-typeof
     if (typeof value !== paramType) {
       return `Параметр "${paramName}" должен быть типа ${paramType}`;
     }
