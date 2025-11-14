@@ -9,7 +9,6 @@
     "prebuild": "npm run generate:index",
     "build": "tsc && tsc-alias",
     "build:bundle": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/bundle.js --external:@modelcontextprotocol/sdk --external:axios --external:inversify --external:p-limit --external:reflect-metadata --sourcemap",
-    "watch": "tsc --watch",
     "dev": "tsc && tsc-alias && node dist/index.js",
     "clean": "rm -rf dist/",
     "lint": "eslint src --ext .ts",
