@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mock } from 'vitest';
-import { BaseOperation } from '@tracker_api/operations/base-operation.js';
+import { BaseOperation } from '@tracker_api/api_operations/base-operation.js';
 import type { HttpClient } from '@infrastructure/http/client/http-client.js';
 import type { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';
 import type { CacheManager } from '@infrastructure/cache/cache-manager.interface.js';

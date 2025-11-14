@@ -19,14 +19,14 @@
 ## 📁 Структура
 
 ```
-src/tracker_api/operations/{feature}/
+src/tracker_api/api_operations/{feature}/
 ├── {name}.operation.ts    # Класс Operation
 ├── index.ts               # Экспорты
 ```
 
 **Примеры:**
-- `operations/issue/get-issues.operation.ts`
-- `operations/user/ping.operation.ts`
+- `api_operations/issue/get-issues.operation.ts`
+- `api_operations/user/ping.operation.ts`
 
 ---
 
@@ -127,7 +127,7 @@ const issue = await this.cache.getOrFetch(cacheKey, async () => {
 
 ## 📋 Чек-лист создания Operation
 
-- [ ] Создать файл `src/tracker_api/operations/{feature}/{name}.operation.ts`
+- [ ] Создать файл `src/tracker_api/api_operations/{feature}/{name}.operation.ts`
 - [ ] **Наследовать BaseOperation:**
   ```typescript
   export class NewOperation extends BaseOperation {
@@ -144,7 +144,7 @@ const issue = await this.cache.getOrFetch(cacheKey, async () => {
   - [ ] Использовать `this.httpClient.get/post/patch/delete()`
   - [ ] Возвращать `*WithUnknownFields`
 - [ ] **Экспорт:**
-  - [ ] Добавить в `operations/{feature}/index.ts`
+  - [ ] Добавить в `api_operations/{feature}/index.ts`
   - [ ] Экспортировать типы результатов (если batch)
 - [ ] **Facade метод:**
   - [ ] Создать публичный метод в `YandexTrackerFacade`
@@ -153,7 +153,7 @@ const issue = await this.cache.getOrFetch(cacheKey, async () => {
   - [ ] `src/composition-root/types.ts` → `TYPES.NewOperation`
   - [ ] `src/composition-root/container.ts` → bind в `bindOperations()`
 - [ ] **Тесты:**
-  - [ ] `tests/unit/tracker_api/operations/{feature}/{name}.operation.test.ts`
+  - [ ] `tests/unit/tracker_api/api_operations/{feature}/{name}.operation.test.ts`
   - [ ] Успешный сценарий
   - [ ] Обработка ошибок API (404, 500, etc.)
   - [ ] Batch-операции: частичный успех
@@ -220,7 +220,7 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 
 ### Batch-операция
 
-**Эталон:** `src/tracker_api/operations/issue/get-issues.operation.ts`
+**Эталон:** `src/tracker_api/api_operations/issue/get-issues.operation.ts`
 
 ```typescript
 export class GetIssuesOperation extends BaseOperation {
@@ -244,7 +244,7 @@ export class GetIssuesOperation extends BaseOperation {
 
 ### Одиночная операция
 
-**Эталон:** `src/tracker_api/operations/user/ping.operation.ts`
+**Эталон:** `src/tracker_api/api_operations/user/ping.operation.ts`
 
 ```typescript
 export class PingOperation extends BaseOperation {

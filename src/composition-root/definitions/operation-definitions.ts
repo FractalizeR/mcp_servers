@@ -7,9 +7,9 @@
  * 3. Всё остальное произойдёт автоматически (DI регистрация)
  */
 
-import { PingOperation } from '@tracker_api/operations/user/ping.operation.js';
-import { GetIssuesOperation } from '@tracker_api/operations/issue/get-issues.operation.js';
-import { FindIssuesOperation } from '@tracker_api/operations/issue/find/index.js';
+import { PingOperation } from '@tracker_api/api_operations/user/ping.operation.js';
+import { GetIssuesOperation } from '@tracker_api/api_operations/issue/get-issues.operation.js';
+import { FindIssuesOperation } from '@tracker_api/api_operations/issue/find/index.js';
 
 /**
  * Массив всех Operation классов в проекте

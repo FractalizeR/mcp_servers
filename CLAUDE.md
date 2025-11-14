@@ -97,7 +97,7 @@ function process(data: string): ProcessedData { }
 
 - Один класс = один файл = одна ответственность
 - Tool: `src/mcp/tools/{api|helpers}/{feature}/{action}/{name}.tool.ts`
-- Operation: `src/tracker_api/operations/{feature}/{action}/{name}.operation.ts`
+- Operation: `src/tracker_api/api_operations/{feature}/{action}/{name}.operation.ts`
 - ❌ НЕ объединяй логику разных операций в один файл
 
 **Правила импортов:**
@@ -248,7 +248,7 @@ logger.error('Operation failed', error, { requestId: '456' });
   - Шаблоны и чек-листы для API и Helper Tools
   - Примеры и критические правила
 
-- **Operations** — [src/tracker_api/operations/CONVENTIONS.md](src/tracker_api/operations/CONVENTIONS.md)
+- **API Operations** — [src/tracker_api/api_operations/CONVENTIONS.md](src/tracker_api/api_operations/CONVENTIONS.md)
   - Работа с `BaseOperation`, `ParallelExecutor`, кешированием
   - Batch-операции и типобезопасность
   - Интеграция с Facade
@@ -285,7 +285,7 @@ logger.error('Operation failed', error, { requestId: '456' });
 
 ### Добавление Operation
 
-- [ ] 📖 Прочитай [src/tracker_api/operations/CONVENTIONS.md](src/tracker_api/operations/CONVENTIONS.md)
+- [ ] 📖 Прочитай [src/tracker_api/api_operations/CONVENTIONS.md](src/tracker_api/api_operations/CONVENTIONS.md)
 - [ ] Наследуй `BaseOperation`
 - [ ] Для batch: используй `ParallelExecutor`, возвращай `BatchResult<T>`
 - [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:** Добавь **1 строку** в `src/composition-root/definitions/operation-definitions.ts`

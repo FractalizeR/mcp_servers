@@ -66,7 +66,7 @@ handlers/
 
 - **`tracker_api/`** — Доменная логика (специфика Яндекс.Трекера)
   - `entities/` — доменные типы (Issue, User)
-  - `operations/` — API операции (Feature-by-Folder + SRP)
+  - `api_operations/` — API операции (Feature-by-Folder + SRP)
     - `base-operation.ts` — базовый класс
     - `user/` — работа с пользователями
     - `issue/` — batch-операции с задачами
@@ -101,7 +101,7 @@ handlers/
 
 - **Tools** — валидация входных данных, форматирование результата для Claude
 - **Facade** — удобный высокоуровневый API для tools
-- **Operations** — бизнес-логика конкретных API операций
+- **API Operations** — бизнес-логика конкретных API операций
 - **HTTP/Retry/Cache** — инфраструктурные компоненты (переиспользуемые)
 
 **Независимость компонентов:**
@@ -413,12 +413,12 @@ results.forEach((result) => {
 
 ### 3. Yandex Tracker API
 
-#### Operations
+#### API Operations
 
-**Базовый класс:** `src/tracker_api/operations/base-operation.ts`
+**Базовый класс:** `src/tracker_api/api_operations/base-operation.ts`
 - Методы `withCache()`, `withRetry()` для композиции инфраструктуры
 
-**Конкретные операции:** см. `src/tracker_api/operations/`
+**Конкретные операции:** см. `src/tracker_api/api_operations/`
 - `user/ping.operation.ts` — проверка подключения
 - `issue/get-issues.operation.ts` — batch-получение задач
 - `issue/create-issues.operation.ts` — batch-создание задач
@@ -485,7 +485,7 @@ results.forEach((result) => {
 
 **Retry стратегия:** `tests/unit/infrastructure/http/retry/exponential-backoff.strategy.test.ts`
 **HTTP клиент:** `tests/unit/infrastructure/http/client/http-client.test.ts`
-**Операции:** `tests/unit/tracker_api/operations/**/*.test.ts`
+**Операции:** `tests/unit/tracker_api/api_operations/**/*.test.ts`
 **Tools:** `tests/unit/mcp/tools/*.test.ts`
 
 ---
@@ -494,14 +494,14 @@ results.forEach((result) => {
 
 ### Добавление новой операции API
 
-1. Создать файл `src/tracker_api/operations/{feature}/{name}.operation.ts`
+1. Создать файл `src/tracker_api/api_operations/{feature}/{name}.operation.ts`
 2. Наследоваться от `BaseOperation`
 3. Реализовать метод `execute(...)`
-4. Экспортировать в `operations/{feature}/index.ts`
+4. Экспортировать в `api_operations/{feature}/index.ts`
 5. Добавить метод в `YandexTrackerFacade` (`src/tracker_api/facade/`)
 6. Зарегистрировать в `src/composition-root/container.ts` (bindOperations)
 7. Добавить токен в `src/composition-root/types.ts`
-8. Написать тесты в `tests/unit/tracker_api/operations/{feature}/{name}.operation.test.ts`
+8. Написать тесты в `tests/unit/tracker_api/api_operations/{feature}/{name}.operation.test.ts`
 
 **Чек-лист:** см. CLAUDE.md (секция "Добавление Operation")
 
@@ -542,7 +542,7 @@ results.forEach((result) => {
    - Operations импортируются только:
      - Через `YandexTrackerFacade`
      - В `composition-root/container.ts` (DI регистрация)
-     - Внутри `operations/` (между собой)
+     - Внутри `api_operations/` (между собой)
 
 4. **Composition Root Top-Level**
    - `composition-root` импортируется только в `src/index.ts`

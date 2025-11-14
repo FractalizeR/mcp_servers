@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { PingOperation } from '@tracker_api/operations/user/ping.operation.js';
+import { PingOperation } from '@tracker_api/api_operations/user/ping.operation.js';
 import type { HttpClient } from '@infrastructure/http/client/http-client.js';
 import type { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';
 import type { CacheManager } from '@infrastructure/cache/cache-manager.interface.js';

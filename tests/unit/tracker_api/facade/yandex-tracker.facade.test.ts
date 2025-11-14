@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Container } from 'inversify';
 import { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
-import type { PingResult } from '@tracker_api/operations/user/ping.operation.js';
-import type { BatchIssueResult } from '@tracker_api/operations/issue/get-issues.operation.js';
+import type { PingResult } from '@tracker_api/api_operations/user/ping.operation.js';
+import type { BatchIssueResult } from '@tracker_api/api_operations/issue/get-issues.operation.js';
 import type { User } from '@tracker_api/entities/user.entity.js';
 import type { Issue, IssueWithUnknownFields } from '@tracker_api/entities/issue.entity.js';
 import type { Queue } from '@tracker_api/entities/queue.entity.js';

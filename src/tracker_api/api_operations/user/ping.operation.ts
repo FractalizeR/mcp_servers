@@ -7,7 +7,7 @@
  * - НЕТ других операций с пользователями
  */
 
-import { BaseOperation } from '@tracker_api/operations/base-operation.js';
+import { BaseOperation } from '@tracker_api/api_operations/base-operation.js';
 import { EntityCacheKey, EntityType } from '@infrastructure/cache/entity-cache-key.js';
 import type { User } from '@tracker_api/entities/user.entity.js';
 import type { ApiError, ServerConfig } from '@types';

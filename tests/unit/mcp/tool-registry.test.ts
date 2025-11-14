@@ -4,11 +4,13 @@ import type { Container } from 'inversify';
 import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@infrastructure/logging/index.js';
 import type { ToolCallParams } from '@types';
-import type { PingResult } from '@tracker_api/operations/user/ping.operation.js';
-import type { BatchIssueResult } from '@tracker_api/operations/issue/get-issues.operation.js';
+import type { PingResult } from '@tracker_api/api_operations/user/ping.operation.js';
+import type { BatchIssueResult } from '@tracker_api/api_operations/issue/get-issues.operation.js';
 import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { PingTool } from '@mcp/tools/ping.tool.js';
 import { GetIssuesTool } from '@mcp/tools/api/issues/get/index.js';
+import { FindIssuesTool } from '@mcp/tools/api/issues/find/index.js';
+import { IssueUrlTool } from '@mcp/tools/helpers/issue-url/index.js';
 import { DemoTool } from '@mcp/tools/helpers/demo/index.js';
 
 describe('ToolRegistry', () => {
@@ -22,6 +24,7 @@ describe('ToolRegistry', () => {
     mockFacade = {
       ping: vi.fn(),
       getIssues: vi.fn(),
+      findIssues: vi.fn(),
     } as unknown as YandexTrackerFacade;
 
     // Mock Logger
@@ -43,6 +46,12 @@ describe('ToolRegistry', () => {
         if (symbolStr.includes('GetIssuesTool')) {
           return new GetIssuesTool(mockFacade, mockLogger);
         }
+        if (symbolStr.includes('FindIssuesTool')) {
+          return new FindIssuesTool(mockFacade, mockLogger);
+        }
+        if (symbolStr.includes('IssueUrlTool')) {
+          return new IssueUrlTool(mockFacade, mockLogger);
+        }
         if (symbolStr.includes('DemoTool')) {
           return new DemoTool(mockFacade, mockLogger);
         }
@@ -59,15 +68,14 @@ describe('ToolRegistry', () => {
 
   describe('constructor', () => {
     it('должна зарегистрировать все доступные инструменты', () => {
-      // Assert - теперь у нас 3 tool (включая DemoTool)
+      // Assert - теперь у нас 5 tools (включая FindIssuesTool, IssueUrlTool, DemoTool)
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Зарегистрирован инструмент: yandex_tracker_ping'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Зарегистрирован инструмент: yandex_tracker_get_issues'
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрирован инструмент: demo');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрировано инструментов: 3');
+      expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрировано инструментов: 5');
     });
   });
 
@@ -76,8 +84,8 @@ describe('ToolRegistry', () => {
       // Act
       const definitions = registry.getDefinitions();
 
-      // Assert - теперь 3 tool
-      expect(definitions).toHaveLength(3);
+      // Assert - теперь 5 tools
+      expect(definitions).toHaveLength(5);
 
       const pingDef = definitions.find((d) => d.name === 'yandex_tracker_ping');
       const getIssuesDef = definitions.find((d) => d.name === 'yandex_tracker_get_issues');

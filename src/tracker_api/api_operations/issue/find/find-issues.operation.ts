@@ -13,7 +13,7 @@
  * Документация: https://yandex.ru/support/tracker/ru/concepts/issues/search-issues
  */
 
-import { BaseOperation } from '@tracker_api/operations/base-operation.js';
+import { BaseOperation } from '@tracker_api/api_operations/base-operation.js';
 import type { FindIssuesInputDto } from '@tracker_api/dto/index.js';
 import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 

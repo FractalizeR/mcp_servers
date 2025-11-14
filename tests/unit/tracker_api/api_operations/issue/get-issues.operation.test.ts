@@ -7,7 +7,7 @@ import { ParallelExecutor } from '@infrastructure/async/parallel-executor.js';
 import type { ServerConfig } from '@types';
 import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import type { BatchResult } from '@types';
-import { GetIssuesOperation } from '@tracker_api/operations/issue/get-issues.operation.js';
+import { GetIssuesOperation } from '@tracker_api/api_operations/issue/get-issues.operation.js';
 
 describe('GetIssuesOperation', () => {
   let operation: GetIssuesOperation;

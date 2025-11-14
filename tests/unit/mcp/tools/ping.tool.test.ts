@@ -3,7 +3,7 @@ import { PingTool } from '@mcp/tools/ping.tool.js';
 import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@infrastructure/logging/index.js';
 import type { ToolCallParams } from '@types';
-import type { PingResult } from '@tracker_api/operations/user/ping.operation.js';
+import type { PingResult } from '@tracker_api/api_operations/user/ping.operation.js';
 
 describe('PingTool', () => {
   let tool: PingTool;

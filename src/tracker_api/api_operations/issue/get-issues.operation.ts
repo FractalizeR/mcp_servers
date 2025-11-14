@@ -14,7 +14,7 @@
  * - Unified BatchResult формат (с key и index полями)
  */
 
-import { BaseOperation } from '@tracker_api/operations/base-operation.js';
+import { BaseOperation } from '@tracker_api/api_operations/base-operation.js';
 import { EntityCacheKey, EntityType } from '@infrastructure/cache/entity-cache-key.js';
 import { ParallelExecutor } from '@infrastructure/async/parallel-executor.js';
 import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';

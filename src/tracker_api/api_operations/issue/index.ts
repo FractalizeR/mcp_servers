@@ -3,7 +3,7 @@
  */
 
 // Get operations (batch only)
-export { GetIssuesOperation } from '@tracker_api/operations/issue/get-issues.operation.js';
+export { GetIssuesOperation } from '@tracker_api/api_operations/issue/get-issues.operation.js';
 export type { BatchIssueResult } from './get-issues.operation.js';
 
 // Find operations (search)

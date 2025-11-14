@@ -61,7 +61,7 @@ module.exports = {
     },
 
     // ================================================
-    // 3. OPERATIONS ISOLATION
+    // 3. API OPERATIONS ISOLATION
     // ================================================
 
     {
@@ -75,11 +75,11 @@ module.exports = {
           '^src/tracker_api/facade/',                           // Facade координирует operations
           '^src/composition-root/container\\.ts$',              // DI контейнер регистрирует все зависимости
           '^src/composition-root/definitions/operation-definitions\\.ts$', // Автоматическая регистрация операций
-          '^src/tracker_api/operations/',                       // Operations могут импортировать друг друга
+          '^src/tracker_api/api_operations/',                       // Operations могут импортировать друг друга
         ],
       },
       to: {
-        path: '^src/tracker_api/operations/',
+        path: '^src/tracker_api/api_operations/',
       },
     },
 
