@@ -9,6 +9,8 @@
 
 import { PingTool } from '@mcp/tools/ping.tool.js';
 import { GetIssuesTool } from '@mcp/tools/api/issues/get/index.js';
+import { FindIssuesTool } from '@mcp/tools/api/issues/find/index.js';
+import { IssueUrlTool } from '@mcp/tools/helpers/issue-url/index.js';
 import { DemoTool } from '@mcp/tools/helpers/demo/index.js';
 
 /**
@@ -27,6 +29,8 @@ import { DemoTool } from '@mcp/tools/helpers/demo/index.js';
 export const TOOL_CLASSES = [
   PingTool,
   GetIssuesTool,
+  FindIssuesTool,
+  IssueUrlTool,
   DemoTool, // ← DEMO: Добавили всего 1 строку!
 ] as const;
 

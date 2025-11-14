@@ -19,6 +19,8 @@ import type { Container } from 'inversify';
 // Types
 import type { PingResult } from '@tracker_api/operations/user/ping.operation.js';
 import type { BatchIssueResult } from '@tracker_api/operations/issue/get-issues.operation.js';
+import type { FindIssuesResult } from '@tracker_api/operations/issue/find/index.js';
+import type { FindIssuesInputDto } from '@tracker_api/dto/index.js';
 
 export class YandexTrackerFacade {
   constructor(private readonly container: Container) {}
@@ -54,5 +56,19 @@ export class YandexTrackerFacade {
       execute: (keys: string[]) => Promise<BatchIssueResult[]>;
     }>('GetIssuesOperation');
     return operation.execute(issueKeys);
+  }
+
+  // === Issue Methods - Search ===
+
+  /**
+   * Ищет задачи по заданным критериям
+   * @param params - параметры поиска (query/filter/keys/queue)
+   * @returns массив найденных задач
+   */
+  async findIssues(params: FindIssuesInputDto): Promise<FindIssuesResult> {
+    const operation = this.getOperation<{
+      execute: (params: FindIssuesInputDto) => Promise<FindIssuesResult>;
+    }>('FindIssuesOperation');
+    return operation.execute(params);
   }
 }
