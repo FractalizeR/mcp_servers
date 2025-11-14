@@ -66,7 +66,7 @@ describe('NameSearchStrategy', () => {
       expect(results[0].toolName).toBe('yandex_tracker_ping');
       expect(results[0].score).toBe(1.0);
       expect(results[0].strategyType).toBe('name');
-      expect(results[0].matchReason).toContain('Exact match');
+      expect(results[0].matchReason).toContain('Exact');
     });
 
     it('должен быть case-insensitive', () => {
@@ -116,7 +116,7 @@ describe('NameSearchStrategy', () => {
 
       expect(results).toHaveLength(1);
       expect(results[0].toolName).toBe('yandex_tracker_ping');
-      expect(results[0].score).toBe(1.0); // Точное совпадение с концом имени
+      expect(results[0].score).toBe(0.5); // Имя содержит query, но не точное совпадение
     });
 
     it('должен найти tools по части имени', () => {

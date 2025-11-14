@@ -111,17 +111,17 @@ describe('FuzzySearchStrategy', () => {
       });
     });
 
-    it('score = 1 - (distance / maxDistance)', () => {
+    it('score = 1 - (distance / (maxDistance + 1))', () => {
       const strategy2 = new FuzzySearchStrategy(3);
 
-      // 'pong' vs 'ping' (distance = 1)
+      // 'pong' vs 'ping' token (distance = 1)
       const results = strategy2.search('pong', mockTools);
       const match = results.find((r) => r.toolName === 'yandex_tracker_ping');
 
       if (match) {
-        // Score должен быть примерно 1 - (1/3) = 0.67
-        expect(match.score).toBeGreaterThan(0.6);
-        expect(match.score).toBeLessThan(0.8);
+        // Score: (1 - 1/(3+1)) * TOKEN_WEIGHT = 0.75 * 0.7 = 0.525
+        expect(match.score).toBeGreaterThan(0.5);
+        expect(match.score).toBeLessThan(0.6);
       }
     });
   });
@@ -215,8 +215,9 @@ describe('FuzzySearchStrategy', () => {
       const results1 = strategy.search('pong', mockTools);
       expect(results1.length).toBeGreaterThan(0);
 
-      // 'pang' vs 'ping' (distance = 2) - НЕ должен найти
-      const results2 = strategy.search('pang', mockTools);
+      // 'pung' vs 'ping' (distance = 1) - ДОЛЖЕН найти
+      // 'pongg' vs 'ping' (distance = 2) - НЕ должен найти
+      const results2 = strategy.search('pongg', mockTools);
       const match = results2.find((r) => r.toolName === 'yandex_tracker_ping');
       expect(match).toBeUndefined();
     });
@@ -309,8 +310,8 @@ describe('FuzzySearchStrategy', () => {
 
       const match = results.find((r) => r.toolName === 'yandex_tracker_ping');
       expect(match).toBeDefined();
-      // Точное совпадение: distance = 0, score = 1.0
-      expect(match!.score).toBe(1.0);
+      // Точное совпадение с токеном: distance = 0, score = 1.0 * TOKEN_WEIGHT (0.7)
+      expect(match!.score).toBe(0.7);
     });
   });
 

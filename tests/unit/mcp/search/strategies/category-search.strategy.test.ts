@@ -70,8 +70,11 @@ describe('CategorySearchStrategy', () => {
     it('должен найти tools по точной категории (score 1.0)', () => {
       const results = strategy.search('issues', mockTools);
 
-      expect(results.length).toBeGreaterThanOrEqual(2);
-      results.forEach((result) => {
+      // Фильтруем только category matches (не tag matches)
+      const categoryMatches = results.filter((r) => r.strategyType === 'category');
+
+      expect(categoryMatches.length).toBeGreaterThanOrEqual(2);
+      categoryMatches.forEach((result) => {
         expect(result.score).toBe(1.0);
         expect(result.strategyType).toBe('category');
         expect(result.matchReason).toContain('Category match');
@@ -81,8 +84,11 @@ describe('CategorySearchStrategy', () => {
     it('должен быть case-insensitive', () => {
       const results = strategy.search('ISSUES', mockTools);
 
-      expect(results.length).toBeGreaterThanOrEqual(2);
-      results.forEach((result) => {
+      // Фильтруем только category matches
+      const categoryMatches = results.filter((r) => r.strategyType === 'category');
+
+      expect(categoryMatches.length).toBeGreaterThanOrEqual(2);
+      categoryMatches.forEach((result) => {
         expect(result.score).toBe(1.0);
       });
     });
