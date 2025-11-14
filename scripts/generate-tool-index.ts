@@ -18,6 +18,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 // Импортируем tool classes (без инстанцирования)
 import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
@@ -226,6 +227,13 @@ async function main(): Promise<void> {
 
     // Записываем файл
     fs.writeFileSync(outputPath, output, 'utf-8');
+
+    // Форматируем файл через Prettier для консистентности
+    try {
+      execSync(`npx prettier --write "${outputPath}"`, { stdio: 'pipe' });
+    } catch (error) {
+      console.warn('⚠️  Не удалось отформатировать файл через Prettier');
+    }
 
     console.log(`✅ Индекс сохранён: ${path.relative(process.cwd(), outputPath)}`);
     console.log('   Размер:', Buffer.byteLength(output, 'utf8'), 'bytes');
