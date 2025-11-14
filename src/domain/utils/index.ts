@@ -1,2 +1,2 @@
-export { EntityCacheKey } from './entity-cache-key.js';
-export { ResponseFieldFilter } from './response-field-filter.js';
+export { EntityCacheKey } from '@domain/utils/entity-cache-key.js';
+export { ResponseFieldFilter } from '@domain/utils/response-field-filter.js';

@@ -4,7 +4,7 @@
  * Соответствует API v3: /v3/issues/{issueKey}
  */
 
-import type { User } from './user.entity.js';
+import type { User } from '@domain/entities/user.entity.js';
 
 /**
  * Очередь задач

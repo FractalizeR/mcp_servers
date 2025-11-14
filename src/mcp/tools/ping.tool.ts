@@ -7,9 +7,9 @@
  * - Получение информации о текущем пользователе
  */
 
-import { BaseTool } from './base-tool.js';
-import type { ToolDefinition } from './base-tool.js';
-import type { ToolCallParams, ToolResult } from '../../types.js';
+import { BaseTool } from '@mcp/tools/base-tool.js';
+import type { ToolDefinition } from '@mcp/tools/base-tool.js';
+import type { ToolCallParams, ToolResult } from '@types';
 
 /**
  * Ping инструмент для диагностики подключения

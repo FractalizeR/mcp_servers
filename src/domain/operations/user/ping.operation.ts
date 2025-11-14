@@ -7,10 +7,10 @@
  * - НЕТ других операций с пользователями
  */
 
-import { BaseOperation } from '../base-operation.js';
-import { EntityCacheKey, EntityType } from '../../utils/entity-cache-key.js';
-import type { User } from '../../entities/user.entity.js';
-import type { ApiError } from '../../../types.js';
+import { BaseOperation } from '@domain/operations/base-operation.js';
+import { EntityCacheKey, EntityType } from '@domain/utils/entity-cache-key.js';
+import type { User } from '@domain/entities/user.entity.js';
+import type { ApiError } from '@types';
 
 /**
  * Результат проверки подключения

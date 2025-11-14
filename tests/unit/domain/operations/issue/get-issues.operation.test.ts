@@ -2,42 +2,43 @@
  * Unit тесты для GetIssuesOperation (batch-получение задач)
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { GetIssuesOperation } from '../../../../src/domain/operations/issue/get-issues.operation.js';
-import type { HttpClient } from '../../../../src/infrastructure/http/client/http-client.js';
-import type { RetryHandler } from '../../../../src/infrastructure/http/retry/retry-handler.js';
-import type { CacheManager } from '../../../../src/infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '../../../../src/infrastructure/logger.js';
-import type { Issue } from '../../../../src/domain/entities/issue.entity.js';
+import {describe, it, expect, beforeEach, vi} from 'vitest';
+import type { Mock } from 'vitest';
+import { GetIssuesOperation } from '@domain/operations/issue/get-issues.operation.js';
+import type { HttpClient } from '@infrastructure/http/client/http-client.js';
+import type { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';
+import type { CacheManager } from '@infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@infrastructure/logger.js';
+import type { Issue } from '@domain/entities/issue.entity.js';
 
 describe('GetIssuesOperation', () => {
   let operation: GetIssuesOperation;
-  let httpClient: jest.Mocked<HttpClient>;
-  let retryHandler: jest.Mocked<RetryHandler>;
-  let cacheManager: jest.Mocked<CacheManager>;
-  let logger: jest.Mocked<Logger>;
+  let httpClient: Mock<HttpClient>;
+  let retryHandler: Mock<RetryHandler>;
+  let cacheManager: Mock<CacheManager>;
+  let logger: Mock<Logger>;
 
   beforeEach(() => {
     // Моки зависимостей
     httpClient = {
-      get: jest.fn<typeof httpClient.get>(),
-    } as unknown as jest.Mocked<HttpClient>;
+      get: vi.fn<typeof httpClient.get>(),
+    } as unknown as Mock<HttpClient>;
 
     retryHandler = {
-      executeWithRetry: jest.fn(<T>(fn: () => Promise<T>) => fn()),
-    } as unknown as jest.Mocked<RetryHandler>;
+      executeWithRetry: vi.fn(<T>(fn: () => Promise<T>) => fn()),
+    } as unknown as Mock<RetryHandler>;
 
     cacheManager = {
-      get: jest.fn<typeof cacheManager.get>(),
-      set: jest.fn<typeof cacheManager.set>(),
-    } as unknown as jest.Mocked<CacheManager>;
+      get: vi.fn<typeof cacheManager.get>(),
+      set: vi.fn<typeof cacheManager.set>(),
+    } as unknown as Mock<CacheManager>;
 
     logger = {
-      info: jest.fn<typeof logger.info>(),
-      warn: jest.fn<typeof logger.warn>(),
-      error: jest.fn<typeof logger.error>(),
-      debug: jest.fn<typeof logger.debug>(),
-    } as unknown as jest.Mocked<Logger>;
+      info: vi.fn<typeof logger.info>(),
+      warn: vi.fn<typeof logger.warn>(),
+      error: vi.fn<typeof logger.error>(),
+      debug: vi.fn<typeof logger.debug>(),
+    } as unknown as Mock<Logger>;
 
     operation = new GetIssuesOperation(httpClient, retryHandler, cacheManager, logger);
   });

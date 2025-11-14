@@ -2,9 +2,9 @@
  * Тесты для ExponentialBackoffStrategy
  */
 
-import { describe, it, expect } from '@jest/globals';
-import { ExponentialBackoffStrategy } from '../../../../src/infrastructure/http/retry/exponential-backoff.strategy.js';
-import type { ApiError } from '../../../../../src/types.js';
+import {describe, it, expect} from 'vitest';
+import { ExponentialBackoffStrategy } from '@infrastructure/http/retry/exponential-backoff.strategy.js';
+import type { ApiError } from '@types';
 
 describe('ExponentialBackoffStrategy', () => {
   describe('constructor', () => {

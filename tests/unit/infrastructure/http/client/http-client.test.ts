@@ -2,21 +2,21 @@
  * Unit тесты для HttpClient
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { HttpClient } from '../../../../src/infrastructure/http/client/http-client.js';
-import type { HttpConfig } from '../../../../src/infrastructure/http/client/http-config.interface.js';
-import type { Logger } from '../../../../src/infrastructure/logger.js';
-import type { RetryStrategy } from '../../../../src/infrastructure/http/retry/retry-strategy.interface.js';
+import {describe, it, expect, beforeEach, vi} from 'vitest';
+import { HttpClient } from '@infrastructure/http/client/http-client.js';
+import type { HttpConfig } from '@infrastructure/http/client/http-config.interface.js';
+import type { Logger } from '@infrastructure/logger.js';
+import type { RetryStrategy } from '@infrastructure/http/retry/retry-strategy.interface.js';
 
 /**
  * Создаёт мок логгера
  */
 function createMockLogger(): Logger {
   return {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   } as unknown as Logger;
 }
 

@@ -8,13 +8,13 @@
  */
 
 // Client
-export { HttpClient } from './client/http-client.js';
+export { HttpClient } from '@infrastructure/http/client/http-client.js';
 export type { HttpConfig } from './client/http-config.interface.js';
 
 // Retry
 export type { RetryStrategy } from './retry/retry-strategy.interface.js';
-export { ExponentialBackoffStrategy } from './retry/exponential-backoff.strategy.js';
-export { RetryHandler } from './retry/retry-handler.js';
+export { ExponentialBackoffStrategy } from '@infrastructure/http/retry/exponential-backoff.strategy.js';
+export { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';
 
 // Error
-export { ErrorMapper } from './error/error-mapper.js';
+export { ErrorMapper } from '@infrastructure/http/error/error-mapper.js';

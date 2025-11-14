@@ -9,8 +9,8 @@
  * - НЕТ кеширования (PATCH не кешируется)
  */
 
-import { BaseOperation } from '../base-operation.js';
-import type { Issue, UpdateIssueRequest } from '../../entities/issue.entity.js';
+import { BaseOperation } from '@domain/operations/base-operation.js';
+import type { Issue, UpdateIssueRequest } from '@domain/entities/issue.entity.js';
 
 /**
  * Параметры для batch-обновления одной задачи

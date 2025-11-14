@@ -13,9 +13,9 @@
  * - Специальная обработка 429 (rate limiting): используется retryAfter из заголовка
  */
 
-import type { RetryStrategy } from './retry-strategy.interface.js';
-import type { ApiError } from '../../../types.js';
-import { HttpStatusCode } from '../../../types.js';
+import type { RetryStrategy } from '@infrastructure/http/retry/retry-strategy.interface.js';
+import type { ApiError } from '@types';
+import { HttpStatusCode } from '@types';
 
 export class ExponentialBackoffStrategy implements RetryStrategy {
   readonly maxRetries: number;

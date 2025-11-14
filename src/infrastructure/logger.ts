@@ -2,7 +2,7 @@
  * Модуль логирования с поддержкой уровней
  */
 
-import type { LogLevel } from '../types.js';
+import type { LogLevel } from '@types';
 
 /**
  * Порядок уровней логирования (от самого детального до критичного)

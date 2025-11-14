@@ -9,9 +9,9 @@
  * - НЕТ поиска задач
  */
 
-import { BaseOperation } from '../base-operation.js';
-import { EntityCacheKey, EntityType } from '../../utils/entity-cache-key.js';
-import type { Issue } from '../../entities/issue.entity.js';
+import { BaseOperation } from '@domain/operations/base-operation.js';
+import { EntityCacheKey, EntityType } from '@domain/utils/entity-cache-key.js';
+import type { Issue } from '@domain/entities/issue.entity.js';
 
 /**
  * Результат batch-операции для одной задачи

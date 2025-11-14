@@ -9,4 +9,4 @@
  */
 
 export type { CacheManager } from './cache-manager.interface.js';
-export { NoOpCache } from './no-op-cache.js';
+export { NoOpCache } from '@infrastructure/cache/no-op-cache.js';

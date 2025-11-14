@@ -18,8 +18,8 @@
  */
 
 import pLimit from 'p-limit';
-import type { Logger } from '../logger.js';
-import type { ApiError } from '../../types.js';
+import type { Logger } from '@infrastructure/logger.js';
+import type { ApiError } from '@types';
 
 /**
  * Результат выполнения одной операции (Discriminated Union)

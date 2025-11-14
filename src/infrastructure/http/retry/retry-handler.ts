@@ -11,9 +11,9 @@
  * - HTTP запросы (принимает готовую функцию)
  */
 
-import type { RetryStrategy } from './retry-strategy.interface.js';
-import type { Logger } from '../../logger.js';
-import type { ApiError } from '../../../types.js';
+import type { RetryStrategy } from '@infrastructure/http/retry/retry-strategy.interface.js';
+import type { Logger } from '@infrastructure/logger.js';
+import type { ApiError } from '@types';
 
 export class RetryHandler {
   constructor(

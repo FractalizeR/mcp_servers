@@ -2,8 +2,8 @@
  * Тесты для NoOpCache
  */
 
-import { describe, it, expect } from '@jest/globals';
-import { NoOpCache } from '../../../../src/infrastructure/cache/no-op-cache.js';
+import {describe, it, expect} from 'vitest';
+import { NoOpCache } from '@infrastructure/cache/no-op-cache.js';
 
 describe('NoOpCache', () => {
   let cache: NoOpCache;

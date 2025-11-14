@@ -5,21 +5,22 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
+    "build:bundle": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/bundle.js --external:@modelcontextprotocol/sdk --external:axios --external:inversify --external:p-limit --external:reflect-metadata --sourcemap",
     "watch": "tsc --watch",
-    "dev": "tsc && node dist/index.js",
+    "dev": "tsc && tsc-alias && node dist/index.js",
     "clean": "rm -rf dist/",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "typecheck": "tsc --noEmit",
     "typecheck:tests": "tsc --project tsconfig.tests.json",
     "typecheck:all": "npm run typecheck && npm run typecheck:tests",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern='.*.test.ts$'",
-    "validate": "npm run lint && npm run typecheck && npm run test && npm run build",
-    "prepublish": "npm run clean && npm run build"
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run --testPathPattern='.*.test.ts$'",
+    "validate": "npm run lint && npm run typecheck && npm run test && npm run build && npm run build:bundle",
+    "prepublish": "npm run clean && npm run build:bundle"
   },
   "keywords": [
     "mcp",
@@ -40,15 +41,16 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@jest/globals": "^30.2.0",
-    "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
     "@types/p-limit": "^2.1.0",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
+    "@vitest/coverage-v8": "^4.0.8",
+    "esbuild": "^0.27.0",
     "eslint": "^9.39.1",
-    "jest": "^30.2.0",
-    "ts-jest": "^29.4.5",
-    "typescript": "^5.9.3"
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.8"
   }
 }

@@ -1,5 +1,5 @@
-import { describe, it, expect } from '@jest/globals';
-import { ResponseFieldFilter } from '../../../../src/domain/utils/response-field-filter.js';
+import {describe, it, expect} from 'vitest';
+import { ResponseFieldFilter } from '@domain/utils/response-field-filter.js';
 
 describe('ResponseFieldFilter', () => {
   describe('filter', () => {

@@ -9,8 +9,8 @@
  * - НЕТ кеширования (POST не кешируется)
  */
 
-import { BaseOperation } from '../base-operation.js';
-import type { Issue, CreateIssueRequest } from '../../entities/issue.entity.js';
+import { BaseOperation } from '@domain/operations/base-operation.js';
+import type { Issue, CreateIssueRequest } from '@domain/entities/issue.entity.js';
 
 /**
  * Результат batch-операции для одного создания задачи

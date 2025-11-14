@@ -66,7 +66,7 @@
 - **TypeScript** (strict mode, NO `any`/`unknown`/`null`/`undefined` где можно избежать)
 - **InversifyJS v7** (DI, Symbol-based tokens, `defaultScope: 'Singleton'`)
 - **Axios** (HTTP client)
-- **Jest** (тесты, покрытие ≥80%)
+- **Vitest** (тесты, покрытие ≥80%)
 - **MCP SDK** (Model Context Protocol)
 - **API:** Яндекс.Трекер v3 (ТОЛЬКО `/v3/*` endpoints)
 
@@ -134,14 +134,12 @@ return this.formatSuccess({ issues: filtered });
 ### 6. Тестирование
 
 - Unit тесты: `tests/unit/` (зеркалируют `src/`)
-- Покрытие: ≥80%
+- Покрытие: ≥80% (текущее: 77 из 123 тестов проходят)
 - Валидация: `npm run validate` (lint + typecheck + test + build)
-- ⚠️ **TypeCheck для тестов:** `npm run typecheck:tests` НЕ включен в `validate`
-  - Известная проблема: TypeScript + ESM + Jest
-  - Тесты используют импорты БЕЗ расширений (TypeScript)
-  - Исходники используют импорты С `.js` (ESM runtime)
-  - `moduleNameMapper` в jest.config.js разрешает это для runtime
-  - TypeScript typecheck не может разрешить импорты без расширений при `module: "ES2022"`
+- ✅ **Vitest** с нативной поддержкой ESM и TypeScript
+- ✅ **TypeScript:** `module: "ES2022"`, `moduleResolution: "bundler"`
+- ✅ Импорты используют расширения `.js` для ESM совместимости
+- ⚠️ **Известная проблема:** 10 тестовых файлов не могут загрузить модули из-за проблем с разрешением ESM импортов (Vitest + TypeScript + ESM). Работают тесты: config, logger, entity-cache-key, response-field-filter
 
 ---
 

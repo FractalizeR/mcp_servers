@@ -15,12 +15,12 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-import { loadConfig } from './infrastructure/config.js';
-import { Logger } from './infrastructure/logger.js';
-import type { ToolRegistry } from './mcp/tool-registry.js';
+import { loadConfig } from '@infrastructure/config.js';
+import { Logger } from '@infrastructure/logger.js';
+import type { ToolRegistry } from '@mcp/tool-registry.js';
 
 // DI Container
-import { createContainer, TYPES } from './infrastructure/di/index.js';
+import { createContainer, TYPES } from '@infrastructure/di/index.js';
 
 /**
  * Настройка обработчиков запросов MCP сервера

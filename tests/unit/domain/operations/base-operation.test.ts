@@ -2,12 +2,13 @@
  * Тесты для BaseOperation
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { BaseOperation } from '../../../../src/domain/operations/base-operation.js';
-import type { HttpClient } from '../../../../src/infrastructure/http/client/http-client.js';
-import type { RetryHandler } from '../../../../src/infrastructure/http/retry/retry-handler.js';
-import type { CacheManager } from '../../../../src/infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '../../../../src/infrastructure/logger.js';
+import {describe, it, expect, beforeEach, vi} from 'vitest';
+import type { Mock } from 'vitest';
+import { BaseOperation } from '@domain/operations/base-operation.js';
+import type { HttpClient } from '@infrastructure/http/client/http-client.js';
+import type { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';
+import type { CacheManager } from '@infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@infrastructure/logger.js';
 
 /**
  * Конкретная реализация BaseOperation для тестирования
@@ -24,35 +25,35 @@ class TestOperation extends BaseOperation {
 
 function createMockHttpClient(): HttpClient {
   return {
-    get: jest.fn(),
-    post: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
   } as unknown as HttpClient;
 }
 
 function createMockRetryHandler(): RetryHandler {
   return {
-    executeWithRetry: jest.fn(<T>(fn: () => Promise<T>) => fn()),
+    executeWithRetry: vi.fn(<T>(fn: () => Promise<T>) => fn()),
   } as unknown as RetryHandler;
 }
 
 function createMockCache(): CacheManager {
   return {
-    get: jest.fn(),
-    set: jest.fn(),
-    delete: jest.fn(),
-    clear: jest.fn(),
-    prune: jest.fn(),
+    get: vi.fn(),
+    set: vi.fn(),
+    delete: vi.fn(),
+    clear: vi.fn(),
+    prune: vi.fn(),
   } as unknown as CacheManager;
 }
 
 function createMockLogger(): Logger {
   return {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   } as unknown as Logger;
 }
 
@@ -76,7 +77,7 @@ describe('BaseOperation', () => {
       mockLogger
     );
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('withCache', () => {
@@ -84,9 +85,9 @@ describe('BaseOperation', () => {
       const cacheKey = 'test:key';
       const cachedValue = { data: 'cached' };
 
-      (mockCache.get as jest.Mock).mockReturnValue(cachedValue);
+      (mockCache.get as Mock).mockReturnValue(cachedValue);
 
-      const fn = jest.fn<() => Promise<unknown>>();
+      const fn = vi.fn<() => Promise<unknown>>();
       const result = await operation.executeWithCache(cacheKey, fn);
 
       expect(result).toEqual(cachedValue);
@@ -101,8 +102,8 @@ describe('BaseOperation', () => {
       const cacheKey = 'test:key';
       const freshValue = { data: 'fresh' };
 
-      (mockCache.get as jest.Mock).mockReturnValue(undefined);
-      const fn = jest.fn(async () => freshValue);
+      (mockCache.get as Mock).mockReturnValue(undefined);
+      const fn = vi.fn(async () => freshValue);
 
       const result = await operation.executeWithCache(cacheKey, fn);
 
@@ -119,8 +120,8 @@ describe('BaseOperation', () => {
       const cacheKey = 'test:key';
       const value = { data: 'new' };
 
-      (mockCache.get as jest.Mock).mockReturnValue(undefined);
-      const fn = jest.fn(async () => value);
+      (mockCache.get as Mock).mockReturnValue(undefined);
+      const fn = vi.fn(async () => value);
 
       await operation.executeWithCache(cacheKey, fn);
 
@@ -130,7 +131,7 @@ describe('BaseOperation', () => {
 
   describe('withRetry', () => {
     it('должен делегировать выполнение RetryHandler', async () => {
-      const fn = jest.fn(async () => 'result');
+      const fn = vi.fn(async () => 'result');
 
       const result = await operation.executeWithRetry(fn);
 
@@ -140,9 +141,9 @@ describe('BaseOperation', () => {
 
     it('должен пробросить ошибку от RetryHandler', async () => {
       const error = new Error('Retry failed');
-      const fn = jest.fn(async () => { throw error; });
+      const fn = vi.fn(async () => { throw error; });
 
-      jest.mocked(mockRetryHandler.executeWithRetry).mockRejectedValue(error);
+      vi.mocked(mockRetryHandler.executeWithRetry).mockRejectedValue(error);
 
       await expect(operation.executeWithRetry(fn)).rejects.toThrow('Retry failed');
     });

@@ -19,7 +19,7 @@
  * const value = cache.get(key); // Всегда undefined для NoOpCache
  */
 
-import type { CacheManager } from './cache-manager.interface.js';
+import type { CacheManager } from '@infrastructure/cache/cache-manager.interface.js';
 
 export class NoOpCache implements CacheManager {
   /**

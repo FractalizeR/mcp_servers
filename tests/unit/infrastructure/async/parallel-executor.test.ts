@@ -2,20 +2,20 @@
  * Unit тесты для ParallelExecutor
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { ParallelExecutor } from '../../../../src/infrastructure/async/parallel-executor.js';
-import type { Logger } from '../../../../src/infrastructure/logger.js';
-import type { ApiError } from '../../../../src/types.js';
+import {describe, it, expect, beforeEach, vi} from 'vitest';
+import { ParallelExecutor } from '@infrastructure/async/parallel-executor.js';
+import type { Logger } from '@infrastructure/logger.js';
+import type { ApiError } from '@types';
 
 /**
  * Создаёт мок логгера для тестов
  */
 function createMockLogger(): Logger {
   return {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   } as unknown as Logger;
 }
 

@@ -3,7 +3,7 @@
   "compilerOptions": {
     /* Наследуем все строгие правила из основного tsconfig.json */
     "noEmit": true,  /* Только проверка типов, без генерации файлов */
-    "types": ["node", "jest"],  /* Глобальные типы для тестов */
+    "types": ["node", "vitest/globals"],  /* Глобальные типы для тестов */
     "rootDir": "."   /* Переопределяем rootDir для включения tests/ */
   },
   "include": [

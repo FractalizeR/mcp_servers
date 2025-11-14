@@ -1,8 +1,8 @@
-import { BaseTool } from './base-tool.js';
-import type { ToolDefinition } from './base-tool.js';
-import type { ToolCallParams, ToolResult } from '../../types.js';
-import { ResponseFieldFilter } from '../../domain/utils/index.js';
-import type { Issue } from '../../domain/entities/issue.entity.js';
+import { BaseTool } from '@mcp/tools/base-tool.js';
+import type { ToolDefinition } from '@mcp/tools/base-tool.js';
+import type { ToolCallParams, ToolResult } from '@types';
+import { ResponseFieldFilter } from '@domain/utils/index.js';
+import type { Issue } from '@domain/entities/issue.entity.js';
 
 /**
  * Инструмент для получения информации о задачах

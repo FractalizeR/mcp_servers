@@ -7,36 +7,36 @@
 
 import 'reflect-metadata';
 import { Container } from 'inversify';
-import type { ServerConfig } from '../../types.js';
-import type { Logger } from '../logger.js';
-import { TYPES } from './types.js';
+import type { ServerConfig } from '@types';
+import type { Logger } from '@infrastructure/logger.js';
+import { TYPES } from '@infrastructure/di/types.js';
 
 // HTTP Layer
-import { HttpClient } from '../http/client/http-client.js';
-import { RetryHandler } from '../http/retry/retry-handler.js';
-import type { RetryStrategy } from '../http/retry/retry-strategy.interface.js';
-import { ExponentialBackoffStrategy } from '../http/retry/exponential-backoff.strategy.js';
+import { HttpClient } from '@infrastructure/http/client/http-client.js';
+import { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';
+import type { RetryStrategy } from '@infrastructure/http/retry/retry-strategy.interface.js';
+import { ExponentialBackoffStrategy } from '@infrastructure/http/retry/exponential-backoff.strategy.js';
 
 // Cache Layer
-import type { CacheManager } from '../cache/cache-manager.interface.js';
-import { NoOpCache } from '../cache/no-op-cache.js';
+import type { CacheManager } from '@infrastructure/cache/cache-manager.interface.js';
+import { NoOpCache } from '@infrastructure/cache/no-op-cache.js';
 
 // Yandex Tracker Operations
-import { PingOperation } from '../../domain/operations/user/ping.operation.js';
-import { GetIssuesOperation } from '../../domain/operations/issue/get-issues.operation.js';
-import { CreateIssuesOperation } from '../../domain/operations/issue/create-issues.operation.js';
-import { UpdateIssuesOperation } from '../../domain/operations/issue/update-issues.operation.js';
-import { DeleteIssuesOperation } from '../../domain/operations/issue/delete-issues.operation.js';
+import { PingOperation } from '@domain/operations/user/ping.operation.js';
+import { GetIssuesOperation } from '@domain/operations/issue/get-issues.operation.js';
+import { CreateIssuesOperation } from '@domain/operations/issue/create-issues.operation.js';
+import { UpdateIssuesOperation } from '@domain/operations/issue/update-issues.operation.js';
+import { DeleteIssuesOperation } from '@domain/operations/issue/delete-issues.operation.js';
 
 // Yandex Tracker Facade
-import { YandexTrackerFacade } from '../../domain/facade/yandex-tracker.facade.js';
+import { YandexTrackerFacade } from '@domain/facade/yandex-tracker.facade.js';
 
 // Tools
-import { PingTool } from '../../mcp/tools/ping.tool.js';
-import { GetIssuesTool } from '../../mcp/tools/get-issues.tool.js';
+import { PingTool } from '@mcp/tools/ping.tool.js';
+import { GetIssuesTool } from '@mcp/tools/get-issues.tool.js';
 
 // Tool Registry
-import { ToolRegistry } from '../../mcp/tool-registry.js';
+import { ToolRegistry } from '@mcp/tool-registry.js';
 
 /**
  * Регистрация базовых зависимостей (config, logger)

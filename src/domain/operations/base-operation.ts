@@ -10,10 +10,10 @@
  * Определяет общую структуру, конкретные операции реализуют детали
  */
 
-import type { HttpClient } from '../../infrastructure/http/client/http-client.js';
-import type { RetryHandler } from '../../infrastructure/http/retry/retry-handler.js';
-import type { CacheManager } from '../../infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '../../infrastructure/logger.js';
+import type { HttpClient } from '@infrastructure/http/client/http-client.js';
+import type { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';
+import type { CacheManager } from '@infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@infrastructure/logger.js';
 
 export abstract class BaseOperation {
   constructor(

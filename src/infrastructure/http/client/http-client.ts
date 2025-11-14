@@ -15,14 +15,14 @@
 
 import axios from 'axios';
 import type { AxiosInstance, AxiosError } from 'axios';
-import type { HttpConfig } from './http-config.interface.js';
-import type { Logger } from '../../logger.js';
-import type { QueryParams } from '../../../types.js';
-import { ErrorMapper } from '../error';
-import { RetryHandler } from '../retry';
-import type { RetryStrategy } from '../retry';
-import { ParallelExecutor } from '../../async';
-import type { BatchResult } from '../../async';
+import type { HttpConfig } from '@infrastructure/http/client/http-config.interface.js';
+import type { Logger } from '@infrastructure/logger.js';
+import type { QueryParams } from '@types';
+import { ErrorMapper } from '@infrastructure/http/error';
+import { RetryHandler } from '@infrastructure/http/retry';
+import type { RetryStrategy } from '@infrastructure/http/retry';
+import { ParallelExecutor } from '@infrastructure/async';
+import type { BatchResult } from '@infrastructure/async';
 
 export class HttpClient {
   private readonly client: AxiosInstance;

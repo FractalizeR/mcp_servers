@@ -2,8 +2,8 @@
  * Тесты для EntityCacheKey
  */
 
-import { describe, it, expect } from '@jest/globals';
-import { EntityCacheKey, EntityType } from '../../../../src/domain/utils/entity-cache-key.js';
+import {describe, it, expect} from 'vitest';
+import { EntityCacheKey, EntityType } from '@domain/utils/entity-cache-key.js';
 
 describe('EntityCacheKey', () => {
   describe('createKey', () => {

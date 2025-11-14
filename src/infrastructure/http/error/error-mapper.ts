@@ -12,8 +12,8 @@
  */
 
 import type { AxiosError } from 'axios';
-import type { ApiError } from '../../../types.js';
-import { HttpStatusCode } from '../../../types.js';
+import type { ApiError } from '@types';
+import { HttpStatusCode } from '@types';
 
 export class ErrorMapper {
   /**

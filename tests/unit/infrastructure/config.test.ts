@@ -2,8 +2,8 @@
  * Unit тесты для модуля конфигурации
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { loadConfig } from '../../../../src/infrastructure/config.js';
+import {describe, it, expect, beforeEach, afterEach} from 'vitest';
+import { loadConfig } from '@infrastructure/config.js';
 
 describe('loadConfig', () => {
   const originalEnv = process.env;

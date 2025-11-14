@@ -2,7 +2,7 @@
  * Загрузка и валидация конфигурации из переменных окружения
  */
 
-import type { ServerConfig, LogLevel } from '../types.js';
+import type { ServerConfig, LogLevel } from '@types';
 
 /**
  * Валидация уровня логирования

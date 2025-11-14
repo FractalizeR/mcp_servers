@@ -1,2 +1,2 @@
-export * from './tools/index.js';
-export { ToolRegistry } from './tool-registry.js';
+export * from '@mcp/tools/index.js';
+export { ToolRegistry } from '@mcp/tool-registry.js';

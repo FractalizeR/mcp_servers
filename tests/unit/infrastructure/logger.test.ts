@@ -2,14 +2,14 @@
  * Unit тесты для модуля логирования
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { Logger } from '../../../../src/infrastructure/logger.js';
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
+import { Logger } from '@infrastructure/logger.js';
 
 describe('Logger', () => {
-  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn<typeof console.error>>;
 
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {

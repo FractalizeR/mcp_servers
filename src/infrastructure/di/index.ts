@@ -4,5 +4,5 @@
  * Экспорт публичного API для работы с InversifyJS контейнером.
  */
 
-export { TYPES } from './types.js';
-export { createContainer } from './container.js';
+export { TYPES } from '@infrastructure/di/types.js';
+export { createContainer } from '@infrastructure/di/container.js';

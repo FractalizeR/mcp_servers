@@ -8,5 +8,5 @@
  */
 
 export type { RetryStrategy } from './retry-strategy.interface.js';
-export { ExponentialBackoffStrategy } from './exponential-backoff.strategy.js';
-export { RetryHandler } from './retry-handler.js';
+export { ExponentialBackoffStrategy } from '@infrastructure/http/retry/exponential-backoff.strategy.js';
+export { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';

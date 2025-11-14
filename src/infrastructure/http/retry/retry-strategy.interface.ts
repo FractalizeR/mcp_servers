@@ -6,7 +6,7 @@
  * - Вычисление задержки перед следующей попыткой
  */
 
-import type { ApiError } from '../../../types.js';
+import type { ApiError } from '@types';
 
 export interface RetryStrategy {
   /**

@@ -10,28 +10,28 @@
  * Упрощает использование сложной системы операций
  */
 
-import type { HttpClient } from '../../infrastructure/http/client/http-client.js';
-import type { RetryHandler } from '../../infrastructure/http/retry/retry-handler.js';
-import type { CacheManager } from '../../infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '../../infrastructure/logger.js';
-import type { ServerConfig } from '../../types.js';
+import type { HttpClient } from '@infrastructure/http/client/http-client.js';
+import type { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';
+import type { CacheManager } from '@infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@infrastructure/logger.js';
+import type { ServerConfig } from '@types';
 
 // User Operations
-import { PingOperation } from '../operations/user/ping.operation.js';
+import { PingOperation } from '@domain/operations/user/ping.operation.js';
 
 // Issue Operations - Batch
-import { GetIssuesOperation } from '../operations/issue/get-issues.operation.js';
-import { CreateIssuesOperation } from '../operations/issue/create-issues.operation.js';
-import { UpdateIssuesOperation } from '../operations/issue/update-issues.operation.js';
-import { DeleteIssuesOperation } from '../operations/issue/delete-issues.operation.js';
+import { GetIssuesOperation } from '@domain/operations/issue/get-issues.operation.js';
+import { CreateIssuesOperation } from '@domain/operations/issue/create-issues.operation.js';
+import { UpdateIssuesOperation } from '@domain/operations/issue/update-issues.operation.js';
+import { DeleteIssuesOperation } from '@domain/operations/issue/delete-issues.operation.js';
 
 // Types
-import type { PingResult } from '../operations/user/ping.operation.js';
-import type { CreateIssueRequest } from '../entities/issue.entity.js';
-import type { BatchIssueResult } from '../operations/issue/get-issues.operation.js';
-import type { BatchCreateIssueResult } from '../operations/issue/create-issues.operation.js';
-import type { UpdateIssueItem, BatchUpdateIssueResult } from '../operations/issue/update-issues.operation.js';
-import type { BatchDeleteIssueResult } from '../operations/issue/delete-issues.operation.js';
+import type { PingResult } from '@domain/operations/user/ping.operation.js';
+import type { CreateIssueRequest } from '@domain/entities/issue.entity.js';
+import type { BatchIssueResult } from '@domain/operations/issue/get-issues.operation.js';
+import type { BatchCreateIssueResult } from '@domain/operations/issue/create-issues.operation.js';
+import type { UpdateIssueItem, BatchUpdateIssueResult } from '@domain/operations/issue/update-issues.operation.js';
+import type { BatchDeleteIssueResult } from '@domain/operations/issue/delete-issues.operation.js';
 
 export class YandexTrackerFacade {
   // User operations

@@ -2,4 +2,4 @@
  * Error модуль - экспорт компонентов обработки ошибок
  */
 
-export { ErrorMapper } from './error-mapper.js';
+export { ErrorMapper } from '@infrastructure/http/error/error-mapper.js';

@@ -2,11 +2,11 @@
  * Unit тесты для GetIssuesTool
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { GetIssuesTool } from '../../../../src/mcp/tools/get-issues.tool.js';
-import type { YandexTrackerFacade } from '../../../../src/domain/facade/yandex-tracker.facade.js';
-import type { Logger } from '../../../../src/infrastructure/logger.js';
-import type { Issue } from '../../../../src/domain/entities/issue.entity.js';
+import {describe, it, expect, beforeEach, vi} from 'vitest';
+import { GetIssuesTool } from '@mcp/tools/get-issues.tool.js';
+import type { YandexTrackerFacade } from '@domain/facade/yandex-tracker.facade.js';
+import type { Logger } from '@infrastructure/logger.js';
+import type { Issue } from '@domain/entities/issue.entity.js';
 
 describe('GetIssuesTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -72,14 +72,14 @@ describe('GetIssuesTool', () => {
 
   beforeEach(() => {
     mockTrackerFacade = {
-      getIssues: jest.fn(),
+      getIssues: vi.fn(),
     } as unknown as YandexTrackerFacade;
 
     mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
     } as unknown as Logger;
 
     tool = new GetIssuesTool(mockTrackerFacade, mockLogger);
@@ -183,7 +183,7 @@ describe('GetIssuesTool', () => {
 
     describe('получение задач', () => {
       it('должен получить одну задачу без фильтрации полей', async () => {
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, issueKey: 'QUEUE-123' },
         ]);
 
@@ -215,7 +215,7 @@ describe('GetIssuesTool', () => {
       });
 
       it('должен получить несколько задач без фильтрации полей', async () => {
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, issueKey: 'QUEUE-123' },
           { status: 'fulfilled', value: mockIssue2, issueKey: 'QUEUE-456' },
         ]);
@@ -248,7 +248,7 @@ describe('GetIssuesTool', () => {
       });
 
       it('должен получить задачи с фильтрацией полей верхнего уровня', async () => {
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, issueKey: 'QUEUE-123' },
           { status: 'fulfilled', value: mockIssue2, issueKey: 'QUEUE-456' },
         ]);
@@ -280,7 +280,7 @@ describe('GetIssuesTool', () => {
       });
 
       it('должен получить задачи с фильтрацией вложенных полей', async () => {
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, issueKey: 'QUEUE-123' },
         ]);
 
@@ -314,7 +314,7 @@ describe('GetIssuesTool', () => {
       });
 
       it('должен нормализовать дубликаты в списке полей', async () => {
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, issueKey: 'QUEUE-123' },
         ]);
 
@@ -354,7 +354,7 @@ describe('GetIssuesTool', () => {
     describe('обработка ошибок', () => {
       it('должен обработать частичные ошибки (часть задач успешно получена)', async () => {
         const apiError = new Error('API Error: Issue not found');
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, issueKey: 'QUEUE-123' },
           { status: 'rejected', reason: apiError, issueKey: 'QUEUE-999' },
           { status: 'fulfilled', value: mockIssue2, issueKey: 'QUEUE-456' },
@@ -389,7 +389,7 @@ describe('GetIssuesTool', () => {
       it('должен обработать все ошибки (ни одна задача не получена)', async () => {
         const apiError1 = new Error('Not found');
         const apiError2 = new Error('Access denied');
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'rejected', reason: apiError1, issueKey: 'QUEUE-999' },
           { status: 'rejected', reason: apiError2, issueKey: 'QUEUE-888' },
         ]);
@@ -418,7 +418,7 @@ describe('GetIssuesTool', () => {
 
       it('должен обработать критическую ошибку facade', async () => {
         const criticalError = new Error('Network timeout');
-        jest.mocked(mockTrackerFacade.getIssues).mockRejectedValue(criticalError);
+        vi.mocked(mockTrackerFacade.getIssues).mockRejectedValue(criticalError);
 
         const result = await tool.execute({ issueKeys: ['QUEUE-123'] });
 
@@ -437,7 +437,7 @@ describe('GetIssuesTool', () => {
 
     describe('логирование', () => {
       it('должен логировать информацию о запросе одной задачи', async () => {
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, issueKey: 'QUEUE-123' },
         ]);
 
@@ -453,7 +453,7 @@ describe('GetIssuesTool', () => {
       });
 
       it('должен логировать информацию о запросе нескольких задач', async () => {
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, issueKey: 'QUEUE-123' },
           { status: 'fulfilled', value: mockIssue2, issueKey: 'QUEUE-456' },
         ]);
@@ -469,7 +469,7 @@ describe('GetIssuesTool', () => {
       });
 
       it('должен логировать информацию о результатах', async () => {
-        jest.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, issueKey: 'QUEUE-123' },
         ]);
 

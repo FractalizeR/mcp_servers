@@ -3,4 +3,4 @@ export {
   type ParallelExecutorConfig,
   type OperationResult,
   type BatchResult,
-} from './parallel-executor.js';
+} from '@infrastructure/async/parallel-executor.js';

@@ -2,10 +2,10 @@
  * Тесты для ErrorMapper
  */
 
-import { describe, it, expect } from '@jest/globals';
+import {describe, it, expect} from 'vitest';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ErrorMapper } from '../../../../src/infrastructure/http/error/error-mapper.js';
-import type { ApiError } from '../../../../../src/types.js';
+import { ErrorMapper } from '@infrastructure/http/error/error-mapper.js';
+import type { ApiError } from '@types';
 
 /**
  * Вспомогательная функция для создания мок AxiosError

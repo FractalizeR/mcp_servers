@@ -9,7 +9,7 @@
  * - НЕТ кеширования (DELETE не кешируется)
  */
 
-import { BaseOperation } from '../base-operation.js';
+import { BaseOperation } from '@domain/operations/base-operation.js';
 
 /**
  * Результат batch-операции для одного удаления задачи

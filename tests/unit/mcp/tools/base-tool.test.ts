@@ -2,12 +2,12 @@
  * Unit тесты для базового класса инструментов
  */
 
-import { describe, it, expect, jest } from '@jest/globals';
-import { BaseTool } from '../../../../src/mcp/tools/base-tool.js';
-import type { ToolDefinition } from '../../../../src/mcp/tools/base-tool.js';
-import type { ToolCallParams, ToolResult } from '../../../../src/types.js';
-import type { YandexTrackerFacade } from '../../../../src/domain/facade/yandex-tracker.facade.js';
-import type { Logger } from '../../../../src/infrastructure/logger.js';
+import {describe, it, expect, vi} from 'vitest';
+import { BaseTool } from '@mcp/tools/base-tool.js';
+import type { ToolDefinition } from '@mcp/tools/base-tool.js';
+import type { ToolCallParams, ToolResult } from '@types';
+import type { YandexTrackerFacade } from '@domain/facade/yandex-tracker.facade.js';
+import type { Logger } from '@infrastructure/logger.js';
 
 /**
  * Тестовая реализация BaseTool для проверки protected методов
@@ -62,10 +62,10 @@ describe('BaseTool', () => {
   beforeEach(() => {
     mockTrackerFacade = {} as YandexTrackerFacade;
     mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
     } as unknown as Logger;
 
     testTool = new TestTool(mockTrackerFacade, mockLogger);
