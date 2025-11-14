@@ -49,9 +49,6 @@ handlers/
 **Ключевые директории:**
 
 - **`infrastructure/`** — Инфраструктурный слой (переиспользуемый, не знает о домене)
-  - `di/` — DI контейнер (InversifyJS v7, Symbol-based tokens)
-    - `types.ts` — токены TYPES для всех зависимостей
-    - `container.ts` — конфигурация контейнера
   - `http/` — HTTP слой (низкоуровневый)
     - `client/` — HttpClient (Axios wrapper)
     - `retry/` — RetryHandler + стратегии
@@ -300,7 +297,7 @@ const toolRegistry = new ToolRegistry(facade, logger);
 **После DI (контейнер):**
 ```typescript
 import 'reflect-metadata';
-import { createContainer, TYPES } from './infrastructure/di/index.js';
+import { createContainer, TYPES } from '@composition-root/index.js';
 
 const container = createContainer(config, logger);
 const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);

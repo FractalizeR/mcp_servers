@@ -285,7 +285,8 @@ logger.error('Operation failed', error, { requestId: '456' });
 ### Добавление MCP Tool
 
 - [ ] 📖 Прочитай [src/mcp/CONVENTIONS.md](src/mcp/CONVENTIONS.md)
-- [ ] Создай структуру `.schema.ts`, `.definition.ts`, `.tool.ts`, `index.ts`
+- [ ] Создай структуру: `{feature}/{action}/{name}.schema.ts`, `.definition.ts`, `.tool.ts`, `index.ts`
+- [ ] Добавь `static readonly METADATA` (обязательно для Tool Search)
 - [ ] Используй утилиты: `validateParams()`, `BatchResultProcessor`, `ResultLogger`
 - [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:** Добавь **1 строку** в `src/composition-root/definitions/tool-definitions.ts`
 - [ ] ВСЁ! (DI регистрация, ToolRegistry, TYPES — автоматически)
