@@ -14,12 +14,13 @@ import type { ToolCallParams, ToolResult } from '@types';
 import { DemoDefinition } from './demo.definition.js';
 import { DemoParamsSchema } from './demo.schema.js';
 
+import { buildToolName } from '@mcp/tools/common/utils/index.js';
 export class DemoTool extends BaseTool {
   /**
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: 'fyt_mcp_demo',
+    name: buildToolName('demo'),
     description: 'Демонстрационный инструмент для тестирования',
     category: ToolCategory.DEMO,
     tags: ['demo', 'example', 'test'],

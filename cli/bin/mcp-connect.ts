@@ -5,19 +5,37 @@
  */
 
 import { Command } from 'commander';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { connectCommand } from '../commands/connect.command.js';
 import { disconnectCommand } from '../commands/disconnect.command.js';
 import { statusCommand } from '../commands/status.command.js';
 import { listCommand } from '../commands/list.command.js';
 import { Logger } from '../utils/logger.js';
-import { MCP_SERVER_DISPLAY_NAME } from '../../src/constants.js';
+import { MCP_SERVER_DISPLAY_NAME, MCP_SERVER_NAME } from '../../src/constants.js';
+
+/**
+ * Получение версии из package.json
+ */
+function getPackageVersion(): string {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const packageJsonPath = join(__dirname, '..', '..', 'package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { version: string };
+    return packageJson.version;
+  } catch {
+    return '0.0.0'; // fallback если не удалось прочитать
+  }
+}
 
 const program = new Command();
 
 program
-  .name('fyt-mcp')
+  .name(MCP_SERVER_NAME)
   .description(`${MCP_SERVER_DISPLAY_NAME} - Управление подключениями MCP сервера`)
-  .version('0.1.0');
+  .version(getPackageVersion());
 
 // Команда connect
 program

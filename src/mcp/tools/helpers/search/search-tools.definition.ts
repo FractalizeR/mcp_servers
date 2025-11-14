@@ -9,13 +9,14 @@
 
 import type { ToolDefinition } from '@mcp/tools/base/index.js';
 
+import { buildToolName } from '@mcp/tools/common/utils/index.js';
 /**
  * Definition builder для SearchToolsTool
  */
 export class SearchToolsDefinition {
   build(): ToolDefinition {
     return {
-      name: 'fyt_mcp_search_tools',
+      name: buildToolName('search_tools'),
       description:
         'Поиск доступных MCP инструментов по запросу. ' +
         'Поддерживает поиск по названию, описанию, категориям и тегам. ' +

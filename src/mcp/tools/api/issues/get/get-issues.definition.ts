@@ -4,6 +4,7 @@
 
 import { BaseToolDefinition, type ToolDefinition } from '@mcp/tools/base/index.js';
 
+import { buildToolName } from '@mcp/tools/common/utils/index.js';
 /**
  * Definition для GetIssuesTool
  *
@@ -16,7 +17,7 @@ import { BaseToolDefinition, type ToolDefinition } from '@mcp/tools/base/index.j
 export class GetIssuesDefinition extends BaseToolDefinition {
   build(): ToolDefinition {
     return {
-      name: 'fyt_mcp_get_issues',
+      name: buildToolName('get_issues'),
       description: this.buildDescription(),
       inputSchema: {
         type: 'object',

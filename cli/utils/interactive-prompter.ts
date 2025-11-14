@@ -4,6 +4,7 @@
 
 import inquirer from 'inquirer';
 import type { MCPClientInfo, MCPServerConfig } from '../connectors/base/connector.interface.js';
+import { DEFAULT_LOG_LEVEL } from '../../src/constants.js';
 
 export class InteractivePrompter {
   /**
@@ -55,7 +56,7 @@ export class InteractivePrompter {
         name: 'logLevel',
         message: 'Уровень логирования:',
         choices: ['info', 'debug', 'warn', 'error'],
-        default: savedConfig?.logLevel || 'info',
+        default: savedConfig?.logLevel || DEFAULT_LOG_LEVEL,
       },
     ]);
 

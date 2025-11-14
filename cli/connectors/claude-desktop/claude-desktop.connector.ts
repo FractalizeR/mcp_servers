@@ -11,7 +11,14 @@ import type {
   ConnectionStatus,
 } from '../base/connector.interface.js';
 import { FileManager } from '../../utils/file-manager.js';
-import { MCP_SERVER_NAME } from '../../../src/constants.js';
+import {
+  MCP_SERVER_NAME,
+  SERVER_ENTRY_POINT,
+  DEFAULT_API_BASE,
+  DEFAULT_LOG_LEVEL,
+  DEFAULT_REQUEST_TIMEOUT,
+  ENV_VAR_NAMES,
+} from '../../../src/constants.js';
 
 interface ClaudeDesktopConfig {
   mcpServers: Record<
@@ -107,13 +114,15 @@ export class ClaudeDesktopConnector extends BaseConnector {
     // Добавить/обновить MCP сервер
     config.mcpServers[MCP_SERVER_NAME] = {
       command: 'node',
-      args: [path.join(serverConfig.projectPath, 'dist/index.js')],
+      args: [path.join(serverConfig.projectPath, SERVER_ENTRY_POINT)],
       env: {
-        YANDEX_TRACKER_TOKEN: serverConfig.token,
-        YANDEX_ORG_ID: serverConfig.orgId,
-        YANDEX_TRACKER_API_BASE: serverConfig.apiBase || 'https://api.tracker.yandex.net',
-        LOG_LEVEL: serverConfig.logLevel || 'info',
-        REQUEST_TIMEOUT: String(serverConfig.requestTimeout || 30000),
+        [ENV_VAR_NAMES.YANDEX_TRACKER_TOKEN]: serverConfig.token,
+        [ENV_VAR_NAMES.YANDEX_ORG_ID]: serverConfig.orgId,
+        [ENV_VAR_NAMES.YANDEX_TRACKER_API_BASE]: serverConfig.apiBase || DEFAULT_API_BASE,
+        [ENV_VAR_NAMES.LOG_LEVEL]: serverConfig.logLevel || DEFAULT_LOG_LEVEL,
+        [ENV_VAR_NAMES.REQUEST_TIMEOUT]: String(
+          serverConfig.requestTimeout || DEFAULT_REQUEST_TIMEOUT
+        ),
       },
     };
 

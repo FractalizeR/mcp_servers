@@ -22,6 +22,12 @@ import type { ToolSearchEngine } from '@mcp/search/tool-search-engine.js';
 import { SearchToolsDefinition } from './search-tools.definition.js';
 import { SearchToolsParamsSchema } from './search-tools.schema.js';
 
+import { buildToolName } from '@mcp/tools/common/utils/index.js';
+import {
+  DEFAULT_TOOL_SEARCH_LIMIT,
+  DEFAULT_TOOL_SEARCH_DETAIL_LEVEL,
+} from '@mcp/search/constants.js';
+
 /**
  * Инструмент для поиска других MCP tools
  *
@@ -35,7 +41,7 @@ export class SearchToolsTool {
    * Статические метаданные для compile-time индексации
    */
   static readonly METADATA: StaticToolMetadata = {
-    name: 'fyt_mcp_search_tools',
+    name: buildToolName('search_tools'),
     description:
       'Поиск доступных MCP инструментов по запросу. ' +
       'Поддерживает поиск по названию, описанию, категориям и тегам. ' +
@@ -96,20 +102,20 @@ export class SearchToolsTool {
       // 2. Логирование начала операции
       this.logger.info('Поиск MCP инструментов', {
         query,
-        detailLevel: detailLevel ?? 'name_and_description',
+        detailLevel: detailLevel ?? DEFAULT_TOOL_SEARCH_DETAIL_LEVEL,
         category,
         isHelper,
-        limit: limit ?? 10,
+        limit: limit ?? DEFAULT_TOOL_SEARCH_LIMIT,
       });
 
       // 3. Выполнение поиска через ToolSearchEngine (wrapped in Promise для async)
       const searchResponse = await Promise.resolve(
         this.searchEngine.search({
           query,
-          detailLevel: detailLevel ?? 'name_and_description',
+          detailLevel: detailLevel ?? DEFAULT_TOOL_SEARCH_DETAIL_LEVEL,
           ...(category !== undefined && { category }),
           ...(isHelper !== undefined && { isHelper }),
-          limit: limit ?? 10,
+          limit: limit ?? DEFAULT_TOOL_SEARCH_LIMIT,
         })
       );
 

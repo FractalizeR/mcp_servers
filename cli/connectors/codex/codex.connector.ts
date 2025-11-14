@@ -12,7 +12,14 @@ import type {
 } from '../base/connector.interface.js';
 import { CommandExecutor } from '../../utils/command-executor.js';
 import { FileManager } from '../../utils/file-manager.js';
-import { MCP_SERVER_NAME } from '../../../src/constants.js';
+import {
+  MCP_SERVER_NAME,
+  SERVER_ENTRY_POINT,
+  DEFAULT_API_BASE,
+  DEFAULT_LOG_LEVEL,
+  DEFAULT_REQUEST_TIMEOUT,
+  ENV_VAR_NAMES,
+} from '../../../src/constants.js';
 
 interface CodexConfig {
   mcp_servers?: Record<
@@ -81,18 +88,18 @@ export class CodexConnector extends BaseConnector {
       'add',
       MCP_SERVER_NAME,
       '--env',
-      `YANDEX_TRACKER_TOKEN=${serverConfig.token}`,
+      `${ENV_VAR_NAMES.YANDEX_TRACKER_TOKEN}=${serverConfig.token}`,
       '--env',
-      `YANDEX_ORG_ID=${serverConfig.orgId}`,
+      `${ENV_VAR_NAMES.YANDEX_ORG_ID}=${serverConfig.orgId}`,
       '--env',
-      `YANDEX_TRACKER_API_BASE=${serverConfig.apiBase || 'https://api.tracker.yandex.net'}`,
+      `${ENV_VAR_NAMES.YANDEX_TRACKER_API_BASE}=${serverConfig.apiBase || DEFAULT_API_BASE}`,
       '--env',
-      `LOG_LEVEL=${serverConfig.logLevel || 'info'}`,
+      `${ENV_VAR_NAMES.LOG_LEVEL}=${serverConfig.logLevel || DEFAULT_LOG_LEVEL}`,
       '--env',
-      `REQUEST_TIMEOUT=${serverConfig.requestTimeout || 30000}`,
+      `${ENV_VAR_NAMES.REQUEST_TIMEOUT}=${serverConfig.requestTimeout || DEFAULT_REQUEST_TIMEOUT}`,
       '--',
       'node',
-      path.join(serverConfig.projectPath, 'dist/index.js'),
+      path.join(serverConfig.projectPath, SERVER_ENTRY_POINT),
     ];
 
     await CommandExecutor.execInteractive('codex', args);

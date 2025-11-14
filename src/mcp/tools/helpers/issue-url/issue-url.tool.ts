@@ -12,6 +12,7 @@ import type { ToolDefinition } from '@mcp/tools/base/index.js';
 import type { ToolCallParams, ToolResult } from '@types';
 import { IssueUrlDefinition } from '@mcp/tools/helpers/issue-url/issue-url.definition.js';
 import { IssueUrlParamsSchema } from '@mcp/tools/helpers/issue-url/issue-url.schema.js';
+import { buildToolName } from '@mcp/tools/common/utils/index.js';
 
 /**
  * Инструмент для получения URL задачи
@@ -28,7 +29,7 @@ export class IssueUrlTool extends BaseTool {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: 'fyt_mcp_get_issue_url',
+    name: buildToolName('get_issue_url'),
     description: 'Получить URL задачи в Яндекс.Трекере',
     category: ToolCategory.URL_GENERATION,
     tags: ['url', 'link', 'helper', 'issue'],

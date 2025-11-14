@@ -3,6 +3,7 @@
  */
 
 import { BaseToolDefinition, type ToolDefinition } from '@mcp/tools/base/index.js';
+import { buildToolName } from '@mcp/tools/common/utils/index.js';
 
 /**
  * Definition для IssueUrlTool
@@ -15,7 +16,7 @@ import { BaseToolDefinition, type ToolDefinition } from '@mcp/tools/base/index.j
 export class IssueUrlDefinition extends BaseToolDefinition {
   build(): ToolDefinition {
     return {
-      name: 'fyt_mcp_issue_get_url',
+      name: buildToolName('get_issue_url'),
       description: this.buildDescription(),
       inputSchema: {
         type: 'object',

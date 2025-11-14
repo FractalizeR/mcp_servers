@@ -19,6 +19,7 @@ import type {
   ToolSearchResultItem,
 } from './types.js';
 import type { ToolRegistry } from '@mcp/tool-registry.js';
+import { DEFAULT_TOOL_SEARCH_LIMIT, DEFAULT_TOOL_SEARCH_DETAIL_LEVEL } from './constants.js';
 
 /**
  * Поисковый движок для tools
@@ -83,10 +84,13 @@ export class ToolSearchEngine {
 
     // Применяем лимит
     const totalFound = searchResults.length;
-    const limited = searchResults.slice(0, params.limit || 10);
+    const limited = searchResults.slice(0, params.limit || DEFAULT_TOOL_SEARCH_LIMIT);
 
     // Форматируем результаты
-    const tools = this.formatResults(limited, params.detailLevel || 'name_and_description');
+    const tools = this.formatResults(
+      limited,
+      params.detailLevel || DEFAULT_TOOL_SEARCH_DETAIL_LEVEL
+    );
 
     return {
       tools,

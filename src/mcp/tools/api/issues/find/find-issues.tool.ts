@@ -15,6 +15,7 @@ import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { FindIssuesDefinition } from '@mcp/tools/api/issues/find/find-issues.definition.js';
 import { FindIssuesParamsSchema } from '@mcp/tools/api/issues/find/find-issues.schema.js';
 
+import { buildToolName } from '@mcp/tools/common/utils/index.js';
 /**
  * Инструмент для поиска задач
  *
@@ -34,7 +35,7 @@ export class FindIssuesTool extends BaseTool {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: 'fyt_mcp_find_issues',
+    name: buildToolName('find_issues'),
     description: 'Найти задачи по JQL запросу',
     category: ToolCategory.ISSUES,
     tags: ['issue', 'find', 'search', 'jql', 'query'],

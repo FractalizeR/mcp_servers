@@ -15,6 +15,7 @@ import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { GetIssuesDefinition } from '@mcp/tools/api/issues/get/get-issues.definition.js';
 import { GetIssuesParamsSchema } from '@mcp/tools/api/issues/get/get-issues.schema.js';
 
+import { buildToolName } from '@mcp/tools/common/utils/index.js';
 /**
  * Инструмент для получения информации о задачах
  *
@@ -35,7 +36,7 @@ export class GetIssuesTool extends BaseTool {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: 'fyt_mcp_get_issues',
+    name: buildToolName('get_issues'),
     description: 'Получить задачи по ключам (batch операция)',
     category: ToolCategory.ISSUES,
     tags: ['issue', 'get', 'batch', 'read'],

@@ -10,10 +10,14 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
 import { loadConfig } from '@infrastructure/config.js';
 import type { Logger } from '@infrastructure/logging/index.js';
 import type { ToolRegistry } from '@mcp/tool-registry.js';
+import { MCP_SERVER_NAME } from './constants.js';
 
 // DI Container (Composition Root)
 import { createContainer, TYPES } from '@composition-root/index.js';
@@ -75,6 +79,21 @@ function setupSignalHandlers(server: Server, logger: Logger): void {
 }
 
 /**
+ * Получение версии из package.json
+ */
+function getPackageVersion(): string {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const packageJsonPath = join(__dirname, '..', 'package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { version: string };
+    return packageJson.version;
+  } catch {
+    return '0.0.0'; // fallback если не удалось прочитать
+  }
+}
+
+/**
  * Основная функция запуска сервера
  */
 async function main(): Promise<void> {
@@ -104,8 +123,8 @@ async function main(): Promise<void> {
     // Создание MCP сервера
     const server = new Server(
       {
-        name: 'yandex-tracker-mcp',
-        version: '0.1.0',
+        name: MCP_SERVER_NAME,
+        version: getPackageVersion(),
       },
       {
         capabilities: {
