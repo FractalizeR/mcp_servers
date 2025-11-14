@@ -3,10 +3,11 @@
  */
 
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
+import type { MockInstance } from 'vitest';
 import { Logger } from '@infrastructure/logger.js';
 
 describe('Logger', () => {
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn<typeof console.error>>;
+  let consoleErrorSpy: MockInstance;
 
   beforeEach(() => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

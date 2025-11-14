@@ -19,7 +19,7 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run --testPathPattern='.*.test.ts$'",
-    "validate": "npm run lint && npm run typecheck && npm run test && npm run build && npm run build:bundle",
+    "validate": "npm run lint && npm run typecheck:all && npm run test && npm run build && npm run build:bundle",
     "prepublish": "npm run clean && npm run build:bundle"
   },
   "keywords": [

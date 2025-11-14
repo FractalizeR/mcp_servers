@@ -13,34 +13,51 @@ import type { Issue } from '@domain/entities/issue.entity.js';
 
 describe('GetIssuesOperation', () => {
   let operation: GetIssuesOperation;
-  let httpClient: Mock<HttpClient>;
-  let retryHandler: Mock<RetryHandler>;
-  let cacheManager: Mock<CacheManager>;
-  let logger: Mock<Logger>;
+  let httpClient: {
+    get: Mock;
+  };
+  let retryHandler: {
+    executeWithRetry: Mock;
+  };
+  let cacheManager: {
+    get: Mock;
+    set: Mock;
+  };
+  let logger: {
+    info: Mock;
+    warn: Mock;
+    error: Mock;
+    debug: Mock;
+  };
 
   beforeEach(() => {
     // Моки зависимостей
     httpClient = {
-      get: vi.fn<typeof httpClient.get>(),
-    } as unknown as Mock<HttpClient>;
+      get: vi.fn(),
+    };
 
     retryHandler = {
       executeWithRetry: vi.fn(<T>(fn: () => Promise<T>) => fn()),
-    } as unknown as Mock<RetryHandler>;
+    };
 
     cacheManager = {
-      get: vi.fn<typeof cacheManager.get>(),
-      set: vi.fn<typeof cacheManager.set>(),
-    } as unknown as Mock<CacheManager>;
+      get: vi.fn(),
+      set: vi.fn(),
+    };
 
     logger = {
-      info: vi.fn<typeof logger.info>(),
-      warn: vi.fn<typeof logger.warn>(),
-      error: vi.fn<typeof logger.error>(),
-      debug: vi.fn<typeof logger.debug>(),
-    } as unknown as Mock<Logger>;
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+    };
 
-    operation = new GetIssuesOperation(httpClient, retryHandler, cacheManager, logger);
+    operation = new GetIssuesOperation(
+      httpClient as unknown as HttpClient,
+      retryHandler as unknown as RetryHandler,
+      cacheManager as unknown as CacheManager,
+      logger as unknown as Logger
+    );
   });
 
   it('должен вернуть пустой массив для пустого входного массива', async () => {
