@@ -2,7 +2,7 @@
  * Тесты для ExponentialBackoffStrategy
  */
 
-import {describe, it, expect} from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { ExponentialBackoffStrategy } from '@infrastructure/http/retry/exponential-backoff.strategy.js';
 import type { ApiError } from '@types';
 

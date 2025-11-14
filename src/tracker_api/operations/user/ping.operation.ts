@@ -59,9 +59,7 @@ export class PingOperation extends BaseOperation {
     const cacheKey = EntityCacheKey.createKey(EntityType.USER, 'myself');
 
     return this.withCache(cacheKey, async () => {
-      return this.withRetry(() =>
-        this.httpClient.get<User>('/v3/myself')
-      );
+      return this.withRetry(() => this.httpClient.get<User>('/v3/myself'));
     });
   }
 }

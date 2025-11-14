@@ -51,10 +51,18 @@ export abstract class BaseToolDefinition {
       description,
     };
 
-    if (options?.pattern) {schema['pattern'] = options.pattern;}
-    if (options?.minLength !== undefined) {schema['minLength'] = options.minLength;}
-    if (options?.maxLength !== undefined) {schema['maxLength'] = options.maxLength;}
-    if (options?.examples) {schema['examples'] = options.examples;}
+    if (options?.pattern) {
+      schema['pattern'] = options.pattern;
+    }
+    if (options?.minLength !== undefined) {
+      schema['minLength'] = options.minLength;
+    }
+    if (options?.maxLength !== undefined) {
+      schema['maxLength'] = options.maxLength;
+    }
+    if (options?.examples) {
+      schema['examples'] = options.examples;
+    }
 
     return schema;
   }
@@ -75,9 +83,15 @@ export abstract class BaseToolDefinition {
       description,
     };
 
-    if (options?.minimum !== undefined) {schema['minimum'] = options.minimum;}
-    if (options?.maximum !== undefined) {schema['maximum'] = options.maximum;}
-    if (options?.examples) {schema['examples'] = options.examples;}
+    if (options?.minimum !== undefined) {
+      schema['minimum'] = options.minimum;
+    }
+    if (options?.maximum !== undefined) {
+      schema['maximum'] = options.maximum;
+    }
+    if (options?.examples) {
+      schema['examples'] = options.examples;
+    }
 
     return schema;
   }
@@ -100,9 +114,15 @@ export abstract class BaseToolDefinition {
       items: itemSchema,
     };
 
-    if (options?.minItems !== undefined) {schema['minItems'] = options.minItems;}
-    if (options?.maxItems !== undefined) {schema['maxItems'] = options.maxItems;}
-    if (options?.examples) {schema['examples'] = options.examples;}
+    if (options?.minItems !== undefined) {
+      schema['minItems'] = options.minItems;
+    }
+    if (options?.maxItems !== undefined) {
+      schema['maxItems'] = options.maxItems;
+    }
+    if (options?.examples) {
+      schema['examples'] = options.examples;
+    }
 
     return schema;
   }
@@ -123,7 +143,9 @@ export abstract class BaseToolDefinition {
       enum: values,
     };
 
-    if (options?.examples) {schema['examples'] = options.examples;}
+    if (options?.examples) {
+      schema['examples'] = options.examples;
+    }
 
     return schema;
   }

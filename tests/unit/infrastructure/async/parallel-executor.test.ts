@@ -2,7 +2,7 @@
  * Unit тесты для ParallelExecutor
  */
 
-import {describe, it, expect, beforeEach, vi} from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ParallelExecutor } from '@infrastructure/async/parallel-executor.js';
 import type { Logger } from '@infrastructure/logging/index.js';
 import type { ApiError } from '@types';
@@ -180,9 +180,7 @@ describe('ParallelExecutor', () => {
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining('Завершено параллельное выполнение за')
       );
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Успешно: 1/1')
-      );
+      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Успешно: 1/1'));
     });
 
     it('должен логировать неудачные операции', async () => {
@@ -398,7 +396,10 @@ describe('ParallelExecutor', () => {
   describe('валидация maxBatchSize', () => {
     it('должен выбросить ошибку, если количество операций превышает maxBatchSize', async () => {
       // Arrange
-      const operations = Array.from({ length: 101 }, (_, i) => async (): Promise<string> => `result${i}`);
+      const operations = Array.from(
+        { length: 101 },
+        (_, i) => async (): Promise<string> => `result${i}`
+      );
 
       // Act & Assert
       await expect(executor.executeParallel(operations, 'test operation')).rejects.toThrow(
@@ -408,7 +409,10 @@ describe('ParallelExecutor', () => {
 
     it('должен успешно выполнить операции, если их количество равно maxBatchSize', async () => {
       // Arrange
-      const operations = Array.from({ length: 100 }, (_, i) => async (): Promise<string> => `result${i}`);
+      const operations = Array.from(
+        { length: 100 },
+        (_, i) => async (): Promise<string> => `result${i}`
+      );
 
       // Act
       const result = await executor.executeParallel(operations, 'test operation');
@@ -441,7 +445,10 @@ describe('ParallelExecutor', () => {
       });
 
       // Act
-      const result = await executorWithSmallLimit.executeParallel(operations, 'throttled operations');
+      const result = await executorWithSmallLimit.executeParallel(
+        operations,
+        'throttled operations'
+      );
 
       // Assert
       expect(result.successCount).toBe(10);

@@ -180,10 +180,7 @@ describe('GetIssuesTool', () => {
         const result = await tool.execute({ issueKeys: ['QUEUE-123', 'QUEUE-456'] });
 
         expect(result.isError).toBeUndefined();
-        expect(mockTrackerFacade.getIssues).toHaveBeenCalledWith([
-          'QUEUE-123',
-          'QUEUE-456',
-        ]);
+        expect(mockTrackerFacade.getIssues).toHaveBeenCalledWith(['QUEUE-123', 'QUEUE-456']);
 
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
           success: boolean;

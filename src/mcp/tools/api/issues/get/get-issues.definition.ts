@@ -82,10 +82,7 @@ export class GetIssuesDefinition extends BaseToolDefinition {
       {
         minItems: 1,
         maxItems: 100,
-        examples: [
-          ['PROJ-123'],
-          ['PROJ-123', 'PROJ-456', 'PROJ-789'],
-        ],
+        examples: [['PROJ-123'], ['PROJ-123', 'PROJ-456', 'PROJ-789']],
       }
     );
   }

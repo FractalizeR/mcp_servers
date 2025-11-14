@@ -27,11 +27,7 @@ export class ExponentialBackoffStrategy implements RetryStrategy {
    * @param baseDelayMs - базовая задержка в миллисекундах (по умолчанию 1000)
    * @param maxDelayMs - максимальная задержка в миллисекундах (по умолчанию 10000)
    */
-  constructor(
-    maxRetries: number = 3,
-    baseDelayMs: number = 1000,
-    maxDelayMs: number = 10000
-  ) {
+  constructor(maxRetries: number = 3, baseDelayMs: number = 1000, maxDelayMs: number = 10000) {
     this.maxRetries = maxRetries;
     this.baseDelay = baseDelayMs;
     this.maxDelay = maxDelayMs;
@@ -45,13 +41,13 @@ export class ExponentialBackoffStrategy implements RetryStrategy {
 
     // Список повторяемых статус-кодов (используем enum для типобезопасности)
     const retryableStatusCodes: HttpStatusCode[] = [
-      HttpStatusCode.NETWORK_ERROR,         // 0: нет ответа от сервера
-      HttpStatusCode.REQUEST_TIMEOUT,       // 408: Request Timeout
-      HttpStatusCode.TOO_MANY_REQUESTS,     // 429: Rate Limiting
+      HttpStatusCode.NETWORK_ERROR, // 0: нет ответа от сервера
+      HttpStatusCode.REQUEST_TIMEOUT, // 408: Request Timeout
+      HttpStatusCode.TOO_MANY_REQUESTS, // 429: Rate Limiting
       HttpStatusCode.INTERNAL_SERVER_ERROR, // 500: Internal Server Error
-      HttpStatusCode.BAD_GATEWAY,           // 502: Bad Gateway
-      HttpStatusCode.SERVICE_UNAVAILABLE,   // 503: Service Unavailable
-      HttpStatusCode.GATEWAY_TIMEOUT,       // 504: Gateway Timeout
+      HttpStatusCode.BAD_GATEWAY, // 502: Bad Gateway
+      HttpStatusCode.SERVICE_UNAVAILABLE, // 503: Service Unavailable
+      HttpStatusCode.GATEWAY_TIMEOUT, // 504: Gateway Timeout
     ];
 
     return retryableStatusCodes.includes(error.statusCode);

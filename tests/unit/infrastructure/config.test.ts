@@ -2,7 +2,7 @@
  * Unit тесты для модуля конфигурации
  */
 
-import {describe, it, expect, beforeEach, afterEach} from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { loadConfig } from '@infrastructure/config.js';
 
 describe('loadConfig', () => {
@@ -45,7 +45,9 @@ describe('loadConfig', () => {
     process.env['YANDEX_ORG_ID'] = 'test-org';
     process.env['YANDEX_CLOUD_ORG_ID'] = 'test-cloud-org';
 
-    expect(() => loadConfig()).toThrow('Нельзя использовать YANDEX_ORG_ID и YANDEX_CLOUD_ORG_ID одновременно');
+    expect(() => loadConfig()).toThrow(
+      'Нельзя использовать YANDEX_ORG_ID и YANDEX_CLOUD_ORG_ID одновременно'
+    );
   });
 
   it('должен принять YANDEX_ORG_ID (Яндекс 360)', () => {

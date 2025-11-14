@@ -183,9 +183,9 @@ async execute(key: string, data: UpdateIssueDto): Promise<IssueWithUnknownFields
 ### Архитектура DI модуля
 
 **Файлы:**
-- `src/infrastructure/di/types.ts` — Symbol-based токены для всех зависимостей
-- `src/infrastructure/di/container.ts` — конфигурация InversifyJS контейнера
-- `src/infrastructure/di/index.ts` — публичный API (TYPES, createContainer)
+- `src/composition-root/types.ts` — Symbol-based токены для всех зависимостей
+- `src/composition-root/container.ts` — конфигурация InversifyJS контейнера
+- `src/composition-root/index.ts` — публичный API (TYPES, createContainer)
 
 ### Symbol-based tokens (TYPES)
 
@@ -197,7 +197,7 @@ async execute(key: string, data: UpdateIssueDto): Promise<IssueWithUnknownFields
 3. Явный контракт (все зависимости в `types.ts`)
 4. Поддержка multiple bindings
 
-**Файл:** `src/infrastructure/di/types.ts`
+**Файл:** `src/composition-root/types.ts`
 
 ### Конфигурация контейнера
 
@@ -206,7 +206,7 @@ async execute(key: string, data: UpdateIssueDto): Promise<IssueWithUnknownFields
 - `toDynamicValue()` — гибкое создание зависимостей с доступом к контейнеру
 - Модульная структура bind функций (по слоям: HTTP, Cache, Operations, Tools)
 
-**Файл:** `src/infrastructure/di/container.ts`
+**Файл:** `src/composition-root/container.ts`
 
 ### Использование в коде
 
@@ -431,8 +431,8 @@ results.forEach((result) => {
 3. Реализовать метод `execute(...)`
 4. Экспортировать в `operations/{feature}/index.ts`
 5. Добавить метод в `YandexTrackerFacade` (`src/tracker_api/facade/`)
-6. Зарегистрировать в `src/infrastructure/di/container.ts` (bindOperations)
-7. Добавить токен в `src/infrastructure/di/types.ts`
+6. Зарегистрировать в `src/composition-root/container.ts` (bindOperations)
+7. Добавить токен в `src/composition-root/types.ts`
 8. Написать тесты в `tests/unit/tracker_api/operations/{feature}/{name}.operation.test.ts`
 
 **Чек-лист:** см. CLAUDE.md (секция "Добавление Operation")
@@ -444,11 +444,59 @@ results.forEach((result) => {
 3. Реализовать `getDefinition()` + `execute()`
 4. Использовать `ResponseFieldFilter.filter()` перед возвратом
 5. Экспортировать в `src/mcp/tools/index.ts`
-6. Зарегистрировать в `src/infrastructure/di/container.ts` (bindTools)
-7. Добавить токен в `src/infrastructure/di/types.ts`
+6. Зарегистрировать в `src/composition-root/container.ts` (bindTools)
+7. Добавить токен в `src/composition-root/types.ts`
 8. Написать тесты в `tests/unit/mcp/tools/{name}.tool.test.ts`
 
 **Чек-лист:** см. CLAUDE.md (секция "Добавление Tool")
+
+---
+
+## 🔒 Архитектурные правила (dependency-cruiser)
+
+Проект использует `dependency-cruiser` для автоматической валидации архитектурных правил.
+
+### Конфигурация
+
+**Файл:** `.dependency-cruiser.cjs`
+
+### Правила
+
+1. **Layered Architecture**
+   - `tracker_api` не импортирует `mcp`
+   - `infrastructure` не импортирует бизнес-слои (`tracker_api`, `mcp`, `composition-root`)
+
+2. **MCP Isolation**
+   - MCP tools используют только `Facade`, не `Operations` напрямую
+   - Разрешены импорты `entities` и `dto` для типов
+
+3. **Operations Isolation**
+   - Operations импортируются только:
+     - Через `YandexTrackerFacade`
+     - В `composition-root/container.ts` (DI регистрация)
+     - Внутри `operations/` (между собой)
+
+4. **Composition Root Top-Level**
+   - `composition-root` импортируется только в `src/index.ts`
+   - Файлы внутри `composition-root` могут импортировать друг друга
+
+5. **Циклические зависимости**
+   - Запрещены (severity: warn)
+
+### Использование
+
+```bash
+# Проверка правил
+npm run depcruise
+
+# Генерация графа зависимостей (SVG)
+npm run depcruise:graph
+
+# Генерация графа зависимостей (HTML)
+npm run depcruise:graph:html
+```
+
+**Интеграция в CI:** правила проверяются в `npm run validate`
 
 ---
 

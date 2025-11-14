@@ -50,10 +50,7 @@ export class PingTool extends BaseTool {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      return this.formatError(
-        'Ошибка при проверке подключения к API Яндекс.Трекера',
-        error
-      );
+      return this.formatError('Ошибка при проверке подключения к API Яндекс.Трекера', error);
     }
   }
 }

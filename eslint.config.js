@@ -1,6 +1,7 @@
 import eslint from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
+import prettierConfig from 'eslint-config-prettier';
 
 export default [
   {
@@ -89,5 +90,7 @@ export default [
       'eqeqeq': ['error', 'always'],
       'curly': ['error', 'all']
     }
-  }
+  },
+  // Prettier config должен быть последним, чтобы отключить конфликтующие правила
+  prettierConfig
 ];

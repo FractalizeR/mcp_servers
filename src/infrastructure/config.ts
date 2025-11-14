@@ -77,15 +77,15 @@ function validateOrgIds(
   if (!hasOrgId && !hasCloudOrgId) {
     throw new Error(
       'Необходимо указать ID организации. ' +
-      'Используйте YANDEX_ORG_ID (для Яндекс 360 для бизнеса) ' +
-      'или YANDEX_CLOUD_ORG_ID (для Yandex Cloud Organization).'
+        'Используйте YANDEX_ORG_ID (для Яндекс 360 для бизнеса) ' +
+        'или YANDEX_CLOUD_ORG_ID (для Yandex Cloud Organization).'
     );
   }
 
   if (hasOrgId && hasCloudOrgId) {
     throw new Error(
       'Нельзя использовать YANDEX_ORG_ID и YANDEX_CLOUD_ORG_ID одновременно. ' +
-      'Укажите только один из них.'
+        'Укажите только один из них.'
     );
   }
 
@@ -105,7 +105,7 @@ export function loadConfig(): ServerConfig {
   if (!token || token.trim() === '') {
     throw new Error(
       'YANDEX_TRACKER_TOKEN не установлен. ' +
-      'Получите OAuth токен в настройках Яндекс и добавьте в конфигурацию.'
+        'Получите OAuth токен в настройках Яндекс и добавьте в конфигурацию.'
     );
   }
 
@@ -116,13 +116,17 @@ export function loadConfig(): ServerConfig {
   );
 
   // Используем || для дефолтных значений, так как пустая строка должна быть заменена
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-  const apiBase = process.env['YANDEX_TRACKER_API_BASE']?.trim() || 'https://api.tracker.yandex.net';
+   
+  const apiBase =
+    process.env['YANDEX_TRACKER_API_BASE']?.trim() || 'https://api.tracker.yandex.net';
   // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   const logLevel = validateLogLevel(process.env['LOG_LEVEL']?.trim() || 'info');
   const requestTimeout = validateTimeout(process.env['REQUEST_TIMEOUT'], 30000);
   const maxBatchSize = validateMaxBatchSize(process.env['MAX_BATCH_SIZE'], 200);
-  const maxConcurrentRequests = validateMaxConcurrentRequests(process.env['MAX_CONCURRENT_REQUESTS'], 5);
+  const maxConcurrentRequests = validateMaxConcurrentRequests(
+    process.env['MAX_CONCURRENT_REQUESTS'],
+    5
+  );
 
   // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   const logsDir = process.env['LOGS_DIR']?.trim() || './logs';

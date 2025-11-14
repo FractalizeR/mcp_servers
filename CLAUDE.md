@@ -69,6 +69,7 @@
 - **Axios** (HTTP client)
 - **Pino** + **rotating-file-stream** (production logging с автоматической ротацией)
 - **Vitest** (тесты, покрытие ≥80%)
+- **dependency-cruiser** (валидация архитектурных правил)
 - **MCP SDK** (Model Context Protocol)
 - **API:** Яндекс.Трекер v3 (ТОЛЬКО `/v3/*` endpoints)
 
@@ -107,15 +108,18 @@ function process(data: string): ProcessedData { }
 
 ### 3. Dependency Injection (InversifyJS)
 
+**ВАЖНО:** DI контейнер находится в `src/composition-root/` — это высший слой архитектуры, выше `infrastructure`, `tracker_api`, `mcp`.
+
 ```typescript
 // ❌ НЕ ТАК (bind по классу)
 container.bind(HttpClient).toSelf();
 
-// ✅ ТАК (Symbol-based TYPES)
+// ✅ ТАК (Symbol-based TYPES из @composition-root)
+import { TYPES } from '@composition-root/types.js';
 container.bind<HttpClient>(TYPES.HttpClient).toDynamicValue(() => { ... });
 ```
 
-- Symbol-based tokens (`TYPES.*`), НЕ bind по классу
+- Symbol-based tokens (`TYPES.*` из `@composition-root`), НЕ bind по классу
 - `toDynamicValue()`, НЕ декораторы `@injectable()`
 - `defaultScope: 'Singleton'` (убирает boilerplate `.inSingletonScope()`)
 - Подробно: [docs/di-usage-example.md](./docs/di-usage-example.md)
@@ -185,10 +189,40 @@ logger.error('Operation failed', error, { requestId: '456' });
 
 - Unit тесты: `tests/unit/` (зеркалируют `src/`)
 - Покрытие: ≥80%
-- Валидация: `npm run validate` (lint + typecheck + test + build)
+- Валидация: `npm run validate` (lint + typecheck + test + **depcruise** + build)
 - ✅ **Vitest** с нативной поддержкой ESM и TypeScript
 - ✅ **TypeScript:** `module: "ES2022"`, `moduleResolution: "bundler"`
 - ✅ Импорты используют расширения `.js` для ESM совместимости
+
+### 9. Архитектурные правила (dependency-cruiser)
+
+**Автоматическая валидация:** `npm run depcruise`
+
+Правила (см. `.dependency-cruiser.cjs`):
+- ✅ **Layered architecture:** `tracker_api` не импортирует `mcp`, `infrastructure` не импортирует бизнес-слои
+- ✅ **MCP isolation:** MCP tools используют только Facade, не Operations напрямую
+- ✅ **Operations isolation:** Operations импортируются только через Facade или Composition Root
+- ✅ **Composition Root top-level:** Только `index.ts` может импортировать `@composition-root`
+- ✅ **Циклические зависимости:** запрещены
+
+**Визуализация графа:**
+- `npm run depcruise:graph` → `dependency-graph.svg`
+- `npm run depcruise:graph:html` → `dependency-graph.html`
+
+### 10. Форматирование кода (Prettier + Husky)
+
+**Автоматическое форматирование:** Pre-commit hook через Husky + lint-staged
+
+- ✅ **Prettier** форматирует код автоматически при `git commit`
+- ✅ **lint-staged** запускает `prettier --write` и `eslint --fix` на staged файлах
+- ✅ Конфигурация: `.prettierrc.json` (single quotes, 100 chars, 2 spaces)
+- ⚠️ **Для ИИ агентов:** НЕ форматируй код вручную — Prettier сделает это при коммите
+- ⚠️ **npm run validate НЕ проверяет форматирование** — это делается автоматически в pre-commit
+- 🔓 **Обход хука:** `git commit --no-verify` (только в исключительных случаях)
+
+**Ручное форматирование (опционально):**
+- `npm run format` — отформатировать весь код (если нужно проверить до коммита)
+- `npm run format:check` — проверить форматирование без изменений
 
 ---
 
@@ -217,8 +251,8 @@ logger.error('Operation failed', error, { requestId: '456' });
 
 ### Добавление зависимости в DI
 
-- [ ] `src/infrastructure/di/types.ts` → `TYPES.NewService: Symbol.for('NewService')`
-- [ ] `src/infrastructure/di/container.ts` → `container.bind<T>(TYPES.NewService).toDynamicValue(() => { ... })`
+- [ ] `src/composition-root/types.ts` → `TYPES.NewService: Symbol.for('NewService')`
+- [ ] `src/composition-root/container.ts` → `container.bind<T>(TYPES.NewService).toDynamicValue(() => { ... })`
 - [ ] Использование: `container.get<T>(TYPES.NewService)`
 
 ### Добавление Operation
@@ -228,10 +262,10 @@ logger.error('Operation failed', error, { requestId: '456' });
 - [ ] Метод `execute()` реализован
 - [ ] Экспорт в `operations/{feature}/index.ts`
 - [ ] Метод в `YandexTrackerFacade` (`src/tracker_api/facade/`)
-- [ ] Регистрация в `src/infrastructure/di/container.ts` (bindOperations)
-- [ ] Регистрация в `src/infrastructure/di/types.ts`
+- [ ] Регистрация в `src/composition-root/container.ts` (bindOperations)
+- [ ] Регистрация в `src/composition-root/types.ts`
 - [ ] `tests/unit/tracker_api/operations/{feature}/{name}.operation.test.ts`
-- [ ] `npm run validate` — проходит
+- [ ] `npm run validate` — проходит (включая depcruise)
 
 ### Добавление Entity
 
@@ -255,6 +289,7 @@ logger.error('Operation failed', error, { requestId: '456' });
 - [ ] Все TODO в коде закрыты
 - [ ] CLAUDE.md актуален (если изменили правила)
 - [ ] ARCHITECTURE.md актуален (если изменили архитектуру)
+- [ ] ⚠️ **НЕ форматируй код вручную** — pre-commit hook сделает это автоматически
 
 ---
 
@@ -262,17 +297,20 @@ logger.error('Operation failed', error, { requestId: '456' });
 
 ```
 src/
-├── infrastructure/       # Инфраструктурный слой (переиспользуемый)
+├── composition-root/    # Высший слой: Composition Root (DI контейнер)
+│   ├── types.ts         # Symbol-based токены (TYPES)
+│   ├── container.ts     # Создание и конфигурация DI контейнера
+│   └── index.ts         # Публичный API
+├── infrastructure/      # Инфраструктурный слой (переиспользуемый)
 │   ├── http/            # HTTP клиент + retry + error mapping
 │   ├── cache/           # Кеширование (NoOpCache, EntityCacheKey)
-│   ├── di/              # DI контейнер (InversifyJS)
 │   ├── async/           # Параллелизация (ParallelExecutor)
 │   ├── logging/         # Pino логирование (Logger, LoggerConfig)
 │   └── config.ts        # Конфигурация из env
 ├── tracker_api/         # Слой работы с Яндекс.Трекер API
 │   ├── entities/        # Issue, User
-│   ├── operations/      # API v3 операции (issue/, user/)
-│   └── facade/          # YandexTrackerFacade
+│   ├── operations/      # API v3 операции (internal, через Facade)
+│   └── facade/          # YandexTrackerFacade (публичный API)
 ├── mcp/                 # Application layer (MCP сервер)
 │   ├── tools/           # MCP tools
 │   │   ├── base/        # BaseTool, BaseToolDefinition

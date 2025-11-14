@@ -10,17 +10,14 @@
 import 'reflect-metadata';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
 import { loadConfig } from '@infrastructure/config.js';
 import type { Logger } from '@infrastructure/logging/index.js';
 import type { ToolRegistry } from '@mcp/tool-registry.js';
 
-// DI Container
-import { createContainer, TYPES } from '@infrastructure/di/index.js';
+// DI Container (Composition Root)
+import { createContainer, TYPES } from '@composition-root/index.js';
 
 /**
  * Настройка обработчиков запросов MCP сервера

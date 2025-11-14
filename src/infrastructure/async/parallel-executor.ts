@@ -110,13 +110,13 @@ export class ParallelExecutor {
     if (totalCount > this.maxBatchSize) {
       throw new Error(
         `Batch size ${totalCount} exceeds maximum allowed ${this.maxBatchSize}. ` +
-        `Increase MAX_BATCH_SIZE or split the request into multiple batches.`
+          `Increase MAX_BATCH_SIZE or split the request into multiple batches.`
       );
     }
 
     this.logger.info(
       `Начинаю параллельное выполнение ${totalCount} операций: ${operationName} ` +
-      `(concurrency limit: ${this.maxConcurrentRequests})`
+        `(concurrency limit: ${this.maxConcurrentRequests})`
     );
 
     const startTime = Date.now();
@@ -165,9 +165,7 @@ export class ParallelExecutor {
   /**
    * Преобразует PromiseSettledResult в наш формат OperationResult
    */
-  private mapSettledResults<T>(
-    settledResults: PromiseSettledResult<T>[]
-  ): OperationResult<T>[] {
+  private mapSettledResults<T>(settledResults: PromiseSettledResult<T>[]): OperationResult<T>[] {
     return settledResults.map((result, index): OperationResult<T> => {
       if (result.status === 'fulfilled') {
         return {
@@ -208,23 +206,18 @@ export class ParallelExecutor {
   ): void {
     this.logger.info(
       `Завершено параллельное выполнение за ${duration}ms. ` +
-      `Успешно: ${stats.successCount}/${stats.totalCount}, ` +
-      `Ошибок: ${stats.errorCount}/${stats.totalCount}`
+        `Успешно: ${stats.successCount}/${stats.totalCount}, ` +
+        `Ошибок: ${stats.errorCount}/${stats.totalCount}`
     );
   }
 
   /**
    * Логирует неудачные операции
    */
-  private logFailures<T>(
-    results: OperationResult<T>[],
-    operationName: string
-  ): void {
+  private logFailures<T>(results: OperationResult<T>[], operationName: string): void {
     results.forEach((result, idx) => {
       if (result.status === 'error') {
-        this.logger.warn(
-          `Операция #${idx} (${operationName}) не удалась: ${result.error.message}`
-        );
+        this.logger.warn(`Операция #${idx} (${operationName}) не удалась: ${result.error.message}`);
       }
     });
   }
@@ -281,7 +274,9 @@ export class ParallelExecutor {
    */
   static getSuccessfulResults<T>(result: BatchResult<T>): T[] {
     return result.results
-      .filter((r): r is Extract<OperationResult<T>, { status: 'success' }> => r.status === 'success')
+      .filter(
+        (r): r is Extract<OperationResult<T>, { status: 'success' }> => r.status === 'success'
+      )
       .map((r) => r.data);
   }
 

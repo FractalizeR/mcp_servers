@@ -2,7 +2,7 @@
  * Тесты для EntityCacheKey
  */
 
-import {describe, it, expect} from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { EntityCacheKey, EntityType } from '@infrastructure/cache/entity-cache-key.js';
 
 describe('EntityCacheKey', () => {

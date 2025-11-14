@@ -2,7 +2,7 @@
  * Тесты для ErrorMapper
  */
 
-import {describe, it, expect} from 'vitest';
+import { describe, it, expect } from 'vitest';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ErrorMapper } from '@infrastructure/http/error/error-mapper.js';
 import type { ApiError } from '@types';
@@ -10,9 +10,7 @@ import type { ApiError } from '@types';
 /**
  * Вспомогательная функция для создания мок AxiosError
  */
-function createAxiosError(
-  overrides: Partial<AxiosError> = {}
-): AxiosError {
+function createAxiosError(overrides: Partial<AxiosError> = {}): AxiosError {
   const baseConfig: AxiosRequestConfig = {
     url: '/test',
     method: 'GET',
@@ -33,10 +31,7 @@ function createAxiosError(
 /**
  * Вспомогательная функция для создания мок AxiosResponse
  */
-function createAxiosResponse(
-  status: number,
-  data: unknown = {}
-): AxiosResponse {
+function createAxiosResponse(status: number, data: unknown = {}): AxiosResponse {
   return {
     data,
     status,

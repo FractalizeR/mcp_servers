@@ -4,6 +4,7 @@ import { resolve } from 'path';
 export default defineConfig({
   resolve: {
     alias: {
+      '@composition-root': resolve(__dirname, './src/composition-root'),
       '@infrastructure': resolve(__dirname, './src/infrastructure'),
       '@tracker_api': resolve(__dirname, './src/tracker_api'),
       '@mcp': resolve(__dirname, './src/mcp'),

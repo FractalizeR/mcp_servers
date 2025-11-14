@@ -2,7 +2,7 @@
  * Тесты для RetryHandler
  */
 
-import {describe, it, expect, beforeEach, vi} from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { RetryHandler } from '@infrastructure/http/retry/retry-handler.js';
 import type { RetryStrategy } from '@infrastructure/http/retry/retry-strategy.interface.js';
@@ -77,7 +77,8 @@ describe('RetryHandler', () => {
     describe('Retry при ошибках', () => {
       it('должен повторить запрос после неудачной попытки', async () => {
         const error: ApiError = { statusCode: 500, message: 'Server Error' };
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
@@ -92,7 +93,8 @@ describe('RetryHandler', () => {
 
       it('должен повторить запрос несколько раз до успеха', async () => {
         const error: ApiError = { statusCode: 503, message: 'Service Unavailable' };
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
@@ -110,7 +112,8 @@ describe('RetryHandler', () => {
 
         vi.mocked(mockStrategy.getDelay).mockImplementation(() => customDelay);
 
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
@@ -187,34 +190,28 @@ describe('RetryHandler', () => {
     describe('Логирование', () => {
       it('должен логировать информацию о повторе', async () => {
         const error: ApiError = { statusCode: 500, message: 'Server Error' };
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
         await retryHandler.executeWithRetry(fn);
 
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Попытка 1/')
-        );
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Server Error')
-        );
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Ожидание')
-        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Попытка 1/'));
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Server Error'));
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Ожидание'));
       });
 
       it('должен логировать код ошибки', async () => {
         const error: ApiError = { statusCode: 503, message: 'Service Unavailable' };
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
         await retryHandler.executeWithRetry(fn);
 
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('код: 503')
-        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('код: 503'));
       });
 
       it('должен логировать задержку', async () => {
@@ -222,15 +219,14 @@ describe('RetryHandler', () => {
         const delay = 2000;
 
         vi.mocked(mockStrategy.getDelay).mockImplementation(() => delay);
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
         await retryHandler.executeWithRetry(fn);
 
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Ожидание 2000ms')
-        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Ожидание 2000ms'));
       });
     });
 
@@ -243,7 +239,8 @@ describe('RetryHandler', () => {
         };
 
         vi.mocked(mockStrategy.getDelay).mockImplementation(() => 100); // Короткая задержка для теста
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
@@ -255,7 +252,8 @@ describe('RetryHandler', () => {
 
       it('должен обработать сетевую ошибку (statusCode = 0)', async () => {
         const error: ApiError = { statusCode: 0, message: 'Network Error' };
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
@@ -274,7 +272,8 @@ describe('RetryHandler', () => {
             field2: ['Error 2'],
           },
         };
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
@@ -289,7 +288,8 @@ describe('RetryHandler', () => {
         const error: ApiError = { statusCode: 500, message: 'Server Error' };
 
         vi.mocked(mockStrategy.getDelay).mockImplementation(() => 0);
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
@@ -303,7 +303,8 @@ describe('RetryHandler', () => {
 
       it('должен передать попытку с правильным индексом', async () => {
         const error: ApiError = { statusCode: 500, message: 'Server Error' };
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
@@ -316,7 +317,8 @@ describe('RetryHandler', () => {
 
       it('должен обработать начальную попытку не с 0', async () => {
         const error: ApiError = { statusCode: 500, message: 'Server Error' };
-        const fn = vi.fn<() => Promise<string>>()
+        const fn = vi
+          .fn<() => Promise<string>>()
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
@@ -342,7 +344,8 @@ describe('RetryHandler', () => {
       const handler = new RetryHandler(realStrategy, mockLogger);
       const error: ApiError = { statusCode: 503, message: 'Service Unavailable' };
 
-      const fn = vi.fn<() => Promise<string>>()
+      const fn = vi
+        .fn<() => Promise<string>>()
         .mockRejectedValueOnce(error)
         .mockRejectedValueOnce(error)
         .mockResolvedValueOnce('success');

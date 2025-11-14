@@ -30,10 +30,7 @@ export abstract class BaseOperation {
    * @param fn - функция для выполнения (если кеш пуст)
    * @returns результат выполнения
    */
-  protected async withCache<T>(
-    cacheKey: string,
-    fn: () => Promise<T>
-  ): Promise<T> {
+  protected async withCache<T>(cacheKey: string, fn: () => Promise<T>): Promise<T> {
     // Пытаемся получить из кеша
     const cached = this.cacheManager.get<T>(cacheKey);
 

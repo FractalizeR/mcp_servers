@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Coverage reports
+coverage/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+
+# Husky
+.husky/_/
+
+# Generated files
+dependency-graph.svg
+dependency-graph.html
+
+# Documentation that shouldn't be reformatted
+CHANGELOG.md

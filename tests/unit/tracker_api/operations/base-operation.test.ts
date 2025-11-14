@@ -2,7 +2,7 @@
  * Тесты для BaseOperation
  */
 
-import {describe, it, expect, beforeEach, vi} from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { BaseOperation } from '@tracker_api/operations/base-operation.js';
 import type { HttpClient } from '@infrastructure/http/client/http-client.js';
@@ -70,12 +70,7 @@ describe('BaseOperation', () => {
     mockCache = createMockCache();
     mockLogger = createMockLogger();
 
-    operation = new TestOperation(
-      mockHttpClient,
-      mockRetryHandler,
-      mockCache,
-      mockLogger
-    );
+    operation = new TestOperation(mockHttpClient, mockRetryHandler, mockCache, mockLogger);
 
     vi.clearAllMocks();
   });
@@ -93,9 +88,7 @@ describe('BaseOperation', () => {
       expect(result).toEqual(cachedValue);
       expect(mockCache.get).toHaveBeenCalledWith(cacheKey);
       expect(fn).not.toHaveBeenCalled();
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('cache hit')
-      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('cache hit'));
     });
 
     it('должен выполнить функцию при отсутствии в кеше', async () => {
@@ -111,9 +104,7 @@ describe('BaseOperation', () => {
       expect(mockCache.get).toHaveBeenCalledWith(cacheKey);
       expect(fn).toHaveBeenCalledTimes(1);
       expect(mockCache.set).toHaveBeenCalledWith(cacheKey, freshValue);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('cache miss')
-      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('cache miss'));
     });
 
     it('должен сохранить результат в кеш', async () => {
@@ -141,7 +132,9 @@ describe('BaseOperation', () => {
 
     it('должен пробросить ошибку от RetryHandler', async () => {
       const error = new Error('Retry failed');
-      const fn = vi.fn(async () => { throw error; });
+      const fn = vi.fn(async () => {
+        throw error;
+      });
 
       vi.mocked(mockRetryHandler.executeWithRetry).mockRejectedValue(error);
 

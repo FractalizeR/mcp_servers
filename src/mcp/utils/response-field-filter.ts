@@ -29,9 +29,7 @@ export class ResponseFieldFilter {
     // Валидация: fields должен содержать минимум 1 элемент
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!fields || fields.length === 0) {
-      throw new Error(
-        'Параметр fields обязателен и должен содержать хотя бы один элемент'
-      );
+      throw new Error('Параметр fields обязателен и должен содержать хотя бы один элемент');
     }
 
     // Обработка массивов
@@ -134,9 +132,7 @@ export class ResponseFieldFilter {
   static normalizeFields(fields: string[]): string[] {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!fields || fields.length === 0) {
-      throw new Error(
-        'Параметр fields обязателен и должен содержать хотя бы один элемент'
-      );
+      throw new Error('Параметр fields обязателен и должен содержать хотя бы один элемент');
     }
 
     // Удаляем дубликаты, пустые строки и сортируем
@@ -146,9 +142,7 @@ export class ResponseFieldFilter {
       .sort();
 
     if (uniqueFields.length === 0) {
-      throw new Error(
-        'После нормализации массив полей пуст (все элементы были пустыми строками)'
-      );
+      throw new Error('После нормализации массив полей пуст (все элементы были пустыми строками)');
     }
 
     return uniqueFields;

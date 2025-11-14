@@ -2,7 +2,7 @@
  * Unit тесты для GetIssuesOperation (batch-получение задач)
  */
 
-import {describe, it, expect, beforeEach, vi} from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { GetIssuesOperation } from '@tracker_api/operations/issue/get-issues.operation.js';
 import type { HttpClient } from '@infrastructure/http/client/http-client.js';

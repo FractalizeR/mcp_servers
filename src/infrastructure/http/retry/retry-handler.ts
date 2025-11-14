@@ -28,10 +28,7 @@ export class RetryHandler {
    * @returns результат выполнения функции
    * @throws ApiError если все попытки исчерпаны или ошибка не повторяемая
    */
-  async executeWithRetry<T>(
-    fn: () => Promise<T>,
-    attempt: number = 0
-  ): Promise<T> {
+  async executeWithRetry<T>(fn: () => Promise<T>, attempt: number = 0): Promise<T> {
     try {
       return await fn();
     } catch (error) {
@@ -59,8 +56,8 @@ export class RetryHandler {
       // Логируем информацию о повторе
       this.logger.warn(
         `Попытка ${attempt + 1}/${this.strategy.maxRetries} не удалась. ` +
-        `Ошибка: ${apiError.message} (код: ${apiError.statusCode}). ` +
-        `Ожидание ${delayMs}ms перед повтором...`
+          `Ошибка: ${apiError.message} (код: ${apiError.statusCode}). ` +
+          `Ожидание ${delayMs}ms перед повтором...`
       );
 
       // Ждём перед следующей попыткой

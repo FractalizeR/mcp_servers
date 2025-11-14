@@ -39,7 +39,11 @@ export interface AlertingTransport {
   /**
    * Отправить алерт
    */
-  sendAlert(level: 'error' | 'warn', message: string, context: Record<string, unknown>): Promise<void>;
+  sendAlert(
+    level: 'error' | 'warn',
+    message: string,
+    context: Record<string, unknown>
+  ): Promise<void>;
 }
 
 /**
@@ -74,10 +78,13 @@ export class Logger {
 
     // Development mode: pretty printing в stderr
     if (config.pretty) {
-      return pino(pinoConfig, pino.destination({
-        dest: 2, // stderr
-        sync: false,
-      }));
+      return pino(
+        pinoConfig,
+        pino.destination({
+          dest: 2, // stderr
+          sync: false,
+        })
+      );
     }
 
     // Production mode: dual logging (stderr + файлы с ротацией)
@@ -183,13 +190,15 @@ export class Logger {
   error(message: string, error?: unknown, context?: Record<string, unknown>): void {
     const errorContext = {
       ...context,
-      ...(error instanceof Error ? {
-        error: {
-          message: error.message,
-          stack: error.stack,
-          name: error.name,
-        },
-      } : { error }),
+      ...(error instanceof Error
+        ? {
+            error: {
+              message: error.message,
+              stack: error.stack,
+              name: error.name,
+            },
+          }
+        : { error }),
     };
 
     this.pino.error(errorContext, message);

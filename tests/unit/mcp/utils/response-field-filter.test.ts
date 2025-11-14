@@ -1,4 +1,4 @@
-import {describe, it, expect} from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { ResponseFieldFilter } from '@mcp/utils/response-field-filter.js';
 
 describe('ResponseFieldFilter', () => {
@@ -70,10 +70,7 @@ describe('ResponseFieldFilter', () => {
         },
       };
 
-      const result = ResponseFieldFilter.filter(data, [
-        'key',
-        'assignee.login',
-      ]);
+      const result = ResponseFieldFilter.filter(data, ['key', 'assignee.login']);
 
       expect(result).toEqual({
         key: 'QUEUE-1',
@@ -93,10 +90,7 @@ describe('ResponseFieldFilter', () => {
         },
       };
 
-      const result = ResponseFieldFilter.filter(data, [
-        'assignee.login',
-        'assignee.email',
-      ]);
+      const result = ResponseFieldFilter.filter(data, ['assignee.login', 'assignee.email']);
 
       expect(result).toEqual({
         assignee: {
@@ -119,9 +113,7 @@ describe('ResponseFieldFilter', () => {
         },
       };
 
-      const result = ResponseFieldFilter.filter(data, [
-        'meta.author.profile.login',
-      ]);
+      const result = ResponseFieldFilter.filter(data, ['meta.author.profile.login']);
 
       expect(result).toEqual({
         meta: {
@@ -140,11 +132,7 @@ describe('ResponseFieldFilter', () => {
         summary: 'Test',
       };
 
-      const result = ResponseFieldFilter.filter(data, [
-        'key',
-        'nonexistent',
-        'also.nonexistent',
-      ]);
+      const result = ResponseFieldFilter.filter(data, ['key', 'nonexistent', 'also.nonexistent']);
 
       expect(result).toEqual({
         key: 'QUEUE-1',
@@ -301,9 +289,7 @@ describe('ResponseFieldFilter', () => {
 
       const error = ResponseFieldFilter.validateFields(fields);
 
-      expect(error).toContain(
-        'не может начинаться или заканчиваться точкой'
-      );
+      expect(error).toContain('не может начинаться или заканчиваться точкой');
     });
 
     it('должен отклонить точку в конце', () => {
@@ -311,9 +297,7 @@ describe('ResponseFieldFilter', () => {
 
       const error = ResponseFieldFilter.validateFields(fields);
 
-      expect(error).toContain(
-        'не может начинаться или заканчиваться точкой'
-      );
+      expect(error).toContain('не может начинаться или заканчиваться точкой');
     });
 
     it('должен принять поля с цифрами и подчёркиваниями', () => {

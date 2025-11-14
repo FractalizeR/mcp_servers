@@ -30,11 +30,7 @@ export class HttpClient {
   private readonly retryHandler: RetryHandler;
   private readonly parallelExecutor: ParallelExecutor;
 
-  constructor(
-    config: HttpConfig,
-    logger: Logger,
-    retryStrategy: RetryStrategy
-  ) {
+  constructor(config: HttpConfig, logger: Logger, retryStrategy: RetryStrategy) {
     this.logger = logger;
     this.retryHandler = new RetryHandler(retryStrategy, logger);
     this.parallelExecutor = new ParallelExecutor(logger, {
@@ -44,9 +40,9 @@ export class HttpClient {
 
     // Формируем базовые заголовки
     const headers: Record<string, string> = {
-      'Authorization': `OAuth ${config.token}`,
+      Authorization: `OAuth ${config.token}`,
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     };
 
     // Добавляем правильный заголовок в зависимости от типа организации
@@ -103,10 +99,7 @@ export class HttpClient {
    * @param params - опциональные query параметры
    * @returns данные ответа
    */
-  async get<T>(
-    path: string,
-    params?: QueryParams
-  ): Promise<T> {
+  async get<T>(path: string, params?: QueryParams): Promise<T> {
     return this.retryHandler.executeWithRetry(async () => {
       const response = await this.client.get<T>(path, { params });
       return response.data;
@@ -178,13 +171,8 @@ export class HttpClient {
    *   const errors = ParallelExecutor.getErrors(result);
    * }
    */
-  async getBatch<T>(
-    paths: string[],
-    params?: QueryParams
-  ): Promise<BatchResult<T>> {
-    const operations = paths.map(path =>
-      this.createRetryableGetOperation<T>(path, params)
-    );
+  async getBatch<T>(paths: string[], params?: QueryParams): Promise<BatchResult<T>> {
+    const operations = paths.map((path) => this.createRetryableGetOperation<T>(path, params));
 
     return this.parallelExecutor.executeParallel(operations, 'GET batch');
   }
@@ -205,7 +193,7 @@ export class HttpClient {
   async postBatch<T = unknown>(
     requests: Array<{ path: string; data?: unknown }>
   ): Promise<BatchResult<T>> {
-    const operations = requests.map(req =>
+    const operations = requests.map((req) =>
       this.createRetryablePostOperation<T>(req.path, req.data)
     );
 
@@ -228,7 +216,7 @@ export class HttpClient {
   async patchBatch<T = unknown>(
     requests: Array<{ path: string; data?: unknown }>
   ): Promise<BatchResult<T>> {
-    const operations = requests.map(req =>
+    const operations = requests.map((req) =>
       this.createRetryablePatchOperation<T>(req.path, req.data)
     );
 
@@ -249,9 +237,7 @@ export class HttpClient {
    * ]);
    */
   async deleteBatch<T = unknown>(paths: string[]): Promise<BatchResult<T>> {
-    const operations = paths.map(path =>
-      this.createRetryableDeleteOperation<T>(path)
-    );
+    const operations = paths.map((path) => this.createRetryableDeleteOperation<T>(path));
 
     return this.parallelExecutor.executeParallel(operations, 'DELETE batch');
   }
@@ -264,39 +250,24 @@ export class HttpClient {
    * Создает "ленивую" GET операцию с retry логикой
    * @private
    */
-  private createRetryableGetOperation<T>(
-    path: string,
-    params?: QueryParams
-  ): () => Promise<T> {
-    return () => this.retryHandler.executeWithRetry(() =>
-      this.get<T>(path, params)
-    );
+  private createRetryableGetOperation<T>(path: string, params?: QueryParams): () => Promise<T> {
+    return () => this.retryHandler.executeWithRetry(() => this.get<T>(path, params));
   }
 
   /**
    * Создает "ленивую" POST операцию с retry логикой
    * @private
    */
-  private createRetryablePostOperation<T>(
-    path: string,
-    data?: unknown
-  ): () => Promise<T> {
-    return () => this.retryHandler.executeWithRetry(() =>
-      this.post<T>(path, data)
-    );
+  private createRetryablePostOperation<T>(path: string, data?: unknown): () => Promise<T> {
+    return () => this.retryHandler.executeWithRetry(() => this.post<T>(path, data));
   }
 
   /**
    * Создает "ленивую" PATCH операцию с retry логикой
    * @private
    */
-  private createRetryablePatchOperation<T>(
-    path: string,
-    data?: unknown
-  ): () => Promise<T> {
-    return () => this.retryHandler.executeWithRetry(() =>
-      this.patch<T>(path, data)
-    );
+  private createRetryablePatchOperation<T>(path: string, data?: unknown): () => Promise<T> {
+    return () => this.retryHandler.executeWithRetry(() => this.patch<T>(path, data));
   }
 
   /**
@@ -304,8 +275,6 @@ export class HttpClient {
    * @private
    */
   private createRetryableDeleteOperation<T>(path: string): () => Promise<T> {
-    return () => this.retryHandler.executeWithRetry(() =>
-      this.delete<T>(path)
-    );
+    return () => this.retryHandler.executeWithRetry(() => this.delete<T>(path));
   }
 }

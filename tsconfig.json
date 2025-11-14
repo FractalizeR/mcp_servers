@@ -11,6 +11,7 @@
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
+      "@composition-root/*": ["./src/composition-root/*"],
       "@infrastructure/*": ["./src/infrastructure/*"],
       "@tracker_api/*": ["./src/tracker_api/*"],
       "@mcp/*": ["./src/mcp/*"],
@@ -52,7 +53,8 @@
     "types": ["node"]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "vitest.config.ts"
   ],
   "exclude": [
     "node_modules",

@@ -2,7 +2,7 @@
  * Unit тесты для HttpClient
  */
 
-import {describe, it, expect, beforeEach, vi} from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { HttpClient } from '@infrastructure/http/client/http-client.js';
 import type { HttpConfig } from '@infrastructure/http/client/http-config.interface.js';
 import type { Logger } from '@infrastructure/logging/index.js';

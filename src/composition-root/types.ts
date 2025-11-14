@@ -21,9 +21,6 @@ export const TYPES = {
   // === Yandex Tracker Operations ===
   PingOperation: Symbol.for('PingOperation'),
   GetIssuesOperation: Symbol.for('GetIssuesOperation'),
-  CreateIssuesOperation: Symbol.for('CreateIssuesOperation'),
-  UpdateIssuesOperation: Symbol.for('UpdateIssuesOperation'),
-  DeleteIssuesOperation: Symbol.for('DeleteIssuesOperation'),
 
   // === Yandex Tracker Facade ===
   YandexTrackerFacade: Symbol.for('YandexTrackerFacade'),
