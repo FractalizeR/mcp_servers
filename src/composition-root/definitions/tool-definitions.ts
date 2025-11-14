@@ -12,6 +12,7 @@ import { GetIssuesTool } from '@mcp/tools/api/issues/get/index.js';
 import { FindIssuesTool } from '@mcp/tools/api/issues/find/index.js';
 import { IssueUrlTool } from '@mcp/tools/helpers/issue-url/index.js';
 import { DemoTool } from '@mcp/tools/helpers/demo/index.js';
+import { SearchToolsTool } from '@mcp/tools/helpers/search/index.js';
 
 /**
  * Массив всех Tool классов в проекте
@@ -31,7 +32,8 @@ export const TOOL_CLASSES = [
   GetIssuesTool,
   FindIssuesTool,
   IssueUrlTool,
-  DemoTool, // ← DEMO: Добавили всего 1 строку!
+  DemoTool,
+  SearchToolsTool, // ← Helper tool для поиска других инструментов
 ] as const;
 
 /**

@@ -49,6 +49,9 @@ export const TYPES = {
   // === Tool Registry ===
   ToolRegistry: Symbol.for('ToolRegistry'),
 
+  // === Search Engine ===
+  ToolSearchEngine: Symbol.for('ToolSearchEngine'),
+
   // === Operations (автоматически сгенерированы) ===
   ...OPERATION_SYMBOLS,
 

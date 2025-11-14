@@ -86,7 +86,7 @@ async function main(): Promise<void> {
     const config = loadConfig();
 
     // Создание DI контейнера (Logger создаётся внутри)
-    const container = createContainer(config);
+    const container = await createContainer(config);
 
     // Получение Logger из контейнера
     logger = container.get<Logger>(TYPES.Logger);

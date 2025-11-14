@@ -27,6 +27,17 @@ import { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.j
 // Tool Registry
 import { ToolRegistry } from '@mcp/tool-registry.js';
 
+// Search Engine
+import { ToolSearchEngine } from '@mcp/search/tool-search-engine.js';
+import { TOOL_SEARCH_INDEX } from '@mcp/search/generated-index.js';
+import { WeightedCombinedStrategy } from '@mcp/search/strategies/weighted-combined.strategy.js';
+import { NameSearchStrategy } from '@mcp/search/strategies/name-search.strategy.js';
+import { DescriptionSearchStrategy } from '@mcp/search/strategies/description-search.strategy.js';
+import { CategorySearchStrategy } from '@mcp/search/strategies/category-search.strategy.js';
+import { FuzzySearchStrategy } from '@mcp/search/strategies/fuzzy-search.strategy.js';
+import type { ISearchStrategy } from '@mcp/search/strategies/search-strategy.interface.js';
+import type { StrategyType } from '@mcp/search/types.js';
+
 // Автоматически импортируемые определения
 import { TOOL_CLASSES, OPERATION_CLASSES } from './definitions/index.js';
 
@@ -136,23 +147,81 @@ function bindFacade(container: Container): void {
 }
 
 /**
+ * Регистрация поисковой системы tools
+ *
+ * ToolSearchEngine требует:
+ * - Статический индекс (compile-time generated)
+ * - ToolRegistry для lazy loading метаданных
+ * - WeightedCombinedStrategy с набором стратегий
+ */
+function bindSearchEngine(container: Container): void {
+  container.bind<ToolSearchEngine>(TYPES.ToolSearchEngine).toDynamicValue(() => {
+    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+
+    // Создаём все стратегии поиска
+    const strategies = new Map<StrategyType, ISearchStrategy>([
+      ['name', new NameSearchStrategy()],
+      ['description', new DescriptionSearchStrategy()],
+      ['category', new CategorySearchStrategy()],
+      ['fuzzy', new FuzzySearchStrategy(3)], // maxDistance = 3
+    ]);
+
+    // Комбинированная стратегия с весами
+    const combinedStrategy = new WeightedCombinedStrategy(strategies);
+
+    // ToolSearchEngine с статическим индексом
+    return new ToolSearchEngine(TOOL_SEARCH_INDEX, toolRegistry, combinedStrategy);
+  });
+}
+
+/**
  * Регистрация Tools
  *
  * АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:
  * - Все tools из TOOL_CLASSES автоматически регистрируются
  * - Символы создаются из имени класса (ClassName → Symbol.for('ClassName'))
  * - Для добавления нового tool: добавь класс в definitions/tool-definitions.ts
+ *
+ * ОСОБЫЕ СЛУЧАИ:
+ * - SearchToolsTool требует (searchEngine, logger) вместо (facade, logger)
+ * - Регистрируется отдельно для корректной типизации
  */
 function bindTools(container: Container): void {
+  // Стандартные tools: (facade, logger)
   for (const ToolClass of TOOL_CLASSES) {
     const symbol = Symbol.for(ToolClass.name);
+
+    // Пропускаем SearchToolsTool (регистрируется отдельно)
+    if (ToolClass.name === 'SearchToolsTool') {
+      continue;
+    }
 
     container.bind(symbol).toDynamicValue(() => {
       const facade = container.get<YandexTrackerFacade>(TYPES.YandexTrackerFacade);
       const loggerInstance = container.get<Logger>(TYPES.Logger);
-      return new ToolClass(facade, loggerInstance);
+      // Type assertion: все tools кроме SearchToolsTool имеют конструктор (facade, logger)
+      return new (ToolClass as new (facade: YandexTrackerFacade, logger: Logger) => unknown)(
+        facade,
+        loggerInstance
+      );
     });
   }
+}
+
+/**
+ * Регистрация SearchToolsTool
+ *
+ * Отдельная функция для корректной типизации,
+ * т.к. конструктор отличается от BaseTool: (searchEngine, logger)
+ */
+async function bindSearchToolsTool(container: Container): Promise<void> {
+  const { SearchToolsTool } = await import('@mcp/tools/helpers/search/index.js');
+
+  container.bind(Symbol.for('SearchToolsTool')).toDynamicValue(() => {
+    const searchEngine = container.get<ToolSearchEngine>(TYPES.ToolSearchEngine);
+    const loggerInstance = container.get<Logger>(TYPES.Logger);
+    return new SearchToolsTool(searchEngine, loggerInstance);
+  });
 }
 
 /**
@@ -171,7 +240,7 @@ function bindToolRegistry(container: Container): void {
 /**
  * Создание и конфигурация DI контейнера
  */
-export function createContainer(config: ServerConfig): Container {
+export async function createContainer(config: ServerConfig): Promise<Container> {
   const container = new Container({
     defaultScope: 'Singleton', // Все зависимости по умолчанию Singleton
   });
@@ -181,8 +250,10 @@ export function createContainer(config: ServerConfig): Container {
   bindCacheLayer(container);
   bindOperations(container);
   bindFacade(container);
-  bindTools(container);
-  bindToolRegistry(container);
+  bindToolRegistry(container); // ToolRegistry первым (для SearchEngine)
+  bindSearchEngine(container); // SearchEngine после ToolRegistry
+  bindTools(container); // Стандартные tools (facade, logger)
+  await bindSearchToolsTool(container); // SearchToolsTool отдельно (searchEngine, logger)
 
   return container;
 }
