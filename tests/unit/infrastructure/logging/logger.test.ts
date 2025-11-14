@@ -5,6 +5,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Logger } from '@infrastructure/logging/index.js';
 import type { LoggerConfig } from '@infrastructure/logging/index.js';
+import { existsSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 
 describe('Logger', () => {
   describe('Конфигурация', () => {
@@ -65,6 +67,40 @@ describe('Logger', () => {
       };
 
       // rotation.maxSize не указан, используется 50KB по умолчанию
+      expect(() => new Logger(config)).not.toThrow();
+    });
+
+    it('должен автоматически создавать директорию для логов', () => {
+      const testLogsDir = join('/tmp', `test-logs-${Date.now()}`);
+
+      // Убедимся, что директория не существует
+      expect(existsSync(testLogsDir)).toBe(false);
+
+      const config: LoggerConfig = {
+        level: 'info',
+        pretty: false,
+        logsDir: testLogsDir,
+      };
+
+      // Создаём логгер - директория должна быть создана автоматически
+      const logger = new Logger(config);
+      expect(logger).toBeDefined();
+
+      // Проверяем, что директория создана
+      expect(existsSync(testLogsDir)).toBe(true);
+
+      // Очищаем тестовую директорию
+      rmSync(testLogsDir, { recursive: true, force: true });
+    });
+
+    it('должен работать с уже существующей директорией для логов', () => {
+      const config: LoggerConfig = {
+        level: 'info',
+        pretty: false,
+        logsDir: '/tmp', // Существующая директория
+      };
+
+      // Не должно выбрасывать ошибку
       expect(() => new Logger(config)).not.toThrow();
     });
   });

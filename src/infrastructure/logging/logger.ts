@@ -12,6 +12,8 @@ import pino from 'pino';
 import type { Logger as PinoLogger } from 'pino';
 import { createStream } from 'rotating-file-stream';
 import type { LogLevel } from '@types';
+import { mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 /**
  * Конфигурация логгера
@@ -95,6 +97,17 @@ export class Logger {
 
     // Production mode: dual logging (stderr + файлы с ротацией)
     if (config.logsDir) {
+      // Создаём директорию для логов если её нет
+      const logsPath = resolve(config.logsDir);
+      try {
+        mkdirSync(logsPath, { recursive: true });
+      } catch (err) {
+        // Игнорируем ошибку если папка уже существует
+        if ((err as Error & { code?: string }).code !== 'EEXIST') {
+          throw err;
+        }
+      }
+
       // Параметры ротации (по умолчанию: 50KB, 20 файлов)
       const maxSize = config.rotation?.maxSize || 50 * 1024; // 50KB
       const maxFiles = config.rotation?.maxFiles || 20;
@@ -121,7 +134,7 @@ export class Logger {
         {
           level: pinoLevel,
           stream: createStream('combined.log', {
-            path: config.logsDir,
+            path: logsPath,
             size: sizeStr,
             maxFiles,
             compress: 'gzip', // Сжатие старых логов
@@ -131,7 +144,7 @@ export class Logger {
         {
           level: 'error',
           stream: createStream('error.log', {
-            path: config.logsDir,
+            path: logsPath,
             size: sizeStr,
             maxFiles,
             compress: 'gzip',
