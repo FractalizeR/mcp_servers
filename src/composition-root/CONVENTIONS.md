@@ -175,41 +175,28 @@ function bindOperations(container: Container): void {
 
 ## 📋 Чек-лист добавления зависимости
 
-- [ ] **Добавить токен в `types.ts`:**
-  ```typescript
-  export const TYPES = {
-    // ...
-    NewService: Symbol.for('NewService'),
-  } as const;
-  ```
+### Для Infrastructure/Facade/Registry зависимостей
 
-- [ ] **Зарегистрировать в `container.ts`:**
-  - [ ] Определить категорию: Infrastructure / Operations / Facade / Tools / MCP
-  - [ ] Добавить в соответствующую функцию `bind*()`
-  - [ ] Использовать `toDynamicValue()` для создания инстанса
-  - [ ] Inject зависимости через `context.container.get<T>(TYPES.Dependency)`
-
-  ```typescript
-  function bindOperations(container: Container): void {
-    container.bind<NewOperation>(TYPES.NewOperation).toDynamicValue((context) => {
-      return new NewOperation(
-        context.container.get<HttpClient>(TYPES.HttpClient),
-        context.container.get<Logger>(TYPES.Logger)
-      );
-    });
-  }
-  ```
-
+- [ ] **Добавить токен в `types.ts` вручную**
+- [ ] **Зарегистрировать в `container.ts`** в соответствующей функции `bind*()`
 - [ ] **Использование в коде:**
   ```typescript
-  const operation = container.get<NewOperation>(TYPES.NewOperation);
+  const service = container.get<NewService>(TYPES.NewService);
   ```
-
 - [ ] **Тесты:**
   - [ ] Создать mock-контейнер в тестах
   - [ ] Примеры: `tests/unit/tracker_api/facade/yandex-tracker.facade.test.ts`
-
 - [ ] `npm run validate` — проходит
+
+### Для Operation/Tool зависимостей
+
+- [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:**
+  - [ ] Для Tool: добавь 1 строку в `definitions/tool-definitions.ts`
+  - [ ] Для Operation: добавь 1 строку в `definitions/operation-definitions.ts`
+  - [ ] ВСЁ! (Символы, bind, registry — автоматически)
+
+⚠️ **Особый случай:** Helper tools с нестандартным конструктором
+(как `SearchToolsTool`) требуют отдельной регистрации в `container.ts`.
 
 ---
 
@@ -252,7 +239,12 @@ class Service { ... }
 container.bind(Service).toSelf();
 ```
 
-**Причина:** Декораторы требуют `reflect-metadata` и усложняют отладку
+**Причина:** Предпочитаем явную конфигурацию в `container.ts`.
+Легче отлаживать (все зависимости в одном месте).
+Меньше "магии" в runtime.
+
+**Примечание:** Проект использует `reflect-metadata` для других целей,
+но НЕ для InversifyJS декораторов `@injectable()`.
 
 ---
 

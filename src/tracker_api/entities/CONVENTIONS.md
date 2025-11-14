@@ -236,11 +236,14 @@ export interface Issue {
  * Статус задачи в Яндекс.Трекере
  */
 export interface Status {
+  /** Идентификатор статуса (всегда присутствует) */
+  readonly id: string;
+
   /** Уникальный ключ статуса */
-  key: string;
+  readonly key: string;
 
   /** Отображаемое название */
-  display: string;
+  readonly display: string;
 }
 
 export type StatusWithUnknownFields = WithUnknownFields<Status>;

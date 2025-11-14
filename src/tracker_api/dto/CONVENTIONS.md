@@ -155,7 +155,7 @@ async createIssue(params: Issue): Promise<Issue> { ... }
 
 ✅ **Правильно:**
 ```typescript
-export interface CreateIssueDTO {
+export interface CreateIssueDto {
   queue: string;
   summary: string;
   [key: string]: unknown; // Кастомные поля
@@ -164,7 +164,7 @@ export interface CreateIssueDTO {
 
 ❌ **Неправильно:**
 ```typescript
-export interface CreateIssueDTO {
+export interface CreateIssueDto {
   queue: string;
   summary: string;
   customFields?: Record<string, unknown>; // Излишняя вложенность
@@ -179,7 +179,7 @@ Update операции обычно поддерживают partial update:
 
 ✅ **Правильно:**
 ```typescript
-export interface UpdateIssueDTO {
+export interface UpdateIssueDto {
   summary?: string;     // Все поля опциональны
   description?: string;
   status?: string;
@@ -189,7 +189,7 @@ export interface UpdateIssueDTO {
 
 ❌ **Неправильно:**
 ```typescript
-export interface UpdateIssueDTO {
+export interface UpdateIssueDto {
   summary: string;      // Обязательные поля для update — неправильно
   description: string;
 }
@@ -203,7 +203,7 @@ export interface UpdateIssueDTO {
 
 ✅ **Правильно:**
 ```typescript
-export interface CreateIssueDTO {
+export interface CreateIssueDto {
   queue: string;           // Ключ очереди
   assignee?: string;       // Login пользователя
   parent?: string;         // Ключ родительской задачи
@@ -212,7 +212,7 @@ export interface CreateIssueDTO {
 
 ❌ **Неправильно:**
 ```typescript
-export interface CreateIssueDTO {
+export interface CreateIssueDto {
   queue: Queue;            // Вложенный объект — API не примет
   assignee?: User;
 }
@@ -232,7 +232,7 @@ export interface CreateIssueDTO {
  *
  * Документация: https://cloud.yandex.ru/docs/tracker/concepts/issues/create-issue
  */
-export interface CreateIssueDTO {
+export interface CreateIssueDto {
   /** Ключ очереди (обязательно) */
   queue: string;
 
