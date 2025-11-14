@@ -274,7 +274,7 @@ export interface CreateIssueDto {
  *
  * Документация: https://cloud.yandex.ru/docs/tracker/concepts/issues/patch-issue
  */
-export interface UpdateIssueDTO {
+export interface UpdateIssueDto {
   summary?: string;
   description?: string;
   status?: string;
@@ -287,6 +287,18 @@ export interface UpdateIssueDTO {
   [key: string]: unknown;
 }
 ```
+
+### Search/Find DTO
+
+**Особенность:** DTO для поиска задач с множественными опциональными параметрами.
+
+**Пример:** `FindIssuesInputDto`
+- Поддерживает 4 способа поиска (query, filter, keys, queue)
+- Пагинация (perPage, page)
+- Сортировка (order)
+- Расширение ответа (expand)
+
+**Эталон:** `src/tracker_api/dto/issue/find-issues-input.dto.ts` (102 строки)
 
 ---
 

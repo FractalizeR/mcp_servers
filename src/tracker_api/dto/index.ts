@@ -2,7 +2,8 @@
  * Data Transfer Objects (DTO)
  *
  * ВАЖНО: DTO используются для type-safe отправки данных в API.
- * Содержат только known поля, без index signature для unknown полей.
+ * Содержат known поля + index signature [key: string]: unknown
+ * для поддержки кастомных полей Яндекс.Трекера.
  */
 export type {
   CreateIssueDto,

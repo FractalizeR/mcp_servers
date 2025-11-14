@@ -254,24 +254,42 @@ export type StatusWithUnknownFields = WithUnknownFields<Status>;
 **Файл:** `src/tracker_api/entities/issue.entity.ts`
 
 ```typescript
+import type { WithUnknownFields } from './types.js';
 import type { User } from './user.entity.js';
 import type { Queue } from './queue.entity.js';
 import type { Status } from './status.entity.js';
-import type { WithUnknownFields } from './types.js';
+import type { Priority } from './priority.entity.js';
+import type { IssueType } from './issue-type.entity.js';
 
 export interface Issue {
-  key: string;
-  summary: string;
+  /** Идентификатор задачи (всегда присутствует) */
+  readonly id: string;
+
+  /** Уникальный ключ задачи (QUEUE-123) (всегда присутствует) */
+  readonly key: string;
+
+  /** Краткое описание */
+  readonly summary: string;
 
   // Вложенные entities
-  queue: Queue;
-  status: Status;
-  createdBy: User;
-  assignee?: User;
+  /** Очередь задачи */
+  readonly queue: Queue;
+
+  /** Текущий статус */
+  readonly status: Status;
+
+  /** Автор задачи */
+  readonly createdBy: User;
+
+  /** Исполнитель задачи */
+  readonly assignee?: User;
 
   // Даты
-  createdAt: string;
-  updatedAt: string;
+  /** Дата создания (ISO 8601) */
+  readonly createdAt: string;
+
+  /** Дата последнего обновления (ISO 8601) */
+  readonly updatedAt: string;
 }
 
 export type IssueWithUnknownFields = WithUnknownFields<Issue>;
