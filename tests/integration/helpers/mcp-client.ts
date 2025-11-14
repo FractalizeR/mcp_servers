@@ -5,7 +5,7 @@
 
 import { Container } from 'inversify';
 import type { ToolRegistry } from '@mcp/tool-registry.js';
-import type { Config } from '@infrastructure/config.js';
+import type { ServerConfig } from '@types';
 import { TYPES } from '@composition-root/types.js';
 import { createContainer } from '@composition-root/index.js';
 
@@ -27,7 +27,7 @@ export class TestMCPClient {
   private container: Container;
   private toolRegistry: ToolRegistry;
 
-  constructor(config: Config) {
+  constructor(config: ServerConfig) {
     this.container = createContainer(config);
     this.toolRegistry = this.container.get<ToolRegistry>(TYPES.ToolRegistry);
   }
@@ -65,25 +65,22 @@ export class TestMCPClient {
 /**
  * Создать тестовый MCP клиент с переопределённой конфигурацией
  */
-export function createTestClient(configOverrides: Partial<Config> = {}): TestMCPClient {
-  const defaultConfig: Config = {
+export function createTestClient(configOverrides: Partial<ServerConfig> = {}): TestMCPClient {
+  const defaultConfig: ServerConfig = {
     apiBase: 'https://api.tracker.yandex.net',
     orgId: 'test-org-id',
-    oauthToken: 'test-oauth-token',
+    token: 'test-oauth-token',
     requestTimeout: 10000,
-    maxRetries: 3,
-    retryDelay: 1000,
     logLevel: 'silent', // Отключаем логи в тестах
     logsDir: '', // Отключаем файловое логирование в тестах
     prettyLogs: false,
     logMaxSize: 1048576, // 1MB в байтах (минимум для корректной работы ротации)
     logMaxFiles: 20,
-    parallelLimit: 5,
     maxBatchSize: 100,
     maxConcurrentRequests: 5,
   };
 
-  const config: Config = { ...defaultConfig, ...configOverrides };
+  const config: ServerConfig = { ...defaultConfig, ...configOverrides };
 
   return new TestMCPClient(config);
 }

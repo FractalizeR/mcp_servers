@@ -9,6 +9,7 @@ export default defineConfig({
       '@tracker_api': resolve(__dirname, './src/tracker_api'),
       '@mcp': resolve(__dirname, './src/mcp'),
       '@types': resolve(__dirname, './src/types.ts'),
+      '@integration': resolve(__dirname, './tests/integration'),
     },
   },
   test: {
@@ -20,8 +21,6 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.ts'],
       exclude: ['src/index.ts'],
-      // Интеграционные тесты НЕ влияют на покрытие unit-тестов
-      all: false,
       thresholds: {
         branches: 80,
         functions: 80,

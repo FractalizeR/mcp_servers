@@ -4,7 +4,15 @@
     /* Наследуем все строгие правила из основного tsconfig.json */
     "noEmit": true,  /* Только проверка типов, без генерации файлов */
     "types": ["node", "vitest/globals"],  /* Глобальные типы для тестов */
-    "rootDir": "."   /* Переопределяем rootDir для включения tests/ */
+    "rootDir": ".",   /* Переопределяем rootDir для включения tests/ */
+    "paths": {
+      "@composition-root/*": ["./src/composition-root/*"],
+      "@infrastructure/*": ["./src/infrastructure/*"],
+      "@tracker_api/*": ["./src/tracker_api/*"],
+      "@mcp/*": ["./src/mcp/*"],
+      "@types": ["./src/types.ts"],
+      "@integration/*": ["./tests/integration/*"]
+    }
   },
   "include": [
     "src/**/*",  /* Включаем src для разрешения импортов */

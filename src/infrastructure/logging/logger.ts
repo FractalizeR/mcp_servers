@@ -61,8 +61,11 @@ export class Logger {
    * Создать Pino logger с правильной конфигурацией
    */
   private createPinoLogger(config: LoggerConfig): PinoLogger {
+    // Для silent используем 'fatal' (самый высокий уровень) чтобы ничего не логировалось
+    const pinoLevel = config.level === 'silent' ? 'fatal' : config.level;
+
     const pinoConfig: pino.LoggerOptions = {
-      level: config.level,
+      level: pinoLevel,
       // Форматирование для structured logging
       formatters: {
         level: (label) => ({ level: label }),
@@ -101,7 +104,7 @@ export class Logger {
         },
         // Все логи → файл с ротацией
         {
-          level: config.level,
+          level: pinoLevel,
           stream: createStream('combined.log', {
             path: config.logsDir,
             size: `${Math.floor(maxSize / (1024 * 1024))}M`, // converting bytes to MB

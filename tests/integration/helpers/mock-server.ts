@@ -4,24 +4,16 @@
  */
 
 import nock from 'nock';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import {
+  generateIssueFixture,
+  generateError404Fixture,
+  generateError401Fixture,
+  generateError403Fixture,
+  type GenerateIssueOptions,
+} from './fixture-generator.js';
 
 export const TRACKER_API_BASE = 'https://api.tracker.yandex.net';
 export const TRACKER_API_V3 = '/v3';
-
-/**
- * Загрузить fixture из JSON файла
- */
-function loadFixture(path: string): unknown {
-  const fixturePath = join(__dirname, '../fixtures', path);
-  const content = readFileSync(fixturePath, 'utf-8');
-  return JSON.parse(content);
-}
 
 /**
  * MockServer для настройки HTTP моков
@@ -39,8 +31,8 @@ export class MockServer {
   /**
    * Мок успешного получения задачи по ключу
    */
-  mockGetIssueSuccess(issueKey: string, fixtureName = 'get-issue-QUEUE-1.json'): this {
-    const response = loadFixture(`issues/${fixtureName}`);
+  mockGetIssueSuccess(issueKey: string, options?: Partial<GenerateIssueOptions>): this {
+    const response = generateIssueFixture({ issueKey, ...options });
 
     this.scope.get(`${TRACKER_API_V3}/issues/${issueKey}`).reply(200, response);
 
@@ -50,19 +42,17 @@ export class MockServer {
   /**
    * Мок успешного получения нескольких задач (batch)
    */
-  mockGetIssuesBatchSuccess(issueKeys: string[], fixtureName = 'get-issue-QUEUE-1.json'): this {
-    const response = loadFixture(`issues/${fixtureName}`);
+  mockGetIssuesBatchSuccess(issueKeys: string[]): this {
+    // Генерируем уникальную фикстуру для каждой задачи
+    const responses = issueKeys.map((key) => generateIssueFixture({ issueKey: key }));
 
     // Для batch запроса используется POST с параметром keys
     this.scope
       .post(`${TRACKER_API_V3}/issues/_search`, (body: Record<string, unknown>) => {
-        const keys = body.keys as string[] | undefined;
+        const keys = body['keys'] as string[] | undefined;
         return keys !== undefined && issueKeys.every((key) => keys.includes(key));
       })
-      .reply(
-        200,
-        issueKeys.map(() => response)
-      );
+      .reply(200, responses);
 
     return this;
   }
@@ -71,7 +61,7 @@ export class MockServer {
    * Мок ошибки 404 (задача не найдена)
    */
   mockGetIssue404(issueKey: string): this {
-    const response = loadFixture('issues/error-404.json');
+    const response = generateError404Fixture();
 
     this.scope.get(`${TRACKER_API_V3}/issues/${issueKey}`).reply(404, response);
 
@@ -82,7 +72,7 @@ export class MockServer {
    * Мок ошибки 401 (не авторизован)
    */
   mockGetIssue401(issueKey: string): this {
-    const response = loadFixture('issues/error-401.json');
+    const response = generateError401Fixture();
 
     this.scope.get(`${TRACKER_API_V3}/issues/${issueKey}`).reply(401, response);
 
@@ -93,7 +83,7 @@ export class MockServer {
    * Мок ошибки 403 (доступ запрещён)
    */
   mockGetIssue403(issueKey: string): this {
-    const response = loadFixture('issues/error-403.json');
+    const response = generateError403Fixture();
 
     this.scope.get(`${TRACKER_API_V3}/issues/${issueKey}`).reply(403, response);
 

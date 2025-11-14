@@ -66,7 +66,7 @@ export interface ServerConfig {
 /**
  * Уровни логирования
  */
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
 
 /**
  * Структура ошибки API (Discriminated Union)
