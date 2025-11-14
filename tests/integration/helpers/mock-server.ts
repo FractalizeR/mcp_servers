@@ -111,6 +111,48 @@ export class MockServer {
   }
 
   /**
+   * Мок успешного поиска задач (POST /v3/issues/_search)
+   */
+  mockFindIssuesSuccess(
+    issueKeys: string[],
+    matcher?: (body: Record<string, unknown>) => boolean
+  ): this {
+    const responses = issueKeys.map((key) =>
+      generateIssue({
+        overrides: { key },
+      })
+    );
+
+    this.scope
+      .post(`${TRACKER_API_V3}/issues/_search`, matcher ?? (() => true))
+      .reply(200, responses);
+
+    return this;
+  }
+
+  /**
+   * Мок ошибки 400 при поиске задач (невалидный запрос)
+   */
+  mockFindIssuesError400(): this {
+    this.scope.post(`${TRACKER_API_V3}/issues/_search`).reply(400, {
+      statusCode: 400,
+      errorMessages: ['Invalid search query'],
+      errors: {},
+    });
+
+    return this;
+  }
+
+  /**
+   * Мок пустого результата поиска
+   */
+  mockFindIssuesEmpty(): this {
+    this.scope.post(`${TRACKER_API_V3}/issues/_search`).reply(200, []);
+
+    return this;
+  }
+
+  /**
    * Очистить все моки и восстановить HTTP
    */
   cleanup(): void {
