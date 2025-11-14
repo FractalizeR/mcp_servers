@@ -96,6 +96,18 @@ export class Logger {
       const maxSize = config.rotation?.maxSize || 50 * 1024; // 50KB
       const maxFiles = config.rotation?.maxFiles || 20;
 
+      // Конвертация размера в формат rotating-file-stream (строка с суффиксом)
+      const formatSize = (
+        bytes: number
+      ): `${number}B` | `${number}K` | `${number}M` | `${number}G` => {
+        if (bytes >= 1024 * 1024) {
+          return `${Math.floor(bytes / (1024 * 1024))}M`;
+        }
+        return `${Math.floor(bytes / 1024)}K`;
+      };
+
+      const sizeStr = formatSize(maxSize);
+
       const streams: pino.StreamEntry[] = [
         // Критичные логи (error/warn) → stderr для мониторинга
         {
@@ -107,7 +119,7 @@ export class Logger {
           level: pinoLevel,
           stream: createStream('combined.log', {
             path: config.logsDir,
-            size: `${Math.floor(maxSize / (1024 * 1024))}M`, // converting bytes to MB
+            size: sizeStr,
             maxFiles,
             compress: 'gzip', // Сжатие старых логов
           }),
@@ -117,7 +129,7 @@ export class Logger {
           level: 'error',
           stream: createStream('error.log', {
             path: config.logsDir,
-            size: `${Math.floor(maxSize / (1024 * 1024))}M`,
+            size: sizeStr,
             maxFiles,
             compress: 'gzip',
           }),

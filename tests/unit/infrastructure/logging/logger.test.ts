@@ -27,6 +27,46 @@ describe('Logger', () => {
         expect(logger.level).toBe(level);
       });
     });
+
+    it('должен создаваться с ротацией файлов (50KB по умолчанию)', () => {
+      const config: LoggerConfig = {
+        level: 'info',
+        pretty: false,
+        logsDir: '/tmp/test-logs',
+        rotation: {
+          maxSize: 50 * 1024, // 50KB
+          maxFiles: 20,
+        },
+      };
+
+      // Проверяем, что не выбрасывается ошибка "A positive integer number is expected"
+      expect(() => new Logger(config)).not.toThrow();
+    });
+
+    it('должен создаваться с ротацией файлов (1MB)', () => {
+      const config: LoggerConfig = {
+        level: 'info',
+        pretty: false,
+        logsDir: '/tmp/test-logs',
+        rotation: {
+          maxSize: 1024 * 1024, // 1MB
+          maxFiles: 10,
+        },
+      };
+
+      expect(() => new Logger(config)).not.toThrow();
+    });
+
+    it('должен создаваться с ротацией файлов (размер по умолчанию)', () => {
+      const config: LoggerConfig = {
+        level: 'info',
+        pretty: false,
+        logsDir: '/tmp/test-logs',
+      };
+
+      // rotation.maxSize не указан, используется 50KB по умолчанию
+      expect(() => new Logger(config)).not.toThrow();
+    });
   });
 
   describe('Уровни логирования', () => {
