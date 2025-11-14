@@ -18,11 +18,19 @@ MCP Bundle — это стандартизированный формат упа
 
 ### Текущие инструменты
 
+**API операции:**
 - `yandex_tracker_ping` — проверка доступности API и валидности токена
+- `yandex_tracker_get_issues` — получить задачи по ключам (batch операция)
+- `yandex_tracker_find_issues` — найти задачи по JQL запросу
+
+**Helper инструменты:**
+- `yandex_tracker_get_issue_url` — получить URL задачи в Яндекс.Трекере
+- `yandex_tracker_search_tools` — поиск доступных MCP инструментов по запросу
+- `yandex_tracker_demo` — демонстрационный инструмент для тестирования
 
 ## Требования
 
-- **Node.js**: версия 16.0.0 или выше
+- **Node.js**: версия 22.0.0 или выше
 - **npm**: для установки зависимостей
 - **OAuth токен Яндекс**: для доступа к API Трекера
 - **ID организации**: для работы с конкретной организацией в Трекере
@@ -48,7 +56,7 @@ npm install
 npm run build
 ```
 
-Эта команда скомпилирует TypeScript код в JavaScript в директорию `server/`.
+Эта команда скомпилирует TypeScript код в JavaScript в директорию `dist/`.
 
 ## Получение OAuth токена
 
@@ -75,8 +83,7 @@ ID организации можно найти в настройках Янде
 | Переменная | Тип | Обязательная | Описание | По умолчанию |
 |-----------|-----|--------------|----------|--------------|
 | `YANDEX_TRACKER_TOKEN` | string | ✅ Да | OAuth токен для API | - |
-| `YANDEX_ORG_ID` | string | ⚠️ Один из двух* | ID организации (Яндекс 360 для бизнеса) | - |
-| `YANDEX_CLOUD_ORG_ID` | string | ⚠️ Один из двух* | ID организации (Yandex Cloud Organization) | - |
+| `YANDEX_ORG_ID` | string | ✅ Да | ID организации в Яндекс.Трекере | - |
 | `LOG_LEVEL` | string | Нет | Уровень логирования: debug, info, warn, error | `info` |
 | `LOGS_DIR` | string | Нет | Директория для лог-файлов | `./logs` |
 | `PRETTY_LOGS` | boolean | Нет | Pretty-printing логов (для development) | `false` |
@@ -85,10 +92,6 @@ ID организации можно найти в настройках Янде
 | `REQUEST_TIMEOUT` | number | Нет | Таймаут запросов (мс), диапазон: 5000-120000 | `30000` |
 | `MAX_BATCH_SIZE` | number | Нет | Максимальное количество элементов в batch-запросе, диапазон: 1-1000 | `200` |
 | `MAX_CONCURRENT_REQUESTS` | number | Нет | Максимальное количество одновременных HTTP-запросов, диапазон: 1-20 | `5` |
-
-**\* Важно:** Необходимо указать **только один** из параметров `YANDEX_ORG_ID` или `YANDEX_CLOUD_ORG_ID`:
-- Используйте `YANDEX_ORG_ID`, если к Трекеру привязана **Яндекс 360 для бизнеса**
-- Используйте `YANDEX_CLOUD_ORG_ID`, если к Трекеру привязана **Yandex Cloud Organization**
 
 ### Логирование
 
@@ -157,13 +160,7 @@ PRETTY_LOGS=true LOG_LEVEL=debug npm run dev
 ```bash
 # Установите переменные окружения
 export YANDEX_TRACKER_TOKEN="your-oauth-token"
-
-# Для Яндекс 360 для бизнеса:
 export YANDEX_ORG_ID="your-org-id"
-
-# ИЛИ для Yandex Cloud Organization:
-# export YANDEX_CLOUD_ORG_ID="bpf3crucp1v2********"
-
 export LOG_LEVEL="debug"
 
 # Запустите сервер
@@ -196,59 +193,64 @@ npm run dev
 
 ```
 yandex-tracker-mcp/
-├── manifest.json          # Манифест MCPB бандла
-├── package.json           # Зависимости Node.js
-├── tsconfig.json          # Конфигурация TypeScript
-├── .eslintrc.json         # Правила линтинга
-├── src/                   # Исходный код TypeScript
-│   ├── index.ts          # Главный файл MCP-сервера
-│   ├── types.ts          # Определения типов
-│   ├── config.ts         # Загрузка конфигурации
-│   ├── logger.ts         # Система логирования
-│   ├── api-client.ts     # Клиент API Яндекс.Трекера
-│   └── tools.ts          # Определения инструментов
-├── server/                # Скомпилированный JavaScript (создаётся при сборке)
-└── README.md             # Эта документация
+├── manifest.json            # Манифест MCPB бандла
+├── package.json             # Зависимости Node.js
+├── tsconfig.json            # Конфигурация TypeScript
+├── CLAUDE.md                # Правила и конвенции для ИИ агентов
+├── ARCHITECTURE.md          # Архитектурная документация
+├── src/                     # Исходный код TypeScript
+│   ├── index.ts            # Главный файл MCP-сервера
+│   ├── composition-root/   # DI контейнер (InversifyJS)
+│   ├── infrastructure/     # HTTP, кеш, логирование, параллелизация
+│   ├── tracker_api/        # API Operations, Entities, DTO, Facade
+│   └── mcp/                # MCP Tools (API + Helpers), Registry, Search
+├── tests/                   # Тесты (unit + integration + e2e)
+├── dist/                    # Скомпилированный JavaScript (создаётся при сборке)
+└── README.md               # Эта документация
 ```
+
+Подробная документация по архитектуре: [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ### Добавление новых инструментов
 
-1. **Добавьте определение инструмента** в `src/tools.ts`:
-   ```typescript
-   export const TOOL_DEFINITIONS = [
-     // ... существующие инструменты
-     {
-       name: 'yandex_tracker_create_issue',
-       description: 'Создание новой задачи в Яндекс.Трекере',
-       inputSchema: {
-         type: 'object',
-         properties: {
-           queue: { type: 'string', description: 'Ключ очереди' },
-           summary: { type: 'string', description: 'Название задачи' },
-         },
-         required: ['queue', 'summary'],
-       },
-     },
-   ];
+Проект использует **feature-based архитектуру** с автоматической регистрацией через DI контейнер.
+
+**Для добавления нового MCP Tool:**
+
+1. **Создай файловую структуру** (например, для создания задачи):
+   ```
+   src/mcp/tools/api/issues/create/
+   ├── create-issue.schema.ts      # Zod схемы для валидации
+   ├── create-issue.definition.ts  # MCP ToolDefinition для ИИ
+   ├── create-issue.tool.ts        # Основной класс Tool
+   └── index.ts                    # Реэкспорт
    ```
 
-2. **Реализуйте обработчик** в классе `ToolHandler`:
+2. **Добавь 1 строку в автоматическую регистрацию**:
    ```typescript
-   private async handleCreateIssue(params: ToolCallParams): Promise<ToolResult> {
-     // Реализация создания задачи
-   }
+   // src/composition-root/definitions/tool-definitions.ts
+   import { CreateIssueTool } from '@mcp/tools/api/issues/create/index.js';
+
+   export const TOOL_CLASSES = [
+     // ... существующие tools
+     CreateIssueTool,  // ← ДОБАВЬ ОДНУ СТРОКУ
+   ] as const;
    ```
 
-3. **Добавьте маршрутизацию** в метод `handleToolCall`:
-   ```typescript
-   case 'yandex_tracker_create_issue':
-     return this.handleCreateIssue(params);
-   ```
+3. **ВСЁ!** DI контейнер автоматически:
+   - Зарегистрирует Tool в контейнере
+   - Сгенерирует Symbol для DI токена
+   - Добавит Tool в ToolRegistry
 
-4. **Пересоберите проект**:
+4. **Запусти валидацию**:
    ```bash
-   npm run build
+   npm run validate  # lint + typecheck + tests + depcruise + build
    ```
+
+**Подробная документация:**
+- Правила и шаблоны: [src/mcp/CONVENTIONS.md](./src/mcp/CONVENTIONS.md)
+- Общие конвенции: [CLAUDE.md](./CLAUDE.md)
+- Архитектура: [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ### Скрипты разработки
 
@@ -282,7 +284,7 @@ npm run clean
 
 ```bash
 npm run build
-node server/index.js
+node dist/index.js
 ```
 
 Затем отправьте JSON-RPC запрос:
@@ -321,7 +323,7 @@ node server/index.js
 
 - **Платформы**: macOS, Linux, Windows
 - **MCP клиенты**: Claude Desktop ≥ 0.10.0
-- **Node.js**: ≥ 16.0.0
+- **Node.js**: ≥ 22.0.0
 
 ## Лицензия
 

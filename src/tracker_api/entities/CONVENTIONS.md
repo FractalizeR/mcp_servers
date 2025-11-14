@@ -249,6 +249,6 @@ export type IssueWithUnknownFields = WithUnknownFields<Issue>;
 
 ## 🔗 См. также
 
-- **Operations:** [src/tracker_api/operations/CONVENTIONS.md](../operations/CONVENTIONS.md)
+- **Operations:** [src/tracker_api/api_operations/CONVENTIONS.md](../api_operations/CONVENTIONS.md)
 - **DTO:** [src/tracker_api/dto/CONVENTIONS.md](../dto/CONVENTIONS.md)
-- **Общие правила:** [CLAUDE.md](../../CLAUDE.md)
+- **Общие правила:** [CLAUDE.md](../../../CLAUDE.md)

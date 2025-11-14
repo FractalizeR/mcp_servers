@@ -325,6 +325,6 @@ describe('MyService', () => {
 ## 🔗 См. также
 
 - **DI использование в тестах:** [docs/di-usage-example.md](../../docs/di-usage-example.md)
-- **Operations:** [src/tracker_api/operations/CONVENTIONS.md](../tracker_api/operations/CONVENTIONS.md)
+- **Operations:** [src/tracker_api/api_operations/CONVENTIONS.md](../tracker_api/api_operations/CONVENTIONS.md)
 - **MCP Tools:** [src/mcp/CONVENTIONS.md](../mcp/CONVENTIONS.md)
 - **Общие правила:** [CLAUDE.md](../../CLAUDE.md)
