@@ -38,7 +38,8 @@
     "axios": "^1.13.2",
     "inversify": "^7.10.4",
     "p-limit": "^7.2.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

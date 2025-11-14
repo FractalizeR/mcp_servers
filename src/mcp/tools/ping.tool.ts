@@ -7,8 +7,8 @@
  * - Получение информации о текущем пользователе
  */
 
-import { BaseTool } from '@mcp/tools/base-tool.js';
-import type { ToolDefinition } from '@mcp/tools/base-tool.js';
+import { BaseTool } from '@mcp/tools/base/index.js';
+import type { ToolDefinition } from '@mcp/tools/base/index.js';
 import type { ToolCallParams, ToolResult } from '@types';
 
 /**

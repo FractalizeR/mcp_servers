@@ -65,6 +65,7 @@
 
 - **TypeScript** (strict mode, NO `any`/`unknown`/`null`/`undefined` где можно избежать)
 - **InversifyJS v7** (DI, Symbol-based tokens, `defaultScope: 'Singleton'`)
+- **Zod** (валидация параметров, type inference)
 - **Axios** (HTTP client)
 - **Vitest** (тесты, покрытие ≥80%)
 - **MCP SDK** (Model Context Protocol)
@@ -93,9 +94,15 @@ function process(data: string): ProcessedData { }
 ### 2. Single Responsibility Principle (SRP)
 
 - Один класс = один файл = одна ответственность
-- Tool: `src/mcp/tools/{name}.tool.ts`
-- Operation: `src/tracker_api/operations/{feature}/{name}.operation.ts`
+- Tool: `src/mcp/tools/{api|helpers}/{feature}/{action}/{name}.tool.ts`
+- Operation: `src/tracker_api/operations/{feature}/{action}/{name}.operation.ts`
 - ❌ НЕ объединяй логику разных операций в один файл
+
+**Правила импортов:**
+- ✅ @ алиасы для импортов между слоями/фичами: `@mcp/tools/...`, `@tracker_api/...`
+- ✅ Относительные пути (`./file.js`) ТОЛЬКО в `index.ts` для реэкспорта из той же папки
+- ✅ Относительные пути внутри одной папки (напр. `entities/issue.ts` → `./types.js`)
+- ❌ Запрещены `../` (переход в родительскую папку) — используй @ алиасы
 
 ### 3. Dependency Injection (InversifyJS)
 
@@ -131,30 +138,56 @@ return this.formatSuccess({ issues: filtered });
 - Tool params: `fields?: string[]`
 - Экономия: 80-90% размера ответа
 
-### 6. Тестирование
+### 6. Валидация параметров (Zod)
+
+```typescript
+// ❌ НЕ ТАК (кастомные валидаторы)
+if (!params.key || typeof params.key !== 'string') { ... }
+
+// ✅ ТАК (Zod схемы)
+const schema = z.object({ key: IssueKeySchema });
+const result = schema.safeParse(params);
+if (!result.success) { return this.formatError(...); }
+```
+
+- ✅ ВСЕГДА используй Zod для валидации параметров tools
+- ✅ Переиспользуй схемы из `@mcp/tools/common/schemas/`
+- ✅ Type inference: `type Params = z.infer<typeof ParamsSchema>`
+- ❌ НЕ пиши кастомные валидаторы
+
+### 7. Тестирование
 
 - Unit тесты: `tests/unit/` (зеркалируют `src/`)
-- Покрытие: ≥80% (текущее: 77 из 123 тестов проходят)
+- Покрытие: ≥80%
 - Валидация: `npm run validate` (lint + typecheck + test + build)
 - ✅ **Vitest** с нативной поддержкой ESM и TypeScript
 - ✅ **TypeScript:** `module: "ES2022"`, `moduleResolution: "bundler"`
 - ✅ Импорты используют расширения `.js` для ESM совместимости
-- ⚠️ **Известная проблема:** 10 тестовых файлов не могут загрузить модули из-за проблем с разрешением ESM импортов (Vitest + TypeScript + ESM). Работают тесты: config, logger, entity-cache-key, response-field-filter
 
 ---
 
 ## 📋 ЧЕК-ЛИСТЫ
 
-### Добавление Tool
+### Добавление API Tool (прямой доступ к API)
 
-- [ ] `src/mcp/tools/{name}.tool.ts` — наследует `BaseTool`
-- [ ] `getDefinition()` + `execute()` реализованы
-- [ ] `ResponseFieldFilter.filter()` используется
-- [ ] `src/mcp/tools/index.ts` — экспорт
+- [ ] Определить тип: API (1 HTTP запрос) или Helper (композитная операция)
+- [ ] Создать структуру `src/mcp/tools/api/{feature}/{action}/`
+- [ ] `{action}.schema.ts` — Zod схема валидации параметров
+- [ ] `{action}.definition.ts` — подробное описание для ИИ агента
+- [ ] `{action}.tool.ts` — наследует `BaseTool`, использует Zod
+- [ ] `index.ts` — экспорт всех компонентов tool
+- [ ] `ResponseFieldFilter.filter()` используется (если применимо)
 - [ ] `src/infrastructure/di/types.ts` — токен `TYPES.{Name}Tool`
 - [ ] `src/infrastructure/di/container.ts` — bind в `bindTools()`
-- [ ] `tests/unit/mcp/tools/{name}.test.ts` — тесты
+- [ ] `tests/unit/mcp/tools/api/{feature}/{action}/{action}.tool.test.ts`
 - [ ] `npm run validate` — проходит
+
+### Добавление Helper Tool (композитные операции)
+
+- [ ] Создать структуру `src/mcp/tools/helpers/{feature}/{action}/`
+- [ ] Аналогично API Tool: `.schema.ts`, `.definition.ts`, `.tool.ts`, `index.ts`
+- [ ] Использует несколько API calls или сложную бизнес-логику
+- [ ] Тесты + DI регистрация + валидация
 
 ### Добавление зависимости в DI
 
@@ -215,7 +248,11 @@ src/
 │   ├── operations/      # API v3 операции (issue/, user/)
 │   └── facade/          # YandexTrackerFacade
 ├── mcp/                 # Application layer (MCP сервер)
-│   ├── tools/           # MCP tools (один файл = один tool)
+│   ├── tools/           # MCP tools
+│   │   ├── base/        # BaseTool, BaseToolDefinition
+│   │   ├── common/      # Переиспользуемые Zod схемы
+│   │   ├── api/         # API tools (1 tool = 1 API endpoint)
+│   │   └── helpers/     # Композитные операции
 │   ├── utils/           # ResponseFieldFilter
 │   └── tool-registry.ts # Регистрация tools
 ├── types.ts             # Общие типы (ServerConfig, ApiError, etc.)

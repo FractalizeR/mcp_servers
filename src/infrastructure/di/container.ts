@@ -33,7 +33,7 @@ import { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.j
 
 // Tools
 import { PingTool } from '@mcp/tools/ping.tool.js';
-import { GetIssuesTool } from '@mcp/tools/get-issues.tool.js';
+import { GetIssuesTool } from '@mcp/tools/api/issues/get/index.js';
 
 // Tool Registry
 import { ToolRegistry } from '@mcp/tool-registry.js';
