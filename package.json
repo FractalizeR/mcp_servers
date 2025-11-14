@@ -8,9 +8,9 @@
     "generate:index": "tsx scripts/generate-tool-index.ts",
     "prebuild": "npm run generate:index",
     "build": "tsc && tsc-alias",
-    "build:bundle": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/bundle.js --external:@modelcontextprotocol/sdk --external:axios --external:inversify --external:p-limit --external:reflect-metadata --sourcemap",
+    "build:bundle": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/bundle.js --external:@modelcontextprotocol/sdk --external:axios --external:inversify --external:p-limit --sourcemap",
     "dev": "tsc && tsc-alias && node dist/index.js",
-    "clean": "rm -rf dist/",
+    "clean": "rimraf dist/",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "typecheck": "tsc --noEmit",
@@ -32,7 +32,7 @@
     "mcp:disconnect": "tsx cli/bin/mcp-connect.ts disconnect",
     "mcp:status": "tsx cli/bin/mcp-connect.ts status",
     "mcp:list": "tsx cli/bin/mcp-connect.ts list",
-    "prepublish": "npm run clean && npm run build:bundle",
+    "prepublishOnly": "npm run clean && npm run build:bundle",
     "prepare": "husky"
   },
   "keywords": [
@@ -58,8 +58,6 @@
     "p-limit": "^7.2.0",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
-    "pino-roll": "^4.0.0",
-    "reflect-metadata": "^0.2.2",
     "rotating-file-stream": "^3.2.7",
     "zod": "^3.25.76"
   },
@@ -82,6 +80,7 @@
     "lint-staged": "^16.2.6",
     "nock": "^14.0.10",
     "prettier": "^3.6.2",
+    "rimraf": "^6.1.0",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",

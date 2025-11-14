@@ -5,7 +5,6 @@
  * Использует Symbol-based токены для типобезопасной привязки.
  */
 
-import 'reflect-metadata';
 import { Container } from 'inversify';
 import type { ServerConfig } from '@types';
 import { Logger } from '@infrastructure/logging/index.js';

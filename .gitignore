@@ -16,6 +16,11 @@ dist/
 !*.config.js
 !eslint.config.js
 
+# Скомпилированные скрипты (используем только TS-исходники)
+scripts/*.js
+scripts/*.js.map
+scripts/*.d.ts
+
 # Временные файлы
 *.log
 *.tmp

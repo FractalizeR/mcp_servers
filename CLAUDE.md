@@ -200,7 +200,7 @@ logger.error('Operation failed', error, { requestId: '456' });
 - Покрытие: ≥80%
 - Валидация: `npm run validate` (lint + typecheck + test + **depcruise** + build)
 - ✅ **Vitest** с нативной поддержкой ESM и TypeScript
-- ✅ **TypeScript:** `module: "ES2022"`, `moduleResolution: "bundler"`
+- ✅ **TypeScript:** `module: "NodeNext"`, `moduleResolution: "NodeNext"`
 - ✅ Импорты используют расширения `.js` для ESM совместимости
 - ✅ **Баг + тест:** Если исправляешь баг (даже обнаруженный в результате рефакторинга или изменения архитектуры), обязательно добавь тест на этот кейс (если его ещё нет)
 

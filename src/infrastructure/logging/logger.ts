@@ -81,13 +81,16 @@ export class Logger {
 
     // Development mode: pretty printing в stderr
     if (config.pretty) {
-      return pino(
-        pinoConfig,
-        pino.destination({
-          dest: 2, // stderr
-          sync: false,
-        })
-      );
+      const prettyTransport = pino.transport({
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'SYS:standard',
+          ignore: 'pid,hostname',
+        },
+      }) as pino.DestinationStream;
+
+      return pino(pinoConfig, prettyTransport);
     }
 
     // Production mode: dual logging (stderr + файлы с ротацией)
