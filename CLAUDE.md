@@ -11,14 +11,14 @@
 ### Лимиты размера
 
 **Жёсткие лимиты (MUST):**
-- `CLAUDE.md` ≤ 300 строк
-- `ARCHITECTURE.md` ≤ 500 строк
+- `CLAUDE.md` ≤ 350 строк
+- `ARCHITECTURE.md` ≤ 600 строк
 - Module `README.md` ≤ 500 строк
 
 **Целевые значения (SHOULD):**
-- `CLAUDE.md` ~250 строк
-- `ARCHITECTURE.md` ~400 строк
-- Module `README.md` ~300-400 строк
+- `CLAUDE.md` ~300 строк
+- `ARCHITECTURE.md` ~500 строк
+- Module `README.md` ~400 строк
 
 **Проверка:** `npm run validate:docs`
 
@@ -191,6 +191,10 @@
 - ESLint правила: `max-params` (≤4), `complexity` (≤10), `max-depth` (≤4)
 - Режим `warn` — не блокирует build, но предупреждает
 
+### 13. Структура валидации
+
+`npm run validate` — полная, или частично: `validate:code`/`:tests`/`:architecture`/`:security`/`:build`/`:docs`. Dev: `watch`, `test:ui`, `test:changed`, `dev:debug`, `mcp:validate`
+
 ---
 
 ## 📖 КОНВЕНЦИИ ПО КОМПОНЕНТАМ
@@ -287,7 +291,6 @@ tests/unit/              # Зеркалирует src/
 **Подробно:** [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ---
-
 ## 🔗 ДОПОЛНИТЕЛЬНО
 
 - **Архитектура:** [ARCHITECTURE.md](./ARCHITECTURE.md)

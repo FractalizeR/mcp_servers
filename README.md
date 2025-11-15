@@ -178,6 +178,7 @@ CLI автоматически:
 npm run mcp:status       # Проверить статус подключений
 npm run mcp:list         # Показать поддерживаемые клиенты
 npm run mcp:disconnect   # Отключить от клиента
+npm run mcp:validate     # Валидация конфигураций клиентов
 ```
 
 ### Локальный запуск для тестирования
@@ -269,7 +270,9 @@ fyt-mcp/
 
 4. **Запусти валидацию**:
    ```bash
-   npm run validate  # lint + typecheck + tests + depcruise + build
+   npm run validate        # Полная валидация (все подгруппы)
+   npm run validate:code   # Только код: lint + typecheck + format
+   npm run validate:tests  # Только тесты
    ```
 
 **Подробная документация:**
@@ -288,11 +291,11 @@ npm run watch
 
 # Запуск с отладкой
 npm run dev
+npm run dev:debug          # С Node.js inspector
 
 # Проверка типов без сборки
 npm run typecheck          # Только src/
 npm run typecheck:tests    # Только tests/
-npm run typecheck:all      # src/ + tests/
 
 # Линтинг кода
 npm run lint
