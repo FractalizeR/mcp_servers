@@ -53,6 +53,74 @@
 
 ---
 
+## 🎯 МЕТА: Правила ведения документации проекта
+
+**Cohesion/Coupling:** Документация рядом с кодом, который она описывает.
+
+### 1. Контекстное размещение
+
+- ✅ **Документация модуля:** `{module}/README.md` (НЕ `CONVENTIONS.md`)
+- ✅ **Документация подмодуля:** `{module}/{submodule}/README.md`
+- ❌ **НЕ создавать** централизованную `docs/` папку для модульной документации
+- ✅ **Исключение:** `docs/` только для специальных документов (если абсолютно необходимо)
+
+### 2. Лимиты размера (проверяется автоматически)
+
+- `CLAUDE.md` ≤ 250 строк
+- `ARCHITECTURE.md` ≤ 400 строк
+- Module `README.md` ≤ 400 строк
+- **Проверка:** `npm run validate:docs`
+
+### 3. Примеры кода
+
+- ≤10 строк — можно в документе (только для объяснения концепций)
+- >10 строк — заменить на ссылку на реальный файл: `См. [file.ts](path/to/file.ts)`
+
+### 4. Избегать дублирования
+
+- **Правило** в `CLAUDE.md` → **Концепция** в `ARCHITECTURE.md` → **Практика** в module `README.md`
+- Complementary информация на разных уровнях абстракции — OK
+- Дублирование одной и той же информации — ❌ ЗАПРЕЩЕНО
+
+### 5. Структура module README.md
+
+```markdown
+# {Module Name}
+
+## Ответственность
+Что делает этот модуль
+
+## Архитектура
+Структура папок + ключевые компоненты
+
+## Критические правила
+✅ Что делать / ❌ Что НЕ делать
+
+## Интеграция
+С какими модулями взаимодействует
+
+## Добавление компонента
+Чек-лист (5-10 пунктов)
+
+## Примеры
+Ссылки на реальные файлы (НЕ примеры кода >10 строк)
+```
+
+### 6. Когда обновлять документацию
+
+**ОБЯЗАТЕЛЬНО обновляй соответствующий `README.md` после:**
+- Добавления нового модуля/компонента
+- Изменения архитектуры модуля
+- Добавления новых правил/ограничений
+- Изменения API модуля (публичных интерфейсов)
+
+**НЕ обновляй документацию при:**
+- Рефакторинге внутренней реализации (без изменения API)
+- Исправлении багов (если не добавляются новые правила)
+- Обновлении комментариев в коде
+
+---
+
 ## ⚡ ОБЯЗАТЕЛЬНО ПРОЧИТАЙ
 
 **Перед началом работы:**
@@ -251,27 +319,27 @@ logger.error('Operation failed', error, { requestId: '456' });
 
 **ОБЯЗАТЕЛЬНО прочитай соответствующий файл перед работой с компонентом:**
 
-- **MCP Tools** — [src/mcp/CONVENTIONS.md](src/mcp/CONVENTIONS.md)
+- **MCP Tools** — [src/mcp/README.md](src/mcp/README.md)
   - Переиспользуемые утилиты: `BaseTool`, `BatchResultProcessor`, `ResultLogger`
   - Шаблоны и чек-листы для API и Helper Tools
   - Примеры и критические правила
 
-- **API Operations** — [src/tracker_api/api_operations/CONVENTIONS.md](src/tracker_api/api_operations/CONVENTIONS.md)
+- **API Operations** — [src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md)
   - Работа с `BaseOperation`, `ParallelExecutor`, кешированием
   - Batch-операции и типобезопасность
   - Интеграция с Facade
 
-- **Entities** — [src/tracker_api/entities/CONVENTIONS.md](src/tracker_api/entities/CONVENTIONS.md)
+- **Entities** — [src/tracker_api/entities/README.md](src/tracker_api/entities/README.md)
   - Работа с `WithUnknownFields<T>`
   - Структура и правила создания
   - Поддержка кастомных полей API
 
-- **DTO** — [src/tracker_api/dto/CONVENTIONS.md](src/tracker_api/dto/CONVENTIONS.md)
+- **DTO** — [src/tracker_api/dto/README.md](src/tracker_api/dto/README.md)
   - Input/Output паттерны
   - Create/Update DTO
   - Работа с кастомными полями
 
-- **Dependency Injection** — [src/composition-root/CONVENTIONS.md](src/composition-root/CONVENTIONS.md)
+- **Dependency Injection** — [src/composition-root/README.md](src/composition-root/README.md)
   - Symbol-based токены
   - Конфигурация контейнера
   - Тестирование с DI
@@ -280,11 +348,11 @@ logger.error('Operation failed', error, { requestId: '456' });
 
 ## 📋 КРАТКИЕ ЧЕК-ЛИСТЫ
 
-**⚠️ Подробные чек-листы — в CONVENTIONS.md файлах выше**
+**⚠️ Подробные чек-листы — в README.md файлах модулей выше**
 
 ### Добавление MCP Tool
 
-- [ ] 📖 Прочитай [src/mcp/CONVENTIONS.md](src/mcp/CONVENTIONS.md)
+- [ ] 📖 Прочитай [src/mcp/README.md](src/mcp/README.md)
 - [ ] Создай структуру: `{feature}/{action}/{name}.schema.ts`, `.definition.ts`, `.tool.ts`, `index.ts`
 - [ ] Добавь `static readonly METADATA` (обязательно для Tool Search)
 - [ ] Используй утилиты: `validateParams()`, `BatchResultProcessor`, `ResultLogger`
@@ -294,7 +362,7 @@ logger.error('Operation failed', error, { requestId: '456' });
 
 ### Добавление Operation
 
-- [ ] 📖 Прочитай [src/tracker_api/api_operations/CONVENTIONS.md](src/tracker_api/api_operations/CONVENTIONS.md)
+- [ ] 📖 Прочитай [src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md)
 - [ ] Наследуй `BaseOperation`
 - [ ] Для batch: используй `ParallelExecutor`, возвращай `BatchResult<T>`
 - [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:** Добавь **1 строку** в `src/composition-root/definitions/operation-definitions.ts`
@@ -303,14 +371,14 @@ logger.error('Operation failed', error, { requestId: '456' });
 
 ### Добавление Entity
 
-- [ ] 📖 Прочитай [src/tracker_api/entities/CONVENTIONS.md](src/tracker_api/entities/CONVENTIONS.md)
+- [ ] 📖 Прочитай [src/tracker_api/entities/README.md](src/tracker_api/entities/README.md)
 - [ ] Создай интерфейс (только known поля)
 - [ ] Создай `{Name}WithUnknownFields = WithUnknownFields<{Name}>`
 - [ ] Экспорт в `index.ts`
 
 ### Добавление DTO
 
-- [ ] 📖 Прочитай [src/tracker_api/dto/CONVENTIONS.md](src/tracker_api/dto/CONVENTIONS.md)
+- [ ] 📖 Прочитай [src/tracker_api/dto/README.md](src/tracker_api/dto/README.md)
 - [ ] Создай Input DTO (с `[key: string]: unknown` если нужно)
 - [ ] Для update — все поля опциональны
 - [ ] Экспорт в `index.ts`
@@ -380,7 +448,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ```
 src/
-├── composition-root/    # DI контейнер (см. CONVENTIONS.md)
+├── composition-root/    # DI контейнер (см. README.md)
 ├── infrastructure/      # HTTP, кеш, логирование, параллелизация
 ├── tracker_api/         # Operations, Entities, DTO, Facade
 └── mcp/                 # Tools (API + Helpers), Utils, Registry

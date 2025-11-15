@@ -273,7 +273,7 @@ fyt-mcp/
    ```
 
 **Подробная документация:**
-- Правила и шаблоны: [src/mcp/CONVENTIONS.md](./src/mcp/CONVENTIONS.md)
+- Правила и шаблоны: [src/mcp/README.md](./src/mcp/README.md)
 - Общие конвенции: [CLAUDE.md](./CLAUDE.md)
 - Архитектура: [ARCHITECTURE.md](./ARCHITECTURE.md)
 

@@ -183,7 +183,7 @@ BatchResultProcessor.process<TInput, TOutput>(
 
 **Экономия на каждый новый batch-tool:** ~60-70 строк кода
 
-**Подробнее:** [src/mcp/CONVENTIONS.md](src/mcp/CONVENTIONS.md)
+**Подробнее:** [src/mcp/README.md](src/mcp/README.md)
 
 ---
 
@@ -544,7 +544,7 @@ src/mcp/tools/helpers/{feature}/
 npm run validate
 ```
 
-**Подробнее:** см. `src/mcp/CONVENTIONS.md`
+**Подробнее:** см. `src/mcp/README.md`
 
 ---
 
