@@ -59,8 +59,7 @@
 
 | Файл | Назначение |
 |------|-----------|
-| **[src/composition-root/README.md](./src/composition-root/README.md)** | Dependency Injection — Symbol-based tokens, автоматическая регистрация |
-| **[docs/di-usage-example.md](./docs/di-usage-example.md)** | DI примеры — unit тесты, integration тесты, типичные ошибки |
+| **[src/composition-root/README.md](./src/composition-root/README.md)** | Dependency Injection — Symbol-based tokens, автоматическая регистрация, примеры использования |
 
 ### CLI инструмент
 

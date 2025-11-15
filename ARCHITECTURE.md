@@ -213,7 +213,7 @@ async execute(key: string, data: UpdateIssueDto): Promise<IssueWithUnknownFields
 **Преимущества Symbol-based подхода:**
 - Работает с интерфейсами, легко тестировать (rebind), явный контракт
 
-**Подробнее:** [src/composition-root/README.md](src/composition-root/README.md), [docs/di-usage-example.md](docs/di-usage-example.md)
+**Подробнее:** [src/composition-root/README.md](src/composition-root/README.md)
 
 ---
 
@@ -386,4 +386,4 @@ npm run depcruise:graph:html
 
 - **[CLAUDE.md](./CLAUDE.md)** — Критические правила и чек-листы для ИИ агентов
 - **[README.md](./README.md)** — Общая документация проекта
-- **[docs/di-usage-example.md](./docs/di-usage-example.md)** — Примеры использования DI в тестах
+- **[src/composition-root/README.md](./src/composition-root/README.md#-примеры-использования)** — Примеры использования DI

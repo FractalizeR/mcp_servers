@@ -106,7 +106,7 @@
 - Symbol-based tokens (`TYPES.*`), НЕ bind по классу
 - `toDynamicValue()`, НЕ декораторы `@injectable()`
 - `defaultScope: 'Singleton'` (убирает `.inSingletonScope()`)
-- **Детали:** [src/composition-root/README.md](src/composition-root/README.md), [docs/di-usage-example.md](./docs/di-usage-example.md)
+- **Детали:** [src/composition-root/README.md](src/composition-root/README.md)
 
 ### 4. API Яндекс.Трекер
 
@@ -263,5 +263,5 @@ tests/unit/              # Зеркалирует src/
 ## 🔗 ДОПОЛНИТЕЛЬНО
 
 - **Архитектура:** [ARCHITECTURE.md](./ARCHITECTURE.md)
-- **DI использование:** [docs/di-usage-example.md](./docs/di-usage-example.md)
+- **DI примеры:** [src/composition-root/README.md](src/composition-root/README.md#-примеры-использования)
 - **API справка:** `yandex_tracker_client/` (Python SDK)

@@ -329,49 +329,133 @@ function bindTools(container: Container): void {
 
 ---
 
-## 🔧 Тестирование с DI
+## 💡 Примеры использования
 
-**Создание mock-контейнера:**
+### Извлечение зависимостей в продакшене
 
 ```typescript
-import { Container } from 'inversify';
-import { TYPES } from '@composition-root/types.js';
+import { loadConfig } from '@infrastructure/config.js';
+import { createContainer, TYPES } from '@composition-root/index.js';
+import type { Logger } from '@infrastructure/logging/index.js';
 
-describe('MyService', () => {
-  let container: Container;
-  let mockHttpClient: HttpClient;
+const config = loadConfig();
+const container = await createContainer(config); // ASYNC!
+const logger = container.get<Logger>(TYPES.Logger);
+logger.info('Приложение запущено');
+```
+
+### Unit тесты: Mock Container с Operations
+
+```typescript
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Container } from 'inversify';
+import { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
+import type { PingOperation } from '@tracker_api/api_operations/user/ping.operation.js';
+
+describe('YandexTrackerFacade', () => {
+  let facade: YandexTrackerFacade;
+  let mockContainer: Container;
+  let mockPingOperation: PingOperation;
 
   beforeEach(() => {
-    container = new Container();
+    mockPingOperation = { execute: vi.fn() } as unknown as PingOperation;
 
-    // Mock зависимостей
-    mockHttpClient = {
-      get: vi.fn(),
-      post: vi.fn(),
-    } as unknown as HttpClient;
+    mockContainer = {
+      get: vi.fn((symbol: symbol) => {
+        if (symbol === Symbol.for('PingOperation')) return mockPingOperation;
+        throw new Error(`Unknown symbol: ${symbol.toString()}`);
+      }),
+    } as unknown as Container;
 
-    container.bind<HttpClient>(TYPES.HttpClient).toConstantValue(mockHttpClient);
-
-    // Реальный сервис
-    container.bind<MyService>(TYPES.MyService).toDynamicValue((context) => {
-      return new MyService(
-        context.container.get<HttpClient>(TYPES.HttpClient)
-      );
-    });
+    facade = new YandexTrackerFacade(mockContainer);
   });
 
-  it('should work', () => {
-    const service = container.get<MyService>(TYPES.MyService);
-    // ...
+  it('должна успешно вызвать операцию ping', async () => {
+    vi.mocked(mockPingOperation.execute).mockResolvedValue({ success: true });
+    const result = await facade.ping();
+    expect(result.success).toBe(true);
   });
 });
+```
+
+### Unit тесты: Mock Facade
+
+```typescript
+import { ToolRegistry } from '@mcp/tool-registry.js';
+import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
+import { PingTool } from '@mcp/tools/ping.tool.js';
+
+let mockFacade = { ping: vi.fn() } as unknown as YandexTrackerFacade;
+let mockContainer = {
+  get: vi.fn((symbol: symbol) => {
+    if (symbol.toString().includes('PingTool')) {
+      return new PingTool(mockFacade, mockLogger);
+    }
+    throw new Error(`Unknown symbol: ${symbol.toString()}`);
+  }),
+} as unknown as Container;
+
+const registry = new ToolRegistry(mockContainer, mockLogger);
+```
+
+### Интеграционные тесты: Реальный контейнер
+
+```typescript
+import { createContainer, TYPES } from '@composition-root/index.js';
+import type { ToolRegistry } from '@mcp/tool-registry.js';
+
+const config = {
+  apiBase: 'https://api.tracker.yandex.net',
+  orgId: 'test-org',
+  token: 'test-token',
+  logLevel: 'silent', // Отключаем логи
+  logsDir: '',
+};
+
+const container = await createContainer(config);
+const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+expect(registry.getDefinitions().length).toBeGreaterThan(0);
+```
+
+### Типичные ошибки
+
+**❌ Забыть await:**
+```typescript
+const container = createContainer(config); // ❌ Забыли await
+const logger = container.get(TYPES.Logger); // TypeError: container is Promise
+```
+
+**✅ Правильно:**
+```typescript
+const container = await createContainer(config); // ✅
+```
+
+**❌ Создавать Logger вручную:**
+```typescript
+const logger = new Logger({ level: 'info' }); // ❌
+```
+
+**✅ Правильно:**
+```typescript
+const logger = container.get<Logger>(TYPES.Logger); // ✅
+```
+
+**❌ Использовать container.rebind() в unit тестах:**
+```typescript
+container.rebind(TYPES.HttpClient).toConstantValue(mockHttp); // ❌ Ошибка: не зарегистрирован
+```
+
+**✅ Правильно:**
+```typescript
+container.bind(TYPES.HttpClient).toConstantValue(mockHttp); // ✅
 ```
 
 ---
 
 ## 🔗 См. также
 
-- **DI использование в тестах:** [docs/di-usage-example.md](../../docs/di-usage-example.md)
-- **Operations:** [src/tracker_api/api_operations/CONVENTIONS.md](../tracker_api/api_operations/CONVENTIONS.md)
-- **MCP Tools:** [src/mcp/CONVENTIONS.md](../mcp/CONVENTIONS.md)
+- **Operations:** [src/tracker_api/api_operations/README.md](../tracker_api/api_operations/README.md)
+- **MCP Tools:** [src/mcp/README.md](../mcp/README.md)
 - **Общие правила:** [CLAUDE.md](../../CLAUDE.md)
+- **Реальные unit тесты:** `tests/unit/tracker_api/facade/yandex-tracker.facade.test.ts`
+- **Реальные integration тесты:** `tests/integration/helpers/mcp-client.ts`
