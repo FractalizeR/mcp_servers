@@ -47,7 +47,10 @@ export class ClaudeDesktopConnector extends BaseConnector {
       this.configPath = path.join(os.homedir(), '.config/claude/claude_desktop_config.json');
     } else {
       // Windows
-      this.configPath = path.join(process.env.APPDATA || '', 'Claude/claude_desktop_config.json');
+      this.configPath = path.join(
+        process.env['APPDATA'] || '',
+        'Claude/claude_desktop_config.json'
+      );
     }
   }
 
@@ -62,13 +65,8 @@ export class ClaudeDesktopConnector extends BaseConnector {
   }
 
   async isInstalled(): Promise<boolean> {
-    try {
-      const configDir = path.dirname(this.configPath);
-      await FileManager.exists(configDir);
-      return true;
-    } catch {
-      return false;
-    }
+    const configDir = path.dirname(this.configPath);
+    return FileManager.exists(configDir);
   }
 
   async getStatus(): Promise<ConnectionStatus> {

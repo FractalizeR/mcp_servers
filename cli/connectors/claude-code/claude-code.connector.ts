@@ -40,14 +40,16 @@ export class ClaudeCodeConnector extends BaseConnector {
       const output = CommandExecutor.exec('claude mcp list');
       const connected = output.includes(MCP_SERVER_NAME);
 
-      return {
-        connected,
-        details: connected
-          ? {
-              configPath: 'managed by claude mcp',
-            }
-          : undefined,
-      };
+      if (connected) {
+        return {
+          connected,
+          details: {
+            configPath: 'managed by claude mcp',
+          },
+        };
+      }
+
+      return { connected };
     } catch (error) {
       return {
         connected: false,

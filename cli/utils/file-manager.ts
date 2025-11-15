@@ -76,7 +76,7 @@ export class FileManager {
    * Получить домашнюю директорию пользователя
    */
   static getHomeDir(): string {
-    return process.env.HOME || process.env.USERPROFILE || '';
+    return process.env['HOME'] || process.env['USERPROFILE'] || '';
   }
 
   /**

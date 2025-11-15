@@ -42,11 +42,18 @@ export class ConfigManager {
     // Сохраняем только безопасные поля (без токена)
     const safeConfig: Partial<MCPServerConfig> = {
       orgId: config.orgId,
-      apiBase: config.apiBase,
-      logLevel: config.logLevel,
-      requestTimeout: config.requestTimeout,
       projectPath: config.projectPath,
     };
+
+    if (config.apiBase) {
+      safeConfig.apiBase = config.apiBase;
+    }
+    if (config.logLevel) {
+      safeConfig.logLevel = config.logLevel;
+    }
+    if (config.requestTimeout) {
+      safeConfig.requestTimeout = config.requestTimeout;
+    }
 
     await FileManager.writeJSON(this.configPath, safeConfig);
 

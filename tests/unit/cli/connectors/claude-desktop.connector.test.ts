@@ -2,8 +2,8 @@
  * Unit тесты для ClaudeDesktopConnector
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { mkdtemp, rm, writeFile, mkdir } from 'fs/promises';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtemp, rm, writeFile, mkdir, readFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir, platform } from 'os';
 import { ClaudeDesktopConnector } from '../../../../cli/connectors/claude-desktop/claude-desktop.connector.js';
@@ -57,9 +57,6 @@ describe('ClaudeDesktopConnector', () => {
   afterEach(async () => {
     // Очищаем временную директорию после каждого теста
     await rm(tempDir, { recursive: true, force: true });
-
-    // Восстанавливаем все моки
-    vi.restoreAllMocks();
   });
 
   describe('getClientInfo', () => {
@@ -115,8 +112,12 @@ describe('ClaudeDesktopConnector', () => {
     });
 
     it('должен вернуть false если директория конфига не существует', async () => {
-      // Act (директория не создана)
-      const result = await connector.isInstalled();
+      // Arrange: Создаём коннектор с путём к несуществующей директории
+      const nonExistentPath = join(tempDir, 'non-existent-dir', 'claude_desktop_config.json');
+      const testConnector = new TestClaudeDesktopConnector(nonExistentPath);
+
+      // Act
+      const result = await testConnector.isInstalled();
 
       // Assert
       expect(result).toBe(false);
@@ -137,7 +138,6 @@ describe('ClaudeDesktopConnector', () => {
 
     it('должен вернуть connected: true если сервер зарегистрирован в конфиге', async () => {
       // Arrange: Создаём конфиг с нашим сервером
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
       const config = {
         mcpServers: {
           [MCP_SERVER_NAME]: {
@@ -150,20 +150,22 @@ describe('ClaudeDesktopConnector', () => {
           },
         },
       };
-      await writeFile(configPath, JSON.stringify(config, null, 2), { recursive: true });
+      await mkdir(join(tempDir, 'config'), { recursive: true });
+      await writeFile(testConfigPath, JSON.stringify(config, null, 2));
 
       // Act
       const status = await connector.getStatus();
 
       // Assert
       expect(status.connected).toBe(true);
-      expect(status.details?.configPath).toBe(configPath);
-      expect(status.details?.metadata?.serverConfig).toEqual(config.mcpServers[MCP_SERVER_NAME]);
+      expect(status.details?.configPath).toBe(testConfigPath);
+      expect(status.details?.metadata?.['serverConfig']).toEqual(
+        config.mcpServers[MCP_SERVER_NAME]
+      );
     });
 
     it('должен вернуть connected: false если сервер не зарегистрирован в конфиге', async () => {
       // Arrange: Создаём конфиг без нашего сервера
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
       const config = {
         mcpServers: {
           'other-server': {
@@ -173,7 +175,8 @@ describe('ClaudeDesktopConnector', () => {
           },
         },
       };
-      await writeFile(configPath, JSON.stringify(config, null, 2), { recursive: true });
+      await mkdir(join(tempDir, 'config'), { recursive: true });
+      await writeFile(testConfigPath, JSON.stringify(config, null, 2));
 
       // Act
       const status = await connector.getStatus();
@@ -186,8 +189,8 @@ describe('ClaudeDesktopConnector', () => {
 
     it('должен вернуть ошибку если конфиг файл невалидный JSON', async () => {
       // Arrange: Создаём невалидный JSON
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
-      await writeFile(configPath, 'invalid json {', { recursive: true });
+      await mkdir(join(tempDir, 'config'), { recursive: true });
+      await writeFile(testConfigPath, 'invalid json {');
 
       // Act
       const status = await connector.getStatus();
@@ -199,11 +202,6 @@ describe('ClaudeDesktopConnector', () => {
   });
 
   describe('connect', () => {
-    beforeEach(() => {
-      vi.spyOn(os, 'platform').mockReturnValue('darwin');
-      connector = new ClaudeDesktopConnector();
-    });
-
     it('должен создать новый конфиг файл если он не существует', async () => {
       // Act
       await connector.connect(testConfig);
@@ -218,15 +216,13 @@ describe('ClaudeDesktopConnector', () => {
       await connector.connect(testConfig);
 
       // Assert
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
       const status = await connector.getStatus();
       expect(status.connected).toBe(true);
-      expect(status.details?.configPath).toBe(configPath);
+      expect(status.details?.configPath).toBe(testConfigPath);
     });
 
     it('должен добавить сервер в существующий конфиг без удаления других серверов', async () => {
       // Arrange: Создаём конфиг с другим сервером
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
       const existingConfig = {
         mcpServers: {
           'existing-server': {
@@ -236,7 +232,8 @@ describe('ClaudeDesktopConnector', () => {
           },
         },
       };
-      await writeFile(configPath, JSON.stringify(existingConfig, null, 2), { recursive: true });
+      await mkdir(join(tempDir, 'config'), { recursive: true });
+      await writeFile(testConfigPath, JSON.stringify(existingConfig, null, 2));
 
       // Act
       await connector.connect(testConfig);
@@ -246,12 +243,11 @@ describe('ClaudeDesktopConnector', () => {
       expect(status.connected).toBe(true);
 
       // Проверяем, что оба сервера присутствуют
-      const config = status.details?.metadata?.serverConfig;
+      const config = status.details?.metadata?.['serverConfig'];
       expect(config).toBeDefined();
 
       // Читаем файл напрямую для полной проверки
-      const { readFile } = await import('fs/promises');
-      const fileContent = await readFile(configPath, 'utf-8');
+      const fileContent = await readFile(testConfigPath, 'utf-8');
       const fullConfig = JSON.parse(fileContent);
       expect(fullConfig.mcpServers).toHaveProperty('existing-server');
       expect(fullConfig.mcpServers).toHaveProperty(MCP_SERVER_NAME);
@@ -259,7 +255,6 @@ describe('ClaudeDesktopConnector', () => {
 
     it('должен обновить конфигурацию существующего сервера', async () => {
       // Arrange: Создаём конфиг с нашим сервером (старая версия)
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
       const oldConfig = {
         mcpServers: {
           [MCP_SERVER_NAME]: {
@@ -272,14 +267,14 @@ describe('ClaudeDesktopConnector', () => {
           },
         },
       };
-      await writeFile(configPath, JSON.stringify(oldConfig, null, 2), { recursive: true });
+      await mkdir(join(tempDir, 'config'), { recursive: true });
+      await writeFile(testConfigPath, JSON.stringify(oldConfig, null, 2));
 
       // Act: Подключаемся с новой конфигурацией
       await connector.connect(testConfig);
 
       // Assert: Проверяем обновление
-      const { readFile } = await import('fs/promises');
-      const fileContent = await readFile(configPath, 'utf-8');
+      const fileContent = await readFile(testConfigPath, 'utf-8');
       const newConfig = JSON.parse(fileContent);
       const serverConfig = newConfig.mcpServers[MCP_SERVER_NAME];
 
@@ -293,9 +288,7 @@ describe('ClaudeDesktopConnector', () => {
       await connector.connect(testConfig);
 
       // Assert
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
-      const { readFile } = await import('fs/promises');
-      const fileContent = await readFile(configPath, 'utf-8');
+      const fileContent = await readFile(testConfigPath, 'utf-8');
       const config = JSON.parse(fileContent);
       const serverConfig = config.mcpServers[MCP_SERVER_NAME];
 
@@ -324,9 +317,7 @@ describe('ClaudeDesktopConnector', () => {
       await connector.connect(minimalConfig);
 
       // Assert
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
-      const { readFile } = await import('fs/promises');
-      const fileContent = await readFile(configPath, 'utf-8');
+      const fileContent = await readFile(testConfigPath, 'utf-8');
       const config = JSON.parse(fileContent);
       const serverConfig = config.mcpServers[MCP_SERVER_NAME];
 
@@ -340,9 +331,7 @@ describe('ClaudeDesktopConnector', () => {
       await connector.connect(testConfig);
 
       // Assert
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
-      const { readFile } = await import('fs/promises');
-      const fileContent = await readFile(configPath, 'utf-8');
+      const fileContent = await readFile(testConfigPath, 'utf-8');
       const config = JSON.parse(fileContent);
       const serverConfig = config.mcpServers[MCP_SERVER_NAME];
 
@@ -354,11 +343,6 @@ describe('ClaudeDesktopConnector', () => {
   });
 
   describe('disconnect', () => {
-    beforeEach(() => {
-      vi.spyOn(os, 'platform').mockReturnValue('darwin');
-      connector = new ClaudeDesktopConnector();
-    });
-
     it('должен удалить сервер из конфига', async () => {
       // Arrange: Подключаем сервер
       await connector.connect(testConfig);
@@ -375,7 +359,6 @@ describe('ClaudeDesktopConnector', () => {
 
     it('должен сохранить другие серверы при отключении', async () => {
       // Arrange: Создаём конфиг с несколькими серверами
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
       const config = {
         mcpServers: {
           'other-server': {
@@ -390,14 +373,14 @@ describe('ClaudeDesktopConnector', () => {
           },
         },
       };
-      await writeFile(configPath, JSON.stringify(config, null, 2), { recursive: true });
+      await mkdir(join(tempDir, 'config'), { recursive: true });
+      await writeFile(testConfigPath, JSON.stringify(config, null, 2));
 
       // Act: Отключаем наш сервер
       await connector.disconnect();
 
       // Assert: Проверяем, что другой сервер остался
-      const { readFile } = await import('fs/promises');
-      const fileContent = await readFile(configPath, 'utf-8');
+      const fileContent = await readFile(testConfigPath, 'utf-8');
       const newConfig = JSON.parse(fileContent);
 
       expect(newConfig.mcpServers).toHaveProperty('other-server');
@@ -411,7 +394,6 @@ describe('ClaudeDesktopConnector', () => {
 
     it('не должен изменить конфиг если сервер не был зарегистрирован', async () => {
       // Arrange: Создаём конфиг без нашего сервера
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
       const config = {
         mcpServers: {
           'other-server': {
@@ -421,14 +403,14 @@ describe('ClaudeDesktopConnector', () => {
           },
         },
       };
-      await writeFile(configPath, JSON.stringify(config, null, 2), { recursive: true });
+      await mkdir(join(tempDir, 'config'), { recursive: true });
+      await writeFile(testConfigPath, JSON.stringify(config, null, 2));
 
       // Act
       await connector.disconnect();
 
       // Assert: Конфиг не изменился
-      const { readFile } = await import('fs/promises');
-      const fileContent = await readFile(configPath, 'utf-8');
+      const fileContent = await readFile(testConfigPath, 'utf-8');
       const newConfig = JSON.parse(fileContent);
 
       expect(newConfig).toEqual(config);
@@ -436,11 +418,6 @@ describe('ClaudeDesktopConnector', () => {
   });
 
   describe('интеграционные сценарии', () => {
-    beforeEach(() => {
-      vi.spyOn(os, 'platform').mockReturnValue('darwin');
-      connector = new ClaudeDesktopConnector();
-    });
-
     it('должен корректно выполнить полный цикл: connect -> getStatus -> disconnect', async () => {
       // Начальное состояние
       let status = await connector.getStatus();
@@ -479,9 +456,7 @@ describe('ClaudeDesktopConnector', () => {
       expect(status.connected).toBe(true);
 
       // Проверяем обновление конфигурации
-      const configPath = join(tempDir, CONFIG_PATHS.darwin);
-      const { readFile } = await import('fs/promises');
-      const fileContent = await readFile(configPath, 'utf-8');
+      const fileContent = await readFile(testConfigPath, 'utf-8');
       const config = JSON.parse(fileContent);
       const serverConfig = config.mcpServers[MCP_SERVER_NAME];
 

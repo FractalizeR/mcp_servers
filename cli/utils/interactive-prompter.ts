@@ -60,13 +60,20 @@ export class InteractivePrompter {
       },
     ]);
 
-    return {
+    const result: Omit<MCPServerConfig, 'projectPath'> = {
       token: answers.token,
       orgId: answers.orgId,
       logLevel: answers.logLevel,
-      apiBase: savedConfig?.apiBase,
-      requestTimeout: savedConfig?.requestTimeout,
     };
+
+    if (savedConfig?.apiBase) {
+      result.apiBase = savedConfig.apiBase;
+    }
+    if (savedConfig?.requestTimeout) {
+      result.requestTimeout = savedConfig.requestTimeout;
+    }
+
+    return result;
   }
 
   /**
