@@ -121,69 +121,17 @@ handlers/
 
 ## 🔧 Переиспользуемые утилиты MCP Tools
 
-**Проблема:** При масштабировании (5+ tools) дублируется код валидации, обработки batch-результатов и логирования.
+**Проблема:** Дублирование кода валидации, обработки batch-результатов, логирования.
 
-**Решение:** Централизованные утилиты с единым API.
+**Решение:** Централизованные утилиты:
+- `BaseTool` — валидация параметров, форматирование ответов
+- `BatchResultProcessor` — обработка batch-результатов
+- `ResultLogger` — стандартизированное логирование
+- `ResponseFieldFilter` — фильтрация полей (экономия 80-90% размера)
 
-### BaseTool — Базовый класс
+**Результат:** Сокращение кода tools с 160 до 50 строк (~70% экономия)
 
-**Файл:** `src/mcp/tools/base/base-tool.ts`
-
-**Предоставляет:**
-- `validateParams<T>(params, schema)` — Zod валидация, возвращает type-safe result или formatted error
-- `formatSuccess(data)` — стандартизированный успешный ответ
-- `formatError(message, error)` — форматирование + автоматическое логирование
-
-**Выгода:** Убирает 10-15 строк дублирующегося кода из каждого tool.
-
----
-
-### BatchResultProcessor — Обработка batch-операций
-
-**Файл:** `src/mcp/utils/batch-result-processor.ts`
-
-**Назначение:** Преобразует `BatchResult<T>` (из Operations) в структурированный результат для Tools.
-
-**API:**
-```typescript
-BatchResultProcessor.process<TInput, TOutput>(
-  results: BatchResult<TInput>,
-  filterFn?: (item: TInput) => TOutput
-): ProcessedBatchResult<TOutput>
-```
-
-**Возвращает:**
-```typescript
-{
-  successful: { issueKey, data }[],
-  failed: { issueKey, error }[]
-}
-```
-
-**Выгода:** Type-safe работа с discriminated unions, поддержка фильтрации, устранение дублирования 30-40 строк кода.
-
----
-
-### ResultLogger — Стандартизированное логирование
-
-**Файл:** `src/mcp/utils/result-logger.ts`
-
-**Методы:**
-- `logOperationStart(logger, name, count, fields?)` — старт операции
-- `logBatchResults(logger, name, config, results?)` — результаты + статистика размеров
-
-**Выгода:** Единообразный формат логов, автоматический расчёт статистики, 15-20 строк экономии.
-
----
-
-### Итог рефакторинга
-
-**Было:** GetIssuesTool — 160 строк (75 основной код + 85 processResults/logResults)
-**Стало:** GetIssuesTool — 50 строк (только координация, логика в утилитах)
-
-**Экономия на каждый новый batch-tool:** ~60-70 строк кода
-
-**Подробнее:** [src/mcp/README.md](src/mcp/README.md)
+**Подробнее:** [src/mcp/tools/common/README.md](src/mcp/tools/common/README.md)
 
 ---
 
@@ -255,71 +203,17 @@ async execute(key: string, data: UpdateIssueDto): Promise<IssueWithUnknownFields
 
 ## 🏗️ Dependency Injection (DI)
 
-### Архитектура DI модуля
+**Подход:** InversifyJS v7 с Symbol-based tokens, `defaultScope: 'Singleton'`
 
-**Файлы:**
-- `src/composition-root/types.ts` — Symbol-based токены для всех зависимостей
-- `src/composition-root/container.ts` — конфигурация InversifyJS контейнера
-- `src/composition-root/definitions/` — декларативные определения tools и operations
-- `src/composition-root/index.ts` — публичный API (TYPES, createContainer)
+**Ключевые файлы:**
+- `src/composition-root/types.ts` — Symbol-based токены (TYPES)
+- `src/composition-root/container.ts` — конфигурация контейнера
+- `src/composition-root/definitions/` — декларативные определения
 
-### Symbol-based tokens (TYPES)
+**Преимущества Symbol-based подхода:**
+- Работает с интерфейсами, легко тестировать (rebind), явный контракт
 
-**Решение:** Используем Symbol-based подход вместо class-based binding.
-
-**Преимущества:**
-1. Работает с интерфейсами (не только с классами)
-2. Лучше для тестов (легко подменять через `container.rebind()`)
-3. Явный контракт (все зависимости в `types.ts`)
-4. Поддержка multiple bindings
-
-**Файл:** `src/composition-root/types.ts`
-
-### Конфигурация контейнера
-
-**Ключевые особенности:**
-- `defaultScope: 'Singleton'` — все зависимости по умолчанию Singleton
-- `toDynamicValue()` — гибкое создание зависимостей с доступом к контейнеру
-- Модульная структура bind функций (по слоям: HTTP, Cache, Operations, Tools)
-
-**Файл:** `src/composition-root/container.ts`
-
-### Использование в коде
-
-**До DI (ручное создание):**
-```typescript
-const retryStrategy = new ExponentialBackoffStrategy(3, 1000, 10000);
-const httpClient = new HttpClient(config, logger, retryStrategy);
-const cacheManager = new NoOpCache();
-const facade = new YandexTrackerFacade(container); // Facade получает контейнер
-const toolRegistry = new ToolRegistry(facade, logger);
-```
-
-**После DI (контейнер):**
-```typescript
-import 'reflect-metadata';
-import { createContainer, TYPES } from '@composition-root/index.js';
-
-const container = createContainer(config, logger);
-const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-```
-
-### Использование в тестах
-
-**Подмена зависимости для теста:**
-```typescript
-const container = createContainer(config, logger);
-const mockHttpClient = createMockHttpClient();
-container.rebind(TYPES.HttpClient).toConstantValue(mockHttpClient);
-const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-```
-
-**Преимущества:**
-- Легко подменять зависимости через `rebind()`
-- Изолированное тестирование компонентов
-- Разные конфигурации для разных тестовых сценариев
-
-**Подробнее:** `docs/di-usage-example.md`
+**Подробнее:** [src/composition-root/README.md](src/composition-root/README.md), [docs/di-usage-example.md](docs/di-usage-example.md)
 
 ---
 
@@ -355,146 +249,38 @@ const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
 
 ### Обработка результатов
 
-**Типобезопасность:** Все batch-операции возвращают типизированные результаты с `status: 'fulfilled' | 'rejected'`.
+**Типобезопасность:** `BatchResult<T>` с discriminated union (`status: 'fulfilled' | 'rejected'`)
 
-**Пример:**
-```typescript
-const results = await facade.getIssues(['QUEUE-123', 'INVALID-KEY']);
+**Преимущества:** частичные ошибки не блокируют выполнение, порядок сохраняется
 
-results.forEach((result) => {
-  if (result.status === 'fulfilled') {
-    console.log(`Задача ${result.issueKey}:`, result.value);
-  } else {
-    console.error(`Ошибка ${result.issueKey}:`, result.reason);
-  }
-});
-```
-
-**Преимущества:**
-- Частичные ошибки не блокируют выполнение
-- Сохранение порядка результатов
-- Полная типобезопасность (TypeScript)
+**Типы:** `src/types/index.ts`, примеры: `*.operation.ts` файлы
 
 ---
 
-## 🏗️ Детальное описание компонентов
+## 🏗️ Ключевые компоненты
 
-### 1. HTTP Слой
+### HTTP Слой
+- HttpClient (Axios wrapper), Retry Strategies (exponential backoff)
+- **Детали:** `src/infrastructure/http/`, [src/infrastructure/README.md](src/infrastructure/README.md)
 
-#### HttpClient
-**Файл:** `src/infrastructure/http/client/http-client.ts`
+### Кеширование
+- Strategy Pattern + Null Object, EntityCacheKey
+- **Детали:** `src/infrastructure/cache/`
 
-**Ответственность:**
-- Конфигурация Axios instance
-- Базовые HTTP методы (get, post, patch, delete)
-- Добавление заголовков (Authorization, X-Org-ID)
-- Логирование запросов/ответов через interceptors
+### Yandex Tracker API
+- BaseOperation, конкретные операции, YandexTrackerFacade (Facade Pattern)
+- **Детали:** [src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md)
 
-**НЕ отвечает за:** Retry логику, кеширование, бизнес-логику API
+### MCP Tools
+- BaseTool, валидация (Zod), ResponseFieldFilter, ToolRegistry
+- **Детали:** [src/mcp/README.md](src/mcp/README.md), [src/mcp/tools/common/README.md](src/mcp/tools/common/README.md)
 
-#### Retry Strategies
-**Паттерн:** Strategy Pattern
+### Применяемые паттерны
+Strategy, Facade, Registry, Template Method, Null Object, Dependency Injection
 
-**Интерфейс:** `src/infrastructure/http/retry/retry-strategy.interface.ts`
-**Реализация:** `src/infrastructure/http/retry/exponential-backoff.strategy.ts`
-**Оркестратор:** `src/infrastructure/http/retry/retry-handler.ts`
-
-**Формула задержки:** `delay = baseDelay * 2^attempt` (ограничение: maxDelay)
-
----
-
-### 2. Кеширование
-
-**Паттерн:** Strategy Pattern + Null Object Pattern
-
-**Интерфейс:** `src/infrastructure/cache/cache-manager.interface.ts`
-**Реализации:**
-- `no-op-cache.ts` — Null Object (заглушка)
-
-**Генератор ключей:** `src/infrastructure/cache/entity-cache-key.ts`
-- Создание ключей вида `<EntityType>:<ID>`
-- Извлечение entity key из API пути
-- Специфичен для доменных сущностей (Issue, User)
-
----
-
-### 3. Yandex Tracker API
-
-#### API Operations
-
-**Базовый класс:** `src/tracker_api/api_operations/base-operation.ts`
-- Методы `withCache()`, `withRetry()` для композиции инфраструктуры
-
-**Конкретные операции:** см. `src/tracker_api/api_operations/`
-- `user/ping.operation.ts` — проверка подключения
-- `issue/get-issues.operation.ts` — batch-получение задач
-- `issue/create-issues.operation.ts` — batch-создание задач
-- `issue/update-issues.operation.ts` — batch-обновление задач
-- `issue/delete-issues.operation.ts` — batch-удаление задач
-
-#### YandexTrackerFacade
-
-**Паттерн:** Facade Pattern
-**Файл:** `src/tracker_api/facade/yandex-tracker.facade.ts`
-
-**Ответственность:**
-- Инициализация всех операций
-- Предоставление удобного API для tools
-- Делегирование вызовов конкретным операциям
-
-**НЕ отвечает за:** Бизнес-логику, HTTP запросы
-
----
-
-### 4. MCP Tools
-
-**Файлы:** `src/mcp/tools/`
-
-**Ответственность:**
-- Определение MCP инструмента (name, description, inputSchema)
-- Валидация параметров от Claude
-- Вызов YandexTrackerFacade
-- Форматирование результата для Claude
-- Фильтрация полей через `ResponseFieldFilter`
-
-**Базовый класс:** `src/mcp/tools/base/base-tool.ts`
-- Валидация параметров через Zod: `validateParams<T>(params, schema)`
-- Форматирование результатов: `formatSuccess(data)`, `formatError(message, error)`
-
-**Конкретные tools:** см. `src/mcp/tools/api/` и `src/mcp/tools/helpers/`
-
-**Tool Registry:** `src/mcp/tool-registry.ts`
-- Регистрация всех tools
-- Маршрутизация вызовов к нужному tool
-
----
-
-## 🎓 Применяемые паттерны проектирования
-
-- **Strategy Pattern** — RetryStrategy, CacheManager
-- **Facade Pattern** — YandexTrackerFacade
-- **Registry Pattern** — ToolRegistry
-- **Template Method** — BaseTool, BaseOperation
-- **Null Object Pattern** — NoOpCache
-- **Dependency Injection** — InversifyJS v7 (везде)
-
----
-
-## 🧪 Тестирование
-
-### Принципы
-
-1. **Изоляция:** Каждый класс тестируется отдельно с моками зависимостей
-2. **Покрытие:** Минимум 80% code coverage
-3. **Структура:** Тесты зеркалируют структуру `src/`
-4. **AAA паттерн:** Arrange → Act → Assert
-
-### Примеры тестов
-
-**Retry стратегия:** `tests/unit/infrastructure/http/retry/exponential-backoff.strategy.test.ts`
-**HTTP клиент:** `tests/unit/infrastructure/http/client/http-client.test.ts`
-**Операции:** `tests/unit/tracker_api/api_operations/**/*.test.ts`
-**Tools:** `tests/unit/mcp/tools/api/**/*.test.ts`, `tests/unit/mcp/tools/helpers/**/*.test.ts`
+### Тестирование
+- Изоляция (моки), покрытие ≥80%, структура зеркалирует `src/`, AAA паттерн
+- **Детали:** [tests/README.md](tests/README.md)
 
 ---
 
