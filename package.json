@@ -28,7 +28,7 @@
     "mcp:validate": "tsx src/cli/bin/mcp-connect.ts validate",
     "postinstall": "./scripts/install-gitleaks.sh",
     "prebuild": "npm run generate:index",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "prepublishOnly": "npm run clean && npm run build:bundle",
     "test": "vitest run",
     "test:changed": "vitest run --changed",
