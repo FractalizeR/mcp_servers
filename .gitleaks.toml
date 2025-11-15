@@ -1,5 +1,5 @@
 # Gitleaks configuration for Yandex Tracker MCP
-title = "Gitleaks config for fyt-mcp"
+title = "Gitleaks config for fractalizer_mcp_yandex_tracker"
 
 [extend]
 # Используем стандартные правила Gitleaks

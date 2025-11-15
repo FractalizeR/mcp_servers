@@ -17,7 +17,7 @@ import type { StaticToolIndex } from '@mcp/search/types.js';
 describe('FuzzySearchStrategy', () => {
   const mockTools: StaticToolIndex[] = [
     {
-      name: 'fyt_mcp_ping',
+      name: 'fractalizer_mcp_yandex_tracker_ping',
       category: ToolCategory.USERS,
       tags: ['ping', 'health'],
       isHelper: false,
@@ -26,7 +26,7 @@ describe('FuzzySearchStrategy', () => {
       descriptionShort: 'Ping tool',
     },
     {
-      name: 'fyt_mcp_get_issues',
+      name: 'fractalizer_mcp_yandex_tracker_get_issues',
       category: ToolCategory.ISSUES,
       tags: ['issue', 'get'],
       isHelper: false,
@@ -35,7 +35,7 @@ describe('FuzzySearchStrategy', () => {
       descriptionShort: 'Get issues',
     },
     {
-      name: 'fyt_mcp_find_issues',
+      name: 'fractalizer_mcp_yandex_tracker_find_issues',
       category: ToolCategory.ISSUES,
       tags: ['issue', 'find'],
       isHelper: false,
@@ -53,7 +53,7 @@ describe('FuzzySearchStrategy', () => {
       const results = strategy.search('pong', mockTools);
 
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeDefined();
       expect(match!.score).toBeGreaterThan(0);
       expect(match!.strategyType).toBe('fuzzy');
@@ -64,7 +64,7 @@ describe('FuzzySearchStrategy', () => {
       const results = strategy.search('pang', mockTools);
 
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeDefined();
     });
 
@@ -79,7 +79,7 @@ describe('FuzzySearchStrategy', () => {
       // 'completely_different' != 'ping' (distance >> 3)
       const results = strategy.search('completely', mockTools);
 
-      const pingMatch = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const pingMatch = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(pingMatch).toBeUndefined();
     });
   });
@@ -92,8 +92,12 @@ describe('FuzzySearchStrategy', () => {
       const exactResults = strategy.search('ping', mockTools);
       const fuzzyResults = strategy.search('pong', mockTools);
 
-      const exactMatch = exactResults.find((r) => r.toolName === 'fyt_mcp_ping');
-      const fuzzyMatch = fuzzyResults.find((r) => r.toolName === 'fyt_mcp_ping');
+      const exactMatch = exactResults.find(
+        (r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping'
+      );
+      const fuzzyMatch = fuzzyResults.find(
+        (r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping'
+      );
 
       expect(exactMatch).toBeDefined();
       expect(fuzzyMatch).toBeDefined();
@@ -116,7 +120,7 @@ describe('FuzzySearchStrategy', () => {
 
       // 'pong' vs 'ping' token (distance = 1)
       const results = strategy2.search('pong', mockTools);
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
 
       if (match) {
         // Score: (1 - 1/(3+1)) * TOKEN_WEIGHT = 0.75 * 0.7 = 0.525
@@ -202,7 +206,7 @@ describe('FuzzySearchStrategy', () => {
       const results = strategy.search('pn', mockTools);
 
       // 'pn' vs 'ping' (distance = 2: вставить 'i' и 'g')
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeDefined();
     });
   });
@@ -218,7 +222,7 @@ describe('FuzzySearchStrategy', () => {
       // 'pung' vs 'ping' (distance = 1) - ДОЛЖЕН найти
       // 'pongg' vs 'ping' (distance = 2) - НЕ должен найти
       const results2 = strategy.search('pongg', mockTools);
-      const match = results2.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results2.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeUndefined();
     });
 
@@ -229,7 +233,7 @@ describe('FuzzySearchStrategy', () => {
       const results = strategy.search('pongg', mockTools);
 
       expect(results.length).toBeGreaterThan(0);
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeDefined();
     });
   });
@@ -308,7 +312,7 @@ describe('FuzzySearchStrategy', () => {
     it('должен обработать query равный токену', () => {
       const results = strategy.search('ping', mockTools);
 
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeDefined();
       // Точное совпадение с токеном: distance = 0, score = 1.0 * TOKEN_WEIGHT (0.7)
       expect(match!.score).toBe(0.7);
@@ -320,26 +324,26 @@ describe('FuzzySearchStrategy', () => {
 
     it('вставка одного символа (distance = 1)', () => {
       const results = strategy.search('pnig', mockTools);
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeDefined();
     });
 
     it('удаление одного символа (distance = 1)', () => {
       const results = strategy.search('pin', mockTools);
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeDefined();
     });
 
     it('замена одного символа (distance = 1)', () => {
       const results = strategy.search('pong', mockTools);
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeDefined();
     });
 
     it('несколько операций', () => {
       // 'pang' vs 'ping': замена 'i' -> 'a' и 'g' -> 'g' (distance = 1)
       const results = strategy.search('pang', mockTools);
-      const match = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const match = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
       expect(match).toBeDefined();
     });
   });

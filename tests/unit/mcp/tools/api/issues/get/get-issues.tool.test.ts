@@ -89,7 +89,7 @@ describe('GetIssuesTool', () => {
     it('должен вернуть корректное определение инструмента', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.name).toBe('fyt_mcp_get_issues');
+      expect(definition.name).toBe('fractalizer_mcp_yandex_tracker_get_issues');
       expect(definition.description).toContain('Получение информации о задачах');
       expect(definition.description).toContain('Batch-режим');
       expect(definition.inputSchema.type).toBe('object');

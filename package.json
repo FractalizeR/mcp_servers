@@ -1,5 +1,5 @@
 {
-  "name": "fyt-mcp",
+  "name": "fractalizer_mcp_yandex_tracker",
   "version": "0.1.0",
   "description": "FractalizeR's Yandex Tracker MCP - MCP сервер для интеграции с Яндекс.Трекером",
   "type": "module",

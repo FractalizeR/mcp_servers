@@ -199,7 +199,9 @@ describe('Child Logger Traceability', () => {
       // Act - имитируем цепочку вызовов
       // 1. ToolRegistry получает запрос от MCP клиента
       const toolRegistryLogger = rootLogger.child({ requestId, component: 'ToolRegistry' });
-      toolRegistryLogger.info('Incoming MCP request', { toolName: 'fyt_mcp_get_issues' });
+      toolRegistryLogger.info('Incoming MCP request', {
+        toolName: 'fractalizer_mcp_yandex_tracker_get_issues',
+      });
 
       // 2. Tool начинает обработку
       const toolLogger = toolRegistryLogger.child({ component: 'GetIssuesTool' });

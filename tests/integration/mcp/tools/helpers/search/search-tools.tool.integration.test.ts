@@ -29,7 +29,7 @@ describe('search-tools integration tests', () => {
   describe('Happy Path', () => {
     it('должен успешно найти инструменты по простому query', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
       });
 
@@ -56,7 +56,7 @@ describe('search-tools integration tests', () => {
 
     it('должен найти tools по специфичному названию', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'get_issues',
         detailLevel: 'full',
       });
@@ -71,17 +71,17 @@ describe('search-tools integration tests', () => {
 
         // Должен найти fyt_mcp_get_issues
         const getIssuesTool = parsed.data.tools.find(
-          (t: { name: string }) => t.name === 'fyt_mcp_get_issues'
+          (t: { name: string }) => t.name === 'fractalizer_mcp_yandex_tracker_get_issues'
         );
         expect(getIssuesTool).toBeDefined();
-        expect(getIssuesTool.name).toBe('fyt_mcp_get_issues');
+        expect(getIssuesTool.name).toBe('fractalizer_mcp_yandex_tracker_get_issues');
         expect(getIssuesTool.inputSchema).toBeDefined(); // full detail level
       }
     });
 
     it('должен применить лимит к результатам', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'yandex',
         limit: 2,
       });
@@ -100,7 +100,7 @@ describe('search-tools integration tests', () => {
 
     it('должен использовать default limit (10)', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'tracker',
       });
 
@@ -118,7 +118,7 @@ describe('search-tools integration tests', () => {
   describe('Уровни детализации', () => {
     it('name_only: должен вернуть только имена', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
         detailLevel: 'name_only',
       });
@@ -140,7 +140,7 @@ describe('search-tools integration tests', () => {
 
     it('name_and_description: должен вернуть имя, описание, категорию', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
         detailLevel: 'name_and_description',
       });
@@ -163,7 +163,7 @@ describe('search-tools integration tests', () => {
 
     it('full: должен загрузить полные метаданные', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
         detailLevel: 'full',
       });
@@ -187,7 +187,7 @@ describe('search-tools integration tests', () => {
 
     it('default detailLevel = name_and_description', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
       });
 
@@ -207,7 +207,7 @@ describe('search-tools integration tests', () => {
   describe('Фильтрация', () => {
     it('должен фильтровать по категории ISSUES', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'yandex',
         category: 'issues',
       });
@@ -226,7 +226,7 @@ describe('search-tools integration tests', () => {
 
     it('должен фильтровать по типу (helper)', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'search',
         isHelper: true,
       });
@@ -239,7 +239,7 @@ describe('search-tools integration tests', () => {
         const parsed = JSON.parse(content.text);
         // search_tools должен быть helper
         const searchToolsTool = parsed.data.tools.find(
-          (t: { name: string }) => t.name === 'fyt_mcp_search_tools'
+          (t: { name: string }) => t.name === 'fractalizer_mcp_yandex_tracker_search_tools'
         );
         expect(searchToolsTool).toBeDefined();
       }
@@ -247,7 +247,7 @@ describe('search-tools integration tests', () => {
 
     it('должен фильтровать по типу (API)', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
         isHelper: false,
       });
@@ -261,14 +261,14 @@ describe('search-tools integration tests', () => {
         // Все результаты должны быть API tools
         parsed.data.tools.forEach((toolData: { name: string }) => {
           // search_tools не должен быть в результатах (он helper)
-          expect(toolData.name).not.toBe('fyt_mcp_search_tools');
+          expect(toolData.name).not.toBe('fractalizer_mcp_yandex_tracker_search_tools');
         });
       }
     });
 
     it('должен комбинировать фильтры', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'yandex',
         category: 'issues',
         isHelper: false,
@@ -292,7 +292,7 @@ describe('search-tools integration tests', () => {
   describe('Валидация параметров', () => {
     it('должен вернуть ошибку для пустого query', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: '',
       });
 
@@ -309,7 +309,7 @@ describe('search-tools integration tests', () => {
 
     it('должен вернуть ошибку для невалидного detailLevel', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
         detailLevel: 'invalid',
       });
@@ -325,7 +325,7 @@ describe('search-tools integration tests', () => {
 
     it('должен вернуть ошибку для невалидной категории', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
         category: 'INVALID_CATEGORY',
       });
@@ -341,7 +341,7 @@ describe('search-tools integration tests', () => {
 
     it('должен вернуть ошибку для невалидного limit (негативное число)', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
         limit: -5,
       });
@@ -357,7 +357,7 @@ describe('search-tools integration tests', () => {
 
     it('должен вернуть ошибку для невалидного limit (не целое число)', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
         limit: 3.14,
       });
@@ -373,7 +373,7 @@ describe('search-tools integration tests', () => {
 
     it('должен принять валидные параметры', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
         detailLevel: 'full',
         category: 'issues',
@@ -389,7 +389,7 @@ describe('search-tools integration tests', () => {
   describe('Edge cases', () => {
     it('должен обработать query без совпадений', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'xyzqwertynonexistent999',
       });
 
@@ -410,7 +410,7 @@ describe('search-tools integration tests', () => {
     it('должен обработать очень длинный query', async () => {
       // Act
       const longQuery = 'a'.repeat(1000);
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: longQuery,
       });
 
@@ -426,7 +426,7 @@ describe('search-tools integration tests', () => {
 
     it('должен обработать специальные символы в query', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'tracker_',
       });
 
@@ -442,7 +442,7 @@ describe('search-tools integration tests', () => {
 
     it('должен обработать query с пробелами', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: '  issue  ',
       });
 
@@ -461,7 +461,7 @@ describe('search-tools integration tests', () => {
   describe('JSON формат ответа', () => {
     it('должен вернуть валидный JSON', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
       });
 
@@ -476,7 +476,7 @@ describe('search-tools integration tests', () => {
 
     it('должен включить все обязательные поля в ответ', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'issue',
       });
 
@@ -501,7 +501,7 @@ describe('search-tools integration tests', () => {
 
     it('totalFound должен быть >= returned', async () => {
       // Act
-      const result = await client.callTool('fyt_mcp_search_tools', {
+      const result = await client.callTool('fractalizer_mcp_yandex_tracker_search_tools', {
         query: 'yandex',
         limit: 1,
       });

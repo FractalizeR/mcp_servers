@@ -60,7 +60,7 @@ describe('ToolSearchEngine (Integration)', () => {
 
   const mockIndex: StaticToolIndex[] = [
     {
-      name: 'fyt_mcp_ping',
+      name: 'fractalizer_mcp_yandex_tracker_ping',
       category: ToolCategory.USERS,
       tags: ['ping', 'health', 'check'],
       isHelper: false,
@@ -69,7 +69,7 @@ describe('ToolSearchEngine (Integration)', () => {
       descriptionShort: 'Проверка доступности API',
     },
     {
-      name: 'fyt_mcp_get_issues',
+      name: 'fractalizer_mcp_yandex_tracker_get_issues',
       category: ToolCategory.ISSUES,
       tags: ['issue', 'get', 'batch'],
       isHelper: false,
@@ -78,7 +78,7 @@ describe('ToolSearchEngine (Integration)', () => {
       descriptionShort: 'Получить задачи по ключам',
     },
     {
-      name: 'fyt_mcp_find_issues',
+      name: 'fractalizer_mcp_yandex_tracker_find_issues',
       category: ToolCategory.ISSUES,
       tags: ['issue', 'find', 'search', 'jql'],
       isHelper: false,
@@ -87,7 +87,7 @@ describe('ToolSearchEngine (Integration)', () => {
       descriptionShort: 'Найти задачи по JQL запросу',
     },
     {
-      name: 'fyt_mcp_search_tools',
+      name: 'fractalizer_mcp_yandex_tracker_search_tools',
       category: ToolCategory.SEARCH,
       tags: ['search', 'tools', 'discovery'],
       isHelper: true,
@@ -141,7 +141,7 @@ describe('ToolSearchEngine (Integration)', () => {
       expect(results.tools.length).toBeGreaterThan(0);
 
       // 'ping' должен найтись по нескольким стратегиям
-      const pingTool = results.tools.find((t) => t.name === 'fyt_mcp_ping');
+      const pingTool = results.tools.find((t) => t.name === 'fractalizer_mcp_yandex_tracker_ping');
       expect(pingTool).toBeDefined();
     });
 
@@ -166,7 +166,9 @@ describe('ToolSearchEngine (Integration)', () => {
         limit: 10,
       });
 
-      const searchTool = results.tools.find((t) => t.name === 'fyt_mcp_search_tools');
+      const searchTool = results.tools.find(
+        (t) => t.name === 'fractalizer_mcp_yandex_tracker_search_tools'
+      );
       expect(searchTool).toBeDefined();
       expect((searchTool as any)?.score).toBeGreaterThan(0);
     });

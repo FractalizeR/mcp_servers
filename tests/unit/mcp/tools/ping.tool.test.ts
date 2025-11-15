@@ -39,7 +39,7 @@ describe('PingTool', () => {
       const definition = tool.getDefinition();
 
       // Assert
-      expect(definition.name).toBe('fyt_mcp_ping');
+      expect(definition.name).toBe('fractalizer_mcp_yandex_tracker_ping');
       expect(definition.description).toContain('API Яндекс.Трекера');
       expect(definition.description).toContain('OAuth токена');
       expect(definition.inputSchema.type).toBe('object');

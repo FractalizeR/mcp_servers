@@ -9,7 +9,7 @@ import { MCP_TOOL_PREFIX } from '../src/constants.js';
 
 /**
  * Префикс для названий инструментов в тестах
- * @example "fyt_mcp_"
+ * @example "fractalizer_mcp_yandex_tracker_"
  */
 export const TEST_TOOL_PREFIX = MCP_TOOL_PREFIX;
 

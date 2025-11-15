@@ -1,6 +1,6 @@
 {
   "manifest_version": "0.3",
-  "name": "fyt-mcp",
+  "name": "fractalizer_mcp_yandex_tracker",
   "version": "0.1.0",
   "display_name": "FractalizeR's Yandex Tracker MCP",
   "description": "FractalizeR's Yandex Tracker MCP server for API v3 integration",
@@ -10,10 +10,10 @@
     "email": "fractalizer@example.com"
   },
   "license": "MIT",
-  "homepage": "https://github.com/fractalizer/fyt-mcp",
+  "homepage": "https://github.com/FractalizeR/mcp_server_yandex_tracker",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fractalizer/fyt-mcp"
+    "url": "https://github.com/FractalizeR/mcp_server_yandex_tracker"
   },
   "keywords": [
     "yandex",
@@ -70,13 +70,8 @@
       "sensitive": false
     }
   },
-  "tools": [
-    {
-      "name": "fyt_mcp_ping",
-      "description": "Проверка доступности API Яндекс.Трекера и валидности токена"
-    }
-  ],
-  "tools_generated": false,
+  "tools_generated": true,
+  "prompts_generated": false,
   "compatibility": {
     "claude_desktop": ">=0.10.0",
     "platforms": [

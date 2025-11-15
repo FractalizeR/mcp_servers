@@ -81,7 +81,7 @@ describe('ToolRegistry', () => {
           // Mock SearchToolsTool (имеет другой конструктор)
           return {
             getDefinition: () => ({
-              name: 'fyt_mcp_search_tools',
+              name: 'fractalizer_mcp_yandex_tracker_search_tools',
               description: 'Search tools',
               inputSchema: { type: 'object', properties: {}, required: [] },
             }),
@@ -108,9 +108,11 @@ describe('ToolRegistry', () => {
       const definitions = registry.getDefinitions();
 
       // Assert - теперь у нас 11 tools (Ping, GetIssues, CreateIssue, UpdateIssue, FindIssues, GetIssueChangelog, GetIssueTransitions, TransitionIssue, IssueUrl, Demo, SearchTools)
-      expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрирован инструмент: fyt_mcp_ping');
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'Зарегистрирован инструмент: fyt_mcp_get_issues'
+        'Зарегистрирован инструмент: fractalizer_mcp_yandex_tracker_ping'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Зарегистрирован инструмент: fractalizer_mcp_yandex_tracker_get_issues'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрировано инструментов: 11');
       expect(definitions.length).toBe(11);
@@ -125,8 +127,10 @@ describe('ToolRegistry', () => {
       // Assert - теперь 11 tools
       expect(definitions).toHaveLength(11);
 
-      const pingDef = definitions.find((d) => d.name === 'fyt_mcp_ping');
-      const getIssuesDef = definitions.find((d) => d.name === 'fyt_mcp_get_issues');
+      const pingDef = definitions.find((d) => d.name === 'fractalizer_mcp_yandex_tracker_ping');
+      const getIssuesDef = definitions.find(
+        (d) => d.name === 'fractalizer_mcp_yandex_tracker_get_issues'
+      );
       const demoDef = definitions.find((d) => d.name === 'demo');
 
       expect(pingDef).toBeDefined();
@@ -165,15 +169,19 @@ describe('ToolRegistry', () => {
       vi.mocked(mockFacade.ping).mockResolvedValue(mockPingResult);
 
       // Act
-      const result = await registry.execute('fyt_mcp_ping', params);
+      const result = await registry.execute('fractalizer_mcp_yandex_tracker_ping', params);
 
       // Assert
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
       expect(result.content[0]!.type).toBe('text');
 
-      expect(mockLogger.info).toHaveBeenCalledWith('Вызов инструмента: fyt_mcp_ping');
-      expect(mockLogger.info).toHaveBeenCalledWith('Инструмент fyt_mcp_ping выполнен успешно');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Вызов инструмента: fractalizer_mcp_yandex_tracker_ping'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Инструмент fractalizer_mcp_yandex_tracker_ping выполнен успешно'
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith('Параметры:', params);
     });
 
@@ -204,12 +212,12 @@ describe('ToolRegistry', () => {
       vi.mocked(mockFacade.getIssues).mockResolvedValue(mockResults);
 
       // Act
-      const result = await registry.execute('fyt_mcp_get_issues', params);
+      const result = await registry.execute('fractalizer_mcp_yandex_tracker_get_issues', params);
 
       // Assert
       expect(result.isError).toBeUndefined();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Инструмент fyt_mcp_get_issues выполнен успешно'
+        'Инструмент fractalizer_mcp_yandex_tracker_get_issues выполнен успешно'
       );
     });
 
@@ -228,8 +236,8 @@ describe('ToolRegistry', () => {
       const content = JSON.parse(result.content[0]!.text);
       expect(content.success).toBe(false);
       expect(content.message).toContain('не найден');
-      expect(content.availableTools).toContain('fyt_mcp_ping');
-      expect(content.availableTools).toContain('fyt_mcp_get_issues');
+      expect(content.availableTools).toContain('fractalizer_mcp_yandex_tracker_ping');
+      expect(content.availableTools).toContain('fractalizer_mcp_yandex_tracker_get_issues');
 
       expect(mockLogger.error).toHaveBeenCalledWith('Инструмент не найден: non_existent_tool');
     });
@@ -242,7 +250,7 @@ describe('ToolRegistry', () => {
       vi.mocked(mockFacade.ping).mockRejectedValue(error);
 
       // Act
-      const result = await registry.execute('fyt_mcp_ping', params);
+      const result = await registry.execute('fractalizer_mcp_yandex_tracker_ping', params);
 
       // Assert
       expect(result.isError).toBe(true);
@@ -264,7 +272,7 @@ describe('ToolRegistry', () => {
       vi.mocked(mockFacade.ping).mockRejectedValue('String error');
 
       // Act
-      const result = await registry.execute('fyt_mcp_ping', params);
+      const result = await registry.execute('fractalizer_mcp_yandex_tracker_ping', params);
 
       // Assert
       expect(result.isError).toBe(true);
@@ -284,7 +292,7 @@ describe('ToolRegistry', () => {
       vi.mocked(mockFacade.ping).mockResolvedValue(mockPingResult);
 
       // Act
-      await registry.execute('fyt_mcp_ping', params);
+      await registry.execute('fractalizer_mcp_yandex_tracker_ping', params);
 
       // Assert
       expect(mockLogger.debug).toHaveBeenCalledWith('Параметры:', params);

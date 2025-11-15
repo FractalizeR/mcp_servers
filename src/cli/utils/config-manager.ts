@@ -5,8 +5,9 @@
 import * as path from 'path';
 import type { MCPServerConfig } from '../connectors/base/connector.interface.js';
 import { FileManager } from './file-manager.js';
+import { PROJECT_BASE_NAME } from '../../constants.js';
 
-const CONFIG_DIR = '.fyt-mcp';
+const CONFIG_DIR = `.${PROJECT_BASE_NAME}`;
 const CONFIG_FILE = 'config.json';
 
 export class ConfigManager {

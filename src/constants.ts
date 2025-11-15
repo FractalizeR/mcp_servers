@@ -3,16 +3,23 @@
  */
 
 /**
- * Название MCP сервера (используется в конфигурациях клиентов)
- * @example "fyt-mcp" в mcpServers config
+ * Базовое название проекта (без префиксов)
+ * Используется для построения других названий
+ * @example "fractalizer_mcp_yandex_tracker"
  */
-export const MCP_SERVER_NAME = 'fyt-mcp' as const;
+export const PROJECT_BASE_NAME = 'fractalizer_mcp_yandex_tracker' as const;
+
+/**
+ * Название MCP сервера (используется в конфигурациях клиентов)
+ * @example "fractalizer_mcp_yandex_tracker" в mcpServers config
+ */
+export const MCP_SERVER_NAME = PROJECT_BASE_NAME;
 
 /**
  * Префикс для названий MCP инструментов
- * @example "fyt_mcp_get_issues"
+ * @example "fractalizer_mcp_yandex_tracker_get_issues"
  */
-export const MCP_TOOL_PREFIX = 'fyt_mcp_' as const;
+export const MCP_TOOL_PREFIX = `${PROJECT_BASE_NAME}_` as const;
 
 /**
  * Отображаемое название MCP сервера
@@ -37,12 +44,13 @@ export const PROJECT_AUTHOR_EMAIL = 'fractalizer@example.com' as const;
 /**
  * Домашняя страница проекта
  */
-export const PROJECT_HOMEPAGE = 'https://github.com/fractalizer/fyt-mcp' as const;
+export const PROJECT_HOMEPAGE = 'https://github.com/FractalizeR/mcp_server_yandex_tracker' as const;
 
 /**
  * Репозиторий проекта
  */
-export const PROJECT_REPOSITORY_URL = 'https://github.com/fractalizer/fyt-mcp' as const;
+export const PROJECT_REPOSITORY_URL =
+  'https://github.com/FractalizeR/mcp_server_yandex_tracker' as const;
 
 /**
  * Дефолтные значения конфигурации

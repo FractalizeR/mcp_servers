@@ -21,7 +21,7 @@ describe('NameSearchStrategy', () => {
   // Mock tools для тестирования
   const mockTools: StaticToolIndex[] = [
     {
-      name: 'fyt_mcp_ping',
+      name: 'fractalizer_mcp_yandex_tracker_ping',
       category: ToolCategory.USERS,
       tags: ['ping', 'health'],
       isHelper: false,
@@ -30,7 +30,7 @@ describe('NameSearchStrategy', () => {
       descriptionShort: 'Ping tool',
     },
     {
-      name: 'fyt_mcp_get_issues',
+      name: 'fractalizer_mcp_yandex_tracker_get_issues',
       category: ToolCategory.ISSUES,
       tags: ['issue', 'get'],
       isHelper: false,
@@ -39,7 +39,7 @@ describe('NameSearchStrategy', () => {
       descriptionShort: 'Get issues',
     },
     {
-      name: 'fyt_mcp_find_issues',
+      name: 'fractalizer_mcp_yandex_tracker_find_issues',
       category: ToolCategory.ISSUES,
       tags: ['issue', 'find'],
       isHelper: false,
@@ -60,25 +60,25 @@ describe('NameSearchStrategy', () => {
 
   describe('Точное совпадение', () => {
     it('должен найти tool по точному имени с score 1.0', () => {
-      const results = strategy.search('fyt_mcp_ping', mockTools);
+      const results = strategy.search('fractalizer_mcp_yandex_tracker_ping', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0]!.toolName).toBe('fyt_mcp_ping');
+      expect(results[0]!.toolName).toBe('fractalizer_mcp_yandex_tracker_ping');
       expect(results[0]!.score).toBe(1.0);
       expect(results[0]!.strategyType).toBe('name');
       expect(results[0]!.matchReason).toContain('Exact');
     });
 
     it('должен быть case-insensitive', () => {
-      const results = strategy.search('FYT_MCP_PING', mockTools);
+      const results = strategy.search('FRACTALIZER_MCP_YANDEX_TRACKER_PING', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0]!.toolName).toBe('fyt_mcp_ping');
+      expect(results[0]!.toolName).toBe('fractalizer_mcp_yandex_tracker_ping');
       expect(results[0]!.score).toBe(1.0);
     });
 
     it('должен игнорировать пробелы', () => {
-      const results = strategy.search('  fyt_mcp_ping  ', mockTools);
+      const results = strategy.search('  fractalizer_mcp_yandex_tracker_ping  ', mockTools);
 
       expect(results).toHaveLength(1);
       expect(results[0]!.score).toBe(1.0);
@@ -87,25 +87,25 @@ describe('NameSearchStrategy', () => {
 
   describe('Имя начинается с query', () => {
     it('должен найти tools, начинающиеся с query (score 0.8)', () => {
-      const results = strategy.search('fyt_mcp', mockTools);
+      const results = strategy.search('fractalizer_mcp_yandex_tracker', mockTools);
 
       expect(results.length).toBeGreaterThanOrEqual(3);
 
       // Все должны иметь score 0.8
       results.forEach((result) => {
         expect(result.score).toBe(0.8);
-        expect(result.toolName).toMatch(/^fyt_mcp/);
+        expect(result.toolName).toMatch(/^fractalizer_mcp_yandex_tracker/);
         expect(result.matchReason).toContain('Name starts with');
       });
     });
 
     it('должен найти tools по короткому префиксу', () => {
-      const results = strategy.search('fyt', mockTools);
+      const results = strategy.search('fractalizer_mcp', mockTools);
 
       expect(results.length).toBeGreaterThanOrEqual(3);
       results.forEach((result) => {
         expect(result.score).toBe(0.8);
-        expect(result.toolName).toMatch(/^fyt/);
+        expect(result.toolName).toMatch(/^fractalizer_mcp/);
       });
     });
   });
@@ -115,7 +115,7 @@ describe('NameSearchStrategy', () => {
       const results = strategy.search('ping', mockTools);
 
       expect(results).toHaveLength(1);
-      expect(results[0]!.toolName).toBe('fyt_mcp_ping');
+      expect(results[0]!.toolName).toBe('fractalizer_mcp_yandex_tracker_ping');
       expect(results[0]!.score).toBe(0.5); // Имя содержит query, но не точное совпадение
     });
 
@@ -184,7 +184,9 @@ describe('NameSearchStrategy', () => {
       expect(exactMatch!.score).toBe(1.0);
 
       // Второй - fyt_mcp_ping с меньшим score
-      const partialMatch = results.find((r) => r.toolName === 'fyt_mcp_ping');
+      const partialMatch = results.find(
+        (r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping'
+      );
       expect(partialMatch).toBeDefined();
       expect(partialMatch!.score).toBeLessThan(1.0);
     });
