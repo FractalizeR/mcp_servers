@@ -3,11 +3,11 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { disconnectCommand } from '../../../../cli/commands/disconnect.command.js';
-import { ConnectorRegistry } from '../../../../cli/connectors/registry.js';
-import { InteractivePrompter } from '../../../../cli/utils/interactive-prompter.js';
-import { Logger } from '../../../../cli/utils/logger.js';
-import type { ConnectionStatus } from '../../../../cli/connectors/base/connector.interface.js';
+import { disconnectCommand } from '@cli/commands/disconnect.command.js';
+import { ConnectorRegistry } from '@cli/connectors/registry.js';
+import { InteractivePrompter } from '@cli/utils/interactive-prompter.js';
+import { Logger } from '@cli/utils/logger.js';
+import type { ConnectionStatus } from '@cli/connectors/base/connector.interface.js';
 
 // Мокаем модули
 vi.mock('../../../../cli/connectors/registry.js');

@@ -19,7 +19,7 @@ import {
   DEFAULT_LOG_LEVEL,
   DEFAULT_REQUEST_TIMEOUT,
   ENV_VAR_NAMES,
-} from '../../../src/constants.js';
+} from '../../../constants.js';
 
 interface CodexConfig {
   mcp_servers?: Record<
@@ -63,7 +63,7 @@ export class CodexConnector extends BaseConnector {
 
       const config = await FileManager.readTOML<CodexConfig>(this.configPath);
 
-      if (config.mcp_servers && config.mcp_servers[MCP_SERVER_NAME]) {
+      if (config.mcp_servers?.[MCP_SERVER_NAME]) {
         return {
           connected: true,
           details: {
@@ -113,7 +113,7 @@ export class CodexConnector extends BaseConnector {
 
     const config = await FileManager.readTOML<CodexConfig>(this.configPath);
 
-    if (config.mcp_servers && config.mcp_servers[MCP_SERVER_NAME]) {
+    if (config.mcp_servers?.[MCP_SERVER_NAME]) {
       delete config.mcp_servers[MCP_SERVER_NAME];
       await FileManager.writeTOML(this.configPath, config);
     }

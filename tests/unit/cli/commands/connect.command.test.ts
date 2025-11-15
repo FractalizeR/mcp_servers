@@ -7,7 +7,7 @@ import type {
   MCPConnector,
   MCPServerConfig,
   ConnectionStatus,
-} from '../../../../cli/connectors/base/connector.interface.js';
+} from '@cli/connectors/base/connector.interface.js';
 
 // Создаем hoisted моки для использования в vi.mock()
 const mocks = vi.hoisted(() => ({
@@ -127,7 +127,7 @@ describe('connectCommand', () => {
       mocks.registry.findInstalled.mockResolvedValue([]);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({});
 
       // Assert
@@ -145,7 +145,7 @@ describe('connectCommand', () => {
       mocks.registry.findInstalled.mockResolvedValue([]);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({});
 
       // Assert
@@ -159,7 +159,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(mockConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -174,7 +174,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(mockConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -188,7 +188,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(undefined);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'nonexistent' });
 
       // Assert
@@ -207,7 +207,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(notInstalledConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -223,7 +223,7 @@ describe('connectCommand', () => {
       mocks.prompter.promptClientSelection.mockResolvedValue('test-client');
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({});
 
       // Assert
@@ -239,7 +239,7 @@ describe('connectCommand', () => {
       mocks.prompter.promptClientSelection.mockResolvedValue('invalid');
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({});
 
       // Assert
@@ -255,7 +255,7 @@ describe('connectCommand', () => {
       mocks.config.load.mockResolvedValue(mockSavedConfig);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -271,7 +271,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(mockConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -296,7 +296,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(invalidConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -311,7 +311,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(mockConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -326,7 +326,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(mockConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -339,7 +339,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(mockConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -357,7 +357,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(mockConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -380,7 +380,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(errorConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -400,7 +400,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(errorConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -416,7 +416,7 @@ describe('connectCommand', () => {
       mocks.prompter.promptConfirmation.mockResolvedValue(true);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -440,7 +440,7 @@ describe('connectCommand', () => {
       mocks.prompter.promptConfirmation.mockResolvedValue(false);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -453,7 +453,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(mockConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert
@@ -470,7 +470,7 @@ describe('connectCommand', () => {
       mocks.registry.get.mockReturnValue(mockConnector);
 
       // Act
-      const { connectCommand } = await import('../../../../cli/commands/connect.command.js');
+      const { connectCommand } = await import('../../../../src/cli/commands/connect.command.js');
       await connectCommand({ client: 'test-client' });
 
       // Assert

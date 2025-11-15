@@ -17,7 +17,7 @@ import {
   DEFAULT_LOG_LEVEL,
   DEFAULT_REQUEST_TIMEOUT,
   ENV_VAR_NAMES,
-} from '../../../src/constants.js';
+} from '../../../constants.js';
 
 export class ClaudeCodeConnector extends BaseConnector {
   getClientInfo(): MCPClientInfo {

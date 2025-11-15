@@ -18,7 +18,7 @@ import {
   DEFAULT_LOG_LEVEL,
   DEFAULT_REQUEST_TIMEOUT,
   ENV_VAR_NAMES,
-} from '../../../src/constants.js';
+} from '../../../constants.js';
 
 interface ClaudeDesktopConfig {
   mcpServers: Record<
@@ -77,7 +77,7 @@ export class ClaudeDesktopConnector extends BaseConnector {
 
       const config = await FileManager.readJSON<ClaudeDesktopConfig>(this.configPath);
 
-      if (config.mcpServers && config.mcpServers[MCP_SERVER_NAME]) {
+      if (config.mcpServers?.[MCP_SERVER_NAME]) {
         return {
           connected: true,
           details: {
@@ -135,7 +135,7 @@ export class ClaudeDesktopConnector extends BaseConnector {
 
     const config = await FileManager.readJSON<ClaudeDesktopConfig>(this.configPath);
 
-    if (config.mcpServers && config.mcpServers[MCP_SERVER_NAME]) {
+    if (config.mcpServers?.[MCP_SERVER_NAME]) {
       delete config.mcpServers[MCP_SERVER_NAME];
       await FileManager.writeJSON(this.configPath, config);
     }

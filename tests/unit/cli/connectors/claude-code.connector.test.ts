@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ClaudeCodeConnector } from '../../../../cli/connectors/claude-code/claude-code.connector.js';
-import { CommandExecutor } from '../../../../cli/utils/command-executor.js';
-import type { MCPServerConfig } from '../../../../cli/connectors/base/connector.interface.js';
+import { ClaudeCodeConnector } from '@cli/connectors/claude-code/claude-code.connector.js';
+import { CommandExecutor } from '@cli/utils/command-executor.js';
+import type { MCPServerConfig } from '@cli/connectors/base/connector.interface.js';
 import {
   MCP_SERVER_NAME,
   SERVER_ENTRY_POINT,

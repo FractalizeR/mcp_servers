@@ -17,7 +17,7 @@
 ## Структура файлов
 
 ```
-cli/
+src/cli/
 ├── bin/
 │   └── mcp-connect.ts              # Entry point, commander setup
 │
@@ -51,7 +51,7 @@ cli/
 │
 └── types.ts                        # Общие типы
 
-tests/cli/                           # Тесты CLI
+tests/unit/cli/                           # Тесты CLI
 ├── connectors/
 │   ├── claude-desktop.test.ts
 │   └── claude-code.test.ts
@@ -66,7 +66,7 @@ tests/cli/                           # Тесты CLI
 ### MCPConnector (базовый интерфейс)
 
 ```typescript
-// cli/connectors/base/connector.interface.ts
+// src/cli/connectors/base/connector.interface.ts
 
 export interface MCPClientInfo {
   /** Название клиента */
@@ -152,7 +152,7 @@ export interface MCPConnector {
 ### ConnectorRegistry
 
 ```typescript
-// cli/connectors/registry.ts
+// src/cli/connectors/registry.ts
 
 export class ConnectorRegistry {
   private connectors: Map<string, MCPConnector>;
@@ -181,7 +181,7 @@ export class ConnectorRegistry {
 ### Claude Desktop Connector
 
 ```typescript
-// cli/connectors/claude-desktop/claude-desktop.connector.ts
+// src/cli/connectors/claude-desktop/claude-desktop.connector.ts
 
 import { MCPConnector, MCPClientInfo, MCPServerConfig, ConnectionStatus } from '../base/connector.interface.js';
 import { BaseConnector } from '../base/base-connector.js';
@@ -256,7 +256,7 @@ export class ClaudeDesktopConnector extends BaseConnector implements MCPConnecto
 ### Claude Code Connector
 
 ```typescript
-// cli/connectors/claude-code/claude-code.connector.ts
+// src/cli/connectors/claude-code/claude-code.connector.ts
 
 export class ClaudeCodeConnector extends BaseConnector implements MCPConnector {
   getClientInfo(): MCPClientInfo {
@@ -314,7 +314,7 @@ export class ClaudeCodeConnector extends BaseConnector implements MCPConnector {
 ### connect — Интерактивное подключение
 
 ```typescript
-// cli/commands/connect.command.ts
+// src/cli/commands/connect.command.ts
 
 import inquirer from 'inquirer';
 import { ConnectorRegistry } from '../connectors/registry.js';
@@ -432,7 +432,7 @@ async function promptConfiguration(savedConfig?: Partial<MCPServerConfig>) {
 ### status — Статус подключений
 
 ```typescript
-// cli/commands/status.command.ts
+// src/cli/commands/status.command.ts
 
 export async function statusCommand(): Promise<void> {
   const registry = new ConnectorRegistry();
@@ -526,7 +526,7 @@ npm run mcp:list
 ### Шаг 1: Создать класс коннектора
 
 ```typescript
-// cli/connectors/new-client/new-client.connector.ts
+// src/cli/connectors/new-client/new-client.connector.ts
 
 import { MCPConnector } from '../base/connector.interface.js';
 import { BaseConnector } from '../base/base-connector.js';
@@ -561,7 +561,7 @@ export class NewClientConnector extends BaseConnector implements MCPConnector {
 ### Шаг 2: Зарегистрировать в реестре
 
 ```typescript
-// cli/connectors/index.ts
+// src/cli/connectors/index.ts
 
 import { ConnectorRegistry } from './registry.js';
 import { ClaudeDesktopConnector } from './claude-desktop/claude-desktop.connector.js';
@@ -606,10 +606,10 @@ export function createRegistry(): ConnectorRegistry {
 ```json
 {
   "scripts": {
-    "mcp:connect": "tsx cli/bin/mcp-connect.ts connect",
-    "mcp:disconnect": "tsx cli/bin/mcp-connect.ts disconnect",
-    "mcp:status": "tsx cli/bin/mcp-connect.ts status",
-    "mcp:list": "tsx cli/bin/mcp-connect.ts list"
+    "mcp:connect": "tsx src/cli/bin/mcp-connect.ts connect",
+    "mcp:disconnect": "tsx src/cli/bin/mcp-connect.ts disconnect",
+    "mcp:status": "tsx src/cli/bin/mcp-connect.ts status",
+    "mcp:list": "tsx src/cli/bin/mcp-connect.ts list"
   }
 }
 ```
@@ -619,7 +619,7 @@ export function createRegistry(): ConnectorRegistry {
 ## Тестирование
 
 ```typescript
-// tests/cli/connectors/claude-desktop.test.ts
+// tests/unit/cli/connectors/claude-desktop.test.ts
 
 describe('ClaudeDesktopConnector', () => {
   let connector: ClaudeDesktopConnector;

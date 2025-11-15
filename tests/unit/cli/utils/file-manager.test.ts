@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, writeFile, readFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { FileManager } from '../../../../cli/utils/file-manager.js';
+import { FileManager } from '@cli/utils/file-manager.js';
 
 describe('FileManager', () => {
   let tempDir: string;

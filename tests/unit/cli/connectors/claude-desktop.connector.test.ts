@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, writeFile, mkdir, readFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir, platform } from 'os';
-import { ClaudeDesktopConnector } from '../../../../cli/connectors/claude-desktop/claude-desktop.connector.js';
+import { ClaudeDesktopConnector } from '@cli/connectors/claude-desktop/claude-desktop.connector.js';
 import {
   MCP_SERVER_NAME,
   SERVER_ENTRY_POINT,
@@ -15,7 +15,7 @@ import {
   DEFAULT_REQUEST_TIMEOUT,
   ENV_VAR_NAMES,
 } from '../../../../src/constants.js';
-import type { MCPServerConfig } from '../../../../cli/connectors/base/connector.interface.js';
+import type { MCPServerConfig } from '@cli/connectors/base/connector.interface.js';
 
 /**
  * Создать тестовый коннектор с кастомным config path для изоляции

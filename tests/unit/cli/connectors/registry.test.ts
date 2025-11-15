@@ -3,11 +3,11 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ConnectorRegistry } from '../../../../cli/connectors/registry.js';
+import { ConnectorRegistry } from '@cli/connectors/registry.js';
 import type {
   MCPConnector,
   ConnectionStatus,
-} from '../../../../cli/connectors/base/connector.interface.js';
+} from '@cli/connectors/base/connector.interface.js';
 
 // Mock коннектор для тестов
 class MockConnector implements MCPConnector {

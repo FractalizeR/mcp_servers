@@ -6,10 +6,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtemp, rm, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { CodexConnector } from '../../../../cli/connectors/codex/codex.connector.js';
-import { CommandExecutor } from '../../../../cli/utils/command-executor.js';
-import { FileManager } from '../../../../cli/utils/file-manager.js';
-import type { MCPServerConfig } from '../../../../cli/connectors/base/connector.interface.js';
+import { CodexConnector } from '@cli/connectors/codex/codex.connector.js';
+import { CommandExecutor } from '@cli/utils/command-executor.js';
+import { FileManager } from '@cli/utils/file-manager.js';
+import type { MCPServerConfig } from '@cli/connectors/base/connector.interface.js';
 import {
   MCP_SERVER_NAME,
   SERVER_ENTRY_POINT,

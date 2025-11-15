@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { CommandExecutor } from '../../../../cli/utils/command-executor.js';
+import { CommandExecutor } from '@cli/utils/command-executor.js';
 
 describe('CommandExecutor', () => {
   describe('exec', () => {

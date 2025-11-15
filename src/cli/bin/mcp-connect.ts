@@ -13,7 +13,9 @@ import { disconnectCommand } from '../commands/disconnect.command.js';
 import { statusCommand } from '../commands/status.command.js';
 import { listCommand } from '../commands/list.command.js';
 import { Logger } from '../utils/logger.js';
-import { MCP_SERVER_DISPLAY_NAME, MCP_SERVER_NAME } from '../../src/constants.js';
+import { MCP_SERVER_DISPLAY_NAME, MCP_SERVER_NAME } from '../../constants.js';
+import type { ConnectCommandOptions } from '../commands/connect.command.js';
+import type { DisconnectCommandOptions } from '../commands/disconnect.command.js';
 
 /**
  * Получение версии из package.json
@@ -33,8 +35,8 @@ function getPackageVersion(): string {
 const program = new Command();
 
 program
-  .name(MCP_SERVER_NAME)
-  .description(`${MCP_SERVER_DISPLAY_NAME} - Управление подключениями MCP сервера`)
+  .name(MCP_SERVER_NAME as string)
+  .description(`${MCP_SERVER_DISPLAY_NAME as string} - Управление подключениями MCP сервера`)
   .version(getPackageVersion());
 
 // Команда connect
@@ -42,7 +44,7 @@ program
   .command('connect')
   .description('Подключить MCP сервер к клиенту (интерактивно)')
   .option('-c, --client <name>', 'Имя клиента (claude-desktop, claude-code, codex)')
-  .action(async (options) => {
+  .action(async (options: ConnectCommandOptions) => {
     try {
       await connectCommand(options);
     } catch (error) {
@@ -56,7 +58,7 @@ program
   .command('disconnect')
   .description('Отключить MCP сервер от клиента')
   .option('-c, --client <name>', 'Имя клиента (claude-desktop, claude-code, codex)')
-  .action(async (options) => {
+  .action(async (options: DisconnectCommandOptions) => {
     try {
       await disconnectCommand(options);
     } catch (error) {

@@ -97,9 +97,9 @@ CLI сохраняет конфигурацию в `~/.fyt-mcp/config.json` дл
 
 ## Добавление нового клиента
 
-1. Создай класс коннектора в `cli/connectors/new-client/`
+1. Создай класс коннектора в `src/cli/connectors/new-client/`
 2. Реализуй интерфейс `MCPConnector`
-3. Зарегистрируй в `cli/connectors/registry.ts`:
+3. Зарегистрируй в `src/cli/connectors/registry.ts`:
 
 ```typescript
 import { NewClientConnector } from './new-client/new-client.connector.js';

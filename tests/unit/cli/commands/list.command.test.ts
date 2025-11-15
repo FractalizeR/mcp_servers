@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { listCommand } from '../../../../cli/commands/list.command.js';
-import { ConnectorRegistry } from '../../../../cli/connectors/registry.js';
-import { Logger } from '../../../../cli/utils/logger.js';
+import { listCommand } from '@cli/commands/list.command.js';
+import { ConnectorRegistry } from '@cli/connectors/registry.js';
+import { Logger } from '@cli/utils/logger.js';
 
 // Мокаем модули
 vi.mock('../../../../cli/connectors/registry.js');

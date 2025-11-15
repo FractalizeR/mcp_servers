@@ -1,6 +1,8 @@
 {
   "*.ts": [
-    "prettier --write",
+    "prettier --write"
+  ],
+  "!(src/cli)/**/*.ts": [
     "eslint --fix"
   ]
 }

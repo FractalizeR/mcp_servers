@@ -3,10 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { statusCommand } from '../../../../cli/commands/status.command.js';
-import { ConnectorRegistry } from '../../../../cli/connectors/registry.js';
-import { Logger } from '../../../../cli/utils/logger.js';
-import type { ConnectionStatus } from '../../../../cli/connectors/base/connector.interface.js';
+import { statusCommand } from '@cli/commands/status.command.js';
+import { ConnectorRegistry } from '@cli/connectors/registry.js';
+import { Logger } from '@cli/utils/logger.js';
+import type { ConnectionStatus } from '@cli/connectors/base/connector.interface.js';
 
 // Мокаем модули
 vi.mock('../../../../cli/connectors/registry.js');
