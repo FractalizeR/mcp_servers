@@ -71,13 +71,13 @@ export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
     descriptionShort: 'Найти задачи по JQL запросу',
   },
   {
-    name: 'fyt_mcp_get_issue_url',
+    name: 'fyt_mcp_get_issue_urls',
     category: ToolCategory.URL_GENERATION,
-    tags: ['url', 'link', 'helper', 'issue'],
+    tags: ['url', 'link', 'helper', 'issue', 'batch'],
     isHelper: true,
-    nameTokens: ['fyt', 'mcp', 'get', 'issue', 'url'],
+    nameTokens: ['fyt', 'mcp', 'get', 'issue', 'urls'],
     descriptionTokens: ['url'],
-    descriptionShort: 'Получить URL задачи в Яндекс',
+    descriptionShort: 'Получить URL задач в Яндекс',
   },
   {
     name: 'fyt_mcp_demo',

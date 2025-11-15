@@ -3,16 +3,16 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema } from '@mcp/tools/common/index.js';
+import { IssueKeysSchema } from '@mcp/tools/common/index.js';
 
 /**
- * Схема параметров для получения URL задачи
+ * Схема параметров для получения URL задач
  */
 export const IssueUrlParamsSchema = z.object({
   /**
-   * Ключ задачи в формате QUEUE-123
+   * Массив ключей задач в формате QUEUE-123
    */
-  issueKey: IssueKeySchema,
+  issueKeys: IssueKeysSchema,
 });
 
 /**

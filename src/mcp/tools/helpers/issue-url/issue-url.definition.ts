@@ -16,14 +16,14 @@ import { buildToolName } from '@mcp/tools/common/utils/index.js';
 export class IssueUrlDefinition extends BaseToolDefinition {
   build(): ToolDefinition {
     return {
-      name: buildToolName('get_issue_url'),
+      name: buildToolName('get_issue_urls'),
       description: this.buildDescription(),
       inputSchema: {
         type: 'object',
         properties: {
-          issueKey: this.buildIssueKeyParam(),
+          issueKeys: this.buildIssueKeysParam(),
         },
-        required: ['issueKey'],
+        required: ['issueKeys'],
       },
     };
   }
@@ -33,29 +33,59 @@ export class IssueUrlDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Получение URL задачи в веб-интерфейсе Яндекс.Трекера. ' +
+      'Получение URL задач в веб-интерфейсе Яндекс.Трекера. ' +
       '\n\n' +
+      '⚠️ ФОРМАТ ПАРАМЕТРОВ:\n' +
+      '```json\n' +
+      '{\n' +
+      '  "issueKeys": ["PROJ-123", "PROJ-456"]\n' +
+      '}\n' +
+      '```\n' +
+      '\n' +
+      'Для одной задачи используй массив из одного элемента:\n' +
+      '```json\n' +
+      '{\n' +
+      '  "issueKeys": ["PROJ-123"]\n' +
+      '}\n' +
+      '```\n' +
+      '\n' +
       'Особенности:\n' +
       '- НЕ делает запросов к API (мгновенное выполнение)\n' +
-      '- Формирует URL для открытия задачи в браузере\n' +
+      '- Формирует URL для открытия задач в браузере\n' +
       '- Работает с любыми задачами (даже удалёнными)\n' +
+      '- Batch-режим: можно получить URL для нескольких задач одновременно\n' +
       '\n' +
       'Используй этот инструмент когда нужно:\n' +
-      '- Получить ссылку на задачу для пользователя\n' +
+      '- Получить ссылки на задачи для пользователя\n' +
       '- Сформировать URL для открытия в браузере\n' +
-      '- Создать кликабельную ссылку в ответе\n' +
+      '- Создать кликабельные ссылки в ответе\n' +
       '\n' +
       'Формат URL: https://tracker.yandex.ru/{issueKey}'
     );
   }
 
   /**
-   * Построить описание параметра issueKey
+   * Построить описание параметра issueKeys
    */
-  private buildIssueKeyParam(): Record<string, unknown> {
-    return this.buildStringParam('Ключ задачи в формате QUEUE-123', {
-      pattern: '^[A-Z][A-Z0-9]+-\\d+$',
-      examples: ['PROJ-123', 'DEVOPS-456', 'TEST-1'],
-    });
+  private buildIssueKeysParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНО МАССИВ! Даже для одной задачи используй ["PROJ-123"], НЕ "PROJ-123".\n' +
+        '\n' +
+        'Правильные примеры:\n' +
+        '✅ ["PROJ-123"] - одна задача\n' +
+        '✅ ["PROJ-123", "PROJ-456"] - несколько задач\n' +
+        '\n' +
+        'Неправильные примеры:\n' +
+        '❌ "PROJ-123" - это НЕ массив, будет ошибка!\n' +
+        '❌ {"issueKey": "PROJ-123"} - неверная структура',
+      this.buildStringParam('Ключ задачи', {
+        pattern: '^[A-Z][A-Z0-9]+-\\d+$',
+        examples: ['PROJ-123', 'DEVOPS-456', 'TEST-1'],
+      }),
+      {
+        minItems: 1,
+        examples: [['PROJ-123'], ['PROJ-123', 'PROJ-456']],
+      }
+    );
   }
 }
