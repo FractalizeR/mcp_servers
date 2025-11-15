@@ -245,14 +245,31 @@ jobs:
 
     steps:
       - name: Check if all jobs succeeded
+        shell: bash
         run: |
-          if [[ "${{ needs.code-quality.result }}" != "success" ]] || \
-             [[ "${{ needs.tests.result }}" != "success" ]] || \
-             [[ "${{ needs.architecture.result }}" != "success" ]] || \
-             [[ "${{ needs.security.result }}" != "success" ]] || \
-             [[ "${{ needs.documentation.result }}" != "success" ]] || \
-             [[ "${{ needs.build.result }}" != "success" ]]; then
+          echo "Checking job results..."
+          echo "code-quality: ${{ needs.code-quality.result }}"
+          echo "tests: ${{ needs.tests.result }}"
+          echo "architecture: ${{ needs.architecture.result }}"
+          echo "security: ${{ needs.security.result }}"
+          echo "documentation: ${{ needs.documentation.result }}"
+          echo "build: ${{ needs.build.result }}"
+
+          FAILED=0
+
+          if [ "${{ needs.code-quality.result }}" != "success" ]; then FAILED=1; fi
+          if [ "${{ needs.tests.result }}" != "success" ]; then FAILED=1; fi
+          if [ "${{ needs.architecture.result }}" != "success" ]; then FAILED=1; fi
+          if [ "${{ needs.security.result }}" != "success" ]; then FAILED=1; fi
+          if [ "${{ needs.documentation.result }}" != "success" ]; then FAILED=1; fi
+          if [ "${{ needs.build.result }}" != "success" ]; then FAILED=1; fi
+
+          if [ "$FAILED" = "1" ]; then
+            echo ""
             echo "❌ Some checks failed!"
             exit 1
           fi
+
+          echo ""
           echo "✅ All checks passed!"
+          exit 0
