@@ -10,6 +10,7 @@ export default defineConfig({
       '@mcp': resolve(__dirname, './src/mcp'),
       '@cli': resolve(__dirname, './src/cli'),
       '@types': resolve(__dirname, './src/types.ts'),
+      '@constants': resolve(__dirname, './src/constants.ts'),
       '@integration': resolve(__dirname, './tests/integration'),
     },
   },
