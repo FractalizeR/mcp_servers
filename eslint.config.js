@@ -6,8 +6,6 @@ import prettierConfig from 'eslint-config-prettier';
 export default [
   {
     ignores: [
-      '**/*.test.ts',
-      '**/*.spec.ts',
       'jest.config.js',
       'dist/**/*',
       'node_modules/**/*'
@@ -110,7 +108,9 @@ export default [
         __filename: 'readonly',
         module: 'readonly',
         require: 'readonly',
-        exports: 'readonly'
+        exports: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly'
       }
     },
     plugins: {

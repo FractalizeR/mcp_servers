@@ -41,6 +41,7 @@ describe('GetIssuesOperation', () => {
     mockParallelExecutor = {
       executeParallel: vi.fn(),
     } as unknown as ParallelExecutor;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Замена приватного поля для unit тестирования (альтернатива - DI, но потребует изменения production кода)
     (operation as any).parallelExecutor = mockParallelExecutor;
   });
 
@@ -200,6 +201,7 @@ describe('GetIssuesOperation', () => {
         maxBatchSize: 50,
         maxConcurrentRequests: 10,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Замена приватного поля для unit тестирования
       (operation as any).parallelExecutor = realParallelExecutor;
 
       // Мокируем httpClient.get чтобы он возвращал данные
@@ -243,6 +245,7 @@ describe('GetIssuesOperation', () => {
         maxBatchSize: 50,
         maxConcurrentRequests: 10,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Замена приватного поля для unit тестирования
       (operation as any).parallelExecutor = realParallelExecutor;
 
       // Мокируем cache (cache hit) - СИНХРОННО
@@ -283,6 +286,7 @@ describe('GetIssuesOperation', () => {
         maxBatchSize: 50,
         maxConcurrentRequests: 10,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Замена приватного поля для unit тестирования
       (operation as any).parallelExecutor = realParallelExecutor;
 
       // Мокируем httpClient.get с разными ответами для каждого ключа

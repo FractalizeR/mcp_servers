@@ -127,6 +127,7 @@ describe('SearchToolsTool (E2E)', () => {
     });
 
     // Создаём стратегии
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Допустимо для Map со стратегиями поиска (type inference)
     const strategies = new Map<StrategyType, any>([
       ['name', new NameSearchStrategy()],
       ['description', new DescriptionSearchStrategy()],
@@ -198,6 +199,7 @@ describe('SearchToolsTool (E2E)', () => {
       const content = result.content[0]!;
       if (content.type === 'text') {
         const parsed = JSON.parse(content.text);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамическая структура данных из JSON
         parsed.data.tools.forEach((toolData: any) => {
           expect(toolData.name).toBeDefined();
           expect(toolData.description).toBeUndefined();
@@ -217,6 +219,7 @@ describe('SearchToolsTool (E2E)', () => {
       const content = result.content[0]!;
       if (content.type === 'text') {
         const parsed = JSON.parse(content.text);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамическая структура данных из JSON
         parsed.data.tools.forEach((toolData: any) => {
           expect(toolData.name).toBeDefined();
           expect(toolData.description).toBeDefined();
@@ -234,6 +237,7 @@ describe('SearchToolsTool (E2E)', () => {
       const content = result.content[0]!;
       if (content.type === 'text') {
         const parsed = JSON.parse(content.text);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамическая структура данных из JSON
         parsed.data.tools.forEach((toolData: any) => {
           expect(toolData.name).toBeDefined();
           expect(toolData.description).toBeDefined();
@@ -267,6 +271,7 @@ describe('SearchToolsTool (E2E)', () => {
       const content = result.content[0]!;
       if (content.type === 'text') {
         const parsed = JSON.parse(content.text);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамическая структура данных из JSON
         parsed.data.tools.forEach((toolData: any) => {
           const indexEntry = mockIndex.find((t) => t.name === toolData.name);
           expect(indexEntry?.category).toBe(ToolCategory.ISSUES);
@@ -281,6 +286,7 @@ describe('SearchToolsTool (E2E)', () => {
       const content = result.content[0]!;
       if (content.type === 'text') {
         const parsed = JSON.parse(content.text);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамическая структура данных из JSON
         parsed.data.tools.forEach((toolData: any) => {
           const indexEntry = mockIndex.find((t) => t.name === toolData.name);
           expect(indexEntry?.isHelper).toBe(true);
@@ -295,6 +301,7 @@ describe('SearchToolsTool (E2E)', () => {
       const content = result.content[0]!;
       if (content.type === 'text') {
         const parsed = JSON.parse(content.text);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамическая структура данных из JSON
         parsed.data.tools.forEach((toolData: any) => {
           const indexEntry = mockIndex.find((t) => t.name === toolData.name);
           expect(indexEntry?.isHelper).toBe(false);
@@ -314,6 +321,7 @@ describe('SearchToolsTool (E2E)', () => {
       const content = result.content[0]!;
       if (content.type === 'text') {
         const parsed = JSON.parse(content.text);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамическая структура данных из JSON
         parsed.data.tools.forEach((toolData: any) => {
           const indexEntry = mockIndex.find((t) => t.name === toolData.name);
           expect(indexEntry?.category).toBe(ToolCategory.ISSUES);
@@ -338,6 +346,7 @@ describe('SearchToolsTool (E2E)', () => {
     });
 
     it('должен вернуть ошибку для невалидного detailLevel', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Намеренно невалидное значение для теста валидации ошибок
       const result = await tool.execute({ query: 'ping', detailLevel: 'invalid' as any });
 
       expect(result.isError).toBe(true);
@@ -348,6 +357,7 @@ describe('SearchToolsTool (E2E)', () => {
     });
 
     it('должен вернуть ошибку для невалидной категории', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Намеренно невалидное значение для теста валидации ошибок
       const result = await tool.execute({ query: 'ping', category: 'INVALID_CATEGORY' as any });
 
       expect(result.isError).toBe(true);
