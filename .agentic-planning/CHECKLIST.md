@@ -133,17 +133,17 @@
 - [x] Smoke test создан/обновлён
 - [ ] ✅ Smoke test работает (будет протестирован после сборки в шаге 3.1)
 
-### Шаг 3.4: Обновление документации
-- [ ] Корневой `README.md` обновлён (структура monorepo)
-- [ ] Создан `packages/infrastructure/README.md`
-- [ ] Создан `packages/core/README.md`
-- [ ] Создан `packages/search/README.md`
-- [ ] Создан `packages/cli/README.md`
-- [ ] Обновлён `packages/yandex-tracker/README.md`
-- [ ] Обновлён `CLAUDE.md` (пути и импорты)
-- [ ] Обновлён `ARCHITECTURE.md` (схема monorepo)
-- [ ] Создан `MIGRATION.md` (гайд для пользователей v1)
-- [ ] Создан `CHANGELOG.md` для всех пакетов
+### Шаг 3.5: Обновление документации
+- [x] Корневой `README.md` обновлён (структура monorepo)
+- [x] Создан `packages/infrastructure/README.md`
+- [x] Создан `packages/core/README.md`
+- [x] Создан `packages/search/README.md`
+- [x] Обновлён `packages/yandex-tracker/README.md` (cli не было в monorepo)
+- [x] Обновлён корневой `CLAUDE.md` (упрощён для monorepo, ~267 строк)
+- [x] Создан `packages/yandex-tracker/CLAUDE.md` (~232 строки)
+- [x] Обновлён `ARCHITECTURE.md` (схема monorepo, 564 строки)
+- [x] Создан `MIGRATION.md` (гайд для пользователей v1)
+- [x] Создан `CHANGELOG.md` для всех пакетов (infrastructure, core, search, yandex-tracker)
 
 ### Шаг 3.5: Подготовка к публикации
 - [ ] Создан `.npmignore` для всех пакетов

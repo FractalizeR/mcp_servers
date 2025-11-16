@@ -1,389 +1,302 @@
-# Яндекс.Трекер для Claude Desktop
+# MCP Framework & Yandex Tracker Server
 
-[![CI](https://github.com/fractalizer/yandex-tracker-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/fractalizer/yandex-tracker-mcp/actions/workflows/ci.yml)
-[![Release](https://github.com/fractalizer/yandex-tracker-mcp/actions/workflows/release.yml/badge.svg)](https://github.com/fractalizer/yandex-tracker-mcp/actions/workflows/release.yml)
-[![npm version](https://img.shields.io/npm/v/fractalizer_mcp_yandex_tracker.svg)](https://www.npmjs.com/package/fractalizer_mcp_yandex_tracker)
+[![CI](https://github.com/FractalizeR/mcp_server_yandex_tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/FractalizeR/mcp_server_yandex_tracker/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Управляй задачами в Яндекс.Трекере прямо из Claude!** 🚀
+**Monorepo containing MCP Framework packages and Yandex Tracker integration**
 
-Этот MCP-сервер позволяет Claude работать с твоими задачами в Яндекс.Трекере: искать, читать, создавать и обновлять их — всё это без переключения между приложениями.
-
----
-
-## 🎯 Преимущества, по сравнению с другими решениями
-
- - Групповая обработка. Один запрос к MCP инструменту = несколько запросов к Yandex Tracker.
- - Поддержка модификации данных трекера
+This repository provides:
+- 🏗️ **MCP Framework** — reusable packages for building MCP tools
+- 🚀 **Yandex Tracker Server** — complete MCP server for Yandex.Tracker API
 
 ---
 
-## 📦 Установка
+## 📦 Packages
 
-### Способ 1: Автоматический (рекомендуется)
+### Framework Packages (Published to npm)
 
-1. **Скачай и установи пакет:**
-   ```bash
-   npm install -g fractalizer_mcp_yandex_tracker
-   ```
+| Package | Version | Description |
+|---------|---------|-------------|
+| [@mcp-framework/infrastructure](packages/infrastructure) | 0.1.0 | HTTP client, cache, logging, async utilities |
+| [@mcp-framework/core](packages/core) | 0.1.0 | Base classes, type system, tool registry |
+| [@mcp-framework/search](packages/search) | 0.1.0 | Advanced tool search engine with compile-time indexing |
 
-2. **Подключи к Claude Desktop:**
-   ```bash
-   fractalizer_mcp_yandex_tracker connect
-   ```
+### Application Package
 
-   CLI автоматически:
-   - Найдет установленный Claude Desktop
-   - Попросит ввести OAuth токен и ID организации
-   - Настроит всё за тебя
-
-3. **Перезапусти Claude Desktop** — готово!
-
-### Способ 2: MCPB Bundle (через файл)
-
-1. **Скачай** готовый `.mcpb` файл из [Releases](https://github.com/fractalizer/fractalizer_mcp_yandex_tracker/releases)
-2. **Открой Claude Desktop** → Settings → Developer → MCP Bundles
-3. **Добавь** скачанный файл `fractalizer_mcp_yandex_tracker.mcpb`
-4. **Введи** OAuth токен и ID организации
-5. **Перезапусти** Claude Desktop
-
-### Способ 3: Из исходников (для разработчиков)
-
-Смотри раздел [**Разработка**](#-для-разработчиков) ниже.
+| Package | Version | Description |
+|---------|---------|-------------|
+| [mcp-server-yandex-tracker](packages/yandex-tracker) | 0.1.0 | MCP server for Yandex.Tracker API v3 integration |
 
 ---
 
-## 🔑 Получение OAuth токена
+## 🏗️ Architecture
 
-### Шаг 1: Создай приложение в Яндекс.OAuth
-1. Открой https://oauth.yandex.ru/
-2. Нажми **"Создать приложение"**
-3. Заполни форму:
-   - **Название:** "Claude MCP для Трекера" (любое)
-   - **Права доступа:**
-     - ✅ `tracker:read` (чтение задач)
-     - ✅ `tracker:write` (создание/редактирование задач)
-4. Нажми **"Создать"**
+```
+packages/
+├── infrastructure/     → @mcp-framework/infrastructure
+│   └── HTTP, cache, logging, async utilities
+├── core/              → @mcp-framework/core
+│   └── BaseTool, registry, type system
+├── search/            → @mcp-framework/search
+│   └── Tool Search Engine (compile-time indexing)
+└── yandex-tracker/    → mcp-server-yandex-tracker
+    └── Yandex API, tools, operations, DI
+```
 
-### Шаг 2: Получи токен
-1. На странице приложения найди **"OAuth токен"**
-2. Скопируй его (начинается с `y0_...`)
-3. **⚠️ ВАЖНО:** Храни токен в безопасности, не показывай никому!
+**Dependency Graph:**
+```
+infrastructure (0 dependencies)
+    ↓
+core (depends on infrastructure)
+    ↓
+search (depends on core)
+    ↓
+yandex-tracker (depends on all framework packages)
+```
 
-### Шаг 3: Узнай ID организации
-1. Открой **Яндекс.Трекер** → Настройки → Организация
-2. Скопируй **ID организации** (обычно это число)
+**Details:** [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ---
 
-## 💬 Примеры использования
+## 🚀 Quick Start
 
-После установки просто спроси Claude:
+### For Users (Yandex Tracker Server)
 
-### Поиск задач
-```
-Найди все критичные баги в проекте MOBILE
-```
-Claude использует `fractalizer_mcp_yandex_tracker_find_issues` с JQL: `project = MOBILE AND type = Bug AND priority = Critical`
-
-### Анализ задач
-```
-Покажи все задачи, назначенные на меня, которые нужно закрыть до конца недели
-```
-
-### Создание задачи
-```
-Создай задачу в проекте BACKEND: "Исправить ошибку авторизации", приоритет высокий
-```
-
-### Групповые операции
-```
-Обнови все задачи из спринта Sprint-42, поставь статус "In Review"
-```
-
-### Добавление комментария
-```
-Добавь комментарий к задаче PROJ-123: "Протестировал, всё работает отлично!"
-```
-
----
-
-## ⚙️ Настройка (опционально)
-
-После установки можно изменить настройки в конфигурации Claude Desktop.
-
-### Доступные параметры
-
-| Параметр | Описание | По умолчанию |
-|----------|----------|--------------|
-| `YANDEX_TRACKER_TOKEN` | OAuth токен (**обязательно**) | — |
-| `YANDEX_ORG_ID` | ID организации (**обязательно**) | — |
-| `LOG_LEVEL` | Уровень логов: `debug`, `info`, `warn`, `error` | `info` |
-| `REQUEST_TIMEOUT` | Таймаут запросов (мс), 5000-120000 | `30000` |
-| `MAX_BATCH_SIZE` | Макс. задач в одном запросе, 1-1000 | `200` |
-| `MAX_CONCURRENT_REQUESTS` | Одновременных запросов к API, 1-20 | `5` |
-
-### Где найти конфигурацию?
-
-**macOS:**
-```
-~/Library/Application Support/Claude/claude_desktop_config.json
-```
-
-**Windows:**
-```
-%APPDATA%\Claude\claude_desktop_config.json
-```
-
-**Linux:**
-```
-~/.config/Claude/claude_desktop_config.json
-```
-
-### Пример конфигурации
-```json
-{
-  "mcpServers": {
-    "fractalizer_mcp_yandex_tracker": {
-      "command": "npx",
-      "args": ["-y", "fractalizer_mcp_yandex_tracker"],
-      "env": {
-        "YANDEX_TRACKER_TOKEN": "y0_your_token_here",
-        "YANDEX_ORG_ID": "12345678",
-        "LOG_LEVEL": "info",
-        "REQUEST_TIMEOUT": "30000"
-      }
-    }
-  }
-}
-```
-
----
-
-## 🛠️ Устранение проблем
-
-### Claude не видит инструменты
-1. **Проверь токен:** `fractalizer_mcp_yandex_tracker status` (покажет ошибки подключения)
-2. **Перезапусти Claude Desktop** (обязательно!)
-3. **Проверь логи:** в настройках Claude → Developer → View Logs
-
-### Ошибка "Invalid token"
-- Убедись, что токен скопирован полностью (начинается с `y0_`)
-- Проверь права доступа: `tracker:read` и `tracker:write`
-- Токен мог истечь — создай новый
-
-### Ошибка "Organization not found"
-- Проверь правильность ID организации
-- Убедись, что у тебя есть доступ к этой организации в Трекере
-
-### Проверка статуса
+**Install and run:**
 ```bash
-fractalizer_mcp_yandex_tracker status       # Статус подключения
-fractalizer_mcp_yandex_tracker validate     # Полная проверка конфигурации
+npm install -g mcp-server-yandex-tracker
 ```
+
+**Connect to Claude Desktop:**
+Follow instructions in [packages/yandex-tracker/README.md](packages/yandex-tracker/README.md)
+
+### For Framework Users
+
+**Install packages you need:**
+```bash
+npm install @mcp-framework/infrastructure
+npm install @mcp-framework/core
+npm install @mcp-framework/search
+```
+
+**Usage examples:** See README.md in each package.
+
+### For Contributors
+
+**Clone and setup:**
+```bash
+git clone https://github.com/FractalizeR/mcp_server_yandex_tracker.git
+cd mcp_server_yandex_tracker
+npm install
+npm run build
+npm run test
+```
+
+**Read contributing guide:** [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
 ---
 
-## 🔒 Безопасность
+## 🛠️ Development
 
-### Защита токенов
-- ✅ Токены передаются через переменные окружения (не в коде)
-- ✅ Токены не попадают в логи
-- ✅ Рекомендуется минимальный набор прав (`tracker:read`, `tracker:write`)
-- ⚠️ **Никогда** не коммить токены в Git!
-
-### Опасные операции
-Инструменты, которые **изменяют данные** (создание, обновление, удаление), требуют явного подтверждения от пользователя. Claude спросит разрешение перед выполнением:
-- `fractalizer_mcp_yandex_tracker_create_issue` — создание задачи
-- `fractalizer_mcp_yandex_tracker_update_issue` — обновление задачи
-- `fractalizer_mcp_yandex_tracker_link_issues` — связывание задач
-- `fractalizer_mcp_yandex_tracker_add_comment` — добавление комментария
-
-**Только чтение** (безопасно, без подтверждения):
-- `fractalizer_mcp_yandex_tracker_ping`, `fractalizer_mcp_yandex_tracker_get_issues`, `fractalizer_mcp_yandex_tracker_find_issues`, `fractalizer_mcp_yandex_tracker_get_issue_url`
-
----
-
-## 📊 Логи и отладка
-
-### Где находятся логи?
-
-**macOS:**
-```
-~/Library/Application Support/Claude/logs/
-```
-
-**Windows:**
-```
-%APPDATA%\Claude\logs\
-```
-
-**Linux:**
-```
-~/.config/Claude/logs/
-```
-
-### Включить debug-логи
-В конфигурации Claude Desktop измени:
-```json
-"LOG_LEVEL": "debug"
-```
-
-Перезапусти Claude Desktop — теперь в логах будет полная информация о запросах.
-
-### Автоматическая ротация
-- Логи автоматически сжимаются в `.gz` архивы
-- По умолчанию: 20 файлов × 50KB = ~1MB на диске
-- Старые логи удаляются автоматически
-
----
-
-## 🚀 Для разработчиков
-
-### Установка из исходников
+### Workspace Commands
 
 ```bash
-# Клонируй репозиторий
-git clone https://github.com/fractalizer/fractalizer_mcp_yandex_tracker.git
-cd fractalizer_mcp_yandex_tracker
-
-# Установи зависимости
+# Install all dependencies
 npm install
 
-# Собери проект
+# Build all packages (topological order)
 npm run build
 
-# Подключи к Claude Desktop
-npm run mcp:connect
+# Test all packages
+npm run test
+
+# Validate entire monorepo
+npm run validate
+
+# Clean all packages
+npm run clean
 ```
 
-### Как контрибьютить
-
-Хочешь помочь проекту? Читай [CONTRIBUTING.md](.github/CONTRIBUTING.md) - там все про:
-- Процесс разработки и PR
-- CI/CD pipeline и автоматические проверки
-- Процесс релиза
-
-### Архитектура и конвенции
-- **Архитектура:** [ARCHITECTURE.md](./ARCHITECTURE.md) — layered architecture, DI, модульность
-- **Правила для ИИ агентов:** [CLAUDE.md](./CLAUDE.md) — конвенции кода, чек-листы
-- **MCP Tools:** [src/mcp/README.md](./src/mcp/README.md) — как добавлять новые инструменты
-- **API Operations:** [src/tracker_api/api_operations/README.md](./src/tracker_api/api_operations/README.md)
-- **Тесты:** [tests/README.md](./tests/README.md) — unit/integration/e2e тесты
-
-### Команды для разработки
+### Working with Individual Packages
 
 ```bash
-# Сборка
-npm run build              # Полная сборка TypeScript → JavaScript
-npm run watch              # Автоматическая пересборка при изменениях
+# Build one package
+npm run build --workspace=@mcp-framework/core
 
-# Запуск
-npm run dev                # Запуск с debug-логами
-npm run dev:debug          # С Node.js inspector
+# Test one package
+npm run test --workspace=mcp-server-yandex-tracker
 
-# Валидация
-npm run validate           # Полная проверка (линтер + тесты + архитектура)
-npm run validate:code      # Только код (lint + typecheck + format)
-npm run validate:tests     # Только тесты
-npm run lint               # ESLint проверка
-npm run typecheck          # TypeScript type checking
-
-# Тестирование
-npm run test               # Все тесты
-npm run test:unit          # Только unit-тесты
-npm run test:coverage      # С покрытием кода
-npm run test:watch         # Watch mode
-
-# MCP команды
-npm run mcp:connect        # Подключить к Claude Desktop
-npm run mcp:disconnect     # Отключить
-npm run mcp:status         # Статус подключения
-npm run mcp:validate       # Проверка конфигурации
+# All package commands
+cd packages/yandex-tracker
+npm run <script>
 ```
 
-### Добавление нового инструмента
+### Dependency Management
 
-**Пример:** добавим инструмент для получения спринтов.
+```bash
+# Add dependency to specific package
+npm install axios --workspace=@mcp-framework/infrastructure
 
-1. **Создай структуру файлов:**
-   ```
-   src/mcp/tools/api/sprints/get/
-   ├── get-sprints.schema.ts      # Zod схемы валидации
-   ├── get-sprints.definition.ts  # MCP ToolDefinition
-   ├── get-sprints.tool.ts        # Основной класс
-   └── index.ts                   # Реэкспорт
-   ```
-
-2. **Добавь 1 строку регистрации:**
-   ```typescript
-   // src/composition-root/definitions/tool-definitions.ts
-   import { GetSprintsTool } from '@mcp/tools/api/sprints/get/index.js';
-
-   export const TOOL_CLASSES = [
-     // ... существующие
-     GetSprintsTool,  // ← ОДНА СТРОКА
-   ] as const;
-   ```
-
-3. **Готово!** DI контейнер автоматически зарегистрирует инструмент.
-
-**Подробнее:** [src/mcp/README.md](./src/mcp/README.md)
-
-### Технологический стек
-
-- **TypeScript** (strict mode, без `any`)
-- **InversifyJS v7** (Dependency Injection)
-- **Zod** (валидация параметров)
-- **Axios** (HTTP client)
-- **Pino** (structured logging с ротацией)
-- **Vitest** (тесты, покрытие ≥80%)
-- **MCP SDK** (Model Context Protocol)
+# Add framework package to yandex-tracker
+cd packages/yandex-tracker
+npm install @mcp-framework/core
+```
 
 ---
 
-## 📄 Совместимость
+## 📖 Documentation
 
-- **Платформы:** macOS, Linux, Windows
-- **Node.js:** ≥ 22.0.0
-- **MCP клиенты:** Claude Desktop ≥ 0.10.0
+### Monorepo
 
----
+- **[CLAUDE.md](CLAUDE.md)** — AI agent guidelines for monorepo
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — Architecture overview
+- **[MIGRATION.md](MIGRATION.md)** — Migration guide v1 → v2
+- **[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)** — Contribution guidelines
 
-## 📝 Лицензия
+### Packages
 
-MIT License — свободное использование, модификация и распространение.
-
----
-
-## 🔗 Полезные ссылки
-
-- **GitHub репозиторий:** https://github.com/fractalizer/fractalizer_mcp_yandex_tracker
-- **MCP спецификация:** https://github.com/anthropics/mcp
-- **API Яндекс.Трекера:** https://cloud.yandex.ru/docs/tracker/about-api
-- **OAuth Яндекс:** https://yandex.ru/dev/oauth/
+- **Infrastructure:** [packages/infrastructure/README.md](packages/infrastructure/README.md)
+- **Core:** [packages/core/README.md](packages/core/README.md)
+- **Search:** [packages/search/README.md](packages/search/README.md)
+- **Yandex Tracker:** [packages/yandex-tracker/README.md](packages/yandex-tracker/README.md)
 
 ---
 
-## 💬 Поддержка
+## 🧪 Testing
 
-**Нашел баг или есть вопрос?**
-1. Проверь раздел [Устранение проблем](#-устранение-проблем)
-2. Посмотри [Issues на GitHub](https://github.com/fractalizer/fractalizer_mcp_yandex_tracker/issues)
-3. Создай новый Issue с описанием проблемы
+**Run all tests:**
+```bash
+npm run test
+```
 
-**Хочешь помочь проекту?**
-- ⭐ Поставь звезду на GitHub
-- 🐛 Сообщи о баге
-- 💡 Предложи новую фичу
-- 🔧 Сделай Pull Request
+**With coverage:**
+```bash
+npm run test:coverage
+```
+
+**Package-specific:**
+```bash
+npm run test --workspace=@mcp-framework/core
+```
+
+**Watch mode:**
+```bash
+cd packages/yandex-tracker
+npm run test:watch
+```
+
+---
+
+## 🔍 Code Quality
+
+**Linting:**
+```bash
+npm run lint              # Check all packages
+npm run lint:fix          # Fix auto-fixable issues
+```
+
+**Type checking:**
+```bash
+npm run typecheck         # Check all packages
+```
+
+**Architecture validation:**
+```bash
+npm run depcruise         # Validate dependency graph
+npm run depcruise:graph   # Generate visual graph
+```
+
+**Security audits:**
+```bash
+npm run audit:socket      # Supply-chain analysis
+npm run audit:secrets     # Scan for leaked secrets
+npm run audit:lockfile    # Verify package-lock.json
+```
+
+**Dead code detection:**
+```bash
+npm run knip              # Find unused files/exports/dependencies
+```
+
+---
+
+## 📦 Publishing
+
+**Framework packages** (`@mcp-framework/*`) are published to npm registry.
+**Application package** (`mcp-server-yandex-tracker`) is published to npm registry.
+
+**Version management:**
+- Using [Changesets](https://github.com/changesets/changesets)
+- Automated via GitHub Actions on merge to main
+
+**Manual publish (if needed):**
+```bash
+# Create changeset
+npx changeset add
+
+# Version bump
+npx changeset version
+
+# Publish (from main branch)
+npm run publish:all
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please read:
+
+1. **[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)** — Contribution process
+2. **[CLAUDE.md](CLAUDE.md)** — Code conventions and architecture rules
+3. **[ARCHITECTURE.md](ARCHITECTURE.md)** — Understanding the codebase
+
+**Quick checklist:**
+- ✅ Fork and create a feature branch
+- ✅ Follow code conventions (see CLAUDE.md)
+- ✅ Add tests (coverage ≥80%)
+- ✅ Run `npm run validate` before commit
+- ✅ Write clear commit messages
+- ✅ Open a Pull Request
+
+---
+
+## 📄 License
+
+MIT License — free to use, modify, and distribute.
+
+See [LICENSE](LICENSE) for details.
+
+---
+
+## 🔗 Links
+
+- **GitHub:** https://github.com/FractalizeR/mcp_server_yandex_tracker
+- **Issues:** https://github.com/FractalizeR/mcp_server_yandex_tracker/issues
+- **MCP Specification:** https://github.com/anthropics/mcp
+- **Yandex.Tracker API:** https://cloud.yandex.ru/docs/tracker/about-api
+
+---
+
+## 💬 Support
+
+**Found a bug or have a question?**
+1. Check [issues](https://github.com/FractalizeR/mcp_server_yandex_tracker/issues)
+2. Read package documentation (README.md in each package)
+3. Create a new issue with details
+
+**Want to help?**
+- ⭐ Star the repository
+- 🐛 Report bugs
+- 💡 Suggest features
+- 🔧 Submit Pull Requests
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by Fractalizer**
+**Built with ❤️ for the MCP community**
 
-[⬆ Наверх](#яндекстрекер-для-claude-desktop)
+[⬆ Back to top](#mcp-framework--yandex-tracker-server)
 
 </div>

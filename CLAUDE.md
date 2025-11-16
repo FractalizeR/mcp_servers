@@ -1,6 +1,6 @@
-# CLAUDE.md — Руководство для ИИ агентов
+# CLAUDE.md — Руководство для ИИ агентов (Monorepo)
 
-**MCP сервер для интеграции с API Яндекс.Трекера v3**
+**MCP Framework & Yandex Tracker Server**
 
 ---
 
@@ -20,7 +20,7 @@
 - `ARCHITECTURE.md` ~600 строк
 - Module `README.md` ~400 строк
 
-**Проверка:** `npm run validate:docs`
+**Проверка:** `npm run validate:docs` (в yandex-tracker пакете)
 
 ### Правила сокращения (по приоритету)
 
@@ -59,8 +59,87 @@
 ## ⚡ ОБЯЗАТЕЛЬНО ПРОЧИТАЙ
 
 **Перед началом работы:**
-1. 📖 **Этот файл** (CLAUDE.md) — правила и чек-листы
-2. 📖 **[ARCHITECTURE.md](./ARCHITECTURE.md)** — понимание архитектуры проекта
+1. 📖 **Этот файл** (CLAUDE.md) — правила monorepo
+2. 📖 **[ARCHITECTURE.md](./ARCHITECTURE.md)** — понимание архитектуры monorepo
+3. 📖 **[packages/yandex-tracker/CLAUDE.md](./packages/yandex-tracker/CLAUDE.md)** — специфика Yandex Tracker
+
+---
+
+## 📦 Структура monorepo
+
+```
+packages/
+├── infrastructure/     → @mcp-framework/infrastructure
+│   └── HTTP, cache, logging, async utilities
+├── core/              → @mcp-framework/core
+│   └── BaseTool, registry, type system
+├── search/            → @mcp-framework/search
+│   └── Tool Search Engine (compile-time indexing)
+└── yandex-tracker/    → mcp-server-yandex-tracker
+    └── Yandex API, tools, operations, DI
+```
+
+**Детали:**
+- **Infrastructure** — [packages/infrastructure/README.md](packages/infrastructure/README.md)
+- **Core** — [packages/core/README.md](packages/core/README.md)
+- **Search** — [packages/search/README.md](packages/search/README.md)
+- **Yandex Tracker** — [packages/yandex-tracker/README.md](packages/yandex-tracker/README.md)
+
+---
+
+## 🚨 КРИТИЧЕСКИЕ ПРАВИЛА MONOREPO
+
+### 1. Граф зависимостей (НЕ НАРУШАТЬ!)
+
+```
+infrastructure (база для всех, 0 зависимостей)
+    ↓
+core (зависит от infrastructure)
+    ↓
+search (зависит от core)
+    ↓
+yandex-tracker (зависит от всех framework пакетов)
+```
+
+**Правила:**
+- ❌ **НЕЛЬЗЯ** обратные зависимости (core → infrastructure)
+- ❌ **НЕЛЬЗЯ** импорты вверх по графу
+- ❌ **НЕЛЬЗЯ** импорты из yandex-tracker в framework пакеты
+- ✅ **МОЖНО** добавлять зависимости вниз по графу
+
+**Проверка:** `npm run depcruise` (в корне) валидирует граф
+
+### 2. Импорты между пакетами
+
+**✅ Используй npm package names:**
+```typescript
+import { BaseTool } from '@mcp-framework/core';
+import { HttpClient } from '@mcp-framework/infrastructure';
+import { ToolSearchEngine } from '@mcp-framework/search';
+```
+
+**❌ НЕ используй:**
+```typescript
+import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
+import { BaseTool } from '@core/tools/base/base-tool.js';              // WRONG!
+```
+
+**Внутри пакета:**
+- ✅ Относительные пути (`./`, `../`) для внутренних импортов
+- ✅ Алиасы только если настроены в `tsconfig.json` пакета
+
+### 3. Типобезопасность
+
+- ❌ `any` / `unknown` / `null` / `undefined` (где можно избежать)
+- ✅ Явные типы для всех публичных функций и параметров
+- ✅ `import type` для type-only импортов
+- ✅ Strict mode во всех пакетах
+
+### 4. Single Responsibility Principle (SRP)
+
+- Один класс = один файл = одна ответственность
+- Каждый пакет имеет чёткую границу ответственности (см. README.md пакетов)
+- Не смешивай логику разных слоёв в одном файле
 
 ---
 
@@ -101,201 +180,63 @@
 
 ---
 
-## 📚 STACK
+## 🛠️ Команды (Workspace)
 
-- **TypeScript** (strict mode, NO `any`/`unknown`/`null`/`undefined` где можно избежать)
-- **InversifyJS v7** (DI, Symbol-based tokens, `defaultScope: 'Singleton'`)
-- **Zod** (валидация параметров, type inference)
-- **Axios** (HTTP client)
-- **Pino** + **rotating-file-stream** (production logging с автоматической ротацией)
-- **Vitest** (тесты, покрытие ≥80%)
-- **dependency-cruiser** (валидация архитектурных правил)
-- **MCP SDK** (Model Context Protocol)
-- **Tool Search System** (compile-time индексирование, 5 стратегий поиска, LRU кеш)
-- **API:** Яндекс.Трекер v3 (ТОЛЬКО `/v3/*` endpoints)
+**Корень monorepo:**
+```bash
+# Установка всех зависимостей
+npm install
 
----
+# Сборка всех пакетов (topological order)
+npm run build
 
-## 🚨 КРИТИЧЕСКИЕ ПРАВИЛА
+# Тесты всех пакетов
+npm run test
 
-### 1. Типобезопасность
+# Валидация всего monorepo
+npm run validate
 
-- ❌ `any` / `unknown` / `null` / `undefined` (где можно избежать)
-- ✅ Явные типы для всех функций и параметров
-- ✅ `import type` для type-only импортов
-- **Примеры:** см. любой файл в `src/`
+# Валидация архитектуры (граф зависимостей)
+npm run depcruise
 
-### 2. Single Responsibility Principle (SRP)
+# Очистка всех пакетов
+npm run clean
+```
 
-- Один класс = один файл = одна ответственность
-- Tool: `src/mcp/tools/{api|helpers}/{feature}/{action}/{name}.tool.ts`
-- Operation: `src/tracker_api/api_operations/{feature}/{action}/{name}.operation.ts`
-- ❌ НЕ объединяй логику разных операций в один файл
+**Работа с отдельным пакетом:**
+```bash
+# Сборка одного пакета
+npm run build --workspace=@mcp-framework/core
 
-**Правила импортов:**
-- ✅ @ алиасы для импортов между слоями/фичами: `@mcp/tools/...`, `@tracker_api/...`
-- ✅ Относительные пути (`./file.js`) ТОЛЬКО в `index.ts` для реэкспорта из той же папки
-- ✅ Относительные пути внутри одной папки (напр. `entities/issue.ts` → `./types.js`)
-- ❌ Запрещены `../` (переход в родительскую папку) — используй @ алиасы
+# Тесты одного пакета
+npm run test --workspace=mcp-server-yandex-tracker
 
-### 3. Dependency Injection (InversifyJS)
-
-- Symbol-based tokens (`TYPES.*`), НЕ bind по классу
-- `toDynamicValue()`, НЕ декораторы `@injectable()`
-- `defaultScope: 'Singleton'` (убирает `.inSingletonScope()`)
-- **Детали:** [src/composition-root/README.md](src/composition-root/README.md)
-
-### 4. API Яндекс.Трекер
-
-- ✅ ТОЛЬКО v3: `/v3/issues`, `/v3/myself`
-- ✅ Batch-операции: `getIssues([keys])`, НЕ `getIssue(key)`
-- ✅ Справка: `yandex_tracker_client/` (Python SDK)
-- ✅ Batch-результаты: используй типы `BatchResult<T>`, `FulfilledResult<T>`, `RejectedResult` из `@types`
-
-### 5. Фильтрация полей (Response Field Filter)
-
-- ВСЕГДА фильтруй перед возвратом: `ResponseFieldFilter.filter(data, fields)`
-- Tool params: `fields?: string[]`, экономия 80-90% размера ответа
-- **Детали:** [src/mcp/tools/common/README.md](src/mcp/tools/common/README.md)
-
-### 6. Валидация параметров (Zod)
-
-- ✅ ВСЕГДА используй Zod для валидации параметров tools, НЕ кастомные валидаторы
-- ✅ Переиспользуй схемы из `@mcp/tools/common/schemas/`
-- ✅ Type inference: `type Params = z.infer<typeof ParamsSchema>`
-- **Примеры:** любой `*.tool.ts` файл
-
-### 7. Статические метаданные для Tool Search
-
-- ✅ ОБЯЗАТЕЛЬНО добавляй `static readonly METADATA: StaticToolMetadata` во все tools
-- ✅ Используется для compile-time индексирования (`npm run generate:index`)
-- ✅ Позволяет SearchToolsTool находить tools без загрузки всего кода
-- ⚠️ При добавлении нового tool — запусти `npm run build` (автоматически обновит индекс)
-
-### 8. Логирование (Pino)
-
-- ✅ Используй **Pino** с structured logging, НЕ `console.log`
-- ✅ Dual output: error/warn → stderr + файл, info/debug → файл
-- ✅ Автоматическая ротация логов (`.gz` архивы)
-- ⚠️ MCP stdio: stdout для JSON-RPC, stderr для логов
-- **Детали:** [src/infrastructure/logging/README.md](src/infrastructure/logging/README.md)
-
-### 9. Тестирование
-
-- Unit тесты: `tests/unit/` (зеркалируют `src/`), покрытие ≥80%
-- Vitest с ESM и TypeScript, импорты с `.js` расширениями
-- **Баг + тест:** При исправлении бага обязательно добавь тест
-- **Детали:** [tests/README.md](tests/README.md)
-
-### 10. Архитектурные правила (dependency-cruiser)
-
-- Layered architecture, MCP isolation, Operations isolation
-- Composition Root top-level, циклические зависимости запрещены
-- Валидация: `npm run depcruise`, графы: `npm run depcruise:graph`
-- **Детали:** `.dependency-cruiser.cjs`, [ARCHITECTURE.md](./ARCHITECTURE.md)
-
-### 11. Автоматическая проверка регистрации
-
-- `npm run validate:tools` проверяет регистрацию всех `*.tool.ts` и `*.operation.ts`
-- Предотвращает забывчивость при добавлении компонентов
-- Автоматически запускается в `npm run validate`
-
-### 12. Инструменты качества кода
-
-**Мёртвый код и зависимости (Knip):**
-- `npm run knip` — поиск неиспользуемых файлов, exports, npm-пакетов
-- Конфигурация: `knip.json`, автоматически запускается в `npm run validate`
-
-**Безопасность зависимостей (Socket.dev):**
-- `npm run audit:socket` — анализ supply-chain атак, вредоносных пакетов
-- Автоматически в `npm run validate`, severity: high
-
-**Поиск секретов (Gitleaks):**
-- `npm run audit:secrets` — сканирование токенов, паролей в коде
-- Конфигурация: `.gitleaks.toml`
-- **Pre-commit hook:** автоматически проверяет staged файлы
-
-**Lockfile синхронизация:**
-- `npm run audit:lockfile` — проверка актуальности package-lock.json
-- Автоматически в `npm run validate`
-
-**Автообновление зависимостей (Renovate):**
-- Конфигурация: `renovate.json`
-- Автоматические PR для патчей/минорных версий (automerge)
-- Major обновления требуют ручного review
-
-**Code complexity:**
-- ESLint правила: `max-params` (≤4), `complexity` (≤10), `max-depth` (≤4)
-- Режим `warn` — не блокирует build, но предупреждает
+# Все команды пакета
+cd packages/yandex-tracker
+npm run <script>
+```
 
 ---
 
-## 📖 КОНВЕНЦИИ ПО КОМПОНЕНТАМ
+## 📖 Работа с конкретными компонентами
 
-**ОБЯЗАТЕЛЬНО прочитай перед работой с компонентом:**
+**Framework пакеты (infrastructure, core, search):**
+- Универсальные, переиспользуемые компоненты
+- НЕ должны зависеть от доменной логики (Yandex Tracker)
+- См. README.md в каждом пакете для API и примеров
 
-- **MCP Tools** — [src/mcp/README.md](src/mcp/README.md)
-- **API Operations** — [src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md)
-- **Entities** — [src/tracker_api/entities/README.md](src/tracker_api/entities/README.md)
-- **DTO** — [src/tracker_api/dto/README.md](src/tracker_api/dto/README.md)
-- **Dependency Injection** — [src/composition-root/README.md](src/composition-root/README.md)
-- **Тестирование** — [tests/README.md](tests/README.md)
+**Yandex Tracker (packages/yandex-tracker):**
+- Доменная логика Яндекс.Трекера
+- MCP tools, API operations, entities, DTO
+- **ОБЯЗАТЕЛЬНО прочитай:** [packages/yandex-tracker/CLAUDE.md](packages/yandex-tracker/CLAUDE.md)
 
 ---
 
-## 📋 КРАТКИЕ ЧЕК-ЛИСТЫ
-
-**⚠️ Подробные чек-листы — в README.md файлах модулей выше**
-
-### Добавление MCP Tool
-
-- [ ] 📖 Прочитай [src/mcp/README.md](src/mcp/README.md)
-- [ ] Создай структуру: `{feature}/{action}/{name}.schema.ts`, `.definition.ts`, `.tool.ts`, `index.ts`
-- [ ] Добавь `static readonly METADATA`:
-  - [ ] ⚠️ Если tool ИЗМЕНЯЕТ данные → `requiresExplicitUserConsent: true`
-  - [ ] ✅ Если tool только ЧИТАЕТ → НЕ добавляй флаг (или `false`)
-- [ ] В `Definition.build()`:
-  - [ ] Реализуй `getStaticMetadata()` → возврат `ToolClass.METADATA`
-  - [ ] Оберни description: `this.wrapWithSafetyWarning(this.buildDescription())`
-- [ ] Используй утилиты: `validateParams()`, `BatchResultProcessor`, `ResultLogger`
-- [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:** Добавь **1 строку** в `src/composition-root/definitions/tool-definitions.ts`
-- [ ] Тесты + `npm run validate` (автоматически проверит флаг)
-
-### Добавление Operation
-
-- [ ] 📖 Прочитай [src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md)
-- [ ] Наследуй `BaseOperation`
-- [ ] Для batch: используй `ParallelExecutor`, возвращай `BatchResult<T>`
-- [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:** Добавь **1 строку** в `src/composition-root/definitions/operation-definitions.ts`
-- [ ] Facade метод + тесты
-- [ ] `npm run validate`
-
-### Добавление Entity
-
-- [ ] 📖 Прочитай [src/tracker_api/entities/README.md](src/tracker_api/entities/README.md)
-- [ ] Создай интерфейс (только known поля)
-- [ ] Создай `{Name}WithUnknownFields = WithUnknownFields<{Name}>`
-- [ ] Экспорт в `index.ts`
-
-### Добавление DTO
-
-- [ ] 📖 Прочитай [src/tracker_api/dto/README.md](src/tracker_api/dto/README.md)
-- [ ] Создай Input DTO (с `[key: string]: unknown` если нужно)
-- [ ] Для update — все поля опциональны
-- [ ] Экспорт в `index.ts`
-
-### Перед коммитом
-
-- [ ] `npm run validate` — без ошибок (если только документация, можно не запускать)
-- [ ] Все TODO в коде закрыты
-- [ ] CLAUDE.md и ARCHITECTURE.md актуальны (если изменили)
-- [ ] ⚠️ НЕ форматируй код вручную — pre-commit hook сделает автоматически
-
-### Автоматический коммит
+## 📋 Автоматический коммит
 
 **Коммить автоматически ТОЛЬКО если:**
 1. ✅ Задача завершена (все TODO выполнены)
-2. ✅ `npm run validate` успешна
+2. ✅ `npm run validate` успешна (если применимо)
 3. ✅ Нет вопросов к пользователю
 
 **Формат:**
@@ -313,23 +254,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
-## 📁 СТРУКТУРА
-
-```
-src/
-├── composition-root/    # DI контейнер (см. README.md)
-├── infrastructure/      # HTTP, кеш, логирование, параллелизация
-├── tracker_api/         # Operations, Entities, DTO, Facade
-└── mcp/                 # Tools (API + Helpers), Utils, Registry
-
-tests/unit/              # Зеркалирует src/
-```
-
-**Подробно:** [ARCHITECTURE.md](./ARCHITECTURE.md)
-
----
 ## 🔗 ДОПОЛНИТЕЛЬНО
 
-- **Архитектура:** [ARCHITECTURE.md](./ARCHITECTURE.md)
-- **DI примеры:** [src/composition-root/README.md](src/composition-root/README.md#-примеры-использования)
-- **API справка:** `yandex_tracker_client/` (Python SDK)
+- **Архитектура monorepo:** [ARCHITECTURE.md](./ARCHITECTURE.md)
+- **Migration guide v1 → v2:** [MIGRATION.md](./MIGRATION.md)
+- **Framework packages:**
+  - [Infrastructure API](packages/infrastructure/README.md)
+  - [Core API](packages/core/README.md)
+  - [Search System](packages/search/README.md)
+- **Yandex Tracker:**
+  - [Yandex Tracker CLAUDE.md](packages/yandex-tracker/CLAUDE.md)
+  - [Yandex Tracker README.md](packages/yandex-tracker/README.md)

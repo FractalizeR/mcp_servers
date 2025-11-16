@@ -1,9 +1,146 @@
-# Архитектура проекта Yandex Tracker MCP
+# Architecture: MCP Framework & Yandex Tracker Server
 
-## 🎯 Архитектурные принципы
+**Monorepo Architecture Overview**
+
+---
+
+## 🎯 Monorepo Principles
+
+### 1. Package Independence
+Каждый пакет может быть опубликован и использован независимо.
+
+### 2. Clear Dependency Graph
+Строгая иерархия зависимостей без циклов.
+
+### 3. Shared Infrastructure
+Общие компоненты (infrastructure, core) переиспользуются.
+
+### 4. Topological Build Order
+Сборка автоматически учитывает зависимости пакетов.
+
+---
+
+## 📦 Monorepo Structure
+
+```
+packages/
+├── infrastructure/     → @mcp-framework/infrastructure
+│   ├── http/, cache/, async/, logging/
+│   └── 0 dependencies
+├── core/              → @mcp-framework/core
+│   ├── tools/base/, utils/, tool-registry
+│   └── depends on: infrastructure
+├── search/            → @mcp-framework/search
+│   ├── engine/, strategies/, tools/
+│   └── depends on: core
+└── yandex-tracker/    → mcp-server-yandex-tracker
+    ├── api_operations/, entities/, mcp/, composition-root/
+    └── depends on: infrastructure, core, search
+```
+
+---
+
+## 🔗 Dependency Graph
+
+```
+┌─────────────────┐
+│ infrastructure  │ ← Base layer (HTTP, logging, cache, async)
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────┐
+│      core       │ ← Framework core (BaseTool, registry, utilities)
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────┐
+│     search      │ ← Tool discovery (search engine, strategies)
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────┐
+│ yandex-tracker  │ ← Application (Yandex.Tracker integration)
+└─────────────────┘
+```
+
+**Rules:**
+- ❌ No reverse dependencies (core → infrastructure)
+- ❌ No imports from yandex-tracker to framework packages
+- ✅ Dependencies flow top-down only
+
+**Validation:**
+```bash
+npm run depcruise  # Validates dependency graph
+```
+
+---
+
+## 📦 Package Details
+
+### @mcp-framework/infrastructure
+
+**Purpose:** Reusable infrastructure layer (domain-agnostic)
+
+**Components:**
+- **HTTP Layer:** HttpClient (Axios wrapper), RetryHandler, ErrorMapper
+- **Caching:** CacheManager interface, NoOpCache
+- **Async:** ParallelExecutor (batch throttling)
+- **Logging:** Pino with rotating-file-stream
+- **Config:** Environment variable loading and validation
+
+**Key Principle:** Infrastructure does NOT know about domain (Yandex.Tracker, MCP)
+
+**Details:** [packages/infrastructure/README.md](packages/infrastructure/README.md)
+
+### @mcp-framework/core
+
+**Purpose:** Core framework for building MCP tools
+
+**Components:**
+- **Base Classes:** BaseTool<TFacade>, BaseDefinition
+- **Tool Registry:** ToolRegistry (lazy initialization)
+- **Utilities:** ResponseFieldFilter, BatchResultProcessor, ResultLogger
+- **Schemas:** Common Zod schemas (fields, expand, issue-key)
+
+**Key Principle:** Generic `BaseTool<TFacade>` — facade-agnostic design
+
+**Details:** [packages/core/README.md](packages/core/README.md)
+
+### @mcp-framework/search
+
+**Purpose:** Advanced tool discovery with compile-time indexing
+
+**Components:**
+- **Engine:** ToolSearchEngine (LRU cache)
+- **Strategies:** Name, Description, Category, Fuzzy, WeightedCombined
+- **Tools:** SearchToolsTool (MCP tool for Claude)
+- **Index:** generated-index.ts (auto-generated at build)
+
+**Key Principle:** Compile-time indexing (zero runtime overhead)
+
+**Details:** [packages/search/README.md](packages/search/README.md)
+
+### mcp-server-yandex-tracker
+
+**Purpose:** Complete MCP server for Yandex.Tracker API v3
+
+**Components:**
+- **API Operations:** Batch operations for issues, users, comments
+- **Entities:** Domain types (Issue, User, Queue, etc.)
+- **DTO:** Data Transfer Objects (create, update requests)
+- **MCP Tools:** API tools + helpers
+- **DI:** InversifyJS composition root
+
+**Key Principle:** Built on framework packages (infrastructure, core, search)
+
+**Details:** [packages/yandex-tracker/README.md](packages/yandex-tracker/README.md), [packages/yandex-tracker/CLAUDE.md](packages/yandex-tracker/CLAUDE.md)
+
+---
+
+## 🏗️ Architectural Principles (Shared)
 
 ### 1. Feature-by-Folder
-Группируем файлы по функциональности, а не по типу файла.
+Группируем файлы по функциональности, а не по типу.
 
 **✅ Правильно:**
 ```
@@ -21,369 +158,407 @@ handlers/
 └── retry-handler.ts
 ```
 
-### 2. Строгий SRP (Single Responsibility Principle)
-Каждый класс отвечает ТОЛЬКО за одну операцию/стратегию/фичу.
-
-- ✅ `PingOperation` — только проверка подключения
-- ✅ `GetIssuesOperation` — только batch-получение задач
-- ❌ `IssueOperations` с методами get, create, update, delete
+### 2. Single Responsibility Principle (SRP)
+Каждый класс/файл отвечает ТОЛЬКО за одну задачу.
 
 ### 3. Dependency Injection
-Все зависимости передаются через конструктор, не создаются внутри классов.
-
-**Используемый IoC контейнер:** InversifyJS v7
-**Подход:** Symbol-based tokens (TYPES) для типобезопасной привязки зависимостей
+Все зависимости через конструктор (InversifyJS в yandex-tracker).
 
 ### 4. Interface Segregation
-Каждый интерфейс минимален и специфичен для конкретной задачи.
+Минимальные, специфичные интерфейсы.
 
 ### 5. Open/Closed Principle
-Система открыта для расширения (новые стратегии, операции), закрыта для модификации.
+Открыто для расширения, закрыто для модификации.
 
 ---
 
-## 📂 Структура проекта
+## 🔄 Data Flow (Yandex Tracker Server)
 
-**Исследование структуры:** используй `Glob` или `tree src/` для актуального состояния.
+**Request Chain:**
 
-**Ключевые директории:**
-
-- **`infrastructure/`** — Инфраструктурный слой (переиспользуемый, не знает о домене)
-  - `http/` — HTTP слой (низкоуровневый)
-    - `client/` — HttpClient (Axios wrapper)
-    - `retry/` — RetryHandler + стратегии
-    - `error/` — ErrorMapper (AxiosError → ApiError)
-  - `cache/` — Кеширование
-    - `cache-manager.interface.ts` — интерфейс (Strategy Pattern)
-    - `no-op-cache.ts` — реализация (Null Object)
-  - `async/` — Утилиты для параллелизации
-    - `parallel-executor.ts` — параллельное выполнение с throttling
-  - `logger.ts` — Логирование
-  - `config.ts` — Конфигурация из env
-
-- **`tracker_api/`** — Доменная логика (специфика Яндекс.Трекера)
-  - `entities/` — доменные типы (Issue, User)
-  - `api_operations/` — API операции (Feature-by-Folder + SRP)
-    - `base-operation.ts` — базовый класс
-    - `user/` — работа с пользователями
-    - `issue/` — batch-операции с задачами
-  - `facade/` — YandexTrackerFacade для удобного API
-
-- **`mcp/`** — Application layer (MCP сервер)
-  - `tools/` — MCP инструменты
-    - `base/` — базовые классы (BaseTool)
-    - `api/` — API tools (работа с Яндекс.Трекер API)
-    - `helpers/` — Helper tools (утилиты, поиск, демо)
-    - `common/` — переиспользуемые утилиты и схемы
-  - `search/` — Tool Search System (compile-time индексирование + runtime поиск)
-    - `tool-search-engine.ts` — движок поиска с LRU кешем
-    - `strategies/` — 5 стратегий поиска (Name, Description, Category, Fuzzy, WeightedCombined)
-    - `generated-index.ts` — статический индекс (auto-generated при build)
-  - `utils/` — MCP утилиты
-    - `response-field-filter.ts` — фильтрация полей ответа (экономия токенов)
-  - `tool-registry.ts` — регистрация и маршрутизация tools (lazy initialization)
-
-- **`composition-root/`** — DI контейнер (высший слой архитектуры)
-  - `definitions/` — декларативные определения tools и operations
-  - `container.ts` — конфигурация InversifyJS контейнера
-  - `types.ts` — Symbol-based токены для DI
-
-**Тесты:** `tests/unit/` зеркалирует структуру `src/`
-
----
-
-## 🔄 Поток данных
-
-**Цепочка вызовов:**
-
-1. **MCP Client** (Claude Desktop App) → JSON-RPC через stdio
-2. **MCP Server** (`index.ts`) → обработчики `tools/list`, `tools/call`
-3. **ToolRegistry** (`tool-registry.ts`) → маппинг имён на Tool классы
-4. **Concrete Tool** (например, `ping.tool.ts`) → валидация параметров
-5. **YandexTrackerFacade** → делегирование операциям
-6. **Operation** (например, `ping.operation.ts`) → бизнес-логика
-7. **HttpClient** (с встроенным retry) → HTTPS запрос к API Яндекс.Трекер v3
-
-**Разделение ответственности по слоям:**
-
-- **Tools** — валидация входных данных, форматирование результата для Claude
-- **Facade** — удобный высокоуровневый API для tools
-- **API Operations** — бизнес-логика конкретных API операций
-- **HTTP/Retry/Cache** — инфраструктурные компоненты (переиспользуемые)
-
-**Независимость компонентов:**
-- `HttpClient` содержит встроенный retry (через `RetryHandler`)
-- `CacheManager` не знает про API
-- `ParallelExecutor` не знает про HTTP
-- Композируется в `Operation` через DI
-
----
-
-## 🔧 Переиспользуемые утилиты MCP Tools
-
-**Проблема:** Дублирование кода валидации, обработки batch-результатов, логирования.
-
-**Решение:** Централизованные утилиты:
-- `BaseTool` — валидация параметров, форматирование ответов
-- `BatchResultProcessor` — обработка batch-результатов
-- `ResultLogger` — стандартизированное логирование
-- `ResponseFieldFilter` — фильтрация полей (экономия 80-90% размера)
-
-**Результат:** Сокращение кода tools с 160 до 50 строк (~70% экономия)
-
-**Подробнее:** [src/mcp/tools/common/README.md](src/mcp/tools/common/README.md)
-
----
-
-## 📦 Entities и DTO: Forward Compatibility Pattern
-
-### Проблема
-
-При эволюции API Яндекс.Трекер добавляет новые поля. Без специальной обработки они теряются при передаче через TypeScript слои.
-
-### Решение: Разделение типов по направлению потока данных
-
-**Структура:**
 ```
-src/tracker_api/
-├── entities/              # Чтение (с unknown полями)
-│   ├── types.ts          # WithUnknownFields<T>
-│   ├── issue.entity.ts   # Issue + IssueWithUnknownFields
-│   └── queue.entity.ts   # Queue + QueueWithUnknownFields
-├── dto/                  # Запись (только known поля)
-│   └── issue/
-│       ├── create-issue.dto.ts
-│       └── update-issue.dto.ts
+1. Claude Desktop (MCP Client)
+   ↓ JSON-RPC via stdio
+2. MCP Server (index.ts)
+   ↓ tools/call
+3. ToolRegistry
+   ↓ route to tool
+4. Concrete Tool (e.g., GetIssuesTool)
+   ↓ validate params (Zod)
+5. YandexTrackerFacade
+   ↓ delegate to operation
+6. Operation (e.g., GetIssuesOperation)
+   ↓ business logic
+7. HttpClient (with retry)
+   ↓ HTTPS request
+8. Yandex.Tracker API v3
+   ↓ response
+9. IssueWithUnknownFields (preserves unknown fields)
+   ↓ filter fields
+10. ResponseFieldFilter
+   ↓ format for Claude
+11. Tool returns result
 ```
 
-### Входящие данные (от API): *WithUnknownFields
+**Layer Responsibilities:**
+- **Tools** — validation, formatting for Claude
+- **Facade** — high-level API for tools
+- **Operations** — business logic
+- **Infrastructure** — HTTP, retry, cache, logging
 
-**Определение:** `src/tracker_api/entities/types.ts`
+---
 
-**Использование в entities:**
+## 📦 Entities & DTO: Forward Compatibility
+
+**Pattern:** Separate types by data flow direction
+
+### Incoming (from API): *WithUnknownFields
+
 ```typescript
-// issue.entity.ts
+// packages/yandex-tracker/src/entities/issue.entity.ts
 export interface Issue { /* known fields */ }
 export type IssueWithUnknownFields = WithUnknownFields<Issue>;
 ```
 
-**Использование в operations:**
+**Purpose:** Preserve unknown fields added by Yandex.Tracker
+
+### Outgoing (to API): Strict DTO
+
 ```typescript
-async execute(keys: string[]): Promise<IssueWithUnknownFields[]> {
-  return this.httpClient.get<IssueWithUnknownFields>(`/v3/issues`);
+// packages/yandex-tracker/src/dto/issue/update-issue.dto.ts
+export interface UpdateIssueDto {
+  summary?: string;
+  description?: string;
+  // NO index signature (type-safe)
 }
 ```
 
-### Исходящие данные (в API): строгие DTO
+**Purpose:** Type-safe requests
 
-**Определение:** `src/tracker_api/dto/issue/update-issue.dto.ts`
+**Details:** [packages/yandex-tracker/src/entities/README.md](packages/yandex-tracker/src/entities/README.md), [packages/yandex-tracker/src/dto/README.md](packages/yandex-tracker/src/dto/README.md)
 
-**Особенности:**
-- Только known поля
-- Для input DTO можно добавить `[key: string]: unknown` для кастомных полей Трекера
-- NO index signature для output (type-safe)
+---
 
-**Использование в operations:**
+## 🚀 Batch Operations (Yandex Tracker)
+
+**Principle:** All collection operations use batch approach
+
+**Pattern:**
+- `getIssues(keys[])` — batch get
+- `createIssues(requests[])` — batch create
+- `updateIssues(items[])` — batch update
+
+**Why:**
+- Universality (1 or N items)
+- Automatic throttling (ParallelExecutor)
+- Simplified architecture (no code duplication)
+
+**Implementation:**
 ```typescript
-async execute(key: string, data: UpdateIssueDto): Promise<IssueWithUnknownFields> {
-  // TypeScript не даст передать лишние поля в data
-  return this.httpClient.patch<IssueWithUnknownFields>(`/v3/issues/${key}`, data);
-}
+// ParallelExecutor with 2 independent limits
+const executor = new ParallelExecutor(config);
+const results = await executor.execute(
+  keys,
+  (key) => httpClient.get<Issue>(`/v3/issues/${key}`)
+);
+// results: BatchResult<string, Issue>
 ```
 
-### Ограничения
+**Limits:**
+1. **MAX_BATCH_SIZE** (business): 200 items per chunk
+2. **MAX_CONCURRENT_REQUESTS** (technical): 5 concurrent requests
 
-- Unknown поля сохраняются только на **верхнем уровне** объекта
-- Для вложенных объектов (`queue.newField`) unknown поля **НЕ** типизированы, но сохраняются при JSON.stringify
-- При необходимости deep support — использовать `DeepPartial<T>` (пока не требуется)
+**Result Type:** `BatchResult<T>` (discriminated union: fulfilled | rejected)
 
-**Детали:** см. `src/tracker_api/entities/types.ts`, CLAUDE.md (чек-листы Entity/DTO)
+**Details:** [packages/infrastructure/README.md](packages/infrastructure/README.md#parallel-execution)
 
 ---
 
-## 🏗️ Dependency Injection (DI)
+## 🔧 Dependency Injection (Yandex Tracker)
 
-**Подход:** InversifyJS v7 с Symbol-based tokens, `defaultScope: 'Singleton'`
+**Approach:** InversifyJS v7 with Symbol-based tokens
 
-**Ключевые файлы:**
-- `src/composition-root/types.ts` — Symbol-based токены (TYPES)
-- `src/composition-root/container.ts` — конфигурация контейнера
-- `src/composition-root/definitions/` — декларативные определения
+**Structure:**
+```
+packages/yandex-tracker/src/composition-root/
+├── types.ts           # Symbol tokens (TYPES.HttpClient, etc.)
+├── container.ts       # Container configuration
+└── definitions/       # Declarative definitions
+    ├── tool-definitions.ts
+    └── operation-definitions.ts
+```
 
-**Преимущества Symbol-based подхода:**
-- Работает с интерфейсами, легко тестировать (rebind), явный контракт
+**Benefits:**
+- Works with interfaces
+- Easy testing (rebind)
+- Explicit contracts
 
-**Подробнее:** [src/composition-root/README.md](src/composition-root/README.md)
+**Details:** [packages/yandex-tracker/src/composition-root/README.md](packages/yandex-tracker/src/composition-root/README.md)
 
 ---
 
-## 🚀 Batch-операции с задачами
+## 🔍 Tool Search System
 
-**Паттерн:** Все операции с коллекциями объектов используют batch-подход (массивы параметров).
+**Architecture:**
 
-### Правило
+1. **Compile-time Indexing:**
+   ```bash
+   npm run build
+   # → runs scripts/generate-tool-index.ts
+   # → generates packages/search/src/generated-index.ts
+   ```
 
-Для операций с задачами используем ТОЛЬКО batch-версии методов:
-- `getIssues(keys[])` — получение
-- `createIssues(requests[])` — создание
-- `updateIssues(items[])` — обновление
-- `deleteIssues(keys[])` — удаление
+2. **Runtime Search:**
+   ```typescript
+   const engine = new ToolSearchEngine(TOOL_INDEX);
+   const results = engine.search('find issues');
+   ```
 
-**Почему:**
-1. Универсальность — один метод для одной/нескольких задач
-2. Параллельные запросы — автоматический throttling
-3. Упрощение архитектуры — нет дублирования кода
-4. Единообразие — все операции с коллекциями одинаковы
+3. **5 Search Strategies:**
+   - NameSearchStrategy (exact/partial match)
+   - DescriptionSearchStrategy (word matching)
+   - CategorySearchStrategy (category filter)
+   - FuzzySearchStrategy (Levenshtein distance)
+   - WeightedCombinedStrategy (combine all)
 
-**Подробнее:** см. CLAUDE.md (секция "Batch-операции")
+4. **LRU Cache:**
+   - Max 100 entries
+   - Key: `${query}_${strategy}`
 
-### Параллельное выполнение
-
-**Механизм:** `Promise.allSettled` + `ParallelExecutor` для throttling.
-
-**Два независимых лимита:**
-1. **MAX_BATCH_SIZE** (бизнес-лимит): 200 элементов в batch-запросе
-2. **MAX_CONCURRENT_REQUESTS** (технический лимит): 5 одновременных HTTP-запросов
-
-**Реализация:** `src/infrastructure/async/parallel-executor.ts`
-
-### Обработка результатов
-
-**Типобезопасность:** `BatchResult<T>` с discriminated union (`status: 'fulfilled' | 'rejected'`)
-
-**Преимущества:** частичные ошибки не блокируют выполнение, порядок сохраняется
-
-**Типы:** `src/types/index.ts`, примеры: `*.operation.ts` файлы
+**Details:** [packages/search/README.md](packages/search/README.md)
 
 ---
 
-## 🏗️ Ключевые компоненты
+## 🔒 Architecture Validation (dependency-cruiser)
 
-### HTTP Слой
-- HttpClient (Axios wrapper), Retry Strategies (exponential backoff)
-- **Детали:** `src/infrastructure/http/`, [src/infrastructure/README.md](src/infrastructure/README.md)
+**Rules:**
 
-### Кеширование
-- Strategy Pattern + Null Object, EntityCacheKey
-- **Детали:** `src/infrastructure/cache/`
+1. **Layered Architecture**
+   - `yandex-tracker` не импортирует в framework пакеты
+   - `infrastructure` не импортирует domain слои
 
-### Yandex Tracker API
-- BaseOperation, конкретные операции, YandexTrackerFacade (Facade Pattern)
-- **Детали:** [src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md)
+2. **Package Boundaries**
+   - Импорты между пакетами только через npm package names
+   - Нет относительных путов между пакетами
 
-### MCP Tools
-- BaseTool, валидация (Zod), ResponseFieldFilter, ToolRegistry
-- **Детали:** [src/mcp/README.md](src/mcp/README.md), [src/mcp/tools/common/README.md](src/mcp/tools/common/README.md)
+3. **MCP Isolation (yandex-tracker)**
+   - Tools используют только Facade, не Operations напрямую
+   - Разрешены импорты entities/dto для типов
 
-### Применяемые паттерны
-Strategy, Facade, Registry, Template Method, Null Object, Dependency Injection
+4. **No Circular Dependencies**
+   - Запрещены циклические зависимости
 
-### Тестирование
-- Изоляция (моки), покрытие ≥80%, структура зеркалирует `src/`, AAA паттерн
-- **Детали:** [tests/README.md](tests/README.md)
+**Validation:**
+```bash
+npm run depcruise           # Check all rules
+npm run depcruise:graph     # Generate dependency graph
+```
+
+**Config:** `.dependency-cruiser.cjs`
+
+**Integration:** Rules checked in `npm run validate`
 
 ---
 
-## 🚀 Добавление новой функциональности
+## 🧪 Testing Strategy
 
-### Добавление новой операции API
+### Unit Tests
 
-1. Создать файл `src/tracker_api/api_operations/{feature}/{name}.operation.ts` или `{feature}/{action}/{name}.operation.ts`
-2. Наследоваться от `BaseOperation`
-3. Реализовать метод `execute(...)`
-4. Экспортировать в `api_operations/{feature}/index.ts` или `{feature}/{action}/index.ts`
-5. Добавить метод в `YandexTrackerFacade` (`src/tracker_api/facade/`)
-6. **Автоматическая регистрация:** добавить класс в `src/composition-root/definitions/operation-definitions.ts`
-7. Написать тесты (зеркалируя структуру `src/`)
-8. `npm run validate`
+**Structure:** `packages/*/tests/` mirrors `packages/*/src/`
 
-**Чек-лист:** см. CLAUDE.md (секция "Добавление Operation")
+**Framework:** Vitest (ESM + TypeScript)
 
-### Добавление нового MCP инструмента
+**Coverage:** ≥80% for all packages
 
-**1. Создать feature-based структуру:**
+**Patterns:**
+- AAA (Arrange, Act, Assert)
+- Mocks for external dependencies
+- Test both happy path and error cases
 
-Для API Tool:
-```
-src/mcp/tools/api/{feature}/{action}/
-├── {action}-{feature}.schema.ts
-├── {action}-{feature}.definition.ts
-├── {action}-{feature}.tool.ts
-└── index.ts
+**Commands:**
+```bash
+npm run test                    # All packages
+npm run test:coverage           # With coverage
+npm run test --workspace=@mcp-framework/core  # Single package
 ```
 
-Для Helper Tool:
-```
-src/mcp/tools/helpers/{feature}/
-├── {feature}.schema.ts (опционально)
-├── {feature}.definition.ts
-├── {feature}.tool.ts
-└── index.ts
+**Details:** [packages/yandex-tracker/tests/README.md](packages/yandex-tracker/tests/README.md)
+
+---
+
+## 📋 Adding New Functionality
+
+### Adding Framework Package
+
+1. Create `packages/new-package/`
+2. Add `package.json` with correct dependencies
+3. Add `tsconfig.json` with project references
+4. Update root `package.json` workspaces
+5. Update root `tsconfig.json` references
+6. Update `.dependency-cruiser.cjs` rules
+7. Create README.md
+8. `npm install && npm run build`
+
+### Adding MCP Tool (in yandex-tracker)
+
+1. Create structure:
+   ```
+   packages/yandex-tracker/src/mcp/tools/{api|helpers}/{feature}/{action}/
+   ├── {name}.schema.ts
+   ├── {name}.definition.ts
+   ├── {name}.tool.ts
+   └── index.ts
+   ```
+
+2. Add to registry:
+   ```typescript
+   // packages/yandex-tracker/src/composition-root/definitions/tool-definitions.ts
+   export const TOOL_CLASSES = [
+     // ...
+     NewTool,
+   ] as const;
+   ```
+
+3. Tests + `npm run validate`
+
+**Details:** [packages/yandex-tracker/src/mcp/README.md](packages/yandex-tracker/src/mcp/README.md)
+
+### Adding API Operation (in yandex-tracker)
+
+1. Create `packages/yandex-tracker/src/api_operations/{feature}/{action}/{name}.operation.ts`
+2. Extend `BaseOperation`
+3. Add facade method
+4. Register in `packages/yandex-tracker/src/composition-root/definitions/operation-definitions.ts`
+5. Tests + `npm run validate`
+
+**Details:** [packages/yandex-tracker/src/api_operations/README.md](packages/yandex-tracker/src/api_operations/README.md)
+
+---
+
+## 🚀 Build & Release Process
+
+### Build Order (Topological)
+
+```bash
+npm run build
+# Builds in order:
+# 1. infrastructure
+# 2. core (depends on infrastructure)
+# 3. search (depends on core)
+# 4. yandex-tracker (depends on all)
 ```
 
-**2. Автоматическая регистрация:**
-- Добавить класс в `src/composition-root/definitions/tool-definitions.ts`
-- DI контейнер автоматически зарегистрирует tool
+### Version Management
 
-**3. Валидация:**
+**Tool:** Changesets (https://github.com/changesets/changesets)
+
+**Workflow:**
+1. `npx changeset add` — describe changes
+2. `npx changeset version` — bump versions
+3. `git commit && git push`
+4. GitHub Actions publishes to npm
+
+**Manual publish:**
+```bash
+npm run publish:all
+```
+
+---
+
+## 🔍 Code Quality Tools
+
+### Linting & Formatting
+- **ESLint** — code quality (max-params, complexity)
+- **Prettier** — code formatting (via pre-commit hook)
+- **TypeScript** — type checking (strict mode)
+
+### Security
+- **Socket.dev** — supply-chain analysis
+- **Gitleaks** — secret scanning (pre-commit hook)
+
+### Dead Code Detection
+- **Knip** — unused files/exports/dependencies
+
+### Lockfile Validation
+- Ensures package-lock.json is in sync
+
+**Run all:**
 ```bash
 npm run validate
 ```
 
-**Подробнее:** см. `src/mcp/README.md`
+---
+
+## 📚 Documentation Structure
+
+### Monorepo Root
+
+- **[README.md](README.md)** — Overview, quick start
+- **[CLAUDE.md](CLAUDE.md)** — Monorepo rules for AI agents
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** (this file) — Architecture overview
+- **[MIGRATION.md](MIGRATION.md)** — Migration guide v1 → v2
+
+### Framework Packages
+
+- **[packages/infrastructure/README.md](packages/infrastructure/README.md)** — Infrastructure API
+- **[packages/core/README.md](packages/core/README.md)** — Core API
+- **[packages/search/README.md](packages/search/README.md)** — Search system
+
+### Yandex Tracker
+
+- **[packages/yandex-tracker/README.md](packages/yandex-tracker/README.md)** — User guide
+- **[packages/yandex-tracker/CLAUDE.md](packages/yandex-tracker/CLAUDE.md)** — Developer rules
+- **Module READMEs:**
+  - [src/mcp/README.md](packages/yandex-tracker/src/mcp/README.md)
+  - [src/api_operations/README.md](packages/yandex-tracker/src/api_operations/README.md)
+  - [src/entities/README.md](packages/yandex-tracker/src/entities/README.md)
+  - [src/dto/README.md](packages/yandex-tracker/src/dto/README.md)
+  - [src/composition-root/README.md](packages/yandex-tracker/src/composition-root/README.md)
+  - [tests/README.md](packages/yandex-tracker/tests/README.md)
 
 ---
 
-## 🔒 Архитектурные правила (dependency-cruiser)
+## 🎯 Design Patterns Used
 
-Проект использует `dependency-cruiser` для автоматической валидации архитектурных правил.
+### Framework Level
+- **Strategy Pattern** — Search strategies, retry strategies
+- **Null Object** — NoOpCache
+- **Factory Pattern** — Tool creation in registry
+- **Template Method** — BaseTool, BaseDefinition
 
-### Конфигурация
-
-**Файл:** `.dependency-cruiser.cjs`
-
-### Правила
-
-1. **Layered Architecture**
-   - `tracker_api` не импортирует `mcp`
-   - `infrastructure` не импортирует бизнес-слои (`tracker_api`, `mcp`, `composition-root`)
-
-2. **MCP Isolation**
-   - MCP tools используют только `Facade`, не `Operations` напрямую
-   - Разрешены импорты `entities` и `dto` для типов
-
-3. **Operations Isolation**
-   - Operations импортируются только:
-     - Через `YandexTrackerFacade`
-     - В `composition-root/container.ts` (DI регистрация)
-     - Внутри `api_operations/` (между собой)
-
-4. **Composition Root Top-Level**
-   - `composition-root` импортируется только в `src/index.ts`
-   - Файлы внутри `composition-root` могут импортировать друг друга
-
-5. **Циклические зависимости**
-   - Запрещены (severity: warn)
-
-### Использование
-
-```bash
-# Проверка правил
-npm run depcruise
-
-# Генерация графа зависимостей (SVG)
-npm run depcruise:graph
-
-# Генерация графа зависимостей (HTML)
-npm run depcruise:graph:html
-```
-
-**Интеграция в CI:** правила проверяются в `npm run validate`
+### Application Level (Yandex Tracker)
+- **Facade Pattern** — YandexTrackerFacade
+- **Registry Pattern** — ToolRegistry
+- **Dependency Injection** — InversifyJS container
+- **Repository Pattern** — Operations as repositories
 
 ---
 
-## 📚 Дополнительные ресурсы
+## 📊 Performance Considerations
 
-- **[CLAUDE.md](./CLAUDE.md)** — Критические правила и чек-листы для ИИ агентов
-- **[README.md](./README.md)** — Общая документация проекта
-- **[src/composition-root/README.md](./src/composition-root/README.md#-примеры-использования)** — Примеры использования DI
+### Compile-time Optimization
+- Tool index generated at build (not runtime)
+- TypeScript compilation with project references
+- Incremental builds
+
+### Runtime Optimization
+- Lazy tool initialization (ToolRegistry)
+- LRU cache (tool search)
+- Batch operations (parallel execution)
+- Field filtering (80-90% response size reduction)
+
+### Bundle Size
+- Tree-shaking friendly (ESM modules)
+- Separate packages (install only what you need)
+- No dynamic requires
+
+---
+
+## 🔗 External Resources
+
+- **MCP Specification:** https://github.com/anthropics/mcp
+- **Yandex.Tracker API:** https://cloud.yandex.ru/docs/tracker/about-api
+- **InversifyJS:** https://inversify.io/
+- **Zod:** https://zod.dev/
+- **Vitest:** https://vitest.dev/
+- **dependency-cruiser:** https://github.com/sverweij/dependency-cruiser
