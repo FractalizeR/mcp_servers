@@ -136,4 +136,12 @@ export class HttpClient {
       return response.data;
     });
   }
+
+  /**
+   * Получить axios instance (для тестов)
+   * @internal Только для использования в интеграционных тестах
+   */
+  getAxiosInstance(): AxiosInstance {
+    return this.client;
+  }
 }

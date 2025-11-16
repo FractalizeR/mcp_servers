@@ -16,14 +16,13 @@ describe('get-issues integration tests', () => {
   let mockServer: MockServer;
 
   beforeEach(async () => {
-    // ВАЖНО: создаём mock HTTP сервер ПЕРЕД клиентом
-    // чтобы nock.disableNetConnect() был активен до создания axios instance
-    mockServer = createMockServer();
-
-    // Создаём MCP клиент с тестовой конфигурацией
+    // ВАЖНО: создаём MCP клиент СНАЧАЛА, чтобы получить axios instance
     client = await createTestClient({
       logLevel: 'silent', // Отключаем логи в тестах
     });
+
+    // Затем создаём MockServer с axios instance из клиента
+    mockServer = createMockServer(client.getAxiosInstance());
   });
 
   afterEach(() => {

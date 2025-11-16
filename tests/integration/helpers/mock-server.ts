@@ -1,9 +1,10 @@
 /**
  * Mock сервер для имитации Яндекс.Трекер API v3
- * Использует nock для перехвата HTTP запросов
+ * Использует axios-mock-adapter для перехвата HTTP запросов
  */
 
-import nock from 'nock';
+import MockAdapter from 'axios-mock-adapter';
+import type { AxiosInstance } from 'axios';
 import {
   generateIssue,
   generateError404,
@@ -18,24 +19,17 @@ export const TRACKER_API_V3 = '/v3';
  * MockServer для настройки HTTP моков
  */
 export class MockServer {
-  private scope: nock.Scope;
+  private mockAdapter: MockAdapter;
+  private pendingMocks: string[] = [];
 
-  constructor() {
-    // КРИТИЧНО: Очищаем ВСЕ предыдущие моки перед созданием новых
-    // Это предотвращает конфликты при shuffle=true в vitest
-    nock.cleanAll();
-
-    // Восстанавливаем nock (если он был деактивирован)
-    if (!nock.isActive()) {
-      nock.activate();
-    }
-
-    // Отключаем реальные HTTP запросы
-    nock.disableNetConnect();
-
-    // ВАЖНО: Создаём scope С явным портом :443
-    // Axios добавляет :443 к HTTPS URL, nock должен мокировать именно этот вариант
-    this.scope = nock(`${TRACKER_API_BASE}:443`);
+  constructor(axiosInstance: AxiosInstance) {
+    // Создаём MockAdapter для axios instance
+    // delayResponse: 0 - мгновенный ответ для быстрых тестов
+    // onNoMatch: 'throwException' - выбрасывать ошибку для незамоканных запросов
+    this.mockAdapter = new MockAdapter(axiosInstance, {
+      delayResponse: 0,
+      onNoMatch: 'throwException',
+    });
   }
 
   /**
@@ -49,7 +43,15 @@ export class MockServer {
       },
     });
 
-    this.scope.get(`${TRACKER_API_V3}/issues/${issueKey}`).reply(200, response);
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, response];
+    });
+    this.pendingMocks.push(mockKey);
 
     return this;
   }
@@ -66,12 +68,27 @@ export class MockServer {
     );
 
     // Для batch запроса используется POST с параметром keys
-    this.scope
-      .post(`${TRACKER_API_V3}/issues/_search`, (body: Record<string, unknown>) => {
+    // Матчер проверяет, что body содержит все требуемые ключи
+    this.mockAdapter
+      .onPost(`${TRACKER_API_V3}/issues/_search`, (data: unknown) => {
+        const body =
+          typeof data === 'string' ? JSON.parse(data) : (data as Record<string, unknown>);
         const keys = body['keys'] as string[] | undefined;
-        return keys !== undefined && issueKeys.every((key) => keys.includes(key));
+        const matches = keys !== undefined && issueKeys.every((key) => keys.includes(key));
+
+        // Удаляем из pending если матчится
+        if (matches) {
+          const index = this.pendingMocks.indexOf(`POST ${TRACKER_API_V3}/issues/_search`);
+          if (index !== -1) {
+            this.pendingMocks.splice(index, 1);
+          }
+        }
+
+        return matches;
       })
       .reply(200, responses);
+
+    this.pendingMocks.push(`POST ${TRACKER_API_V3}/issues/_search`);
 
     return this;
   }
@@ -82,7 +99,15 @@ export class MockServer {
   mockGetIssue404(issueKey: string): this {
     const response = generateError404();
 
-    this.scope.get(`${TRACKER_API_V3}/issues/${issueKey}`).reply(404, response);
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
 
     return this;
   }
@@ -93,7 +118,15 @@ export class MockServer {
   mockGetIssue401(issueKey: string): this {
     const response = generateError401();
 
-    this.scope.get(`${TRACKER_API_V3}/issues/${issueKey}`).reply(401, response);
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [401, response];
+    });
+    this.pendingMocks.push(mockKey);
 
     return this;
   }
@@ -104,7 +137,15 @@ export class MockServer {
   mockGetIssue403(issueKey: string): this {
     const response = generateError403();
 
-    this.scope.get(`${TRACKER_API_V3}/issues/${issueKey}`).reply(403, response);
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [403, response];
+    });
+    this.pendingMocks.push(mockKey);
 
     return this;
   }
@@ -113,10 +154,16 @@ export class MockServer {
    * Мок сетевой ошибки (таймаут, connection refused)
    */
   mockNetworkError(issueKey: string, errorCode = 'ETIMEDOUT'): this {
-    this.scope.get(`${TRACKER_API_V3}/issues/${issueKey}`).replyWithError({
-      code: errorCode,
-      message: 'Network error',
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      // Для networkError возвращаем reject вместо response
+      return Promise.reject(new Error(errorCode));
     });
+    this.pendingMocks.push(mockKey);
 
     return this;
   }
@@ -134,9 +181,39 @@ export class MockServer {
       })
     );
 
-    this.scope
-      .post(`${TRACKER_API_V3}/issues/_search`, matcher ?? (() => true))
-      .reply(200, responses);
+    // Если matcher не передан, мокируем все запросы
+    if (!matcher) {
+      this.mockAdapter.onPost(`${TRACKER_API_V3}/issues/_search`).reply((config) => {
+        // Удаляем из pending при вызове
+        const index = this.pendingMocks.indexOf(`POST ${TRACKER_API_V3}/issues/_search`);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [200, responses];
+      });
+      this.pendingMocks.push(`POST ${TRACKER_API_V3}/issues/_search`);
+      return this;
+    }
+
+    // Если matcher передан, используем reply callback для проверки
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/issues/_search`).reply((config) => {
+      const data = config.data;
+      const body = typeof data === 'string' ? JSON.parse(data) : (data as Record<string, unknown>);
+
+      if (matcher(body)) {
+        // Удаляем из pending при успешном вызове
+        const index = this.pendingMocks.indexOf(`POST ${TRACKER_API_V3}/issues/_search`);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [200, responses];
+      }
+
+      // Если matcher не совпал, возвращаем 404
+      return [404, { statusCode: 404, errorMessages: ['Not found'], errors: {} }];
+    });
+
+    this.pendingMocks.push(`POST ${TRACKER_API_V3}/issues/_search`);
 
     return this;
   }
@@ -145,11 +222,22 @@ export class MockServer {
    * Мок ошибки 400 при поиске задач (невалидный запрос)
    */
   mockFindIssuesError400(): this {
-    this.scope.post(`${TRACKER_API_V3}/issues/_search`).reply(400, {
-      statusCode: 400,
-      errorMessages: ['Invalid search query'],
-      errors: {},
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/issues/_search`).reply((config) => {
+      // Удаляем из pending при вызове
+      const index = this.pendingMocks.indexOf(`POST ${TRACKER_API_V3}/issues/_search`);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [
+        400,
+        {
+          statusCode: 400,
+          errorMessages: ['Invalid search query'],
+          errors: {},
+        },
+      ];
     });
+    this.pendingMocks.push(`POST ${TRACKER_API_V3}/issues/_search`);
 
     return this;
   }
@@ -158,47 +246,45 @@ export class MockServer {
    * Мок пустого результата поиска
    */
   mockFindIssuesEmpty(): this {
-    this.scope.post(`${TRACKER_API_V3}/issues/_search`).reply(200, []);
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/issues/_search`).reply((config) => {
+      // Удаляем из pending при вызове
+      const index = this.pendingMocks.indexOf(`POST ${TRACKER_API_V3}/issues/_search`);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, []];
+    });
+    this.pendingMocks.push(`POST ${TRACKER_API_V3}/issues/_search`);
 
     return this;
   }
 
   /**
-   * Очистить все моки и восстановить HTTP
+   * Очистить все моки и восстановить оригинальный адаптер
    */
   cleanup(): void {
-    // Проверяем, что все замоканные запросы были выполнены
-    // Это помогает отловить тесты, которые не вызывают API как ожидается
-    if (!this.scope.isDone()) {
-      // Логируем pending mocks для отладки
-      const pendingMocks = this.scope.pendingMocks();
-      if (pendingMocks.length > 0) {
-         
-        console.warn('⚠️  Pending HTTP mocks not consumed:', pendingMocks);
-      }
-    }
-
-    // Очищаем все nock interceptors
-    nock.cleanAll();
-
-    // Восстанавливаем реальные HTTP запросы
-    nock.enableNetConnect();
-
-    // Восстанавливаем нативные HTTP модули
-    nock.restore();
+    // Восстанавливаем оригинальный адаптер
+    this.mockAdapter.restore();
+    // Очищаем pending mocks
+    this.pendingMocks = [];
   }
 
   /**
    * Проверить, что все замоканные запросы были выполнены
+   * Выбрасывает ошибку если остались неиспользованные моки
    */
   assertAllRequestsDone(): void {
-    this.scope.done();
+    if (this.pendingMocks.length > 0) {
+      throw new Error(
+        `Не все HTTP моки были использованы: ${this.pendingMocks.join(', ')}`
+      );
+    }
   }
 }
 
 /**
  * Хелпер для быстрого создания MockServer в тестах
  */
-export function createMockServer(): MockServer {
-  return new MockServer();
+export function createMockServer(axiosInstance: AxiosInstance): MockServer {
+  return new MockServer(axiosInstance);
 }

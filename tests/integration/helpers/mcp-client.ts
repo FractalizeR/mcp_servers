@@ -5,6 +5,8 @@
 
 import { Container } from 'inversify';
 import type { ToolRegistry } from '@mcp/tool-registry.js';
+import type { HttpClient } from '@infrastructure/http/client/http-client.js';
+import type { AxiosInstance } from 'axios';
 import type { ServerConfig } from '@types';
 import { TYPES } from '@composition-root/types.js';
 import { createContainer } from '@composition-root/index.js';
@@ -69,6 +71,21 @@ export class TestMCPClient {
   getToolRegistry(): ToolRegistry {
     return this.toolRegistry;
   }
+
+  /**
+   * Получить HttpClient (для интеграционных тестов с моками)
+   */
+  getHttpClient(): HttpClient {
+    return this.container.get<HttpClient>(TYPES.HttpClient);
+  }
+
+  /**
+   * Получить axios instance (для настройки HTTP моков)
+   */
+  getAxiosInstance(): AxiosInstance {
+    const httpClient = this.getHttpClient();
+    return httpClient.getAxiosInstance();
+  }
 }
 
 /**
@@ -77,10 +94,6 @@ export class TestMCPClient {
 export async function createTestClient(
   configOverrides: Partial<ServerConfig> = {}
 ): Promise<TestMCPClient> {
-  // ВАЖНО: Отключаем HTTP keep-alive для совместимости с nock
-  // Nock может не перехватывать запросы с переиспользуемыми соединениями
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // Для тестов
-
   const defaultConfig: ServerConfig = {
     apiBase: 'https://api.tracker.yandex.net',
     orgId: 'test-org-id',

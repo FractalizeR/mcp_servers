@@ -67,7 +67,7 @@ src/mcp/tools/api/issues/get/get-issues.tool.ts
 - Тестирование взаимодействия компонентов
 - End-to-end flow: `MCP Client → ToolRegistry → Tool → Operation → HttpClient → API (mock)`
 - Использование реального DI контейнера
-- Mock только внешних HTTP запросов (через `nock`)
+- Mock только внешних HTTP запросов (через axios adapter)
 
 **Структура также зеркалирует `src/`:**
 ```
@@ -78,7 +78,7 @@ src/mcp/tools/api/issues/get/get-issues.tool.ts
 
 **Helpers:**
 - `@integration/helpers/mcp-client.ts` — тестовый клиент для вызова tools
-- `@integration/helpers/mock-server.ts` — настройка HTTP моков (nock)
+- `@integration/helpers/mock-server.ts` — настройка HTTP моков (axios adapter)
 - `@integration/helpers/template-based-generator.ts` — template-based генератор (актуальный)
 - `@integration/helpers/fixture-generator.ts` — старый генератор (deprecated)
 
@@ -108,12 +108,12 @@ const result = await client.callTool('yandex_tracker_get_issues', {
 
 ### MockServer
 
-Mock HTTP сервера на базе `nock` для имитации API Яндекс.Трекер:
+Mock HTTP сервера на базе кастомного axios adapter для имитации API Яндекс.Трекер:
 
 ```typescript
 import { createMockServer } from '@integration/helpers/mock-server.js';
 
-const mockServer = createMockServer();
+const mockServer = createMockServer(client.getHttpClient().getAxiosInstance());
 
 // Успешный ответ с автоматически генерированными данными
 mockServer.mockGetIssueSuccess('QUEUE-1');
@@ -337,14 +337,16 @@ await writeFile('./logs/test.log', data);
 
 ```typescript
 describe('API tests', () => {
+  let client: TestMCPClient;
   let mockServer: MockServer;
 
-  beforeEach(() => {
-    mockServer = createMockServer();
+  beforeEach(async () => {
+    client = await createTestClient();
+    mockServer = createMockServer(client.getAxiosInstance());
   });
 
   afterEach(() => {
-    mockServer.cleanup(); // Очищает nock.cleanAll()
+    mockServer.cleanup(); // Восстанавливает оригинальный adapter и очищает моки
   });
 });
 ```
@@ -455,13 +457,13 @@ describe('get-issues integration tests', () => {
   let client: TestMCPClient;
   let mockServer: MockServer;
 
-  beforeEach(() => {
-    client = createTestClient();
-    mockServer = createMockServer(); // nock.disableNetConnect()
+  beforeEach(async () => {
+    client = await createTestClient();
+    mockServer = createMockServer(client.getAxiosInstance());
   });
 
   afterEach(() => {
-    mockServer.cleanup(); // nock.cleanAll() + nock.enableNetConnect()
+    mockServer.cleanup(); // Восстанавливает оригинальный adapter
   });
 
   it('должен вернуть задачу', async () => {
@@ -494,6 +496,6 @@ npm run validate
 ## 📚 Дополнительные материалы
 
 - **Документация Vitest:** https://vitest.dev/
-- **nock (HTTP mocking):** https://github.com/nock/nock
+- **axios-mock-adapter (HTTP mocking):** https://github.com/ctimmerm/axios-mock-adapter
 - **InversifyJS (DI):** https://inversify.io/
 - **API Яндекс.Трекер v3:** `yandex_tracker_client/` (Python SDK)
