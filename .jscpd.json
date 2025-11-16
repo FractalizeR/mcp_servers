@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/kucherenko/jscpd/master/packages/jscpd/schema.json",
+  "threshold": 5,
+  "reporters": ["console", "html"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/tests/**",
+    "**/.agentic-planning/**",
+    "**/coverage/**"
+  ],
+  "absolute": true,
+  "gitignore": true,
+  "format": ["typescript", "javascript"],
+  "minLines": 5,
+  "minTokens": 50,
+  "output": "./jscpd-report"
+}

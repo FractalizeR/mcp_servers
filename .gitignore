@@ -62,3 +62,4 @@ logs/
 knip-report.json
 dependency-graph.svg
 dependency-graph.html
+jscpd-report/
