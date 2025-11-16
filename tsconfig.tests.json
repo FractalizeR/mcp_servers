@@ -12,7 +12,9 @@
       "@infrastructure/*": ["./src/infrastructure/*"],
       "@tracker_api/*": ["./src/tracker_api/*"],
       "@mcp/*": ["./src/mcp/*"],
+      "@cli/*": ["./src/cli/*"],
       "@types": ["./src/types.ts"],
+      "@constants": ["./src/constants.ts"],
       "@integration/*": ["./tests/integration/*"]
     }
   },

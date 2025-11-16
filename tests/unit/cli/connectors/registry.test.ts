@@ -12,7 +12,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ConnectorRegistry } from '@cli/connectors/registry.js';
-import type { MCPConnector, ConnectionStatus } from '@cli/connectors/base/connector.interface.js';
+import type { MCPConnector } from '@cli/connectors/base/connector.interface.js';
 
 // Mock зависимостей коннекторов
 vi.mock('@cli/utils/command-executor.js', () => ({
