@@ -32,7 +32,7 @@ import { DemoTool } from '@tools/helpers/demo/index.js';
  * 3. ВСЁ! (DI регистрация, ToolRegistry, TYPES — автоматически)
  *
  * ПРИМЕЧАНИЕ: SearchToolsTool регистрируется отдельно через container.ts,
- * так как не наследует от BaseTool<YandexTrackerFacade>
+ * так как имеет другой конструктор: (searchEngine, logger) вместо (facade, logger)
  */
 export const TOOL_CLASSES = [
   PingTool,

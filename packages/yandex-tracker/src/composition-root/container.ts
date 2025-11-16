@@ -211,12 +211,17 @@ async function bindSearchToolsTool(container: Container): Promise<void> {
  * Регистрация ToolRegistry
  *
  * ВАЖНО: ToolRegistry автоматически извлекает все tools из контейнера
+ * SearchToolsTool добавляется динамически после его регистрации в контейнере
  */
-function bindToolRegistry(container: Container): void {
+async function bindToolRegistry(container: Container): Promise<void> {
+  const { SearchToolsTool } = await import('@mcp-framework/search');
+
   container.bind<ToolRegistry>(TYPES.ToolRegistry).toDynamicValue(() => {
     const loggerInstance = container.get<Logger>(TYPES.Logger);
-    // Передаём контейнер, logger и TOOL_CLASSES для автоматической регистрации всех tools
-    return new ToolRegistry(container, loggerInstance, TOOL_CLASSES);
+    // Передаём контейнер, logger и все tool классы (включая SearchToolsTool)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allToolClasses = [...TOOL_CLASSES, SearchToolsTool] as any;
+    return new ToolRegistry(container, loggerInstance, allToolClasses);
   });
 }
 
@@ -233,7 +238,7 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
   bindCacheLayer(container);
   bindOperations(container);
   bindFacade(container);
-  bindToolRegistry(container); // ToolRegistry первым (lazy initialization)
+  await bindToolRegistry(container); // ToolRegistry первым (lazy initialization)
   bindSearchEngine(container); // SearchEngine после ToolRegistry
   bindTools(container); // Стандартные tools (facade, logger)
   await bindSearchToolsTool(container); // SearchToolsTool последним (searchEngine, logger)

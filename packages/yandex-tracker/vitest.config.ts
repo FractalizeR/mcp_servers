@@ -8,13 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/**',
-        'dist/**',
-        '**/*.test.ts',
-        '**/*.spec.ts',
-        '**/index.ts',
-      ],
+      exclude: ['node_modules/**', 'dist/**', '**/*.test.ts', '**/*.spec.ts', '**/index.ts'],
     },
   },
   resolve: {
@@ -23,6 +17,7 @@ export default defineConfig({
       '@tracker_api': path.resolve(__dirname, './src/tracker_api'),
       '@tools': path.resolve(__dirname, './src/tools'),
       '@composition-root': path.resolve(__dirname, './src/composition-root'),
+      '@integration': path.resolve(__dirname, './tests/integration'),
       '@mcp-framework/search': path.resolve(__dirname, '../search/src'),
       '@mcp-framework/core': path.resolve(__dirname, '../core/src'),
       '@mcp-framework/infrastructure': path.resolve(__dirname, '../infrastructure/src'),

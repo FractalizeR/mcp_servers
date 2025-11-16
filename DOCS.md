@@ -26,7 +26,7 @@
 
 | Файл | Назначение |
 |------|-----------|
-| **[tests/README.md](./tests/README.md)** | Архитектура тестирования — типы тестов, helpers, изоляция |
+| **[tests/README.md](./packages/yandex-tracker/tests/README.md)** | Архитектура тестирования — типы тестов, helpers, изоляция |
 
 ---
 

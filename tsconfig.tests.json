@@ -1,30 +1,14 @@
 {
-  "extends": "./tsconfig.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Tests Configuration",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    /* Наследуем все строгие правила из основного tsconfig.json */
-    "noEmit": true,  /* Только проверка типов, без генерации файлов */
-    "types": ["node", "vitest/globals"],  /* Глобальные типы для тестов */
-    "rootDir": ".",   /* Переопределяем rootDir для включения tests/ и vitest.config.ts */
-    "incremental": true,  /* Включаем incremental для ускорения typecheck:tests */
-    "tsBuildInfoFile": "./dist/tsconfig.tests.tsbuildinfo",
-    "paths": {
-      "@composition-root/*": ["./src/composition-root/*"],
-      "@infrastructure/*": ["./src/infrastructure/*"],
-      "@tracker_api/*": ["./src/tracker_api/*"],
-      "@mcp/*": ["./src/mcp/*"],
-      "@cli/*": ["./src/cli/*"],
-      "@types": ["./src/types.ts"],
-      "@constants": ["./src/constants.ts"],
-      "@integration/*": ["./tests/integration/*"]
-    }
+    "types": ["vitest/globals", "node"],
+    "rootDir": "."
   },
   "include": [
-    "src/**/*",  /* Включаем src для разрешения импортов */
-    "tests/**/*",  /* Только тесты */
-    "vitest.config.ts"  /* Vitest конфигурация */
+    "packages/*/tests/**/*",
+    "packages/*/vitest.config.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist", "**/node_modules/**", "**/dist/**"]
 }
