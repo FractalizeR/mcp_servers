@@ -85,8 +85,8 @@ async function main(): Promise<void> {
    */
   async function runSmokeTest(): Promise<void> {
     // 1. Запускаем сервер
-    console.log('1️⃣  Запуск сервера: node dist/index.js');
-    serverProcess = spawn('node', ['dist/index.js'], {
+    console.log('1️⃣  Запуск сервера: node ../dist/index.js');
+    serverProcess = spawn('node', ['../dist/index.js'], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,

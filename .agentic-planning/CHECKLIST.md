@@ -119,7 +119,15 @@
 - [x] ✅ `npm run test --workspaces` успешен (684 теста)
 - [x] Coverage ≥80% (core: 98%, infra: 93%, search: 96%, tracker: 99%)
 
-### Шаг 3.3: Валидация архитектуры
+### Шаг 3.3: Адаптация скриптов валидации
+- [x] Переместить `validate-tool-registration.ts` в `packages/yandex-tracker/scripts/`
+- [x] Переместить `smoke-test-server.ts` в `packages/yandex-tracker/scripts/`
+- [x] Обновить пути в скриптах для monorepo структуры
+- [x] Добавить `validate:tools` скрипт в `packages/yandex-tracker/package.json`
+- [x] ✅ `npm run validate:tools` работает (10 tools, 8 operations)
+- [x] Удалить старые скрипты из корневой `scripts/`
+
+### Шаг 3.4: Валидация архитектуры
 - [ ] `.dependency-cruiser.cjs` обновлён для monorepo
 - [ ] ✅ `npm run depcruise` проходит без ошибок
 - [ ] Smoke test создан/обновлён

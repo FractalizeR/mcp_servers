@@ -8,8 +8,8 @@
 
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
-import { OPERATION_CLASSES } from '../src/composition-root/definitions/operation-definitions.js';
+import { TOOL_CLASSES } from '../dist/composition-root/definitions/tool-definitions.js';
+import { OPERATION_CLASSES } from '../dist/composition-root/definitions/operation-definitions.js';
 
 /**
  * Рекурсивный поиск файлов по паттерну
@@ -66,7 +66,7 @@ function extractClassName(filePath: string, suffix: string): string | null {
  * Проверка регистрации Tools
  */
 async function validateTools(): Promise<string[]> {
-  const toolFiles = await findFiles('src/mcp/tools', /\.tool\.ts$/, [/base-tool\.ts$/, /\/base\//]);
+  const toolFiles = await findFiles('../src/tools', /\.tool\.ts$/, [/base-tool\.ts$/, /\/base\//]);
 
   const registeredTools = TOOL_CLASSES.map((ToolClass) => ToolClass.name);
   const unregisteredTools: string[] = [];
@@ -144,7 +144,7 @@ async function validateSafetyFlags(): Promise<SafetyValidationResult> {
  * Проверка регистрации Operations
  */
 async function validateOperations(): Promise<string[]> {
-  const operationFiles = await findFiles('src/tracker_api/operations', /\.operation\.ts$/, [
+  const operationFiles = await findFiles('../src/tracker_api/api_operations', /\.operation\.ts$/, [
     /base-operation\.ts$/,
     /\/base\//,
   ]);
@@ -181,7 +181,9 @@ async function main(): Promise<void> {
     hasErrors = true;
     console.error('❌ Незарегистрированные Tools:');
     unregisteredTools.forEach((tool) => console.error(`   - ${tool}`));
-    console.error('\n💡 Добавь их в src/composition-root/definitions/tool-definitions.ts\n');
+    console.error(
+      '\n💡 Добавь их в packages/yandex-tracker/src/composition-root/definitions/tool-definitions.ts\n'
+    );
   }
 
   // Проверка регистрации Operations
@@ -189,7 +191,9 @@ async function main(): Promise<void> {
     hasErrors = true;
     console.error('❌ Незарегистрированные Operations:');
     unregisteredOperations.forEach((op) => console.error(`   - ${op}`));
-    console.error('\n💡 Добавь их в src/composition-root/definitions/operation-definitions.ts\n');
+    console.error(
+      '\n💡 Добавь их в packages/yandex-tracker/src/composition-root/definitions/operation-definitions.ts\n'
+    );
   }
 
   // Проверка флага requiresExplicitUserConsent

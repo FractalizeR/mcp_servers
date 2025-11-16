@@ -15,6 +15,7 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "test:smoke": "tsx scripts/smoke-test-server.ts",
+    "validate:tools": "tsx scripts/validate-tool-registration.ts",
     "dev": "npm run build && node dist/index.js",
     "clean": "rimraf dist"
   },
