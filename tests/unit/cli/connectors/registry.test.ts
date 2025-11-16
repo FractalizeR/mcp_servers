@@ -11,28 +11,38 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ConnectorRegistry } from '@cli/connectors/registry.js';
 import type { MCPConnector } from '@cli/connectors/base/connector.interface.js';
+
+// Hoisted моки - создаём ДО импорта модулей
+const { CommandExecutor, FileManager } = vi.hoisted(() => {
+  return {
+    CommandExecutor: {
+      isCommandAvailable: vi.fn().mockReturnValue(false),
+      exec: vi.fn(),
+      execInteractive: vi.fn(),
+    },
+    FileManager: {
+      exists: vi.fn().mockResolvedValue(false),
+      readJSON: vi.fn(),
+      writeJSON: vi.fn(),
+      readTOML: vi.fn(),
+      writeTOML: vi.fn(),
+      ensureDir: vi.fn(),
+    },
+  };
+});
 
 // Mock зависимостей коннекторов
 vi.mock('@cli/utils/command-executor.js', () => ({
-  CommandExecutor: {
-    isCommandAvailable: vi.fn().mockReturnValue(false),
-    exec: vi.fn(),
-    execInteractive: vi.fn(),
-  },
+  CommandExecutor,
 }));
 
 vi.mock('@cli/utils/file-manager.js', () => ({
-  FileManager: {
-    exists: vi.fn().mockResolvedValue(false),
-    readJSON: vi.fn(),
-    writeJSON: vi.fn(),
-    readTOML: vi.fn(),
-    writeTOML: vi.fn(),
-    ensureDir: vi.fn(),
-  },
+  FileManager,
 }));
+
+// Импортируем ПОСЛЕ определения моков
+import { ConnectorRegistry } from '@cli/connectors/registry.js';
 
 describe('ConnectorRegistry', () => {
   let registry: ConnectorRegistry;

@@ -25,7 +25,22 @@ Branches:   80.47% (цель: 65%+)  ✅ ДОСТИГНУТО (+15.47%)
 
 ---
 
-## ✅ Что сделано в ЭТОЙ сессии (2025-11-16)
+## ✅ Что сделано в ЭТОЙ сессии (2025-11-16, обновлено)
+
+### 0. Исправлены ВSЕГО 11 падающих unit тестов CLI коннекторов
+
+**Коммит:** TBD
+
+**Проблема:** Unit тесты CLI коннекторов падали из-за неправильного мокирования в Vitest ESM
+
+**Исправлено:**
+- Использован `vi.hoisted()` для создания моков ДО импорта модулей
+- Исправлены тесты в:
+  - `tests/unit/cli/connectors/codex/codex.connector.test.ts`
+  - `tests/unit/cli/connectors/registry.test.ts`
+  - `tests/unit/cli/connectors/claude-desktop/claude-desktop.connector.test.ts`
+
+**Результат:** ✅ Все 715 unit тестов проходят (было 704/715)
 
 ### 1. Исправлены критические TypeScript ошибки в тестах entities
 
@@ -105,33 +120,57 @@ Branches:   80.47% (цель: 65%+)  ✅ ДОСТИГНУТО (+15.47%)
 
 ### Интеграционные тесты: HTTP Mocking (17 failed из 79)
 
-**Статус:** ✅ 60/79 тестов проходят (validation tests)
-**Проблема:** 17 тестов с HTTP моками падают с timeout
-
-**Причина:** Nock плохо совместим с vitest worker threads/forks
+**Статус:** ✅ 60/79 тестов проходят (validation tests), ❌ 17/79 падают с HTTP mocking
+**Проблема:** Nock НЕ СОВМЕСТИМ с Vitest ESM + worker threads/forks
 
 **Падающие тесты:**
 - `get-issues.tool.integration.test.ts`: Happy Path, Fields Filtering, Error Handling (8 тестов)
 - `find-issues.tool.integration.test.ts`: Happy Path, Fields Filtering, Error Handling (9 тестов)
 
-**Что сделано для исправления:**
+**Что сделано для исправления (2025-11-16):**
 1. ✅ Изменена последовательность setup: mockServer создаётся ПЕРЕД client
-2. ✅ Исправлен nock scope: добавлен `nock.cleanAll()` перед созданием scope
-3. ✅ Изменён vitest.config.ts: `pool: 'forks'`, `isolate: false`
-4. ❌ Проблема остаётся: nock не перехватывает HTTP запросы из axios
+2. ✅ Исправлен nock scope: добавлен `nock.cleanAll()` + `nock.activate()` в constructor
+3. ✅ Добавлен `nock.restore()` в cleanup()
+4. ✅ Добавлена проверка pending mocks в cleanup() (для отладки)
+5. ✅ Попытка с явным портом `:443` в scope
+6. ❌ **ВЫВОД: Nock фундаментально несовместим с нашей setup**
 
-**Диагностика:**
-- Тесты падают с timeout ~7 секунд (= retry delay: 1s + 2s + 4s)
-- Это означает что nock НЕ перехватывает запросы, axios получает сетевые ошибки
-- Проблема специфична для vitest + nock + worker isolation
+**Диагностика (финальная):**
+- Моки **создаются** правильно: `GET https://api.tracker.yandex.net:443/v3/issues/QUEUE-1`
+- Но **НЕ перехватываются**: axios делает реальные HTTP запросы
+- Тесты падают с timeout (axios retry: 1s + 2s + 4s = 7s)
+- **Причина:** Nock патчит нативные HTTP модули Node.js, но в Vitest ESM + forks эти патчи НЕ применяются к axios adapter
 
-**Варианты решения:**
-1. **Переписать на MSW (Mock Service Worker)** - более современная библиотека, лучше работает с vitest
-2. **Использовать реальный API** - запустить интеграционные тесты с реальным API токеном
-3. **Skip падающие тесты** - пометить их как `.skip` и оставить для ручного тестирования
-4. **Исследовать vitest plugins** - возможно есть plugin для better nock integration
+**Корневая проблема:**
+- `vitest.config.ts`: `shuffle: true` + `isolate: false` = глобальное состояние nock
+- Axios adapter создаётся ДО активации nock
+- Nock не может перехватывать запросы от уже созданного axios instance
+- ESM модули + worker threads делают патчинг HTTP модулей ненадёжным
 
-**Рекомендация:** Отложить на потом, НЕ блокирует разработку. Unit тесты (715/715 ✅) покрывают всю логику.
+**Рекомендуемые решения (в порядке приоритета):**
+
+1. **✅ ЛУЧШЕЕ: axios-mock-adapter** (~2 часа)
+   - Мокирует на уровне Axios, а НЕ HTTP модулей
+   - Нет проблем с ESM / worker threads
+   - Работает напрямую с axios instance через DI
+   - Простая миграция: заменить nock interceptors на MockAdapter
+
+2. **MSW (Mock Service Worker)** (~4 часа)
+   - Более современная библиотека
+   - Лучше работает с Vitest
+   - Но сложнее настройка для Node.js (нужен polyfill)
+
+3. **Использовать реальный API** (~1 час)
+   - Создать `.env.test` с реальным токеном
+   - Тесты будут медленнее, но надёжнее
+   - Не подходит для CI/CD без секретов
+
+4. **Skip падающие тесты** (~0 часов)
+   - Пометить как `.skip`
+   - Unit тесты (715/715 ✅) покрывают всю логику
+   - Оставить HTTP тесты для ручного тестирования
+
+**Рекомендация:** **Использовать axios-mock-adapter** - минимальные изменения, максимальная совместимость.
 
 ---
 
@@ -139,23 +178,29 @@ Branches:   80.47% (цель: 65%+)  ✅ ДОСТИГНУТО (+15.47%)
 
 ### Опция 1: Исправить HTTP mocking в интеграционных тестах
 
-**Время:** ~4-6 часов
+**Время:** ~2 часа (axios-mock-adapter) или ~4 часа (MSW)
 
-**Что делать:**
-1. **Переписать на MSW** (рекомендуется):
-   - `npm install -D msw`
-   - Создать handlers для API endpoints
-   - Заменить nock на msw в mock-server.ts
-   - MSW лучше работает с vitest и современными инструментами
+**✅ РЕКОМЕНДУЕТСЯ: axios-mock-adapter**
+1. Установить: `npm install -D axios-mock-adapter`
+2. Изменить `tests/integration/helpers/mock-server.ts`:
+   - Заменить `nock` на `MockAdapter`
+   - Получать axios instance через DI от HttpClient
+   - Методы `.get()`, `.post()` остаются похожими
+3. Обновить `createTestClient()`:
+   - Получить HttpClient из контейнера
+   - Передать его axios instance в MockServer
+4. Запустить тесты: `npm run test:integration`
 
-2. **Или использовать реальный API** (временно):
-   - Создать `.env.test` с реальным токеном Яндекс.Трекера
-   - Изменить `createTestClient` для загрузки env vars
-   - Тесты будут медленнее, но надёжнее
+**Альтернативно: MSW**
+1. Установить: `npm install -D msw @mswjs/interceptors`
+2. Создать handlers для API endpoints в `tests/integration/helpers/handlers.ts`
+3. Заменить MockServer на MSW setup/teardown
+4. MSW лучше для browser + Node.js, но сложнее setup
 
-**Файлы:**
-- `tests/integration/helpers/mock-server.ts` - заменить nock на msw
-- `tests/integration/mcp/tools/api/issues/{get,find}/*.test.ts` - адаптировать тесты
+**Файлы для изменения:**
+- `tests/integration/helpers/mock-server.ts` - основная логика мокирования
+- `tests/integration/helpers/mcp-client.ts` - передача axios instance в MockServer
+- `tests/integration/mcp/tools/api/issues/{get,find}/*.test.ts` - тесты (минимальные изменения)
 
 ### Опция 2: CLI команды (опционально, т.к. цели покрытия достигнуты)
 
@@ -252,6 +297,35 @@ npm run validate
 
 ---
 
-**Последнее обновление:** 2025-11-16 (исследование интеграционных тестов)
+---
+
+## ⚠️ ВАЖНО: Тестовая изоляция и shuffle mode
+
+**Обнаружено:** Тесты выполняются в рандомном порядке (`shuffle: true` в `vitest.config.ts`)
+
+**Проблемы:**
+- Тесты могут иметь сайд-эффекты (глобальное состояние, моки, кеши)
+- При `isolate: false` тесты делят один процесс
+- Это может вызывать непредсказуемое падение/прохождение тестов
+
+**Правила для написания тестов:**
+1. **ВСЕГДА** очищать моки в `beforeEach`/`afterEach`
+2. **ВСЕГДА** использовать `vi.hoisted()` для ESM моков в unit тестах
+3. **НЕ** полагаться на порядок выполнения тестов
+4. **НЕ** использовать глобальные переменные без очистки
+5. **ВСЕГДА** тестировать на CI с shuffle mode
+
+**Документация:**
+- Это поведение задокументировано в `vitest.config.ts` (строка 29-32)
+- Unit тесты ✅ изолированы корректно (715/715 проходят)
+- Интеграционные тесты ❌ имеют проблемы с nock глобальным состоянием
+
+---
+
+**Последнее обновление:** 2025-11-16 (фикс unit тестов, исследование nock проблемы)
 **Автор:** Claude Code
-**Статус:** Проект в отличном состоянии! Unit тесты ✅ 715/715, Интеграционные ✅ 60/79 (17 требуют MSW migration)
+**Статус:**
+- ✅ Unit тесты: 715/715 (100%)
+- ✅ TypeScript: 0 ошибок
+- ✅ Покрытие: 77.2% lines, 83.37% functions (цели превышены)
+- ❌ Интеграционные: 60/79 (17 требуют миграции с nock на axios-mock-adapter)

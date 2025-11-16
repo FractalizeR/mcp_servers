@@ -21,16 +21,21 @@ export class MockServer {
   private scope: nock.Scope;
 
   constructor() {
+    // КРИТИЧНО: Очищаем ВСЕ предыдущие моки перед созданием новых
+    // Это предотвращает конфликты при shuffle=true в vitest
+    nock.cleanAll();
+
+    // Восстанавливаем nock (если он был деактивирован)
+    if (!nock.isActive()) {
+      nock.activate();
+    }
+
     // Отключаем реальные HTTP запросы
     nock.disableNetConnect();
 
-    // Очищаем все предыдущие моки
-    nock.cleanAll();
-
-    // Создаём scope БЕЗ порта
-    // Nock автоматически нормализует URL и будет перехватывать запросы
-    // как с явным портом :443, так и без него
-    this.scope = nock(TRACKER_API_BASE);
+    // ВАЖНО: Создаём scope С явным портом :443
+    // Axios добавляет :443 к HTTPS URL, nock должен мокировать именно этот вариант
+    this.scope = nock(`${TRACKER_API_BASE}:443`);
   }
 
   /**
@@ -162,8 +167,25 @@ export class MockServer {
    * Очистить все моки и восстановить HTTP
    */
   cleanup(): void {
+    // Проверяем, что все замоканные запросы были выполнены
+    // Это помогает отловить тесты, которые не вызывают API как ожидается
+    if (!this.scope.isDone()) {
+      // Логируем pending mocks для отладки
+      const pendingMocks = this.scope.pendingMocks();
+      if (pendingMocks.length > 0) {
+         
+        console.warn('⚠️  Pending HTTP mocks not consumed:', pendingMocks);
+      }
+    }
+
+    // Очищаем все nock interceptors
     nock.cleanAll();
+
+    // Восстанавливаем реальные HTTP запросы
     nock.enableNetConnect();
+
+    // Восстанавливаем нативные HTTP модули
+    nock.restore();
   }
 
   /**

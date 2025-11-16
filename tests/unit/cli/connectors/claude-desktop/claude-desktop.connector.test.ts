@@ -11,24 +11,29 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ClaudeDesktopConnector } from '@cli/connectors/claude-desktop/claude-desktop.connector.js';
 import type { MCPServerConfig } from '@cli/connectors/base/connector.interface.js';
 import * as os from 'os';
 import * as path from 'path';
 
+// Hoisted моки - создаём ДО импорта модулей
+const { FileManager } = vi.hoisted(() => {
+  return {
+    FileManager: {
+      exists: vi.fn(),
+      readJSON: vi.fn(),
+      writeJSON: vi.fn(),
+      ensureDir: vi.fn(),
+    },
+  };
+});
+
 // Mock FileManager
 vi.mock('@cli/utils/file-manager.js', () => ({
-  FileManager: {
-    exists: vi.fn(),
-    readJSON: vi.fn(),
-    writeJSON: vi.fn(),
-    ensureDir: vi.fn(),
-  },
+  FileManager,
 }));
 
-// Импортируем FileManager после мока
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { FileManager } = (await import('@cli/utils/file-manager.js')) as any;
+// Импортируем ПОСЛЕ определения моков
+import { ClaudeDesktopConnector } from '@cli/connectors/claude-desktop/claude-desktop.connector.js';
 
 describe('ClaudeDesktopConnector', () => {
   let connector: ClaudeDesktopConnector;

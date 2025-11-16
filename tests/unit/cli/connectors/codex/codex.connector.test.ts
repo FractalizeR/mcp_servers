@@ -11,34 +11,38 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CodexConnector } from '@cli/connectors/codex/codex.connector.js';
 import type { MCPServerConfig } from '@cli/connectors/base/connector.interface.js';
 import { MCP_SERVER_NAME } from '@constants';
 import * as os from 'os';
 import * as path from 'path';
 
+// Hoisted моки - создаём ДО импорта модулей
+const { CommandExecutor, FileManager } = vi.hoisted(() => {
+  return {
+    CommandExecutor: {
+      isCommandAvailable: vi.fn(),
+      execInteractive: vi.fn(),
+    },
+    FileManager: {
+      exists: vi.fn(),
+      readTOML: vi.fn(),
+      writeTOML: vi.fn(),
+    },
+  };
+});
+
 // Mock CommandExecutor
 vi.mock('@cli/utils/command-executor.js', () => ({
-  CommandExecutor: {
-    isCommandAvailable: vi.fn(),
-    execInteractive: vi.fn(),
-  },
+  CommandExecutor,
 }));
 
 // Mock FileManager
 vi.mock('@cli/utils/file-manager.js', () => ({
-  FileManager: {
-    exists: vi.fn(),
-    readTOML: vi.fn(),
-    writeTOML: vi.fn(),
-  },
+  FileManager,
 }));
 
-// Импортируем после моков
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { CommandExecutor } = (await import('@cli/utils/command-executor.js')) as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { FileManager } = (await import('@cli/utils/file-manager.js')) as any;
+// Импортируем ПОСЛЕ определения моков
+import { CodexConnector } from '@cli/connectors/codex/codex.connector.js';
 
 describe('CodexConnector', () => {
   let connector: CodexConnector;
