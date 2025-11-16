@@ -128,10 +128,10 @@
 - [x] Удалить старые скрипты из корневой `scripts/`
 
 ### Шаг 3.4: Валидация архитектуры
-- [ ] `.dependency-cruiser.cjs` обновлён для monorepo
-- [ ] ✅ `npm run depcruise` проходит без ошибок
-- [ ] Smoke test создан/обновлён
-- [ ] ✅ Smoke test работает
+- [x] `.dependency-cruiser.cjs` обновлён для monorepo
+- [x] ✅ `npm run depcruise` проходит без ошибок (4 warnings, 0 errors)
+- [x] Smoke test создан/обновлён
+- [ ] ✅ Smoke test работает (будет протестирован после сборки в шаге 3.1)
 
 ### Шаг 3.4: Обновление документации
 - [ ] Корневой `README.md` обновлён (структура monorepo)
