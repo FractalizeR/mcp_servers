@@ -259,6 +259,302 @@ export class MockServer {
     return this;
   }
 
+  // ============================================================
+  // E2E МЕТОДЫ (префикс e2e_) - для E2E workflows тестов
+  // ============================================================
+
+  /**
+   * E2E: Mock успешного создания задачи
+   */
+  e2e_createIssueSuccess(issueData?: Record<string, unknown>): this {
+    const issue = generateIssue({ overrides: issueData });
+    const mockKey = `POST ${TRACKER_API_V3}/issues`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/issues`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [201, issue];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * E2E: Mock успешного обновления задачи
+   */
+  e2e_updateIssueSuccess(issueKey: string, updates?: Record<string, unknown>): this {
+    const issue = generateIssue({
+      overrides: { key: issueKey, ...updates },
+    });
+    const mockKey = `PATCH ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onPatch(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, issue];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * E2E: Mock успешного перехода
+   */
+  e2e_transitionIssueSuccess(issueKey: string, transition: string): this {
+    const issue = generateIssue({ overrides: { key: issueKey } });
+    const mockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`;
+    this.mockAdapter
+      .onPost(`${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`)
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [200, issue];
+      });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * E2E: Mock успешного получения changelog
+   */
+  e2e_getChangelogSuccess(issueKey: string): this {
+    const changelog = [
+      {
+        id: '1',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+        updatedBy: { login: 'test-user', display: 'Test User' },
+        fields: [{ field: { key: 'summary', display: 'Summary' } }],
+      },
+    ];
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/changelog`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/changelog`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, changelog];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * E2E: Mock успешного получения transitions
+   */
+  e2e_getTransitionsSuccess(
+    issueKey: string,
+    transitions?: Array<{ id: string; to: { key: string } }>
+  ): this {
+    const defaultTransitions = [
+      { id: 'start', to: { key: 'inProgress', display: 'In Progress' } },
+      { id: 'close', to: { key: 'closed', display: 'Closed' } },
+    ];
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/transitions`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/transitions`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, transitions ?? defaultTransitions];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  // ============================================================
+  // INTEGRATION МЕТОДЫ (БЕЗ префикса) - для integration тестов
+  // ============================================================
+
+  /**
+   * Mock успешного создания задачи
+   */
+  mockCreateIssueSuccess(issueData?: Record<string, unknown>): this {
+    const issue = generateIssue({ overrides: issueData });
+    const mockKey = `POST ${TRACKER_API_V3}/issues`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/issues`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [201, issue];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 403 при создании
+   */
+  mockCreateIssue403(): this {
+    const response = generateError403();
+    const mockKey = `POST ${TRACKER_API_V3}/issues`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/issues`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [403, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного обновления задачи
+   */
+  mockUpdateIssueSuccess(issueKey: string, updates?: Record<string, unknown>): this {
+    const issue = generateIssue({
+      overrides: { key: issueKey, ...updates },
+    });
+    const mockKey = `PATCH ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onPatch(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, issue];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при обновлении
+   */
+  mockUpdateIssue404(issueKey: string): this {
+    const response = generateError404();
+    const mockKey = `PATCH ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onPatch(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного перехода
+   */
+  mockTransitionIssueSuccess(issueKey: string, transition: string): this {
+    const issue = generateIssue({ overrides: { key: issueKey } });
+    const mockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`;
+    this.mockAdapter
+      .onPost(`${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`)
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [200, issue];
+      });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при переходе
+   */
+  mockTransitionIssue404(issueKey: string, transition: string): this {
+    const response = generateError404();
+    const mockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`;
+    this.mockAdapter
+      .onPost(`${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`)
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [404, response];
+      });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного получения changelog
+   */
+  mockGetChangelogSuccess(issueKey: string): this {
+    const changelog = [
+      {
+        id: '1',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+        updatedBy: { login: 'test-user', display: 'Test User' },
+        fields: [{ field: { key: 'summary', display: 'Summary' } }],
+      },
+    ];
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/changelog`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/changelog`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, changelog];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при получении changelog
+   */
+  mockGetChangelog404(issueKey: string): this {
+    const response = generateError404();
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/changelog`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/changelog`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного получения transitions
+   */
+  mockGetTransitionsSuccess(issueKey: string): this {
+    const transitions = [
+      { id: 'start', to: { key: 'inProgress', display: 'In Progress' } },
+      { id: 'close', to: { key: 'closed', display: 'Closed' } },
+    ];
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/transitions`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/transitions`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, transitions];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при получении transitions
+   */
+  mockGetTransitions404(issueKey: string): this {
+    const response = generateError404();
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/transitions`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/transitions`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
   /**
    * Очистить все моки и восстановить оригинальный адаптер
    */
