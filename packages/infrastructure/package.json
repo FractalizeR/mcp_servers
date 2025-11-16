@@ -1,0 +1,63 @@
+{
+  "name": "@mcp-framework/infrastructure",
+  "version": "0.1.0",
+  "description": "Reusable infrastructure layer: HTTP, cache, logging, async utilities",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./http": {
+      "types": "./dist/http/index.d.ts",
+      "default": "./dist/http/index.js"
+    },
+    "./cache": {
+      "types": "./dist/cache/index.d.ts",
+      "default": "./dist/cache/index.js"
+    },
+    "./logging": {
+      "types": "./dist/logging/index.d.ts",
+      "default": "./dist/logging/index.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "default": "./dist/config.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "mcp",
+    "infrastructure",
+    "http",
+    "logging",
+    "cache"
+  ],
+  "author": "Fractalizer",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "p-limit": "^7.2.0",
+    "pino": "^10.1.0",
+    "pino-pretty": "^13.1.2",
+    "rotating-file-stream": "^3.2.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.8",
+    "tsc-alias": "^1.8.16",
+    "rimraf": "^6.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
