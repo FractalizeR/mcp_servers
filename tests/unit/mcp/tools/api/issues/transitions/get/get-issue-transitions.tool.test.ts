@@ -15,6 +15,7 @@ describe('GetIssueTransitionsTool', () => {
 
   const mockTransition1: TransitionWithUnknownFields = {
     id: 'close',
+    self: 'https://api.tracker.yandex.net/v3/issues/QUEUE-123/transitions/close',
     display: 'Close',
     to: {
       id: '3',
@@ -25,6 +26,7 @@ describe('GetIssueTransitionsTool', () => {
 
   const mockTransition2: TransitionWithUnknownFields = {
     id: 'reopen',
+    self: 'https://api.tracker.yandex.net/v3/issues/QUEUE-123/transitions/reopen',
     display: 'Reopen',
     to: {
       id: '1',

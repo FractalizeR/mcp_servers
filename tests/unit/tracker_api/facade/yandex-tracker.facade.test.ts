@@ -336,7 +336,7 @@ describe('YandexTrackerFacade', () => {
           id: '1',
           key: 'TEST-1',
           summary: 'Test',
-          queue: { id: '1', key: 'TEST', display: 'Test', name: 'Test' },
+          queue: { id: '1', key: 'TEST', name: 'Test' },
           status: { id: '1', key: 'open', display: 'Open' },
           createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
           createdAt: '2024-01-01',
@@ -368,7 +368,7 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-1',
         summary: 'New Issue',
-        queue: { id: '1', key: 'TEST', display: 'Test', name: 'Test' },
+        queue: { id: '1', key: 'TEST', name: 'Test' },
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
         createdAt: '2024-01-01',
@@ -400,7 +400,7 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Updated',
-        queue: { id: '1', key: 'TEST', display: 'Test', name: 'Test' },
+        queue: { id: '1', key: 'TEST', name: 'Test' },
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
         createdAt: '2024-01-01',
@@ -431,8 +431,11 @@ describe('YandexTrackerFacade', () => {
       const mockResult: ChangelogEntryWithUnknownFields[] = [
         {
           id: '1',
+          self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/changelog/1',
+          issue: { id: '123', key: 'TEST-123', display: 'Test Issue' },
           updatedAt: '2024-01-01',
           updatedBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+          type: 'IssueUpdated',
           fields: [],
         },
       ];
@@ -460,7 +463,7 @@ describe('YandexTrackerFacade', () => {
       const mockResult: TransitionWithUnknownFields[] = [
         {
           id: 'trans1',
-          display: 'Start Progress',
+          self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/transitions/trans1',
           to: { id: '2', key: 'inProgress', display: 'In Progress' },
         },
       ];
@@ -491,7 +494,7 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test',
-        queue: { id: '1', key: 'TEST', display: 'Test', name: 'Test' },
+        queue: { id: '1', key: 'TEST', name: 'Test' },
         status: { id: '2', key: 'inProgress', display: 'In Progress' },
         createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
         createdAt: '2024-01-01',

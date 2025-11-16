@@ -45,6 +45,8 @@ describe('GetIssueChangelogOperation', () => {
       const mockChangelog: ChangelogEntryWithUnknownFields[] = [
         {
           id: '1',
+          self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/changelog/1',
+          issue: { id: '123', key: 'TEST-123', display: 'Test Issue' },
           updatedAt: '2024-01-01T10:00:00.000Z',
           updatedBy: {
             uid: 'user1',
@@ -52,6 +54,7 @@ describe('GetIssueChangelogOperation', () => {
             login: 'user1',
             isActive: true,
           },
+          type: 'IssueUpdated',
           fields: [
             {
               field: {
@@ -78,6 +81,8 @@ describe('GetIssueChangelogOperation', () => {
       const mockChangelog: ChangelogEntryWithUnknownFields[] = [
         {
           id: '1',
+          self: 'https://api.tracker.yandex.net/v3/issues/PROJ-456/changelog/1',
+          issue: { id: '456', key: 'PROJ-456', display: 'Test Issue' },
           updatedAt: '2024-01-01T10:00:00.000Z',
           updatedBy: {
             uid: 'user1',
@@ -85,10 +90,13 @@ describe('GetIssueChangelogOperation', () => {
             login: 'user1',
             isActive: true,
           },
+          type: 'IssueUpdated',
           fields: [],
         },
         {
           id: '2',
+          self: 'https://api.tracker.yandex.net/v3/issues/PROJ-456/changelog/2',
+          issue: { id: '456', key: 'PROJ-456', display: 'Test Issue' },
           updatedAt: '2024-01-02T10:00:00.000Z',
           updatedBy: {
             uid: 'user2',
@@ -96,6 +104,7 @@ describe('GetIssueChangelogOperation', () => {
             login: 'user2',
             isActive: true,
           },
+          type: 'IssueUpdated',
           fields: [],
         },
       ];

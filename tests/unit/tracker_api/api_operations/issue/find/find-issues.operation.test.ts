@@ -16,7 +16,7 @@ describe('FindIssuesOperation', () => {
     id: '1',
     key: 'TEST-123',
     summary: 'Test Issue',
-    queue: { id: '1', key: 'TEST', display: 'Test Queue', name: 'Test Queue' },
+    queue: { id: '1', key: 'TEST', name: 'Test Queue' },
     status: { id: '1', key: 'open', display: 'Open' },
     createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
     createdAt: '2024-01-01T10:00:00.000Z',
@@ -143,7 +143,7 @@ describe('FindIssuesOperation', () => {
     it('should handle sorting (order)', async () => {
       const params: FindIssuesInputDto = {
         query: 'status: open',
-        order: 'createdAt DESC',
+        order: ['-createdAt'],
       };
 
       vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
@@ -152,7 +152,7 @@ describe('FindIssuesOperation', () => {
 
       expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
         query: 'status: open',
-        order: 'createdAt DESC',
+        order: ['-createdAt'],
       });
     });
 
