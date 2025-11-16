@@ -27,6 +27,12 @@
     "test:coverage": "vitest run --coverage",
     "clean": "rimraf dist"
   },
+  "files": [
+    "dist",
+    "scripts",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "keywords": [
     "mcp",
     "search",

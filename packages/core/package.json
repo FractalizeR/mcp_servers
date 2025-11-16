@@ -27,6 +27,11 @@
     "test:coverage": "vitest run --coverage",
     "clean": "rimraf dist"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "keywords": [
     "mcp",
     "model-context-protocol",

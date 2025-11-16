@@ -145,17 +145,18 @@
 - [x] Создан `MIGRATION.md` (гайд для пользователей v1)
 - [x] Создан `CHANGELOG.md` для всех пакетов (infrastructure, core, search, yandex-tracker)
 
-### Шаг 3.5: Подготовка к публикации
-- [ ] Создан `.npmignore` для всех пакетов
-- [ ] `publishConfig` проверен во всех `package.json`
-- [ ] Создан `.github/workflows/ci.yml`
-- [ ] Создан `.github/workflows/publish.yml`
-- [ ] Установлен `@changesets/cli`
-- [ ] Выполнен `npx changeset init`
-- [ ] ✅ `npm pack --dry-run` успешен для всех пакетов
-- [ ] Размеры пакетов адекватны
+### Шаг 3.6: Подготовка к публикации
+- [x] Создан `.npmignore` для всех пакетов
+- [x] `publishConfig` проверен во всех `package.json` (добавлен в yandex-tracker)
+- [x] `files` поле добавлено во все package.json
+- [x] Обновлён `.github/workflows/ci.yml` для monorepo
+- [x] Создан `.github/workflows/publish.yml`
+- [x] Установлен `@changesets/cli`
+- [x] Выполнен `npx changeset init`
+- [x] ✅ `npm pack --dry-run` успешен для всех пакетов
+- [x] Размеры пакетов адекватны (infrastructure: 47kB, core: 41kB, search: 47kB, yandex-tracker: 127kB)
 
-### Шаг 3.6: Финальная валидация
+### Шаг 3.7: Финальная валидация
 - [ ] Полная очистка: `npm run clean && rm -rf node_modules packages/*/node_modules`
 - [ ] Свежая установка: `npm install`
 - [ ] Полная сборка: `npm run build`

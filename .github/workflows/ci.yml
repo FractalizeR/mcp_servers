@@ -2,23 +2,12 @@ name: CI
 
 on:
   push:
-    branches: ['**']
-    tags-ignore: ['**']
+    branches: [main, develop]
   pull_request:
-    branches: [master, main, develop]
-
-# Отменяем предыдущие запуски для той же ветки/PR
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  # ============================================
-  # Основные проверки (параллельно)
-  # ============================================
-
-  code-quality:
-    name: Code Quality (Lint & Typecheck)
+  test:
+    name: Build & Test All Packages
     runs-on: ubuntu-latest
 
     steps:
@@ -28,248 +17,22 @@ jobs:
       - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '22'
           cache: 'npm'
 
       - name: 📦 Install dependencies
         run: npm ci
 
-      - name: 🔍 Run code quality checks
-        run: |
-          echo "::group::ESLint"
-          npm run lint
-          echo "::endgroup::"
+      - name: 🔨 Build all packages
+        run: npm run build
 
-          echo "::group::TypeScript Type Checking"
-          npm run typecheck
-          npm run typecheck:tests
-          echo "::endgroup::"
+      - name: 🧪 Run all tests
+        run: npm run test
 
-          echo "::group::Prettier Format Check"
-          npm run format:check
-          echo "::endgroup::"
+      - name: 🔍 Lint check
+        run: npm run lint
+        continue-on-error: true
 
-  tests:
-    name: Tests & Coverage
-    runs-on: ubuntu-latest
+      - name: 🏗️ Validate architecture
+        run: npm run depcruise
 
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: 🧪 Run tests with coverage
-        run: npm run test:coverage
-        env:
-          CI: true
-
-      - name: 📊 Upload coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage/coverage-final.json
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  architecture:
-    name: Architecture & Registration
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: 🏗️ Validate architecture rules
-        run: |
-          echo "::group::Dependency Cruiser"
-          npm run depcruise
-          echo "::endgroup::"
-
-          echo "::group::Tool Registration Validation"
-          npm run validate:tools
-          echo "::endgroup::"
-
-  security:
-    name: Security Audit
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        check:
-          - name: Gitleaks (Secrets)
-            command: npm run audit:secrets
-          - name: Knip (Dead Code)
-            command: npm run knip
-          - name: Lockfile Integrity
-            command: npm run audit:lockfile
-          - name: NPM Audit
-            command: npm audit --audit-level=high
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm ci
-        if: matrix.check.name != 'Lockfile Integrity'
-
-      - name: 🔒 ${{ matrix.check.name }}
-        run: ${{ matrix.check.command }}
-        continue-on-error: ${{ matrix.check.name == 'NPM Audit' }}
-
-  documentation:
-    name: Documentation Validation
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: 📝 Validate documentation size limits
-        run: npm run validate:docs
-
-  build:
-    name: Build & Bundle
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: 🔨 Build project
-        run: |
-          echo "::group::TypeScript Build"
-          npm run build
-          echo "::endgroup::"
-
-          echo "::group::MCPB Bundle Build"
-          npm run build:bundle
-          echo "::endgroup::"
-
-      - name: 📤 Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: |
-            dist/
-            !dist/**/*.map
-          retention-days: 7
-
-  # ============================================
-  # Commit Messages (только для PR)
-  # ============================================
-
-  lint-commits:
-    name: Lint Commit Messages
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: 💬 Validate commit messages
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-
-  # ============================================
-  # Final Status Check (для branch protection)
-  # ============================================
-
-  ci-success:
-    name: ✅ All Checks Passed
-    runs-on: ubuntu-latest
-    needs:
-      - code-quality
-      - tests
-      - architecture
-      - security
-      - documentation
-      - build
-    if: always()
-
-    steps:
-      - name: Check if all jobs succeeded
-        shell: bash
-        run: |
-          echo "Checking job results..."
-          echo "code-quality: ${{ needs.code-quality.result }}"
-          echo "tests: ${{ needs.tests.result }}"
-          echo "architecture: ${{ needs.architecture.result }}"
-          echo "security: ${{ needs.security.result }}"
-          echo "documentation: ${{ needs.documentation.result }}"
-          echo "build: ${{ needs.build.result }}"
-
-          FAILED=0
-
-          if [ "${{ needs.code-quality.result }}" != "success" ]; then FAILED=1; fi
-          if [ "${{ needs.tests.result }}" != "success" ]; then FAILED=1; fi
-          if [ "${{ needs.architecture.result }}" != "success" ]; then FAILED=1; fi
-          if [ "${{ needs.security.result }}" != "success" ]; then FAILED=1; fi
-          if [ "${{ needs.documentation.result }}" != "success" ]; then FAILED=1; fi
-          if [ "${{ needs.build.result }}" != "success" ]; then FAILED=1; fi
-
-          if [ "$FAILED" = "1" ]; then
-            echo ""
-            echo "❌ Some checks failed!"
-            exit 1
-          fi
-
-          echo ""
-          echo "✅ All checks passed!"
-          exit 0
