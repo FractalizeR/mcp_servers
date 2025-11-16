@@ -182,6 +182,75 @@ describe('ResponseFieldFilter', () => {
         assignee: null,
       });
     });
+
+    it('должен обрабатывать вложенное поле когда промежуточное значение не объект', () => {
+      const data = {
+        key: 'QUEUE-1',
+        assignee: 'string_value', // не объект
+      };
+
+      // Пытаемся получить вложенное поле из примитива
+      const result = ResponseFieldFilter.filter(data, ['assignee.login']);
+
+      // Должен вернуть пустой объект, т.к. assignee.login не существует (assignee - это строка)
+      expect(result).toEqual({});
+    });
+
+    it('должен обрабатывать очень глубоко вложенные поля (5+ уровней)', () => {
+      const data = {
+        level1: {
+          level2: {
+            level3: {
+              level4: {
+                level5: {
+                  value: 'deep',
+                  extra: 'ignored',
+                },
+                ignored: 'value',
+              },
+            },
+          },
+        },
+      };
+
+      const result = ResponseFieldFilter.filter(data, ['level1.level2.level3.level4.level5.value']);
+
+      expect(result).toEqual({
+        level1: {
+          level2: {
+            level3: {
+              level4: {
+                level5: {
+                  value: 'deep',
+                },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('должен обрабатывать вложенные поля с null промежуточными значениями', () => {
+      const data = {
+        key: 'QUEUE-1',
+        parent: null,
+      };
+
+      // Пытаемся получить вложенное поле из null
+      const result = ResponseFieldFilter.filter(data, ['parent.id']);
+
+      // Должен вернуть пустой объект, т.к. parent.id не существует (parent - это null)
+      expect(result).toEqual({});
+    });
+
+    it('должен обрабатывать массив примитивов', () => {
+      const data = ['string1', 'string2', 'string3'];
+
+      const result = ResponseFieldFilter.filter(data, ['field']);
+
+      // Массив примитивов вернётся как есть (map для примитивов)
+      expect(result).toEqual(['string1', 'string2', 'string3']);
+    });
   });
 
   describe('normalizeFields', () => {

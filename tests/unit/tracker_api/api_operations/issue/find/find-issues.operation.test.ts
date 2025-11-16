@@ -201,5 +201,68 @@ describe('FindIssuesOperation', () => {
         'FindIssuesOperation: не указан способ поиска'
       );
     });
+
+    it('should support filterId search', async () => {
+      const params: FindIssuesInputDto = {
+        filterId: 'filter-123',
+      };
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
+
+      const result = await operation.execute(params);
+
+      expect(result).toHaveLength(1);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
+        filterId: 'filter-123',
+      });
+    });
+
+    it('should handle expand parameter', async () => {
+      const params: FindIssuesInputDto = {
+        query: 'status: open',
+        expand: ['transitions', 'attachments'],
+      };
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
+
+      await operation.execute(params);
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v3/issues/_search?expand=transitions%2Cattachments',
+        {
+          query: 'status: open',
+        }
+      );
+    });
+
+    it('should handle expand parameter with single value', async () => {
+      const params: FindIssuesInputDto = {
+        query: 'status: open',
+        expand: ['transitions'],
+      };
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
+
+      await operation.execute(params);
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search?expand=transitions', {
+        query: 'status: open',
+      });
+    });
+
+    it('should ignore empty expand array', async () => {
+      const params: FindIssuesInputDto = {
+        query: 'status: open',
+        expand: [],
+      };
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
+
+      await operation.execute(params);
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
+        query: 'status: open',
+      });
+    });
   });
 });

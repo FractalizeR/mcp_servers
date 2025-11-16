@@ -4,7 +4,7 @@ import type { ToolDefinition } from '@mcp/tools/base/base-definition.js';
 import type { StaticToolMetadata } from '@mcp/tools/base/tool-metadata.js';
 import { ToolCategory } from '@mcp/tools/base/tool-metadata.js';
 
-// Тестовая реализация BaseToolDefinition
+// Тестовая реализация BaseToolDefinition (безопасная)
 class TestToolDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
     return {
@@ -27,6 +27,11 @@ class TestToolDefinition extends BaseToolDefinition {
         required: [],
       },
     };
+  }
+
+  // Публичный метод для тестирования wrapWithSafetyWarning
+  public testWrapWithSafetyWarning(description: string): string {
+    return this.wrapWithSafetyWarning(description);
   }
 
   // Публичные методы для тестирования protected методов
@@ -77,6 +82,37 @@ class TestToolDefinition extends BaseToolDefinition {
 
   public testBuildBooleanParam(description: string) {
     return this.buildBooleanParam(description);
+  }
+}
+
+// Тестовая реализация с requiresExplicitUserConsent: true
+class DangerousToolDefinition extends BaseToolDefinition {
+  protected getStaticMetadata(): StaticToolMetadata {
+    return {
+      name: 'dangerous_tool',
+      description: 'Dangerous tool that modifies data',
+      category: ToolCategory.ISSUES,
+      tags: ['write', 'dangerous'],
+      isHelper: false,
+      requiresExplicitUserConsent: true,
+    };
+  }
+
+  build(): ToolDefinition {
+    return {
+      name: 'dangerous_tool',
+      description: this.wrapWithSafetyWarning('Dangerous tool that modifies data'),
+      inputSchema: {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+    };
+  }
+
+  // Публичный метод для тестирования wrapWithSafetyWarning
+  public testWrapWithSafetyWarning(description: string): string {
+    return this.wrapWithSafetyWarning(description);
   }
 }
 
@@ -375,6 +411,104 @@ describe('BaseToolDefinition', () => {
       expect(toolDef.inputSchema.type).toBe('object');
       expect(toolDef.inputSchema.properties).toEqual({});
       expect(toolDef.inputSchema.required).toEqual([]);
+    });
+  });
+
+  describe('wrapWithSafetyWarning', () => {
+    it('НЕ должна добавлять предупреждение когда requiresExplicitUserConsent = false', () => {
+      // Arrange
+      const safeDefinition = new TestToolDefinition();
+      const originalDescription = 'This is a safe read-only operation';
+
+      // Act
+      const wrappedDescription = safeDefinition.testWrapWithSafetyWarning(originalDescription);
+
+      // Assert
+      expect(wrappedDescription).toBe(originalDescription);
+      expect(wrappedDescription).not.toContain('⚠️');
+      expect(wrappedDescription).not.toContain('КРИТИЧЕСКИ ВАЖНО');
+    });
+
+    it('ДОЛЖНА добавлять предупреждение когда requiresExplicitUserConsent = true', () => {
+      // Arrange
+      const dangerousDefinition = new DangerousToolDefinition();
+      const originalDescription = 'This operation modifies user data';
+
+      // Act
+      const wrappedDescription = dangerousDefinition.testWrapWithSafetyWarning(originalDescription);
+
+      // Assert
+      expect(wrappedDescription).toContain(originalDescription);
+      expect(wrappedDescription).toContain('⚠️');
+      expect(wrappedDescription).toContain('КРИТИЧЕСКИ ВАЖНО');
+      expect(wrappedDescription).toContain('ИЗМЕНЯЕТ данные пользователя');
+      expect(wrappedDescription.length).toBeGreaterThan(originalDescription.length);
+    });
+
+    it('должна сохранить оригинальное описание в начале', () => {
+      // Arrange
+      const dangerousDefinition = new DangerousToolDefinition();
+      const originalDescription = 'Updates issue status in Yandex.Tracker';
+
+      // Act
+      const wrappedDescription = dangerousDefinition.testWrapWithSafetyWarning(originalDescription);
+
+      // Assert
+      expect(wrappedDescription.startsWith(originalDescription)).toBe(true);
+    });
+
+    it('должна содержать ключевые фразы предупреждения', () => {
+      // Arrange
+      const dangerousDefinition = new DangerousToolDefinition();
+      const originalDescription = 'Deletes an issue';
+
+      // Act
+      const wrappedDescription = dangerousDefinition.testWrapWithSafetyWarning(originalDescription);
+
+      // Assert
+      expect(wrappedDescription).toContain('Используй его ТОЛЬКО если');
+      expect(wrappedDescription).toContain('Пользователь ЯВНО попросил');
+      expect(wrappedDescription).toContain('НИКОГДА не используй этот инструмент');
+      expect(wrappedDescription).toContain('не используй placeholder/dummy значения');
+    });
+
+    it('должна работать для пустого описания', () => {
+      // Arrange
+      const dangerousDefinition = new DangerousToolDefinition();
+      const originalDescription = '';
+
+      // Act
+      const wrappedDescription = dangerousDefinition.testWrapWithSafetyWarning(originalDescription);
+
+      // Assert
+      expect(wrappedDescription).toContain('⚠️');
+      expect(wrappedDescription).toContain('КРИТИЧЕСКИ ВАЖНО');
+    });
+
+    it('build() должен использовать wrapWithSafetyWarning для опасных операций', () => {
+      // Arrange
+      const dangerousDefinition = new DangerousToolDefinition();
+
+      // Act
+      const toolDef = dangerousDefinition.build();
+
+      // Assert
+      expect(toolDef.description).toContain('Dangerous tool that modifies data');
+      expect(toolDef.description).toContain('⚠️');
+      expect(toolDef.description).toContain('КРИТИЧЕСКИ ВАЖНО');
+    });
+
+    it('build() НЕ должен добавлять предупреждение для безопасных операций', () => {
+      // Arrange
+      const safeDefinition = new TestToolDefinition();
+
+      // Act
+      const toolDef = safeDefinition.build();
+
+      // Assert
+      expect(toolDef.description).toBe('Test tool description');
+      expect(toolDef.description).not.toContain('⚠️');
+      expect(toolDef.description).not.toContain('КРИТИЧЕСКИ ВАЖНО');
     });
   });
 });
