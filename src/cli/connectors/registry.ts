@@ -6,6 +6,8 @@ import type { MCPConnector, ConnectionStatus } from './base/connector.interface.
 import { ClaudeDesktopConnector } from './claude-desktop/claude-desktop.connector.js';
 import { ClaudeCodeConnector } from './claude-code/claude-code.connector.js';
 import { CodexConnector } from './codex/codex.connector.js';
+import { GeminiConnector } from './gemini/gemini.connector.js';
+import { QwenConnector } from './qwen/qwen.connector.js';
 
 export class ConnectorRegistry {
   private connectors: Map<string, MCPConnector> = new Map();
@@ -15,6 +17,8 @@ export class ConnectorRegistry {
     this.register(new ClaudeDesktopConnector());
     this.register(new ClaudeCodeConnector());
     this.register(new CodexConnector());
+    this.register(new GeminiConnector());
+    this.register(new QwenConnector());
   }
 
   /**

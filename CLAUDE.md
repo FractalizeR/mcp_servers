@@ -62,6 +62,7 @@
 1. 📖 **Этот файл** (CLAUDE.md) — правила monorepo
 2. 📖 **[ARCHITECTURE.md](./ARCHITECTURE.md)** — понимание архитектуры monorepo
 3. 📖 **[packages/yandex-tracker/CLAUDE.md](./packages/yandex-tracker/CLAUDE.md)** — специфика Yandex Tracker
+4. 📖 **[src/cli/README.md](./src/cli/README.md)** — при работе с CLI коннекторами
 
 ---
 
