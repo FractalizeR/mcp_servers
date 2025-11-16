@@ -1,0 +1,57 @@
+{
+  "name": "@mcp-framework/core",
+  "version": "0.1.0",
+  "description": "Core framework for building MCP tools: base classes, utilities, registry",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./tools": {
+      "types": "./dist/tools/index.d.ts",
+      "default": "./dist/tools/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "default": "./dist/utils/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "framework",
+    "tools",
+    "ai"
+  ],
+  "author": "Fractalizer",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "zod": "^3.25.76",
+    "pino": "^10.1.0"
+  },
+  "peerDependencies": {
+    "inversify": "^7.x"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "inversify": "^7.10.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.8",
+    "tsc-alias": "^1.8.16",
+    "rimraf": "^6.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
