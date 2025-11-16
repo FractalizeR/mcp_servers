@@ -13,12 +13,14 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SearchToolsTool } from '@mcp-framework/search';
-import { ToolSearchEngine } from '@mcp-framework/search/tool-search-engine.js';
-import { WeightedCombinedStrategy } from '@mcp-framework/search/strategies/weighted-combined.strategy.js';
-import { NameSearchStrategy } from '@mcp-framework/search/strategies/name-search.strategy.js';
-import { DescriptionSearchStrategy } from '@mcp-framework/search/strategies/description-search.strategy.js';
-import { CategorySearchStrategy } from '@mcp-framework/search/strategies/category-search.strategy.js';
-import { FuzzySearchStrategy } from '@mcp-framework/search/strategies/fuzzy-search.strategy.js';
+import { ToolSearchEngine } from '@mcp-framework/search/engine';
+import {
+  WeightedCombinedStrategy,
+  NameSearchStrategy,
+  DescriptionSearchStrategy,
+  CategorySearchStrategy,
+  FuzzySearchStrategy,
+} from '@mcp-framework/search/strategies';
 import { ToolCategory } from '@mcp-framework/core/tools/base/tool-metadata.js';
 import type { StaticToolIndex, StrategyType } from '@mcp-framework/search/types.js';
 import type { ToolRegistry } from '@mcp-framework/core/tool-registry.js';
@@ -352,7 +354,7 @@ describe('SearchToolsTool (E2E)', () => {
       expect(result.isError).toBe(true);
       const content = result.content[0]!;
       if (content.type === 'text') {
-        expect(content.text).toContain('Invalid enum value');
+        expect(content.text).toContain('Invalid option');
       }
     });
 
@@ -363,7 +365,7 @@ describe('SearchToolsTool (E2E)', () => {
       expect(result.isError).toBe(true);
       const content = result.content[0]!;
       if (content.type === 'text') {
-        expect(content.text).toContain('Invalid enum value');
+        expect(content.text).toContain('Invalid option');
       }
     });
 
@@ -373,7 +375,7 @@ describe('SearchToolsTool (E2E)', () => {
       expect(result.isError).toBe(true);
       const content = result.content[0]!;
       if (content.type === 'text') {
-        expect(content.text).toContain('Number must be greater than 0');
+        expect(content.text).toContain('Too small');
       }
     });
 
@@ -383,7 +385,7 @@ describe('SearchToolsTool (E2E)', () => {
       expect(result.isError).toBe(true);
       const content = result.content[0]!;
       if (content.type === 'text') {
-        expect(content.text).toContain('Expected integer');
+        expect(content.text).toContain('Invalid input');
       }
     });
 
