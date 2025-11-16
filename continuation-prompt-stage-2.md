@@ -49,10 +49,11 @@
 
 ---
 
-#### 2.1.1. GetIssuesTool tests
+#### ✅ 2.1.1. ВЫПОЛНЕНО - GetIssuesTool tests
 
 **Файл:** `tests/unit/mcp/tools/api/issues/get/get-issues.tool.test.ts`
 **Тестируемый:** `src/mcp/tools/api/issues/get/get-issues.tool.ts`
+**Статус:** 9 тестов проходят
 
 **Тесты:**
 1. ✅ **Validation**
@@ -162,11 +163,11 @@ describe('GetIssuesTool', () => {
 
 ---
 
-#### 2.1.2. FindIssuesTool tests
+#### ✅ 2.1.2. ВЫПОЛНЕНО - FindIssuesTool tests
 
 **Файл:** `tests/unit/mcp/tools/api/issues/find/find-issues.tool.test.ts`
 **Тестируемый:** `src/mcp/tools/api/issues/find/find-issues.tool.ts`
-**Текущее покрытие:** 36.36% → **Цель: 85%+**
+**Статус:** 24 теста проходят
 
 **Тесты:**
 1. ✅ **Validation**
@@ -193,10 +194,11 @@ describe('GetIssuesTool', () => {
 
 ---
 
-#### 2.1.3. CreateIssueTool tests
+#### ✅ 2.1.3. ВЫПОЛНЕНО - CreateIssueTool tests
 
 **Файл:** `tests/unit/mcp/tools/api/issues/create/create-issue.tool.test.ts`
 **Тестируемый:** `src/mcp/tools/api/issues/create/create-issue.tool.ts`
+**Статус:** 16 тестов проходят
 
 **Тесты:**
 1. ✅ **Validation**
@@ -217,10 +219,11 @@ describe('GetIssuesTool', () => {
 
 ---
 
-#### 2.1.4. UpdateIssueTool tests
+#### ✅ 2.1.4. ВЫПОЛНЕНО - UpdateIssueTool tests
 
 **Файл:** `tests/unit/mcp/tools/api/issues/update/update-issue.tool.test.ts`
 **Тестируемый:** `src/mcp/tools/api/issues/update/update-issue.tool.ts`
+**Статус:** 12 тестов проходят
 
 **Тесты:**
 1. ✅ **Validation**
@@ -242,10 +245,11 @@ describe('GetIssuesTool', () => {
 
 ---
 
-#### 2.1.5. ChangelogIssuesTool tests
+#### ✅ 2.1.5. ВЫПОЛНЕНО - ChangelogIssuesTool tests
 
-**Файл:** `tests/unit/mcp/tools/api/issues/changelog/changelog-issues.tool.test.ts`
-**Тестируемый:** `src/mcp/tools/api/issues/changelog/changelog-issues.tool.ts`
+**Файл:** `tests/unit/mcp/tools/api/issues/changelog/get-issue-changelog.tool.test.ts`
+**Тестируемый:** `src/mcp/tools/api/issues/changelog/get-issue-changelog.tool.ts`
+**Статус:** 10 тестов проходят
 
 **Тесты:**
 1. ✅ **Validation**
@@ -264,10 +268,11 @@ describe('GetIssuesTool', () => {
 
 ---
 
-#### 2.1.6. GetTransitionsTool tests
+#### ✅ 2.1.6. ВЫПОЛНЕНО - GetTransitionsTool tests
 
-**Файл:** `tests/unit/mcp/tools/api/issues/transitions/get/get-transitions.tool.test.ts`
-**Тестируемый:** `src/mcp/tools/api/issues/transitions/get/get-transitions.tool.ts`
+**Файл:** `tests/unit/mcp/tools/api/issues/transitions/get/get-issue-transitions.tool.test.ts`
+**Тестируемый:** `src/mcp/tools/api/issues/transitions/get/get-issue-transitions.tool.ts`
+**Статус:** 10 тестов проходят
 
 **Тесты:**
 1. ✅ **Validation**
@@ -286,10 +291,11 @@ describe('GetIssuesTool', () => {
 
 ---
 
-#### 2.1.7. ExecuteTransitionTool tests
+#### ✅ 2.1.7. ВЫПОЛНЕНО - ExecuteTransitionTool tests
 
-**Файл:** `tests/unit/mcp/tools/api/issues/transitions/execute/execute-transition.tool.test.ts`
-**Тестируемый:** `src/mcp/tools/api/issues/transitions/execute/execute-transition.tool.ts`
+**Файл:** `tests/unit/mcp/tools/api/issues/transitions/execute/transition-issue.tool.test.ts`
+**Тестируемый:** `src/mcp/tools/api/issues/transitions/execute/transition-issue.tool.ts`
+**Статус:** 13 тестов проходят
 
 **Тесты:**
 1. ✅ **Validation**
@@ -344,10 +350,11 @@ describe('GetIssuesTool', () => {
 
 ---
 
-#### 2.2.1. Container tests
+#### ✅ 2.2.1. ВЫПОЛНЕНО - Container tests
 
 **Файл:** `tests/unit/composition-root/container.test.ts`
 **Тестируемый:** `src/composition-root/container.ts`
+**Статус:** 34 теста проходят
 
 **Тесты:**
 

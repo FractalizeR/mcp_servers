@@ -264,10 +264,11 @@ describe('get-issues integration tests', () => {
 
 ---
 
-#### 3.2.1. CategorySearchStrategy tests
+#### ✅ 3.2.1. ВЫПОЛНЕНО - CategorySearchStrategy tests
 
 **Файл:** `tests/unit/mcp/search/strategies/category-search.strategy.test.ts`
 **Тестируемый:** `src/mcp/search/strategies/category-search.strategy.ts`
+**Статус:** 19 тестов проходят
 
 **Тесты:**
 1. ✅ should find exact category match
@@ -327,10 +328,11 @@ describe('CategorySearchStrategy', () => {
 
 ---
 
-#### 3.2.2. DescriptionSearchStrategy tests
+#### ✅ 3.2.2. ВЫПОЛНЕНО - DescriptionSearchStrategy tests
 
 **Файл:** `tests/unit/mcp/search/strategies/description-search.strategy.test.ts`
 **Тестируемый:** `src/mcp/search/strategies/description-search.strategy.ts`
+**Статус:** 17 тестов проходят
 
 **Тесты:**
 1. ✅ should find query in description
@@ -356,10 +358,11 @@ describe('CategorySearchStrategy', () => {
 
 ---
 
-#### 3.2.4. FuzzySearchStrategy tests
+#### ✅ 3.2.4. ВЫПОЛНЕНО - FuzzySearchStrategy tests
 
 **Файл:** `tests/unit/mcp/search/strategies/fuzzy-search.strategy.test.ts`
 **Тестируемый:** `src/mcp/search/strategies/fuzzy-search.strategy.ts`
+**Статус:** 28 тестов проходят
 
 **Тесты:**
 1. ✅ should find similar strings (typos)

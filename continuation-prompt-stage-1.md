@@ -43,7 +43,7 @@
 
 Создать unit тесты для следующих операций (по образцу `tests/unit/tracker_api/api_operations/issue/get/get-issues.operation.test.ts`):
 
-1. **changelog.operation.test.ts**
+1. **✅ ВЫПОЛНЕНО - changelog.operation.test.ts** (100% coverage)
    - Путь: `tests/unit/tracker_api/api_operations/issue/changelog/changelog.operation.test.ts`
    - Тестируемый файл: `src/tracker_api/api_operations/issue/changelog/changelog.operation.ts`
    - Тесты:
@@ -53,7 +53,7 @@
      - ✅ should pass logger to BaseOperation
      - ✅ should include requestId in logs
 
-2. **create.operation.test.ts**
+2. **✅ ВЫПОЛНЕНО - create.operation.test.ts** (100% coverage)
    - Путь: `tests/unit/tracker_api/api_operations/issue/create/create.operation.test.ts`
    - Тестируемый файл: `src/tracker_api/api_operations/issue/create/create.operation.ts`
    - Тесты:
@@ -63,7 +63,7 @@
      - ✅ should handle HTTP errors
      - ✅ should log creation success
 
-3. **find.operation.test.ts**
+3. **✅ ВЫПОЛНЕНО - find.operation.test.ts** (90.62% coverage)
    - Путь: `tests/unit/tracker_api/api_operations/issue/find/find.operation.test.ts`
    - Тестируемый файл: `src/tracker_api/api_operations/issue/find/find.operation.ts`
    - Тесты:
@@ -78,7 +78,7 @@
      - ✅ should handle empty results
      - ✅ should handle HTTP errors
 
-4. **update.operation.test.ts**
+4. **✅ ВЫПОЛНЕНО - update.operation.test.ts** (100% coverage)
    - Путь: `tests/unit/tracker_api/api_operations/issue/update/update.operation.test.ts`
    - Тестируемый файл: `src/tracker_api/api_operations/issue/update/update.operation.ts`
    - Тесты:
@@ -89,7 +89,7 @@
      - ✅ should handle HTTP errors
      - ✅ should log update success
 
-5. **get-transitions.operation.test.ts**
+5. **✅ ВЫПОЛНЕНО - get-transitions.operation.test.ts** (100% coverage)
    - Путь: `tests/unit/tracker_api/api_operations/issue/transitions/get-transitions.operation.test.ts`
    - Тестируемый файл: `src/tracker_api/api_operations/issue/transitions/get-transitions.operation.ts`
    - Тесты:
@@ -98,7 +98,7 @@
      - ✅ should handle not found errors (404)
      - ✅ should handle HTTP errors
 
-6. **execute-transition.operation.test.ts**
+6. **✅ ВЫПОЛНЕНО - execute-transition.operation.test.ts** (100% coverage)
    - Путь: `tests/unit/tracker_api/api_operations/issue/transitions/execute/execute-transition.operation.test.ts`
    - Тестируемый файл: `src/tracker_api/api_operations/issue/transitions/execute/execute-transition.operation.ts`
    - Тесты:
@@ -173,15 +173,15 @@ npm run test:unit -- tests/unit/tracker_api/api_operations/
 
 ---
 
-### Задача 1.2: YandexTrackerFacade tests (+2% покрытия)
+### ✅ Задача 1.2: ВЫПОЛНЕНО - YandexTrackerFacade tests (+2% покрытия)
 
-**Проблема:** Facade покрыт только на 33.33%, не покрыты строки 79-159 (основные методы)
+**Статус:** Facade покрыт на 100%, все строки 79-159 покрыты
 
-**Что делать:**
+**Что сделано:**
 
-Расширить существующий тест `tests/unit/tracker_api/facade/yandex-tracker.facade.test.ts`:
+Расширен существующий тест `tests/unit/tracker_api/facade/yandex-tracker.facade.test.ts` (18 тестов):
 
-**Добавить тесты для методов:**
+**Добавлены тесты для методов:**
 1. ✅ `findIssues()` - должен вызывать FindIssuesOperation
 2. ✅ `createIssue()` - должен вызывать CreateIssueOperation
 3. ✅ `updateIssue()` - должен вызывать UpdateIssueOperation
@@ -221,15 +221,15 @@ npm run test:unit -- tests/unit/tracker_api/facade/
 
 ---
 
-### Задача 1.3: HTTP Client tests (+1.5% покрытия)
+### ✅ Задача 1.3: ВЫПОЛНЕНО - HTTP Client tests (+1.5% покрытия)
 
-**Проблема:** HTTP Client покрыт на 64.28%, не все сценарии покрыты
+**Статус:** HTTP Client имеет 16 тестов, все основные сценарии покрыты
 
-**Что делать:**
+**Что сделано:**
 
-Расширить `tests/unit/infrastructure/http/client/http-client.test.ts`:
+Расширен `tests/unit/infrastructure/http/client/http-client.test.ts`:
 
-**Добавить тесты:**
+**Добавлены тесты:**
 
 1. ✅ **POST method** - should send POST requests correctly
 2. ✅ **PUT method** - should send PUT requests correctly
@@ -277,26 +277,30 @@ npm run test:unit -- tests/unit/infrastructure/http/client/
 
 ## Критерии успеха Этапа 1
 
-После завершения всех задач запустить:
+**ТЕКУЩИЙ СТАТУС (2025-11-16):**
 
 ```bash
-# Запустить unit тесты с coverage
-npx vitest run tests/unit --coverage
-
-# Проверить метрики (должны быть):
-# Lines: 60%+
-# Functions: 70%+
-# Statements: 60%+
-# Branches: 59%+
+# Текущее покрытие:
+Lines:      58.48% (цель: 60%+) ⚠️ ПОЧТИ
+Functions:  66.49% (цель: 70%+) ⚠️ ПОЧТИ
+Statements: 58.33% (цель: 60%+) ⚠️ ПОЧТИ
+Branches:   53.79% (цель: 59%+) ⚠️ ПОЧТИ
 ```
 
-**Ожидаемые результаты:**
-- ✅ Все новые тесты проходят
-- ✅ Coverage увеличился на ~15%
-- ✅ Lines ≥ 60%
-- ✅ Functions ≥ 70%
-- ✅ Statements ≥ 60%
-- ✅ Branches ≥ 59%
+**Что выполнено:**
+- ✅ Все 6 API Operations тестов (changelog, create, find, update, get-transitions, execute-transition)
+- ✅ YandexTrackerFacade tests (100% покрытие)
+- ✅ HTTP Client tests (16 тестов)
+- ✅ 462 теста проходят успешно
+
+**Что осталось для достижения целей:**
+- ⚠️ Докрыть GetIssuesOperation строки 76-81 (сейчас 75%, нужно 100%)
+- ⚠️ Нужно +1.52% для Lines
+- ⚠️ Нужно +3.51% для Functions
+- ⚠️ Нужно +1.67% для Statements
+- ⚠️ Нужно +5.21% для Branches
+
+**Рекомендация:** Перейти к Stage 2 (MCP Tools tests), это даст больший прирост покрытия
 
 ---
 
