@@ -37,12 +37,13 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       exclude: ['src/index.ts'],
       thresholds: {
-        // TODO: Повысить до 80% когда будет больше тестов
-        // Цель: 80%, текущие требования соответствуют текущему покрытию
-        branches: 59,
-        functions: 70,
-        lines: 61,
-        statements: 61,
+        // Обновлено 2025-11-16: установлено на 2-3% ниже текущих значений
+        // для защиты от регрессии с запасом на изменения
+        // Текущий coverage: statements 78%, branches 81%, functions 84%, lines 78%
+        branches: 78,
+        functions: 81,
+        lines: 75,
+        statements: 75,
       },
     },
   },
