@@ -181,5 +181,132 @@ describe('GetIssuesOperation', () => {
         expect(rejected1.reason).toEqual(mockError2);
       }
     });
+
+    it('выполняет реальный код кеширования для одной задачи (покрывает строки 76-81)', async () => {
+      const issueKey = 'TASK-1';
+      const mockIssue: IssueWithUnknownFields = {
+        id: '1',
+        key: 'TASK-1',
+        summary: 'Issue 1',
+        queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
+        status: { id: '1', key: 'open', display: 'Open' },
+        createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      } as IssueWithUnknownFields;
+
+      // НЕ мокируем parallelExecutor - используем реальный
+      const realParallelExecutor = new ParallelExecutor(mockLogger, {
+        maxBatchSize: 50,
+        maxConcurrentRequests: 10,
+      });
+      (operation as any).parallelExecutor = realParallelExecutor;
+
+      // Мокируем httpClient.get чтобы он возвращал данные
+      mockHttpClient.get = vi.fn().mockResolvedValue(mockIssue);
+
+      // Мокируем cache (cache miss) - СИНХРОННО
+      vi.mocked(mockCacheManager.get).mockReturnValue(undefined);
+      vi.mocked(mockCacheManager.set).mockReturnValue(undefined);
+
+      const result = await operation.execute([issueKey]);
+
+      // Проверяем результат
+      expect(result).toHaveLength(1);
+      expect(result[0]?.status).toBe('fulfilled');
+      if (result[0] && result[0].status === 'fulfilled') {
+        expect(result[0].value.key).toBe('TASK-1');
+      }
+
+      // Проверяем, что был вызван httpClient.get
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/issues/TASK-1');
+
+      // Проверяем, что кеш был проверен
+      expect(mockCacheManager.get).toHaveBeenCalled();
+    });
+
+    it('использует кешированные данные если доступны', async () => {
+      const issueKey = 'TASK-CACHED';
+      const cachedIssue: IssueWithUnknownFields = {
+        id: '99',
+        key: 'TASK-CACHED',
+        summary: 'Cached Issue',
+        queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
+        status: { id: '1', key: 'open', display: 'Open' },
+        createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      } as IssueWithUnknownFields;
+
+      // Используем реальный parallelExecutor
+      const realParallelExecutor = new ParallelExecutor(mockLogger, {
+        maxBatchSize: 50,
+        maxConcurrentRequests: 10,
+      });
+      (operation as any).parallelExecutor = realParallelExecutor;
+
+      // Мокируем cache (cache hit) - СИНХРОННО
+      vi.mocked(mockCacheManager.get).mockReturnValue(cachedIssue);
+
+      // httpClient.get НЕ должен быть вызван
+      mockHttpClient.get = vi.fn();
+
+      const result = await operation.execute([issueKey]);
+
+      // Проверяем результат
+      expect(result).toHaveLength(1);
+      expect(result[0]?.status).toBe('fulfilled');
+      if (result[0] && result[0].status === 'fulfilled') {
+        expect(result[0].value.key).toBe('TASK-CACHED');
+        expect(result[0].value.summary).toBe('Cached Issue');
+      }
+
+      // Проверяем, что httpClient.get НЕ был вызван (данные из кеша)
+      expect(mockHttpClient.get).not.toHaveBeenCalled();
+    });
+
+    it('выполняет batch запросов с реальным parallelExecutor', async () => {
+      const issueKeys = ['TASK-A', 'TASK-B', 'TASK-C'];
+      const mockIssues: IssueWithUnknownFields[] = issueKeys.map((key, idx) => ({
+        id: String(idx + 1),
+        key,
+        summary: `Issue ${key}`,
+        queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
+        status: { id: '1', key: 'open', display: 'Open' },
+        createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      })) as IssueWithUnknownFields[];
+
+      // Используем реальный parallelExecutor
+      const realParallelExecutor = new ParallelExecutor(mockLogger, {
+        maxBatchSize: 50,
+        maxConcurrentRequests: 10,
+      });
+      (operation as any).parallelExecutor = realParallelExecutor;
+
+      // Мокируем httpClient.get с разными ответами для каждого ключа
+      mockHttpClient.get = vi.fn().mockImplementation((url: string) => {
+        const key = url.split('/').pop();
+        const issue = mockIssues.find((i) => i.key === key);
+        return Promise.resolve(issue);
+      });
+
+      // Мокируем cache (все cache miss) - СИНХРОННО
+      vi.mocked(mockCacheManager.get).mockReturnValue(undefined);
+      vi.mocked(mockCacheManager.set).mockReturnValue(undefined);
+
+      const result = await operation.execute(issueKeys);
+
+      // Проверяем результат
+      expect(result).toHaveLength(3);
+      expect(result.every((r) => r.status === 'fulfilled')).toBe(true);
+
+      // Проверяем, что httpClient.get был вызван для каждого ключа
+      expect(mockHttpClient.get).toHaveBeenCalledTimes(3);
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/issues/TASK-A');
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/issues/TASK-B');
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/issues/TASK-C');
+    });
   });
 });
