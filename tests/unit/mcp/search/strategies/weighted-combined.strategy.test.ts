@@ -9,7 +9,7 @@
  * - Правильная сортировка по weighted score
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { WeightedCombinedStrategy } from '@mcp/search/strategies/weighted-combined.strategy.js';
 import type { ISearchStrategy } from '@mcp/search/strategies/search-strategy.interface.js';
 import type { SearchResult, StaticToolIndex, StrategyType } from '@mcp/search/types.js';
@@ -84,10 +84,10 @@ describe('WeightedCombinedStrategy', () => {
     // name strategy имеет вес 1.0, description - 0.5
     // tool_a: 1.0 * 1.0 = 1.0
     // tool_b: 0.8 * 0.5 = 0.4
-    expect(results[0].toolName).toBe('tool_a');
-    expect(results[0].score).toBeCloseTo(1.0, 2);
-    expect(results[1].toolName).toBe('tool_b');
-    expect(results[1].score).toBeCloseTo(0.4, 2);
+    expect(results[0]!.toolName).toBe('tool_a');
+    expect(results[0]!.score).toBeCloseTo(1.0, 2);
+    expect(results[1]!.toolName).toBe('tool_b');
+    expect(results[1]!.score).toBeCloseTo(0.4, 2);
   });
 
   it('должна выбрать максимальный weighted score для дубликатов', () => {
@@ -110,12 +110,12 @@ describe('WeightedCombinedStrategy', () => {
 
     // Assert
     expect(results).toHaveLength(1);
-    expect(results[0].toolName).toBe('tool_a');
+    expect(results[0]!.toolName).toBe('tool_a');
     // description weight = 0.5, name weight = 1.0
     // name: 0.5 * 1.0 = 0.5
     // description: 1.0 * 0.5 = 0.5 (равны, остается первый - name)
-    expect(results[0].score).toBeCloseTo(0.5, 2);
-    expect(results[0].strategyType).toBe('name');
+    expect(results[0]!.score).toBeCloseTo(0.5, 2);
+    expect(results[0]!.strategyType).toBe('name');
   });
 
   it('должна сохранять matchDetails для каждой стратегии', () => {
@@ -138,9 +138,9 @@ describe('WeightedCombinedStrategy', () => {
 
     // Assert
     expect(results).toHaveLength(1);
-    expect(results[0].matchDetails).toBeDefined();
-    expect(results[0].matchDetails?.name).toBe(0.8);
-    expect(results[0].matchDetails?.description).toBe(0.6);
+    expect(results[0]!.matchDetails).toBeDefined();
+    expect(results[0]!.matchDetails?.name).toBe(0.8);
+    expect(results[0]!.matchDetails?.description).toBe(0.6);
   });
 
   it('должна сохранять matchReason из стратегии с максимальным weighted score', () => {
@@ -175,7 +175,7 @@ describe('WeightedCombinedStrategy', () => {
     expect(results).toHaveLength(1);
     // Weighted scores равны (0.5 * 1.0 = 0.5 === 1.0 * 0.5 = 0.5)
     // Остается matchReason от первой стратегии (name)
-    expect(results[0].matchReason).toBe('Name contains query');
+    expect(results[0]!.matchReason).toBe('Name contains query');
   });
 
   it('должна правильно сортировать результаты по weighted score (descending)', () => {
@@ -195,10 +195,10 @@ describe('WeightedCombinedStrategy', () => {
 
     // Assert
     expect(results).toHaveLength(2);
-    expect(results[0].toolName).toBe('tool_b'); // 1.0 * 1.0 = 1.0
-    expect(results[0].score).toBeCloseTo(1.0, 2);
-    expect(results[1].toolName).toBe('tool_a'); // 0.6 * 1.0 = 0.6
-    expect(results[1].score).toBeCloseTo(0.6, 2);
+    expect(results[0]!.toolName).toBe('tool_b'); // 1.0 * 1.0 = 1.0
+    expect(results[0]!.score).toBeCloseTo(1.0, 2);
+    expect(results[1]!.toolName).toBe('tool_a'); // 0.6 * 1.0 = 0.6
+    expect(results[1]!.score).toBeCloseTo(0.6, 2);
   });
 
   it('должна обрабатывать случай когда только одна стратегия вернула результаты', () => {
@@ -219,9 +219,9 @@ describe('WeightedCombinedStrategy', () => {
 
     // Assert
     expect(results).toHaveLength(1);
-    expect(results[0].toolName).toBe('tool_a');
-    expect(results[0].score).toBeCloseTo(0.9, 2);
-    expect(results[0].matchDetails?.name).toBe(0.9);
+    expect(results[0]!.toolName).toBe('tool_a');
+    expect(results[0]!.score).toBeCloseTo(0.9, 2);
+    expect(results[0]!.matchDetails?.name).toBe(0.9);
   });
 
   it('должна обрабатывать результаты без matchReason', () => {
@@ -240,7 +240,7 @@ describe('WeightedCombinedStrategy', () => {
 
     // Assert
     expect(results).toHaveLength(1);
-    expect(results[0].matchReason).toBeUndefined();
+    expect(results[0]!.matchReason).toBeUndefined();
   });
 
   it('должна корректно объединять результаты из 3+ стратегий', () => {
@@ -298,6 +298,6 @@ describe('WeightedCombinedStrategy', () => {
     // Assert
     expect(results).toHaveLength(1);
     // name имеет больший weighted score (1.0 * 1.0 = 1.0 > 1.0 * 0.9 = 0.9)
-    expect(results[0].strategyType).toBe('name');
+    expect(results[0]!.strategyType).toBe('name');
   });
 });

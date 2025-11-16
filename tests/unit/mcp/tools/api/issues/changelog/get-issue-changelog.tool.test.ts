@@ -15,6 +15,8 @@ describe('GetIssueChangelogTool', () => {
 
   const mockChangelogEntry1: ChangelogEntryWithUnknownFields = {
     id: '1',
+    self: 'https://api.tracker.yandex.net/v3/issues/QUEUE-123/changelog/1',
+    issue: { id: '123', key: 'QUEUE-123', display: 'Test Issue' },
     updatedAt: '2025-01-01T10:00:00Z',
     updatedBy: {
       uid: 'uid-user1',
@@ -22,6 +24,7 @@ describe('GetIssueChangelogTool', () => {
       login: 'user1',
       isActive: true,
     },
+    type: 'IssueUpdated',
     fields: [
       {
         field: {
@@ -36,6 +39,8 @@ describe('GetIssueChangelogTool', () => {
 
   const mockChangelogEntry2: ChangelogEntryWithUnknownFields = {
     id: '2',
+    self: 'https://api.tracker.yandex.net/v3/issues/QUEUE-123/changelog/2',
+    issue: { id: '123', key: 'QUEUE-123', display: 'Test Issue' },
     updatedAt: '2025-01-02T12:00:00Z',
     updatedBy: {
       uid: 'uid-user2',
@@ -43,6 +48,7 @@ describe('GetIssueChangelogTool', () => {
       login: 'user2',
       isActive: true,
     },
+    type: 'IssueUpdated',
     fields: [
       {
         field: {

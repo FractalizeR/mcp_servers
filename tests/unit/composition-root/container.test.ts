@@ -21,17 +21,16 @@ describe('Container', () => {
     mockConfig = {
       token: 'test-token',
       orgId: 'test-org',
-      cloudOrgId: undefined,
       apiBase: 'https://api.tracker.yandex.net',
       requestTimeout: 30000,
       maxBatchSize: 50,
       maxConcurrentRequests: 10,
       logLevel: 'info',
-      logsDir: undefined,
-      logMaxSize: '10M',
+      logsDir: '/tmp/logs',
+      logMaxSize: 10485760,
       logMaxFiles: 10,
       prettyLogs: false,
-    } as ServerConfig;
+    };
 
     container = await createContainer(mockConfig);
   });

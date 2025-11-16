@@ -45,6 +45,7 @@ describe('GetIssueTransitionsOperation', () => {
       const mockTransitions: TransitionWithUnknownFields[] = [
         {
           id: 'transition1',
+          self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/transitions/transition1',
           display: 'Start Progress',
           to: { id: 'status2', key: 'inProgress', display: 'In Progress' },
         },
@@ -63,11 +64,13 @@ describe('GetIssueTransitionsOperation', () => {
       const mockTransitions: TransitionWithUnknownFields[] = [
         {
           id: 'transition1',
+          self: 'https://api.tracker.yandex.net/v3/issues/PROJ-456/transitions/transition1',
           display: 'Start Progress',
           to: { id: 'status2', key: 'inProgress', display: 'In Progress' },
         },
         {
           id: 'transition2',
+          self: 'https://api.tracker.yandex.net/v3/issues/PROJ-456/transitions/transition2',
           display: 'Close',
           to: { id: 'status3', key: 'closed', display: 'Closed' },
         },

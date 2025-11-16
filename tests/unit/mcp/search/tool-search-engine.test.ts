@@ -14,12 +14,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ToolSearchEngine } from '@mcp/search/tool-search-engine.js';
 import type { ISearchStrategy } from '@mcp/search/strategies/search-strategy.interface.js';
-import type {
-  SearchParams,
-  SearchResult,
-  StaticToolIndex,
-  StrategyType,
-} from '@mcp/search/types.js';
+import type { SearchResult, StaticToolIndex, StrategyType } from '@mcp/search/types.js';
 import type { ToolRegistry } from '@mcp/tool-registry.js';
 import type { BaseTool } from '@mcp/tools/base/base-tool.js';
 import type { ToolMetadata } from '@mcp/tools/base/tool-metadata.js';
@@ -83,6 +78,9 @@ describe('ToolSearchEngine', () => {
                 description: 'Получить задачи из Яндекс.Трекера',
                 inputSchema: { type: 'object', properties: {} },
               },
+              category: ToolCategory.ISSUES,
+              tags: ['api', 'read'],
+              isHelper: false,
               examples: ['example1'],
             }),
           } as BaseTool;
@@ -103,9 +101,7 @@ describe('ToolSearchEngine', () => {
         score: 0.8,
         strategyType: 'description' as StrategyType,
         matchDetails: {
-          strategy: 'description',
-          field: 'description',
-          matchedTokens: ['поиск'],
+          description: 0.8,
         },
       },
     ]);
@@ -121,8 +117,8 @@ describe('ToolSearchEngine', () => {
       // Assert
       expect(result.totalFound).toBe(2);
       expect(result.tools).toHaveLength(2);
-      expect(result.tools[0].name).toBe('get_issues');
-      expect(result.tools[1].name).toBe('search_tools');
+      expect(result.tools[0]!.name).toBe('get_issues');
+      expect(result.tools[1]!.name).toBe('search_tools');
     });
 
     it('должен использовать кеш при повторном поиске с теми же параметрами', () => {
@@ -224,7 +220,7 @@ describe('ToolSearchEngine', () => {
 
       // Assert
       expect(result.tools).toHaveLength(1);
-      expect(result.tools[0].category).toBe(ToolCategory.SEARCH);
+      expect((result.tools[0] as { category: ToolCategory })!.category).toBe(ToolCategory.SEARCH);
     });
 
     it('должен фильтровать по isHelper = true', () => {
@@ -233,7 +229,7 @@ describe('ToolSearchEngine', () => {
 
       // Assert
       expect(result.tools).toHaveLength(1);
-      expect(result.tools[0].name).toBe('search_tools');
+      expect(result.tools[0]!.name).toBe('search_tools');
     });
 
     it('должен фильтровать по isHelper = false', () => {
@@ -263,7 +259,7 @@ describe('ToolSearchEngine', () => {
 
       // Assert - должен вернуть только API tools из категории ISSUES
       result.tools.forEach((tool) => {
-        expect(tool.category).toBe(ToolCategory.ISSUES);
+        expect((tool as { category: ToolCategory }).category).toBe(ToolCategory.ISSUES);
       });
     });
   });
@@ -321,9 +317,7 @@ describe('ToolSearchEngine', () => {
       // Assert
       const searchToolResult = result.tools.find((t) => t.name === 'search_tools');
       expect(searchToolResult).toHaveProperty('matchDetails', {
-        strategy: 'description',
-        field: 'description',
-        matchedTokens: ['поиск'],
+        description: 0.8,
       });
     });
 
@@ -333,7 +327,9 @@ describe('ToolSearchEngine', () => {
 
       // Assert
       const searchToolResult = result.tools.find((t) => t.name === 'search_tools');
-      expect(searchToolResult?.description).toBe('Поиск инструментов'); // descriptionShort
+      expect((searchToolResult as { description?: string })?.description).toBe(
+        'Поиск инструментов'
+      ); // descriptionShort
     });
 
     it('должен округлить score до 2 знаков после запятой', () => {
@@ -351,7 +347,7 @@ describe('ToolSearchEngine', () => {
       const result = engineFloat.search({ query: 'test', detailLevel: 'name_and_description' });
 
       // Assert
-      expect(result.tools[0].score).toBe(0.88);
+      expect((result.tools[0] as { score?: number })!.score).toBe(0.88);
     });
 
     it('должен обработать случай когда staticData не найден', () => {
@@ -411,7 +407,7 @@ describe('ToolSearchEngine', () => {
     it('должен учитывать category в ключе кеша', () => {
       // Act
       searchEngine.search({ query: 'test', category: ToolCategory.ISSUES });
-      searchEngine.search({ query: 'test', category: ToolCategory.HELPERS });
+      searchEngine.search({ query: 'test', category: ToolCategory.SEARCH });
 
       const stats = searchEngine.getCacheStats();
 
