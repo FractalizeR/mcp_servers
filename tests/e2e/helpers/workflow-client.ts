@@ -42,7 +42,7 @@ export class WorkflowClient {
     }
 
     const response = JSON.parse(result.content[0]!.text);
-    return response.data.results[0];
+    return response.data.issues[0]?.issue;
   }
 
   /**
@@ -62,10 +62,10 @@ export class WorkflowClient {
   /**
    * Перевести задачу в новый статус
    */
-  async transitionIssue(issueKey: string, transition: string): Promise<void> {
+  async transitionIssue(issueKey: string, transitionId: string): Promise<void> {
     const result = await this.client.callTool('fractalizer_mcp_yandex_tracker_transition_issue', {
       issueKey,
-      transition,
+      transitionId,
     });
 
     if (result.isError) {
@@ -86,7 +86,7 @@ export class WorkflowClient {
     }
 
     const response = JSON.parse(result.content[0]!.text);
-    return response.data.results;
+    return response.data.issues;
   }
 
   /**

@@ -267,7 +267,7 @@ export class MockServer {
    * E2E: Mock успешного создания задачи
    */
   e2e_createIssueSuccess(issueData?: Record<string, unknown>): this {
-    const issue = generateIssue({ overrides: issueData });
+    const issue = generateIssue(issueData ? { overrides: issueData } : {});
     const mockKey = `POST ${TRACKER_API_V3}/issues`;
     this.mockAdapter.onPost(`${TRACKER_API_V3}/issues`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
@@ -373,7 +373,7 @@ export class MockServer {
    * Mock успешного создания задачи
    */
   mockCreateIssueSuccess(issueData?: Record<string, unknown>): this {
-    const issue = generateIssue({ overrides: issueData });
+    const issue = generateIssue(issueData ? { overrides: issueData } : {});
     const mockKey = `POST ${TRACKER_API_V3}/issues`;
     this.mockAdapter.onPost(`${TRACKER_API_V3}/issues`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);

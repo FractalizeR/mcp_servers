@@ -21,13 +21,13 @@ describe('transition-issue integration tests', () => {
   it('должен выполнить переход задачи', async () => {
     // Arrange
     const issueKey = 'TEST-200';
-    const transition = 'start';
-    mockServer.mockTransitionIssueSuccess(issueKey, transition);
+    const transitionId = 'start';
+    mockServer.mockTransitionIssueSuccess(issueKey, transitionId);
 
     // Act
     const result = await client.callTool('fractalizer_mcp_yandex_tracker_transition_issue', {
       issueKey,
-      transition,
+      transitionId,
     });
 
     // Assert
@@ -40,13 +40,13 @@ describe('transition-issue integration tests', () => {
   it('должен выполнить переход с комментарием', async () => {
     // Arrange
     const issueKey = 'TEST-201';
-    const transition = 'close';
-    mockServer.mockTransitionIssueSuccess(issueKey, transition);
+    const transitionId = 'close';
+    mockServer.mockTransitionIssueSuccess(issueKey, transitionId);
 
     // Act
     const result = await client.callTool('fractalizer_mcp_yandex_tracker_transition_issue', {
       issueKey,
-      transition,
+      transitionId,
       comment: 'Closing as completed',
     });
 
@@ -58,13 +58,13 @@ describe('transition-issue integration tests', () => {
   it('должен обработать ошибку 404 (задача или переход не найдены)', async () => {
     // Arrange
     const issueKey = 'NONEXISTENT-1';
-    const transition = 'start';
-    mockServer.mockTransitionIssue404(issueKey, transition);
+    const transitionId = 'start';
+    mockServer.mockTransitionIssue404(issueKey, transitionId);
 
     // Act
     const result = await client.callTool('fractalizer_mcp_yandex_tracker_transition_issue', {
       issueKey,
-      transition,
+      transitionId,
     });
 
     // Assert
@@ -75,13 +75,13 @@ describe('transition-issue integration tests', () => {
   it('должен выполнить переход с фильтрацией полей', async () => {
     // Arrange
     const issueKey = 'TEST-202';
-    const transition = 'resolve';
-    mockServer.mockTransitionIssueSuccess(issueKey, transition);
+    const transitionId = 'resolve';
+    mockServer.mockTransitionIssueSuccess(issueKey, transitionId);
 
     // Act
     const result = await client.callTool('fractalizer_mcp_yandex_tracker_transition_issue', {
       issueKey,
-      transition,
+      transitionId,
       fields: ['key', 'status'],
     });
 

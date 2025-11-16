@@ -79,7 +79,7 @@ describe('Issue Lifecycle E2E', () => {
     const updates = {
       summary: 'New Summary',
       description: 'New Description',
-      priority: { key: 'critical' },
+      priority: 'critical',
     };
 
     // Act
