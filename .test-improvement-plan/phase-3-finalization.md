@@ -199,7 +199,7 @@ cat /tmp/private-access.txt
 
 #### 2. Рефакторинг критичных (1 день)
 
-См. [05-important-refactoring.md](./05-important-refactoring.md), Шаг 2:
+**Подход:**
 - Использовать DI для зависимостей
 - Или создать публичные setters для тестов
 - Обновить регистрацию в DI контейнере
@@ -431,7 +431,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - ✅ Integration для всех mutation tools
 - ✅ Единые паттерны тестирования
 
-**Следующие шаги (будущее):**
-- [07-future-performance.md](./07-future-performance.md)
-- [08-future-mutation.md](./08-future-mutation.md)
-- [09-future-mocks.md](./09-future-mocks.md)
+**Возможные будущие улучшения:**
+- Performance тесты (после стабилизации)
+- Mutation testing (Stryker)
+- Улучшение типизации моков

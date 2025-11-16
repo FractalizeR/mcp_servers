@@ -61,10 +61,14 @@ mockServer.mockUpdateIssueSuccess(key);
 - [x] Документация E2E подхода
 
 ### Детальный план
-См. [02-critical-e2e.md](./02-critical-e2e.md):
-- **Шаг 1:** ПРОПУСТИТЬ (уже сделан в Фазе 0)
-- **Шаг 2:** Дополнить helpers (workflow-client.ts)
-- **Шаги 3-6:** Выполнить полностью
+
+**Шаги:**
+1. ПРОПУСТИТЬ создание базовых helpers (уже сделано в Фазе 0)
+2. Дополнить helpers (workflow-client.ts)
+3. Создать E2E тесты для issue lifecycle
+4. Создать E2E тесты для issue search workflows
+5. Создать E2E тесты для issue tracking
+6. Документировать E2E подход
 
 ### Критерии завершения
 - [x] 3+ E2E файла созданы
@@ -298,7 +302,13 @@ describe('Issue Lifecycle E2E', () => {
 - [x] Integration для changelog/transitions
 
 ### Детальный план
-См. [04-important-integration.md](./04-important-integration.md) - выполнить ВСЕ шаги.
+
+**Шаги:**
+1. Создать integration тест для create-issue tool
+2. Создать integration тест для update-issue tool
+3. Создать integration тест для transition-issue tool
+4. Создать integration тесты для changelog/transitions
+5. Обновить MockServer при необходимости
 
 ### Критерии завершения
 - [x] 5 integration файлов созданы
