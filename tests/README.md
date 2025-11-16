@@ -493,6 +493,82 @@ npm run validate
 4. dependency-cruiser (архитектурные правила)
 5. Build проверка
 
+## 🎨 Mocking Best Practices
+
+### ❌ Anti-patterns
+
+**НЕ используй в новых тестах:**
+
+1. **Доступ к приватным полям через `as any`**
+   ```typescript
+   // ❌ ПЛОХО
+   (operation as any).privateField = mockValue;
+   ```
+
+2. **Неполные моки с `as unknown as`**
+   ```typescript
+   // ❌ ПЛОХО
+   const mock = { method: vi.fn() } as unknown as ComplexType;
+   ```
+
+### ✅ Best Practices
+
+**Используй в новых тестах (Фазы 1-3):**
+
+1. **Mock factories для стандартных типов**
+   ```typescript
+   // ✅ ХОРОШО
+   import { createMockLogger } from '@tests/helpers/mock-factories.js';
+   const mockLogger = createMockLogger();
+   ```
+
+2. **Полные моки через factories**
+   ```typescript
+   // ✅ ХОРОШО
+   import { createMockFacade } from '@tests/helpers/mock-factories.js';
+   const mockFacade = createMockFacade();
+   ```
+
+3. **Partial моки с явным helper**
+   ```typescript
+   // ✅ ДОПУСТИМО для custom типов
+   import { createPartialMock } from '@tests/helpers/mock-factories.js';
+   const mock = createPartialMock<MyType>({ method: vi.fn() });
+   ```
+
+### Mock Factories
+
+Доступные factories (с Фазы 0):
+
+```typescript
+import {
+  createMockLogger,      // Logger с всеми методами
+  createMockHttpClient,  // HttpClient
+  createMockFacade,      // YandexTrackerFacade (partial)
+  createPartialMock,     // Generic partial mock helper
+} from '@tests/helpers/mock-factories.js';
+```
+
+### Примеры
+
+**Unit тест для Tool:**
+```typescript
+import { createMockFacade, createMockLogger } from '@tests/helpers/mock-factories.js';
+
+const mockFacade = createMockFacade();
+const mockLogger = createMockLogger();
+const tool = new MyTool(mockFacade as YandexTrackerFacade, mockLogger);
+```
+
+**Unit тест для Operation:**
+```typescript
+import { createMockHttpClient, createMockLogger } from '@tests/helpers/mock-factories.js';
+
+const mockHttpClient = createMockHttpClient();
+const mockLogger = createMockLogger();
+const operation = new MyOperation(mockHttpClient, mockLogger);
+```
+
 ## 📚 Дополнительные материалы
 
 - **Документация Vitest:** https://vitest.dev/
