@@ -1,199 +1,75 @@
-# Continuation Prompt: Улучшение покрытия тестами
+# Continuation Prompt: Оставшиеся задачи
 
 ## Текущая ситуация
 
-**Дата обновления:** 2025-01-16
-**Ветка:** `claude/continuation-prompt-implementation-01Hu2KMLWa78M7JZ1ymZoVWf`
-**Коммит:** `471efb8` - "test: добавить unit тесты для улучшения покрытия (+5% coverage)"
+**Дата обновления:** 2025-11-16
+**Ветка:** `claude/implement-missing-features-015Zz4v3NyuVVDtEbxzr21Q7`
+**Последний коммит:** `bfd28e1` - "test: улучшить покрытие unit тестами (+1.87% Lines, +6.08% Functions)"
 
-### Текущее покрытие (2025-01-16)
+### Текущее покрытие тестами (2025-11-16)
 
 ```
-Lines:      65.83% (было 60.86%, +4.97%)
-Functions:  67.27% (было 69.92%, -2.65%)
-Statements: 65.83% (было 60.83%, +5.00%)
-Branches:   72.55% (было 56.26%, +16.29%)
+Lines:      67.7%  (цель: 70%+, осталось +2.3%)
+Functions:  73.35% (цель: 75%+, осталось +1.65%)
+Statements: 67.72% (цель: 70%+, осталось +2.28%)
+Branches:   69.52% (цель: 65%+) ✅ ДОСТИГНУТО
 ```
 
-**Прогресс:** +5% Lines, +5% Statements, +16.29% Branches
+**Прогресс:** +1.87% Lines, +6.08% Functions, +1.89% Statements с предыдущего обновления
 
-### Цели финального этапа
-
-**Минимальные цели (MUST):**
-- Lines: 70%+ (нужно +4.17%) ⚠️
-- Functions: 75%+ (нужно +7.73%) ⚠️
-- Statements: 70%+ (нужно +4.17%) ⚠️
-- Branches: 65%+ (✅ ДОСТИГНУТО - 72.55%)
-
-**Идеальные цели (SHOULD):**
-- Lines: 80%+
-- Functions: 85%+
-- Statements: 80%+
-- Branches: 75%+
+**Добавлено:** 27 новых unit тестов (FindIssuesOperation, ResponseFieldFilter, BaseDefinition, WeightedCombinedStrategy)
 
 ---
 
-## Выполненные задачи ✅
+## Приоритет 1: Достижение минимальных целей по покрытию
 
-### Stage 1: Быстрые победы (ЗАВЕРШЁН)
+**Цель:** Довести Lines до 70%+, Functions до 75%+
 
-✅ **API Operations tests** - 6 operations покрыты на 90-100%
-- changelog.operation.test.ts (100%)
-- create.operation.test.ts (100%)
-- find.operation.test.ts (90.62%)
-- update.operation.test.ts (100%)
-- get-transitions.operation.test.ts (100%)
-- execute-transition.operation.test.ts (100%)
+**Осталось:** ~2-3% покрытия, примерно 10-15 тестов
 
-✅ **YandexTrackerFacade tests** - 100% покрытие (18 тестов)
+### Задача 1.1: Докрыть helper tools (~1% покрытия)
 
-✅ **HTTP Client tests** - 16 тестов, все основные сценарии
+**Проблема:** DemoTool и IssueUrlTool имеют низкое покрытие
 
-### Stage 2: MCP Tools (ЧАСТИЧНО ВЫПОЛНЕН)
-
-✅ **MCP Tools tests** - 7 из 8 tools покрыты:
-- GetIssuesTool (9 тестов) ✅
-- FindIssuesTool (24 теста) ✅
-- CreateIssueTool (16 тестов) ✅
-- UpdateIssueTool (12 тестов) ✅
-- GetIssueChangelogTool (10 тестов) ✅
-- GetIssueTransitionsTool (10 тестов) ✅
-- TransitionIssueTool (13 тестов) ✅
-
-✅ **Composition Root tests** - Container tests (100% покрытие)
-
-### Stage 3: Search Strategies (ЧАСТИЧНО ВЫПОЛНЕН)
-
-✅ **Search Strategy tests** - 4 из 5 strategies покрыты:
-- CategorySearchStrategy (19 тестов) ✅
-- FuzzySearchStrategy (тесты есть) ✅
-- NameSearchStrategy (тесты есть) ✅
-- DescriptionSearchStrategy (17 тестов) ✅
-
-### Stage 4: SearchToolsTool и GetIssuesOperation (ВЫПОЛНЕН - 2025-01-16)
-
-✅ **SearchToolsTool tests** - 23 unit теста (коммит 471efb8):
-- Валидация параметров (Zod): 8 тестов
-- Функциональность поиска: 9 тестов
-- Логирование: 2 теста
-- Обработка ошибок: 3 теста
-- Метаданные: 1 тест
-
-✅ **GetIssuesOperation edge cases** - 3 новых теста (коммит 471efb8):
-- Реальный код кеширования для одной задачи (покрывает строки 76-81)
-- Использование кешированных данных
-- Batch запросы с реальным ParallelExecutor
-
-**Результат:** +5% Lines, +5% Statements, +16.29% Branches
-
----
-
-## Оставшиеся задачи
-
-### Приоритет 1: КРИТИЧНО для достижения минимальных целей (~4-5% покрытия)
-
-#### 1.3. Докрыть FindIssuesOperation строки 83, 102-103 (+0.3% покрытия)
-
-**Проблема:** FindIssuesOperation покрыт на 90.62%, строки 83, 102-103 не покрыты
-
-**Файл:** Расширить `tests/unit/tracker_api/api_operations/issue/find/find-issues.operation.test.ts`
+**Файлы для тестов:**
+- `tests/unit/mcp/tools/helpers/demo/demo.tool.test.ts` (создать)
+- `tests/unit/mcp/tools/helpers/issue-url/issue-url.tool.test.ts` (создать)
 
 **Что добавить:**
 ```typescript
-describe('FindIssuesOperation - edge cases', () => {
-  it('should handle empty search params', async () => {
-    // Test line 83: validation
-    await expect(operation.execute({})).rejects.toThrow();
+// DemoTool tests (27.27% → 90%+)
+describe('DemoTool', () => {
+  it('should return greeting with default name', async () => {
+    const result = await demoTool.execute({});
+    expect(result.content[0].text).toContain('Hello, World!');
   });
 
-  it('should handle pagination edge cases', async () => {
-    // Test lines 102-103: pagination logic
-    const params = {
-      query: 'status: open',
-      page: 999, // Large page number
-      perPage: 1
-    };
-    // ...
+  it('should return greeting with custom name', async () => {
+    const result = await demoTool.execute({ name: 'Alice' });
+    expect(result.content[0].text).toContain('Hello, Alice!');
+  });
+
+  it('should include timestamp', async () => {
+    const result = await demoTool.execute({});
+    expect(result.content[0].text).toMatch(/\d{4}-\d{2}-\d{2}/);
   });
 });
-```
 
-**Ожидаемое улучшение:** +0.3% Lines
-
----
-
-#### 1.4. Докрыть ResponseFieldFilter строки 58, 84, 92 (+0.5% покрытия)
-
-**Проблема:** ResponseFieldFilter покрыт на 94.11%, строки 58, 84, 92 не покрыты
-
-**Файл:** Расширить `tests/unit/mcp/utils/response-field-filter.test.ts`
-
-**Что добавить:**
-```typescript
-describe('ResponseFieldFilter - edge cases', () => {
-  it('should handle deeply nested fields', () => {
-    // Test line 58: deep nesting
-    const data = { a: { b: { c: { d: 'value' } } } };
-    const result = ResponseFieldFilter.filter(data, ['a.b.c.d']);
-    expect(result.a.b.c.d).toBe('value');
+// IssueUrlTool tests (36.36% → 90%+)
+describe('IssueUrlTool', () => {
+  it('should generate URL for single issue key', async () => {
+    const result = await tool.execute({ issueKeys: ['TEST-123'] });
+    expect(result.content[0].text).toContain('https://tracker.yandex.ru/TEST-123');
   });
 
-  it('should handle array fields', () => {
-    // Test line 84: array handling
-    const data = { items: [{ id: 1 }, { id: 2 }] };
-    const result = ResponseFieldFilter.filter(data, ['items.id']);
+  it('should generate URLs for multiple issues', async () => {
+    const result = await tool.execute({ issueKeys: ['TEST-1', 'TEST-2'] });
     // ...
   });
 
-  it('should handle non-existent fields', () => {
-    // Test line 92: non-existent field path
-    const data = { a: 'value' };
-    const result = ResponseFieldFilter.filter(data, ['b.c.d']);
-    expect(result).not.toHaveProperty('a');
-  });
-});
-```
-
-**Ожидаемое улучшение:** +0.5% Lines
-
----
-
-#### 1.5. Докрыть BaseDefinition строки с requiresExplicitUserConsent (+1% покрытия)
-
-**Проблема:** BaseDefinition покрыт на 36.36%, много строк с обработкой `requiresExplicitUserConsent` флага
-
-**Файл:** Расширить `tests/unit/mcp/tools/base/base-definition.test.ts`
-
-**Что добавить:**
-```typescript
-describe('BaseDefinition - safety warnings', () => {
-  it('should wrap description with safety warning when requiresExplicitUserConsent is true', () => {
-    const metadata = {
-      ...baseMetadata,
-      requiresExplicitUserConsent: true
-    };
-
-    const definition = new MockDefinition(metadata, mockLogger).getDefinition();
-
-    expect(definition.description).toContain('⚠️');
-    expect(definition.description).toContain('WARNING');
-    expect(definition.description).toContain('MODIFIES DATA');
-  });
-
-  it('should not wrap description when requiresExplicitUserConsent is false', () => {
-    const metadata = {
-      ...baseMetadata,
-      requiresExplicitUserConsent: false
-    };
-
-    const definition = new MockDefinition(metadata, mockLogger).getDefinition();
-
-    expect(definition.description).not.toContain('⚠️');
-    expect(definition.description).not.toContain('WARNING');
-  });
-
-  it('should add safety examples when requiresExplicitUserConsent is true', () => {
-    // Test safety examples logic
+  it('should validate issue key format', async () => {
+    const result = await tool.execute({ issueKeys: ['invalid'] });
+    expect(result.isError).toBe(true);
   });
 });
 ```
@@ -202,82 +78,131 @@ describe('BaseDefinition - safety warnings', () => {
 
 ---
 
-### Приоритет 2: Дополнительное покрытие для идеальных целей (+5% покрытия)
+### Задача 1.2: Докрыть ResponseFieldFilter строки 84, 92 (~0.5% покрытия)
 
-#### 2.1. ExactMatchStrategy tests
+**Проблема:** Две строки в ResponseFieldFilter не покрыты
 
-**Файл:** `tests/unit/mcp/search/strategies/exact-match.strategy.test.ts` (создать новый)
-**Тестируемый:** `src/mcp/search/strategies/exact-match.strategy.ts`
+**Файл:** Расширить `tests/unit/mcp/utils/response-field-filter.test.ts`
 
-**Тесты:**
-- should return high score (1.0) for exact name match
-- should be case insensitive
-- should return 0 for non-exact match
-- should handle partial matches (score lower than exact)
-- should ignore whitespace differences
+**Анализ непокрытых строк:**
+- Строка 84: `if (pathParts.length === 0) return;` - early return в extractField
+- Строка 92: `if (!currentKey) return;` - проверка undefined currentKey
 
-**Ожидаемое улучшение:** +0.5%
-
----
-
-#### 2.2. DTO и Entities tests
-
-**Проблема:** DTOs и Entities покрыты на 0% (но это типы/интерфейсы, низкий приоритет)
-
-**Опционально:** Создать тесты для валидации структуры, но это не даст большого прироста покрытия.
-
-**Ожидаемое улучшение:** +0.5%
-
----
-
-#### 2.3. Integration тесты - исправить провалы
-
-**Проблема:** 17 integration тестов падают с timeout (5000ms)
-
-**Файлы:**
-- `tests/integration/mcp/tools/api/issues/get/get-issues.tool.integration.test.ts` - 8 failed
-- `tests/integration/mcp/tools/api/issues/find/find-issues.tool.integration.test.ts` - 9 failed
-
-**Решение:** Skip тесты если нет API токена
-
+**Что добавить:**
 ```typescript
-const hasApiAccess = !!(
-  process.env.TRACKER_API_TOKEN &&
-  process.env.TRACKER_API_BASE_URL &&
-  process.env.TRACKER_API_ORG_ID
-);
-
-const describeOrSkip = hasApiAccess ? describe : describe.skip;
-
-describeOrSkip('integration tests', () => {
-  // Existing tests
+it('should handle edge case with empty path parts', () => {
+  // Прямое тестирование extractField через публичный API
+  const data = { key: 'value' };
+  const result = ResponseFieldFilter.filter(data, ['']);
+  // Должен игнорировать пустой путь
+  expect(result).toEqual({});
 });
 ```
 
-**Ожидаемое улучшение:** Стабильность CI/CD, 0% coverage (integration не учитываются)
+**Ожидаемое улучшение:** +0.3% Lines
+
+---
+
+### Задача 1.3: Докрыть infrastructure слой (~1% покрытия)
+
+**Файлы с низким покрытием:**
+- `src/infrastructure/async/parallel-executor.ts` - имеет 1 flaky тест
+- `src/infrastructure/cache/cache-manager.ts` - возможно недокрыты edge cases
+
+**Что сделать:**
+1. Исправить flaky тест в `parallel-executor.test.ts` (строка 567)
+2. Добавить edge cases для CacheManager
+
+**Ожидаемое улучшение:** +0.5% Lines, +0.5% Functions
+
+---
+
+## Приоритет 2: CLI тестирование (высокий приоритет)
+
+**Статус:** НЕ НАЧАТО
+
+**Контекст:** CLI инструмент полностью реализован, протестирован вручную, но unit тесты отсутствуют
+
+### Задача 2.1: Unit тесты для коннекторов
+
+**Файлы для создания:**
+- `tests/unit/cli/connectors/claude-desktop/claude-desktop.connector.test.ts`
+- `tests/unit/cli/connectors/claude-code/claude-code.connector.test.ts`
+- `tests/unit/cli/connectors/codex/codex.connector.test.ts`
+- `tests/unit/cli/connectors/registry.test.ts`
+
+**Что тестировать:**
+- Чтение/запись JSON конфигов (Claude Desktop)
+- Вызов CLI команд (Claude Code)
+- TOML операции (Codex)
+- Поиск установленных клиентов (Registry)
+
+**Инструменты:** Vitest, mock'и для fs/promises, child_process
+
+---
+
+### Задача 2.2: Unit тесты для команд
+
+**Файлы для создания:**
+- `tests/unit/cli/commands/connect.command.test.ts`
+- `tests/unit/cli/commands/disconnect.command.test.ts`
+- `tests/unit/cli/commands/status.command.test.ts`
+- `tests/unit/cli/commands/list.command.test.ts`
+
+**Что тестировать:**
+- Логика команд
+- Интеграция с коннекторами
+- Обработка ошибок
+- Mock для inquirer (интерактивные вопросы)
+
+---
+
+### Задача 2.3: Интеграционные тесты CLI
+
+**Файл:** `tests/integration/cli/cli.integration.test.ts`
+
+**Что тестировать:**
+- Реальное создание конфигов в временной директории
+- E2E flow: connect → status → disconnect
+- Проверка корректности сгенерированных файлов
+
+---
+
+## Приоритет 3: Улучшения и документация (средний приоритет)
+
+### Задача 3.1: Обновить continuation-prompt.md после достижения целей
+
+После выполнения Приоритета 1:
+- Обновить цифры покрытия
+- Отметить выполненные задачи
+- Добавить новые задачи если появятся
+
+### Задача 3.2: Документация (опционально)
+
+- Обновить README.md с примерами использования
+- Добавить FAQ.md
+- Создать CONTRIBUTING.md (если планируется open source)
 
 ---
 
 ## План выполнения
 
-### Быстрый путь к минимальным целям (70% coverage)
+### Быстрый путь к минимальным целям (70% Lines, 75% Functions)
 
-**✅ Шаг 1:** SearchToolsTool tests (1-2 часа) → +3% покрытия (ВЫПОЛНЕНО)
-**✅ Шаг 2:** GetIssuesOperation edge cases (30 мин) → +0.5% (ВЫПОЛНЕНО)
-**⏳ Шаг 3:** FindIssuesOperation edge cases (30 мин) → +0.3%
-**⏳ Шаг 4:** ResponseFieldFilter edge cases (30 мин) → +0.5%
-**⏳ Шаг 5:** BaseDefinition safety tests (1 час) → +1%
-**⏳ Шаг 6:** ExactMatchStrategy tests (1 час) → +0.5%
+**Шаг 1:** Helper tools tests (1 час) → +1% Lines, +1.5% Functions
+**Шаг 2:** ResponseFieldFilter edge cases (30 мин) → +0.3% Lines
+**Шаг 3:** Infrastructure edge cases (1 час) → +0.5% Lines, +0.5% Functions
+**Шаг 4:** Запустить coverage, проверить достижение целей
 
-**Итого:** ~3-4 часа работы → ~68-70% coverage (достижение минимальных целей)
+**Итого:** ~2.5-3 часа работы → **70%+ Lines, 75%+ Functions**
 
-### Путь к идеальным целям (80% coverage)
+### Путь к CLI тестированию
 
-**Шаг 7:** Докрыть оставшиеся стратегии поиска → +1%
-**Шаг 8:** Исправить integration тесты (skip если нет токена) → стабильность
-**Шаг 9:** DTO validation tests (опционально) → +0.5%
+**Шаг 5:** Connector tests (3-4 часа) → полное покрытие коннекторов
+**Шаг 6:** Command tests (2-3 часа) → полное покрытие команд
+**Шаг 7:** Integration tests (1-2 часа) → E2E тесты
 
-**Итого:** ~8-10 часов → 70-75% coverage (превышение минимальных целей)
+**Итого:** ~6-9 часов → CLI покрыт тестами на 80%+
 
 ---
 
@@ -294,7 +219,7 @@ npx vitest run tests/unit/path/to/test.test.ts
 npx vitest tests/unit/path/to/test.test.ts
 
 # Проверить coverage для конкретной директории
-npx vitest run tests/unit/mcp/tools/ --coverage
+npx vitest run tests/unit/mcp/tools/helpers/ --coverage
 
 # Полная валидация проекта
 npm run validate
@@ -304,19 +229,23 @@ npm run validate
 
 ## Критерии успеха
 
-**Минимальные (MUST):**
+**Минимальные (MUST) - Приоритет 1:**
 - ✅ Lines ≥ 70%
 - ✅ Functions ≥ 75%
 - ✅ Statements ≥ 70%
-- ✅ Branches ≥ 65%
+- ✅ Branches ≥ 65% (уже достигнуто)
 - ✅ Все unit тесты проходят
-- ✅ Integration тесты не падают (skip если нет API)
 
-**Идеальные (SHOULD):**
+**Желательные (SHOULD) - Приоритет 2:**
+- ✅ CLI покрыт unit тестами на 80%+
+- ✅ Все коннекторы протестированы
+- ✅ Все команды протестированы
+
+**Идеальные (COULD) - Приоритет 3:**
 - ✅ Lines ≥ 80%
 - ✅ Functions ≥ 85%
-- ✅ Statements ≥ 80%
-- ✅ Branches ≥ 75%
+- ✅ Интеграционные тесты CLI
+- ✅ Обновлена документация
 
 ---
 
@@ -325,15 +254,16 @@ npm run validate
 **Существующие тесты для reference:**
 - `tests/unit/mcp/tools/api/issues/get/get-issues.tool.test.ts` - шаблон для tool tests
 - `tests/unit/tracker_api/api_operations/issue/get/get-issues.operation.test.ts` - шаблон для operations
-- `tests/unit/mcp/search/strategies/description-search.strategy.test.ts` - шаблон для search strategies
+- `tests/unit/mcp/search/strategies/weighted-combined.strategy.test.ts` - пример полного покрытия
 
 **Документация:**
 - `tests/README.md` - руководство по тестированию
 - `CLAUDE.md` - правила проекта
 - `ARCHITECTURE.md` - архитектура проекта
+- `src/cli/README.md` - архитектура CLI
 
 ---
 
-**Последнее обновление:** 2025-01-16
+**Последнее обновление:** 2025-11-16
 **Автор:** Claude Code
-**Статус:** В процессе выполнения (2 из 6 приоритетных задач выполнено)
+**Статус:** В процессе - фокус на достижении минимальных целей по покрытию
