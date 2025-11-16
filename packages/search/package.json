@@ -1,0 +1,51 @@
+{
+  "name": "@mcp-framework/search",
+  "version": "0.1.0",
+  "description": "Advanced tool search engine with compile-time indexing and 5 search strategies",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./engine": {
+      "types": "./dist/engine/index.d.ts",
+      "default": "./dist/engine/index.js"
+    },
+    "./strategies": {
+      "types": "./dist/strategies/index.d.ts",
+      "default": "./dist/strategies/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "mcp",
+    "search",
+    "tool-discovery",
+    "fuzzy-search",
+    "ai"
+  ],
+  "author": "Fractalizer",
+  "license": "MIT",
+  "dependencies": {
+    "@mcp-framework/core": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.8",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.20.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

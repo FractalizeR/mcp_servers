@@ -1,0 +1,43 @@
+{
+  "name": "mcp-server-yandex-tracker",
+  "version": "0.1.0",
+  "description": "MCP Server for Yandex Tracker API integration",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-server-yandex-tracker": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "build:bundle": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/bundle.js --external:@modelcontextprotocol/sdk --external:axios --external:inversify --external:p-limit --sourcemap",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:smoke": "tsx scripts/smoke-test-server.ts",
+    "dev": "npm run build && node dist/index.js",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "mcp",
+    "yandex-tracker",
+    "project-management",
+    "api",
+    "claude"
+  ],
+  "author": "Fractalizer",
+  "license": "MIT",
+  "dependencies": {
+    "@mcp-framework/core": "*",
+    "@mcp-framework/search": "*",
+    "@mcp-framework/infrastructure": "*",
+    "inversify": "^7.10.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.8",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.20.6",
+    "esbuild": "^0.27.0"
+  }
+}
