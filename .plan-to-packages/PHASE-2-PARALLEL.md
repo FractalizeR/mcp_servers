@@ -43,7 +43,7 @@ mkdir -p packages/search/tests
 # 2. Скопировать код
 cp -r src/mcp/search/* packages/search/src/
 cp -r src/mcp/tools/helpers/search/* packages/search/src/tools/
-cp scripts/generate-tool-index.ts packages/search/scripts/
+# ⚠️ НЕ копируем generate-tool-index.ts (будет в yandex-tracker!)
 
 # 3. Создать package.json
 cat > packages/search/package.json << 'EOF'
@@ -69,7 +69,6 @@ cat > packages/search/package.json << 'EOF'
     }
   },
   "scripts": {
-    "prebuild": "tsx scripts/generate-tool-index.ts",
     "build": "tsc && tsc-alias",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -150,9 +149,10 @@ find packages/search/src -name "*.ts" -type f -exec sed -i "s|from '@mcp/search/
 find packages/search/src -name "*.ts" -type f -exec sed -i "s|from '@mcp/tools/base/|from '@mcp-framework/core'|g" {} \;
 find packages/search/src -name "*.ts" -type f -exec sed -i "s|from '@mcp/tool-registry|from '@mcp-framework/core'|g" {} \;
 
-# 7. Обновить скрипт генерации индекса
-# В packages/search/scripts/generate-tool-index.ts изменить пути к TOOL_CLASSES
-# Вручную или через sed (сложно, лучше вручную)
+# 7. ⚠️ ВАЖНО: Tool Index НЕ генерируется в search пакете!
+# SearchToolsTool принимает индекс как параметр:
+# new SearchToolsTool(TOOL_SEARCH_INDEX, registry, strategies)
+# Индекс будет генерироваться в mcp-server-yandex-tracker
 
 # 8. Скопировать тесты
 cp -r tests/unit/mcp/search/* packages/search/tests/ 2>/dev/null || true

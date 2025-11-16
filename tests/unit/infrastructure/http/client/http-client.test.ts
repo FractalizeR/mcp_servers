@@ -77,6 +77,7 @@ describe('HttpClient', () => {
     };
 
     mockAxiosInstance = createMockAxiosInstance();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Мок axios instance для тестирования (type casting)
     mockedAxios.create.mockReturnValue(mockAxiosInstance as any);
 
     httpClient = new HttpClient(config, logger, retryStrategy);

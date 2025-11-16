@@ -110,6 +110,7 @@ describe('Logger', () => {
       const logger = new Logger({ level: 'info', pretty: false });
 
       // Spy на внутренний pino logger
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Необходимо для spy на приватное поле pino (стандартная практика тестирования)
       const debugSpy = vi.spyOn(logger['pino'] as any, 'debug');
 
       logger.debug('test message');
@@ -123,6 +124,7 @@ describe('Logger', () => {
 
     it('должен логировать info при уровне info', () => {
       const logger = new Logger({ level: 'info', pretty: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Spy на приватное поле для проверки вызовов
       const infoSpy = vi.spyOn(logger['pino'] as any, 'info');
 
       logger.info('test message');
@@ -133,6 +135,7 @@ describe('Logger', () => {
 
     it('должен логировать debug при уровне debug', () => {
       const logger = new Logger({ level: 'debug', pretty: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Spy на приватное поле для проверки вызовов
       const debugSpy = vi.spyOn(logger['pino'] as any, 'debug');
 
       logger.debug('test message');
@@ -143,6 +146,7 @@ describe('Logger', () => {
 
     it('должен логировать error при уровне error', () => {
       const logger = new Logger({ level: 'error', pretty: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Spy на приватное поле для проверки вызовов
       const errorSpy = vi.spyOn(logger['pino'] as any, 'error');
 
       logger.error('test message');
@@ -153,6 +157,7 @@ describe('Logger', () => {
 
     it('должен логировать warn при уровне warn', () => {
       const logger = new Logger({ level: 'warn', pretty: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Spy на приватное поле для проверки вызовов
       const warnSpy = vi.spyOn(logger['pino'] as any, 'warn');
 
       logger.warn('test message');
@@ -165,6 +170,7 @@ describe('Logger', () => {
   describe('Structured logging', () => {
     it('должен логировать с контекстом', () => {
       const logger = new Logger({ level: 'info', pretty: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Spy на приватное поле для проверки вызовов
       const infoSpy = vi.spyOn(logger['pino'] as any, 'info');
 
       const context = { userId: '123', action: 'test' };
@@ -176,6 +182,7 @@ describe('Logger', () => {
 
     it('должен логировать без контекста', () => {
       const logger = new Logger({ level: 'info', pretty: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Spy на приватное поле для проверки вызовов
       const infoSpy = vi.spyOn(logger['pino'] as any, 'info');
 
       logger.info('test message');
@@ -188,6 +195,7 @@ describe('Logger', () => {
   describe('Error logging', () => {
     it('должен корректно обрабатывать Error объекты', () => {
       const logger = new Logger({ level: 'error', pretty: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Spy на приватное поле для проверки вызовов
       const errorSpy = vi.spyOn(logger['pino'] as any, 'error');
 
       const error = new Error('Test error');
@@ -204,6 +212,7 @@ describe('Logger', () => {
 
     it('должен обрабатывать ошибки с дополнительным контекстом', () => {
       const logger = new Logger({ level: 'error', pretty: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Spy на приватное поле для проверки вызовов
       const errorSpy = vi.spyOn(logger['pino'] as any, 'error');
 
       const error = new Error('Test error');

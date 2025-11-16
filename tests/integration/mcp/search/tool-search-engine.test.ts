@@ -114,6 +114,7 @@ describe('ToolSearchEngine (Integration)', () => {
     });
 
     // Создаём стратегии
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Map со стратегиями поиска (type inference)
     const strategies = new Map<StrategyType, any>([
       ['name', new NameSearchStrategy()],
       ['description', new DescriptionSearchStrategy()],
@@ -153,7 +154,9 @@ describe('ToolSearchEngine (Integration)', () => {
 
       // Результаты должны быть отсортированы по убыванию score
       for (let i = 0; i < results.tools.length - 1; i++) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Доступ к опциональному полю score для проверки сортировки
         const currentScore = (results.tools[i] as any).score ?? 0;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Доступ к опциональному полю score для проверки сортировки
         const nextScore = (results.tools[i + 1] as any).score ?? 0;
         expect(currentScore).toBeGreaterThanOrEqual(nextScore);
       }
@@ -170,6 +173,7 @@ describe('ToolSearchEngine (Integration)', () => {
         (t) => t.name === 'fractalizer_mcp_yandex_tracker_search_tools'
       );
       expect(searchTool).toBeDefined();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Доступ к опциональному полю score для проверки
       expect((searchTool as any)?.score).toBeGreaterThan(0);
     });
   });
@@ -194,6 +198,7 @@ describe('ToolSearchEngine (Integration)', () => {
         detailLevel: 'name_and_description',
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамические данные результатов поиска
       results.tools.forEach((tool: any) => {
         expect(tool.name).toBeDefined();
         expect(tool.description).toBeDefined();
@@ -208,6 +213,7 @@ describe('ToolSearchEngine (Integration)', () => {
         detailLevel: 'full',
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамические данные результатов поиска
       results.tools.forEach((tool: any) => {
         expect(tool.name).toBeDefined();
         expect(tool.description).toBeDefined();
@@ -256,7 +262,9 @@ describe('ToolSearchEngine (Integration)', () => {
       });
 
       // name_only не имеет description, full имеет
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Доступ к опциональному полю description для проверки
       expect((results1.tools[0] as any)?.description).toBeUndefined();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Доступ к опциональному полю description для проверки
       expect((results2.tools[0] as any)?.description).toBeDefined();
     });
 

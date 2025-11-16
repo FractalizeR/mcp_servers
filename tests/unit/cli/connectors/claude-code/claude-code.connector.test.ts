@@ -25,7 +25,7 @@ vi.mock('@cli/utils/command-executor.js', () => ({
 }));
 
 // Импортируем CommandExecutor после мока
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамический импорт модуля для тестирования
 const { CommandExecutor } = (await import('@cli/utils/command-executor.js')) as any;
 
 describe('ClaudeCodeConnector', () => {
