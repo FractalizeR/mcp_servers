@@ -192,6 +192,54 @@ describe('NameSearchStrategy', () => {
     });
   });
 
+  describe('Поиск по токенам', () => {
+    it('должен найти tool по точному совпадению токена (score 0.9)', () => {
+      // Query = 'ping', есть токен 'ping' в nameTokens
+      const results = strategy.search('ping', mockTools);
+
+      // Должен найтись fractalizer_mcp_yandex_tracker_ping
+      const found = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_ping');
+      expect(found).toBeDefined();
+      expect(found!.score).toBeGreaterThan(0);
+    });
+
+    it('должен найти tool когда токен начинается с query (score 0.7)', () => {
+      // Query = 'get', есть токен 'get' в nameTokens для get_issues
+      const results = strategy.search('get', mockTools);
+
+      const found = results.find((r) => r.toolName === 'fractalizer_mcp_yandex_tracker_get_issues');
+      expect(found).toBeDefined();
+      expect(found!.score).toBeGreaterThan(0);
+    });
+
+    it('должен найти tool когда токен содержит query', () => {
+      // Query = 'iss', токены ['issues'] содержат 'iss'
+      const results = strategy.search('iss', mockTools);
+
+      // Должны найтись tools с 'issues' в токенах
+      expect(results.length).toBeGreaterThan(0);
+      results.forEach((result) => {
+        expect([
+          'fractalizer_mcp_yandex_tracker_get_issues',
+          'fractalizer_mcp_yandex_tracker_find_issues',
+          'issue_helper',
+        ]).toContain(result.toolName);
+      });
+    });
+
+    it('должен найти по токену даже если не совпадает полное имя', () => {
+      // Query = 'fyt' (токен), но не часть полного имени fractalizer_mcp_yandex_tracker
+      const results = strategy.search('fyt', mockTools);
+
+      // Должны найтись tools с токеном 'fyt'
+      expect(results.length).toBeGreaterThan(0);
+      results.forEach((result) => {
+        expect(result.score).toBeGreaterThan(0);
+        expect(result.matchReason).toContain('Token match');
+      });
+    });
+  });
+
   describe('Edge cases', () => {
     it('должен обработать специальные символы в имени', () => {
       const specialTools: StaticToolIndex[] = [

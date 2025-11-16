@@ -37,13 +37,13 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       exclude: ['src/index.ts'],
       thresholds: {
-        // Обновлено после Фазы 3: защита от регрессии coverage
-        // Текущие значения: statements 78.47%, branches 81.32%, functions 85.35%, lines 78.39%
+        // Обновлено: улучшено покрытие edge cases в критических компонентах
+        // Текущие значения: statements 78.8%, branches 81.74%, functions 85.6%, lines 78.73%
         // Thresholds установлены на 2-3% ниже для буфера
-        branches: 78,
-        functions: 82,
-        lines: 75,
-        statements: 75,
+        branches: 79,
+        functions: 83,
+        lines: 76,
+        statements: 76,
       },
     },
   },

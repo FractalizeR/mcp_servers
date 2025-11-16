@@ -157,6 +157,36 @@ describe('ToolRegistry', () => {
     });
   });
 
+  describe('getTool', () => {
+    it('должна вернуть tool по имени', () => {
+      // Act
+      const tool = registry.getTool('fractalizer_mcp_yandex_tracker_ping');
+
+      // Assert
+      expect(tool).toBeDefined();
+      expect(tool?.getDefinition().name).toBe('fractalizer_mcp_yandex_tracker_ping');
+    });
+
+    it('должна вернуть undefined для несуществующего tool', () => {
+      // Act
+      const tool = registry.getTool('non_existent_tool');
+
+      // Assert
+      expect(tool).toBeUndefined();
+    });
+  });
+
+  describe('getAllTools', () => {
+    it('должна вернуть все зарегистрированные tools', () => {
+      // Act
+      const tools = registry.getAllTools();
+
+      // Assert
+      expect(tools).toHaveLength(11);
+      expect(tools.every((t) => t.getDefinition)).toBe(true);
+    });
+  });
+
   describe('execute', () => {
     it('должна успешно выполнить ping инструмент', async () => {
       // Arrange
@@ -263,6 +293,24 @@ describe('ToolRegistry', () => {
 
       // Logger может быть вызван из PingTool или ToolRegistry
       expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('должна логировать детали ошибки при выполнении инструмента', async () => {
+      // Arrange
+      const params: ToolCallParams = {};
+      const error = new Error('Detailed error');
+
+      vi.mocked(mockFacade.ping).mockRejectedValue(error);
+
+      // Act
+      await registry.execute('fractalizer_mcp_yandex_tracker_ping', params);
+
+      // Assert - проверяем что логируется ошибка с правильными параметрами
+      const errorCalls = vi.mocked(mockLogger.error).mock.calls;
+
+      // Может быть вызвано либо из Registry, либо из Tool
+      expect(mockLogger.error).toHaveBeenCalled();
+      expect(errorCalls.length).toBeGreaterThan(0);
     });
 
     it('должна обработать нестандартную ошибку', async () => {

@@ -251,6 +251,50 @@ describe('ResponseFieldFilter', () => {
       // Массив примитивов вернётся как есть (map для примитивов)
       expect(result).toEqual(['string1', 'string2', 'string3']);
     });
+
+    it('должен обрабатывать несуществующие поля', () => {
+      const data = {
+        key: 'QUEUE-1',
+        summary: 'Test',
+      };
+
+      const result = ResponseFieldFilter.filter(data, ['nonExistentField']);
+
+      // Должен вернуть пустой объект, т.к. поле не существует
+      expect(result).toEqual({});
+    });
+
+    it('должен обрабатывать несуществующие вложенные поля', () => {
+      const data = {
+        key: 'QUEUE-1',
+        assignee: {
+          login: 'user1',
+        },
+      };
+
+      const result = ResponseFieldFilter.filter(data, ['assignee.nonExistent.deep']);
+
+      // Должен вернуть объект с пустым assignee (т.к. nonExistent не существует)
+      expect(result).toEqual({ assignee: {} });
+    });
+
+    it('должен обрабатывать примитивное значение как данные', () => {
+      const data = 'simple string';
+
+      const result = ResponseFieldFilter.filter(data, ['field']);
+
+      // Примитивы возвращаем как есть
+      expect(result).toBe('simple string');
+    });
+
+    it('должен обрабатывать null как данные', () => {
+      const data = null;
+
+      const result = ResponseFieldFilter.filter(data, ['field']);
+
+      // null возвращаем как есть
+      expect(result).toBeNull();
+    });
   });
 
   describe('normalizeFields', () => {
