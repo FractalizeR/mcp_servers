@@ -324,7 +324,7 @@ export type { ToolMetadata, SearchResult, StrategyWeights } from './types.js';
 
 **Run tests:**
 ```bash
-cd packages/search
+cd packages/framework/search
 npm run test
 ```
 

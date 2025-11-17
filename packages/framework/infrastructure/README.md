@@ -276,7 +276,7 @@ export { ApiError } from './types.js';
 
 **Run tests:**
 ```bash
-cd packages/infrastructure
+cd packages/framework/infrastructure
 npm run test
 ```
 

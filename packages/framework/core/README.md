@@ -325,7 +325,7 @@ export type { BatchResult, FulfilledResult, RejectedResult } from '@mcp-framewor
 
 **Run tests:**
 ```bash
-cd packages/core
+cd packages/framework/core
 npm run test
 ```
 
