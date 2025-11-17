@@ -94,15 +94,15 @@ git checkout -b claude/integration-multi-server-{session-id}
 - [x] 0.1_preparation.md ✅ **ЗАВЕРШЕНО** (commit: 564e1c0)
 
 ### Phase 1 (параллельно)
-- [ ] 1.1_move_framework_packages.md
-- [ ] 1.2_move_server_package.md
-- [ ] 1.3_prepare_build_configs.md
-- [ ] 1.4_update_documentation.md
+- [x] 1.1_move_framework_packages.md ✅ **ЗАВЕРШЕНО** (commit: 70c6644)
+- [x] 1.2_move_server_package.md ✅ **ЗАВЕРШЕНО** (commit: 70c6644)
+- [x] 1.3_prepare_build_configs.md ✅ **ЗАВЕРШЕНО** (commit: 70c6644)
+- [x] 1.4_update_documentation.md ✅ **ЗАВЕРШЕНО** (commit: 70c6644)
 
 ### Phase 2
-- [ ] 2.1_integration_and_validation.md
-- [ ] 2.2_ci_cd_updates.md
-- [ ] 2.3_final_validation.md
+- [x] 2.1_integration_and_validation.md ✅ **ЗАВЕРШЕНО** (commit: 70c6644)
+- [x] 2.2_ci_cd_updates.md ✅ **ЗАВЕРШЕНО** (commit: b99796b)
+- [ ] 2.3_final_validation.md ⏳ **СЛЕДУЮЩИЙ ШАГ**
 
 ---
 
