@@ -149,11 +149,16 @@ describe('find-issues integration tests', () => {
       mockServer.assertAllRequestsDone();
     });
 
+    // SKIP: perPage и page передаются как query параметры в URL, а не в body.
+    // Текущая реализация MockServer не поддерживает валидацию query параметров.
+    // Функциональность пагинации косвенно покрывается тестами валидации (строки 330-352).
     it.skip('должен поддерживать пагинацию (perPage, page)', async () => {
       // Arrange
       const issueKeys = ['QUEUE-1', 'QUEUE-2'];
 
-      mockServer.mockFindIssuesSuccess(issueKeys);
+      mockServer.mockFindIssuesSuccess(issueKeys, (body) => {
+        return body['query'] === 'Author: me()';
+      });
 
       // Act
       const result = await client.callTool('find_issues', {
@@ -351,9 +356,14 @@ describe('find-issues integration tests', () => {
       expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
     });
 
+    // SKIP: Избыточный тест - функциональность валидных параметров уже покрывается
+    // всеми другими тестами в этом файле (query, filter, keys, queue, order, fields и т.д.).
+    // perPage и page передаются как query параметры в URL, которые не валидируются в моках.
     it.skip('должен принять валидные параметры', async () => {
       // Arrange
-      mockServer.mockFindIssuesSuccess(['QUEUE-1']);
+      mockServer.mockFindIssuesSuccess(['QUEUE-1'], (body) => {
+        return body['query'] === 'Author: me()';
+      });
 
       // Act
       const result = await client.callTool('find_issues', {
