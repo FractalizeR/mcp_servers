@@ -39,17 +39,27 @@ export class SearchToolsTool {
   static readonly METADATA: StaticToolMetadata = {
     name: buildToolName('search_tools'),
     description:
-      'Поиск доступных MCP инструментов по запросу. ' +
-      'Поддерживает поиск по названию, описанию, категориям и тегам. ' +
-      'Используйте для обнаружения нужных инструментов перед их вызовом.',
+      '⚠️ PRIMARY способ обнаружения инструментов в этом MCP сервере.\n\n' +
+      'tools/list возвращает только essential инструменты (ping, search_tools). ' +
+      'Используйте search_tools для поиска нужных операций перед их вызовом.\n\n' +
+      'Поддерживает:\n' +
+      '• Поиск по названию, описанию, категории, тегам\n' +
+      '• Фильтрацию по категории (issues, users, projects, etc.)\n' +
+      '• Фильтрацию по типу (helper vs API операции)\n' +
+      '• 3 уровня детализации результатов\n\n' +
+      'Примеры:\n' +
+      '• "найти инструменты для работы с задачами"\n' +
+      '• "получить URL задачи"\n' +
+      '• "создать задачу"',
     category: ToolCategory.SEARCH,
-    tags: ['search', 'tools', 'discovery', 'find', 'helper'],
+    tags: ['search', 'tools', 'discovery', 'find', 'helper', 'essential'],
     isHelper: true,
     examples: [
       'query: "issue" - найти все инструменты для работы с задачами',
       'query: "ping" - найти инструмент проверки подключения',
       'query: "url", category: "url-generation" - найти инструменты генерации URL',
       'query: "задачи", isHelper: false - найти только API операции с задачами',
+      'query: "create", category: "issues" - найти инструменты создания задач',
     ],
   } as const;
 

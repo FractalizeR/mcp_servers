@@ -80,6 +80,42 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 - ✅ Позволяет SearchToolsTool находить tools без загрузки всего кода
 - ⚠️ При добавлении нового tool — запусти `npm run build` (автоматически обновит индекс)
 
+### 5.1. Tool Discovery Mode (Lazy Loading)
+
+**Концепция:**
+- MCP endpoint `tools/list` возвращает только **essential инструменты** (`ping`, `search_tools`)
+- Claude использует `search_tools` для обнаружения других инструментов по необходимости
+- Масштабируется до 100+ инструментов без перегрузки контекста
+
+**Конфигурация через ENV:**
+```bash
+# По умолчанию: lazy (рекомендуется для production)
+TOOL_DISCOVERY_MODE=lazy
+
+# Опционально: переопределить список essential tools
+ESSENTIAL_TOOLS=ping,search_tools
+
+# Для отладки: eager режим (все инструменты в tools/list)
+TOOL_DISCOVERY_MODE=eager
+```
+
+**Workflow Claude в lazy режиме:**
+1. Получает `tools/list` → видит только `[ping, search_tools]`
+2. Использует `search_tools` для поиска нужного инструмента
+3. Вызывает найденный инструмент
+
+**Пример:**
+```
+User: "Покажи задачу PROJ-123"
+Claude:
+  1. search_tools({ query: "получить задачу" }) → находит get_issues
+  2. get_issues({ issueKeys: ["PROJ-123"] })
+```
+
+**Когда использовать:**
+- ✅ `lazy` (по умолчанию): для 30+ инструментов, production
+- ⚠️ `eager`: для <20 инструментов, отладка, development
+
 ### 6. Логирование (Pino)
 
 - ✅ Используй **Pino** с structured logging, НЕ `console.log`

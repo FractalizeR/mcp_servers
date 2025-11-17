@@ -61,6 +61,32 @@ export interface ServerConfig {
   logMaxSize: number;
   /** Количество ротируемых лог-файлов (по умолчанию: 20) */
   logMaxFiles: number;
+  /**
+   * Режим обнаружения инструментов для MCP tools/list endpoint
+   *
+   * - 'lazy': tools/list возвращает только essential tools (ping, search_tools)
+   *   Claude должен использовать search_tools для обнаружения остальных инструментов
+   *   Рекомендуется для 30+ инструментов (экономия контекста, масштабируемость)
+   *
+   * - 'eager': tools/list возвращает все инструменты (стандартное MCP поведение)
+   *   Рекомендуется для <20 инструментов или отладки
+   *
+   * @default 'lazy'
+   */
+  toolDiscoveryMode: 'lazy' | 'eager';
+  /**
+   * Список essential инструментов для lazy режима
+   *
+   * Эти инструменты ВСЕГДА возвращаются в tools/list независимо от режима.
+   *
+   * По умолчанию: ['ping', 'search_tools']
+   *
+   * Используй для:
+   * - Базовых инструментов (ping, health check)
+   * - Discovery инструментов (search_tools)
+   * - Критически важных операций, которые Claude должен видеть сразу
+   */
+  essentialTools: readonly string[];
 }
 
 /**
