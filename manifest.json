@@ -26,11 +26,11 @@
   ],
   "server": {
     "type": "node",
-    "entry_point": "dist/yandex-tracker.bundle.js",
+    "entry_point": "dist/yandex-tracker.bundle.cjs",
     "mcp_config": {
       "command": "node",
       "args": [
-        "${__dirname}/dist/yandex-tracker.bundle.js"
+        "${__dirname}/dist/yandex-tracker.bundle.cjs"
       ],
       "env": {
         "YANDEX_TRACKER_TOKEN": "${user_config.oauth_token}",

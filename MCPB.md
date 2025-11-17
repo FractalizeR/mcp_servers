@@ -9,9 +9,16 @@
 MCPB (Model Context Protocol Bundle) — это стандартизированный формат для распространения MCP серверов, разработанный Anthropic. Формат включает:
 
 - **manifest.json** — метаданные сервера и конфигурация запуска
-- **dist/** — скомпилированный код сервера
+- **dist/yandex-tracker.bundle.cjs** — полностью самодостаточный бандл (2 MB)
 - **package.json** — npm метаданные (опционально)
 - **README.md** — документация (опционально)
+
+### Особенности нашего MCPB:
+
+✅ **Полный бандлинг** — все зависимости (axios, inversify, pino, zod и др.) включены в бандл
+✅ **Не требует `npm install`** — только @modelcontextprotocol/sdk должен быть установлен
+✅ **CommonJS формат** — максимальная совместимость с dynamic require
+✅ **Размер: 362 KB** (сжатый) / **2.1 MB** (распакованный)
 
 Подробнее: https://github.com/anthropics/mcpb
 
@@ -60,10 +67,10 @@ fractalizer_mcp_yandex_tracker-0.1.0.mcpb
   "author": { ... },
   "server": {
     "type": "node",
-    "entry_point": "dist/yandex-tracker.bundle.js",
+    "entry_point": "dist/yandex-tracker.bundle.cjs",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/dist/yandex-tracker.bundle.js"],
+      "args": ["${__dirname}/dist/yandex-tracker.bundle.cjs"],
       "env": { ... }
     }
   },
@@ -194,10 +201,14 @@ npm run build --workspace=@mcp-server/yandex-tracker
 
 ### Архив слишком большой
 
-Проверьте `.mcpbignore` — убедитесь что исключены:
-- `node_modules/`
-- исходники (`src/`)
-- тесты
+Это нормально! Наш MCPB использует **полный бандлинг** всех зависимостей:
+- Размер: ~362 KB (сжатый) / 2.1 MB (распакованный)
+- Включает: axios, inversify, pino, zod и все остальные зависимости
+- Преимущество: не требует `npm install` при установке
+
+Если нужен минимальный размер (40 KB), можно вернуться к частичному бандлингу:
+1. В `tsup.config.base.ts`: удалить `noExternal`, добавить зависимости в `external`
+2. Пересобрать: `npm run build:mcpb`
 
 ---
 

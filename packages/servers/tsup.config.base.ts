@@ -18,20 +18,25 @@ export function defineServerConfig(
     // Используем объектную нотацию для entry, чтобы задать имя выходного файла
     entry: { [`${serverName}.bundle`]: 'src/index.ts' },
     outDir: 'dist',
-    format: ['esm'],
+    format: ['cjs'], // CommonJS для полной совместимости с dynamic require
     platform: 'node',
     target: 'node18',
     sourcemap: true,
     clean: true,
     dts: false, // серверы не экспортируют типы
     bundle: true,
-    outExtension: () => ({ js: '.js' }),
-    shims: true, // Для корректной работы __dirname и __filename в ESM
+    splitting: false, // Отключаем code splitting для единого бандла
+    outExtension: () => ({ js: '.cjs' }), // .cjs расширение для CommonJS
+    shims: true, // Для корректной работы __dirname и __filename
     external: [
-      // MCP SDK всегда external (peer dependency)
+      // MCP SDK (peer dependency)
       '@modelcontextprotocol/sdk',
-      // Framework пакеты НЕ external - они будут забандлены
-      // чтобы сервер был самодостаточным
+      // Node.js встроенные модули (всегда external)
+      'node:*',
+    ],
+    noExternal: [
+      // Явно бандлим все зависимости (кроме MCP SDK и Node.js модулей)
+      /.*/,
     ],
     ...additionalOptions,
   };
