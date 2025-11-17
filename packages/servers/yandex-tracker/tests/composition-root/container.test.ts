@@ -186,6 +186,21 @@ describe('Container', () => {
       expect(tool).toHaveProperty('getDefinition');
     });
 
+    it('SearchToolsTool должен быть зарегистрирован в ToolRegistry', () => {
+      const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+      const definitions = registry.getDefinitions();
+
+      // Проверяем, что SearchToolsTool присутствует в списке
+      const searchToolDefinition = definitions.find((def) => def.name === 'search_tools');
+      expect(searchToolDefinition).toBeDefined();
+      expect(searchToolDefinition?.description).toContain('Поиск доступных MCP инструментов');
+
+      // Проверяем, что можно получить tool через getTool
+      const searchTool = registry.getTool('search_tools');
+      expect(searchTool).toBeDefined();
+      expect(searchTool?.getDefinition().name).toBe('search_tools');
+    });
+
     it('должен resolve ToolSearchEngine', () => {
       const searchEngine = container.get(TYPES.ToolSearchEngine);
       expect(searchEngine).toBeDefined();

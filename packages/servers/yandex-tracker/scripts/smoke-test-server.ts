@@ -85,8 +85,8 @@ async function main(): Promise<void> {
    */
   async function runSmokeTest(): Promise<void> {
     // 1. Запускаем сервер
-    console.log('1️⃣  Запуск сервера: node dist/yandex-tracker.bundle.js');
-    serverProcess = spawn('node', ['dist/yandex-tracker.bundle.js'], {
+    console.log('1️⃣  Запуск сервера: node dist/yandex-tracker.bundle.cjs');
+    serverProcess = spawn('node', ['dist/yandex-tracker.bundle.cjs'], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,
@@ -222,10 +222,32 @@ async function main(): Promise<void> {
       throw new Error('Список инструментов пустой');
     }
 
+    // Проверяем минимальное количество инструментов (должно быть >= 10)
+    const MIN_EXPECTED_TOOLS = 10;
+    if (response.result.tools.length < MIN_EXPECTED_TOOLS) {
+      const toolNames = response.result.tools.map((t) => t.name).join(', ');
+      throw new Error(
+        `Ожидалось минимум ${MIN_EXPECTED_TOOLS} инструментов, получено ${response.result.tools.length}. ` +
+          `Инструменты: ${toolNames}`
+      );
+    }
+
     // Проверяем структуру первого инструмента
     const firstTool = response.result.tools[0];
     if (!firstTool || typeof firstTool.name !== 'string') {
       throw new Error('Невалидная структура инструмента (отсутствует name)');
+    }
+
+    // Проверяем наличие критически важных инструментов
+    const toolNames = response.result.tools.map((t) => t.name);
+    const requiredTools = ['ping', 'search_tools'];
+    for (const requiredTool of requiredTools) {
+      if (!toolNames.includes(requiredTool)) {
+        throw new Error(
+          `Критический инструмент "${requiredTool}" отсутствует в списке. ` +
+            `Доступные: ${toolNames.join(', ')}`
+        );
+      }
     }
   }
 }

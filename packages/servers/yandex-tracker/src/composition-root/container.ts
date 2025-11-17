@@ -211,17 +211,16 @@ async function bindSearchToolsTool(container: Container): Promise<void> {
  * Регистрация ToolRegistry
  *
  * ВАЖНО: ToolRegistry автоматически извлекает все tools из контейнера
- * SearchToolsTool добавляется динамически после его регистрации в контейнере
+ * SearchToolsTool добавляется отдельно через registerToolFromContainer()
+ * после регистрации SearchEngine (разрывает циклическую зависимость)
  */
-async function bindToolRegistry(container: Container): Promise<void> {
-  const { SearchToolsTool } = await import('@mcp-framework/search');
-
+function bindToolRegistry(container: Container): void {
   container.bind<ToolRegistry>(TYPES.ToolRegistry).toDynamicValue(() => {
     const loggerInstance = container.get<Logger>(TYPES.Logger);
-    // Передаём контейнер, logger и все tool классы (включая SearchToolsTool)
+    // Передаём контейнер, logger и только стандартные tool классы
+    // SearchToolsTool будет добавлен позже через registerToolFromContainer
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const allToolClasses = [...TOOL_CLASSES, SearchToolsTool] as any;
-    return new ToolRegistry(container, loggerInstance, allToolClasses);
+    return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any);
   });
 }
 
@@ -233,15 +232,31 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
     defaultScope: 'Singleton', // Все зависимости по умолчанию Singleton
   });
 
+  // 1. Инфраструктура (config, logger, http, cache)
   bindInfrastructure(container, config);
   bindHttpLayer(container);
   bindCacheLayer(container);
+
+  // 2. Бизнес-логика (operations, facade)
   bindOperations(container);
   bindFacade(container);
-  await bindToolRegistry(container); // ToolRegistry первым (lazy initialization)
-  bindSearchEngine(container); // SearchEngine после ToolRegistry
-  bindTools(container); // Стандартные tools (facade, logger)
-  await bindSearchToolsTool(container); // SearchToolsTool последним (searchEngine, logger)
+
+  // 3. Стандартные tools (facade, logger)
+  bindTools(container);
+
+  // 4. ToolRegistry (БЕЗ SearchToolsTool - разрываем циклическую зависимость)
+  bindToolRegistry(container);
+
+  // 5. SearchEngine (требует ToolRegistry)
+  bindSearchEngine(container);
+
+  // 6. SearchToolsTool (требует SearchEngine)
+  await bindSearchToolsTool(container);
+
+  // 7. Добавляем SearchToolsTool в ToolRegistry (завершаем цепочку зависимостей)
+  const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+  // Используем строку вместо класса, т.к. компилятор переименовывает класс в _SearchToolsTool
+  toolRegistry.registerToolFromContainer('SearchToolsTool');
 
   return container;
 }

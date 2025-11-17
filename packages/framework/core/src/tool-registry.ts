@@ -80,6 +80,25 @@ export class ToolRegistry {
   }
 
   /**
+   * Добавить дополнительный инструмент из контейнера
+   *
+   * Используется для регистрации инструментов с нестандартными зависимостями
+   * (например, SearchToolsTool с зависимостью от SearchEngine)
+   *
+   * @param symbolKey - Строковый ключ для Symbol.for() или Symbol
+   */
+  public registerToolFromContainer(symbolKey: string | symbol): void {
+    // ВАЖНО: Сначала инициализируем все стандартные tools
+    // Иначе создание this.tools здесь заблокирует ensureInitialized()
+    this.ensureInitialized();
+
+    const symbol = typeof symbolKey === 'string' ? Symbol.for(symbolKey) : symbolKey;
+    const tool = this.container.get<BaseTool>(symbol);
+
+    this.registerTool(tool);
+  }
+
+  /**
    * Получить определения всех зарегистрированных инструментов
    */
   getDefinitions(): ToolDefinition[] {
