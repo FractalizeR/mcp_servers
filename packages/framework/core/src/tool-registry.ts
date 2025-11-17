@@ -172,13 +172,24 @@ export class ToolRegistry {
   async execute(name: string, params: ToolCallParams): Promise<ToolResult> {
     this.ensureInitialized();
 
-    this.logger.info(`Вызов инструмента: ${name}`);
-    this.logger.debug('Параметры:', params);
+    this.logger.info(`🔍 Поиск инструмента: ${name}`);
+    this.logger.debug('Параметры вызова:', params);
 
     const tool = this.tools?.get(name);
 
     if (!tool) {
-      this.logger.error(`Инструмент не найден: ${name}`);
+      const allTools = Array.from(this.tools?.keys() || []);
+
+      // Fuzzy поиск похожих имен
+      const similarTools = allTools.filter((t) => t.includes(name) || name.includes(t));
+
+      this.logger.error(`❌ Инструмент "${name}" не найден`, {
+        requestedTool: name,
+        availableTools: allTools,
+        totalAvailable: allTools.length,
+        similarTools,
+      });
+
       return {
         content: [
           {
@@ -187,7 +198,11 @@ export class ToolRegistry {
               {
                 success: false,
                 message: `Инструмент "${name}" не найден`,
-                availableTools: this.tools ? Array.from(this.tools.keys()) : [],
+                availableTools: allTools,
+                hint:
+                  similarTools.length > 0
+                    ? `Возможно вы имели в виду: ${similarTools.join(', ')}`
+                    : 'Используйте search_tools для поиска доступных инструментов',
               },
               null,
               2
@@ -198,9 +213,13 @@ export class ToolRegistry {
       };
     }
 
+    this.logger.debug(`✅ Инструмент найден, выполняем...`, {
+      toolName: name,
+    });
+
     try {
       const result = await tool.execute(params);
-      this.logger.info(`Инструмент ${name} выполнен успешно`);
+      this.logger.info(`✅ Инструмент ${name} выполнен успешно`);
       return result;
     } catch (error) {
       this.logger.error(`Ошибка при выполнении инструмента ${name}:`, error);

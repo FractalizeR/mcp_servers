@@ -9,7 +9,11 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import {
+  CallToolRequestSchema,
+  InitializeRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -35,9 +39,35 @@ function setupServer(
   config: ServerConfig,
   logger: Logger
 ): void {
+  // Обработчик инициализации соединения
+  server.setRequestHandler(InitializeRequestSchema, (request) => {
+    const { clientInfo, protocolVersion } = request.params;
+
+    logger.info(`🤝 Подключение MCP клиента`, {
+      clientName: clientInfo?.name,
+      clientVersion: clientInfo?.version,
+      protocolVersion,
+    });
+
+    return {
+      protocolVersion: '2025-06-18',
+      capabilities: {
+        tools: {},
+      },
+      serverInfo: {
+        name: MCP_SERVER_NAME,
+        version: getPackageVersion(),
+      },
+    };
+  });
+
   // Обработчик запроса списка инструментов
   server.setRequestHandler(ListToolsRequestSchema, () => {
-    logger.debug(`Запрос списка инструментов (режим: ${config.toolDiscoveryMode})`);
+    logger.info(`📋 Запрос tools/list от клиента`);
+    logger.debug(`Режим discovery: ${config.toolDiscoveryMode}`, {
+      essentialTools: config.essentialTools,
+      totalRegistered: toolRegistry.getDefinitions().length,
+    });
 
     const definitions = toolRegistry.getDefinitionsByMode(
       config.toolDiscoveryMode,
@@ -45,9 +75,21 @@ function setupServer(
     );
 
     logger.info(
-      `Возвращаем ${definitions.length} инструментов ` +
-        `(режим: ${config.toolDiscoveryMode}, essential: [${config.essentialTools.join(', ')}])`
+      `✅ Возвращаем ${definitions.length} инструментов ` + `(режим: ${config.toolDiscoveryMode})`,
+      {
+        toolNames: definitions.map((d) => d.name),
+        essentialCount: config.essentialTools.length,
+      }
     );
+
+    // Предупреждение для lazy режима
+    if (config.toolDiscoveryMode === 'lazy') {
+      logger.warn(`⚠️  ВНИМАНИЕ: Используется lazy режим discovery!`, {
+        message: 'Lazy режим может не работать с некоторыми MCP клиентами',
+        essentialTools: config.essentialTools,
+        recommendation: 'Используйте TOOL_DISCOVERY_MODE=eager для совместимости',
+      });
+    }
 
     return {
       tools: definitions.map((def) => ({
@@ -60,10 +102,11 @@ function setupServer(
 
   // Обработчик вызова инструмента
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    let { name } = request.params;
+    const originalName = request.params.name;
+    let name = originalName;
     const { arguments: args } = request.params;
 
-    logger.info(`Получен запрос на выполнение инструмента: ${name}`);
+    logger.info(`🔧 Запрос инструмента: ${originalName}`);
 
     // Нормализация имени: удаление префикса сервера (добавляется MCP клиентами)
     // Примеры префиксов:
@@ -74,17 +117,25 @@ function setupServer(
       `${MCP_SERVER_DISPLAY_NAME}:`, // Отображаемое имя
     ];
 
+    let removedPrefix: string | null = null;
+
     for (const prefix of serverPrefixes) {
       if (name.startsWith(prefix)) {
-        const originalName = name;
+        removedPrefix = prefix;
         name = name.slice(prefix.length);
-        logger.debug(`Убран префикс сервера из имени инструмента`, {
+        logger.debug(`✂️  Убран префикс сервера`, {
           original: originalName,
           normalized: name,
-          prefix,
+          prefix: removedPrefix,
         });
         break;
       }
+    }
+
+    if (!removedPrefix) {
+      logger.debug(`ℹ️  Префикс не обнаружен (прямой вызов)`, {
+        toolName: name,
+      });
     }
 
     try {
@@ -93,7 +144,10 @@ function setupServer(
 
       // Логируем результат выполнения
       if (result.isError) {
-        logger.error(`Инструмент ${name} вернул ошибку`, {
+        logger.error(`❌ Инструмент ${name} вернул ошибку`, {
+          originalName,
+          normalizedName: name,
+          removedPrefix,
           hasContent: result.content?.length > 0,
           contentPreview:
             result.content?.[0]?.type === 'text'
@@ -101,13 +155,19 @@ function setupServer(
               : undefined,
         });
       } else {
-        logger.debug(`Инструмент ${name} выполнен успешно (результат передан клиенту)`);
+        logger.info(`✅ Инструмент ${name} выполнен успешно`);
       }
 
       return result;
     } catch (error) {
       // Перехват необработанных исключений (на случай если что-то пойдёт не так)
-      logger.error(`Необработанное исключение при выполнении инструмента ${name}:`, error);
+      logger.error(`💥 Необработанное исключение при выполнении инструмента ${name}:`, {
+        originalName,
+        normalizedName: name,
+        removedPrefix,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
 
       return {
         content: [
@@ -120,6 +180,7 @@ function setupServer(
                   error instanceof Error ? error.message : 'Неизвестная ошибка'
                 }`,
                 tool: name,
+                originalName,
               },
               null,
               2
