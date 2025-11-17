@@ -15,7 +15,7 @@
   "main": "./dist/index.js",
   "bin": {
     "mcp-connect": "./dist/cli/bin/mcp-connect.js",
-    "mcp-server-yandex-tracker": "./dist/index.js"
+    "mcp-server-yandex-tracker": "./dist/yandex-tracker.bundle.js"
   },
   "files": [
     "dist",
@@ -25,10 +25,10 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "tsc -b && tsc-alias",
-    "build:bundle": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/bundle.js --external:@modelcontextprotocol/sdk --external:axios --external:inversify --external:p-limit --sourcemap",
+    "build": "tsc -b && tsc-alias && tsup",
+    "build:bundle": "tsup",
     "clean": "rimraf dist",
-    "dev": "npm run build && node dist/index.js",
+    "dev": "npm run build && node dist/yandex-tracker.bundle.js",
     "mcp:connect": "npm run build && node dist/cli/bin/mcp-connect.js connect",
     "mcp:disconnect": "npm run build && node dist/cli/bin/mcp-connect.js disconnect",
     "mcp:list": "npm run build && node dist/cli/bin/mcp-connect.js list",
@@ -61,6 +61,7 @@
     "axios-mock-adapter": "^2.1.0",
     "esbuild": "^0.27.0",
     "tsc-alias": "^1.8.16",
+    "tsup": "^8.3.5",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.8"
