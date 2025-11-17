@@ -7,6 +7,8 @@ import { GetIssueChangelogTool } from '@tools/api/issues/changelog/index.js';
 import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { ChangelogEntryWithUnknownFields } from '@tracker_api/entities/index.js';
+import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '@constants';
 
 describe('GetIssueChangelogTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -80,7 +82,7 @@ describe('GetIssueChangelogTool', () => {
     it('должен вернуть корректное определение инструмента', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.name).toBe('get_issue_changelog');
+      expect(definition.name).toBe(buildToolName('get_issue_changelog', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('историю изменений');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['issueKey']);

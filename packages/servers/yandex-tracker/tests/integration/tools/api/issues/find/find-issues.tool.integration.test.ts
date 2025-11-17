@@ -40,7 +40,7 @@ describe('find-issues integration tests', () => {
       });
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         keys: issueKeys,
       });
 
@@ -75,7 +75,7 @@ describe('find-issues integration tests', () => {
       });
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query,
       });
 
@@ -102,7 +102,7 @@ describe('find-issues integration tests', () => {
       });
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         queue,
       });
 
@@ -133,7 +133,7 @@ describe('find-issues integration tests', () => {
       });
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         filter,
       });
 
@@ -161,7 +161,7 @@ describe('find-issues integration tests', () => {
       });
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'Author: me()',
         perPage: 2,
         page: 1,
@@ -190,7 +190,7 @@ describe('find-issues integration tests', () => {
       });
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'Author: me()',
         order,
       });
@@ -216,7 +216,7 @@ describe('find-issues integration tests', () => {
       mockServer.mockFindIssuesSuccess(issueKeys);
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         keys: issueKeys,
         fields,
       });
@@ -253,7 +253,7 @@ describe('find-issues integration tests', () => {
       mockServer.mockFindIssuesSuccess(issueKeys);
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         keys: issueKeys,
         fields,
       });
@@ -284,7 +284,7 @@ describe('find-issues integration tests', () => {
       mockServer.mockFindIssuesError400();
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'invalid JQL syntax',
       });
 
@@ -302,7 +302,7 @@ describe('find-issues integration tests', () => {
       mockServer.mockFindIssuesEmpty();
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'nonexistent task',
       });
 
@@ -322,7 +322,7 @@ describe('find-issues integration tests', () => {
   describe('Validation', () => {
     it('должен вернуть ошибку если не указан ни один параметр поиска', async () => {
       // Act
-      const result = await client.callTool('find_issues', {});
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {});
 
       // Assert
       expect(result.isError).toBe(true);
@@ -334,7 +334,7 @@ describe('find-issues integration tests', () => {
 
     it('должен вернуть ошибку для невалидного perPage (отрицательное число)', async () => {
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'test',
         perPage: -1,
       });
@@ -346,7 +346,7 @@ describe('find-issues integration tests', () => {
 
     it('должен вернуть ошибку для невалидного page (не целое число)', async () => {
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'test',
         page: 1.5,
       });
@@ -366,7 +366,7 @@ describe('find-issues integration tests', () => {
       });
 
       // Act
-      const result = await client.callTool('find_issues', {
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'Author: me()',
         perPage: 10,
         page: 1,

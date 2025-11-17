@@ -17,9 +17,9 @@ export const MCP_SERVER_NAME = PROJECT_BASE_NAME;
 
 /**
  * Префикс для названий MCP инструментов
- * @example "fractalizer_mcp_yandex_tracker_get_issues"
+ * @example "fr_yandex_tracker_get_issues"
  */
-export const MCP_TOOL_PREFIX = `${PROJECT_BASE_NAME}_` as const;
+export const MCP_TOOL_PREFIX = 'fr_yandex_tracker_' as const;
 
 /**
  * Отображаемое название MCP сервера

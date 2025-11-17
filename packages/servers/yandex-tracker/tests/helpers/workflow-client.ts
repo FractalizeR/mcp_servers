@@ -1,5 +1,7 @@
 // tests/e2e/helpers/workflow-client.ts
 import type { TestMCPClient } from '@integration/helpers/mcp-client.js';
+import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '@constants';
 
 /**
  * Helper для E2E workflows с автоматическим извлечением данных
@@ -16,7 +18,10 @@ export class WorkflowClient {
     summary: string;
     description?: string;
   }): Promise<string> {
-    const result = await this.client.callTool('create_issue', params);
+    const result = await this.client.callTool(
+      buildToolName('create_issue', MCP_TOOL_PREFIX),
+      params
+    );
 
     if (result.isError) {
       throw new Error(`Failed to create issue: ${result.content[0]?.text}`);
@@ -30,7 +35,7 @@ export class WorkflowClient {
    * Получить задачу по ключу
    */
   async getIssue(issueKey: string): Promise<unknown> {
-    const result = await this.client.callTool('get_issues', {
+    const result = await this.client.callTool(buildToolName('get_issues', MCP_TOOL_PREFIX), {
       issueKeys: [issueKey],
     });
 
@@ -46,7 +51,7 @@ export class WorkflowClient {
    * Обновить задачу
    */
   async updateIssue(issueKey: string, updates: Record<string, unknown>): Promise<void> {
-    const result = await this.client.callTool('update_issue', {
+    const result = await this.client.callTool(buildToolName('update_issue', MCP_TOOL_PREFIX), {
       issueKey,
       ...updates,
     });
@@ -60,7 +65,7 @@ export class WorkflowClient {
    * Перевести задачу в новый статус
    */
   async transitionIssue(issueKey: string, transitionId: string): Promise<void> {
-    const result = await this.client.callTool('transition_issue', {
+    const result = await this.client.callTool(buildToolName('transition_issue', MCP_TOOL_PREFIX), {
       issueKey,
       transitionId,
     });
@@ -74,7 +79,7 @@ export class WorkflowClient {
    * Найти задачи по query
    */
   async findIssues(query: string): Promise<unknown[]> {
-    const result = await this.client.callTool('find_issues', {
+    const result = await this.client.callTool(buildToolName('find_issues', MCP_TOOL_PREFIX), {
       query,
     });
 
@@ -90,7 +95,12 @@ export class WorkflowClient {
    * Получить changelog задачи
    */
   async getChangelog(issueKey: string): Promise<unknown[]> {
-    const result = await this.client.callTool('get_issue_changelog', { issueKey });
+    const result = await this.client.callTool(
+      buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
+      {
+        issueKey,
+      }
+    );
 
     if (result.isError) {
       throw new Error(`Failed to get changelog: ${result.content[0]?.text}`);
@@ -104,7 +114,10 @@ export class WorkflowClient {
    * Получить доступные transitions для задачи
    */
   async getTransitions(issueKey: string): Promise<unknown[]> {
-    const result = await this.client.callTool('get_issue_transitions', { issueKey });
+    const result = await this.client.callTool(
+      buildToolName('get_issue_transitions', MCP_TOOL_PREFIX),
+      { issueKey }
+    );
 
     if (result.isError) {
       throw new Error(`Failed to get transitions: ${result.content[0]?.text}`);

@@ -37,7 +37,7 @@ describe('get-issues integration tests', () => {
       mockServer.mockGetIssueSuccess(issueKey);
 
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [issueKey],
       });
 
@@ -81,7 +81,7 @@ describe('get-issues integration tests', () => {
       });
 
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys,
       });
 
@@ -118,7 +118,7 @@ describe('get-issues integration tests', () => {
       mockServer.mockGetIssueSuccess(issueKey);
 
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [issueKey],
         fields,
       });
@@ -156,7 +156,7 @@ describe('get-issues integration tests', () => {
       mockServer.mockGetIssueSuccess(issueKey);
 
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [issueKey],
         fields,
       });
@@ -188,7 +188,7 @@ describe('get-issues integration tests', () => {
       mockServer.mockGetIssue404(issueKey);
 
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [issueKey],
       });
 
@@ -221,7 +221,7 @@ describe('get-issues integration tests', () => {
       mockServer.mockGetIssue401(issueKey);
 
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [issueKey],
       });
 
@@ -243,7 +243,7 @@ describe('get-issues integration tests', () => {
       mockServer.mockGetIssue403(issueKey);
 
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [issueKey],
       });
 
@@ -272,7 +272,7 @@ describe('get-issues integration tests', () => {
       mockServer.mockGetIssueSuccess('QUEUE-3');
 
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: ['QUEUE-1', 'QUEUE-2', 'QUEUE-3'],
       });
 
@@ -305,7 +305,7 @@ describe('get-issues integration tests', () => {
   describe('Validation', () => {
     it('должен вернуть ошибку при пустом массиве issueKeys', async () => {
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [],
       });
 
@@ -316,7 +316,7 @@ describe('get-issues integration tests', () => {
 
     it('должен вернуть ошибку при невалидном формате ключа', async () => {
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: ['invalid-key'], // нет дефиса или формат не соответствует QUEUE-123
       });
 
@@ -327,7 +327,7 @@ describe('get-issues integration tests', () => {
 
     it('должен вернуть ошибку если issueKeys не массив', async () => {
       // Act
-      const result = await client.callTool('get_issues', {
+      const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: 'QUEUE-1', // строка вместо массива
       });
 

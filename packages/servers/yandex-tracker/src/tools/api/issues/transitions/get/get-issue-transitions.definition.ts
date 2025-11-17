@@ -9,7 +9,9 @@ import {
 } from '@mcp-framework/core';
 
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
 import { GetIssueTransitionsTool } from './get-issue-transitions.tool.js';
+
 /**
  * Definition для GetIssueTransitionsTool
  *
@@ -26,7 +28,7 @@ export class GetIssueTransitionsDefinition extends BaseToolDefinition {
 
   build(): ToolDefinition {
     return {
-      name: buildToolName('get_issue_transitions'),
+      name: buildToolName('get_issue_transitions', MCP_TOOL_PREFIX),
       description: this.wrapWithSafetyWarning(this.buildDescription()),
       inputSchema: {
         type: 'object',

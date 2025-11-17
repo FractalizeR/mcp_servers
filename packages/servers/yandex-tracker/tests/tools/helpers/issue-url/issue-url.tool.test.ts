@@ -4,9 +4,10 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { IssueUrlTool } from '@tools/helpers/issue-url/issue-url.tool.js';
-import { ToolCategory } from '@mcp-framework/core';
+import { ToolCategory, buildToolName } from '@mcp-framework/core';
 import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
 import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
+import { MCP_TOOL_PREFIX } from '@constants';
 
 describe('IssueUrlTool', () => {
   let tool: IssueUrlTool;
@@ -30,7 +31,7 @@ describe('IssueUrlTool', () => {
     it('должен вернуть корректное определение инструмента', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.name).toBe('get_issue_urls');
+      expect(definition.name).toBe(buildToolName('get_issue_urls', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('URL');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['issueKeys']);
@@ -180,7 +181,7 @@ describe('IssueUrlTool', () => {
   describe('METADATA', () => {
     it('должен иметь статические метаданные', () => {
       expect(IssueUrlTool.METADATA).toBeDefined();
-      expect(IssueUrlTool.METADATA.name).toBe('get_issue_urls');
+      expect(IssueUrlTool.METADATA.name).toBe(buildToolName('get_issue_urls', MCP_TOOL_PREFIX));
       expect(IssueUrlTool.METADATA.description).toBe('Получить URL задач в Яндекс.Трекере');
       expect(IssueUrlTool.METADATA.category).toBe(ToolCategory.URL_GENERATION);
       expect(IssueUrlTool.METADATA.tags).toContain('url');

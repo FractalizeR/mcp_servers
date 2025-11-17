@@ -17,6 +17,7 @@ import type { CreateIssueDto } from '@tracker_api/dto/index.js';
 import { CreateIssueDefinition } from '@tools/api/issues/create/create-issue.definition.js';
 import { CreateIssueParamsSchema } from '@tools/api/issues/create/create-issue.schema.js';
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../constants.js';
 
 /**
  * Инструмент для создания новой задачи
@@ -35,7 +36,7 @@ export class CreateIssueTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: buildToolName('create_issue'),
+    name: buildToolName('create_issue', MCP_TOOL_PREFIX),
     description: 'Создать новую задачу в Яндекс.Трекере',
     category: ToolCategory.ISSUES,
     tags: ['issue', 'create', 'write'],

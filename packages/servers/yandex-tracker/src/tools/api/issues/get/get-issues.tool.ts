@@ -17,6 +17,7 @@ import { GetIssuesDefinition } from '@tools/api/issues/get/get-issues.definition
 import { GetIssuesParamsSchema } from '@tools/api/issues/get/get-issues.schema.js';
 
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../constants.js';
 /**
  * Инструмент для получения информации о задачах
  *
@@ -37,7 +38,7 @@ export class GetIssuesTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: buildToolName('get_issues'),
+    name: buildToolName('get_issues', MCP_TOOL_PREFIX),
     description: 'Получить задачи по ключам (batch операция)',
     category: ToolCategory.ISSUES,
     tags: ['issue', 'get', 'batch', 'read'],

@@ -17,6 +17,8 @@ import { GetIssueChangelogDefinition } from '@tools/api/issues/changelog/get-iss
 import { GetIssueChangelogParamsSchema } from '@tools/api/issues/changelog/get-issue-changelog.schema.js';
 
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
 /**
  * Инструмент для получения истории изменений задачи
  *
@@ -37,7 +39,7 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: buildToolName('get_issue_changelog'),
+    name: buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
     description: 'Получить историю изменений задачи',
     category: ToolCategory.ISSUES,
     tags: ['issue', 'changelog', 'history', 'read'],

@@ -18,6 +18,8 @@ import { UpdateIssueDefinition } from '@tools/api/issues/update/update-issue.def
 import { UpdateIssueParamsSchema } from '@tools/api/issues/update/update-issue.schema.js';
 
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
 /**
  * Инструмент для обновления задачи
  *
@@ -37,7 +39,7 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: buildToolName('update_issue'),
+    name: buildToolName('update_issue', MCP_TOOL_PREFIX),
     description: 'Обновить существующую задачу в Яндекс.Трекере',
     category: ToolCategory.ISSUES,
     tags: ['issue', 'update', 'write'],

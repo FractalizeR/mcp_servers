@@ -17,6 +17,7 @@ import { FindIssuesDefinition } from '@tools/api/issues/find/find-issues.definit
 import { FindIssuesParamsSchema } from '@tools/api/issues/find/find-issues.schema.js';
 
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../constants.js';
 /**
  * Инструмент для поиска задач
  *
@@ -36,7 +37,7 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: buildToolName('find_issues'),
+    name: buildToolName('find_issues', MCP_TOOL_PREFIX),
     description: 'Найти задачи по JQL запросу',
     category: ToolCategory.ISSUES,
     tags: ['issue', 'find', 'search', 'jql', 'query'],

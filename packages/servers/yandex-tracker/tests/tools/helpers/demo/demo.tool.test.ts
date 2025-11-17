@@ -4,9 +4,10 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DemoTool } from '@tools/helpers/demo/demo.tool.js';
-import { ToolCategory } from '@mcp-framework/core';
+import { ToolCategory, buildToolName } from '@mcp-framework/core';
 import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
 import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
+import { MCP_TOOL_PREFIX } from '@constants';
 
 describe('DemoTool', () => {
   let tool: DemoTool;
@@ -30,7 +31,7 @@ describe('DemoTool', () => {
     it('должен вернуть корректное определение инструмента', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.name).toBe('demo');
+      expect(definition.name).toBe(buildToolName('demo', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('Демонстрационный');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['message']);
@@ -175,7 +176,7 @@ describe('DemoTool', () => {
   describe('METADATA', () => {
     it('должен иметь статические метаданные', () => {
       expect(DemoTool.METADATA).toBeDefined();
-      expect(DemoTool.METADATA.name).toBe('demo');
+      expect(DemoTool.METADATA.name).toBe(buildToolName('demo', MCP_TOOL_PREFIX));
       expect(DemoTool.METADATA.description).toBe('Демонстрационный инструмент для тестирования');
       expect(DemoTool.METADATA.category).toBe(ToolCategory.DEMO);
       expect(DemoTool.METADATA.tags).toContain('demo');

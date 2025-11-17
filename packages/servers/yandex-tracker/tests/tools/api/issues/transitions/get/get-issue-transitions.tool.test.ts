@@ -7,6 +7,8 @@ import { GetIssueTransitionsTool } from '@tools/api/issues/transitions/get/index
 import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { TransitionWithUnknownFields } from '@tracker_api/entities/index.js';
+import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '@constants';
 
 describe('GetIssueTransitionsTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -54,7 +56,7 @@ describe('GetIssueTransitionsTool', () => {
     it('должен вернуть корректное определение инструмента', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.name).toBe('get_issue_transitions');
+      expect(definition.name).toBe(buildToolName('get_issue_transitions', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('переход');
       expect(definition.description).toContain('статус');
       expect(definition.inputSchema.type).toBe('object');
