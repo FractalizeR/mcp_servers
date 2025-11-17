@@ -91,7 +91,7 @@ git checkout -b claude/integration-multi-server-{session-id}
 ## 📊 Прогресс
 
 ### Phase 0
-- [ ] 0.1_preparation.md
+- [x] 0.1_preparation.md ✅ **ЗАВЕРШЕНО** (commit: 564e1c0)
 
 ### Phase 1 (параллельно)
 - [ ] 1.1_move_framework_packages.md
