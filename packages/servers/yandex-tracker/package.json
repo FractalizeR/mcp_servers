@@ -25,8 +25,8 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "tsc -b && tsc-alias && tsup",
-    "build:bundle": "tsup",
+    "build": "tsc -b && tsc-alias && npm run build:bundle",
+    "build:bundle": "tsx scripts/increment-build.ts && tsup",
     "build:mcpb": "npm run build && tsx scripts/build-mcpb.ts",
     "clean": "rimraf dist",
     "dev": "npm run build && node dist/yandex-tracker.bundle.js",

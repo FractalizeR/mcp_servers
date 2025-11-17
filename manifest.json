@@ -93,6 +93,7 @@
   ],
   "_meta": {
     "build": {
+      "number": 2,
       "generated_by": "mcpb-build",
       "last_updated": "2025-11-17"
     }

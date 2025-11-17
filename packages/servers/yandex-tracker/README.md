@@ -256,6 +256,9 @@ src/
 ```bash
 # Сборка
 npm run build              # Полная сборка TypeScript → JavaScript
+                           # Автоматически инкрементирует build number в manifest.json
+npm run build:bundle       # Только бандл (с инкрементом build number)
+npm run build:mcpb         # Создать .mcpb архив для публикации
 
 # Тестирование
 npm run test               # Все тесты
