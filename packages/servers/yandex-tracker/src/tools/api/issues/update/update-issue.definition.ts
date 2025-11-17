@@ -10,6 +10,8 @@ import {
 import { UpdateIssueTool } from './update-issue.tool.js';
 
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
 /**
  * Definition для UpdateIssueTool
  *
@@ -26,7 +28,7 @@ export class UpdateIssueDefinition extends BaseToolDefinition {
 
   build(): ToolDefinition {
     return {
-      name: buildToolName('update_issue'),
+      name: buildToolName('update_issue', MCP_TOOL_PREFIX),
       description: this.wrapWithSafetyWarning(this.buildDescription()),
       inputSchema: {
         type: 'object',

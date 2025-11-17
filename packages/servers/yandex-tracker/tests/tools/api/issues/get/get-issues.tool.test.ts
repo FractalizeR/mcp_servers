@@ -7,6 +7,8 @@ import { GetIssuesTool } from '@tools/api/issues/get/index.js';
 import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
+import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '@constants';
 
 describe('GetIssuesTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -89,7 +91,7 @@ describe('GetIssuesTool', () => {
     it('должен вернуть корректное определение инструмента', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.name).toBe('get_issues');
+      expect(definition.name).toBe(buildToolName('get_issues', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('Получение информации о задачах');
       expect(definition.description).toContain('Batch-режим');
       expect(definition.inputSchema.type).toBe('object');

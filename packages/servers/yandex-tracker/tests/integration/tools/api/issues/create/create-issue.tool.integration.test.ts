@@ -27,7 +27,7 @@ describe('create-issue integration tests', () => {
     });
 
     // Act
-    const result = await client.callTool('create_issue', {
+    const result = await client.callTool('fr_yandex_tracker_create_issue', {
       queue: 'TEST',
       summary: 'Test issue',
     });
@@ -55,7 +55,7 @@ describe('create-issue integration tests', () => {
     mockServer.mockCreateIssueSuccess(issueData);
 
     // Act
-    const result = await client.callTool('create_issue', {
+    const result = await client.callTool('fr_yandex_tracker_create_issue', {
       queue: 'TEST',
       summary: 'Full issue',
       description: 'Detailed description',
@@ -76,7 +76,7 @@ describe('create-issue integration tests', () => {
     mockServer.mockCreateIssue403();
 
     // Act
-    const result = await client.callTool('create_issue', {
+    const result = await client.callTool('fr_yandex_tracker_create_issue', {
       queue: 'TEST',
       summary: 'Test',
     });
@@ -95,7 +95,7 @@ describe('create-issue integration tests', () => {
     });
 
     // Act
-    const result = await client.callTool('create_issue', {
+    const result = await client.callTool('fr_yandex_tracker_create_issue', {
       queue: 'TEST',
       summary: 'Filtered issue',
       fields: ['key', 'summary'],

@@ -17,6 +17,8 @@ import { GetIssueTransitionsDefinition } from '@tools/api/issues/transitions/get
 import { GetIssueTransitionsParamsSchema } from '@tools/api/issues/transitions/get/get-issue-transitions.schema.js';
 
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
+
 /**
  * Инструмент для получения доступных переходов статусов задачи
  *
@@ -37,7 +39,7 @@ export class GetIssueTransitionsTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: buildToolName('get_issue_transitions'),
+    name: buildToolName('get_issue_transitions', MCP_TOOL_PREFIX),
     description: 'Получить доступные переходы статусов задачи',
     category: ToolCategory.ISSUES,
     tags: ['issue', 'transitions', 'workflow', 'read'],

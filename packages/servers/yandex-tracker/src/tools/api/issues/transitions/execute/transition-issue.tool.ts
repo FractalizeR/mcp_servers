@@ -17,6 +17,7 @@ import type { ExecuteTransitionDto } from '@tracker_api/dto/index.js';
 import { TransitionIssueDefinition } from '@tools/api/issues/transitions/execute/transition-issue.definition.js';
 import { TransitionIssueParamsSchema } from '@tools/api/issues/transitions/execute/transition-issue.schema.js';
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
 
 /**
  * Инструмент для выполнения перехода задачи в другой статус
@@ -38,7 +39,7 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: buildToolName('transition_issue'),
+    name: buildToolName('transition_issue', MCP_TOOL_PREFIX),
     description: 'Выполнить переход задачи в другой статус',
     category: ToolCategory.ISSUES,
     tags: ['issue', 'transition', 'workflow', 'write'],

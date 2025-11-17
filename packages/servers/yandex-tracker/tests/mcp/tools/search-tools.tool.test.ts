@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SearchToolsTool } from '@mcp-framework/search';
+import { SearchToolsTool, buildToolName } from '@mcp-framework/search';
 import { ToolSearchEngine } from '@mcp-framework/search/engine';
 import {
   WeightedCombinedStrategy,
@@ -26,6 +26,7 @@ import type { StaticToolIndex, StrategyType } from '@mcp-framework/search/types.
 import type { ToolRegistry } from '@mcp-framework/core/tool-registry.js';
 import type { BaseTool } from '@mcp-framework/core/tools/base/base-tool.js';
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
+import { MCP_TOOL_PREFIX } from '@constants';
 
 describe('SearchToolsTool (E2E)', () => {
   // Mock ToolRegistry
@@ -74,7 +75,7 @@ describe('SearchToolsTool (E2E)', () => {
 
   const mockIndex: StaticToolIndex[] = [
     {
-      name: 'fractalizer_mcp_yandex_tracker_ping',
+      name: buildToolName('ping', MCP_TOOL_PREFIX),
       category: ToolCategory.USERS,
       tags: ['ping', 'health', 'check'],
       isHelper: false,
@@ -83,7 +84,7 @@ describe('SearchToolsTool (E2E)', () => {
       descriptionShort: 'Проверка доступности API',
     },
     {
-      name: 'get_issues',
+      name: buildToolName('get_issues', MCP_TOOL_PREFIX),
       category: ToolCategory.ISSUES,
       tags: ['issue', 'get', 'batch'],
       isHelper: false,
@@ -92,7 +93,7 @@ describe('SearchToolsTool (E2E)', () => {
       descriptionShort: 'Получить задачи по ключам',
     },
     {
-      name: 'find_issues',
+      name: buildToolName('find_issues', MCP_TOOL_PREFIX),
       category: ToolCategory.ISSUES,
       tags: ['issue', 'find', 'search', 'jql'],
       isHelper: false,
@@ -101,7 +102,7 @@ describe('SearchToolsTool (E2E)', () => {
       descriptionShort: 'Найти задачи по JQL запросу',
     },
     {
-      name: 'search_tools',
+      name: buildToolName('search_tools', MCP_TOOL_PREFIX),
       category: ToolCategory.SEARCH,
       tags: ['search', 'tools', 'discovery'],
       isHelper: true,
@@ -164,7 +165,7 @@ describe('SearchToolsTool (E2E)', () => {
         expect(parsed.data.totalFound).toBeGreaterThan(0);
         expect(parsed.data.returned).toBeGreaterThan(0);
         expect(parsed.data.tools).toBeInstanceOf(Array);
-        expect(parsed.data.tools[0].name).toBe('fractalizer_mcp_yandex_tracker_ping');
+        expect(parsed.data.tools[0].name).toBe(buildToolName('ping', MCP_TOOL_PREFIX));
       }
     });
 
@@ -498,7 +499,7 @@ describe('SearchToolsTool (E2E)', () => {
   describe('METADATA', () => {
     it('должен содержать корректные статические метаданные', () => {
       expect(SearchToolsTool.METADATA).toBeDefined();
-      expect(SearchToolsTool.METADATA.name).toBe('search_tools');
+      expect(SearchToolsTool.METADATA.name).toBe(buildToolName('search_tools', MCP_TOOL_PREFIX));
       expect(SearchToolsTool.METADATA.category).toBe(ToolCategory.SEARCH);
       expect(SearchToolsTool.METADATA.isHelper).toBe(true);
       expect(SearchToolsTool.METADATA.tags).toContain('search');

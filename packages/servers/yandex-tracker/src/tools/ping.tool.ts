@@ -11,6 +11,7 @@ import { BaseTool, ToolCategory, buildToolName } from '@mcp-framework/core';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
+import { MCP_TOOL_PREFIX } from '../constants.js';
 
 /**
  * Ping инструмент для диагностики подключения
@@ -20,7 +21,7 @@ export class PingTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: buildToolName('ping'),
+    name: buildToolName('ping', MCP_TOOL_PREFIX),
     description:
       'Проверка доступности API Яндекс.Трекера и валидности OAuth токена. Возвращает информацию о текущем пользователе. Не требует параметров.',
     category: ToolCategory.USERS,
@@ -33,7 +34,7 @@ export class PingTool extends BaseTool<YandexTrackerFacade> {
    */
   override getDefinition(): ToolDefinition {
     return {
-      name: buildToolName('ping'),
+      name: buildToolName('ping', MCP_TOOL_PREFIX),
       description:
         'Проверка доступности API Яндекс.Трекера и валидности OAuth токена. ' +
         'Возвращает информацию о текущем пользователе. ' +

@@ -25,7 +25,7 @@ describe('transition-issue integration tests', () => {
     mockServer.mockTransitionIssueSuccess(issueKey, transitionId);
 
     // Act
-    const result = await client.callTool('transition_issue', {
+    const result = await client.callTool('fr_yandex_tracker_transition_issue', {
       issueKey,
       transitionId,
     });
@@ -44,7 +44,7 @@ describe('transition-issue integration tests', () => {
     mockServer.mockTransitionIssueSuccess(issueKey, transitionId);
 
     // Act
-    const result = await client.callTool('transition_issue', {
+    const result = await client.callTool('fr_yandex_tracker_transition_issue', {
       issueKey,
       transitionId,
       comment: 'Closing as completed',
@@ -62,7 +62,7 @@ describe('transition-issue integration tests', () => {
     mockServer.mockTransitionIssue404(issueKey, transitionId);
 
     // Act
-    const result = await client.callTool('transition_issue', {
+    const result = await client.callTool('fr_yandex_tracker_transition_issue', {
       issueKey,
       transitionId,
     });
@@ -79,7 +79,7 @@ describe('transition-issue integration tests', () => {
     mockServer.mockTransitionIssueSuccess(issueKey, transitionId);
 
     // Act
-    const result = await client.callTool('transition_issue', {
+    const result = await client.callTool('fr_yandex_tracker_transition_issue', {
       issueKey,
       transitionId,
       fields: ['key', 'status'],

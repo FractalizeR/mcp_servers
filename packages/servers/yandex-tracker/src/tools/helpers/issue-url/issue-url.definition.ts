@@ -8,6 +8,7 @@ import {
   type StaticToolMetadata,
 } from '@mcp-framework/core';
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../constants.js';
 import { IssueUrlTool } from './issue-url.tool.js';
 
 /**
@@ -25,7 +26,7 @@ export class IssueUrlDefinition extends BaseToolDefinition {
 
   build(): ToolDefinition {
     return {
-      name: buildToolName('get_issue_urls'),
+      name: buildToolName('get_issue_urls', MCP_TOOL_PREFIX),
       description: this.wrapWithSafetyWarning(this.buildDescription()),
       inputSchema: {
         type: 'object',

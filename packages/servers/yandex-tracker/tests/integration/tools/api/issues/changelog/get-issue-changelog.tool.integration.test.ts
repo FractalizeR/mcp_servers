@@ -24,7 +24,7 @@ describe('get-issue-changelog integration tests', () => {
     mockServer.mockGetChangelogSuccess(issueKey);
 
     // Act
-    const result = await client.callTool('get_issue_changelog', {
+    const result = await client.callTool('fr_yandex_tracker_get_issue_changelog', {
       issueKey,
     });
 
@@ -47,7 +47,7 @@ describe('get-issue-changelog integration tests', () => {
     mockServer.mockGetChangelog404(issueKey);
 
     // Act
-    const result = await client.callTool('get_issue_changelog', {
+    const result = await client.callTool('fr_yandex_tracker_get_issue_changelog', {
       issueKey,
     });
 
@@ -62,7 +62,7 @@ describe('get-issue-changelog integration tests', () => {
     mockServer.mockGetChangelogSuccess(issueKey);
 
     // Act
-    const result = await client.callTool('get_issue_changelog', {
+    const result = await client.callTool('fr_yandex_tracker_get_issue_changelog', {
       issueKey,
       fields: ['id', 'updatedAt', 'updatedBy'],
     });

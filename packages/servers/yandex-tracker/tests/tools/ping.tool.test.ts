@@ -4,6 +4,8 @@ import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { ToolCallParams } from '@mcp-framework/infrastructure/types.js';
 import type { PingResult } from '@tracker_api/api_operations/user/ping.operation.js';
+import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '@constants';
 
 describe('PingTool', () => {
   let tool: PingTool;
@@ -39,7 +41,7 @@ describe('PingTool', () => {
       const definition = tool.getDefinition();
 
       // Assert
-      expect(definition.name).toBe('ping');
+      expect(definition.name).toBe(buildToolName('ping', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('API Яндекс.Трекера');
       expect(definition.description).toContain('OAuth токена');
       expect(definition.inputSchema.type).toBe('object');

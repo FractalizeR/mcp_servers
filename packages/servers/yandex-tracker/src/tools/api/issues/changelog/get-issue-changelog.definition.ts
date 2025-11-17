@@ -9,7 +9,9 @@ import {
 } from '@mcp-framework/core';
 
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../../constants.js';
 import { GetIssueChangelogTool } from './get-issue-changelog.tool.js';
+
 /**
  * Definition для GetIssueChangelogTool
  *
@@ -26,7 +28,7 @@ export class GetIssueChangelogDefinition extends BaseToolDefinition {
 
   build(): ToolDefinition {
     return {
-      name: buildToolName('get_issue_changelog'),
+      name: buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
       description: this.wrapWithSafetyWarning(this.buildDescription()),
       inputSchema: {
         type: 'object',

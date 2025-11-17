@@ -10,6 +10,7 @@ import {
 
 import { buildToolName } from '@mcp-framework/core';
 import { FindIssuesTool } from './find-issues.tool.js';
+import { MCP_TOOL_PREFIX } from '../../../../constants.js';
 /**
  * Definition для FindIssuesTool
  *
@@ -26,7 +27,7 @@ export class FindIssuesDefinition extends BaseToolDefinition {
 
   build(): ToolDefinition {
     return {
-      name: buildToolName('find_issues'),
+      name: buildToolName('find_issues', MCP_TOOL_PREFIX),
       description: this.wrapWithSafetyWarning(this.buildDescription()),
       inputSchema: {
         type: 'object',

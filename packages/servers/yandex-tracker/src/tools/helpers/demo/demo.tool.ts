@@ -16,12 +16,14 @@ import { DemoDefinition } from './demo.definition.js';
 import { DemoParamsSchema } from './demo.schema.js';
 
 import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
 export class DemoTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = {
-    name: buildToolName('demo'),
+    name: buildToolName('demo', MCP_TOOL_PREFIX),
     description: 'Демонстрационный инструмент для тестирования',
     category: ToolCategory.DEMO,
     tags: ['demo', 'example', 'test'],

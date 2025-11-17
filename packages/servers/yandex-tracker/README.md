@@ -104,7 +104,7 @@ npm run build
 ```
 Найди все критичные баги в проекте MOBILE
 ```
-Claude использует `yandex_tracker_find_issues` с JQL: `project = MOBILE AND type = Bug AND priority = Critical`
+Claude использует `fr_yandex_tracker_find_issues` с JQL: `project = MOBILE AND type = Bug AND priority = Critical`
 
 ### Анализ задач
 ```
@@ -190,13 +190,13 @@ Claude использует `yandex_tracker_find_issues` с JQL: `project = MOBI
 
 ### Опасные операции
 Инструменты, которые **изменяют данные** (создание, обновление, удаление), требуют явного подтверждения от пользователя. Claude спросит разрешение перед выполнением:
-- `yandex_tracker_create_issue` — создание задачи
-- `yandex_tracker_update_issue` — обновление задачи
-- `yandex_tracker_link_issues` — связывание задач
-- `yandex_tracker_add_comment` — добавление комментария
+- `fr_yandex_tracker_create_issue` — создание задачи
+- `fr_yandex_tracker_update_issue` — обновление задачи
+- `fr_yandex_tracker_link_issues` — связывание задач
+- `fr_yandex_tracker_add_comment` — добавление комментария
 
 **Только чтение** (безопасно, без подтверждения):
-- `yandex_tracker_ping`, `yandex_tracker_get_issues`, `yandex_tracker_find_issues`, `yandex_tracker_get_issue_url`, `yandex_tracker_search_tools`
+- `fr_yandex_tracker_ping`, `fr_yandex_tracker_get_issues`, `fr_yandex_tracker_find_issues`, `fr_yandex_tracker_get_issue_url`, `fr_yandex_tracker_search_tools`
 
 ---
 

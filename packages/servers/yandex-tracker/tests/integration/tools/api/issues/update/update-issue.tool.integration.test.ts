@@ -26,7 +26,7 @@ describe('update-issue integration tests', () => {
     });
 
     // Act
-    const result = await client.callTool('update_issue', {
+    const result = await client.callTool('fr_yandex_tracker_update_issue', {
       issueKey,
       summary: 'Updated summary',
     });
@@ -49,7 +49,7 @@ describe('update-issue integration tests', () => {
     });
 
     // Act
-    const result = await client.callTool('update_issue', {
+    const result = await client.callTool('fr_yandex_tracker_update_issue', {
       issueKey,
       summary: 'New summary',
       description: 'New description',
@@ -69,7 +69,7 @@ describe('update-issue integration tests', () => {
     mockServer.mockUpdateIssue404(issueKey);
 
     // Act
-    const result = await client.callTool('update_issue', {
+    const result = await client.callTool('fr_yandex_tracker_update_issue', {
       issueKey,
       summary: 'Test',
     });
@@ -85,7 +85,7 @@ describe('update-issue integration tests', () => {
     mockServer.mockUpdateIssueSuccess(issueKey, { summary: 'Updated' });
 
     // Act
-    const result = await client.callTool('update_issue', {
+    const result = await client.callTool('fr_yandex_tracker_update_issue', {
       issueKey,
       summary: 'Updated',
       fields: ['key', 'summary'],

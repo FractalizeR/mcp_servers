@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ToolRegistry } from '@mcp-framework/core/tool-registry.js';
+import { ToolRegistry, buildToolName } from '@mcp-framework/core';
 import type { Container } from 'inversify';
 import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
@@ -17,6 +17,7 @@ import { GetIssueTransitionsTool } from '@tools/api/issues/transitions/get/index
 import { TransitionIssueTool } from '@tools/api/issues/transitions/execute/index.js';
 import { IssueUrlTool } from '@tools/helpers/issue-url/index.js';
 import { DemoTool } from '@tools/helpers/demo/index.js';
+import { MCP_TOOL_PREFIX } from '@constants';
 
 describe('ToolRegistry', () => {
   let registry: ToolRegistry;
@@ -81,7 +82,7 @@ describe('ToolRegistry', () => {
           // Mock SearchToolsTool (имеет другой конструктор)
           return {
             getDefinition: () => ({
-              name: 'search_tools',
+              name: buildToolName('search_tools', MCP_TOOL_PREFIX),
               description: 'Search tools',
               inputSchema: { type: 'object', properties: {}, required: [] },
             }),
@@ -121,8 +122,12 @@ describe('ToolRegistry', () => {
       const definitions = registry.getDefinitions();
 
       // Assert - теперь у нас 11 tools (Ping, GetIssues, CreateIssue, UpdateIssue, FindIssues, GetIssueChangelog, GetIssueTransitions, TransitionIssue, IssueUrl, Demo, SearchTools)
-      expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрирован инструмент: ping');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрирован инструмент: get_issues');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Зарегистрирован инструмент: ${buildToolName('ping', MCP_TOOL_PREFIX)}`
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Зарегистрирован инструмент: ${buildToolName('get_issues', MCP_TOOL_PREFIX)}`
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith('Зарегистрировано инструментов: 10');
       expect(definitions.length).toBe(10);
     });
@@ -136,9 +141,11 @@ describe('ToolRegistry', () => {
       // Assert - теперь 11 tools
       expect(definitions).toHaveLength(10);
 
-      const pingDef = definitions.find((d) => d.name === 'ping');
-      const getIssuesDef = definitions.find((d) => d.name === 'get_issues');
-      const demoDef = definitions.find((d) => d.name === 'demo');
+      const pingDef = definitions.find((d) => d.name === buildToolName('ping', MCP_TOOL_PREFIX));
+      const getIssuesDef = definitions.find(
+        (d) => d.name === buildToolName('get_issues', MCP_TOOL_PREFIX)
+      );
+      const demoDef = definitions.find((d) => d.name === buildToolName('demo', MCP_TOOL_PREFIX));
 
       expect(pingDef).toBeDefined();
       expect(getIssuesDef).toBeDefined();
@@ -167,11 +174,11 @@ describe('ToolRegistry', () => {
   describe('getTool', () => {
     it('должна вернуть tool по имени', () => {
       // Act
-      const tool = registry.getTool('ping');
+      const tool = registry.getTool(buildToolName('ping', MCP_TOOL_PREFIX));
 
       // Assert
       expect(tool).toBeDefined();
-      expect(tool?.getDefinition().name).toBe('ping');
+      expect(tool?.getDefinition().name).toBe(buildToolName('ping', MCP_TOOL_PREFIX));
     });
 
     it('должна вернуть undefined для несуществующего tool', () => {
@@ -202,25 +209,27 @@ describe('ToolRegistry', () => {
         success: true,
         message: 'Подключение успешно',
       };
+      const toolName = buildToolName('ping', MCP_TOOL_PREFIX);
 
       vi.mocked(mockFacade.ping).mockResolvedValue(mockPingResult);
 
       // Act
-      const result = await registry.execute('ping', params);
+      const result = await registry.execute(toolName, params);
 
       // Assert
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
       expect(result.content[0]!.type).toBe('text');
 
-      expect(mockLogger.info).toHaveBeenCalledWith('Вызов инструмента: ping');
-      expect(mockLogger.info).toHaveBeenCalledWith('Инструмент ping выполнен успешно');
+      expect(mockLogger.info).toHaveBeenCalledWith(`Вызов инструмента: ${toolName}`);
+      expect(mockLogger.info).toHaveBeenCalledWith(`Инструмент ${toolName} выполнен успешно`);
       expect(mockLogger.debug).toHaveBeenCalledWith('Параметры:', params);
     });
 
     it('должна успешно выполнить get_issues инструмент', async () => {
       // Arrange
       const params: ToolCallParams = { issueKeys: ['TEST-1'] };
+      const toolName = buildToolName('get_issues', MCP_TOOL_PREFIX);
       const mockResults: BatchIssueResult[] = [
         {
           status: 'fulfilled',
@@ -245,11 +254,11 @@ describe('ToolRegistry', () => {
       vi.mocked(mockFacade.getIssues).mockResolvedValue(mockResults);
 
       // Act
-      const result = await registry.execute('get_issues', params);
+      const result = await registry.execute(toolName, params);
 
       // Assert
       expect(result.isError).toBeUndefined();
-      expect(mockLogger.info).toHaveBeenCalledWith('Инструмент get_issues выполнен успешно');
+      expect(mockLogger.info).toHaveBeenCalledWith(`Инструмент ${toolName} выполнен успешно`);
     });
 
     it('должна вернуть ошибку для несуществующего инструмента', async () => {
@@ -267,8 +276,8 @@ describe('ToolRegistry', () => {
       const content = JSON.parse(result.content[0]!.text);
       expect(content.success).toBe(false);
       expect(content.message).toContain('не найден');
-      expect(content.availableTools).toContain('ping');
-      expect(content.availableTools).toContain('get_issues');
+      expect(content.availableTools).toContain(buildToolName('ping', MCP_TOOL_PREFIX));
+      expect(content.availableTools).toContain(buildToolName('get_issues', MCP_TOOL_PREFIX));
 
       expect(mockLogger.error).toHaveBeenCalledWith('Инструмент не найден: non_existent_tool');
     });
@@ -277,11 +286,12 @@ describe('ToolRegistry', () => {
       // Arrange
       const params: ToolCallParams = {};
       const error = new Error('Execution failed');
+      const toolName = buildToolName('ping', MCP_TOOL_PREFIX);
 
       vi.mocked(mockFacade.ping).mockRejectedValue(error);
 
       // Act
-      const result = await registry.execute('ping', params);
+      const result = await registry.execute(toolName, params);
 
       // Assert
       expect(result.isError).toBe(true);
@@ -300,11 +310,12 @@ describe('ToolRegistry', () => {
       // Arrange
       const params: ToolCallParams = {};
       const error = new Error('Detailed error');
+      const toolName = buildToolName('ping', MCP_TOOL_PREFIX);
 
       vi.mocked(mockFacade.ping).mockRejectedValue(error);
 
       // Act
-      await registry.execute('ping', params);
+      await registry.execute(toolName, params);
 
       // Assert - проверяем что логируется ошибка с правильными параметрами
       const errorCalls = vi.mocked(mockLogger.error).mock.calls;
@@ -317,11 +328,12 @@ describe('ToolRegistry', () => {
     it('должна обработать нестандартную ошибку', async () => {
       // Arrange
       const params: ToolCallParams = {};
+      const toolName = buildToolName('ping', MCP_TOOL_PREFIX);
 
       vi.mocked(mockFacade.ping).mockRejectedValue('String error');
 
       // Act
-      const result = await registry.execute('ping', params);
+      const result = await registry.execute(toolName, params);
 
       // Assert
       expect(result.isError).toBe(true);
@@ -333,6 +345,7 @@ describe('ToolRegistry', () => {
     it('должна логировать параметры вызова', async () => {
       // Arrange
       const params: ToolCallParams = { key: 'value', nested: { prop: 123 } };
+      const toolName = buildToolName('ping', MCP_TOOL_PREFIX);
       const mockPingResult: PingResult = {
         success: true,
         message: 'OK',
@@ -341,7 +354,7 @@ describe('ToolRegistry', () => {
       vi.mocked(mockFacade.ping).mockResolvedValue(mockPingResult);
 
       // Act
-      await registry.execute('ping', params);
+      await registry.execute(toolName, params);
 
       // Assert
       expect(mockLogger.debug).toHaveBeenCalledWith('Параметры:', params);

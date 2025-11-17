@@ -24,7 +24,7 @@ describe('get-issue-transitions integration tests', () => {
     mockServer.mockGetTransitionsSuccess(issueKey);
 
     // Act
-    const result = await client.callTool('get_issue_transitions', {
+    const result = await client.callTool('fr_yandex_tracker_get_issue_transitions', {
       issueKey,
     });
 
@@ -47,7 +47,7 @@ describe('get-issue-transitions integration tests', () => {
     mockServer.mockGetTransitions404(issueKey);
 
     // Act
-    const result = await client.callTool('get_issue_transitions', {
+    const result = await client.callTool('fr_yandex_tracker_get_issue_transitions', {
       issueKey,
     });
 
@@ -62,7 +62,7 @@ describe('get-issue-transitions integration tests', () => {
     mockServer.mockGetTransitionsSuccess(issueKey);
 
     // Act
-    const result = await client.callTool('get_issue_transitions', {
+    const result = await client.callTool('fr_yandex_tracker_get_issue_transitions', {
       issueKey,
       fields: ['id', 'to'],
     });
