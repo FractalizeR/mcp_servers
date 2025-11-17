@@ -25,10 +25,7 @@
       "types": "./dist/utils/index.d.ts",
       "default": "./dist/utils/index.js"
     },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "default": "./dist/*.js"
-    }
+    "./*": "./dist/*"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
