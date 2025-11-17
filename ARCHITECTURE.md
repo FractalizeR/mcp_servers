@@ -133,7 +133,7 @@ npm run depcruise  # Validates dependency graph
 
 **Key Principle:** Built on framework packages (infrastructure, core, search)
 
-**Details:** [packages/yandex-tracker/README.md](packages/yandex-tracker/README.md), [packages/yandex-tracker/CLAUDE.md](packages/yandex-tracker/CLAUDE.md)
+**Details:** [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md), [packages/servers/yandex-tracker/CLAUDE.md](packages/servers/yandex-tracker/CLAUDE.md)
 
 ---
 
@@ -215,7 +215,7 @@ handlers/
 ### Incoming (from API): *WithUnknownFields
 
 ```typescript
-// packages/yandex-tracker/src/entities/issue.entity.ts
+// packages/servers/yandex-tracker/src/entities/issue.entity.ts
 export interface Issue { /* known fields */ }
 export type IssueWithUnknownFields = WithUnknownFields<Issue>;
 ```
@@ -225,7 +225,7 @@ export type IssueWithUnknownFields = WithUnknownFields<Issue>;
 ### Outgoing (to API): Strict DTO
 
 ```typescript
-// packages/yandex-tracker/src/dto/issue/update-issue.dto.ts
+// packages/servers/yandex-tracker/src/dto/issue/update-issue.dto.ts
 export interface UpdateIssueDto {
   summary?: string;
   description?: string;
@@ -235,7 +235,7 @@ export interface UpdateIssueDto {
 
 **Purpose:** Type-safe requests
 
-**Details:** [packages/yandex-tracker/src/entities/README.md](packages/yandex-tracker/src/entities/README.md), [packages/yandex-tracker/src/dto/README.md](packages/yandex-tracker/src/dto/README.md)
+**Details:** [packages/servers/yandex-tracker/src/entities/README.md](packages/servers/yandex-tracker/src/entities/README.md), [packages/servers/yandex-tracker/src/dto/README.md](packages/servers/yandex-tracker/src/dto/README.md)
 
 ---
 
@@ -280,7 +280,7 @@ const results = await executor.execute(
 
 **Structure:**
 ```
-packages/yandex-tracker/src/composition-root/
+packages/servers/yandex-tracker/src/composition-root/
 ├── types.ts           # Symbol tokens (TYPES.HttpClient, etc.)
 ├── container.ts       # Container configuration
 └── definitions/       # Declarative definitions
@@ -293,7 +293,7 @@ packages/yandex-tracker/src/composition-root/
 - Easy testing (rebind)
 - Explicit contracts
 
-**Details:** [packages/yandex-tracker/src/composition-root/README.md](packages/yandex-tracker/src/composition-root/README.md)
+**Details:** [packages/servers/yandex-tracker/src/composition-root/README.md](packages/servers/yandex-tracker/src/composition-root/README.md)
 
 ---
 
@@ -382,7 +382,7 @@ npm run test:coverage           # With coverage
 npm run test --workspace=@mcp-framework/core  # Single package
 ```
 
-**Details:** [packages/yandex-tracker/tests/README.md](packages/yandex-tracker/tests/README.md)
+**Details:** [packages/servers/yandex-tracker/tests/README.md](packages/servers/yandex-tracker/tests/README.md)
 
 ---
 
@@ -403,7 +403,7 @@ npm run test --workspace=@mcp-framework/core  # Single package
 
 1. Create structure:
    ```
-   packages/yandex-tracker/src/mcp/tools/{api|helpers}/{feature}/{action}/
+   packages/servers/yandex-tracker/src/mcp/tools/{api|helpers}/{feature}/{action}/
    ├── {name}.schema.ts
    ├── {name}.definition.ts
    ├── {name}.tool.ts
@@ -412,7 +412,7 @@ npm run test --workspace=@mcp-framework/core  # Single package
 
 2. Add to registry:
    ```typescript
-   // packages/yandex-tracker/src/composition-root/definitions/tool-definitions.ts
+   // packages/servers/yandex-tracker/src/composition-root/definitions/tool-definitions.ts
    export const TOOL_CLASSES = [
      // ...
      NewTool,
@@ -421,17 +421,17 @@ npm run test --workspace=@mcp-framework/core  # Single package
 
 3. Tests + `npm run validate`
 
-**Details:** [packages/yandex-tracker/src/mcp/README.md](packages/yandex-tracker/src/mcp/README.md)
+**Details:** [packages/servers/yandex-tracker/src/mcp/README.md](packages/servers/yandex-tracker/src/mcp/README.md)
 
 ### Adding API Operation (in yandex-tracker)
 
-1. Create `packages/yandex-tracker/src/api_operations/{feature}/{action}/{name}.operation.ts`
+1. Create `packages/servers/yandex-tracker/src/api_operations/{feature}/{action}/{name}.operation.ts`
 2. Extend `BaseOperation`
 3. Add facade method
-4. Register in `packages/yandex-tracker/src/composition-root/definitions/operation-definitions.ts`
+4. Register in `packages/servers/yandex-tracker/src/composition-root/definitions/operation-definitions.ts`
 5. Tests + `npm run validate`
 
-**Details:** [packages/yandex-tracker/src/api_operations/README.md](packages/yandex-tracker/src/api_operations/README.md)
+**Details:** [packages/servers/yandex-tracker/src/api_operations/README.md](packages/servers/yandex-tracker/src/api_operations/README.md)
 
 ---
 
@@ -506,15 +506,15 @@ npm run validate
 
 ### Yandex Tracker
 
-- **[packages/yandex-tracker/README.md](packages/yandex-tracker/README.md)** — User guide
-- **[packages/yandex-tracker/CLAUDE.md](packages/yandex-tracker/CLAUDE.md)** — Developer rules
+- **[packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)** — User guide
+- **[packages/servers/yandex-tracker/CLAUDE.md](packages/servers/yandex-tracker/CLAUDE.md)** — Developer rules
 - **Module READMEs:**
-  - [src/mcp/README.md](packages/yandex-tracker/src/mcp/README.md)
-  - [src/api_operations/README.md](packages/yandex-tracker/src/api_operations/README.md)
-  - [src/entities/README.md](packages/yandex-tracker/src/entities/README.md)
-  - [src/dto/README.md](packages/yandex-tracker/src/dto/README.md)
-  - [src/composition-root/README.md](packages/yandex-tracker/src/composition-root/README.md)
-  - [tests/README.md](packages/yandex-tracker/tests/README.md)
+  - [src/mcp/README.md](packages/servers/yandex-tracker/src/mcp/README.md)
+  - [src/api_operations/README.md](packages/servers/yandex-tracker/src/api_operations/README.md)
+  - [src/entities/README.md](packages/servers/yandex-tracker/src/entities/README.md)
+  - [src/dto/README.md](packages/servers/yandex-tracker/src/dto/README.md)
+  - [src/composition-root/README.md](packages/servers/yandex-tracker/src/composition-root/README.md)
+  - [tests/README.md](packages/servers/yandex-tracker/tests/README.md)
 
 ---
 

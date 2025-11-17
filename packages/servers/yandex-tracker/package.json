@@ -1,0 +1,72 @@
+{
+  "name": "@mcp-server/yandex-tracker",
+  "version": "0.1.0",
+  "description": "MCP Server for Yandex Tracker API integration",
+  "keywords": [
+    "mcp",
+    "yandex-tracker",
+    "project-management",
+    "api",
+    "claude"
+  ],
+  "license": "MIT",
+  "author": "Fractalizer",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-connect": "./dist/cli/bin/mcp-connect.js",
+    "mcp-server-yandex-tracker": "./dist/yandex-tracker.bundle.js"
+  },
+  "files": [
+    "dist",
+    "scripts",
+    "README.md",
+    "CLAUDE.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc -b && tsc-alias && tsup",
+    "build:bundle": "tsup",
+    "clean": "rimraf dist",
+    "dev": "npm run build && node dist/yandex-tracker.bundle.js",
+    "mcp:connect": "npm run build && node dist/cli/bin/mcp-connect.js connect",
+    "mcp:disconnect": "npm run build && node dist/cli/bin/mcp-connect.js disconnect",
+    "mcp:list": "npm run build && node dist/cli/bin/mcp-connect.js list",
+    "mcp:status": "npm run build && node dist/cli/bin/mcp-connect.js status",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:smoke": "tsx scripts/smoke-test-server.ts",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit",
+    "validate:tools": "tsx scripts/validate-tool-registration.ts"
+  },
+  "dependencies": {
+    "@iarna/toml": "^2.2.5",
+    "@mcp-framework/core": "*",
+    "@mcp-framework/infrastructure": "*",
+    "@mcp-framework/search": "*",
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "axios": "^1.7.9",
+    "chalk": "^5.4.1",
+    "commander": "^12.1.0",
+    "inquirer": "^12.3.0",
+    "inversify": "^7.10.4",
+    "ora": "^8.1.1",
+    "pino": "^10.1.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^24.10.1",
+    "axios-mock-adapter": "^2.1.0",
+    "esbuild": "^0.27.0",
+    "tsc-alias": "^1.8.16",
+    "tsup": "^8.3.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

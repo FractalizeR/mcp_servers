@@ -83,7 +83,7 @@ packages/
 - **Infrastructure** — [packages/infrastructure/README.md](packages/infrastructure/README.md)
 - **Core** — [packages/core/README.md](packages/core/README.md)
 - **Search** — [packages/search/README.md](packages/search/README.md)
-- **Yandex Tracker** — [packages/yandex-tracker/README.md](packages/yandex-tracker/README.md)
+- **Yandex Tracker** — [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
 
 ---
 
@@ -210,7 +210,7 @@ npm run build --workspace=@mcp-framework/core
 npm run test --workspace=mcp-server-yandex-tracker
 
 # Все команды пакета
-cd packages/yandex-tracker
+cd packages/servers/yandex-tracker
 npm run <script>
 ```
 
@@ -257,10 +257,10 @@ npm run cpd:report
 - НЕ должны зависеть от доменной логики (Yandex Tracker)
 - См. README.md в каждом пакете для API и примеров
 
-**Yandex Tracker (packages/yandex-tracker):**
+**Yandex Tracker (packages/servers/yandex-tracker):**
 - Доменная логика Яндекс.Трекера
 - MCP tools, API operations, entities, DTO
-- **ОБЯЗАТЕЛЬНО прочитай:** [packages/yandex-tracker/CLAUDE.md](packages/yandex-tracker/CLAUDE.md)
+- **ОБЯЗАТЕЛЬНО прочитай:** [packages/servers/yandex-tracker/CLAUDE.md](packages/servers/yandex-tracker/CLAUDE.md)
 
 ---
 
@@ -295,5 +295,5 @@ Co-Authored-By: Claude <noreply@anthropic.com>
   - [Core API](packages/core/README.md)
   - [Search System](packages/search/README.md)
 - **Yandex Tracker:**
-  - [Yandex Tracker CLAUDE.md](packages/yandex-tracker/CLAUDE.md)
-  - [Yandex Tracker README.md](packages/yandex-tracker/README.md)
+  - [Yandex Tracker CLAUDE.md](packages/servers/yandex-tracker/CLAUDE.md)
+  - [Yandex Tracker README.md](packages/servers/yandex-tracker/README.md)

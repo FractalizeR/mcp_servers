@@ -13,8 +13,8 @@ packages/
 ## Тесты
 
 - Unit тесты в `packages/*/tests/` (зеркалируют `packages/*/src/`)
-- Integration тесты в `packages/yandex-tracker/tests/integration/`
-- E2E тесты в `packages/yandex-tracker/tests/workflows/`
+- Integration тесты в `packages/servers/yandex-tracker/tests/integration/`
+- E2E тесты в `packages/servers/yandex-tracker/tests/workflows/`
 
 ## Ключевые файлы
 

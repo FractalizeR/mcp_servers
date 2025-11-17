@@ -25,7 +25,7 @@ This repository provides:
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| [mcp-server-yandex-tracker](packages/yandex-tracker) | 0.1.0 | MCP server for Yandex.Tracker API v3 integration |
+| [mcp-server-yandex-tracker](packages/servers/yandex-tracker) | 0.1.0 | MCP server for Yandex.Tracker API v3 integration |
 
 ---
 
@@ -68,7 +68,7 @@ npm install -g mcp-server-yandex-tracker
 ```
 
 **Connect to Claude Desktop:**
-Follow instructions in [packages/yandex-tracker/README.md](packages/yandex-tracker/README.md)
+Follow instructions in [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
 
 ### For Framework Users
 
@@ -127,7 +127,7 @@ npm run build --workspace=@mcp-framework/core
 npm run test --workspace=mcp-server-yandex-tracker
 
 # All package commands
-cd packages/yandex-tracker
+cd packages/servers/yandex-tracker
 npm run <script>
 ```
 
@@ -138,7 +138,7 @@ npm run <script>
 npm install axios --workspace=@mcp-framework/infrastructure
 
 # Add framework package to yandex-tracker
-cd packages/yandex-tracker
+cd packages/servers/yandex-tracker
 npm install @mcp-framework/core
 ```
 
@@ -158,7 +158,7 @@ npm install @mcp-framework/core
 - **Infrastructure:** [packages/infrastructure/README.md](packages/infrastructure/README.md)
 - **Core:** [packages/core/README.md](packages/core/README.md)
 - **Search:** [packages/search/README.md](packages/search/README.md)
-- **Yandex Tracker:** [packages/yandex-tracker/README.md](packages/yandex-tracker/README.md)
+- **Yandex Tracker:** [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
 
 ---
 
@@ -181,7 +181,7 @@ npm run test --workspace=@mcp-framework/core
 
 **Watch mode:**
 ```bash
-cd packages/yandex-tracker
+cd packages/servers/yandex-tracker
 npm run test:watch
 ```
 

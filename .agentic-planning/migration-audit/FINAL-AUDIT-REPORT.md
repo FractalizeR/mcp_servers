@@ -55,7 +55,7 @@
 
 #### CLI Tools (21/21) ✅
 
-**Восстановлено в:** `packages/yandex-tracker/src/cli/`
+**Восстановлено в:** `packages/servers/yandex-tracker/src/cli/`
 
 ```
 ✅ src/cli/bin/mcp-connect.ts
@@ -81,7 +81,7 @@
 
 #### Composition Root (6/6) ✅
 
-**Восстановлено в:** `packages/yandex-tracker/src/composition-root/`
+**Восстановлено в:** `packages/servers/yandex-tracker/src/composition-root/`
 
 ```
 ✅ src/composition-root/container.ts
@@ -131,18 +131,18 @@
 
 #### Yandex Tracker Tools (49/49) ✅
 
-**Остались в:** `packages/yandex-tracker/src/tools/`
+**Остались в:** `packages/servers/yandex-tracker/src/tools/`
 
 ```
-✅ src/mcp/tools/api/issues/* → packages/yandex-tracker/src/tools/api/issues/
-✅ src/mcp/tools/helpers/demo/* → packages/yandex-tracker/src/tools/helpers/demo/
-✅ src/mcp/tools/helpers/issue-url/* → packages/yandex-tracker/src/tools/helpers/issue-url/
-✅ src/mcp/tools/ping.tool.ts → packages/yandex-tracker/src/tools/ping.tool.ts
+✅ src/mcp/tools/api/issues/* → packages/servers/yandex-tracker/src/tools/api/issues/
+✅ src/mcp/tools/helpers/demo/* → packages/servers/yandex-tracker/src/tools/helpers/demo/
+✅ src/mcp/tools/helpers/issue-url/* → packages/servers/yandex-tracker/src/tools/helpers/issue-url/
+✅ src/mcp/tools/ping.tool.ts → packages/servers/yandex-tracker/src/tools/ping.tool.ts
 ```
 
 #### Tracker API (27/27) ✅
 
-**Остались в:** `packages/yandex-tracker/src/tracker_api/`
+**Остались в:** `packages/servers/yandex-tracker/src/tracker_api/`
 
 ```
 ✅ src/tracker_api/api_operations/* → без изменений
@@ -173,8 +173,8 @@
 
 | Скрипт | Статус | Местоположение |
 |--------|--------|----------------|
-| smoke-test-server.ts | ✅ | packages/yandex-tracker/scripts/ |
-| validate-tool-registration.ts | ✅ | packages/yandex-tracker/scripts/ |
+| smoke-test-server.ts | ✅ | packages/servers/yandex-tracker/scripts/ |
+| validate-tool-registration.ts | ✅ | packages/servers/yandex-tracker/scripts/ |
 | generate-tool-index.ts | ✅ | packages/search/scripts/ |
 | add-tool-metadata.ts | ⚠️ | **НЕ ВОССТАНОВЛЕН** |
 | audit-migration.sh | ✅ | scripts/ (новый) |
@@ -218,7 +218,7 @@
 }
 ```
 
-#### packages/yandex-tracker/package.json
+#### packages/servers/yandex-tracker/package.json
 
 ```json
 {
@@ -251,15 +251,15 @@
 
 | Документ | Статус | Новое местоположение |
 |----------|--------|----------------------|
-| CLAUDE.md | ✅ | Корень + packages/yandex-tracker/CLAUDE.md |
+| CLAUDE.md | ✅ | Корень + packages/servers/yandex-tracker/CLAUDE.md |
 | ARCHITECTURE.md | ✅ | Корень |
 | README.md | ✅ | Корень + все пакеты |
-| CLI README.md | ✅ | packages/yandex-tracker/src/cli/README.md |
-| Composition Root README.md | ✅ | packages/yandex-tracker/src/composition-root/README.md |
+| CLI README.md | ✅ | packages/servers/yandex-tracker/src/cli/README.md |
+| Composition Root README.md | ✅ | packages/servers/yandex-tracker/src/composition-root/README.md |
 | Infrastructure README.md | ✅ | packages/infrastructure/README.md |
 | Core README.md | ✅ | packages/core/README.md |
 | Search README.md | ✅ | packages/search/README.md |
-| Tracker API README.md | ✅ | packages/yandex-tracker/src/tracker_api/*/README.md |
+| Tracker API README.md | ✅ | packages/servers/yandex-tracker/src/tracker_api/*/README.md |
 
 **Планировочная документация (.continuation-prompts, .test-improvement-plan):**
 - Удалена как устаревшая ✅
@@ -313,7 +313,7 @@ yandex-tracker (зависит от всех framework пакетов)
 
 ```bash
 # Протестировать все CLI команды
-cd packages/yandex-tracker
+cd packages/servers/yandex-tracker
 npm run mcp:connect
 npm run mcp:disconnect
 npm run mcp:list
@@ -339,7 +339,7 @@ npm run validate
 #### 3. Проверить smoke-тест (КРИТИЧНО)
 
 ```bash
-cd packages/yandex-tracker
+cd packages/servers/yandex-tracker
 npm run test:smoke
 ```
 

@@ -200,8 +200,8 @@ npm run build:bundle
 
 - [CLAUDE.md](../CLAUDE.md) — правила кодирования для ИИ агентов
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — архитектура проекта
-- [tests/README.md](../packages/yandex-tracker/tests/README.md) — правила тестирования
-- [packages/yandex-tracker/src/tools/README.md](../packages/yandex-tracker/src/tools/README.md) — разработка MCP tools
+- [tests/README.md](../packages/servers/yandex-tracker/tests/README.md) — правила тестирования
+- [packages/servers/yandex-tracker/src/tools/README.md](../packages/servers/yandex-tracker/src/tools/README.md) — разработка MCP tools
 
 ## ❓ Вопросы?
 

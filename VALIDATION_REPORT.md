@@ -197,7 +197,7 @@ packages/search/
   ✅ scripts/
   ✅ vitest.config.ts
 
-packages/yandex-tracker/
+packages/servers/yandex-tracker/
   ✅ package.json
   ✅ tsconfig.json
   ✅ README.md
@@ -221,8 +221,8 @@ packages/yandex-tracker/
 ✅ packages/core/README.md: ~395 lines (limit: 500) - 79% used
 ✅ packages/infrastructure/README.md: ~313 lines (limit: 500) - 63% used
 ✅ packages/search/README.md: ~404 lines (limit: 500) - 81% used
-✅ packages/yandex-tracker/README.md: ~382 lines (limit: 500) - 76% used
-✅ packages/yandex-tracker/CLAUDE.md: 232 lines (limit: 400) - 58% used
+✅ packages/servers/yandex-tracker/README.md: ~382 lines (limit: 500) - 76% used
+✅ packages/servers/yandex-tracker/CLAUDE.md: 232 lines (limit: 400) - 58% used
 ```
 
 ### Documentation Coverage

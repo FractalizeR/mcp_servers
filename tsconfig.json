@@ -1,10 +1,10 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/infrastructure" },
-    { "path": "./packages/core" },
-    { "path": "./packages/search" },
-    { "path": "./packages/yandex-tracker" },
+    { "path": "./packages/framework/infrastructure" },
+    { "path": "./packages/framework/core" },
+    { "path": "./packages/framework/search" },
+    { "path": "./packages/servers/yandex-tracker" },
     { "path": "./src/cli" }
   ]
 }

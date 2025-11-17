@@ -7,7 +7,7 @@ import { defineConfig } from 'vitest/config';
  * - packages/infrastructure/tests/
  * - packages/core/tests/
  * - packages/search/tests/
- * - packages/yandex-tracker/tests/
+ * - packages/servers/yandex-tracker/tests/
  *
  * Каждый пакет имеет свой vitest.config.ts
  */

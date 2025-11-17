@@ -137,12 +137,12 @@ src/mcp/tools/api/{feature}/{name}.tool.ts
 
 **v2.0:**
 ```
-packages/yandex-tracker/src/mcp/tools/api/{feature}/{action}/{name}.tool.ts
+packages/servers/yandex-tracker/src/mcp/tools/api/{feature}/{action}/{name}.tool.ts
 ```
 
 **Example:**
 - v1.x: `src/mcp/tools/api/issue/get-issues.tool.ts`
-- v2.0: `packages/yandex-tracker/src/mcp/tools/api/issue/get/get-issues.tool.ts`
+- v2.0: `packages/servers/yandex-tracker/src/mcp/tools/api/issue/get/get-issues.tool.ts`
 
 #### Infrastructure
 
@@ -261,7 +261,7 @@ src/mcp/tools/api/my-feature/my-tool.tool.ts
 
 **v2.0 structure:**
 ```
-packages/yandex-tracker/src/mcp/tools/api/my-feature/action/my-tool.tool.ts
+packages/servers/yandex-tracker/src/mcp/tools/api/my-feature/action/my-tool.tool.ts
 ```
 
 **Move your files** to match new structure.
@@ -383,8 +383,8 @@ npm run build
   - [Search README](packages/search/README.md)
 
 - **Yandex Tracker:**
-  - [Yandex Tracker README](packages/yandex-tracker/README.md)
-  - [Yandex Tracker CLAUDE.md](packages/yandex-tracker/CLAUDE.md)
+  - [Yandex Tracker README](packages/servers/yandex-tracker/README.md)
+  - [Yandex Tracker CLAUDE.md](packages/servers/yandex-tracker/CLAUDE.md)
 
 - **Contributing:**
   - [CONTRIBUTING.md](.github/CONTRIBUTING.md)
@@ -400,7 +400,7 @@ npm run build
 
 ## 📝 Changelog
 
-See [CHANGELOG.md](packages/yandex-tracker/CHANGELOG.md) for detailed changes.
+See [CHANGELOG.md](packages/servers/yandex-tracker/CHANGELOG.md) for detailed changes.
 
 **Summary:**
 - **v2.0.0** — Monorepo restructure, framework packages, tool search

@@ -133,7 +133,7 @@ See [MIGRATION.md](./MIGRATION.md) for detailed migration guide.
 - ✅ [packages/infrastructure/README.md](./packages/infrastructure/README.md)
 - ✅ [packages/core/README.md](./packages/core/README.md)
 - ✅ [packages/search/README.md](./packages/search/README.md)
-- ✅ [packages/yandex-tracker/CLAUDE.md](./packages/yandex-tracker/CLAUDE.md)
+- ✅ [packages/servers/yandex-tracker/CLAUDE.md](./packages/servers/yandex-tracker/CLAUDE.md)
 - ✅ CHANGELOG.md for all packages
 
 ### Updated Documentation

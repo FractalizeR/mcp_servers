@@ -195,7 +195,7 @@ CRITICAL_DIRS=(
     "packages/infrastructure"
     "packages/core"
     "packages/search"
-    "packages/yandex-tracker"
+    "packages/servers/yandex-tracker"
 )
 
 for dir in "${CRITICAL_DIRS[@]}"; do

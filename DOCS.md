@@ -26,7 +26,7 @@
 
 | Файл | Назначение |
 |------|-----------|
-| **[tests/README.md](./packages/yandex-tracker/tests/README.md)** | Архитектура тестирования — типы тестов, helpers, изоляция |
+| **[tests/README.md](./packages/servers/yandex-tracker/tests/README.md)** | Архитектура тестирования — типы тестов, helpers, изоляция |
 
 ---
 
@@ -36,27 +36,27 @@
 
 | Файл | Назначение | Размер |
 |------|-----------|--------|
-| **[packages/yandex-tracker/src/tools/README.md](./packages/yandex-tracker/src/tools/README.md)** | MCP Tools — конвенции, шаблоны, чек-листы |  |
+| **[packages/servers/yandex-tracker/src/tools/README.md](./packages/servers/yandex-tracker/src/tools/README.md)** | MCP Tools — конвенции, шаблоны, чек-листы |  |
 
 ### Tracker API слой
 
 | Файл | Назначение |
 |------|-----------|
-| **[packages/yandex-tracker/src/tracker_api/api_operations/README.md](./packages/yandex-tracker/src/tracker_api/api_operations/README.md)** | API Operations — конвенции, BaseOperation, batch-операции |
-| **[packages/yandex-tracker/src/tracker_api/entities/README.md](./packages/yandex-tracker/src/tracker_api/entities/README.md)** | Entities — WithUnknownFields, структура, правила |
-| **[packages/yandex-tracker/src/tracker_api/dto/README.md](./packages/yandex-tracker/src/tracker_api/dto/README.md)** | DTO — Input/Output паттерны, кастомные поля |
+| **[packages/servers/yandex-tracker/src/tracker_api/api_operations/README.md](./packages/servers/yandex-tracker/src/tracker_api/api_operations/README.md)** | API Operations — конвенции, BaseOperation, batch-операции |
+| **[packages/servers/yandex-tracker/src/tracker_api/entities/README.md](./packages/servers/yandex-tracker/src/tracker_api/entities/README.md)** | Entities — WithUnknownFields, структура, правила |
+| **[packages/servers/yandex-tracker/src/tracker_api/dto/README.md](./packages/servers/yandex-tracker/src/tracker_api/dto/README.md)** | DTO — Input/Output паттерны, кастомные поля |
 
 ### Composition Root (DI)
 
 | Файл | Назначение |
 |------|-----------|
-| **[packages/yandex-tracker/src/composition-root/README.md](./packages/yandex-tracker/src/composition-root/README.md)** | Dependency Injection — Symbol-based tokens, автоматическая регистрация, примеры использования |
+| **[packages/servers/yandex-tracker/src/composition-root/README.md](./packages/servers/yandex-tracker/src/composition-root/README.md)** | Dependency Injection — Symbol-based tokens, автоматическая регистрация, примеры использования |
 
 ### CLI инструмент
 
 | Файл | Назначение | Размер |
 |------|-----------|--------|
-| **[packages/yandex-tracker/src/cli/README.md](./packages/yandex-tracker/src/cli/README.md)** | CLI — управление подключениями, connectors, архитектура | ~360 строк |
+| **[packages/servers/yandex-tracker/src/cli/README.md](./packages/servers/yandex-tracker/src/cli/README.md)** | CLI — управление подключениями, connectors, архитектура | ~360 строк |
 
 ---
 
