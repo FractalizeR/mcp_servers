@@ -1,0 +1,13 @@
+@iarna/toml
+@modelcontextprotocol/sdk
+axios
+chalk
+commander
+inquirer
+inversify
+ora
+p-limit
+pino
+pino-pretty
+rotating-file-stream
+zod

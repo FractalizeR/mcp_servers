@@ -1,0 +1,5 @@
+scripts/add-tool-metadata.ts
+scripts/generate-tool-index.ts
+scripts/smoke-test-server.ts
+scripts/validate-tool-registration.d.ts.map
+scripts/validate-tool-registration.ts

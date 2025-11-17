@@ -1,0 +1,2 @@
+tests/integration/templates/issue.json
+tests/integration/templates/user.json

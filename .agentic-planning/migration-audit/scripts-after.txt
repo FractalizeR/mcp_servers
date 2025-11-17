@@ -1,0 +1,14 @@
+build
+build:bundle
+clean
+dev
+mcp:connect
+mcp:disconnect
+mcp:list
+mcp:status
+test
+test:coverage
+test:smoke
+test:watch
+typecheck
+validate:tools
