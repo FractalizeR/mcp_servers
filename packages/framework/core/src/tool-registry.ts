@@ -129,6 +129,44 @@ export class ToolRegistry {
   }
 
   /**
+   * Получить essential инструменты (для lazy discovery)
+   *
+   * @param essentialNames - список имен essential инструментов
+   * @returns Определения только essential инструментов
+   */
+  getEssentialDefinitions(essentialNames: readonly string[]): ToolDefinition[] {
+    this.ensureInitialized();
+    if (!this.tools) {
+      return [];
+    }
+
+    const essentialSet = new Set(essentialNames);
+    return Array.from(this.tools.values())
+      .filter((tool) => essentialSet.has(tool.getDefinition().name))
+      .map((tool) => tool.getDefinition());
+  }
+
+  /**
+   * Получить определения в зависимости от режима discovery
+   *
+   * @param mode - режим обнаружения ('lazy' или 'eager')
+   * @param essentialNames - список essential инструментов (для lazy режима)
+   * @returns Определения инструментов
+   */
+  getDefinitionsByMode(
+    mode: 'lazy' | 'eager',
+    essentialNames?: readonly string[]
+  ): ToolDefinition[] {
+    if (mode === 'eager') {
+      return this.getDefinitions();
+    }
+
+    // Lazy mode: возвращаем только essential tools
+    const names = essentialNames || ['ping', 'search_tools'];
+    return this.getEssentialDefinitions(names);
+  }
+
+  /**
    * Выполнить инструмент по имени
    */
   async execute(name: string, params: ToolCallParams): Promise<ToolResult> {

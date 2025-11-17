@@ -14,6 +14,8 @@ import {
   DEFAULT_LOGS_DIR,
   DEFAULT_LOG_MAX_SIZE,
   DEFAULT_LOG_MAX_FILES,
+  DEFAULT_TOOL_DISCOVERY_MODE,
+  DEFAULT_ESSENTIAL_TOOLS,
   ENV_VAR_NAMES,
 } from './constants.js';
 
@@ -79,6 +81,30 @@ function validateMaxConcurrentRequests(value: string | undefined, defaultValue: 
   }
 
   return parsed;
+}
+
+/**
+ * Валидация режима tool discovery
+ */
+function validateToolDiscoveryMode(mode: string | undefined): 'lazy' | 'eager' {
+  if (mode === 'eager' || mode === 'lazy') {
+    return mode;
+  }
+  return DEFAULT_TOOL_DISCOVERY_MODE;
+}
+
+/**
+ * Парсинг списка essential tools из переменной окружения
+ */
+function parseEssentialTools(value: string | undefined): readonly string[] {
+  if (!value || value.trim() === '') {
+    return DEFAULT_ESSENTIAL_TOOLS;
+  }
+
+  return value
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => name.length > 0);
 }
 
 /**
@@ -169,6 +195,12 @@ export function loadConfig(): ServerConfig {
     10
   );
 
+  // Tool Discovery Mode (lazy по умолчанию для масштабируемости)
+  const toolDiscoveryMode = validateToolDiscoveryMode(
+    process.env[ENV_VAR_NAMES.TOOL_DISCOVERY_MODE]
+  );
+  const essentialTools = parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]);
+
   return {
     token: token.trim(),
     ...validatedOrgIds,
@@ -181,5 +213,7 @@ export function loadConfig(): ServerConfig {
     prettyLogs,
     logMaxSize,
     logMaxFiles,
+    toolDiscoveryMode,
+    essentialTools,
   };
 }

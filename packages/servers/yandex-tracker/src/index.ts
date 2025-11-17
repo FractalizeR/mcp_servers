@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { loadConfig } from '@mcp-framework/infrastructure';
-import type { Logger } from '@mcp-framework/infrastructure';
+import type { Logger, ServerConfig } from '@mcp-framework/infrastructure';
 import type { ToolRegistry } from '@mcp-framework/core';
 import { MCP_SERVER_NAME } from './constants.js';
 
@@ -25,12 +25,25 @@ import { createContainer, TYPES } from '@composition-root/index.js';
 /**
  * Настройка обработчиков запросов MCP сервера
  */
-function setupServer(server: Server, toolRegistry: ToolRegistry, logger: Logger): void {
+function setupServer(
+  server: Server,
+  toolRegistry: ToolRegistry,
+  config: ServerConfig,
+  logger: Logger
+): void {
   // Обработчик запроса списка инструментов
   server.setRequestHandler(ListToolsRequestSchema, () => {
-    logger.debug('Запрос списка инструментов');
+    logger.debug(`Запрос списка инструментов (режим: ${config.toolDiscoveryMode})`);
 
-    const definitions = toolRegistry.getDefinitions();
+    const definitions = toolRegistry.getDefinitionsByMode(
+      config.toolDiscoveryMode,
+      config.essentialTools
+    );
+
+    logger.info(
+      `Возвращаем ${definitions.length} инструментов ` +
+        `(режим: ${config.toolDiscoveryMode}, essential: [${config.essentialTools.join(', ')}])`
+    );
 
     return {
       tools: definitions.map((def) => ({
@@ -134,7 +147,7 @@ async function main(): Promise<void> {
     );
 
     // Настройка обработчиков сервера
-    setupServer(server, toolRegistry, logger);
+    setupServer(server, toolRegistry, config, logger);
 
     // Настройка обработчиков сигналов
     setupSignalHandlers(server, logger);
