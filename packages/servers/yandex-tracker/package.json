@@ -27,6 +27,7 @@
   "scripts": {
     "build": "tsc -b && tsc-alias && tsup",
     "build:bundle": "tsup",
+    "build:mcpb": "npm run build && tsx scripts/build-mcpb.ts",
     "clean": "rimraf dist",
     "dev": "npm run build && node dist/yandex-tracker.bundle.js",
     "mcp:connect": "npm run build && node dist/cli/bin/mcp-connect.js connect",
@@ -56,6 +57,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.0.1",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^24.10.1",
     "axios-mock-adapter": "^2.1.0",

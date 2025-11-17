@@ -1,0 +1,62 @@
+# .mcpbignore - файлы игнорируемые при сборке MCPB архива
+# Синтаксис как в .gitignore
+
+# Временные директории сборки
+.mcpb-build/
+node_modules/
+.npm/
+.cache/
+
+# Исходники (в архив идет только dist/)
+src/
+packages/*/src/
+*.ts
+!*.d.ts
+
+# Тесты
+tests/
+__tests__/
+*.test.*
+*.spec.*
+coverage/
+
+# Документация разработки
+.agentic-planning/
+.github/
+.husky/
+.vscode/
+
+# Конфигурационные файлы разработки
+tsconfig*.json
+vitest.config.ts
+eslint.config.mjs
+.eslintrc*
+.prettierrc*
+.editorconfig
+.dependency-cruiser.js
+.jscpd.json
+commitlint.config.js
+
+# Логи и временные файлы
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# Git файлы
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.gitlab-ci.yml
+azure-pipelines.yml
+.travis.yml
+
+# Другие MCPB архивы
+*.mcpb
+
+# Скрипты разработки
+scripts/

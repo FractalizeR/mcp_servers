@@ -36,6 +36,7 @@
     "validate:security": "npm run knip && npm run audit:socket && npm run audit:lockfile && npm run audit:secrets"
   },
   "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.0.1",
     "@changesets/cli": "^2.29.7",
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/dist/mcpb-manifest-v0.3.schema.json",
   "manifest_version": "0.3",
   "name": "fractalizer_mcp_yandex_tracker",
   "version": "0.1.0",
@@ -25,11 +26,11 @@
   ],
   "server": {
     "type": "node",
-    "entry_point": "dist/index.js",
+    "entry_point": "dist/yandex-tracker.bundle.js",
     "mcp_config": {
       "command": "node",
       "args": [
-        "${__dirname}/dist/index.js"
+        "${__dirname}/dist/yandex-tracker.bundle.js"
       ],
       "env": {
         "YANDEX_TRACKER_TOKEN": "${user_config.oauth_token}",
@@ -43,18 +44,21 @@
   "user_config": {
     "oauth_token": {
       "type": "string",
+      "title": "OAuth Token",
       "description": "OAuth токен для доступа к API Яндекс.Трекера. Получить можно в настройках OAuth приложения Яндекса.",
       "required": true,
       "sensitive": true
     },
     "org_id": {
       "type": "string",
+      "title": "Organization ID",
       "description": "ID организации в Яндекс.Трекере. Можно найти в настройках организации.",
       "required": true,
       "sensitive": false
     },
     "log_level": {
       "type": "string",
+      "title": "Log Level",
       "description": "Уровень логирования: debug, info, warn, error",
       "required": false,
       "default": "info",
@@ -62,6 +66,7 @@
     },
     "request_timeout": {
       "type": "number",
+      "title": "Request Timeout",
       "description": "Таймаут запросов к API (в миллисекундах)",
       "required": false,
       "default": 30000,
@@ -79,16 +84,17 @@
       "linux",
       "win32"
     ],
-    "node": ">=22.0.0"
+    "runtimes": {
+      "node": ">=22.0.0"
+    }
   },
   "privacy_policies": [
-    {
-      "service": "Яндекс.Трекер API",
-      "url": "https://yandex.ru/legal/confidential/"
-    }
+    "https://yandex.ru/legal/confidential/"
   ],
   "_meta": {
-    "generated_by": "manual",
-    "last_updated": "2025-11-11"
+    "build": {
+      "generated_by": "mcpb-build",
+      "last_updated": "2025-11-17"
+    }
   }
 }
