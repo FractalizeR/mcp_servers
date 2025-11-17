@@ -61,8 +61,48 @@ function setupServer(
 
     logger.info(`Получен запрос на выполнение инструмента: ${name}`);
 
-    // ToolRegistry сам логирует параметры и результаты
-    return toolRegistry.execute(name, args as Record<string, unknown>);
+    try {
+      // ToolRegistry сам логирует параметры и результаты
+      const result = await toolRegistry.execute(name, args as Record<string, unknown>);
+
+      // Логируем результат выполнения
+      if (result.isError) {
+        logger.error(`Инструмент ${name} вернул ошибку`, {
+          hasContent: result.content?.length > 0,
+          contentPreview:
+            result.content?.[0]?.type === 'text'
+              ? result.content[0].text.substring(0, 200)
+              : undefined,
+        });
+      } else {
+        logger.debug(`Инструмент ${name} выполнен успешно (результат передан клиенту)`);
+      }
+
+      return result;
+    } catch (error) {
+      // Перехват необработанных исключений (на случай если что-то пойдёт не так)
+      logger.error(`Необработанное исключение при выполнении инструмента ${name}:`, error);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                success: false,
+                message: `Необработанная ошибка при выполнении инструмента: ${
+                  error instanceof Error ? error.message : 'Неизвестная ошибка'
+                }`,
+                tool: name,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
   });
 
   // Обработка ошибок сервера
