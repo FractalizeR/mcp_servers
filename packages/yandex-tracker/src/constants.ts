@@ -7,7 +7,7 @@
  * Используется для построения других названий
  * @example "fractalizer_mcp_yandex_tracker"
  */
-export const PROJECT_BASE_NAME = 'fractalizer_mcp_yandex_tracker' as const;
+const PROJECT_BASE_NAME = 'fractalizer_mcp_yandex_tracker' as const;
 
 /**
  * Название MCP сервера (используется в конфигурациях клиентов)

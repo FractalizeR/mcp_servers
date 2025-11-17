@@ -43,7 +43,8 @@
   "author": "Fractalizer",
   "license": "MIT",
   "dependencies": {
-    "@mcp-framework/core": "*"
+    "@mcp-framework/core": "*",
+    "@mcp-framework/infrastructure": "*"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

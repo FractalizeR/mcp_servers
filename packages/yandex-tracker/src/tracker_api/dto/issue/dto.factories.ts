@@ -5,13 +5,11 @@
  * Используются для unit и integration тестов.
  */
 
-import type {
-  CreateIssueDto,
-  UpdateIssueDto,
-  SearchIssuesDto,
-  FindIssuesInputDto,
-  ExecuteTransitionDto,
-} from './index.js';
+import type { CreateIssueDto } from './create-issue.dto.js';
+import type { UpdateIssueDto } from './update-issue.dto.js';
+import type { SearchIssuesDto } from './search-issues.dto.js';
+import type { FindIssuesInputDto } from './find-issues-input.dto.js';
+import type { ExecuteTransitionDto } from './execute-transition.dto.js';
 
 /**
  * Создает минимальный валидный CreateIssueDto
