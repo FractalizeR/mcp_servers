@@ -13,7 +13,7 @@ export const DEFAULT_MAX_CONCURRENT_REQUESTS = 5 as const;
 export const DEFAULT_LOGS_DIR = './logs' as const;
 export const DEFAULT_LOG_MAX_SIZE = 51200 as const; // 50KB в байтах
 export const DEFAULT_LOG_MAX_FILES = 20 as const;
-export const DEFAULT_TOOL_DISCOVERY_MODE = 'lazy' as const;
+export const DEFAULT_TOOL_DISCOVERY_MODE = 'eager' as const;
 export const DEFAULT_ESSENTIAL_TOOLS = ['ping', 'search_tools'] as const;
 
 /**

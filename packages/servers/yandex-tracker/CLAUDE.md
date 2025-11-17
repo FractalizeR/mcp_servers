@@ -80,41 +80,38 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 - ✅ Позволяет SearchToolsTool находить tools без загрузки всего кода
 - ⚠️ При добавлении нового tool — запусти `npm run build` (автоматически обновит индекс)
 
-### 5.1. Tool Discovery Mode (Lazy Loading)
+### 5.1. Tool Discovery Mode
+
+**⚠️ ВАЖНО:** По умолчанию используется `eager` режим из-за ограничений Claude Code on the Web.
 
 **Концепция:**
-- MCP endpoint `tools/list` возвращает только **essential инструменты** (`ping`, `search_tools`)
-- Claude использует `search_tools` для обнаружения других инструментов по необходимости
-- Масштабируется до 100+ инструментов без перегрузки контекста
+- **Eager режим (по умолчанию):** `tools/list` возвращает ВСЕ инструменты сразу
+  - ✅ Совместимо с Claude Code on the Web и другими MCP клиентами
+  - ⚠️ Больше токенов при подключении (но работает стабильно)
+
+- **Lazy режим (экспериментальный):** `tools/list` возвращает только essential инструменты
+  - ❌ НЕ работает с Claude Code on the Web (клиент блокирует вызовы)
+  - ✅ Работает с Claude Desktop и другими клиентами с правильной реализацией MCP
+  - ✅ Экономия токенов: 100+ инструментов без перегрузки контекста
 
 **Конфигурация через ENV:**
 ```bash
-# По умолчанию: lazy (рекомендуется для production)
-TOOL_DISCOVERY_MODE=lazy
-
-# Опционально: переопределить список essential tools
-ESSENTIAL_TOOLS=ping,search_tools
-
-# Для отладки: eager режим (все инструменты в tools/list)
+# По умолчанию: eager (для совместимости с Claude Code on the Web)
 TOOL_DISCOVERY_MODE=eager
+
+# Экспериментально: lazy режим (только для Claude Desktop и совместимых клиентов)
+TOOL_DISCOVERY_MODE=lazy
+ESSENTIAL_TOOLS=ping,search_tools
 ```
 
-**Workflow Claude в lazy режиме:**
+**Workflow в lazy режиме (только Claude Desktop):**
 1. Получает `tools/list` → видит только `[ping, search_tools]`
 2. Использует `search_tools` для поиска нужного инструмента
 3. Вызывает найденный инструмент
 
-**Пример:**
-```
-User: "Покажи задачу PROJ-123"
-Claude:
-  1. search_tools({ query: "получить задачу" }) → находит get_issues
-  2. get_issues({ issueKeys: ["PROJ-123"] })
-```
-
 **Когда использовать:**
-- ✅ `lazy` (по умолчанию): для 30+ инструментов, production
-- ⚠️ `eager`: для <20 инструментов, отладка, development
+- ✅ `eager` (по умолчанию): Claude Code on the Web, production
+- ⚠️ `lazy`: Claude Desktop, 30+ инструментов, экспериментальный режим
 
 ### 6. Логирование (Pino)
 
