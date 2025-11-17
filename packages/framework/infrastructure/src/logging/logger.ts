@@ -81,9 +81,9 @@ export class Logger {
       timestamp: () => `,"time":"${new Date().toISOString()}"`,
     };
 
-    // Development mode: pretty printing в stderr
-    if (config.pretty) {
-      const prettyTransport = pino.transport({
+    // Helper: создание pretty transport
+    const createPrettyTransport = (): pino.DestinationStream => {
+      return pino.transport({
         target: 'pino-pretty',
         options: {
           colorize: true,
@@ -91,28 +91,15 @@ export class Logger {
           ignore: 'pid,hostname',
         },
       }) as pino.DestinationStream;
+    };
 
-      return pino(pinoConfig, prettyTransport);
-    }
-
-    // Production mode: dual logging (stderr + файлы с ротацией)
-    if (config.logsDir) {
-      // Создаём директорию для логов если её нет
-      const logsPath = resolve(config.logsDir);
-      try {
-        mkdirSync(logsPath, { recursive: true });
-      } catch (err) {
-        // Игнорируем ошибку если папка уже существует
-        if ((err as Error & { code?: string }).code !== 'EEXIST') {
-          throw err;
-        }
-      }
-
-      // Параметры ротации (по умолчанию: 50KB, 20 файлов)
-      const maxSize = config.rotation?.maxSize || 50 * 1024; // 50KB
-      const maxFiles = config.rotation?.maxFiles || 20;
-
-      // Конвертация размера в формат rotating-file-stream (строка с суффиксом)
+    // Helper: создание файловых стримов для ротации логов
+    const createFileStreams = (
+      logsPath: string,
+      maxSize: number,
+      maxFiles: number,
+      level: pino.Level
+    ): pino.StreamEntry[] => {
       const formatSize = (
         bytes: number
       ): `${number}B` | `${number}K` | `${number}M` | `${number}G` => {
@@ -124,20 +111,15 @@ export class Logger {
 
       const sizeStr = formatSize(maxSize);
 
-      const streams: pino.StreamEntry[] = [
-        // Критичные логи (error/warn) → stderr для мониторинга
-        {
-          level: 'warn',
-          stream: process.stderr,
-        },
+      return [
         // Все логи → файл с ротацией
         {
-          level: pinoLevel,
+          level,
           stream: createStream('combined.log', {
             path: logsPath,
             size: sizeStr,
             maxFiles,
-            compress: 'gzip', // Сжатие старых логов
+            compress: 'gzip',
           }),
         },
         // Только ошибки → отдельный файл для быстрого поиска
@@ -150,6 +132,63 @@ export class Logger {
             compress: 'gzip',
           }),
         },
+      ];
+    };
+
+    // Dual logging (pretty + файлы): Pretty printing в stderr + файлы с ротацией
+    if (config.pretty && config.logsDir) {
+      const logsPath = resolve(config.logsDir);
+      try {
+        mkdirSync(logsPath, { recursive: true });
+      } catch (err) {
+        if ((err as Error & { code?: string }).code !== 'EEXIST') {
+          throw err;
+        }
+      }
+
+      const maxSize = config.rotation?.maxSize || 50 * 1024; // 50KB
+      const maxFiles = config.rotation?.maxFiles || 20;
+
+      const streams: pino.StreamEntry[] = [
+        // Pretty logs → stderr для development
+        {
+          level: pinoLevel,
+          stream: createPrettyTransport(),
+        },
+        // Все логи → файлы (для post-mortem анализа)
+        ...createFileStreams(logsPath, maxSize, maxFiles, pinoLevel),
+      ];
+
+      return pino(pinoConfig, pino.multistream(streams));
+    }
+
+    // Development mode: только pretty printing в stderr
+    if (config.pretty) {
+      return pino(pinoConfig, createPrettyTransport());
+    }
+
+    // Production mode: dual logging (stderr + файлы с ротацией)
+    if (config.logsDir) {
+      const logsPath = resolve(config.logsDir);
+      try {
+        mkdirSync(logsPath, { recursive: true });
+      } catch (err) {
+        if ((err as Error & { code?: string }).code !== 'EEXIST') {
+          throw err;
+        }
+      }
+
+      const maxSize = config.rotation?.maxSize || 50 * 1024; // 50KB
+      const maxFiles = config.rotation?.maxFiles || 20;
+
+      const streams: pino.StreamEntry[] = [
+        // Критичные логи (error/warn) → stderr для мониторинга
+        {
+          level: 'warn',
+          stream: process.stderr,
+        },
+        // Все логи → файлы
+        ...createFileStreams(logsPath, maxSize, maxFiles, pinoLevel),
       ];
 
       return pino(pinoConfig, pino.multistream(streams));

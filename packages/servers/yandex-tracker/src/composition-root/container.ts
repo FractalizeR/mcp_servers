@@ -48,7 +48,7 @@ function bindInfrastructure(container: Container, config: ServerConfig): void {
   container.bind<Logger>(TYPES.Logger).toDynamicValue(() => {
     return new Logger({
       level: config.logLevel,
-      ...(!config.prettyLogs && config.logsDir && { logsDir: config.logsDir }),
+      ...(config.logsDir && { logsDir: config.logsDir }),
       pretty: config.prettyLogs,
       rotation: {
         maxSize: config.logMaxSize,

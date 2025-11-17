@@ -17,7 +17,11 @@ import { dirname, join } from 'node:path';
 import { loadConfig } from '@mcp-framework/infrastructure';
 import type { Logger, ServerConfig } from '@mcp-framework/infrastructure';
 import type { ToolRegistry } from '@mcp-framework/core';
-import { MCP_SERVER_NAME, YANDEX_TRACKER_ESSENTIAL_TOOLS } from './constants.js';
+import {
+  MCP_SERVER_NAME,
+  MCP_SERVER_DISPLAY_NAME,
+  YANDEX_TRACKER_ESSENTIAL_TOOLS,
+} from './constants.js';
 
 // DI Container (Composition Root)
 import { createContainer, TYPES } from '@composition-root/index.js';
@@ -56,9 +60,32 @@ function setupServer(
 
   // Обработчик вызова инструмента
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
+    let { name } = request.params;
+    const { arguments: args } = request.params;
 
     logger.info(`Получен запрос на выполнение инструмента: ${name}`);
+
+    // Нормализация имени: удаление префикса сервера (добавляется MCP клиентами)
+    // Примеры префиксов:
+    // - "fractalizer_mcp_yandex_tracker:tool_name" (технический идентификатор)
+    // - "FractalizeR's Yandex Tracker MCP:tool_name" (отображаемое имя в UI)
+    const serverPrefixes = [
+      `${MCP_SERVER_NAME}:`, // Технический идентификатор
+      `${MCP_SERVER_DISPLAY_NAME}:`, // Отображаемое имя
+    ];
+
+    for (const prefix of serverPrefixes) {
+      if (name.startsWith(prefix)) {
+        const originalName = name;
+        name = name.slice(prefix.length);
+        logger.debug(`Убран префикс сервера из имени инструмента`, {
+          original: originalName,
+          normalized: name,
+          prefix,
+        });
+        break;
+      }
+    }
 
     try {
       // ToolRegistry сам логирует параметры и результаты
