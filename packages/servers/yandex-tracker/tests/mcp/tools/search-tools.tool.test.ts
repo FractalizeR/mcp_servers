@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SearchToolsTool, buildToolName } from '@mcp-framework/search';
+import { SearchToolsTool } from '@mcp-framework/search';
 import { ToolSearchEngine } from '@mcp-framework/search/engine';
 import {
   WeightedCombinedStrategy,
@@ -21,7 +21,7 @@ import {
   CategorySearchStrategy,
   FuzzySearchStrategy,
 } from '@mcp-framework/search/strategies';
-import { ToolCategory } from '@mcp-framework/core/tools/base/tool-metadata.js';
+import { ToolCategory, buildToolName } from '@mcp-framework/core';
 import type { StaticToolIndex, StrategyType } from '@mcp-framework/search/types.js';
 import type { ToolRegistry } from '@mcp-framework/core/tool-registry.js';
 import type { BaseTool } from '@mcp-framework/core/tools/base/base-tool.js';
@@ -499,7 +499,8 @@ describe('SearchToolsTool (E2E)', () => {
   describe('METADATA', () => {
     it('должен содержать корректные статические метаданные', () => {
       expect(SearchToolsTool.METADATA).toBeDefined();
-      expect(SearchToolsTool.METADATA.name).toBe(buildToolName('search_tools', MCP_TOOL_PREFIX));
+      // SearchToolsTool - framework tool, БЕЗ префикса проекта
+      expect(SearchToolsTool.METADATA.name).toBe(buildToolName('search_tools'));
       expect(SearchToolsTool.METADATA.category).toBe(ToolCategory.SEARCH);
       expect(SearchToolsTool.METADATA.isHelper).toBe(true);
       expect(SearchToolsTool.METADATA.tags).toContain('search');

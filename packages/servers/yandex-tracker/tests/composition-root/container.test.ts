@@ -193,7 +193,9 @@ describe('Container', () => {
       // Проверяем, что SearchToolsTool присутствует в списке
       const searchToolDefinition = definitions.find((def) => def.name === 'search_tools');
       expect(searchToolDefinition).toBeDefined();
-      expect(searchToolDefinition?.description).toContain('Поиск доступных MCP инструментов');
+      expect(searchToolDefinition?.description).toContain(
+        'PRIMARY способ обнаружения инструментов'
+      );
 
       // Проверяем, что можно получить tool через getTool
       const searchTool = registry.getTool('search_tools');

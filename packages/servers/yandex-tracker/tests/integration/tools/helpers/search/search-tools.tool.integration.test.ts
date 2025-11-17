@@ -14,6 +14,9 @@ import type { TestMCPClient } from '@integration/helpers/mcp-client.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
 
+// SearchToolsTool - framework tool, регистрируется БЕЗ префикса
+const SEARCH_TOOLS_NAME = buildToolName('search_tools');
+
 describe('search-tools integration tests', () => {
   let client: TestMCPClient;
 
@@ -31,7 +34,7 @@ describe('search-tools integration tests', () => {
   describe('Happy Path', () => {
     it('должен успешно найти инструменты по простому query', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
       });
 
@@ -61,7 +64,7 @@ describe('search-tools integration tests', () => {
 
     it('должен найти tools по специфичному названию', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'get_issues',
         detailLevel: 'full',
       });
@@ -87,7 +90,7 @@ describe('search-tools integration tests', () => {
 
     it('должен применить лимит к результатам', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'yandex',
         limit: 2,
       });
@@ -106,7 +109,7 @@ describe('search-tools integration tests', () => {
 
     it('должен использовать default limit (10)', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'tracker',
       });
 
@@ -124,7 +127,7 @@ describe('search-tools integration tests', () => {
   describe('Уровни детализации', () => {
     it('name_only: должен вернуть только имена', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
         detailLevel: 'name_only',
       });
@@ -146,7 +149,7 @@ describe('search-tools integration tests', () => {
 
     it('name_and_description: должен вернуть имя, описание, категорию', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
         detailLevel: 'name_and_description',
       });
@@ -169,7 +172,7 @@ describe('search-tools integration tests', () => {
 
     it('full: должен загрузить полные метаданные', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
         detailLevel: 'full',
       });
@@ -193,7 +196,7 @@ describe('search-tools integration tests', () => {
 
     it('default detailLevel = name_and_description', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
       });
 
@@ -213,7 +216,7 @@ describe('search-tools integration tests', () => {
   describe('Фильтрация', () => {
     it('должен фильтровать по категории ISSUES', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'yandex',
         category: 'issues',
       });
@@ -232,7 +235,7 @@ describe('search-tools integration tests', () => {
 
     it('должен фильтровать по типу (helper)', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'search',
         isHelper: true,
       });
@@ -245,7 +248,7 @@ describe('search-tools integration tests', () => {
         const parsed = JSON.parse(content.text);
         // fractalizer_mcp_yandex_tracker_search_tools должен быть helper
         const searchToolsTool = parsed.data.tools.find(
-          (t: { name: string }) => t.name === buildToolName('search_tools', MCP_TOOL_PREFIX)
+          (t: { name: string }) => t.name === SEARCH_TOOLS_NAME
         );
         expect(searchToolsTool).toBeDefined();
       }
@@ -253,7 +256,7 @@ describe('search-tools integration tests', () => {
 
     it('должен фильтровать по типу (API)', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
         isHelper: false,
       });
@@ -267,14 +270,14 @@ describe('search-tools integration tests', () => {
         // Все результаты должны быть API tools
         parsed.data.tools.forEach((toolData: { name: string }) => {
           // fractalizer_mcp_yandex_tracker_search_tools не должен быть в результатах (он helper)
-          expect(toolData.name).not.toBe(buildToolName('search_tools', MCP_TOOL_PREFIX));
+          expect(toolData.name).not.toBe(SEARCH_TOOLS_NAME);
         });
       }
     });
 
     it('должен комбинировать фильтры', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'yandex',
         category: 'issues',
         isHelper: false,
@@ -298,7 +301,7 @@ describe('search-tools integration tests', () => {
   describe('Валидация параметров', () => {
     it('должен вернуть ошибку для пустого query', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: '',
       });
 
@@ -315,7 +318,7 @@ describe('search-tools integration tests', () => {
 
     it('должен вернуть ошибку для невалидного detailLevel', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
         detailLevel: 'invalid',
       });
@@ -331,7 +334,7 @@ describe('search-tools integration tests', () => {
 
     it('должен вернуть ошибку для невалидной категории', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
         category: 'INVALID_CATEGORY',
       });
@@ -347,7 +350,7 @@ describe('search-tools integration tests', () => {
 
     it('должен вернуть ошибку для невалидного limit (негативное число)', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
         limit: -5,
       });
@@ -363,7 +366,7 @@ describe('search-tools integration tests', () => {
 
     it('должен вернуть ошибку для невалидного limit (не целое число)', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
         limit: 3.14,
       });
@@ -379,7 +382,7 @@ describe('search-tools integration tests', () => {
 
     it('должен принять валидные параметры', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
         detailLevel: 'full',
         category: 'issues',
@@ -395,7 +398,7 @@ describe('search-tools integration tests', () => {
   describe('Edge cases', () => {
     it('должен обработать query без совпадений', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'xyzqwertynonexistent999',
       });
 
@@ -416,7 +419,7 @@ describe('search-tools integration tests', () => {
     it('должен обработать очень длинный query', async () => {
       // Act
       const longQuery = 'a'.repeat(1000);
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: longQuery,
       });
 
@@ -432,7 +435,7 @@ describe('search-tools integration tests', () => {
 
     it('должен обработать специальные символы в query', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'tracker_',
       });
 
@@ -448,7 +451,7 @@ describe('search-tools integration tests', () => {
 
     it('должен обработать query с пробелами', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: '  issue  ',
       });
 
@@ -467,7 +470,7 @@ describe('search-tools integration tests', () => {
   describe('JSON формат ответа', () => {
     it('должен вернуть валидный JSON', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
       });
 
@@ -482,7 +485,7 @@ describe('search-tools integration tests', () => {
 
     it('должен включить все обязательные поля в ответ', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'issue',
       });
 
@@ -507,7 +510,7 @@ describe('search-tools integration tests', () => {
 
     it('totalFound должен быть >= returned', async () => {
       // Act
-      const result = await client.callTool(buildToolName('search_tools', MCP_TOOL_PREFIX), {
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
         query: 'yandex',
         limit: 1,
       });
@@ -519,6 +522,62 @@ describe('search-tools integration tests', () => {
       if (content.type === 'text') {
         const parsed = JSON.parse(content.text);
         expect(parsed.data.totalFound).toBeGreaterThanOrEqual(parsed.data.returned);
+      }
+    });
+  });
+
+  describe('Regression: prefix и inputSchema bug', () => {
+    it('должен возвращать инструменты с правильным префиксом fr_yandex_tracker_*', async () => {
+      // Arrange & Act
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
+        query: 'ping',
+        detailLevel: 'name_and_description',
+      });
+
+      // Assert
+      expect(result.isError).toBeFalsy();
+
+      const content = result.content[0]!;
+      if (content.type === 'text') {
+        const parsed = JSON.parse(content.text);
+        expect(parsed.data.tools.length).toBeGreaterThan(0);
+
+        // Проверяем, что все API инструменты имеют префикс fr_yandex_tracker_*
+        parsed.data.tools.forEach((tool: { name: string }) => {
+          if (tool.name !== SEARCH_TOOLS_NAME) {
+            // Все API tools должны иметь префикс
+            expect(tool.name).toMatch(/^fr_yandex_tracker_/);
+            // НЕ должны иметь старый префикс
+            expect(tool.name).not.toMatch(/^fractalizer_mcp_yandex_tracker_/);
+          }
+        });
+      }
+    });
+
+    it('должен возвращать inputSchema при detailLevel=full', async () => {
+      // Arrange & Act
+      const result = await client.callTool(SEARCH_TOOLS_NAME, {
+        query: 'ping',
+        detailLevel: 'full',
+      });
+
+      // Assert
+      expect(result.isError).toBeFalsy();
+
+      const content = result.content[0]!;
+      if (content.type === 'text') {
+        const parsed = JSON.parse(content.text);
+        expect(parsed.data.tools.length).toBeGreaterThan(0);
+
+        // Находим ping tool
+        const pingTool = parsed.data.tools.find(
+          (t: { name: string }) => t.name === buildToolName('ping', MCP_TOOL_PREFIX)
+        );
+
+        expect(pingTool).toBeDefined();
+        // inputSchema должен быть определен (не пустой объект)
+        expect(pingTool.inputSchema).toBeDefined();
+        expect(typeof pingTool.inputSchema).toBe('object');
       }
     });
   });

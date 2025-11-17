@@ -27,6 +27,7 @@ import { DEFAULT_TOOL_SEARCH_LIMIT, DEFAULT_TOOL_SEARCH_DETAIL_LEVEL } from '../
 export class ToolSearchEngine {
   private searchStrategy: ISearchStrategy;
   private cache: Map<string, SearchResponse>;
+  private lazyIndex: StaticToolIndex[] | null = null;
 
   /**
    * Максимальный размер кеша (LRU)
@@ -34,12 +35,77 @@ export class ToolSearchEngine {
   private readonly MAX_CACHE_SIZE = 100;
 
   constructor(
-    private readonly staticIndex: readonly StaticToolIndex[],
+    private readonly staticIndex: readonly StaticToolIndex[] | null,
     private readonly toolRegistry: ToolRegistry,
     searchStrategy: ISearchStrategy
   ) {
     this.searchStrategy = searchStrategy;
     this.cache = new Map();
+  }
+
+  /**
+   * Получить индекс (статический или динамический из ToolRegistry)
+   */
+  private getIndex(): StaticToolIndex[] {
+    // Если есть статический индекс, используем его
+    if (this.staticIndex) {
+      return Array.from(this.staticIndex);
+    }
+
+    // Иначе генерируем динамический индекс из ToolRegistry (lazy)
+    if (!this.lazyIndex) {
+      this.lazyIndex = this.buildIndexFromRegistry();
+    }
+
+    return this.lazyIndex;
+  }
+
+  /**
+   * Построить индекс из ToolRegistry
+   */
+  private buildIndexFromRegistry(): StaticToolIndex[] {
+    const index: StaticToolIndex[] = [];
+    const tools = this.toolRegistry.getAllTools();
+
+    for (const tool of tools) {
+      const metadata = tool.getMetadata();
+      const definition = metadata.definition;
+
+      if (!definition.name || !definition.description || !metadata.category) {
+        continue;
+      }
+
+      index.push({
+        name: definition.name,
+        category: metadata.category,
+        tags: metadata.tags ? Array.from(metadata.tags) : [],
+        isHelper: metadata.isHelper ?? false,
+        nameTokens: this.tokenize(definition.name),
+        descriptionTokens: this.tokenize(definition.description),
+        descriptionShort: this.getShortDescription(definition.description),
+      });
+    }
+
+    return index;
+  }
+
+  /**
+   * Токенизация текста
+   */
+  private tokenize(text: string): string[] {
+    return text
+      .toLowerCase()
+      .replace(/[_-]/g, ' ')
+      .split(/\W+/)
+      .filter((token) => token.length > 0);
+  }
+
+  /**
+   * Получить краткое описание
+   */
+  private getShortDescription(description: string): string {
+    const firstSentence = description.split(/[.!?]/)[0];
+    return firstSentence ? firstSentence.trim() : description;
   }
 
   /**
@@ -76,8 +142,8 @@ export class ToolSearchEngine {
    * Выполнить поиск без кеширования
    */
   private performSearch(params: SearchParams): SearchResponse {
-    // Фильтруем статический индекс
-    const filtered = this.filterStaticIndex(params);
+    // Фильтруем индекс (статический или динамический)
+    const filtered = this.filterIndex(params);
 
     // Выполняем поиск по стратегиям
     const searchResults = this.searchStrategy.search(params.query, filtered);
@@ -99,10 +165,10 @@ export class ToolSearchEngine {
   }
 
   /**
-   * Фильтровать статический индекс по параметрам
+   * Фильтровать индекс по параметрам
    */
-  private filterStaticIndex(params: SearchParams): StaticToolIndex[] {
-    let filtered = Array.from(this.staticIndex);
+  private filterIndex(params: SearchParams): StaticToolIndex[] {
+    let filtered = this.getIndex();
 
     // Фильтр по категории
     if (params.category) {
@@ -121,8 +187,10 @@ export class ToolSearchEngine {
    * Форматировать результаты по уровню детализации
    */
   private formatResults(results: SearchResult[], detailLevel: DetailLevel): ToolSearchResultItem[] {
+    const index = this.getIndex();
+
     return results.map((r) => {
-      const staticData = this.staticIndex.find((t) => t.name === r.toolName);
+      const staticData = index.find((t) => t.name === r.toolName);
 
       if (!staticData) {
         // Не должно произойти, но на всякий случай

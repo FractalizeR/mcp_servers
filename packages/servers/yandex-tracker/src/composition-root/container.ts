@@ -27,7 +27,6 @@ import { ToolRegistry } from '@mcp-framework/core';
 
 // Search Engine
 import { ToolSearchEngine } from '@mcp-framework/search';
-import { TOOL_SEARCH_INDEX } from '@mcp-framework/search';
 import { WeightedCombinedStrategy } from '@mcp-framework/search';
 import { NameSearchStrategy } from '@mcp-framework/search';
 import { DescriptionSearchStrategy } from '@mcp-framework/search';
@@ -133,9 +132,13 @@ function bindFacade(container: Container): void {
  * Регистрация поисковой системы tools
  *
  * ToolSearchEngine требует:
- * - Статический индекс (compile-time generated)
- * - ToolRegistry для lazy loading метаданных
+ * - ToolRegistry для динамической генерации индекса и lazy loading метаданных
  * - WeightedCombinedStrategy с набором стратегий
+ *
+ * ДИНАМИЧЕСКИЙ ИНДЕКС:
+ * - Передаём null вместо статического индекса
+ * - ToolSearchEngine автоматически генерирует индекс из ToolRegistry при первом поиске
+ * - Всегда актуальные имена инструментов с правильными префиксами
  */
 function bindSearchEngine(container: Container): void {
   container.bind<ToolSearchEngine>(TYPES.ToolSearchEngine).toDynamicValue(() => {
@@ -152,8 +155,8 @@ function bindSearchEngine(container: Container): void {
     // Комбинированная стратегия с весами
     const combinedStrategy = new WeightedCombinedStrategy(strategies);
 
-    // ToolSearchEngine с статическим индексом
-    return new ToolSearchEngine(TOOL_SEARCH_INDEX, toolRegistry, combinedStrategy);
+    // ToolSearchEngine с динамическим индексом (null = генерация из ToolRegistry)
+    return new ToolSearchEngine(null, toolRegistry, combinedStrategy);
   });
 }
 
