@@ -12,6 +12,7 @@ import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import { MCP_TOOL_PREFIX } from '../constants.js';
+import { PingDefinition } from './ping.definition.js';
 
 /**
  * Ping инструмент для диагностики подключения
@@ -40,22 +41,13 @@ export class PingTool extends BaseTool<YandexTrackerFacade> {
     isHelper: false,
   } as const;
 
+  private readonly definition = new PingDefinition();
+
   /**
    * Определение инструмента для MCP
    */
   override getDefinition(): ToolDefinition {
-    return {
-      name: buildToolName('ping', MCP_TOOL_PREFIX),
-      description:
-        'Проверка доступности API Яндекс.Трекера и валидности OAuth токена. ' +
-        'Возвращает информацию о текущем пользователе. ' +
-        'Не требует параметров.',
-      inputSchema: {
-        type: 'object',
-        properties: {},
-        required: [],
-      },
-    };
+    return this.definition.build();
   }
 
   /**

@@ -5,9 +5,8 @@
  */
 
 import type { ToolDefinition, StaticToolMetadata } from '@mcp-framework/core';
-import { BaseToolDefinition, buildToolName } from '@mcp-framework/core';
+import { BaseToolDefinition } from '@mcp-framework/core';
 import { DemoTool } from './demo.tool.js';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
 
 export class DemoDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
@@ -16,7 +15,7 @@ export class DemoDefinition extends BaseToolDefinition {
 
   build(): ToolDefinition {
     return {
-      name: buildToolName('demo', MCP_TOOL_PREFIX),
+      name: this.getToolName(), // ✅ Single Source of Truth из Tool.METADATA
       description: this.wrapWithSafetyWarning(
         'Демонстрационный инструмент для проверки масштабируемости архитектуры'
       ),

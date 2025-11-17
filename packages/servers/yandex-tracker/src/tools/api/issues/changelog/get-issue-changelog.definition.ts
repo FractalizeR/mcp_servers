@@ -8,8 +8,6 @@ import {
   type StaticToolMetadata,
 } from '@mcp-framework/core';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
 import { GetIssueChangelogTool } from './get-issue-changelog.tool.js';
 
 /**
@@ -28,7 +26,7 @@ export class GetIssueChangelogDefinition extends BaseToolDefinition {
 
   build(): ToolDefinition {
     return {
-      name: buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
+      name: this.getToolName(), // ✅ Single Source of Truth из Tool.METADATA
       description: this.wrapWithSafetyWarning(this.buildDescription()),
       inputSchema: {
         type: 'object',

@@ -8,8 +8,6 @@ import {
   type StaticToolMetadata,
 } from '@mcp-framework/core';
 import { TransitionIssueTool } from './transition-issue.tool.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
 
 /**
  * Definition для TransitionIssueTool
@@ -27,7 +25,7 @@ export class TransitionIssueDefinition extends BaseToolDefinition {
 
   build(): ToolDefinition {
     return {
-      name: buildToolName('transition_issue', MCP_TOOL_PREFIX),
+      name: this.getToolName(), // ✅ Single Source of Truth из Tool.METADATA
       description: this.wrapWithSafetyWarning(this.buildDescription()),
       inputSchema: {
         type: 'object',

@@ -44,10 +44,33 @@ export abstract class BaseToolDefinition {
    * Используется для:
    * - Проверки флага requiresExplicitUserConsent
    * - Автоматического добавления предупреждений безопасности
+   * - Получения имени инструмента (Single Source of Truth)
    *
    * @returns Метаданные из статического свойства METADATA наследника
    */
   protected abstract getStaticMetadata(): StaticToolMetadata;
+
+  /**
+   * Получить имя инструмента из метаданных (Single Source of Truth)
+   *
+   * Имя определяется ОДИН РАЗ в Tool.METADATA.name и переиспользуется везде.
+   * НЕ дублируйте имя в Definition.build() - используйте этот метод!
+   *
+   * @returns Полное имя инструмента (с префиксом, если он был добавлен в Tool.METADATA)
+   *
+   * @example
+   * // В Definition классе:
+   * build(): ToolDefinition {
+   *   return {
+   *     name: this.getToolName(), // ✅ Переиспользуем из Tool.METADATA
+   *     description: '...',
+   *     inputSchema: { ... },
+   *   };
+   * }
+   */
+  protected getToolName(): string {
+    return this.getStaticMetadata().name;
+  }
 
   /**
    * Получить название системы для предупреждений безопасности

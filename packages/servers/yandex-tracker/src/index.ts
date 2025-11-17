@@ -17,8 +17,7 @@ import { dirname, join } from 'node:path';
 import { loadConfig } from '@mcp-framework/infrastructure';
 import type { Logger, ServerConfig } from '@mcp-framework/infrastructure';
 import type { ToolRegistry } from '@mcp-framework/core';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_SERVER_NAME, MCP_TOOL_PREFIX } from './constants.js';
+import { MCP_SERVER_NAME, YANDEX_TRACKER_ESSENTIAL_TOOLS } from './constants.js';
 
 // DI Container (Composition Root)
 import { createContainer, TYPES } from '@composition-root/index.js';
@@ -117,27 +116,16 @@ async function main(): Promise<void> {
     // Загрузка конфигурации
     const config = loadConfig();
 
-    // Переопределяем essentialTools с правильными префиксами
-    // DEFAULT_ESSENTIAL_TOOLS содержит ['ping', 'search_tools'] без префиксов,
-    // но реальные имена инструментов: 'fr_yandex_tracker_ping', 'search_tools'
-    const configWithPrefixes: ServerConfig = {
+    // ✅ Переопределяем essentialTools для Yandex Tracker
+    // Имена определяются в Tool.METADATA один раз (Single Source of Truth)
+    // и собраны в YANDEX_TRACKER_ESSENTIAL_TOOLS с правильными префиксами
+    const configWithEssentialTools: ServerConfig = {
       ...config,
-      essentialTools: config.essentialTools.map((name) => {
-        // SearchToolsTool не имеет префикса (framework-level tool)
-        if (name === 'search_tools') {
-          return name;
-        }
-        // Остальные инструменты должны использовать префикс yandex-tracker
-        // Проверяем, есть ли уже префикс
-        if (name.startsWith(MCP_TOOL_PREFIX)) {
-          return name;
-        }
-        return buildToolName(name, MCP_TOOL_PREFIX);
-      }),
+      essentialTools: YANDEX_TRACKER_ESSENTIAL_TOOLS,
     };
 
     // Создание DI контейнера (Logger создаётся внутри)
-    const container = await createContainer(configWithPrefixes);
+    const container = await createContainer(configWithEssentialTools);
 
     // Получение Logger из контейнера
     logger = container.get<Logger>(TYPES.Logger);
@@ -167,7 +155,7 @@ async function main(): Promise<void> {
     );
 
     // Настройка обработчиков сервера
-    setupServer(server, toolRegistry, configWithPrefixes, logger);
+    setupServer(server, toolRegistry, configWithEssentialTools, logger);
 
     // Настройка обработчиков сигналов
     setupSignalHandlers(server, logger);
