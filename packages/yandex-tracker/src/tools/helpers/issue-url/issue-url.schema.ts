@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeysSchema } from '@mcp-framework/core';
+import { IssueKeysSchema } from '../../../common/schemas/index.js';
 
 /**
  * Схема параметров для получения URL задач

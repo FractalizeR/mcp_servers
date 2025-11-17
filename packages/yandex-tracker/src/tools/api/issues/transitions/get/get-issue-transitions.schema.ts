@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '@mcp-framework/core';
+import { IssueKeySchema, FieldsSchema } from '../../../../../common/schemas/index.js';
 
 /**
  * Схема параметров для получения доступных переходов статусов задачи

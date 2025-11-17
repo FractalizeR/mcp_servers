@@ -50,6 +50,24 @@ export abstract class BaseToolDefinition {
   protected abstract getStaticMetadata(): StaticToolMetadata;
 
   /**
+   * Получить название системы для предупреждений безопасности
+   *
+   * Переопределите этот метод в наследнике для указания конкретной системы.
+   * По умолчанию возвращает 'системе' (универсальное название).
+   *
+   * @returns Название системы (например, 'Яндекс.Трекере', 'GitHub', 'Jira')
+   *
+   * @example
+   * // В yandex-tracker пакете:
+   * protected getSystemName(): string {
+   *   return 'Яндекс.Трекере';
+   * }
+   */
+  protected getSystemName(): string {
+    return 'системе';
+  }
+
+  /**
    * Обернуть description предупреждением безопасности
    *
    * Автоматически добавляет предупреждение для ИИ агента если
@@ -62,7 +80,8 @@ export abstract class BaseToolDefinition {
     const metadata = this.getStaticMetadata();
     return SafetyWarningBuilder.addWarningToDescription(
       description,
-      metadata.requiresExplicitUserConsent
+      metadata.requiresExplicitUserConsent,
+      this.getSystemName()
     );
   }
 

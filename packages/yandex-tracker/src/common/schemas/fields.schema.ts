@@ -1,5 +1,7 @@
 /**
  * Zod схемы для валидации параметра fields (фильтрация полей ответа)
+ *
+ * Доменная версия для Yandex Tracker с описанием конкретных полей
  */
 
 import { z } from 'zod';
@@ -7,7 +9,7 @@ import { z } from 'zod';
 /**
  * Валидация массива полей для фильтрации ответа
  *
- * Примеры полей:
+ * Примеры полей Яндекс.Трекера:
  * - key, summary, description, status, assignee
  * - createdAt, updatedAt, dueDate
  * - queue, project, epic

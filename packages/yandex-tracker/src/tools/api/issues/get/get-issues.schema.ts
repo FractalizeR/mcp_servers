@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeysSchema, FieldsSchema } from '@mcp-framework/core';
+import { IssueKeysSchema, FieldsSchema } from '../../../../common/schemas/index.js';
 
 /**
  * Схема параметров для получения задач

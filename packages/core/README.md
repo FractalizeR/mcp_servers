@@ -39,11 +39,7 @@ src/
 │   │   ├── base-tool.ts             # Generic BaseTool<TFacade>
 │   │   ├── base-definition.ts       # BaseDefinition abstract class
 │   │   └── tool-metadata.ts         # StaticToolMetadata interface
-│   └── common/                       # Common utilities and schemas
-│       ├── schemas/                  # Reusable Zod schemas
-│       │   ├── fields.schema.ts     # Field filtering
-│       │   ├── expand.schema.ts     # Expansion parameters
-│       │   └── issue-key.schema.ts  # Issue key validation
+│   └── common/                       # Common utilities
 │       └── utils/                    # Tool utilities
 │           ├── tool-name.ts         # Tool naming conventions
 │           └── safety-warning-builder.ts
@@ -239,31 +235,6 @@ ResultLogger.logError(logger, 'get_item', error, { itemId: '123' });
 
 ---
 
-## 📖 Common Schemas
-
-### Reusable Zod schemas for tool parameters:
-
-```typescript
-import { FieldsSchema, ExpandSchema, IssueKeySchema } from '@mcp-framework/core';
-
-// Field filtering
-const ParamsSchema = z.object({
-  fields: FieldsSchema.optional(), // string[] - fields to return
-});
-
-// Expansion (relationships)
-const ParamsSchema = z.object({
-  expand: ExpandSchema.optional(), // string - comma-separated
-});
-
-// Issue key validation (QUEUE-123 format)
-const ParamsSchema = z.object({
-  key: IssueKeySchema, // string matching /^[A-Z0-9]+-\d+$/
-});
-```
-
----
-
 ## 🚨 Critical Rules
 
 ### 1. BaseTool is generic — facade-agnostic
@@ -341,11 +312,8 @@ export { ResultLogger } from './utils/result-logger.js';
 // Registry
 export { ToolRegistry } from './tool-registry.js';
 
-// Common schemas
-export { FieldsSchema, ExpandSchema, IssueKeySchema } from './tools/common/schemas/index.js';
-
 // Common utilities
-export { ToolNameBuilder, SafetyWarningBuilder } from './tools/common/utils/index.js';
+export { buildToolName, SafetyWarningBuilder } from './tools/common/utils/index.js';
 
 // Types
 export type { BatchResult, FulfilledResult, RejectedResult } from '@mcp-framework/infrastructure';

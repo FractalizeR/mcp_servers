@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema } from '@mcp-framework/core';
+import { FieldsSchema } from '../../../../common/schemas/index.js';
 
 /**
  * Схема параметров для создания задачи
