@@ -55,6 +55,7 @@ log_info "📦 Проверка системных утилит..."
 
 # Список необходимых пакетов
 REQUIRED_TOOLS=(
+    "apt-utils"     # Утилиты APT (устраняет предупреждения debconf)
     "tree"          # Визуализация структуры директорий
     "shellcheck"    # Линтер bash скриптов
     "gh"            # GitHub CLI
@@ -66,10 +67,22 @@ REQUIRED_TOOLS=(
 # Проверка какие пакеты нужно установить
 MISSING_TOOLS=()
 for tool in "${REQUIRED_TOOLS[@]}"; do
-    # Для fd-find команда называется fdfind в Debian/Ubuntu
+    # apt-utils не предоставляет команду, проверяем через dpkg
+    if [ "$tool" = "apt-utils" ]; then
+        if ! dpkg -l | grep -q "^ii  apt-utils"; then
+            MISSING_TOOLS+=("$tool")
+        fi
+        continue
+    fi
+
+    # Некоторые пакеты в Debian/Ubuntu имеют команды с другими именами
     CMD_NAME="$tool"
     if [ "$tool" = "fd-find" ]; then
         CMD_NAME="fdfind"
+    elif [ "$tool" = "bat" ]; then
+        CMD_NAME="batcat"
+    elif [ "$tool" = "git-delta" ]; then
+        CMD_NAME="delta"
     fi
 
     if ! command -v "$CMD_NAME" &> /dev/null; then
@@ -93,17 +106,45 @@ if [ ${#MISSING_TOOLS[@]} -gt 0 ]; then
         exit 1
     }
 
-    # Установка пакетов (тихо, без интерактивных промптов)
-    TMPDIR="$APT_TMP_DIR" DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "${MISSING_TOOLS[@]}" || {
-        log_error "Не удалось установить пакеты: ${MISSING_TOOLS[*]}"
-        rm -rf "$APT_TMP_DIR"
-        exit 1
-    }
+    # Установка apt-utils в первую очередь (чтобы избежать предупреждений debconf)
+    APT_UTILS_IN_LIST=false
+    for tool in "${MISSING_TOOLS[@]}"; do
+        if [ "$tool" = "apt-utils" ]; then
+            APT_UTILS_IN_LIST=true
+            break
+        fi
+    done
+
+    if [ "$APT_UTILS_IN_LIST" = true ]; then
+        log_info "Установка apt-utils (предотвращение предупреждений debconf)..."
+        TMPDIR="$APT_TMP_DIR" DEBIAN_FRONTEND=noninteractive apt-get install -y -qq apt-utils || {
+            log_error "Не удалось установить apt-utils"
+            rm -rf "$APT_TMP_DIR"
+            exit 1
+        }
+        # Удаляем apt-utils из списка для установки
+        REMAINING_TOOLS=()
+        for tool in "${MISSING_TOOLS[@]}"; do
+            if [ "$tool" != "apt-utils" ]; then
+                REMAINING_TOOLS+=("$tool")
+            fi
+        done
+        MISSING_TOOLS=("${REMAINING_TOOLS[@]}")
+    fi
+
+    # Установка остальных пакетов (если есть)
+    if [ ${#MISSING_TOOLS[@]} -gt 0 ]; then
+        TMPDIR="$APT_TMP_DIR" DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "${MISSING_TOOLS[@]}" || {
+            log_error "Не удалось установить пакеты: ${MISSING_TOOLS[*]}"
+            rm -rf "$APT_TMP_DIR"
+            exit 1
+        }
+    fi
 
     # Очистка временной директории
     rm -rf "$APT_TMP_DIR"
 
-    log_success "Установлено: ${MISSING_TOOLS[*]}"
+    log_success "Все необходимые пакеты установлены"
 else
     log_success "Все системные утилиты уже установлены"
 fi
