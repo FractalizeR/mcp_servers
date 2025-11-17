@@ -1,4 +1,75 @@
-# Migration Guide: v1 → v2 (Monorepo)
+# Migration Guide
+
+**Руководства по миграции между версиями**
+
+---
+
+## 📦 v2.0 → v2.1 (Multi-Server Architecture)
+
+**Дата:** 2025-11-17
+
+### Краткое резюме
+
+**Что изменилось:**
+- Новая структура monorepo: `packages/framework/` и `packages/servers/`
+- Новое имя пакета: `@mcp-server/yandex-tracker` вместо `mcp-server-yandex-tracker`
+- Новое имя бандла: `yandex-tracker.bundle.js` вместо `bundle.js`
+
+**Кого это затрагивает:**
+- ✅ **Конечные пользователи MCP сервера** — нужно обновить конфигурацию
+- ✅ **Разработчики, клонировавшие репозиторий** — нужно обновить локальную копию
+
+### Для пользователей MCP сервера
+
+**Обновление конфигурации Claude Desktop/Claude Code:**
+
+**Было (v2.0):**
+```json
+{
+  "mcpServers": {
+    "yandex-tracker": {
+      "command": "npx",
+      "args": ["mcp-server-yandex-tracker"]
+    }
+  }
+}
+```
+
+**Стало (v2.1):**
+```json
+{
+  "mcpServers": {
+    "yandex-tracker": {
+      "command": "npx",
+      "args": ["@mcp-server/yandex-tracker"]
+    }
+  }
+}
+```
+
+### Breaking Changes
+
+1. **Имя npm пакета:** `mcp-server-yandex-tracker` → `@mcp-server/yandex-tracker`
+2. **Имя бандла:** `dist/bundle.js` → `dist/yandex-tracker.bundle.js`
+3. **Структура директорий:**
+   - `packages/infrastructure` → `packages/framework/infrastructure`
+   - `packages/core` → `packages/framework/core`
+   - `packages/search` → `packages/framework/search`
+   - Yandex Tracker → `packages/servers/yandex-tracker`
+
+### Для разработчиков
+
+```bash
+git pull origin main
+npm install
+npm run build
+```
+
+См. [CHANGELOG.md](./CHANGELOG.md) для полного списка изменений.
+
+---
+
+## 📦 v1 → v2.0 (Monorepo)
 
 **Version 2.0.0 introduces a monorepo structure with breaking changes**
 
