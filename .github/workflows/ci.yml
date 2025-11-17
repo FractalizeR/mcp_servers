@@ -29,6 +29,9 @@ jobs:
       - name: 🧪 Run all tests
         run: npm run test
 
+      - name: 🚀 Run smoke tests
+        run: npm run test:smoke
+
       - name: 🔍 Lint check
         run: npm run lint
         continue-on-error: true

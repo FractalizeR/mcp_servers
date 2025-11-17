@@ -17,6 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run test
+      - run: npm run test:smoke
       - run: npm publish --workspaces
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
