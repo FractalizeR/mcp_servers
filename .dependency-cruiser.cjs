@@ -18,12 +18,12 @@ module.exports = {
     {
       name: 'no-reverse-dependencies',
       severity: 'error',
-      comment: 'Запрет обратных зависимостей в графе пакетов (infrastructure <- core <- search <- yandex-tracker)',
+      comment: 'Запрет обратных зависимостей в графе пакетов (infrastructure <- core <- search <- servers)',
       from: {
-        path: '^packages/(infrastructure|core|search)/',
+        path: '^packages/(infrastructure|core|search|framework/(infrastructure|core|search))/',
       },
       to: {
-        path: '^packages/(yandex-tracker)/',
+        path: '^packages/(yandex-tracker|servers/)/',
       },
     },
 
@@ -32,10 +32,10 @@ module.exports = {
       severity: 'error',
       comment: 'Infrastructure — базовый слой, не зависит от других framework пакетов',
       from: {
-        path: '^packages/infrastructure/',
+        path: '^packages/(infrastructure|framework/infrastructure)/',
       },
       to: {
-        path: '^packages/(core|search|cli|yandex-tracker)/',
+        path: '^packages/(core|search|cli|yandex-tracker|framework/(core|search)|servers/)/',
       },
     },
 
@@ -44,10 +44,10 @@ module.exports = {
       severity: 'error',
       comment: 'Core может зависеть только от infrastructure',
       from: {
-        path: '^packages/core/',
+        path: '^packages/(core|framework/core)/',
       },
       to: {
-        path: '^packages/(search|cli|yandex-tracker)/',
+        path: '^packages/(search|cli|yandex-tracker|framework/search|servers/)/',
       },
     },
 
@@ -56,10 +56,10 @@ module.exports = {
       severity: 'error',
       comment: 'Search может зависеть только от core и infrastructure',
       from: {
-        path: '^packages/search/',
+        path: '^packages/(search|framework/search)/',
       },
       to: {
-        path: '^packages/(cli|yandex-tracker)/',
+        path: '^packages/(cli|yandex-tracker|servers/)/',
       },
     },
 
@@ -84,10 +84,10 @@ module.exports = {
       severity: 'error',
       comment: 'tracker_api — низкоуровневый слой, не должен знать о MCP layer',
       from: {
-        path: '^packages/yandex-tracker/src/tracker_api/',
+        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/',
       },
       to: {
-        path: '^packages/yandex-tracker/src/mcp/',
+        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/mcp/',
       },
     },
 
@@ -96,15 +96,15 @@ module.exports = {
       severity: 'error',
       comment: 'MCP tools должны использовать YandexTrackerFacade, не Operations напрямую',
       from: {
-        path: '^packages/yandex-tracker/src/mcp/',
+        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/mcp/',
       },
       to: {
-        path: '^packages/yandex-tracker/src/tracker_api/',
+        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/',
         pathNot: [
           // Разрешены:
-          '^packages/yandex-tracker/src/tracker_api/facade/',     // Facade (основной интерфейс)
-          '^packages/yandex-tracker/src/tracker_api/entities/',   // Entity типы
-          '^packages/yandex-tracker/src/tracker_api/dto/',        // DTO типы
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/facade/',     // Facade (основной интерфейс)
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/entities/',   // Entity типы
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/dto/',        // DTO типы
         ],
       },
     },
@@ -114,17 +114,17 @@ module.exports = {
       severity: 'warn', // warn чтобы не блокировать development
       comment: 'Operations импортируются только через Facade или Composition Root',
       from: {
-        path: '^packages/yandex-tracker/src/',
+        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/',
         pathNot: [
           // Исключения (разрешено импортировать operations):
-          '^packages/yandex-tracker/src/tracker_api/facade/',                           // Facade координирует operations
-          '^packages/yandex-tracker/src/composition-root/container\\.ts$',              // DI контейнер регистрирует все зависимости
-          '^packages/yandex-tracker/src/composition-root/definitions/operation-definitions\\.ts$', // Автоматическая регистрация операций
-          '^packages/yandex-tracker/src/tracker_api/api_operations/',                       // Operations могут импортировать друг друга
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/facade/',                           // Facade координирует operations
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/composition-root/container\\.ts$',              // DI контейнер регистрирует все зависимости
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/composition-root/definitions/operation-definitions\\.ts$', // Автоматическая регистрация операций
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/api_operations/',                       // Operations могут импортировать друг друга
         ],
       },
       to: {
-        path: '^packages/yandex-tracker/src/tracker_api/api_operations/',
+        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/api_operations/',
       },
     },
 
@@ -133,15 +133,15 @@ module.exports = {
       severity: 'error',
       comment: 'Composition Root — высший слой, ничто не должно импортировать его (кроме entry point и файлов внутри composition-root)',
       from: {
-        path: '^packages/yandex-tracker/src/',
+        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/',
         pathNot: [
-          '^packages/yandex-tracker/src/index\\.ts$',                     // Entry point может импортировать
-          '^packages/yandex-tracker/src/composition-root/',               // Файлы внутри composition-root могут импортировать друг друга
-          '^packages/yandex-tracker/src/mcp/tool-registry\\.ts$',         // ToolRegistry импортирует definitions для автоматической регистрации
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/index\\.ts$',                     // Entry point может импортировать
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/composition-root/',               // Файлы внутри composition-root могут импортировать друг друга
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/mcp/tool-registry\\.ts$',         // ToolRegistry импортирует definitions для автоматической регистрации
         ],
       },
       to: {
-        path: '^packages/yandex-tracker/src/composition-root/',
+        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/composition-root/',
       },
     },
 
@@ -164,8 +164,8 @@ module.exports = {
           '^packages/search/src/tools/search-tools\\.definition\\.ts$',
           '^packages/search/src/tools/search-tools\\.tool\\.ts$',
           // DemoDefinition ↔ DemoTool (pairing pattern)
-          '^packages/yandex-tracker/src/tools/helpers/demo/demo\\.definition\\.ts$',
-          '^packages/yandex-tracker/src/tools/helpers/demo/demo\\.tool\\.ts$',
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tools/helpers/demo/demo\\.definition\\.ts$',
+          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tools/helpers/demo/demo\\.tool\\.ts$',
         ],
       },
       to: {

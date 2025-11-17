@@ -6,7 +6,12 @@
   "author": "Fractalizer",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/infrastructure",
+    "packages/core",
+    "packages/search",
+    "packages/yandex-tracker",
+    "packages/framework/*",
+    "packages/servers/*"
   ],
   "scripts": {
     "audit:lockfile": "npm ci --dry-run",
