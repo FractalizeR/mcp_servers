@@ -42,7 +42,17 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
     name: buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
     description: 'Получить историю изменений задачи',
     category: ToolCategory.ISSUES,
-    tags: ['issue', 'changelog', 'history', 'read'],
+    tags: [
+      'issue',
+      'changelog',
+      'history',
+      'read',
+      'changes',
+      'задача',
+      'история',
+      'изменения',
+      'журнал',
+    ],
     isHelper: false,
   } as const;
 

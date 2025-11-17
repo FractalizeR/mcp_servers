@@ -41,7 +41,7 @@ export class GetIssuesTool extends BaseTool<YandexTrackerFacade> {
     name: buildToolName('get_issues', MCP_TOOL_PREFIX),
     description: 'Получить задачи по ключам (batch операция)',
     category: ToolCategory.ISSUES,
-    tags: ['issue', 'get', 'batch', 'read'],
+    tags: ['issue', 'get', 'batch', 'read', 'retrieve', 'задача', 'получить', 'несколько', 'пакет'],
     isHelper: false,
   } as const;
 

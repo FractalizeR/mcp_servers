@@ -35,7 +35,19 @@ export class IssueUrlTool extends BaseTool<YandexTrackerFacade> {
     name: buildToolName('get_issue_urls', MCP_TOOL_PREFIX),
     description: 'Получить URL задач в Яндекс.Трекере',
     category: ToolCategory.URL_GENERATION,
-    tags: ['url', 'link', 'helper', 'issue', 'batch'],
+    tags: [
+      'url',
+      'link',
+      'helper',
+      'issue',
+      'batch',
+      'web',
+      'browser',
+      'ссылка',
+      'задача',
+      'адрес',
+      'веб',
+    ],
     isHelper: true,
   } as const;
 

@@ -27,13 +27,15 @@ const ToolCategorySchema = z.nativeEnum(ToolCategory).optional();
  */
 export const SearchToolsParamsSchema = z.object({
   /**
-   * Поисковый запрос (обязательный, непустая строка)
+   * Поисковый запрос (опциональный)
+   * Если не указан или пустая строка - возвращаются все инструменты
    */
   query: z
     .string()
     .trim()
-    .min(1, 'Query must be a non-empty string')
-    .describe('Search query for finding tools'),
+    .optional()
+    .default('')
+    .describe('Search query for finding tools. Empty or "*" returns all tools'),
 
   /**
    * Уровень детализации результатов

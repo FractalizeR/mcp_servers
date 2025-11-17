@@ -40,7 +40,19 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
     name: buildToolName('find_issues', MCP_TOOL_PREFIX),
     description: 'Найти задачи по JQL запросу',
     category: ToolCategory.ISSUES,
-    tags: ['issue', 'find', 'search', 'jql', 'query'],
+    tags: [
+      'issue',
+      'find',
+      'search',
+      'jql',
+      'query',
+      'filter',
+      'задача',
+      'найти',
+      'поиск',
+      'фильтр',
+      'запрос',
+    ],
     isHelper: false,
   } as const;
 

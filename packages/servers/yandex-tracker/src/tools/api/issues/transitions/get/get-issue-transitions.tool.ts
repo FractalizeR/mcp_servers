@@ -42,7 +42,18 @@ export class GetIssueTransitionsTool extends BaseTool<YandexTrackerFacade> {
     name: buildToolName('get_issue_transitions', MCP_TOOL_PREFIX),
     description: 'Получить доступные переходы статусов задачи',
     category: ToolCategory.ISSUES,
-    tags: ['issue', 'transitions', 'workflow', 'read'],
+    tags: [
+      'issue',
+      'transitions',
+      'workflow',
+      'read',
+      'status',
+      'available-statuses',
+      'задача',
+      'переходы',
+      'статусы',
+      'доступные статусы',
+    ],
     isHelper: false,
   } as const;
 

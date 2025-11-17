@@ -26,7 +26,7 @@ export class DemoTool extends BaseTool<YandexTrackerFacade> {
     name: buildToolName('demo', MCP_TOOL_PREFIX),
     description: 'Демонстрационный инструмент для тестирования',
     category: ToolCategory.DEMO,
-    tags: ['demo', 'example', 'test'],
+    tags: ['demo', 'example', 'test', 'демо', 'пример', 'тест'],
     isHelper: true,
   } as const;
 

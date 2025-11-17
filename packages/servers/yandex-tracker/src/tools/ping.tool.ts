@@ -25,7 +25,18 @@ export class PingTool extends BaseTool<YandexTrackerFacade> {
     description:
       'Проверка доступности API Яндекс.Трекера и валидности OAuth токена. Возвращает информацию о текущем пользователе. Не требует параметров.',
     category: ToolCategory.USERS,
-    tags: ['ping', 'health', 'check', 'connection', 'diagnostics'],
+    tags: [
+      'ping',
+      'health',
+      'check',
+      'connection',
+      'diagnostics',
+      'test',
+      'проверка',
+      'соединение',
+      'подключение',
+      'диагностика',
+    ],
     isHelper: false,
   } as const;
 

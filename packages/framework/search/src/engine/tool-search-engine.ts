@@ -145,8 +145,18 @@ export class ToolSearchEngine {
     // Фильтруем индекс (статический или динамический)
     const filtered = this.filterIndex(params);
 
-    // Выполняем поиск по стратегиям
-    const searchResults = this.searchStrategy.search(params.query, filtered);
+    // Если query пустой или "*", возвращаем все отфильтрованные инструменты
+    let searchResults: SearchResult[];
+    if (!params.query || params.query.trim() === '' || params.query === '*') {
+      // Возвращаем все отфильтрованные инструменты (конвертируем в SearchResult)
+      searchResults = filtered.map((tool) => ({
+        toolName: tool.name,
+        score: 1.0, // максимальный score для полного совпадения
+      }));
+    } else {
+      // Выполняем поиск по стратегиям
+      searchResults = this.searchStrategy.search(params.query, filtered);
+    }
 
     // Применяем лимит
     const totalFound = searchResults.length;

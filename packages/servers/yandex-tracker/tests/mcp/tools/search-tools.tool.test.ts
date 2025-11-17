@@ -335,16 +335,20 @@ describe('SearchToolsTool (E2E)', () => {
   });
 
   describe('Валидация параметров', () => {
-    it('должен вернуть ошибку для пустого query', async () => {
+    it('должен вернуть все инструменты для пустого query', async () => {
+      // Пустой query теперь валиден и возвращает все инструменты
       const result = await tool.execute({ query: '' });
 
-      expect(result.isError).toBe(true);
+      expect(result.isError).toBe(false);
       expect(result.content).toHaveLength(1);
 
       const content = result.content[0]!;
       expect(content.type).toBe('text');
       if (content.type === 'text') {
-        expect(content.text).toContain('Query must be a non-empty string');
+        const parsed = JSON.parse(content.text);
+        expect(parsed.success).toBe(true);
+        expect(parsed.data.tools).toBeDefined();
+        expect(parsed.data.tools.length).toBeGreaterThan(0);
       }
     });
 
