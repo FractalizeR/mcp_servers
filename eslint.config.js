@@ -2,6 +2,7 @@ import eslint from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
 import prettierConfig from 'eslint-config-prettier';
+import sonarjs from 'eslint-plugin-sonarjs';
 
 export default [
   {
@@ -39,7 +40,8 @@ export default [
       }
     },
     plugins: {
-      '@typescript-eslint': tseslint
+      '@typescript-eslint': tseslint,
+      'sonarjs': sonarjs
     },
     rules: {
       ...eslint.configs.recommended.rules,
@@ -74,10 +76,23 @@ export default [
       '@typescript-eslint/restrict-template-expressions': 'error',
       '@typescript-eslint/prefer-promise-reject-errors': 'off',
       '@typescript-eslint/only-throw-error': 'off',
+      // Метрики сложности
       'complexity': ['warn', 10],
       'max-depth': ['warn', 4],
       'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }],
       'max-params': ['warn', 4],
+      // Метрики размера файлов (безопасные лимиты)
+      'max-lines': ['warn', { max: 400, skipBlankLines: true, skipComments: true }],
+      'max-statements': ['warn', 20],
+      // SonarJS rules (когнитивная сложность и качество кода)
+      'sonarjs/cognitive-complexity': ['warn', 15],
+      'sonarjs/no-duplicate-string': ['warn', { threshold: 3 }],
+      'sonarjs/no-identical-functions': 'warn',
+      'sonarjs/prefer-immediate-return': 'warn',
+      'sonarjs/no-redundant-jump': 'warn',
+      'sonarjs/no-small-switch': 'warn',
+      'sonarjs/prefer-single-boolean-return': 'warn',
+      // Остальные правила
       'no-console': [
         'warn',
         {
@@ -119,7 +134,8 @@ export default [
       }
     },
     plugins: {
-      '@typescript-eslint': tseslint
+      '@typescript-eslint': tseslint,
+      'sonarjs': sonarjs
     },
     rules: {
       ...eslint.configs.recommended.rules,
@@ -154,10 +170,23 @@ export default [
       '@typescript-eslint/restrict-template-expressions': 'error',
       '@typescript-eslint/prefer-promise-reject-errors': 'off',
       '@typescript-eslint/only-throw-error': 'off',
+      // Метрики сложности
       'complexity': ['warn', 10],
       'max-depth': ['warn', 4],
       'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }],
       'max-params': ['warn', 4],
+      // Метрики размера файлов (безопасные лимиты)
+      'max-lines': ['warn', { max: 400, skipBlankLines: true, skipComments: true }],
+      'max-statements': ['warn', 20],
+      // SonarJS rules (когнитивная сложность и качество кода)
+      'sonarjs/cognitive-complexity': ['warn', 15],
+      'sonarjs/no-duplicate-string': ['warn', { threshold: 3 }],
+      'sonarjs/no-identical-functions': 'warn',
+      'sonarjs/prefer-immediate-return': 'warn',
+      'sonarjs/no-redundant-jump': 'warn',
+      'sonarjs/no-small-switch': 'warn',
+      'sonarjs/prefer-single-boolean-return': 'warn',
+      // Остальные правила
       'no-console': [
         'warn',
         {

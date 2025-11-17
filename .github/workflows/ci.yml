@@ -36,3 +36,7 @@ jobs:
       - name: 🏗️ Validate architecture
         run: npm run depcruise
 
+      - name: 📊 Code quality checks
+        run: npm run quality
+        continue-on-error: true
+
