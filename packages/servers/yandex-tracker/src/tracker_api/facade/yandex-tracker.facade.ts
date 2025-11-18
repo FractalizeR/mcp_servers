@@ -45,6 +45,10 @@ import type {
   DownloadAttachmentOutput,
   AddChecklistItemInput,
   UpdateChecklistItemInput,
+  GetProjectsDto,
+  CreateProjectDto,
+  ProjectOutput,
+  ProjectsListOutput,
 } from '@tracker_api/dto/index.js';
 import type {
   IssueWithUnknownFields,
@@ -58,6 +62,9 @@ import type {
 import type {
   UpdateQueueParams,
   ManageQueueAccessParams,
+  GetProjectParams,
+  UpdateProjectParams,
+  DeleteProjectParams,
 } from '@tracker_api/api_operations/index.js';
 
 export class YandexTrackerFacade {
@@ -537,5 +544,67 @@ export class YandexTrackerFacade {
       content,
       metadata,
     };
+  }
+
+  // === Project Methods ===
+
+  /**
+   * Получает список проектов с пагинацией и фильтрацией
+   * @param params - параметры запроса (page, perPage, expand, queueId)
+   * @returns список проектов
+   */
+  async getProjects(params?: GetProjectsDto): Promise<ProjectsListOutput> {
+    const operation = this.getOperation<{
+      execute: (params?: GetProjectsDto) => Promise<ProjectsListOutput>;
+    }>('GetProjectsOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Получает один проект по ID или ключу
+   * @param params - параметры запроса (projectId, expand)
+   * @returns проект с полными данными
+   */
+  async getProject(params: GetProjectParams): Promise<ProjectOutput> {
+    const operation = this.getOperation<{
+      execute: (params: GetProjectParams) => Promise<ProjectOutput>;
+    }>('GetProjectOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Создаёт новый проект
+   * @param projectData - данные проекта
+   * @returns созданный проект
+   */
+  async createProject(projectData: CreateProjectDto): Promise<ProjectOutput> {
+    const operation = this.getOperation<{
+      execute: (data: CreateProjectDto) => Promise<ProjectOutput>;
+    }>('CreateProjectOperation');
+    return operation.execute(projectData);
+  }
+
+  /**
+   * Обновляет существующий проект
+   * @param params - параметры (projectId и data)
+   * @returns обновлённый проект
+   */
+  async updateProject(params: UpdateProjectParams): Promise<ProjectOutput> {
+    const operation = this.getOperation<{
+      execute: (params: UpdateProjectParams) => Promise<ProjectOutput>;
+    }>('UpdateProjectOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Удаляет проект
+   * @param params - параметры удаления (projectId)
+   * @returns void
+   */
+  async deleteProject(params: DeleteProjectParams): Promise<void> {
+    const operation = this.getOperation<{
+      execute: (params: DeleteProjectParams) => Promise<void>;
+    }>('DeleteProjectOperation');
+    return operation.execute(params);
   }
 }

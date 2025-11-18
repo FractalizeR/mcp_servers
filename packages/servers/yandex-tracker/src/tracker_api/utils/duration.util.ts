@@ -82,9 +82,9 @@ export class DurationUtil {
     const minutesMatch = trimmed.match(this.MINUTES_PATTERN);
     const secondsMatch = trimmed.match(this.SECONDS_PATTERN);
 
-    const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
-    const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
-    const seconds = secondsMatch ? parseInt(secondsMatch[1], 10) : 0;
+    const hours = hoursMatch?.[1] ? parseInt(hoursMatch[1], 10) : 0;
+    const minutes = minutesMatch?.[1] ? parseInt(minutesMatch[1], 10) : 0;
+    const seconds = secondsMatch?.[1] ? parseInt(secondsMatch[1], 10) : 0;
 
     // Проверка: хотя бы один компонент должен быть > 0
     if (hours === 0 && minutes === 0 && seconds === 0) {

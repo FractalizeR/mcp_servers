@@ -1,0 +1,61 @@
+/**
+ * MCP Tool для удаления проекта в Яндекс.Трекере
+ *
+ * ВАЖНО: Удаление проектов - критическая операция! Необратима!
+ */
+
+import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
+import type { ToolDefinition } from '@mcp-framework/core';
+import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import { DeleteProjectDefinition } from './delete-project.definition.js';
+import { DeleteProjectParamsSchema } from './delete-project.schema.js';
+import { buildToolName } from '@mcp-framework/core';
+import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
+export class DeleteProjectTool extends BaseTool<YandexTrackerFacade> {
+  static override readonly METADATA = {
+    name: buildToolName('delete_project', MCP_TOOL_PREFIX),
+    description: '[Projects/Delete] Удалить проект',
+    category: ToolCategory.PROJECTS,
+    subcategory: 'delete',
+    priority: ToolPriority.CRITICAL,
+    tags: ['project', 'delete', 'remove'],
+    isHelper: false,
+    requiresExplicitUserConsent: true,
+  } as const;
+
+  private readonly definition = new DeleteProjectDefinition();
+
+  protected buildDefinition(): ToolDefinition {
+    return this.definition.build();
+  }
+
+  async execute(params: ToolCallParams): Promise<ToolResult> {
+    const validation = this.validateParams(params, DeleteProjectParamsSchema);
+    if (!validation.success) {
+      return validation.error;
+    }
+
+    const { projectId } = validation.data;
+
+    try {
+      this.logger.info('Удаление проекта', {
+        projectId,
+      });
+
+      await this.facade.deleteProject({ projectId });
+
+      this.logger.info('Проект успешно удален', {
+        projectId,
+      });
+
+      return this.formatSuccess({
+        message: `Проект ${projectId} успешно удален`,
+        projectId,
+      });
+    } catch (error: unknown) {
+      return this.formatError(`Ошибка при удалении проекта ${projectId}`, error as Error);
+    }
+  }
+}
