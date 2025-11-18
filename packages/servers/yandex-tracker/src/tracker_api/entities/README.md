@@ -340,25 +340,70 @@ export type StatusWithUnknownFields = WithUnknownFields<Status>;
 
 **Файл:** `src/tracker_api/entities/queue.entity.ts`
 
-- Использует `UserRef` для руководителя, `QueueDictionaryRef` для справочников
-- Поле `version` для оптимистичных блокировок
-- Поле `assignAuto` контролирует автоназначение исполнителей
+Основная entity для работы с очередями:
+
+```typescript
+export interface Queue {
+  readonly id: string;           // ID очереди
+  readonly key: string;          // Ключ очереди (A-Z, 2-10 символов)
+  readonly name: string;         // Название очереди
+  readonly lead: UserRef;        // Руководитель очереди
+  readonly version: number;      // Версия для optimistic locking
+  readonly assignAuto?: boolean; // Автоназначение исполнителей
+  // ... другие поля
+}
+
+export type QueueWithUnknownFields = WithUnknownFields<Queue>;
+```
+
+**Ключевые особенности:**
+- `version` — используется для оптимистичных блокировок при обновлении
+- `assignAuto` — контролирует автоназначение исполнителей
+- `lead` — тип `UserRef` (не полный `User`)
 
 ### Entity для полей очереди
 
 **Файл:** `src/tracker_api/entities/queue-field.entity.ts`
 
-- Описывает настраиваемые поля очереди
-- Поле `required` определяет обязательность при создании задач
-- Поле `type`: строка, пользователь, дата, число, select, array
+Описывает настраиваемые поля очереди:
+
+```typescript
+export interface QueueField {
+  readonly id: string;
+  readonly name: string;
+  readonly key: string;
+  readonly type: string;         // string, user, date, number, select, array
+  readonly required?: boolean;   // Обязательность при создании задач
+  // ... другие поля
+}
+
+export type QueueFieldWithUnknownFields = WithUnknownFields<QueueField>;
+```
+
+**Поддерживаемые типы полей:** `string`, `user`, `date`, `number`, `select`, `array`
 
 ### Entity для прав доступа
 
 **Файл:** `src/tracker_api/entities/queue-permission.entity.ts`
 
-- Описывает права доступа к очереди
-- `QueueRole`: queue-lead, team-member, follower, access
-- Минималистичная структура — логика в API операциях
+Описывает права доступа к очереди:
+
+```typescript
+export interface QueuePermission {
+  readonly role: QueueRole;      // Роль пользователя
+  readonly users?: UserRef[];    // Пользователи с этой ролью
+  readonly groups?: string[];    // Группы с этой ролью
+}
+
+export type QueueRole = 'queue-lead' | 'team-member' | 'follower' | 'access';
+export type QueuePermissionWithUnknownFields = WithUnknownFields<QueuePermission>;
+```
+
+**Роли очереди:**
+- `queue-lead` — руководитель очереди (полные права)
+- `team-member` — член команды (создание/редактирование задач)
+- `follower` — наблюдатель (только чтение)
+- `access` — базовый доступ к очереди
 
 ---
 
