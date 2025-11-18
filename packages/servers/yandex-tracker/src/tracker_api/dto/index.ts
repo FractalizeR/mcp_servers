@@ -42,6 +42,15 @@ export type {
   DownloadAttachmentOutput,
 } from './attachment/index.js';
 
+// Comment DTO
+export type {
+  AddCommentInput,
+  EditCommentInput,
+  GetCommentsInput,
+  CommentOutput,
+  CommentsListOutput,
+} from './comment/index.js';
+
 // DTO Factories (runtime code for coverage)
 export {
   // Issue factories

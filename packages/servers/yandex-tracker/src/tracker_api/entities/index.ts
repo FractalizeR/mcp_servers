@@ -66,6 +66,9 @@ export type { LinkType, LinkTypeWithUnknownFields } from './link-type.entity.js'
 // Attachment
 export type { Attachment, AttachmentWithUnknownFields } from './attachment.entity.js';
 
+// Comment
+export type { Comment, CommentWithUnknownFields, CommentAttachment } from './comment/index.js';
+
 // Entity Factories (runtime code for coverage)
 export {
   createUser,

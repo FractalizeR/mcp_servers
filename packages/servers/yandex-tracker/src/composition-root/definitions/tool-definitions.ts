@@ -26,6 +26,10 @@ import {
 import { GetIssueLinksTool } from '@tools/api/issues/links/get/index.js';
 import { CreateLinkTool } from '@tools/api/issues/links/create/index.js';
 import { DeleteLinkTool } from '@tools/api/issues/links/delete/index.js';
+import { AddCommentTool } from '@tools/api/comments/add/index.js';
+import { GetCommentsTool } from '@tools/api/comments/get/index.js';
+import { EditCommentTool } from '@tools/api/comments/edit/index.js';
+import { DeleteCommentTool } from '@tools/api/comments/delete/index.js';
 import { IssueUrlTool } from '@tools/helpers/issue-url/index.js';
 import { DemoTool } from '@tools/helpers/demo/index.js';
 
@@ -63,6 +67,10 @@ export const TOOL_CLASSES = [
   GetIssueLinksTool,
   CreateLinkTool,
   DeleteLinkTool,
+  AddCommentTool,
+  GetCommentsTool,
+  EditCommentTool,
+  DeleteCommentTool,
   IssueUrlTool,
   DemoTool,
 ] as const;

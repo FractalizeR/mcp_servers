@@ -34,12 +34,16 @@ import type {
   QueueFieldsOutput,
   QueuePermissionsOutput,
   CreateLinkDto,
+  AddCommentInput,
+  EditCommentInput,
+  GetCommentsInput,
 } from '@tracker_api/dto/index.js';
 import type {
   IssueWithUnknownFields,
   ChangelogEntryWithUnknownFields,
   TransitionWithUnknownFields,
   LinkWithUnknownFields,
+  CommentWithUnknownFields,
 } from '@tracker_api/entities/index.js';
 import type {
   UpdateQueueParams,
@@ -284,5 +288,71 @@ export class YandexTrackerFacade {
       execute: (id: string, linkId: string) => Promise<void>;
     }>('DeleteLinkOperation');
     return operation.execute(issueId, linkId);
+  }
+
+  // === Comment Methods ===
+
+  /**
+   * Добавляет комментарий к задаче
+   * @param issueId - идентификатор или ключ задачи
+   * @param input - данные комментария
+   * @returns созданный комментарий
+   */
+  async addComment(issueId: string, input: AddCommentInput): Promise<CommentWithUnknownFields> {
+    const operation = this.getOperation<{
+      execute: (id: string, data: AddCommentInput) => Promise<CommentWithUnknownFields>;
+    }>('AddCommentOperation');
+    return operation.execute(issueId, input);
+  }
+
+  /**
+   * Получает список комментариев задачи
+   * @param issueId - идентификатор или ключ задачи
+   * @param input - параметры запроса (пагинация, expand)
+   * @returns массив комментариев
+   */
+  async getComments(
+    issueId: string,
+    input?: GetCommentsInput
+  ): Promise<CommentWithUnknownFields[]> {
+    const operation = this.getOperation<{
+      execute: (id: string, data?: GetCommentsInput) => Promise<CommentWithUnknownFields[]>;
+    }>('GetCommentsOperation');
+    return operation.execute(issueId, input);
+  }
+
+  /**
+   * Редактирует комментарий
+   * @param issueId - идентификатор или ключ задачи
+   * @param commentId - идентификатор комментария
+   * @param input - новые данные комментария
+   * @returns обновлённый комментарий
+   */
+  async editComment(
+    issueId: string,
+    commentId: string,
+    input: EditCommentInput
+  ): Promise<CommentWithUnknownFields> {
+    const operation = this.getOperation<{
+      execute: (
+        id: string,
+        cId: string,
+        data: EditCommentInput
+      ) => Promise<CommentWithUnknownFields>;
+    }>('EditCommentOperation');
+    return operation.execute(issueId, commentId, input);
+  }
+
+  /**
+   * Удаляет комментарий
+   * @param issueId - идентификатор или ключ задачи
+   * @param commentId - идентификатор комментария
+   * @returns void
+   */
+  async deleteComment(issueId: string, commentId: string): Promise<void> {
+    const operation = this.getOperation<{
+      execute: (id: string, cId: string) => Promise<void>;
+    }>('DeleteCommentOperation');
+    return operation.execute(issueId, commentId);
   }
 }

@@ -30,6 +30,12 @@ import {
   CreateLinkOperation,
   DeleteLinkOperation,
 } from '@tracker_api/api_operations/link/index.js';
+import {
+  AddCommentOperation,
+  GetCommentsOperation,
+  EditCommentOperation,
+  DeleteCommentOperation,
+} from '@tracker_api/api_operations/comment/index.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -57,6 +63,10 @@ export const OPERATION_CLASSES = [
   GetIssueLinksOperation,
   CreateLinkOperation,
   DeleteLinkOperation,
+  AddCommentOperation,
+  GetCommentsOperation,
+  EditCommentOperation,
+  DeleteCommentOperation,
 ] as const;
 
 /**
