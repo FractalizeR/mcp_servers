@@ -39,7 +39,8 @@ describe('manage-queue-access integration tests', () => {
       expect(result.isError).toBeUndefined();
       const response = JSON.parse(result.content[0]!.text);
       expect(response.data).toBeDefined();
-      expect(response.data.success).toBe(true);
+      expect(response.data.permissions).toBeDefined();
+      expect(Array.isArray(response.data.permissions)).toBe(true);
       mockServer.assertAllRequestsDone();
     });
 
