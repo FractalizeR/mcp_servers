@@ -1104,8 +1104,8 @@ export class MockServer {
    */
   mockCreateQueueSuccess(queueData?: Record<string, unknown>): this {
     const queue = generateQueue({ overrides: queueData });
-    const mockKey = `POST ${TRACKER_API_V3}/queues`;
-    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues`).reply(() => {
+    const mockKey = `POST ${TRACKER_API_V3}/queues/`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1121,8 +1121,8 @@ export class MockServer {
    */
   mockCreateQueue403(): this {
     const response = generateError403();
-    const mockKey = `POST ${TRACKER_API_V3}/queues`;
-    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues`).reply(() => {
+    const mockKey = `POST ${TRACKER_API_V3}/queues/`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1203,13 +1203,21 @@ export class MockServer {
    * Mock успешного управления доступом к очереди
    */
   mockManageQueueAccessSuccess(queueKey: string): this {
-    const mockKey = `POST ${TRACKER_API_V3}/queues/${queueKey}/access`;
-    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/${queueKey}/access`).reply(() => {
+    // API возвращает массив прав доступа (QueuePermissionsOutput)
+    const permissions = [
+      {
+        id: 'user-1234567890',
+        self: 'https://api.tracker.yandex.net/v3/users/user-1234567890',
+        display: 'Test User',
+      },
+    ];
+    const mockKey = `PATCH ${TRACKER_API_V3}/queues/${queueKey}/permissions`;
+    this.mockAdapter.onPatch(`${TRACKER_API_V3}/queues/${queueKey}/permissions`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
       }
-      return [200, { success: true }];
+      return [200, permissions];
     });
     this.pendingMocks.push(mockKey);
     return this;
@@ -1220,8 +1228,8 @@ export class MockServer {
    */
   mockManageQueueAccess403(queueKey: string): this {
     const response = generateError403();
-    const mockKey = `POST ${TRACKER_API_V3}/queues/${queueKey}/access`;
-    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/${queueKey}/access`).reply(() => {
+    const mockKey = `PATCH ${TRACKER_API_V3}/queues/${queueKey}/permissions`;
+    this.mockAdapter.onPatch(`${TRACKER_API_V3}/queues/${queueKey}/permissions`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
