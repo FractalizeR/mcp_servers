@@ -8,6 +8,7 @@ import type { AxiosInstance } from 'axios';
 import {
   generateIssue,
   generateComment,
+  generateQueue,
   generateError404,
   generateError401,
   generateError403,
@@ -1017,6 +1018,216 @@ export class MockServer {
         }
         return [404, response];
       });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  // ============================================================
+  // QUEUES API МЕТОДЫ
+  // ============================================================
+
+  /**
+   * Mock успешного получения списка очередей
+   */
+  mockGetQueuesSuccess(queues?: unknown[]): this {
+    const defaultQueues = [
+      generateQueue({ overrides: { key: 'TEST1', name: 'Test Queue 1' } }),
+      generateQueue({ overrides: { key: 'TEST2', name: 'Test Queue 2' } }),
+    ];
+    const mockKey = `GET ${TRACKER_API_V3}/queues`;
+    const urlPattern = new RegExp(`^${TRACKER_API_V3}/queues(\\?.*)?$`);
+    this.mockAdapter.onGet(urlPattern).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, queues ?? defaultQueues];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock пустого списка очередей
+   */
+  mockGetQueuesEmpty(): this {
+    const mockKey = `GET ${TRACKER_API_V3}/queues`;
+    const urlPattern = new RegExp(`^${TRACKER_API_V3}/queues(\\?.*)?$`);
+    this.mockAdapter.onGet(urlPattern).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, []];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного получения очереди по ключу
+   */
+  mockGetQueueSuccess(queueKey: string, overrides?: Record<string, unknown>): this {
+    const queue = generateQueue({ overrides: { key: queueKey, ...overrides } });
+    const mockKey = `GET ${TRACKER_API_V3}/queues/${queueKey}`;
+    const urlPattern = new RegExp(`^${TRACKER_API_V3}/queues/${queueKey}(\\?.*)?$`);
+    this.mockAdapter.onGet(urlPattern).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, queue];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при получении очереди (очередь не найдена)
+   */
+  mockGetQueue404(queueKey: string): this {
+    const response = generateError404();
+    const mockKey = `GET ${TRACKER_API_V3}/queues/${queueKey}`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/queues/${queueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного создания очереди
+   */
+  mockCreateQueueSuccess(queueData?: Record<string, unknown>): this {
+    const queue = generateQueue({ overrides: queueData });
+    const mockKey = `POST ${TRACKER_API_V3}/queues`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [201, queue];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 403 при создании очереди (нет прав)
+   */
+  mockCreateQueue403(): this {
+    const response = generateError403();
+    const mockKey = `POST ${TRACKER_API_V3}/queues`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [403, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного обновления очереди
+   */
+  mockUpdateQueueSuccess(queueKey: string, updates?: Record<string, unknown>): this {
+    const queue = generateQueue({ overrides: { key: queueKey, ...updates } });
+    const mockKey = `PATCH ${TRACKER_API_V3}/queues/${queueKey}`;
+    this.mockAdapter.onPatch(`${TRACKER_API_V3}/queues/${queueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, queue];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при обновлении очереди
+   */
+  mockUpdateQueue404(queueKey: string): this {
+    const response = generateError404();
+    const mockKey = `PATCH ${TRACKER_API_V3}/queues/${queueKey}`;
+    this.mockAdapter.onPatch(`${TRACKER_API_V3}/queues/${queueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного получения полей очереди
+   */
+  mockGetQueueFieldsSuccess(queueKey: string): this {
+    const fields = [
+      {
+        id: 'summary',
+        name: 'Summary',
+        key: 'summary',
+        type: 'string',
+        required: true,
+      },
+      {
+        id: 'description',
+        name: 'Description',
+        key: 'description',
+        type: 'text',
+        required: false,
+      },
+    ];
+    const mockKey = `GET ${TRACKER_API_V3}/queues/${queueKey}/fields`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/queues/${queueKey}/fields`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, fields];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного управления доступом к очереди
+   */
+  mockManageQueueAccessSuccess(queueKey: string): this {
+    const mockKey = `POST ${TRACKER_API_V3}/queues/${queueKey}/access`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/${queueKey}/access`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, { success: true }];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 403 при управлении доступом (нет прав)
+   */
+  mockManageQueueAccess403(queueKey: string): this {
+    const response = generateError403();
+    const mockKey = `POST ${TRACKER_API_V3}/queues/${queueKey}/access`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/${queueKey}/access`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [403, response];
+    });
     this.pendingMocks.push(mockKey);
     return this;
   }

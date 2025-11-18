@@ -1,0 +1,57 @@
+{
+  "id": "queue123456789abcdef0",
+  "self": "https://api.tracker.yandex.net/v3/queues/TEST",
+  "key": "TEST",
+  "version": 1,
+  "name": "Test Queue",
+  "description": "Test queue description for integration tests",
+  "lead": {
+    "id": "user123",
+    "self": "https://api.tracker.yandex.net/v3/users/user123",
+    "display": "Test User",
+    "cloudUid": "ajem1234567890abcdef",
+    "passportUid": 1234567890
+  },
+  "assignAuto": false,
+  "defaultType": {
+    "id": "1",
+    "key": "task",
+    "display": "Task"
+  },
+  "defaultPriority": {
+    "id": "3",
+    "key": "normal",
+    "display": "Normal"
+  },
+  "issueTypes": [
+    {
+      "id": "1",
+      "key": "task",
+      "display": "Task"
+    },
+    {
+      "id": "2",
+      "key": "bug",
+      "display": "Bug"
+    }
+  ],
+  "denyVoting": false,
+  "issueTypesConfig": [
+    {
+      "issueType": {
+        "id": "1"
+      },
+      "workflow": {
+        "id": "workflow1"
+      },
+      "resolutions": [
+        {
+          "id": "1"
+        },
+        {
+          "id": "2"
+        }
+      ]
+    }
+  ]
+}

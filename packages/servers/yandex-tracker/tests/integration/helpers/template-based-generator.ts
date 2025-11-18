@@ -385,6 +385,7 @@ export const testFixtureFactory = new TemplateGeneratorFactory(join(__dirname, '
 export const generateIssue = testFixtureFactory.create('issue');
 export const generateUser = testFixtureFactory.create('user');
 export const generateComment = testFixtureFactory.create('comment');
+export const generateQueue = testFixtureFactory.create('queue');
 
 /**
  * Генераторы типичных ошибок API
