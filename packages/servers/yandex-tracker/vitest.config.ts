@@ -26,9 +26,12 @@ export default defineConfig({
       '@cli': path.resolve(__dirname, './src/cli'),
       '@constants': path.resolve(__dirname, './src/constants'),
       '@integration': path.resolve(__dirname, './tests/integration'),
-      '@mcp-framework/search': path.resolve(__dirname, '../search/src'),
-      '@mcp-framework/core': path.resolve(__dirname, '../core/src'),
-      '@mcp-framework/infrastructure': path.resolve(__dirname, '../infrastructure/src'),
+      '@mcp-framework/search': path.resolve(__dirname, '../../framework/search/src'),
+      '@mcp-framework/core': path.resolve(__dirname, '../../framework/core/src'),
+      '@mcp-framework/infrastructure': path.resolve(
+        __dirname,
+        '../../framework/infrastructure/src'
+      ),
     },
   },
 });

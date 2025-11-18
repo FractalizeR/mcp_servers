@@ -12,7 +12,10 @@
  * - Удалён двойной retry (исправлена проблема 9 попыток)
  *
  * Паттерн: Facade Pattern + Lazy Initialization
+ *
+ * TODO: Рефакторинг - разделить на несколько фасадов по доменам
  */
+/* eslint-disable max-lines */
 
 import type { Container } from 'inversify';
 

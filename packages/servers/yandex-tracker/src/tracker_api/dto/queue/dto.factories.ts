@@ -75,7 +75,9 @@ export function createUpdateQueueDto(overrides?: Partial<UpdateQueueDto>): Updat
 
 /**
  * Создает валидный GetQueueFieldsDto
+ * Note: Похож на createGetQueueDto, но создает разные типы
  */
+// eslint-disable-next-line sonarjs/no-identical-functions
 export function createGetQueueFieldsDto(overrides?: Partial<GetQueueFieldsDto>): GetQueueFieldsDto {
   return {
     queueId: 'TEST',

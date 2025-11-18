@@ -34,7 +34,8 @@ export class GetQueuesOperation extends BaseOperation {
     if (page) queryParams.append('page', page.toString());
     if (expand) queryParams.append('expand', expand);
 
-    const endpoint = `/v3/queues/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `/v3/queues?${queryString}` : '/v3/queues';
 
     const queues = await this.httpClient.get<QueuesListOutput>(endpoint);
 

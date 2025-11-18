@@ -137,7 +137,8 @@ export class FileUploadUtil {
       return false;
     }
 
-    // Проверка на недопустимые символы
+    // Проверка на недопустимые символы (включая control characters 0x00-0x1F)
+    // eslint-disable-next-line sonarjs/no-control-regex
     const invalidChars = /[<>:"|?*\x00-\x1F]/;
     if (invalidChars.test(filename)) {
       return false;
