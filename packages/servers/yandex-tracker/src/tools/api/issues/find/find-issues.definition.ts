@@ -52,28 +52,12 @@ export class FindIssuesDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Поиск задач в Яндекс.Трекере по различным критериям. ' +
+      'Поиск задач по query (язык запросов Трекера), filter (key-value), keys, queue или filterId. ' +
+      'Параметр fields фильтрует ответ. Поддержка пагинации (perPage, page). ' +
       '\n\n' +
-      'Способы поиска (укажи ОДИН из них):\n' +
-      '1. query - язык запросов Трекера (мощный поиск с логическими операторами)\n' +
-      '2. filter - объект с фильтрами по полям (простой key-value поиск)\n' +
-      '3. keys - список конкретных ключей задач\n' +
-      '4. queue - все задачи в очереди\n' +
-      '5. filterId - ID сохранённого фильтра\n' +
+      'Для: поиска задач по условиям с логическими операторами. ' +
       '\n' +
-      'Особенности:\n' +
-      '- Возвращает массив задач (не batch-режим)\n' +
-      '- Поддержка пагинации (perPage, page)\n' +
-      '- Фильтрация полей для экономии токенов\n' +
-      '- Сортировка результатов (order)\n' +
-      '\n' +
-      'Используй этот инструмент когда нужно:\n' +
-      '- Найти задачи по условиям ("все задачи автора", "задачи без исполнителя")\n' +
-      '- Получить задачи с определённым статусом/приоритетом\n' +
-      '- Применить сложные фильтры с логическими операторами\n' +
-      '\n' +
-      'НЕ используй для:\n' +
-      '- Получения конкретных задач по ключам (используй fyt_mcp_get_issues - эффективнее)'
+      'Не для: получения конкретных задач по ключам (get_issues эффективнее).'
     );
   }
 
@@ -84,38 +68,12 @@ export class FindIssuesDefinition extends BaseToolDefinition {
     return {
       type: 'string',
       description:
-        'Язык запросов Яндекс.Трекера для мощного поиска задач. ' +
-        '\n\n' +
-        'Логические операторы:\n' +
-        '- AND - оба условия (можно опустить, просто пробел)\n' +
-        '- OR - хотя бы одно условие\n' +
-        '- Скобки () для группировки\n' +
+        'Язык запросов Трекера. Формат: "Field: value" с пробелом между условиями (AND). ' +
+        'Функции: me(), empty(), week(), month(). Операторы: OR, !, >, <, >=, <=. ' +
         '\n' +
-        'Функции:\n' +
-        '- empty() - пустое значение (не задано)\n' +
-        '- notEmpty() - любое непустое значение\n' +
-        '- me() - текущий пользователь\n' +
-        '- now() - текущее время\n' +
-        '- today() - сегодня\n' +
-        '- week() - текущая неделя\n' +
-        '- month() - текущий месяц\n' +
-        '- unresolved() - резолюция не задана\n' +
-        '\n' +
-        'Операторы сравнения:\n' +
-        '- ! - не равно\n' +
-        '- > - больше\n' +
-        '- < - меньше\n' +
-        '- >= - больше или равно\n' +
-        '- <= - меньше или равно\n' +
-        '\n' +
-        'Примеры:\n' +
-        '- "Author: me() Resolution: empty()" - мои неразрешённые задачи\n' +
-        '- "Assignee: me() Deadline: week()" - назначенные мне на эту неделю\n' +
-        '- "(Followers: me() OR Assignee: me()) AND Resolution: empty()" - активные задачи где я участвую\n' +
-        '- "Priority: Critical, Blocker Status: Open" - критичные открытые задачи\n' +
-        '- "Created: >2024-01-01 Queue: PROJ" - задачи созданные после даты\n' +
-        '\n' +
-        'ВАЖНО: Это самый мощный способ поиска, используй его для сложных запросов.',
+        'Примеры: "Author: me() Resolution: empty()" | "Assignee: me() Deadline: week()" | ' +
+        '"(Followers: me() OR Assignee: me()) Status: open" | "Priority: critical Status: open" | ' +
+        '"Created: >2024-01-01 Queue: PROJ"',
     };
   }
 
@@ -126,27 +84,9 @@ export class FindIssuesDefinition extends BaseToolDefinition {
     return {
       type: 'object',
       description:
-        'Фильтр по полям задачи в формате key-value (простой поиск). ' +
-        '\n\n' +
-        'Доступные поля для фильтрации:\n' +
-        '- queue - ключ очереди\n' +
-        '- status - статус задачи\n' +
-        '- assignee - исполнитель (логин или ID)\n' +
-        '- author - автор (логин или ID)\n' +
-        '- priority - приоритет\n' +
-        '- type - тип задачи\n' +
-        '- resolution - резолюция\n' +
-        '\n' +
-        'Значения могут быть:\n' +
-        '- Строки: { "queue": "PROJ", "status": "open" }\n' +
-        '- Функции: "empty()", "notEmpty()"\n' +
-        '\n' +
-        'Примеры:\n' +
-        '- { "queue": "PROJ", "assignee": "empty()" } - задачи без исполнителя в PROJ\n' +
-        '- { "status": "open", "priority": "critical" } - открытые критичные\n' +
-        '- { "author": "user@example.com", "resolution": "empty()" } - неразрешённые задачи автора\n' +
-        '\n' +
-        'ВАЖНО: Для сложных условий с OR/AND используй параметр query вместо filter.',
+        'Фильтр key-value (простой поиск). Поля: queue, status, assignee, author, priority, type, resolution. ' +
+        'Значения: строки или функции empty(), notEmpty(). ' +
+        'Для сложных условий с OR/AND используй query.',
       additionalProperties: true,
     };
   }
@@ -156,19 +96,11 @@ export class FindIssuesDefinition extends BaseToolDefinition {
    */
   private buildKeysParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Список ключей задач для поиска (альтернатива query/filter). ' +
-        '\n\n' +
-        'ВАЖНО: Если нужно получить задачи по ключам, лучше используй fyt_mcp_get_issues ' +
-        '(он оптимизирован для batch-получения). ' +
-        '\n\n' +
-        'Этот параметр полезен когда нужно:\n' +
-        '- Найти задачи + применить expand параметры\n' +
-        '- Комбинировать поиск по ключам с другими параметрами\n' +
-        '\n' +
-        'Формат: массив ключей в формате QUEUE-123',
+      'Список ключей задач (альтернатива query/filter). ' +
+        'Для простого получения по ключам лучше get_issues (batch-оптимизирован).',
       this.buildStringParam('Ключ задачи', {
         pattern: '^[A-Z][A-Z0-9]+-\\d+$',
-        examples: ['PROJ-123', 'PROJ-456'],
+        examples: ['PROJ-123'],
       }),
       {
         minItems: 1,
@@ -184,16 +116,9 @@ export class FindIssuesDefinition extends BaseToolDefinition {
     return {
       type: 'string',
       description:
-        'Ключ очереди для поиска всех задач в этой очереди. ' +
-        '\n\n' +
-        'Примеры:\n' +
-        '- "PROJ" - все задачи в очереди PROJ\n' +
-        '- "DEVOPS" - все задачи в очереди DEVOPS\n' +
-        '\n' +
-        'ВАЖНО: Можно комбинировать с фильтрацией полей и сортировкой. ' +
-        'Используй perPage для ограничения количества результатов.',
+        'Ключ очереди для поиска всех задач. Комбинируй с fields и perPage для ограничения результатов.',
       pattern: '^[A-Z][A-Z0-9]*$',
-      examples: ['PROJ', 'DEVOPS', 'TEST'],
+      examples: ['PROJ'],
     };
   }
 
@@ -203,10 +128,7 @@ export class FindIssuesDefinition extends BaseToolDefinition {
   private buildFilterIdParam(): Record<string, unknown> {
     return {
       type: 'string',
-      description:
-        'ID сохранённого фильтра в Трекере. ' +
-        '\n\n' +
-        'Используй когда у пользователя есть готовые фильтры в интерфейсе Трекера.',
+      description: 'ID сохранённого фильтра в интерфейсе Трекера.',
     };
   }
 
@@ -215,24 +137,14 @@ export class FindIssuesDefinition extends BaseToolDefinition {
    */
   private buildOrderParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Сортировка результатов (работает только с filter, не с query). ' +
-        '\n\n' +
-        'Формат: ["±field1", "±field2"] где:\n' +
-        '- "+" или отсутствие = возрастание (ASC)\n' +
-        '- "-" = убывание (DESC)\n' +
-        '\n' +
-        'Примеры:\n' +
-        '- ["+created"] - по дате создания (сначала старые)\n' +
-        '- ["-priority", "+status"] - по приоритету (убыв.), потом по статусу (возр.)\n' +
-        '- ["updated"] - по дате обновления (возрастание)\n' +
-        '\n' +
-        'Доступные поля: created, updated, priority, status, assignee',
+      'Сортировка (только с filter). Формат: ["+field"] (ASC) или ["-field"] (DESC). ' +
+        'Поля: created, updated, priority, status, assignee.',
       this.buildStringParam('Поле сортировки', {
-        examples: ['+created', '-priority', 'updated'],
+        examples: ['+created'],
       }),
       {
         minItems: 1,
-        examples: [['+created'], ['-priority', '+status']],
+        examples: [['+created']],
       }
     );
   }
@@ -244,15 +156,9 @@ export class FindIssuesDefinition extends BaseToolDefinition {
     return {
       type: 'number',
       description:
-        'Количество результатов на странице. ' +
-        '\n\n' +
-        'По умолчанию: 50\n' +
-        'Рекомендуется: 10-50 для экономии токенов\n' +
-        'Максимум: несколько сотен (зависит от сервера)\n' +
-        '\n' +
-        'ВАЖНО: Всегда фильтруй поля (fields параметр) для экономии токенов!',
+        'Количество результатов на странице (по умолчанию 50, рекомендуется 10-50). Используй fields для экономии токенов.',
       minimum: 1,
-      examples: [10, 50, 100],
+      examples: [50],
     };
   }
 
@@ -262,12 +168,9 @@ export class FindIssuesDefinition extends BaseToolDefinition {
   private buildPageParam(): Record<string, unknown> {
     return {
       type: 'number',
-      description:
-        'Номер страницы для пагинации (начинается с 1). ' +
-        '\n\n' +
-        'Используй вместе с perPage для получения больших списков задач.',
+      description: 'Номер страницы для пагинации (начинается с 1). Используй с perPage.',
       minimum: 1,
-      examples: [1, 2, 3],
+      examples: [1],
     };
   }
 
@@ -276,53 +179,32 @@ export class FindIssuesDefinition extends BaseToolDefinition {
    */
   private buildExpandParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Расширение ответа дополнительными полями. ' +
-        '\n\n' +
-        'Доступные значения:\n' +
-        '- "transitions" - доступные переходы по workflow\n' +
-        '- "attachments" - вложения задачи\n' +
-        '\n' +
-        'Примеры:\n' +
-        '- ["transitions"] - для получения доступных действий\n' +
-        '- ["transitions", "attachments"] - полная информация',
+      'Расширение ответа: "transitions" (доступные переходы workflow), "attachments" (вложения задачи).',
       this.buildStringParam('Тип расширения', {
-        examples: ['transitions', 'attachments'],
+        examples: ['transitions'],
       }),
       {
         minItems: 1,
-        examples: [['transitions'], ['transitions', 'attachments']],
+        examples: [['transitions']],
       }
     );
   }
 
   /**
-   * Построить описание параметра fields (переиспользуем логику из GetIssues)
+   * Построить описание параметра fields
    */
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Список полей для возврата (опционально). ' +
-        '\n\n' +
-        'Если не указан - возвращаются ВСЕ доступные поля задачи. ' +
-        'Рекомендуется ВСЕГДА указывать только необходимые поля для экономии токенов. ' +
-        '\n\n' +
-        'Основные поля: key, summary, description, status, priority, assignee, author, createdAt, updatedAt\n' +
-        'Вложенные поля: assignee.login, status.key, queue.key\n' +
-        '\n' +
-        'Примеры:\n' +
-        '- ["key", "summary", "status"] - минимальный набор\n' +
-        '- ["key", "summary", "assignee.login", "status.key"] - с вложенными полями\n' +
-        '\n' +
-        'Экономия токенов: 80-90% при фильтрации 5-7 полей вместо всех',
+      'Фильтр полей ответа (опционально, по умолчанию все). ' +
+        'Основные: key, summary, description, status, priority, assignee, author, createdAt, updatedAt. ' +
+        'Вложенные (dot-notation): assignee.login, status.key, queue.key.',
       this.buildStringParam('Имя поля', {
         minLength: 1,
-        examples: ['key', 'summary', 'status', 'assignee.login'],
+        examples: ['key'],
       }),
       {
         minItems: 1,
-        examples: [
-          ['key', 'summary', 'status'],
-          ['key', 'summary', 'assignee.login', 'status.key', 'createdAt'],
-        ],
+        examples: [['key', 'summary', 'status', 'assignee.login']],
       }
     );
   }
