@@ -70,6 +70,7 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
       this.logger.info(`Получено ${links.length} связей для задачи ${issueId}`);
 
       return this.formatSuccess({
+        success: true,
         issueId,
         linksCount: links.length,
         links: links.map((link) => ({

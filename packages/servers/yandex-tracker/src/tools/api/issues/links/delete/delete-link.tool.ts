@@ -70,6 +70,7 @@ export class DeleteLinkTool extends BaseTool<YandexTrackerFacade> {
       this.logger.info(`Связь ${linkId} удалена из задачи ${issueId}`);
 
       return this.formatSuccess({
+        success: true,
         message: `Связь ${linkId} удалена из задачи ${issueId}`,
         issueId,
         linkId,
