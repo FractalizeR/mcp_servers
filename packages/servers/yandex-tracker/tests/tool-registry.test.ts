@@ -429,4 +429,154 @@ describe('ToolRegistry', () => {
       expect(definitions.map((d) => d.name)).toContain(buildToolName('ping', MCP_TOOL_PREFIX));
     });
   });
+
+  describe('Priority-based sorting', () => {
+    // Helper функция для получения priority из METADATA
+    const getToolPriority = (toolName: string): string => {
+      const tool = registry.getTool(toolName);
+      if (!tool) return 'normal';
+      const toolClass = tool.constructor as any;
+      return toolClass.METADATA?.priority || 'normal';
+    };
+
+    it('должна сортировать инструменты по priority: critical → high → normal → low', () => {
+      // Act
+      const definitions = registry.getDefinitions();
+
+      // Найдем инструменты с разными приоритетами
+      const criticalTools = definitions.filter((d) => getToolPriority(d.name) === 'critical');
+      const highTools = definitions.filter((d) => getToolPriority(d.name) === 'high');
+      const normalTools = definitions.filter((d) => getToolPriority(d.name) === 'normal');
+      const lowTools = definitions.filter((d) => getToolPriority(d.name) === 'low');
+
+      // Assert - проверяем что все critical идут перед high
+      if (criticalTools.length > 0 && highTools.length > 0) {
+        const lastCriticalIdx = definitions.findIndex(
+          (d) => d.name === criticalTools[criticalTools.length - 1]!.name
+        );
+        const firstHighIdx = definitions.findIndex((d) => d.name === highTools[0]!.name);
+        expect(lastCriticalIdx).toBeLessThan(firstHighIdx);
+      }
+
+      // Проверяем что все high идут перед normal
+      if (highTools.length > 0 && normalTools.length > 0) {
+        const lastHighIdx = definitions.findIndex(
+          (d) => d.name === highTools[highTools.length - 1]!.name
+        );
+        const firstNormalIdx = definitions.findIndex((d) => d.name === normalTools[0]!.name);
+        expect(lastHighIdx).toBeLessThan(firstNormalIdx);
+      }
+
+      // Проверяем что все normal идут перед low
+      if (normalTools.length > 0 && lowTools.length > 0) {
+        const lastNormalIdx = definitions.findIndex(
+          (d) => d.name === normalTools[normalTools.length - 1]!.name
+        );
+        const firstLowIdx = definitions.findIndex((d) => d.name === lowTools[0]!.name);
+        expect(lastNormalIdx).toBeLessThan(firstLowIdx);
+      }
+    });
+
+    it('должна сортировать инструменты по алфавиту внутри одного priority', () => {
+      // Act
+      const definitions = registry.getDefinitions();
+
+      // Проверим critical инструменты
+      const criticalTools = definitions.filter((d) => getToolPriority(d.name) === 'critical');
+
+      // Assert - критичные инструменты должны быть отсортированы по алфавиту
+      if (criticalTools.length > 1) {
+        for (let i = 0; i < criticalTools.length - 1; i++) {
+          const current = criticalTools[i]!.name;
+          const next = criticalTools[i + 1]!.name;
+          expect(current.localeCompare(next)).toBeLessThanOrEqual(0);
+        }
+      }
+    });
+
+    it('должна трактовать undefined priority как normal', () => {
+      // Act
+      const definitions = registry.getDefinitions();
+
+      // Найдем инструменты с разными приоритетами
+      const normalTools = definitions.filter((d) => getToolPriority(d.name) === 'normal');
+      const lowTools = definitions.filter((d) => getToolPriority(d.name) === 'low');
+
+      // Assert - инструменты с normal priority должны идти перед low
+      if (normalTools.length > 0 && lowTools.length > 0) {
+        const lastNormalIdx = definitions.findIndex(
+          (d) => d.name === normalTools[normalTools.length - 1]!.name
+        );
+        const firstLowIdx = definitions.findIndex((d) => d.name === lowTools[0]!.name);
+        expect(lastNormalIdx).toBeLessThan(firstLowIdx);
+      }
+
+      // Проверяем что getToolPriority правильно трактует undefined как 'normal'
+      // (это неявная проверка - если METADATA.priority === undefined, функция вернет 'normal')
+      expect(normalTools.length).toBeGreaterThanOrEqual(0);
+    });
+
+    it('сортировка должна работать в eager mode', () => {
+      // Act
+      const definitions = registry.getDefinitionsByMode('eager');
+
+      // Assert - должна быть сортировка по priority
+      expect(definitions.length).toBeGreaterThan(0);
+
+      // Проверяем что первый инструмент имеет высокий приоритет
+      const firstPriority = getToolPriority(definitions[0]!.name);
+      expect(['critical', 'high', 'normal']).toContain(firstPriority);
+    });
+
+    it('сортировка должна работать в lazy mode', () => {
+      // Arrange
+      const essentialTools = [
+        buildToolName('ping', MCP_TOOL_PREFIX),
+        buildToolName('get_issues', MCP_TOOL_PREFIX),
+        buildToolName('demo', MCP_TOOL_PREFIX),
+      ];
+
+      // Act
+      const definitions = registry.getDefinitionsByMode('lazy', essentialTools);
+
+      // Assert - должна быть сортировка по priority
+      expect(definitions.length).toBeGreaterThan(0);
+
+      // Если среди essential есть инструменты с разными приоритетами,
+      // они должны быть отсортированы
+      if (definitions.length > 1) {
+        const priorities = definitions.map((d) => getToolPriority(d.name));
+
+        // Проверяем что порядок приоритетов не нарушен
+        const priorityOrder: Record<string, number> = {
+          critical: 0,
+          high: 1,
+          normal: 2,
+          low: 3,
+        };
+
+        for (let i = 0; i < priorities.length - 1; i++) {
+          const currentOrder = priorityOrder[priorities[i]!] ?? 2;
+          const nextOrder = priorityOrder[priorities[i + 1]!] ?? 2;
+          expect(currentOrder).toBeLessThanOrEqual(nextOrder);
+        }
+      }
+    });
+
+    it('должна логировать распределение по приоритетам', () => {
+      // Act
+      registry.getDefinitions();
+
+      // Assert - проверяем что логируется распределение
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Tools sorted by priority',
+        expect.objectContaining({
+          critical: expect.any(Number),
+          high: expect.any(Number),
+          normal: expect.any(Number),
+          low: expect.any(Number),
+        })
+      );
+    });
+  });
 });

@@ -99,14 +99,77 @@ export class ToolRegistry {
   }
 
   /**
+   * Сортировка инструментов по приоритету
+   *
+   * Порядок: critical → high → normal → low → алфавит (внутри priority)
+   *
+   * @param tools - Массив инструментов
+   * @returns Отсортированный массив
+   */
+  private sortByPriority(tools: BaseTool[]): BaseTool[] {
+    const priorityOrder: Record<string, number> = {
+      critical: 0,
+      high: 1,
+      normal: 2,
+      low: 3,
+    };
+
+    return tools.sort((a, b) => {
+      // Получаем priority из METADATA
+      const aClass = a.constructor as typeof BaseTool;
+      const bClass = b.constructor as typeof BaseTool;
+      const aPriority = aClass.METADATA?.priority || 'normal';
+      const bPriority = bClass.METADATA?.priority || 'normal';
+
+      const aPrio = priorityOrder[aPriority] ?? 2; // default: normal
+      const bPrio = priorityOrder[bPriority] ?? 2; // default: normal
+
+      // Сначала по priority
+      if (aPrio !== bPrio) {
+        return aPrio - bPrio;
+      }
+
+      // Затем по имени (алфавит)
+      return a.getDefinition().name.localeCompare(b.getDefinition().name);
+    });
+  }
+
+  /**
    * Получить определения всех зарегистрированных инструментов
+   *
+   * Инструменты отсортированы по приоритету: critical → high → normal → low
    */
   getDefinitions(): ToolDefinition[] {
     this.ensureInitialized();
     if (!this.tools) {
       return [];
     }
-    return Array.from(this.tools.values()).map((tool) => tool.getDefinition());
+
+    const tools = Array.from(this.tools.values());
+    const sorted = this.sortByPriority(tools);
+
+    // Логируем распределение по приоритетам
+    this.logger.debug('Tools sorted by priority', {
+      critical: sorted.filter((t) => {
+        const tClass = t.constructor as typeof BaseTool;
+        return tClass.METADATA?.priority === 'critical';
+      }).length,
+      high: sorted.filter((t) => {
+        const tClass = t.constructor as typeof BaseTool;
+        return tClass.METADATA?.priority === 'high';
+      }).length,
+      normal: sorted.filter((t) => {
+        const tClass = t.constructor as typeof BaseTool;
+        const priority = tClass.METADATA?.priority || 'normal';
+        return priority === 'normal';
+      }).length,
+      low: sorted.filter((t) => {
+        const tClass = t.constructor as typeof BaseTool;
+        return tClass.METADATA?.priority === 'low';
+      }).length,
+    });
+
+    return sorted.map((tool) => tool.getDefinition());
   }
 
   /**
@@ -131,6 +194,8 @@ export class ToolRegistry {
   /**
    * Получить essential инструменты (для lazy discovery)
    *
+   * Инструменты отсортированы по приоритету: critical → high → normal → low
+   *
    * @param essentialNames - список имен essential инструментов
    * @returns Определения только essential инструментов
    */
@@ -141,9 +206,12 @@ export class ToolRegistry {
     }
 
     const essentialSet = new Set(essentialNames);
-    return Array.from(this.tools.values())
-      .filter((tool) => essentialSet.has(tool.getDefinition().name))
-      .map((tool) => tool.getDefinition());
+    const tools = Array.from(this.tools.values()).filter((tool) =>
+      essentialSet.has(tool.getDefinition().name)
+    );
+
+    const sorted = this.sortByPriority(tools);
+    return sorted.map((tool) => tool.getDefinition());
   }
 
   /**
