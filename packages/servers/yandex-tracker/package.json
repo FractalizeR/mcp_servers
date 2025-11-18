@@ -1,6 +1,6 @@
 {
   "name": "@mcp-server/yandex-tracker",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "MCP Server for Yandex Tracker API integration",
   "keywords": [
     "mcp",
