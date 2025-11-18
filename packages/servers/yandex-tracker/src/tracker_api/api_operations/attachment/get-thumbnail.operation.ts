@@ -54,6 +54,44 @@ export class GetThumbnailOperation extends BaseOperation {
   }
 
   /**
+   * Получить метаданные файла без скачивания содержимого
+   *
+   * Используется для получения информации о файле (имя, размер, MIME тип, etc)
+   * перед скачиванием миниатюры.
+   *
+   * @param issueId - идентификатор или ключ задачи
+   * @param attachmentId - идентификатор файла
+   * @returns метаданные файла
+   *
+   * @example
+   * ```typescript
+   * const metadata = await getThumbnailOp.getMetadata('TEST-123', '67890');
+   * console.log(`Файл: ${metadata.name}, размер: ${metadata.size} байт`);
+   * ```
+   */
+  async getMetadata(issueId: string, attachmentId: string): Promise<AttachmentWithUnknownFields> {
+    this.logger.debug(
+      `GetThumbnailOperation: получение метаданных для attachmentId=${attachmentId}`
+    );
+
+    // Получаем список всех файлов и находим нужный
+    const attachments = await this.httpClient.get<AttachmentWithUnknownFields[]>(
+      `/v2/issues/${issueId}/attachments`
+    );
+
+    const attachment = attachments.find((a) => a.id === attachmentId);
+
+    if (!attachment) {
+      throw new Error(
+        `Файл с id=${attachmentId} не найден в задаче ${issueId}. ` +
+          `Доступные файлы: ${attachments.map((a) => a.id).join(', ')}`
+      );
+    }
+
+    return attachment;
+  }
+
+  /**
    * Проверить, поддерживает ли файл миниатюры
    *
    * Полезно перед вызовом execute() для избежания ошибок API.

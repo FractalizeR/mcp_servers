@@ -405,14 +405,23 @@ export class YandexTrackerFacade {
     input?: DownloadAttachmentInput
   ): Promise<DownloadAttachmentOutput> {
     const operation = this.getOperation<{
-      execute: (
-        id: string,
-        attId: string,
-        fname: string,
-        input?: DownloadAttachmentInput
-      ) => Promise<DownloadAttachmentOutput>;
+      execute: (id: string, attId: string, fname: string) => Promise<Buffer>;
+      getMetadata: (id: string, attId: string) => Promise<AttachmentWithUnknownFields>;
     }>('DownloadAttachmentOperation');
-    return operation.execute(issueId, attachmentId, filename, input);
+
+    // Получаем метаданные файла
+    const metadata = await operation.getMetadata(issueId, attachmentId);
+
+    // Скачиваем файл
+    const buffer = await operation.execute(issueId, attachmentId, filename);
+
+    // Формируем результат
+    const content = input?.returnBase64 ? buffer.toString('base64') : buffer;
+
+    return {
+      content,
+      metadata,
+    };
   }
 
   /**
@@ -440,12 +449,22 @@ export class YandexTrackerFacade {
     input?: DownloadAttachmentInput
   ): Promise<DownloadAttachmentOutput> {
     const operation = this.getOperation<{
-      execute: (
-        id: string,
-        attId: string,
-        input?: DownloadAttachmentInput
-      ) => Promise<DownloadAttachmentOutput>;
+      execute: (id: string, attId: string) => Promise<Buffer>;
+      getMetadata: (id: string, attId: string) => Promise<AttachmentWithUnknownFields>;
     }>('GetThumbnailOperation');
-    return operation.execute(issueId, attachmentId, input);
+
+    // Получаем метаданные файла
+    const metadata = await operation.getMetadata(issueId, attachmentId);
+
+    // Скачиваем миниатюру
+    const buffer = await operation.execute(issueId, attachmentId);
+
+    // Формируем результат
+    const content = input?.returnBase64 ? buffer.toString('base64') : buffer;
+
+    return {
+      content,
+      metadata,
+    };
   }
 }

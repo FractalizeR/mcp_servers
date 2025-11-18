@@ -555,6 +555,194 @@ export class MockServer {
     return this;
   }
 
+  // ============================================================
+  // ATTACHMENTS API МЕТОДЫ
+  // ============================================================
+
+  /**
+   * Mock успешного получения списка файлов задачи
+   */
+  mockGetAttachmentsSuccess(issueKey: string, attachments: unknown[]): this {
+    const mockKey = `GET /v2/issues/${issueKey}/attachments`;
+    this.mockAdapter.onGet(`/v2/issues/${issueKey}/attachments`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, attachments];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при получении списка файлов
+   */
+  mockGetAttachments404(issueKey: string): this {
+    const response = generateError404();
+    const mockKey = `GET /v2/issues/${issueKey}/attachments`;
+    this.mockAdapter.onGet(`/v2/issues/${issueKey}/attachments`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешной загрузки файла
+   */
+  mockUploadAttachmentSuccess(issueKey: string, attachment: unknown): this {
+    const mockKey = `POST /v2/issues/${issueKey}/attachments`;
+    this.mockAdapter.onPost(`/v2/issues/${issueKey}/attachments`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [201, attachment];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 403 при загрузке файла
+   */
+  mockUploadAttachment403(issueKey: string): this {
+    const response = generateError403();
+    const mockKey = `POST /v2/issues/${issueKey}/attachments`;
+    this.mockAdapter.onPost(`/v2/issues/${issueKey}/attachments`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [403, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного скачивания файла
+   */
+  mockDownloadAttachmentSuccess(issueKey: string, attachmentId: string, filename: string): this {
+    const mockKey = `GET /v2/issues/${issueKey}/attachments/${attachmentId}/${filename}`;
+    const fileContent = Buffer.from('test file content');
+    this.mockAdapter
+      .onGet(`/v2/issues/${issueKey}/attachments/${attachmentId}/${filename}`)
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [
+          200,
+          fileContent,
+          {
+            'content-type': 'application/octet-stream',
+            'content-disposition': `attachment; filename="${filename}"`,
+          },
+        ];
+      });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при скачивании файла
+   */
+  mockDownloadAttachment404(issueKey: string, attachmentId: string, filename: string): this {
+    const response = generateError404();
+    const mockKey = `GET /v2/issues/${issueKey}/attachments/${attachmentId}/${filename}`;
+    this.mockAdapter
+      .onGet(`/v2/issues/${issueKey}/attachments/${attachmentId}/${filename}`)
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [404, response];
+      });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного удаления файла
+   */
+  mockDeleteAttachmentSuccess(issueKey: string, attachmentId: string): this {
+    const mockKey = `DELETE /v2/issues/${issueKey}/attachments/${attachmentId}`;
+    this.mockAdapter.onDelete(`/v2/issues/${issueKey}/attachments/${attachmentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [204, ''];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при удалении файла
+   */
+  mockDeleteAttachment404(issueKey: string, attachmentId: string): this {
+    const response = generateError404();
+    const mockKey = `DELETE /v2/issues/${issueKey}/attachments/${attachmentId}`;
+    this.mockAdapter.onDelete(`/v2/issues/${issueKey}/attachments/${attachmentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного получения миниатюры
+   */
+  mockGetThumbnailSuccess(issueKey: string, attachmentId: string): this {
+    const mockKey = `GET /v2/issues/${issueKey}/thumbnails/${attachmentId}`;
+    const thumbnailContent = Buffer.from('thumbnail image content');
+    this.mockAdapter.onGet(`/v2/issues/${issueKey}/thumbnails/${attachmentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [
+        200,
+        thumbnailContent,
+        {
+          'content-type': 'image/png',
+        },
+      ];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при получении миниатюры
+   */
+  mockGetThumbnail404(issueKey: string, attachmentId: string): this {
+    const response = generateError404();
+    const mockKey = `GET /v2/issues/${issueKey}/thumbnails/${attachmentId}`;
+    this.mockAdapter.onGet(`/v2/issues/${issueKey}/thumbnails/${attachmentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
   /**
    * Очистить все моки и восстановить оригинальный адаптер
    */
