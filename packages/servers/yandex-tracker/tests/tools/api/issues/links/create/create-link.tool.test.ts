@@ -161,16 +161,20 @@ describe('CreateLinkTool', () => {
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
-        message: string;
-        link: {
-          id: string;
-          type: { id: string };
+        data: {
+          success: boolean;
+          message: string;
+          link: {
+            id: string;
+            type: { id: string };
+          };
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.message).toContain('Связь создана');
-      expect(parsed.link.id).toBe(mockLink.id);
-      expect(parsed.link.type.id).toBe(mockLink.type.id);
+      expect(parsed.data.success).toBe(true);
+      expect(parsed.data.message).toContain('Связь создана');
+      expect(parsed.data.link.id).toBe(mockLink.id);
+      expect(parsed.data.link.type.id).toBe(mockLink.type.id);
     });
 
     it('должен создать связь типа relates', async () => {
@@ -191,9 +195,12 @@ describe('CreateLinkTool', () => {
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        link: { type: { id: string } };
+        success: boolean;
+        data: {
+          link: { type: { id: string } };
+        };
       };
-      expect(parsed.link.type.id).toBe('relates');
+      expect(parsed.data.link.type.id).toBe('relates');
     });
 
     it('должен создать связь типа depends on', async () => {
@@ -214,9 +221,12 @@ describe('CreateLinkTool', () => {
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        link: { type: { id: string } };
+        success: boolean;
+        data: {
+          link: { type: { id: string } };
+        };
       };
-      expect(parsed.link.type.id).toBe('depends');
+      expect(parsed.data.link.type.id).toBe('depends');
     });
 
     it('должен обработать ошибку от facade', async () => {

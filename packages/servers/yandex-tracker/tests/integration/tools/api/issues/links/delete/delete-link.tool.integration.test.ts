@@ -34,9 +34,10 @@ describe('delete-link integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.message).toContain('удалена');
-    expect(response.issueId).toBe(issueKey);
-    expect(response.linkId).toBe(linkId);
+    expect(response.data.success).toBe(true);
+    expect(response.data.message).toContain('удалена');
+    expect(response.data.issueId).toBe(issueKey);
+    expect(response.data.linkId).toBe(linkId);
     mockServer.assertAllRequestsDone();
   });
 
@@ -114,8 +115,8 @@ describe('delete-link integration tests', () => {
     expect(result2.isError).toBeUndefined();
     const response1 = JSON.parse(result1.content[0]!.text);
     const response2 = JSON.parse(result2.content[0]!.text);
-    expect(response1.issueId).toBe(issue1);
-    expect(response2.issueId).toBe(issue2);
+    expect(response1.data.issueId).toBe(issue1);
+    expect(response2.data.issueId).toBe(issue2);
     mockServer.assertAllRequestsDone();
   });
 
@@ -135,8 +136,9 @@ describe('delete-link integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.message).toContain(linkId);
-    expect(response.message).toContain(issueKey);
+    expect(response.data.success).toBe(true);
+    expect(response.data.message).toContain(linkId);
+    expect(response.data.message).toContain(issueKey);
     mockServer.assertAllRequestsDone();
   });
 });

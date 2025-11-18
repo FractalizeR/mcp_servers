@@ -39,7 +39,8 @@ describe('GetIssueLinksTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('get_issue_links', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Получить связи задачи');
+      expect(definition.description).toContain('Получить');
+      expect(definition.description).toContain('связи');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['issueId']);
       expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
@@ -84,16 +85,19 @@ describe('GetIssueLinksTool', () => {
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        issueId: string;
-        linksCount: number;
-        links: Array<{
-          id: string;
-          type: { id: string };
-        }>;
+        success: boolean;
+        data: {
+          issueId: string;
+          linksCount: number;
+          links: Array<{
+            id: string;
+            type: { id: string };
+          }>;
+        };
       };
-      expect(parsed.issueId).toBe('TEST-123');
-      expect(parsed.linksCount).toBe(2);
-      expect(parsed.links).toHaveLength(2);
+      expect(parsed.data.issueId).toBe('TEST-123');
+      expect(parsed.data.linksCount).toBe(2);
+      expect(parsed.data.links).toHaveLength(2);
     });
 
     it('должен вернуть пустой массив когда нет связей', async () => {
@@ -103,11 +107,14 @@ describe('GetIssueLinksTool', () => {
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        linksCount: number;
-        links: unknown[];
+        success: boolean;
+        data: {
+          linksCount: number;
+          links: unknown[];
+        };
       };
-      expect(parsed.linksCount).toBe(0);
-      expect(parsed.links).toEqual([]);
+      expect(parsed.data.linksCount).toBe(0);
+      expect(parsed.data.links).toEqual([]);
     });
 
     it('должен включить все поля связи в ответ', async () => {
@@ -118,21 +125,24 @@ describe('GetIssueLinksTool', () => {
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        links: Array<{
-          id: string;
-          type: { id: string; inward: string; outward: string };
-          direction: string;
-          linkedIssue: { id: string; key: string; display: string };
-          createdBy: { id: string; display: string };
-          createdAt: string;
-        }>;
+        success: boolean;
+        data: {
+          links: Array<{
+            id: string;
+            type: { id: string; inward: string; outward: string };
+            direction: string;
+            linkedIssue: { id: string; key: string; display: string };
+            createdBy: { id: string; display: string };
+            createdAt: string;
+          }>;
+        };
       };
-      expect(parsed.links[0]).toHaveProperty('id');
-      expect(parsed.links[0]).toHaveProperty('type');
-      expect(parsed.links[0]).toHaveProperty('direction');
-      expect(parsed.links[0]).toHaveProperty('linkedIssue');
-      expect(parsed.links[0]).toHaveProperty('createdBy');
-      expect(parsed.links[0]).toHaveProperty('createdAt');
+      expect(parsed.data.links[0]).toHaveProperty('id');
+      expect(parsed.data.links[0]).toHaveProperty('type');
+      expect(parsed.data.links[0]).toHaveProperty('direction');
+      expect(parsed.data.links[0]).toHaveProperty('linkedIssue');
+      expect(parsed.data.links[0]).toHaveProperty('createdBy');
+      expect(parsed.data.links[0]).toHaveProperty('createdAt');
     });
 
     it('должен обработать связи разных типов', async () => {
@@ -146,10 +156,13 @@ describe('GetIssueLinksTool', () => {
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        links: Array<{ type: { id: string } }>;
+        success: boolean;
+        data: {
+          links: Array<{ type: { id: string } }>;
+        };
       };
-      expect(parsed.links[0]!.type.id).toBe('subtask');
-      expect(parsed.links[1]!.type.id).toBe('relates');
+      expect(parsed.data.links[0]!.type.id).toBe('subtask');
+      expect(parsed.data.links[1]!.type.id).toBe('relates');
     });
 
     it('должен включить updatedBy и updatedAt если они есть', async () => {
@@ -169,14 +182,17 @@ describe('GetIssueLinksTool', () => {
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        links: Array<{
-          updatedBy?: { id: string; display: string };
-          updatedAt?: string;
-        }>;
+        success: boolean;
+        data: {
+          links: Array<{
+            updatedBy?: { id: string; display: string };
+            updatedAt?: string;
+          }>;
+        };
       };
-      expect(parsed.links[0]).toHaveProperty('updatedBy');
-      expect(parsed.links[0]).toHaveProperty('updatedAt');
-      expect(parsed.links[0]!.updatedBy?.id).toBe('123');
+      expect(parsed.data.links[0]).toHaveProperty('updatedBy');
+      expect(parsed.data.links[0]).toHaveProperty('updatedAt');
+      expect(parsed.data.links[0]!.updatedBy?.id).toBe('123');
     });
 
     it('должен обработать ошибку от facade', async () => {
@@ -213,13 +229,16 @@ describe('GetIssueLinksTool', () => {
       const mockLinks = createLinkListFixture(100);
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      const result = await tool.execute({ issueId: 'TEST-EPIC' });
+      const result = await tool.execute({ issueId: 'TEST-999' });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        linksCount: number;
+        success: boolean;
+        data: {
+          linksCount: number;
+        };
       };
-      expect(parsed.linksCount).toBe(100);
+      expect(parsed.data.linksCount).toBe(100);
     });
   });
 });
