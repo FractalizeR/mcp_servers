@@ -35,10 +35,10 @@ export class UploadAttachmentOperation extends BaseOperation {
     httpClient: ConstructorParameters<typeof BaseOperation>[0],
     cacheManager: ConstructorParameters<typeof BaseOperation>[1],
     logger: ConstructorParameters<typeof BaseOperation>[2],
-    maxFileSize: number = DEFAULT_MAX_FILE_SIZE
+    config?: { maxFileSize?: number }
   ) {
     super(httpClient, cacheManager, logger);
-    this.maxFileSize = maxFileSize;
+    this.maxFileSize = config?.maxFileSize ?? DEFAULT_MAX_FILE_SIZE;
   }
 
   /**

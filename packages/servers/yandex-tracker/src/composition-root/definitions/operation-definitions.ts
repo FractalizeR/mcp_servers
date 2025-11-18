@@ -36,6 +36,13 @@ import {
   EditCommentOperation,
   DeleteCommentOperation,
 } from '@tracker_api/api_operations/comment/index.js';
+import {
+  GetAttachmentsOperation,
+  UploadAttachmentOperation,
+  DownloadAttachmentOperation,
+  DeleteAttachmentOperation,
+  GetThumbnailOperation,
+} from '@tracker_api/api_operations/attachment/index.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -67,6 +74,11 @@ export const OPERATION_CLASSES = [
   GetCommentsOperation,
   EditCommentOperation,
   DeleteCommentOperation,
+  GetAttachmentsOperation,
+  UploadAttachmentOperation,
+  DownloadAttachmentOperation,
+  DeleteAttachmentOperation,
+  GetThumbnailOperation,
 ] as const;
 
 /**

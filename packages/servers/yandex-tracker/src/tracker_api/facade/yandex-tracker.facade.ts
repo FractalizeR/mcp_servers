@@ -37,6 +37,9 @@ import type {
   AddCommentInput,
   EditCommentInput,
   GetCommentsInput,
+  UploadAttachmentInput,
+  DownloadAttachmentInput,
+  DownloadAttachmentOutput,
 } from '@tracker_api/dto/index.js';
 import type {
   IssueWithUnknownFields,
@@ -44,6 +47,7 @@ import type {
   TransitionWithUnknownFields,
   LinkWithUnknownFields,
   CommentWithUnknownFields,
+  AttachmentWithUnknownFields,
 } from '@tracker_api/entities/index.js';
 import type {
   UpdateQueueParams,
@@ -354,5 +358,94 @@ export class YandexTrackerFacade {
       execute: (id: string, cId: string) => Promise<void>;
     }>('DeleteCommentOperation');
     return operation.execute(issueId, commentId);
+  }
+
+  // === Issue Methods - Attachments ===
+
+  /**
+   * Получает список всех прикрепленных файлов задачи
+   * @param issueId - ключ или ID задачи
+   * @returns массив прикрепленных файлов
+   */
+  async getAttachments(issueId: string): Promise<AttachmentWithUnknownFields[]> {
+    const operation = this.getOperation<{
+      execute: (id: string) => Promise<AttachmentWithUnknownFields[]>;
+    }>('GetAttachmentsOperation');
+    return operation.execute(issueId);
+  }
+
+  /**
+   * Загружает файл в задачу
+   * @param issueId - ключ или ID задачи
+   * @param input - параметры загрузки файла (filename, file, mimetype)
+   * @returns информация о загруженном файле
+   */
+  async uploadAttachment(
+    issueId: string,
+    input: UploadAttachmentInput
+  ): Promise<AttachmentWithUnknownFields> {
+    const operation = this.getOperation<{
+      execute: (id: string, input: UploadAttachmentInput) => Promise<AttachmentWithUnknownFields>;
+    }>('UploadAttachmentOperation');
+    return operation.execute(issueId, input);
+  }
+
+  /**
+   * Скачивает прикрепленный файл из задачи
+   * @param issueId - ключ или ID задачи
+   * @param attachmentId - ID прикрепленного файла
+   * @param filename - имя файла
+   * @param input - опции скачивания (saveToPath, returnBase64)
+   * @returns содержимое файла и метаданные
+   */
+  async downloadAttachment(
+    issueId: string,
+    attachmentId: string,
+    filename: string,
+    input?: DownloadAttachmentInput
+  ): Promise<DownloadAttachmentOutput> {
+    const operation = this.getOperation<{
+      execute: (
+        id: string,
+        attId: string,
+        fname: string,
+        input?: DownloadAttachmentInput
+      ) => Promise<DownloadAttachmentOutput>;
+    }>('DownloadAttachmentOperation');
+    return operation.execute(issueId, attachmentId, filename, input);
+  }
+
+  /**
+   * Удаляет прикрепленный файл из задачи
+   * @param issueId - ключ или ID задачи
+   * @param attachmentId - ID прикрепленного файла
+   */
+  async deleteAttachment(issueId: string, attachmentId: string): Promise<void> {
+    const operation = this.getOperation<{
+      execute: (id: string, attId: string) => Promise<void>;
+    }>('DeleteAttachmentOperation');
+    return operation.execute(issueId, attachmentId);
+  }
+
+  /**
+   * Получает миниатюру прикрепленного изображения
+   * @param issueId - ключ или ID задачи
+   * @param attachmentId - ID прикрепленного файла (должно быть изображение)
+   * @param input - опции скачивания (saveToPath, returnBase64)
+   * @returns содержимое миниатюры и метаданные
+   */
+  async getThumbnail(
+    issueId: string,
+    attachmentId: string,
+    input?: DownloadAttachmentInput
+  ): Promise<DownloadAttachmentOutput> {
+    const operation = this.getOperation<{
+      execute: (
+        id: string,
+        attId: string,
+        input?: DownloadAttachmentInput
+      ) => Promise<DownloadAttachmentOutput>;
+    }>('GetThumbnailOperation');
+    return operation.execute(issueId, attachmentId, input);
   }
 }

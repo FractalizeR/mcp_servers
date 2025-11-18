@@ -30,6 +30,11 @@ import { AddCommentTool } from '@tools/api/comments/add/index.js';
 import { GetCommentsTool } from '@tools/api/comments/get/index.js';
 import { EditCommentTool } from '@tools/api/comments/edit/index.js';
 import { DeleteCommentTool } from '@tools/api/comments/delete/index.js';
+import { GetAttachmentsTool } from '@tools/api/issues/attachments/get/index.js';
+import { UploadAttachmentTool } from '@tools/api/issues/attachments/upload/index.js';
+import { DownloadAttachmentTool } from '@tools/api/issues/attachments/download/index.js';
+import { DeleteAttachmentTool } from '@tools/api/issues/attachments/delete/index.js';
+import { GetThumbnailTool } from '@tools/api/issues/attachments/thumbnail/index.js';
 import { IssueUrlTool } from '@tools/helpers/issue-url/index.js';
 import { DemoTool } from '@tools/helpers/demo/index.js';
 
@@ -71,6 +76,11 @@ export const TOOL_CLASSES = [
   GetCommentsTool,
   EditCommentTool,
   DeleteCommentTool,
+  GetAttachmentsTool,
+  UploadAttachmentTool,
+  DownloadAttachmentTool,
+  DeleteAttachmentTool,
+  GetThumbnailTool,
   IssueUrlTool,
   DemoTool,
 ] as const;
