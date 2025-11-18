@@ -20,6 +20,7 @@ export enum EntityType {
   QUEUE = 'queue',
   USER = 'user',
   COMMENT = 'comment',
+  COMPONENT = 'component',
   SPRINT = 'sprint',
   PROJECT = 'project',
   ATTACHMENT = 'attachment',

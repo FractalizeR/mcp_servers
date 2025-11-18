@@ -1,0 +1,19 @@
+{
+  "id": "component123456789abc",
+  "self": "https://api.tracker.yandex.net/v2/components/1",
+  "name": "Test Component",
+  "description": "Test component description for integration tests",
+  "lead": {
+    "id": "user123",
+    "self": "https://api.tracker.yandex.net/v3/users/user123",
+    "display": "Test User",
+    "cloudUid": "ajem1234567890abcdef",
+    "passportUid": 1234567890
+  },
+  "assignAuto": false,
+  "queue": {
+    "id": "1",
+    "key": "TEST",
+    "display": "Test Queue"
+  }
+}

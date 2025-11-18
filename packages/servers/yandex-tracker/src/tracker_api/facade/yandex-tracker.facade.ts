@@ -36,6 +36,10 @@ import type {
   QueuesListOutput,
   QueueFieldsOutput,
   QueuePermissionsOutput,
+  CreateComponentDto,
+  UpdateComponentDto,
+  ComponentOutput,
+  ComponentsListOutput,
   CreateLinkDto,
   AddCommentInput,
   EditCommentInput,
@@ -331,6 +335,71 @@ export class YandexTrackerFacade {
       execute: (params: DeleteProjectParams) => Promise<void>;
     }>('DeleteProjectOperation');
     return operation.execute(params);
+  }
+
+  // === Component Methods ===
+
+  /**
+   * Получает список компонентов очереди
+   * @param queueId - ключ или ID очереди
+   * @returns массив компонентов очереди
+   */
+  async getComponents(params: { queueId: string }): Promise<ComponentsListOutput> {
+    const operation = this.getOperation<{
+      execute: (queueId: string) => Promise<ComponentsListOutput>;
+    }>('GetComponentsOperation');
+    return operation.execute(params.queueId);
+  }
+
+  /**
+   * Создаёт новый компонент в очереди
+   * @param queueId - ключ или ID очереди
+   * @param componentData - данные компонента
+   * @returns созданный компонент
+   */
+  async createComponent(params: {
+    queueId: string;
+    name: string;
+    description?: string;
+    lead?: string;
+    assignAuto?: boolean;
+  }): Promise<ComponentOutput> {
+    const { queueId, ...componentData } = params;
+    const operation = this.getOperation<{
+      execute: (queueId: string, data: CreateComponentDto) => Promise<ComponentOutput>;
+    }>('CreateComponentOperation');
+    return operation.execute(queueId, componentData);
+  }
+
+  /**
+   * Обновляет существующий компонент
+   * @param componentId - ID компонента
+   * @param componentData - данные для обновления
+   * @returns обновлённый компонент
+   */
+  async updateComponent(params: {
+    componentId: string;
+    name?: string;
+    description?: string;
+    lead?: string;
+    assignAuto?: boolean;
+  }): Promise<ComponentOutput> {
+    const { componentId, ...componentData } = params;
+    const operation = this.getOperation<{
+      execute: (componentId: string, data: UpdateComponentDto) => Promise<ComponentOutput>;
+    }>('UpdateComponentOperation');
+    return operation.execute(componentId, componentData);
+  }
+
+  /**
+   * Удаляет компонент из очереди
+   * @param componentId - ID компонента
+   */
+  async deleteComponent(params: { componentId: string }): Promise<void> {
+    const operation = this.getOperation<{
+      execute: (componentId: string) => Promise<void>;
+    }>('DeleteComponentOperation');
+    return operation.execute(params.componentId);
   }
 
   // === Issue Methods - Links ===

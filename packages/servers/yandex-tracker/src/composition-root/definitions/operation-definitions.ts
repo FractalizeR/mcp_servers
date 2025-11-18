@@ -26,6 +26,12 @@ import {
   ManageQueueAccessOperation,
 } from '@tracker_api/api_operations/queue/index.js';
 import {
+  GetComponentsOperation,
+  CreateComponentOperation,
+  UpdateComponentOperation,
+  DeleteComponentOperation,
+} from '@tracker_api/api_operations/component/index.js';
+import {
   GetIssueLinksOperation,
   CreateLinkOperation,
   DeleteLinkOperation,
@@ -67,6 +73,10 @@ export const OPERATION_CLASSES = [
   UpdateQueueOperation,
   GetQueueFieldsOperation,
   ManageQueueAccessOperation,
+  GetComponentsOperation,
+  CreateComponentOperation,
+  UpdateComponentOperation,
+  DeleteComponentOperation,
   GetIssueLinksOperation,
   CreateLinkOperation,
   DeleteLinkOperation,

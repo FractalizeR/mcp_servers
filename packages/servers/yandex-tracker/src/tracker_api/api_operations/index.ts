@@ -24,8 +24,14 @@ export * from '@tracker_api/api_operations/comment/index.js';
 // Checklist operations
 export * from '@tracker_api/api_operations/checklist/index.js';
 
+// Component operations
+export * from '@tracker_api/api_operations/component/index.js';
+
 // Worklog operations
 export * from '@tracker_api/api_operations/worklog/index.js';
 
 // Project operations
 export * from '@tracker_api/api_operations/project/index.js';
+
+// Attachment operations
+export * from '@tracker_api/api_operations/attachment/index.js';

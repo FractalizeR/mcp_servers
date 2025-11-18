@@ -249,49 +249,17 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 
 ### Batch-операция
 
-**Эталон:** `src/tracker_api/api_operations/issue/get-issues.operation.ts`
-
-```typescript
-export class GetIssuesOperation extends BaseOperation {
-  async execute(issueKeys: string[]): Promise<BatchResult<IssueWithUnknownFields>> {
-    if (issueKeys.length === 0) {
-      this.logger.warn('Пустой массив ключей');
-      return [];
-    }
-
-    this.logger.info(`Получение ${issueKeys.length} задач`);
-
-    const operations = issueKeys.map((key) => ({
-      key,
-      fn: async () => {
-        const cacheKey = EntityCacheKey.createKey(EntityType.Issue, key);
-        return this.withCache(cacheKey, async () => {
-          return this.httpClient.get<IssueWithUnknownFields>(`/v3/issues/${key}`);
-        });
-      },
-    }));
-
-    return this.parallelExecutor.executeParallel(operations, 'getIssues');
-  }
-}
-```
+См. эталонную реализацию: `src/tracker_api/api_operations/issue/get-issues.operation.ts`
+- Использует `ParallelExecutor.executeParallel()`
+- Кеширование через `EntityCacheKey`
+- Возвращает `BatchResult<T>`
 
 ### Одиночная операция
 
-**Эталон:** `src/tracker_api/api_operations/user/ping.operation.ts`
-
-```typescript
-export class PingOperation extends BaseOperation {
-  async execute(): Promise<UserWithUnknownFields> {
-    this.logger.info('Проверка доступности API');
-
-    const user = await this.httpClient.get<User>('/v3/myself');
-
-    this.logger.info(`API доступен. Текущий пользователь: ${user.login}`);
-    return user;
-  }
-}
-```
+См. эталонную реализацию: `src/tracker_api/api_operations/user/ping.operation.ts`
+- Использует `httpClient.get()`
+- Возвращает `*WithUnknownFields`
+- Логирование через `this.logger`
 
 ---
 
@@ -300,60 +268,19 @@ export class PingOperation extends BaseOperation {
 **5 операций для работы с вложениями:**
 
 ### 1. GetAttachmentsOperation
-**API:** `GET /v2/issues/{issueId}/attachments`
-**Назначение:** Получение списка всех файлов задачи
-
-```typescript
-const attachments = await getAttachmentsOp.execute('QUEUE-123');
-// Кеш: ✅ (через EntityCacheKey)
-// Возврат: AttachmentWithUnknownFields[]
-```
+`GET /v2/issues/{issueId}/attachments` — получение списка файлов, кеш ✅
 
 ### 2. UploadAttachmentOperation
-**API:** `POST /v2/issues/{issueId}/attachments`
-**Назначение:** Загрузка файла через multipart/form-data
-
-```typescript
-const attachment = await uploadOp.execute('QUEUE-123', {
-  filename: 'report.pdf',
-  file: Buffer.from('...'),  // или base64 string
-  mimetype: 'application/pdf'
-});
-// Валидация: размер (default 10MB), имя файла
-// Кеш: ❌ инвалидирует list cache
-// Возврат: AttachmentWithUnknownFields
-```
+`POST /v2/issues/{issueId}/attachments` — загрузка файла (multipart/form-data), валидация размера (10MB)
 
 ### 3. DownloadAttachmentOperation
-**API:** `GET /v2/issues/{issueId}/attachments/{attachmentId}/{filename}`
-**Назначение:** Скачивание файла как Buffer
-
-```typescript
-const buffer = await downloadOp.execute('QUEUE-123', '67890', 'report.pdf');
-// Возврат: Buffer (бинарные данные)
-```
-
-**Дополнительно:** `getMetadata()` для получения информации без скачивания
+`GET /v2/issues/{issueId}/attachments/{attachmentId}/{filename}` — скачивание как Buffer
 
 ### 4. DeleteAttachmentOperation
-**API:** `DELETE /v2/issues/{issueId}/attachments/{attachmentId}`
-**Назначение:** Удаление файла из задачи
-
-```typescript
-await deleteOp.execute('QUEUE-123', '67890');
-// Кеш: ❌ инвалидирует list cache
-// Возврат: void
-```
+`DELETE /v2/issues/{issueId}/attachments/{attachmentId}` — удаление файла, инвалидация кеша
 
 ### 5. GetThumbnailOperation
-**API:** `GET /v2/issues/{issueId}/attachments/{attachmentId}/thumbnail/{filename}`
-**Назначение:** Получение миниатюры изображения
-
-```typescript
-const thumbnail = await getThumbnailOp.execute('QUEUE-123', '67890', 'photo.jpg');
-// Кеш: ✅
-// Возврат: Buffer (только для изображений)
-```
+`GET /v2/issues/{issueId}/attachments/{attachmentId}/thumbnail/{filename}` — миниатюра изображения, кеш ✅
 
 **Ключевые аспекты:**
 - **Размер файла:** Default 10MB, настраивается через конфигурацию
@@ -369,60 +296,16 @@ const thumbnail = await getThumbnailOp.execute('QUEUE-123', '67890', 'photo.jpg'
 **4 операции для работы с комментариями:**
 
 ### 1. AddCommentOperation
-**API:** `POST /v2/issues/{issueId}/comments`
-**Назначение:** Добавление комментария к задаче
-
-```typescript
-const comment = await addCommentOp.execute('QUEUE-123', {
-  text: 'New comment',
-  attachmentIds: ['att-1', 'att-2']  // опционально
-});
-// Кеш: ❌ инвалидирует list cache
-// Возврат: CommentWithUnknownFields
-```
+`POST /v2/issues/{issueId}/comments` — добавление комментария, инвалидация кеша
 
 ### 2. GetCommentsOperation
-**API:** `GET /v2/issues/{issueId}/comments`
-**Назначение:** Получение списка комментариев задачи
-
-```typescript
-const comments = await getCommentsOp.execute('QUEUE-123', {
-  perPage: 50,
-  page: 1,
-  expand: 'attachments'  // опционально
-});
-// Кеш: ✅ (через EntityCacheKey)
-// Возврат: CommentWithUnknownFields[]
-```
-
-**Параметры пагинации:**
-- `perPage` — количество комментариев на странице (default: 50)
-- `page` — номер страницы (начиная с 1)
-- `expand` — дополнительные поля ('attachments')
+`GET /v2/issues/{issueId}/comments` — получение списка, пагинация (perPage, page, expand), кеш ✅
 
 ### 3. EditCommentOperation
-**API:** `PATCH /v2/issues/{issueId}/comments/{commentId}`
-**Назначение:** Редактирование существующего комментария
-
-```typescript
-const updatedComment = await editCommentOp.execute('QUEUE-123', 'comment-456', {
-  text: 'Updated comment text'
-});
-// Кеш: ❌ инвалидирует list cache
-// Возврат: CommentWithUnknownFields
-```
-
-**Важно:** При редактировании обновляются поля `updatedBy`, `updatedAt` и `version`
+`PATCH /v2/issues/{issueId}/comments/{commentId}` — редактирование, обновляет version
 
 ### 4. DeleteCommentOperation
-**API:** `DELETE /v2/issues/{issueId}/comments/{commentId}`
-**Назначение:** Удаление комментария
-
-```typescript
-await deleteCommentOp.execute('QUEUE-123', 'comment-456');
-// Кеш: ❌ инвалидирует list cache
-// Возврат: void
-```
+`DELETE /v2/issues/{issueId}/comments/{commentId}` — удаление, инвалидация кеша
 
 **Ключевые аспекты:**
 - **Markdown:** Поле `text` поддерживает markdown форматирование
@@ -480,6 +363,32 @@ await deleteCommentOp.execute('QUEUE-123', 'comment-456');
 - **Версионность:** `version` поле для оптимистичных блокировок
 - **Кеш:** Очереди кешируются по ключу, инвалидируются при изменениях
 - **Batch:** GetQueuesOperation поддерживает пагинацию
+
+---
+
+## 📦 Component Operations (Complete API)
+
+**4 операции для работы с компонентами очередей:**
+
+### 1. GetComponentsOperation
+`GET /v2/queues/{queueId}/components` — список компонентов очереди, кеш ✅
+
+### 2. CreateComponentOperation
+`POST /v2/queues/{queueId}/components` — создание (name, description?, lead?, assignAuto?), инвалидация кеша
+
+### 3. UpdateComponentOperation
+`PATCH /v2/components/{componentId}` — обновление параметров, инвалидация кеша
+
+### 4. DeleteComponentOperation
+`DELETE /v2/components/{componentId}` — удаление, сначала GET для queueId
+
+**Ключевые аспекты:**
+- **API версия:** Компоненты используют API v2 (не v3)
+- **Scope:** Компоненты привязаны к конкретной очереди
+- **Auto-assign:** `assignAuto` — автоназначение исполнителя при добавлении компонента к задаче
+- **Lead:** Опциональный ответственный за компонент
+- **Кеш:** Списки компонентов кешируются по очереди, инвалидируются при изменениях
+- **Delete:** При удалении сначала делает GET для получения queueId (для инвалидации кеша)
 
 ---
 
