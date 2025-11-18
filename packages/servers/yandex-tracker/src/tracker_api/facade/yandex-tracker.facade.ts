@@ -40,6 +40,8 @@ import type {
   AddCommentInput,
   EditCommentInput,
   GetCommentsInput,
+  AddWorklogInput,
+  UpdateWorklogInput,
   UploadAttachmentInput,
   DownloadAttachmentInput,
   DownloadAttachmentOutput,
@@ -56,6 +58,7 @@ import type {
   TransitionWithUnknownFields,
   LinkWithUnknownFields,
   CommentWithUnknownFields,
+  WorklogWithUnknownFields,
   AttachmentWithUnknownFields,
   ChecklistItemWithUnknownFields,
 } from '@tracker_api/entities/index.js';
@@ -436,6 +439,68 @@ export class YandexTrackerFacade {
       execute: (id: string, itemId: string) => Promise<void>;
     }>('DeleteChecklistItemOperation');
     return operation.execute(issueId, checklistItemId);
+  }
+
+  // === Worklog Methods ===
+
+  /**
+   * Получает список записей времени задачи
+   * @param issueId - идентификатор или ключ задачи
+   * @returns массив записей времени
+   */
+  async getWorklogs(issueId: string): Promise<WorklogWithUnknownFields[]> {
+    const operation = this.getOperation<{
+      execute: (id: string) => Promise<WorklogWithUnknownFields[]>;
+    }>('GetWorklogsOperation');
+    return operation.execute(issueId);
+  }
+
+  /**
+   * Добавляет запись времени к задаче
+   * @param issueId - идентификатор или ключ задачи
+   * @param input - данные записи времени
+   * @returns созданная запись времени
+   */
+  async addWorklog(issueId: string, input: AddWorklogInput): Promise<WorklogWithUnknownFields> {
+    const operation = this.getOperation<{
+      execute: (id: string, data: AddWorklogInput) => Promise<WorklogWithUnknownFields>;
+    }>('AddWorklogOperation');
+    return operation.execute(issueId, input);
+  }
+
+  /**
+   * Обновляет запись времени
+   * @param issueId - идентификатор или ключ задачи
+   * @param worklogId - идентификатор записи времени
+   * @param input - новые данные записи времени
+   * @returns обновлённая запись времени
+   */
+  async updateWorklog(
+    issueId: string,
+    worklogId: string,
+    input: UpdateWorklogInput
+  ): Promise<WorklogWithUnknownFields> {
+    const operation = this.getOperation<{
+      execute: (
+        id: string,
+        wId: string,
+        data: UpdateWorklogInput
+      ) => Promise<WorklogWithUnknownFields>;
+    }>('UpdateWorklogOperation');
+    return operation.execute(issueId, worklogId, input);
+  }
+
+  /**
+   * Удаляет запись времени
+   * @param issueId - идентификатор или ключ задачи
+   * @param worklogId - идентификатор записи времени
+   * @returns void
+   */
+  async deleteWorklog(issueId: string, worklogId: string): Promise<void> {
+    const operation = this.getOperation<{
+      execute: (id: string, wId: string) => Promise<void>;
+    }>('DeleteWorklogOperation');
+    return operation.execute(issueId, worklogId);
   }
 
   // === Issue Methods - Attachments ===
