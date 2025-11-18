@@ -17,6 +17,7 @@ import type { Issue } from './issue.entity.js';
 import type { Transition } from './transition.entity.js';
 import type { ChangelogEntry, ChangelogField } from './changelog.entity.js';
 import type { Attachment } from './attachment.entity.js';
+import type { Project, ProjectStatus, QueueRef } from './project.entity.js';
 
 /**
  * Создает валидный User entity
@@ -348,6 +349,54 @@ export function createAttachmentWithThumbnail(overrides?: Partial<Attachment>): 
     createdAt: '2024-01-01T00:00:00.000Z',
     mimetype: 'image/png',
     size: 2048,
+    ...overrides,
+  };
+}
+
+/**
+ * Создает валидный QueueRef (облегченная версия Queue для Project)
+ */
+export function createQueueRef(overrides?: Partial<QueueRef>): QueueRef {
+  return {
+    id: '1',
+    key: 'QUEUE',
+    display: 'Test Queue',
+    ...overrides,
+  };
+}
+
+/**
+ * Создает минимальный Project entity (только обязательные поля)
+ */
+export function createMinimalProject(overrides?: Partial<Project>): Project {
+  return {
+    id: '1',
+    self: 'https://api.tracker.yandex.net/v2/projects/1',
+    key: 'PROJECT',
+    name: 'Test Project',
+    lead: createUserRef(),
+    status: 'in_progress' as ProjectStatus,
+    ...overrides,
+  };
+}
+
+/**
+ * Создает полный Project entity (со всеми опциональными полями)
+ */
+export function createFullProject(overrides?: Partial<Project>): Project {
+  return {
+    id: '1',
+    self: 'https://api.tracker.yandex.net/v2/projects/1',
+    key: 'PROJECT',
+    name: 'Test Project',
+    lead: createUserRef(),
+    status: 'in_progress' as ProjectStatus,
+    description: 'Test project description',
+    teamUsers: [createUserRef()],
+    teamGroups: [{ id: '1', display: 'Test Group' }],
+    startDate: '2024-01-01',
+    endDate: '2024-12-31',
+    queues: [createQueueRef()],
     ...overrides,
   };
 }

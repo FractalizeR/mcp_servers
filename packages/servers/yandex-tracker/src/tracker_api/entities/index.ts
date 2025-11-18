@@ -75,6 +75,14 @@ export type { Comment, CommentWithUnknownFields, CommentAttachment } from './com
 // Worklog
 export type { Worklog, WorklogWithUnknownFields } from './worklog.entity.js';
 
+// Project
+export type {
+  Project,
+  ProjectWithUnknownFields,
+  ProjectStatus,
+  QueueRef,
+} from './project.entity.js';
+
 // Entity Factories (runtime code for coverage)
 export {
   createUser,
@@ -98,4 +106,7 @@ export {
   createFullChangelogEntry,
   createAttachment,
   createAttachmentWithThumbnail,
+  createQueueRef,
+  createMinimalProject,
+  createFullProject,
 } from './entity.factories.js';

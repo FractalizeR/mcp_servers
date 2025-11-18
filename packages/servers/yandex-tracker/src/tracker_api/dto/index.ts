@@ -67,6 +67,16 @@ export type {
   WorklogsListOutput,
 } from './worklog/index.js';
 
+// Project DTO
+export type {
+  GetProjectsDto,
+  GetProjectDto,
+  CreateProjectDto,
+  UpdateProjectDto,
+  ProjectOutput,
+  ProjectsListOutput,
+} from './project/index.js';
+
 // DTO Factories (runtime code for coverage)
 export {
   // Issue factories
@@ -93,3 +103,13 @@ export {
   createAddQueueAccessDto,
   createRemoveQueueAccessDto,
 } from './queue/index.js';
+
+export {
+  // Project factories
+  createGetProjectsDto,
+  createGetProjectDto,
+  createMinimalCreateProjectDto,
+  createFullCreateProjectDto,
+  createUpdateProjectDto,
+  createFullUpdateProjectDto,
+} from './project/index.js';
