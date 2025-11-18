@@ -244,12 +244,17 @@ async function main(): Promise<void> {
     // Загрузка конфигурации
     const config = loadConfig();
 
-    // ✅ Переопределяем essentialTools для Yandex Tracker
-    // Имена определяются в Tool.METADATA один раз (Single Source of Truth)
-    // и собраны в YANDEX_TRACKER_ESSENTIAL_TOOLS с правильными префиксами
+    // ✅ Переопределяем essentialTools в зависимости от режима discovery
+    // - eager: только ping (search_tools избыточен, т.к. Claude видит все инструменты)
+    // - lazy: ping + search_tools (search_tools нужен для discovery)
+    const essentialTools =
+      config.toolDiscoveryMode === 'eager'
+        ? ['fr_yandex_tracker_ping']
+        : YANDEX_TRACKER_ESSENTIAL_TOOLS;
+
     const configWithEssentialTools: ServerConfig = {
       ...config,
-      essentialTools: YANDEX_TRACKER_ESSENTIAL_TOOLS,
+      essentialTools,
     };
 
     // Создание DI контейнера (Logger создаётся внутри)
