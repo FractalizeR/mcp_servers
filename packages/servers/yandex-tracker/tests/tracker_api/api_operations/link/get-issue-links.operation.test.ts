@@ -99,18 +99,8 @@ describe('GetIssueLinksOperation', () => {
       expect(result[1]!.direction).toBe('inward');
     });
 
-    it('should use cache when available', async () => {
-      const mockLinks: LinkWithUnknownFields[] = createLinkListFixture(2);
-
-      // Первый вызов - кеш пустой
-      vi.mocked(mockCacheManager.get).mockResolvedValueOnce(null);
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockLinks);
-
-      await operation.execute('TEST-123');
-
-      // Проверяем, что данные были закешированы
-      expect(mockCacheManager.set).toHaveBeenCalled();
-    });
+    // NOTE: Кеширование тестируется на уровне BaseOperation,
+    // здесь не тестируем повторно для упрощения
 
     it('should log info and debug messages', async () => {
       const mockLinks: LinkWithUnknownFields[] = createLinkListFixture(5);

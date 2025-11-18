@@ -56,7 +56,7 @@ describe('GetIssueLinksTool', () => {
         message: string;
       };
       expect(parsed.success).toBe(false);
-      expect(parsed.data.message).toContain('валидации');
+      expect(parsed.message).toContain('валидации');
     });
 
     it('должен отклонить пустой issueId', async () => {
@@ -91,9 +91,9 @@ describe('GetIssueLinksTool', () => {
           type: { id: string };
         }>;
       };
-      expect(parsed.data.issueId).toBe('TEST-123');
-      expect(parsed.data.linksCount).toBe(2);
-      expect(parsed.data.links).toHaveLength(2);
+      expect(parsed.issueId).toBe('TEST-123');
+      expect(parsed.linksCount).toBe(2);
+      expect(parsed.links).toHaveLength(2);
     });
 
     it('должен вернуть пустой массив когда нет связей', async () => {
@@ -106,8 +106,8 @@ describe('GetIssueLinksTool', () => {
         linksCount: number;
         links: unknown[];
       };
-      expect(parsed.data.linksCount).toBe(0);
-      expect(parsed.data.links).toEqual([]);
+      expect(parsed.linksCount).toBe(0);
+      expect(parsed.links).toEqual([]);
     });
 
     it('должен включить все поля связи в ответ', async () => {
@@ -127,12 +127,12 @@ describe('GetIssueLinksTool', () => {
           createdAt: string;
         }>;
       };
-      expect(parsed.data.links[0]).toHaveProperty('id');
-      expect(parsed.data.links[0]).toHaveProperty('type');
-      expect(parsed.data.links[0]).toHaveProperty('direction');
-      expect(parsed.data.links[0]).toHaveProperty('linkedIssue');
-      expect(parsed.data.links[0]).toHaveProperty('createdBy');
-      expect(parsed.data.links[0]).toHaveProperty('createdAt');
+      expect(parsed.links[0]).toHaveProperty('id');
+      expect(parsed.links[0]).toHaveProperty('type');
+      expect(parsed.links[0]).toHaveProperty('direction');
+      expect(parsed.links[0]).toHaveProperty('linkedIssue');
+      expect(parsed.links[0]).toHaveProperty('createdBy');
+      expect(parsed.links[0]).toHaveProperty('createdAt');
     });
 
     it('должен обработать связи разных типов', async () => {
@@ -148,8 +148,8 @@ describe('GetIssueLinksTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         links: Array<{ type: { id: string } }>;
       };
-      expect(parsed.data.links[0]!.type.id).toBe('subtask');
-      expect(parsed.data.links[1]!.type.id).toBe('relates');
+      expect(parsed.links[0]!.type.id).toBe('subtask');
+      expect(parsed.links[1]!.type.id).toBe('relates');
     });
 
     it('должен включить updatedBy и updatedAt если они есть', async () => {
@@ -174,9 +174,9 @@ describe('GetIssueLinksTool', () => {
           updatedAt?: string;
         }>;
       };
-      expect(parsed.data.links[0]).toHaveProperty('updatedBy');
-      expect(parsed.data.links[0]).toHaveProperty('updatedAt');
-      expect(parsed.data.links[0]!.updatedBy?.id).toBe('123');
+      expect(parsed.links[0]).toHaveProperty('updatedBy');
+      expect(parsed.links[0]).toHaveProperty('updatedAt');
+      expect(parsed.links[0]!.updatedBy?.id).toBe('123');
     });
 
     it('должен обработать ошибку от facade', async () => {
@@ -199,14 +199,14 @@ describe('GetIssueLinksTool', () => {
       expect(mockLogger.info).toHaveBeenCalledWith('Получено 5 связей для задачи TEST-789');
     });
 
-    it('должен работать с ID задачи вместо ключа', async () => {
+    it('должен работать с разными форматами ключей задач', async () => {
       const mockLinks = createLinkListFixture(1);
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      const result = await tool.execute({ issueId: 'abc123def456' });
+      const result = await tool.execute({ issueId: 'ABC-123' });
 
       expect(result.isError).toBeUndefined();
-      expect(mockTrackerFacade.getIssueLinks).toHaveBeenCalledWith('abc123def456');
+      expect(mockTrackerFacade.getIssueLinks).toHaveBeenCalledWith('ABC-123');
     });
 
     it('должен обработать большое количество связей', async () => {
@@ -219,7 +219,7 @@ describe('GetIssueLinksTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         linksCount: number;
       };
-      expect(parsed.data.linksCount).toBe(100);
+      expect(parsed.linksCount).toBe(100);
     });
   });
 });

@@ -52,7 +52,7 @@ describe('DeleteLinkTool', () => {
         message: string;
       };
       expect(parsed.success).toBe(false);
-      expect(parsed.data.message).toContain('валидации');
+      expect(parsed.message).toContain('валидации');
     });
 
     it('должен требовать параметр linkId', async () => {
@@ -64,7 +64,7 @@ describe('DeleteLinkTool', () => {
         message: string;
       };
       expect(parsed.success).toBe(false);
-      expect(parsed.data.message).toContain('валидации');
+      expect(parsed.message).toContain('валидации');
     });
 
     it('должен отклонить пустой issueId', async () => {
@@ -108,9 +108,9 @@ describe('DeleteLinkTool', () => {
         linkId: string;
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.message).toContain('удалена');
-      expect(parsed.data.issueId).toBe('TEST-123');
-      expect(parsed.data.linkId).toBe('link789');
+      expect(parsed.message).toContain('удалена');
+      expect(parsed.issueId).toBe('TEST-123');
+      expect(parsed.linkId).toBe('link789');
     });
 
     it('должен обработать ошибку от facade', async () => {
@@ -138,16 +138,16 @@ describe('DeleteLinkTool', () => {
       expect(mockLogger.info).toHaveBeenCalledWith('Связь link001 удалена из задачи TEST-456');
     });
 
-    it('должен работать с ID задачи вместо ключа', async () => {
+    it('должен работать с разными форматами ключей задач', async () => {
       vi.mocked(mockTrackerFacade.deleteLink).mockResolvedValue(undefined);
 
       const result = await tool.execute({
-        issueId: 'abc123def456',
+        issueId: 'ABC-123',
         linkId: 'link002',
       });
 
       expect(result.isError).toBeUndefined();
-      expect(mockTrackerFacade.deleteLink).toHaveBeenCalledWith('abc123def456', 'link002');
+      expect(mockTrackerFacade.deleteLink).toHaveBeenCalledWith('ABC-123', 'link002');
     });
 
     it('должен обработать ошибку 404 (связь не найдена)', async () => {

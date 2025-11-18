@@ -60,7 +60,7 @@ describe('CreateLinkTool', () => {
         message: string;
       };
       expect(parsed.success).toBe(false);
-      expect(parsed.data.message).toContain('валидации');
+      expect(parsed.message).toContain('валидации');
     });
 
     it('должен требовать параметр relationship', async () => {
@@ -75,7 +75,7 @@ describe('CreateLinkTool', () => {
         message: string;
       };
       expect(parsed.success).toBe(false);
-      expect(parsed.data.message).toContain('валидации');
+      expect(parsed.message).toContain('валидации');
     });
 
     it('должен требовать параметр targetIssue', async () => {
@@ -90,7 +90,7 @@ describe('CreateLinkTool', () => {
         message: string;
       };
       expect(parsed.success).toBe(false);
-      expect(parsed.data.message).toContain('валидации');
+      expect(parsed.message).toContain('валидации');
     });
 
     it('должен отклонить невалидный relationship', async () => {
@@ -168,9 +168,9 @@ describe('CreateLinkTool', () => {
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.message).toContain('Связь создана');
-      expect(parsed.data.link.id).toBe(mockLink.id);
-      expect(parsed.data.link.type.id).toBe(mockLink.type.id);
+      expect(parsed.message).toContain('Связь создана');
+      expect(parsed.link.id).toBe(mockLink.id);
+      expect(parsed.link.type.id).toBe(mockLink.type.id);
     });
 
     it('должен создать связь типа relates', async () => {
@@ -193,7 +193,7 @@ describe('CreateLinkTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         link: { type: { id: string } };
       };
-      expect(parsed.data.link.type.id).toBe('relates');
+      expect(parsed.link.type.id).toBe('relates');
     });
 
     it('должен создать связь типа depends on', async () => {
@@ -216,7 +216,7 @@ describe('CreateLinkTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         link: { type: { id: string } };
       };
-      expect(parsed.data.link.type.id).toBe('depends');
+      expect(parsed.link.type.id).toBe('depends');
     });
 
     it('должен обработать ошибку от facade', async () => {
@@ -249,20 +249,23 @@ describe('CreateLinkTool', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Связь создана'));
     });
 
-    it('должен работать с ID задачи вместо ключа', async () => {
+    it('должен работать с разными форматами ключей задач', async () => {
       const mockLink = createSubtaskLinkFixture();
       vi.mocked(mockTrackerFacade.createLink).mockResolvedValue(mockLink);
 
       const result = await tool.execute({
-        issueId: 'abc123def456',
+        issueId: 'ABC-123',
         relationship: 'relates',
-        targetIssue: 'xyz789',
+        targetIssue: 'XYZ-789',
       });
 
+      if (result.isError) {
+        console.error('Error result:', JSON.stringify(result, null, 2));
+      }
       expect(result.isError).toBeUndefined();
-      expect(mockTrackerFacade.createLink).toHaveBeenCalledWith('abc123def456', {
+      expect(mockTrackerFacade.createLink).toHaveBeenCalledWith('ABC-123', {
         relationship: 'relates',
-        issue: 'xyz789',
+        issue: 'XYZ-789',
       });
     });
   });

@@ -7,7 +7,7 @@ import type { MockServer } from '@integration/helpers/mock-server.js';
 import {
   createSubtaskLinkFixture,
   createRelatesLinkFixture,
-} from '../../../../helpers/link.fixture.js';
+} from '../../../../../helpers/link.fixture.js';
 
 describe('create-link integration tests', () => {
   let client: TestMCPClient;

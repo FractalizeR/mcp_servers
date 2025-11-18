@@ -8,7 +8,7 @@ import {
   createLinkListFixture,
   createSubtaskLinkFixture,
   createRelatesLinkFixture,
-} from '../../../../helpers/link.fixture.js';
+} from '../../../../../helpers/link.fixture.js';
 
 describe('get-issue-links integration tests', () => {
   let client: TestMCPClient;
