@@ -25,7 +25,7 @@ export class DemoTool extends BaseTool<YandexTrackerFacade> {
    */
   static override readonly METADATA = {
     name: buildToolName('demo', MCP_TOOL_PREFIX),
-    description: '[Helpers/Demo] Демонстрационный инструмент для тестирования',
+    description: '[Helpers/Demo] Тестовый инструмент',
     category: ToolCategory.HELPERS,
     subcategory: 'demo',
     priority: ToolPriority.LOW,

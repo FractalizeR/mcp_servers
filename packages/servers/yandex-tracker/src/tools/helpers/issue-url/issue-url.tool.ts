@@ -33,7 +33,7 @@ export class IssueUrlTool extends BaseTool<YandexTrackerFacade> {
    */
   static override readonly METADATA = {
     name: buildToolName('get_issue_urls', MCP_TOOL_PREFIX),
-    description: '[Helpers/URL] Получить URL задачи в веб-интерфейсе',
+    description: '[Helpers/URL] URL задачи',
     category: ToolCategory.HELPERS,
     subcategory: 'url',
     priority: ToolPriority.NORMAL,

@@ -39,7 +39,7 @@ export class GetIssuesTool extends BaseTool<YandexTrackerFacade> {
    */
   static override readonly METADATA = {
     name: buildToolName('get_issues', MCP_TOOL_PREFIX),
-    description: '[Issues/Read] Получить задачи по ключам или ID',
+    description: '[Issues/Read] Получить задачи',
     category: ToolCategory.ISSUES,
     subcategory: 'read',
     priority: ToolPriority.CRITICAL,

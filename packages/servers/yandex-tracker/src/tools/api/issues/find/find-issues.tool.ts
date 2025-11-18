@@ -38,7 +38,7 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
    */
   static override readonly METADATA = {
     name: buildToolName('find_issues', MCP_TOOL_PREFIX),
-    description: '[Issues/Read] Найти задачи по фильтру с сортировкой',
+    description: '[Issues/Read] Поиск по фильтру',
     category: ToolCategory.ISSUES,
     subcategory: 'read',
     priority: ToolPriority.CRITICAL,

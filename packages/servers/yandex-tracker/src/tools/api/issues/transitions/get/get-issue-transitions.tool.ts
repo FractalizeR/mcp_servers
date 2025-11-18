@@ -40,7 +40,7 @@ export class GetIssueTransitionsTool extends BaseTool<YandexTrackerFacade> {
    */
   static override readonly METADATA = {
     name: buildToolName('get_issue_transitions', MCP_TOOL_PREFIX),
-    description: '[Issues/Workflow] Доступные переходы для задачи',
+    description: '[Issues/Workflow] Доступные переходы',
     category: ToolCategory.ISSUES,
     subcategory: 'workflow',
     priority: ToolPriority.HIGH,

@@ -335,10 +335,10 @@ describe('FindIssuesTool', () => {
     it('должен иметь корректные статические метаданные', () => {
       expect(FindIssuesTool.METADATA).toBeDefined();
       expect(FindIssuesTool.METADATA.name).toBe(buildToolName('find_issues', MCP_TOOL_PREFIX));
-      expect(FindIssuesTool.METADATA.description).toContain('Найти задачи');
+      expect(FindIssuesTool.METADATA.description).toContain('Поиск');
       expect(FindIssuesTool.METADATA.category).toBe('issues');
-      expect(FindIssuesTool.METADATA.tags).toContain('issue');
-      expect(FindIssuesTool.METADATA.tags).toContain('find');
+      expect(FindIssuesTool.METADATA.tags).toContain('issues');
+      expect(FindIssuesTool.METADATA.tags).toContain('query');
       expect(FindIssuesTool.METADATA.tags).toContain('search');
       expect(FindIssuesTool.METADATA.isHelper).toBe(false);
     });

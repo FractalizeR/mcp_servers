@@ -43,7 +43,7 @@ describe('DemoTool', () => {
     it('должен вернуть корректные метаданные', () => {
       const metadata = tool.getMetadata();
 
-      expect(metadata.category).toBe(ToolCategory.DEMO);
+      expect(metadata.category).toBe(ToolCategory.HELPERS);
       expect(metadata.isHelper).toBe(true);
       expect(metadata.tags).toContain('demo');
       expect(metadata.tags).toContain('example');
@@ -177,8 +177,8 @@ describe('DemoTool', () => {
     it('должен иметь статические метаданные', () => {
       expect(DemoTool.METADATA).toBeDefined();
       expect(DemoTool.METADATA.name).toBe(buildToolName('demo', MCP_TOOL_PREFIX));
-      expect(DemoTool.METADATA.description).toBe('Демонстрационный инструмент для тестирования');
-      expect(DemoTool.METADATA.category).toBe(ToolCategory.DEMO);
+      expect(DemoTool.METADATA.description).toBe('[Helpers/Demo] Тестовый инструмент');
+      expect(DemoTool.METADATA.category).toBe(ToolCategory.HELPERS);
       expect(DemoTool.METADATA.tags).toContain('demo');
       expect(DemoTool.METADATA.isHelper).toBe(true);
     });

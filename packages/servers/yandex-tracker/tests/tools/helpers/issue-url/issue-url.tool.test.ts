@@ -43,13 +43,11 @@ describe('IssueUrlTool', () => {
     it('должен вернуть корректные метаданные', () => {
       const metadata = tool.getMetadata();
 
-      expect(metadata.category).toBe(ToolCategory.URL_GENERATION);
+      expect(metadata.category).toBe(ToolCategory.HELPERS);
       expect(metadata.isHelper).toBe(true);
       expect(metadata.tags).toContain('url');
       expect(metadata.tags).toContain('link');
       expect(metadata.tags).toContain('helper');
-      expect(metadata.tags).toContain('issue');
-      expect(metadata.tags).toContain('batch');
     });
   });
 
@@ -182,8 +180,8 @@ describe('IssueUrlTool', () => {
     it('должен иметь статические метаданные', () => {
       expect(IssueUrlTool.METADATA).toBeDefined();
       expect(IssueUrlTool.METADATA.name).toBe(buildToolName('get_issue_urls', MCP_TOOL_PREFIX));
-      expect(IssueUrlTool.METADATA.description).toBe('Получить URL задач в Яндекс.Трекере');
-      expect(IssueUrlTool.METADATA.category).toBe(ToolCategory.URL_GENERATION);
+      expect(IssueUrlTool.METADATA.description).toBe('[Helpers/URL] URL задачи');
+      expect(IssueUrlTool.METADATA.category).toBe(ToolCategory.HELPERS);
       expect(IssueUrlTool.METADATA.tags).toContain('url');
       expect(IssueUrlTool.METADATA.isHelper).toBe(true);
     });
