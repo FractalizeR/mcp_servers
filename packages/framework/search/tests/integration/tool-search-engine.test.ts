@@ -293,10 +293,12 @@ describe('ToolSearchEngine (Integration)', () => {
 
   describe('Edge cases', () => {
     it('должен обрабатывать пустой query', () => {
+      // Пустой query возвращает все доступные инструменты
       const results = searchEngine.search({ query: '' });
 
-      expect(results.totalFound).toBe(0);
-      expect(results.tools.length).toBe(0);
+      // Должны вернуться все зарегистрированные инструменты
+      expect(results.totalFound).toBeGreaterThan(0);
+      expect(results.tools.length).toBe(results.totalFound);
     });
 
     it('должен обрабатывать query без совпадений', () => {

@@ -240,7 +240,7 @@ async function main(): Promise<void> {
 
     // Проверяем наличие критически важных инструментов
     const toolNames = response.result.tools.map((t) => t.name);
-    const requiredTools = ['ping', 'search_tools'];
+    const requiredTools = ['fr_yandex_tracker_ping', 'search_tools'];
     for (const requiredTool of requiredTools) {
       if (!toolNames.includes(requiredTool)) {
         throw new Error(

@@ -221,9 +221,9 @@ describe('ToolRegistry', () => {
       expect(result.content).toHaveLength(1);
       expect(result.content[0]!.type).toBe('text');
 
-      expect(mockLogger.info).toHaveBeenCalledWith(`Вызов инструмента: ${toolName}`);
-      expect(mockLogger.info).toHaveBeenCalledWith(`Инструмент ${toolName} выполнен успешно`);
-      expect(mockLogger.debug).toHaveBeenCalledWith('Параметры:', params);
+      expect(mockLogger.info).toHaveBeenCalledWith(`🔍 Поиск инструмента: ${toolName}`);
+      expect(mockLogger.info).toHaveBeenCalledWith(`✅ Инструмент ${toolName} выполнен успешно`);
+      expect(mockLogger.debug).toHaveBeenCalledWith('Параметры вызова:', params);
     });
 
     it('должна успешно выполнить get_issues инструмент', async () => {
@@ -258,7 +258,7 @@ describe('ToolRegistry', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      expect(mockLogger.info).toHaveBeenCalledWith(`Инструмент ${toolName} выполнен успешно`);
+      expect(mockLogger.info).toHaveBeenCalledWith(`✅ Инструмент ${toolName} выполнен успешно`);
     });
 
     it('должна вернуть ошибку для несуществующего инструмента', async () => {
@@ -279,7 +279,13 @@ describe('ToolRegistry', () => {
       expect(content.availableTools).toContain(buildToolName('ping', MCP_TOOL_PREFIX));
       expect(content.availableTools).toContain(buildToolName('get_issues', MCP_TOOL_PREFIX));
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Инструмент не найден: non_existent_tool');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '❌ Инструмент "non_existent_tool" не найден',
+        expect.objectContaining({
+          requestedTool: 'non_existent_tool',
+          availableTools: expect.any(Array),
+        })
+      );
     });
 
     it('должна обработать ошибку при выполнении инструмента', async () => {
@@ -357,7 +363,7 @@ describe('ToolRegistry', () => {
       await registry.execute(toolName, params);
 
       // Assert
-      expect(mockLogger.debug).toHaveBeenCalledWith('Параметры:', params);
+      expect(mockLogger.debug).toHaveBeenCalledWith('Параметры вызова:', params);
     });
   });
 
