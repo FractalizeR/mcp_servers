@@ -43,6 +43,8 @@ import type {
   UploadAttachmentInput,
   DownloadAttachmentInput,
   DownloadAttachmentOutput,
+  AddChecklistItemInput,
+  UpdateChecklistItemInput,
 } from '@tracker_api/dto/index.js';
 import type {
   IssueWithUnknownFields,
@@ -51,6 +53,7 @@ import type {
   LinkWithUnknownFields,
   CommentWithUnknownFields,
   AttachmentWithUnknownFields,
+  ChecklistItemWithUnknownFields,
 } from '@tracker_api/entities/index.js';
 import type {
   UpdateQueueParams,
@@ -361,6 +364,71 @@ export class YandexTrackerFacade {
       execute: (id: string, cId: string) => Promise<void>;
     }>('DeleteCommentOperation');
     return operation.execute(issueId, commentId);
+  }
+
+  // === Checklist Methods ===
+
+  /**
+   * Получает чеклист задачи
+   * @param issueId - идентификатор или ключ задачи
+   * @returns массив элементов чеклиста
+   */
+  async getChecklist(issueId: string): Promise<ChecklistItemWithUnknownFields[]> {
+    const operation = this.getOperation<{
+      execute: (id: string) => Promise<ChecklistItemWithUnknownFields[]>;
+    }>('GetChecklistOperation');
+    return operation.execute(issueId);
+  }
+
+  /**
+   * Добавляет элемент в чеклист задачи
+   * @param issueId - идентификатор или ключ задачи
+   * @param input - данные элемента
+   * @returns созданный элемент чеклиста
+   */
+  async addChecklistItem(
+    issueId: string,
+    input: AddChecklistItemInput
+  ): Promise<ChecklistItemWithUnknownFields> {
+    const operation = this.getOperation<{
+      execute: (id: string, data: AddChecklistItemInput) => Promise<ChecklistItemWithUnknownFields>;
+    }>('AddChecklistItemOperation');
+    return operation.execute(issueId, input);
+  }
+
+  /**
+   * Обновляет элемент чеклиста
+   * @param issueId - идентификатор или ключ задачи
+   * @param checklistItemId - идентификатор элемента чеклиста
+   * @param input - новые данные элемента
+   * @returns обновлённый элемент чеклиста
+   */
+  async updateChecklistItem(
+    issueId: string,
+    checklistItemId: string,
+    input: UpdateChecklistItemInput
+  ): Promise<ChecklistItemWithUnknownFields> {
+    const operation = this.getOperation<{
+      execute: (
+        id: string,
+        itemId: string,
+        data: UpdateChecklistItemInput
+      ) => Promise<ChecklistItemWithUnknownFields>;
+    }>('UpdateChecklistItemOperation');
+    return operation.execute(issueId, checklistItemId, input);
+  }
+
+  /**
+   * Удаляет элемент из чеклиста
+   * @param issueId - идентификатор или ключ задачи
+   * @param checklistItemId - идентификатор элемента чеклиста
+   * @returns void
+   */
+  async deleteChecklistItem(issueId: string, checklistItemId: string): Promise<void> {
+    const operation = this.getOperation<{
+      execute: (id: string, itemId: string) => Promise<void>;
+    }>('DeleteChecklistItemOperation');
+    return operation.execute(issueId, checklistItemId);
   }
 
   // === Issue Methods - Attachments ===

@@ -51,6 +51,14 @@ export type {
   CommentsListOutput,
 } from './comment/index.js';
 
+// Checklist DTO
+export type {
+  AddChecklistItemInput,
+  UpdateChecklistItemInput,
+  ChecklistItemOutput,
+  ChecklistOutput,
+} from './checklist/index.js';
+
 // Worklog DTO
 export type {
   AddWorklogInput,

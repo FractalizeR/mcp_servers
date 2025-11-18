@@ -66,6 +66,9 @@ export type { LinkType, LinkTypeWithUnknownFields } from './link-type.entity.js'
 // Attachment
 export type { Attachment, AttachmentWithUnknownFields } from './attachment.entity.js';
 
+// ChecklistItem
+export type { ChecklistItem, ChecklistItemWithUnknownFields } from './checklist-item.entity.js';
+
 // Comment
 export type { Comment, CommentWithUnknownFields, CommentAttachment } from './comment/index.js';
 

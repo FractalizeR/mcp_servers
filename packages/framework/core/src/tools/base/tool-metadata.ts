@@ -23,6 +23,7 @@ export enum ToolCategory {
   BOARDS = 'boards',
   SPRINTS = 'sprints',
   COMMENTS = 'comments',
+  CHECKLISTS = 'checklists',
 
   // Системные инструменты
   SYSTEM = 'system',
