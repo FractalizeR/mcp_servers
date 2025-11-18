@@ -7,7 +7,7 @@ import type { MockServer } from '@integration/helpers/mock-server.js';
 import {
   createSubtaskLinkFixture,
   createRelatesLinkFixture,
-} from '../../../../../helpers/link.fixture.js';
+} from '../../../../../../helpers/link.fixture.js';
 
 describe('create-link integration tests', () => {
   let client: TestMCPClient;
@@ -48,9 +48,10 @@ describe('create-link integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.message).toContain('Связь создана');
-    expect(response.link).toHaveProperty('id');
-    expect(response.link.type.id).toBe('subtask');
+    expect(response.data.success).toBe(true);
+    expect(response.data.message).toContain('Связь создана');
+    expect(response.data.link).toHaveProperty('id');
+    expect(response.data.link.type.id).toBe('subtask');
     mockServer.assertAllRequestsDone();
   });
 
@@ -80,7 +81,8 @@ describe('create-link integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.link.type.id).toBe('relates');
+    expect(response.data.success).toBe(true);
+    expect(response.data.link.type.id).toBe('relates');
     mockServer.assertAllRequestsDone();
   });
 
@@ -116,7 +118,8 @@ describe('create-link integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.link.type.id).toBe('depends');
+    expect(response.data.success).toBe(true);
+    expect(response.data.link.type.id).toBe('depends');
     mockServer.assertAllRequestsDone();
   });
 
@@ -162,12 +165,12 @@ describe('create-link integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    expect(response.link).toHaveProperty('id');
-    expect(response.link).toHaveProperty('type');
-    expect(response.link).toHaveProperty('direction');
-    expect(response.link).toHaveProperty('linkedIssue');
-    expect(response.link).toHaveProperty('createdBy');
-    expect(response.link).toHaveProperty('createdAt');
+    expect(response.data.link).toHaveProperty('id');
+    expect(response.data.link).toHaveProperty('type');
+    expect(response.data.link).toHaveProperty('direction');
+    expect(response.data.link).toHaveProperty('linkedIssue');
+    expect(response.data.link).toHaveProperty('createdBy');
+    expect(response.data.link).toHaveProperty('createdAt');
     mockServer.assertAllRequestsDone();
   });
 });

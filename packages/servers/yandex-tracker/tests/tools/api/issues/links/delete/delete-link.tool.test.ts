@@ -103,14 +103,18 @@ describe('DeleteLinkTool', () => {
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
-        message: string;
-        issueId: string;
-        linkId: string;
+        data: {
+          success: boolean;
+          message: string;
+          issueId: string;
+          linkId: string;
+        };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.message).toContain('удалена');
-      expect(parsed.issueId).toBe('TEST-123');
-      expect(parsed.linkId).toBe('link789');
+      expect(parsed.data.success).toBe(true);
+      expect(parsed.data.message).toContain('удалена');
+      expect(parsed.data.issueId).toBe('TEST-123');
+      expect(parsed.data.linkId).toBe('link789');
     });
 
     it('должен обработать ошибку от facade', async () => {

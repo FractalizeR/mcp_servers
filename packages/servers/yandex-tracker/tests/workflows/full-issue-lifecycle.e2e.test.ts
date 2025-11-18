@@ -143,6 +143,7 @@ describe('Full Issue Lifecycle E2E', () => {
     expect(createLinkResult.isError).toBeUndefined();
     const linkData = JSON.parse(createLinkResult.content[0]!.text);
     expect(linkData.success).toBe(true);
+    expect(linkData.data.success).toBe(true);
 
     // 7. Изменить статус задачи
     mockServer.mockTransitionIssueSuccess(issueKey, 'inProgress');

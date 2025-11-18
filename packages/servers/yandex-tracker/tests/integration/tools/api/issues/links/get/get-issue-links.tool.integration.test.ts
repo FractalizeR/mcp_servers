@@ -8,7 +8,7 @@ import {
   createLinkListFixture,
   createSubtaskLinkFixture,
   createRelatesLinkFixture,
-} from '../../../../../helpers/link.fixture.js';
+} from '../../../../../../helpers/link.fixture.js';
 
 describe('get-issue-links integration tests', () => {
   let client: TestMCPClient;
@@ -37,9 +37,10 @@ describe('get-issue-links integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    expect(response.issueId).toBe(issueKey);
-    expect(response.linksCount).toBe(3);
-    expect(response.links).toHaveLength(3);
+    expect(response.success).toBe(true);
+    expect(response.data.issueId).toBe(issueKey);
+    expect(response.data.linksCount).toBe(3);
+    expect(response.data.links).toHaveLength(3);
     mockServer.assertAllRequestsDone();
   });
 
@@ -56,8 +57,9 @@ describe('get-issue-links integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    expect(response.linksCount).toBe(0);
-    expect(response.links).toEqual([]);
+    expect(response.success).toBe(true);
+    expect(response.data.linksCount).toBe(0);
+    expect(response.data.links).toEqual([]);
     mockServer.assertAllRequestsDone();
   });
 
@@ -78,9 +80,10 @@ describe('get-issue-links integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    expect(response.links).toHaveLength(2);
-    expect(response.links[0].type.id).toBe('subtask');
-    expect(response.links[1].type.id).toBe('relates');
+    expect(response.success).toBe(true);
+    expect(response.data.links).toHaveLength(2);
+    expect(response.data.links[0].type.id).toBe('subtask');
+    expect(response.data.links[1].type.id).toBe('relates');
     mockServer.assertAllRequestsDone();
   });
 
@@ -113,7 +116,8 @@ describe('get-issue-links integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    const link = response.links[0];
+    expect(response.success).toBe(true);
+    const link = response.data.links[0];
     expect(link).toHaveProperty('id');
     expect(link).toHaveProperty('type');
     expect(link).toHaveProperty('direction');
@@ -137,8 +141,9 @@ describe('get-issue-links integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    expect(response.linksCount).toBe(50);
-    expect(response.links).toHaveLength(50);
+    expect(response.success).toBe(true);
+    expect(response.data.linksCount).toBe(50);
+    expect(response.data.links).toHaveLength(50);
     mockServer.assertAllRequestsDone();
   });
 
@@ -165,7 +170,8 @@ describe('get-issue-links integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    const link = response.links[0];
+    expect(response.success).toBe(true);
+    const link = response.data.links[0];
     expect(link).toHaveProperty('updatedBy');
     expect(link).toHaveProperty('updatedAt');
     expect(link.updatedBy.id).toBe('123');
