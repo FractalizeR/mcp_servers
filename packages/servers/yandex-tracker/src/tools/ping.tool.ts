@@ -36,7 +36,7 @@ export class PingTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Определение инструмента для MCP
    */
-  override getDefinition(): ToolDefinition {
+  protected buildDefinition(): ToolDefinition {
     return this.definition.build();
   }
 

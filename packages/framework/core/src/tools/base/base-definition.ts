@@ -24,6 +24,12 @@ export interface ToolDefinition {
     properties: Record<string, unknown>;
     required?: string[];
   };
+  /** Категория инструмента для группировки */
+  category?: string;
+  /** Подкатегория для детальной группировки (опционально) */
+  subcategory?: string;
+  /** Приоритет инструмента для сортировки */
+  priority?: 'critical' | 'high' | 'normal' | 'low';
 }
 
 /**

@@ -20,7 +20,7 @@ import { dirname, join } from 'node:path';
 
 import { loadConfig } from '@mcp-framework/infrastructure';
 import type { Logger, ServerConfig } from '@mcp-framework/infrastructure';
-import type { ToolRegistry } from '@mcp-framework/core';
+import type { ToolRegistry, ToolDefinition } from '@mcp-framework/core';
 import {
   MCP_SERVER_NAME,
   MCP_SERVER_DISPLAY_NAME,
@@ -29,6 +29,53 @@ import {
 
 // DI Container (Composition Root)
 import { createContainer, TYPES } from '@composition-root/index.js';
+
+/**
+ * Метрики инструментов для анализа размера tools/list response
+ */
+interface ToolsMetrics {
+  totalTools: number;
+  descriptionLength: number;
+  estimatedTokens: number;
+  byCategory: Record<string, number>;
+  byPriority: Record<string, number>;
+  bySubcategory: Record<string, number>;
+}
+
+/**
+ * Подсчёт метрик инструментов
+ */
+function calculateToolsMetrics(definitions: ToolDefinition[]): ToolsMetrics {
+  const descriptionLength = definitions.reduce((sum, def) => sum + def.description.length, 0);
+
+  const byCategory: Record<string, number> = {};
+  const byPriority: Record<string, number> = {};
+  const bySubcategory: Record<string, number> = {};
+
+  for (const def of definitions) {
+    // By category
+    const category = def.category || 'unknown';
+    byCategory[category] = (byCategory[category] || 0) + 1;
+
+    // By priority
+    const priority = def.priority || 'normal';
+    byPriority[priority] = (byPriority[priority] || 0) + 1;
+
+    // By subcategory
+    if (def.subcategory) {
+      bySubcategory[def.subcategory] = (bySubcategory[def.subcategory] || 0) + 1;
+    }
+  }
+
+  return {
+    totalTools: definitions.length,
+    descriptionLength,
+    estimatedTokens: Math.ceil(descriptionLength / 4),
+    byCategory,
+    byPriority,
+    bySubcategory,
+  };
+}
 
 /**
  * Настройка обработчиков запросов MCP сервера
@@ -64,23 +111,41 @@ function setupServer(
   // Обработчик запроса списка инструментов
   server.setRequestHandler(ListToolsRequestSchema, () => {
     logger.info(`📋 Запрос tools/list от клиента`);
-    logger.debug(`Режим discovery: ${config.toolDiscoveryMode}`, {
-      essentialTools: config.essentialTools,
-      totalRegistered: toolRegistry.getDefinitions().length,
-    });
 
     const definitions = toolRegistry.getDefinitionsByMode(
       config.toolDiscoveryMode,
       config.essentialTools
     );
 
+    // Подсчёт метрик
+    const metrics = calculateToolsMetrics(definitions);
+
+    // Info level: базовая информация
     logger.info(
-      `✅ Возвращаем ${definitions.length} инструментов ` + `(режим: ${config.toolDiscoveryMode})`,
+      `✅ Возвращаем ${metrics.totalTools} инструментов (режим: ${config.toolDiscoveryMode})`,
       {
-        toolNames: definitions.map((d) => d.name),
-        essentialCount: config.essentialTools.length,
+        totalTools: metrics.totalTools,
+        mode: config.toolDiscoveryMode,
+        descriptionLength: metrics.descriptionLength,
+        estimatedTokens: metrics.estimatedTokens,
       }
     );
+
+    // Debug level: детальная разбивка
+    logger.debug('📊 Распределение инструментов', {
+      byCategory: metrics.byCategory,
+      byPriority: metrics.byPriority,
+      bySubcategory: metrics.bySubcategory,
+    });
+
+    // Debug level: порядок инструментов (для отладки сортировки)
+    logger.debug('🔢 Порядок инструментов:', {
+      order: definitions.map((d) => ({
+        name: d.name,
+        category: d.category,
+        priority: d.priority || 'normal',
+      })),
+    });
 
     // Предупреждение для lazy режима
     if (config.toolDiscoveryMode === 'lazy') {
@@ -88,6 +153,23 @@ function setupServer(
         message: 'Lazy режим может не работать с некоторыми MCP клиентами',
         essentialTools: config.essentialTools,
         recommendation: 'Используйте TOOL_DISCOVERY_MODE=eager для совместимости',
+      });
+    }
+
+    // Рекомендация переключиться на lazy mode при большом количестве инструментов
+    if (config.toolDiscoveryMode === 'eager' && metrics.totalTools > 30) {
+      logger.warn('⚠️  Рекомендация: много инструментов в eager mode', {
+        totalTools: metrics.totalTools,
+        estimatedTokens: metrics.estimatedTokens,
+        recommendation: 'Рассмотрите TOOL_DISCOVERY_MODE=lazy для экономии контекста',
+      });
+    }
+
+    // Предупреждение о больших descriptions
+    if (metrics.estimatedTokens > 200) {
+      logger.warn('⚠️  Descriptions занимают много токенов', {
+        estimatedTokens: metrics.estimatedTokens,
+        recommendation: 'Сократите descriptions для экономии контекста LLM',
       });
     }
 

@@ -10,6 +10,7 @@
  */
 
 import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import type { ToolDefinition } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { DemoDefinition } from './demo.definition.js';
@@ -34,7 +35,7 @@ export class DemoTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new DemoDefinition();
 
-  getDefinition(): ReturnType<DemoDefinition['build']> {
+  protected buildDefinition(): ToolDefinition {
     return this.definition.build();
   }
 

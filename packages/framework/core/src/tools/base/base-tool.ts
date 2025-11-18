@@ -45,8 +45,37 @@ export abstract class BaseTool<TFacade = unknown> {
 
   /**
    * Получить определение инструмента
+   *
+   * Автоматически добавляет category, subcategory, priority из METADATA
    */
-  abstract getDefinition(): ToolDefinition;
+  getDefinition(): ToolDefinition {
+    const ToolClass = this.constructor as typeof BaseTool;
+    const metadata = ToolClass.METADATA;
+    const definition = this.buildDefinition();
+
+    const result: ToolDefinition = {
+      ...definition,
+      category: metadata.category,
+    };
+
+    if (metadata.subcategory !== undefined) {
+      result.subcategory = metadata.subcategory;
+    }
+
+    if (metadata.priority !== undefined) {
+      result.priority = metadata.priority;
+    }
+
+    return result;
+  }
+
+  /**
+   * Построить базовое определение инструмента
+   *
+   * Переопределите этот метод в наследнике для предоставления
+   * name, description и inputSchema
+   */
+  protected abstract buildDefinition(): ToolDefinition;
 
   /**
    * Получить метаданные (runtime)

@@ -50,7 +50,7 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new GetIssueChangelogDefinition();
 
-  override getDefinition(): ToolDefinition {
+  protected buildDefinition(): ToolDefinition {
     return this.definition.build();
   }
 

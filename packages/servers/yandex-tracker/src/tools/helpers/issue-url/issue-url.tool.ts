@@ -44,7 +44,7 @@ export class IssueUrlTool extends BaseTool<YandexTrackerFacade> {
   private readonly definition = new IssueUrlDefinition();
   private readonly TRACKER_BASE_URL = 'https://tracker.yandex.ru';
 
-  override getDefinition(): ToolDefinition {
+  protected buildDefinition(): ToolDefinition {
     return this.definition.build();
   }
 

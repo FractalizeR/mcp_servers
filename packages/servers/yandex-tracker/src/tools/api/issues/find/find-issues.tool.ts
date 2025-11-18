@@ -48,7 +48,7 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new FindIssuesDefinition();
 
-  override getDefinition(): ToolDefinition {
+  protected buildDefinition(): ToolDefinition {
     return this.definition.build();
   }
 

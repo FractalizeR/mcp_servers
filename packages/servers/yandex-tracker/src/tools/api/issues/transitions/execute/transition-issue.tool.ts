@@ -51,7 +51,7 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new TransitionIssueDefinition();
 
-  override getDefinition(): ToolDefinition {
+  protected buildDefinition(): ToolDefinition {
     return this.definition.build();
   }
 
