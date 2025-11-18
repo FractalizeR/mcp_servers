@@ -17,6 +17,7 @@ import type { ToolDefinition } from './base-definition.js';
 export enum ToolCategory {
   // API операции
   ISSUES = 'issues',
+  QUEUES = 'queues',
   USERS = 'users',
   PROJECTS = 'projects',
   BOARDS = 'boards',

@@ -17,6 +17,14 @@ import {
   GetIssueTransitionsOperation,
   TransitionIssueOperation,
 } from '@tracker_api/api_operations/issue/index.js';
+import {
+  GetQueuesOperation,
+  GetQueueOperation,
+  CreateQueueOperation,
+  UpdateQueueOperation,
+  GetQueueFieldsOperation,
+  ManageQueueAccessOperation,
+} from '@tracker_api/api_operations/queue/index.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -35,6 +43,12 @@ export const OPERATION_CLASSES = [
   GetIssueChangelogOperation,
   GetIssueTransitionsOperation,
   TransitionIssueOperation,
+  GetQueuesOperation,
+  GetQueueOperation,
+  CreateQueueOperation,
+  UpdateQueueOperation,
+  GetQueueFieldsOperation,
+  ManageQueueAccessOperation,
 ] as const;
 
 /**

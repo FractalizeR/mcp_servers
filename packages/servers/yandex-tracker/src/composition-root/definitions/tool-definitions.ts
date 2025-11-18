@@ -15,6 +15,14 @@ import { UpdateIssueTool } from '@tools/api/issues/update/index.js';
 import { GetIssueChangelogTool } from '@tools/api/issues/changelog/index.js';
 import { GetIssueTransitionsTool } from '@tools/api/issues/transitions/get/index.js';
 import { TransitionIssueTool } from '@tools/api/issues/transitions/execute/index.js';
+import {
+  GetQueuesTool,
+  GetQueueTool,
+  CreateQueueTool,
+  UpdateQueueTool,
+  GetQueueFieldsTool,
+  ManageQueueAccessTool,
+} from '@tools/api/queues/index.js';
 import { IssueUrlTool } from '@tools/helpers/issue-url/index.js';
 import { DemoTool } from '@tools/helpers/demo/index.js';
 
@@ -43,6 +51,12 @@ export const TOOL_CLASSES = [
   GetIssueChangelogTool,
   GetIssueTransitionsTool,
   TransitionIssueTool,
+  GetQueuesTool,
+  GetQueueTool,
+  CreateQueueTool,
+  UpdateQueueTool,
+  GetQueueFieldsTool,
+  ManageQueueAccessTool,
   IssueUrlTool,
   DemoTool,
 ] as const;
