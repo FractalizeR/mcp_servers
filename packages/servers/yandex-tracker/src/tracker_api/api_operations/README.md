@@ -355,6 +355,75 @@ export class DownloadAttachmentOperation extends BaseOperation {
 
 ---
 
+## 📎 Attachment Operations (Complete API)
+
+**5 операций для работы с вложениями:**
+
+### 1. GetAttachmentsOperation
+**API:** `GET /v2/issues/{issueId}/attachments`
+**Назначение:** Получение списка всех файлов задачи
+
+```typescript
+const attachments = await getAttachmentsOp.execute('QUEUE-123');
+// Кеш: ✅ (через EntityCacheKey)
+// Возврат: AttachmentWithUnknownFields[]
+```
+
+### 2. UploadAttachmentOperation
+**API:** `POST /v2/issues/{issueId}/attachments`
+**Назначение:** Загрузка файла через multipart/form-data
+
+```typescript
+const attachment = await uploadOp.execute('QUEUE-123', {
+  filename: 'report.pdf',
+  file: Buffer.from('...'),  // или base64 string
+  mimetype: 'application/pdf'
+});
+// Валидация: размер (default 10MB), имя файла
+// Кеш: ❌ инвалидирует list cache
+// Возврат: AttachmentWithUnknownFields
+```
+
+### 3. DownloadAttachmentOperation
+**API:** `GET /v2/issues/{issueId}/attachments/{attachmentId}/{filename}`
+**Назначение:** Скачивание файла как Buffer
+
+```typescript
+const buffer = await downloadOp.execute('QUEUE-123', '67890', 'report.pdf');
+// Возврат: Buffer (бинарные данные)
+```
+
+**Дополнительно:** `getMetadata()` для получения информации без скачивания
+
+### 4. DeleteAttachmentOperation
+**API:** `DELETE /v2/issues/{issueId}/attachments/{attachmentId}`
+**Назначение:** Удаление файла из задачи
+
+```typescript
+await deleteOp.execute('QUEUE-123', '67890');
+// Кеш: ❌ инвалидирует list cache
+// Возврат: void
+```
+
+### 5. GetThumbnailOperation
+**API:** `GET /v2/issues/{issueId}/attachments/{attachmentId}/thumbnail/{filename}`
+**Назначение:** Получение миниатюры изображения
+
+```typescript
+const thumbnail = await getThumbnailOp.execute('QUEUE-123', '67890', 'photo.jpg');
+// Кеш: ✅
+// Возврат: Buffer (только для изображений)
+```
+
+**Ключевые аспекты:**
+- **Размер файла:** Default 10MB, настраивается через конфигурацию
+- **Валидация:** `FileUploadUtil.validateFilename()`, `validateFileSize()`
+- **Кодирование:** `encodeURIComponent()` для filename в URL
+- **Кеш:** Список файлов кешируется, инвалидируется при upload/delete
+- **MIME type:** Автоопределение через `FileUploadUtil.getMimeType()`
+
+---
+
 ## 🔗 См. также
 
 - **Facade конвенции:** [src/tracker_api/facade/README.md](../facade/README.md) (если создашь)

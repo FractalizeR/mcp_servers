@@ -451,42 +451,80 @@ ESSENTIAL_TOOLS=ping,search_tools
 
 ---
 
-## 📚 Примеры: Attachment Tools
+## 📚 Attachments API — Complete Tools Documentation
 
-### Upload Attachment Tool
+**5 MCP Tools для работы с вложениями** (production ready ✅)
 
-**Файл:** `src/tools/api/issues/attachments/upload/upload-attachment.tool.ts`
+### Полный список инструментов
 
+| Tool | API Endpoint | Описание | Safety |
+|------|-------------|----------|--------|
+| `get_attachments` | GET /attachments | Список файлов задачи | Read-only |
+| `upload_attachment` | POST /attachments | Загрузка файла | ⚠️ Write |
+| `download_attachment` | GET /attachments/{id}/{name} | Скачивание файла | Read-only |
+| `delete_attachment` | DELETE /attachments/{id} | Удаление файла | ⚠️ Write |
+| `get_thumbnail` | GET /attachments/{id}/thumbnail | Миниатюра изображения | Read-only |
+
+---
+
+### 1. Upload Attachment — Загрузка файлов
+
+**Tool:** `upload_attachment`
+**Safety:** `requiresExplicitUserConsent: true` ⚠️
+
+**Два способа загрузки:**
+
+#### Способ 1: Base64 (для MCP clients)
+```typescript
+// Claude отправляет файл как base64 строку
+{
+  "issueId": "QUEUE-123",
+  "filename": "report.pdf",
+  "fileContent": "JVBERi0xLjQKJeLjz9MK...", // base64
+  "mimetype": "application/pdf"  // опционально
+}
+```
+
+#### Способ 2: File Path (для локальных файлов)
+```typescript
+// Claude читает файл с диска
+{
+  "issueId": "QUEUE-123",
+  "filename": "screenshot.png",
+  "filePath": "/tmp/screenshot.png"
+}
+```
+
+**Лимиты:**
+- **Максимальный размер:** 10 MB (по умолчанию)
+- **Валидация имени:** Без спецсимволов `../, /, \`
+- **MIME type:** Автоопределение если не указан
+- **Форматы:** Любые файлы (PDF, PNG, DOCX, etc)
+
+**Пример реализации:**
 ```typescript
 export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
   static override readonly METADATA = {
-    name: buildToolName('upload_attachment', MCP_TOOL_PREFIX),
+    name: 'fyt_mcp_upload_attachment',
     description: '[Issues/Attachments] Загрузить файл в задачу',
-    category: ToolCategory.ISSUES,
-    subcategory: 'attachments',
-    priority: ToolPriority.HIGH,
-    tags: ['attachments', 'upload', 'files', 'write'],
-    requiresExplicitUserConsent: true, // ВАЖНО: модифицирует данные!
-    isHelper: false,
-  } as const;
+    requiresExplicitUserConsent: true, // ⚠️ Модификация данных
+  };
 
-  async execute(params: ToolCallParams): Promise<ToolResult> {
-    const validation = this.validateParams(params, UploadAttachmentParamsSchema);
-    if (!validation.success) return validation.error;
+  async execute(params: unknown): Promise<ToolResponse> {
+    const { issueId, filename, fileContent, filePath } = params;
 
-    const { issueId, filename, fileContent, filePath } = validation.data;
+    // Поддержка обоих способов
+    const buffer = fileContent
+      ? Buffer.from(fileContent, 'base64')
+      : await readFile(filePath);
 
-    // Поддержка base64 и file path
-    let fileBuffer: Buffer;
-    if (fileContent) {
-      fileBuffer = Buffer.from(fileContent, 'base64');
-    } else if (filePath) {
-      fileBuffer = await readFile(filePath);
-    }
+    // Валидация через FileUploadUtil
+    FileUploadUtil.validateFilename(filename);
+    FileUploadUtil.validateFileSize(buffer.length, MAX_SIZE);
 
     const attachment = await this.facade.uploadAttachment(issueId, {
       filename,
-      file: fileBuffer,
+      file: buffer,
     });
 
     return this.formatSuccess({ issueId, attachment });
@@ -494,54 +532,145 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
 }
 ```
 
-### Download Attachment Tool
+---
 
-**Файл:** `src/tools/api/issues/attachments/download/download-attachment.tool.ts`
+### 2. Download Attachment — Скачивание файлов
 
+**Tool:** `download_attachment`
+**Safety:** Read-only ✅
+
+**Два режима:**
+
+#### Режим 1: Возврат base64 (default)
 ```typescript
-export class DownloadAttachmentTool extends BaseTool<YandexTrackerFacade> {
-  async execute(params: ToolCallParams): Promise<ToolResult> {
-    const validation = this.validateParams(params, DownloadAttachmentParamsSchema);
-    if (!validation.success) return validation.error;
-
-    const { issueId, attachmentId, filename, saveToPath } = validation.data;
-
-    // Скачать файл (Buffer или base64)
-    const result = await this.facade.downloadAttachment(
-      issueId,
-      attachmentId,
-      filename,
-      { returnBase64: !saveToPath }
-    );
-
-    // Опционально сохранить в файл
-    if (saveToPath && result.content instanceof Buffer) {
-      await writeFile(saveToPath, result.content);
-      return this.formatSuccess({ issueId, attachmentId, savedTo: saveToPath });
-    }
-
-    // Вернуть base64 для MCP response
-    const base64 = typeof result.content === 'string'
-      ? result.content
-      : result.content.toString('base64');
-
-    return this.formatSuccess({
-      issueId,
-      attachmentId,
-      filename,
-      size: result.metadata.size,
-      base64,
-    });
-  }
+{
+  "issueId": "QUEUE-123",
+  "attachmentId": "67890",
+  "filename": "report.pdf"
 }
+// Response: { base64: "JVBERi...", size: 245678, mimetype: "application/pdf" }
 ```
 
-**Ключевые особенности Attachment Tools:**
-- **Upload:** Поддержка base64 и file path для гибкости
-- **Download:** Возврат base64 для MCP или сохранение в файл
-- **File Size Limits:** Валидация через `FileUploadUtil.validateFileSize()`
-- **Thumbnail:** Только для изображений (проверка через `supportsThumbnail()`)
-- **Safety:** `requiresExplicitUserConsent: true` для upload/delete
+#### Режим 2: Сохранение в файл
+```typescript
+{
+  "issueId": "QUEUE-123",
+  "attachmentId": "67890",
+  "filename": "report.pdf",
+  "saveToPath": "/tmp/downloaded_report.pdf"
+}
+// Response: { savedTo: "/tmp/downloaded_report.pdf", size: 245678 }
+```
+
+**Особенности:**
+- API требует filename в URL (получить из `get_attachments`)
+- Автоматическое кодирование filename через `encodeURIComponent()`
+- Поддержка больших файлов (streaming через Buffer)
+
+---
+
+### 3. Get Attachments — Список файлов
+
+**Tool:** `get_attachments`
+**Safety:** Read-only ✅
+
+```typescript
+{
+  "issueId": "QUEUE-123"
+}
+// Response: [
+//   { id: "67890", name: "report.pdf", size: 245678, mimetype: "application/pdf" },
+//   { id: "67891", name: "photo.jpg", size: 102400, thumbnail: "..." }
+// ]
+```
+
+**Кеширование:** ✅ Список кешируется, инвалидируется при upload/delete
+
+---
+
+### 4. Delete Attachment — Удаление файла
+
+**Tool:** `delete_attachment`
+**Safety:** `requiresExplicitUserConsent: true` ⚠️
+
+```typescript
+{
+  "issueId": "QUEUE-123",
+  "attachmentId": "67890"
+}
+// Response: { deleted: true, issueId, attachmentId }
+```
+
+**Предупреждения:**
+- Операция необратима
+- Инвалидирует кеш списка файлов
+- Требует явного согласия пользователя
+
+---
+
+### 5. Get Thumbnail — Миниатюра изображения
+
+**Tool:** `get_thumbnail`
+**Safety:** Read-only ✅
+
+```typescript
+{
+  "issueId": "QUEUE-123",
+  "attachmentId": "67891",
+  "filename": "photo.jpg"
+}
+// Response: { base64: "iVBORw0KG...", mimetype: "image/jpeg" }
+```
+
+**Ограничения:**
+- ✅ Только изображения (PNG, JPG, GIF)
+- ❌ Для документов вернет ошибку
+- Проверка через `attachment.thumbnail !== undefined`
+
+---
+
+## 🔧 FileUploadUtil — Утилиты валидации
+
+**Методы:**
+
+```typescript
+// Валидация имени файла
+FileUploadUtil.validateFilename('report.pdf');  // true
+FileUploadUtil.validateFilename('../etc/passwd'); // false
+
+// Валидация размера
+FileUploadUtil.validateFileSize(buffer.length, 10_000_000); // true/false
+
+// Форматирование размера
+FileUploadUtil.formatFileSize(245678); // "239.92 KB"
+
+// MIME type
+FileUploadUtil.getMimeType('report.pdf'); // "application/pdf"
+
+// Multipart FormData
+FileUploadUtil.prepareMultipartFormData(buffer, filename);
+```
+
+---
+
+## 📊 Integration Tests Coverage
+
+**Все 5 Attachments Tools покрыты integration тестами** (коммит c0f44c8):
+
+```bash
+✅ upload_attachment.integration.test.ts
+✅ download_attachment.integration.test.ts
+✅ get_attachments.integration.test.ts
+✅ delete_attachment.integration.test.ts
+✅ get_thumbnail.integration.test.ts
+```
+
+**Test scenarios:**
+- Upload: base64 + file path + валидация
+- Download: base64 + save to file
+- Get: список + пустой список
+- Delete: успех + 404
+- Thumbnail: изображение + ошибка для не-изображений
 
 ---
 
