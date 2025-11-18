@@ -90,12 +90,5 @@
   },
   "privacy_policies": [
     "https://yandex.ru/legal/confidential/"
-  ],
-  "_meta": {
-    "build": {
-      "number": 2,
-      "generated_by": "mcpb-build",
-      "last_updated": "2025-11-17"
-    }
-  }
+  ]
 }

@@ -65,3 +65,6 @@ dependency-graph.html
 jscpd-report/
 *.mcpb
 .mcpb-build/
+
+# Динамически генерируемые файлы (build hash обновляется при каждой сборке)
+manifest.json
