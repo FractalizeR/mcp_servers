@@ -55,7 +55,9 @@
     "test:quiet": "vitest run --reporter=dot --silent",
     "test:verbose": "vitest run --reporter=verbose",
     "test:watch": "vitest watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run lint && npm run typecheck && npm run test",
+    "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet"
   },
   "dependencies": {
     "axios": "^1.13.2",

@@ -157,11 +157,16 @@ import { BaseTool } from '@core/tools/base/base-tool.js';              // WRONG!
 - `test:verbose` — `vitest run --reporter=verbose`
 - `test:watch` — `vitest watch`
 - `typecheck` — `tsc --noEmit`
+- `validate` — `npm run lint && npm run typecheck && npm run test`
+- `validate:quiet` — `npm run lint:quiet && npm run typecheck && npm run test:quiet`
 
 **Корневой package.json:**
 - Делегирует команды через `--workspaces --if-present`
 - `clean` — только артефакты, `clean:all` — включая node_modules
-- `validate:quiet` — для использования ИИ агентами (минимальный вывод)
+- `validate` — lint + typecheck + test + test:smoke + cpd
+- `validate:quiet` — lint:quiet + typecheck + test:quiet + cpd:quiet
+
+**Примечание:** yandex-tracker добавляет `test:smoke` в свой `validate`
 
 **Режимы вывода (для экономии токенов ИИ):**
 - **Обычный** (`test`, `lint`) — для разработчиков, подробный вывод

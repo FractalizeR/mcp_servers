@@ -46,6 +46,8 @@
     "test:verbose": "vitest run --reporter=verbose",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
+    "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke",
+    "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet",
     "validate:tools": "tsx scripts/validate-tool-registration.ts"
   },
   "dependencies": {
