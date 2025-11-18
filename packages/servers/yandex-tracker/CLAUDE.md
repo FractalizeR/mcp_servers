@@ -209,6 +209,36 @@ ESSENTIAL_TOOLS=ping,search_tools
 - [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:** Добавь **1 строку** в `src/composition-root/definitions/tool-definitions.ts`
 - [ ] Тесты + `npm run validate` (автоматически проверит флаг)
 
+#### Метаданные инструментов (обязательно)
+
+**При создании нового tool:**
+- ✅ Указать `category` (обязательно): `'issues'`, `'helpers'`, `'system'`, etc.
+- ✅ Указать `subcategory` (опционально): `'read'`, `'write'`, `'workflow'`
+- ✅ Указать `priority` на основе частоты использования:
+  - `'critical'` — часто используемые операции (create, find, get)
+  - `'high'` — важные, но не критичные (transitions, changelog)
+  - `'normal'` — обычные операции (helpers, utilities) — default
+  - `'low'` — редко используемые (demo, debug)
+- ✅ Формат `description`: `[Category/Subcategory] Краткое описание`
+- ✅ Длина description: `≤ 80 символов`
+- ✅ Добавить `tags` для поиска (3-5 тегов): `['read', 'query', 'filter']`
+
+**Примеры:**
+```typescript
+static readonly METADATA = {
+  name: 'create_issue',
+  description: '[Issues/Write] Создать новую задачу',
+  category: 'issues',
+  subcategory: 'write',
+  priority: 'critical',
+  tags: ['create', 'new', 'write', 'issue'],
+  inputSchema: { ... }
+};
+```
+
+**Зачем:** Priority-based сортировка оптимизирует контекст LLM (важные tools первыми)
+**Детали:** [src/tools/README.md](src/tools/README.md#категоризация-инструментов)
+
 ### Добавление Operation
 
 - [ ] 📖 Прочитай [src/api_operations/README.md](src/api_operations/README.md)
