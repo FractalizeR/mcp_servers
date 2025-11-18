@@ -15,6 +15,9 @@ import { UpdateIssueTool } from '@tools/api/issues/update/index.js';
 import { GetIssueChangelogTool } from '@tools/api/issues/changelog/index.js';
 import { GetIssueTransitionsTool } from '@tools/api/issues/transitions/get/index.js';
 import { TransitionIssueTool } from '@tools/api/issues/transitions/execute/index.js';
+import { GetIssueLinksTool } from '@tools/api/issues/links/get/index.js';
+import { CreateLinkTool } from '@tools/api/issues/links/create/index.js';
+import { DeleteLinkTool } from '@tools/api/issues/links/delete/index.js';
 import { IssueUrlTool } from '@tools/helpers/issue-url/index.js';
 import { DemoTool } from '@tools/helpers/demo/index.js';
 
@@ -43,6 +46,9 @@ export const TOOL_CLASSES = [
   GetIssueChangelogTool,
   GetIssueTransitionsTool,
   TransitionIssueTool,
+  GetIssueLinksTool,
+  CreateLinkTool,
+  DeleteLinkTool,
   IssueUrlTool,
   DemoTool,
 ] as const;

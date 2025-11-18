@@ -13,6 +13,8 @@ export type {
   ExecuteTransitionDto,
 } from './issue/index.js';
 
+export type { CreateLinkDto } from './link/index.js';
+
 // DTO Factories (runtime code for coverage)
 export {
   createMinimalCreateIssueDto,

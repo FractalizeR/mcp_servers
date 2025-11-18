@@ -38,6 +38,12 @@ export type {
 // Transition
 export type { Transition, TransitionWithUnknownFields } from './transition.entity.js';
 
+// Link
+export type { Link, LinkWithUnknownFields, LinkRelationship } from './link.entity.js';
+
+// LinkType
+export type { LinkType, LinkTypeWithUnknownFields } from './link-type.entity.js';
+
 // Entity Factories (runtime code for coverage)
 export {
   createUser,

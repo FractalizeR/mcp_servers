@@ -17,6 +17,11 @@ import {
   GetIssueTransitionsOperation,
   TransitionIssueOperation,
 } from '@tracker_api/api_operations/issue/index.js';
+import {
+  GetIssueLinksOperation,
+  CreateLinkOperation,
+  DeleteLinkOperation,
+} from '@tracker_api/api_operations/link/index.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -35,6 +40,9 @@ export const OPERATION_CLASSES = [
   GetIssueChangelogOperation,
   GetIssueTransitionsOperation,
   TransitionIssueOperation,
+  GetIssueLinksOperation,
+  CreateLinkOperation,
+  DeleteLinkOperation,
 ] as const;
 
 /**
