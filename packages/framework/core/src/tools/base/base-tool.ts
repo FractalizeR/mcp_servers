@@ -150,7 +150,7 @@ export abstract class BaseTool<TFacade = unknown> {
    * Форматирование ошибки валидации Zod
    */
   private formatValidationError(zodError: ZodError): ToolResult {
-    const errorMessage = zodError.errors.map((e) => e.message).join('; ');
+    const errorMessage = zodError.issues.map((e: { message: string }) => e.message).join('; ');
     return this.formatError('Ошибка валидации параметров', new Error(errorMessage));
   }
 }

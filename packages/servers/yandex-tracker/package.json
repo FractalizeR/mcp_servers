@@ -49,12 +49,12 @@
     "@modelcontextprotocol/sdk": "^1.22.0",
     "axios": "^1.7.9",
     "chalk": "^5.4.1",
-    "commander": "^12.1.0",
-    "inquirer": "^12.3.0",
+    "commander": "^14.0.2",
+    "inquirer": "^13.0.1",
     "inversify": "^7.10.4",
-    "ora": "^8.1.1",
+    "ora": "^9.0.0",
     "pino": "^10.1.0",
-    "zod": "^3.25.76"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@anthropic-ai/mcpb": "^2.0.1",
