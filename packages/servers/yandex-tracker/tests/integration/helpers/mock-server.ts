@@ -9,6 +9,7 @@ import {
   generateIssue,
   generateComment,
   generateQueue,
+  generateComponent,
   generateError404,
   generateError401,
   generateError403,
@@ -1237,6 +1238,228 @@ export class MockServer {
       return [403, response];
     });
     this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  // ============================================================
+  // COMPONENTS API МЕТОДЫ
+  // ============================================================
+
+  /**
+   * Mock успешного получения списка компонентов очереди
+   */
+  mockGetComponentsSuccess(queueId: string, components?: unknown[]): this {
+    const defaultComponents = [
+      generateComponent({
+        overrides: {
+          name: 'Component 1',
+          queue: { id: queueId, key: 'TEST', display: 'Test Queue' },
+        },
+      }),
+      generateComponent({
+        overrides: {
+          name: 'Component 2',
+          queue: { id: queueId, key: 'TEST', display: 'Test Queue' },
+        },
+      }),
+    ];
+    const mockKey = `GET /v2/queues/${queueId}/components`;
+    const urlPattern = new RegExp(`^/v2/queues/${queueId}/components(\\?.*)?$`);
+    this.mockAdapter.onGet(urlPattern).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, components ?? defaultComponents];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock пустого списка компонентов
+   */
+  mockGetComponentsEmpty(queueId: string): this {
+    const mockKey = `GET /v2/queues/${queueId}/components`;
+    const urlPattern = new RegExp(`^/v2/queues/${queueId}/components(\\?.*)?$`);
+    this.mockAdapter.onGet(urlPattern).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, []];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при получении компонентов (очередь не найдена)
+   */
+  mockGetComponents404(queueId: string): this {
+    const response = generateError404();
+    const mockKey = `GET /v2/queues/${queueId}/components`;
+    this.mockAdapter.onGet(`/v2/queues/${queueId}/components`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного создания компонента
+   */
+  mockCreateComponentSuccess(queueId: string, componentData?: Record<string, unknown>): this {
+    const component = generateComponent({
+      overrides: {
+        queue: { id: queueId, key: 'TEST', display: 'Test Queue' },
+        ...componentData,
+      },
+    });
+    const mockKey = `POST /v2/queues/${queueId}/components`;
+    this.mockAdapter.onPost(`/v2/queues/${queueId}/components`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [201, component];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 403 при создании компонента (нет прав)
+   */
+  mockCreateComponent403(queueId: string): this {
+    const response = generateError403();
+    const mockKey = `POST /v2/queues/${queueId}/components`;
+    this.mockAdapter.onPost(`/v2/queues/${queueId}/components`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [403, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при создании компонента (очередь не найдена)
+   */
+  mockCreateComponent404(queueId: string): this {
+    const response = generateError404();
+    const mockKey = `POST /v2/queues/${queueId}/components`;
+    this.mockAdapter.onPost(`/v2/queues/${queueId}/components`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного обновления компонента
+   */
+  mockUpdateComponentSuccess(componentId: string, updates?: Record<string, unknown>): this {
+    const component = generateComponent({
+      overrides: { id: componentId, ...updates },
+    });
+    const mockKey = `PATCH /v2/components/${componentId}`;
+    this.mockAdapter.onPatch(`/v2/components/${componentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, component];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при обновлении компонента
+   */
+  mockUpdateComponent404(componentId: string): this {
+    const response = generateError404();
+    const mockKey = `PATCH /v2/components/${componentId}`;
+    this.mockAdapter.onPatch(`/v2/components/${componentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного удаления компонента
+   */
+  mockDeleteComponentSuccess(componentId: string, queueId = 'TEST'): this {
+    // DELETE operation сначала GET компонент для получения queue.id
+    const component = generateComponent({
+      id: componentId,
+      queue: { id: queueId, key: queueId, display: queueId },
+    });
+    const getMockKey = `GET /v2/components/${componentId}`;
+    this.mockAdapter.onGet(`/v2/components/${componentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(getMockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, component];
+    });
+    this.pendingMocks.push(getMockKey);
+
+    // Затем DELETE
+    const deleteMockKey = `DELETE /v2/components/${componentId}`;
+    this.mockAdapter.onDelete(`/v2/components/${componentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(deleteMockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [204, ''];
+    });
+    this.pendingMocks.push(deleteMockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при удалении компонента
+   */
+  mockDeleteComponent404(componentId: string): this {
+    // Компонент не найден уже на GET
+    const response = generateError404();
+    const mockKey = `GET /v2/components/${componentId}`;
+    this.mockAdapter.onGet(`/v2/components/${componentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+
+    // DELETE тоже вернет 404
+    const deleteMockKey = `DELETE /v2/components/${componentId}`;
+    this.mockAdapter.onDelete(`/v2/components/${componentId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(deleteMockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(deleteMockKey);
     return this;
   }
 

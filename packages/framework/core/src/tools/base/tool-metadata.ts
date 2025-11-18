@@ -24,6 +24,7 @@ export enum ToolCategory {
   SPRINTS = 'sprints',
   COMMENTS = 'comments',
   CHECKLISTS = 'checklists',
+  COMPONENTS = 'components',
 
   // Системные инструменты
   SYSTEM = 'system',

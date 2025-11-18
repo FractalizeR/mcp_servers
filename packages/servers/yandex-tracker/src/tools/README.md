@@ -466,6 +466,24 @@ ESSENTIAL_TOOLS=ping,search_tools
 
 ---
 
+## 📦 Components API — Complete Tools
+
+**4 MCP Tools для работы с компонентами очередей:**
+
+- `get_components` — список компонентов очереди (кеш ✅, API v2)
+- `create_component` — создание (queueId, name, description?, lead?, assignAuto?) ⚠️
+- `update_component` — обновление (componentId, name?, description?, lead?, assignAuto?) ⚠️
+- `delete_component` — удаление компонента ⚠️
+
+**Ключевые особенности:**
+- API v2 (не v3)
+- Компоненты привязаны к очереди
+- `assignAuto` — автоназначение исполнителя
+
+См. файлы в `src/tools/api/components/` для деталей.
+
+---
+
 ## 🔗 См. также
 
 - **Общие утилиты:** [@mcp-framework/core](../../../../../framework/core/src/tools/common/README.md)

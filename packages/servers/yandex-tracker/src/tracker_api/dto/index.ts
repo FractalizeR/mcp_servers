@@ -42,6 +42,14 @@ export type {
   DownloadAttachmentOutput,
 } from './attachment/index.js';
 
+// Component DTO
+export type {
+  CreateComponentDto,
+  UpdateComponentDto,
+  ComponentOutput,
+  ComponentsListOutput,
+} from './component/index.js';
+
 // Comment DTO
 export type {
   AddCommentInput,

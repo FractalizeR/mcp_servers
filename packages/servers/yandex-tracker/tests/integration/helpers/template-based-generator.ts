@@ -386,6 +386,7 @@ export const generateIssue = testFixtureFactory.create('issue');
 export const generateUser = testFixtureFactory.create('user');
 export const generateComment = testFixtureFactory.create('comment');
 export const generateQueue = testFixtureFactory.create('queue');
+export const generateComponent = testFixtureFactory.create('component');
 
 /**
  * Генераторы типичных ошибок API

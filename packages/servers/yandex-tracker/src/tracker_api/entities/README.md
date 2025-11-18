@@ -405,6 +405,31 @@ export type QueuePermissionWithUnknownFields = WithUnknownFields<QueuePermission
 - `follower` — наблюдатель (только чтение)
 - `access` — базовый доступ к очереди
 
+### Entity для компонентов
+
+**Файл:** `src/tracker_api/entities/component.entity.ts`
+
+Описывает компоненты очереди для группировки задач:
+
+```typescript
+export interface Component {
+  readonly id: string;           // ID компонента
+  readonly self: string;         // URL в API
+  readonly name: string;         // Название компонента
+  readonly queue: QueueRef;      // Очередь компонента
+  readonly assignAuto: boolean;  // Автоназначение исполнителя
+  readonly description?: string; // Описание (опционально)
+  readonly lead?: UserRef;       // Ответственный (опционально)
+}
+
+export type ComponentWithUnknownFields = WithUnknownFields<Component>;
+```
+
+**Ключевые особенности:**
+- `queue` — тип `QueueRef` (референс на очередь)
+- `assignAuto` — автоназначение исполнителя при добавлении компонента
+- `lead` — опциональный ответственный за компонент
+
 ---
 
 ## 🔗 См. также
