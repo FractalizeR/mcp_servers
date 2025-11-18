@@ -629,6 +629,176 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
 
 ---
 
+## 💬 Comments API — Complete Tools Documentation
+
+**4 инструмента для работы с комментариями к задачам**
+
+### 1. fr_yandex_tracker_add_comment
+
+**Категория:** `COMMENTS/write`
+**Назначение:** Добавить комментарий к задаче
+
+**Параметры:**
+- `issueId` (string, required) — ключ или ID задачи (например, TEST-123)
+- `text` (string, required) — текст комментария (поддерживает markdown)
+- `attachmentIds` (string[], optional) — массив ID прикрепленных файлов
+
+**Пример MCP запроса:**
+```json
+{
+  "name": "fr_yandex_tracker_add_comment",
+  "arguments": {
+    "issueId": "TEST-123",
+    "text": "## Обновление\n\nЗадача выполнена.",
+    "attachmentIds": ["att-1", "att-2"]
+  }
+}
+```
+
+**Пример ответа:**
+```json
+{
+  "data": {
+    "comment": {
+      "id": "comment-12345",
+      "self": "https://api.tracker.yandex.net/v2/issues/TEST-123/comments/comment-12345",
+      "text": "## Обновление\n\nЗадача выполнена.",
+      "createdBy": { "id": "user-1", "display": "John Doe" },
+      "createdAt": "2025-01-18T10:00:00.000+0000",
+      "version": 1,
+      "transport": "internal"
+    }
+  }
+}
+```
+
+### 2. fr_yandex_tracker_get_comments
+
+**Категория:** `COMMENTS/read`
+**Назначение:** Получить список комментариев задачи
+
+**Параметры:**
+- `issueId` (string, required) — ключ или ID задачи
+- `perPage` (number, optional) — количество комментариев на странице (default: 50)
+- `page` (number, optional) — номер страницы (начиная с 1)
+- `expand` (string, optional) — дополнительные поля ('attachments')
+
+**Пример MCP запроса:**
+```json
+{
+  "name": "fr_yandex_tracker_get_comments",
+  "arguments": {
+    "issueId": "TEST-123",
+    "perPage": 10,
+    "page": 1,
+    "expand": "attachments"
+  }
+}
+```
+
+**Пример ответа:**
+```json
+{
+  "data": {
+    "comments": [
+      {
+        "id": "comment-1",
+        "text": "First comment",
+        "createdBy": { "id": "user-1", "display": "John Doe" },
+        "createdAt": "2025-01-18T10:00:00.000+0000"
+      },
+      {
+        "id": "comment-2",
+        "text": "Second comment",
+        "createdBy": { "id": "user-2", "display": "Jane Smith" },
+        "createdAt": "2025-01-18T11:00:00.000+0000",
+        "attachments": [
+          { "id": "att-1", "name": "file.pdf", "size": 1024 }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 3. fr_yandex_tracker_edit_comment
+
+**Категория:** `COMMENTS/write`
+**Назначение:** Редактировать существующий комментарий
+
+**Параметры:**
+- `issueId` (string, required) — ключ или ID задачи
+- `commentId` (string, required) — ID комментария
+- `text` (string, required) — новый текст комментария
+
+**Пример MCP запроса:**
+```json
+{
+  "name": "fr_yandex_tracker_edit_comment",
+  "arguments": {
+    "issueId": "TEST-123",
+    "commentId": "comment-12345",
+    "text": "Обновленный текст комментария"
+  }
+}
+```
+
+**Пример ответа:**
+```json
+{
+  "data": {
+    "comment": {
+      "id": "comment-12345",
+      "text": "Обновленный текст комментария",
+      "createdBy": { "id": "user-1", "display": "John Doe" },
+      "createdAt": "2025-01-18T10:00:00.000+0000",
+      "updatedBy": { "id": "user-1", "display": "John Doe" },
+      "updatedAt": "2025-01-18T12:00:00.000+0000",
+      "version": 2
+    }
+  }
+}
+```
+
+### 4. fr_yandex_tracker_delete_comment
+
+**Категория:** `COMMENTS/write`
+**Назначение:** Удалить комментарий
+
+**Параметры:**
+- `issueId` (string, required) — ключ или ID задачи
+- `commentId` (string, required) — ID комментария
+
+**Пример MCP запроса:**
+```json
+{
+  "name": "fr_yandex_tracker_delete_comment",
+  "arguments": {
+    "issueId": "TEST-123",
+    "commentId": "comment-12345"
+  }
+}
+```
+
+**Пример ответа:**
+```json
+{
+  "data": {
+    "success": true,
+    "message": "Comment deleted successfully"
+  }
+}
+```
+
+**Ключевые особенности:**
+- ✅ Markdown форматирование в тексте комментариев
+- ✅ Поддержка вложений (attachmentIds)
+- ✅ Пагинация для списка комментариев
+- ✅ Версионность для контроля конкурентных изменений
+- ❌ Удаленные комментарии восстановить нельзя
+
+---
+
 ## 🔧 FileUploadUtil — Утилиты валидации
 
 **Методы:**

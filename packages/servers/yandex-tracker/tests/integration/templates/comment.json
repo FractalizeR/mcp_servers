@@ -1,0 +1,30 @@
+{
+  "id": "6253ebaffab26d0e966ab4fd",
+  "self": "https://api.tracker.yandex.net/v3/issues/QUEUE-1/comments/6253ebaffab26d0e966ab4fd",
+  "text": "Тестовый комментарий к задаче",
+  "createdBy": {
+    "self": "https://api.tracker.yandex.net/v3/users/1130000000000001",
+    "id": "1130000000000001",
+    "display": "Тестовый Пользователь",
+    "cloudUid": "ajexxxxxxxxxxxxxxxx1",
+    "passportUid": 1130000000000001
+  },
+  "createdAt": "2022-04-11T08:49:50.935+0000",
+  "updatedBy": {
+    "self": "https://api.tracker.yandex.net/v3/users/1130000000000002",
+    "id": "1130000000000002",
+    "display": "Другой Пользователь",
+    "cloudUid": "ajexxxxxxxxxxxxxxxx2",
+    "passportUid": 1130000000000002
+  },
+  "updatedAt": "2022-04-11T09:30:00.000+0000",
+  "version": 1,
+  "transport": "internal",
+  "attachments": [
+    {
+      "id": "6253ebaffab26d0e966ab500",
+      "name": "document.pdf",
+      "size": 1024000
+    }
+  ]
+}

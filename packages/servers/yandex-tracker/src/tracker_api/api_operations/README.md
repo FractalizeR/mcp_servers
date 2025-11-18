@@ -424,6 +424,75 @@ const thumbnail = await getThumbnailOp.execute('QUEUE-123', '67890', 'photo.jpg'
 
 ---
 
+## 💬 Comment Operations (Complete API)
+
+**4 операции для работы с комментариями:**
+
+### 1. AddCommentOperation
+**API:** `POST /v2/issues/{issueId}/comments`
+**Назначение:** Добавление комментария к задаче
+
+```typescript
+const comment = await addCommentOp.execute('QUEUE-123', {
+  text: 'New comment',
+  attachmentIds: ['att-1', 'att-2']  // опционально
+});
+// Кеш: ❌ инвалидирует list cache
+// Возврат: CommentWithUnknownFields
+```
+
+### 2. GetCommentsOperation
+**API:** `GET /v2/issues/{issueId}/comments`
+**Назначение:** Получение списка комментариев задачи
+
+```typescript
+const comments = await getCommentsOp.execute('QUEUE-123', {
+  perPage: 50,
+  page: 1,
+  expand: 'attachments'  // опционально
+});
+// Кеш: ✅ (через EntityCacheKey)
+// Возврат: CommentWithUnknownFields[]
+```
+
+**Параметры пагинации:**
+- `perPage` — количество комментариев на странице (default: 50)
+- `page` — номер страницы (начиная с 1)
+- `expand` — дополнительные поля ('attachments')
+
+### 3. EditCommentOperation
+**API:** `PATCH /v2/issues/{issueId}/comments/{commentId}`
+**Назначение:** Редактирование существующего комментария
+
+```typescript
+const updatedComment = await editCommentOp.execute('QUEUE-123', 'comment-456', {
+  text: 'Updated comment text'
+});
+// Кеш: ❌ инвалидирует list cache
+// Возврат: CommentWithUnknownFields
+```
+
+**Важно:** При редактировании обновляются поля `updatedBy`, `updatedAt` и `version`
+
+### 4. DeleteCommentOperation
+**API:** `DELETE /v2/issues/{issueId}/comments/{commentId}`
+**Назначение:** Удаление комментария
+
+```typescript
+await deleteCommentOp.execute('QUEUE-123', 'comment-456');
+// Кеш: ❌ инвалидирует list cache
+// Возврат: void
+```
+
+**Ключевые аспекты:**
+- **Markdown:** Поле `text` поддерживает markdown форматирование
+- **Вложения:** Можно прикрепить файлы через `attachmentIds` при создании
+- **Версионность:** Поле `version` используется для оптимистичной блокировки
+- **Transport:** Комментарии могут быть созданы через UI ('internal') или email ('email')
+- **Кеш:** Список комментариев кешируется, инвалидируется при add/edit/delete
+
+---
+
 ## 🔗 См. также
 
 - **Facade конвенции:** [src/tracker_api/facade/README.md](../facade/README.md) (если создашь)
