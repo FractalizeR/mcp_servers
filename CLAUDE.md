@@ -141,6 +141,40 @@ import { BaseTool } from '@core/tools/base/base-tool.js';              // WRONG!
 - Каждый пакет имеет чёткую границу ответственности (см. README.md пакетов)
 - Не смешивай логику разных слоёв в одном файле
 
+### 5. Консистентность npm скриптов
+
+**Все workspaces ОБЯЗАНЫ иметь одинаковый набор базовых команд:**
+- `build` — `tsc -b && tsc-alias` (НЕ `tsc` без `-b`!)
+- `clean` — `rimraf dist` (только артефакты сборки)
+- `lint` — `eslint src --ext .ts`
+- `lint:fix` — `eslint src --ext .ts --fix`
+- `lint:quiet` — `eslint src --ext .ts --quiet`
+- `format` — `prettier --write "src/**/*.ts" "tests/**/*.ts"`
+- `format:check` — `prettier --check "src/**/*.ts" "tests/**/*.ts"`
+- `test` — `vitest run`
+- `test:coverage` — `vitest run --coverage`
+- `test:quiet` — `vitest run --reporter=dot --silent`
+- `test:verbose` — `vitest run --reporter=verbose`
+- `test:watch` — `vitest watch`
+- `typecheck` — `tsc --noEmit`
+- `validate` — `npm run lint && npm run typecheck && npm run test`
+- `validate:quiet` — `npm run lint:quiet && npm run typecheck && npm run test:quiet`
+
+**Корневой package.json:**
+- Делегирует команды через `--workspaces --if-present`
+- `clean` — только артефакты, `clean:all` — включая node_modules
+- `validate` — lint + typecheck + test + test:smoke + cpd
+- `validate:quiet` — lint:quiet + typecheck + test:quiet + cpd:quiet
+
+**Примечание:** yandex-tracker добавляет `test:smoke` в свой `validate`
+
+**Режимы вывода (для экономии токенов ИИ):**
+- **Обычный** (`test`, `lint`) — для разработчиков, подробный вывод
+- **Quiet** (`test:quiet`, `lint:quiet`) — для ИИ агентов, только ошибки
+- **Verbose** (`test:verbose`) — для отладки, максимум деталей
+
+**ВАЖНО для ИИ агентов:** Используй `npm run validate:quiet` вместо `validate`
+
 ---
 
 ## 📋 Процесс работы с большими задачами
@@ -196,6 +230,9 @@ npm run test
 # Валидация всего monorepo
 npm run validate
 
+# Валидация (quiet для ИИ агентов - экономия токенов)
+npm run validate:quiet
+
 # Валидация архитектуры (граф зависимостей)
 npm run depcruise
 
@@ -211,9 +248,13 @@ npm run build --workspace=@mcp-framework/core
 # Тесты одного пакета
 npm run test --workspace=@mcp-server/yandex-tracker
 
+# Тесты в quiet режиме (для ИИ)
+npm run test:quiet --workspace=@mcp-framework/core
+
 # Из директории пакета
 cd packages/servers/yandex-tracker
 npm test
+npm run test:quiet  # для ИИ агентов
 ```
 
 **ВАЖНО:** Команды с `--workspace` работают только из корня monorepo!
