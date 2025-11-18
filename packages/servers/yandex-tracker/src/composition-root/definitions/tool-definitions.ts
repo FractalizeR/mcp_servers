@@ -41,6 +41,12 @@ import { UploadAttachmentTool } from '@tools/api/issues/attachments/upload/index
 import { DownloadAttachmentTool } from '@tools/api/issues/attachments/download/index.js';
 import { DeleteAttachmentTool } from '@tools/api/issues/attachments/delete/index.js';
 import { GetThumbnailTool } from '@tools/api/issues/attachments/thumbnail/index.js';
+import {
+  GetChecklistTool,
+  AddChecklistItemTool,
+  UpdateChecklistItemTool,
+  DeleteChecklistItemTool,
+} from '@tools/api/checklists/index.js';
 import { IssueUrlTool } from '@tools/helpers/issue-url/index.js';
 import { DemoTool } from '@tools/helpers/demo/index.js';
 
@@ -91,6 +97,10 @@ export const TOOL_CLASSES = [
   DownloadAttachmentTool,
   DeleteAttachmentTool,
   GetThumbnailTool,
+  GetChecklistTool,
+  AddChecklistItemTool,
+  UpdateChecklistItemTool,
+  DeleteChecklistItemTool,
   IssueUrlTool,
   DemoTool,
 ] as const;

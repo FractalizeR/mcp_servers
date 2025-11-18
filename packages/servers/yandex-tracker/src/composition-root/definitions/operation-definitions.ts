@@ -49,6 +49,12 @@ import {
   DeleteAttachmentOperation,
   GetThumbnailOperation,
 } from '@tracker_api/api_operations/attachment/index.js';
+import {
+  GetChecklistOperation,
+  AddChecklistItemOperation,
+  UpdateChecklistItemOperation,
+  DeleteChecklistItemOperation,
+} from '@tracker_api/api_operations/checklist/index.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -89,6 +95,10 @@ export const OPERATION_CLASSES = [
   DownloadAttachmentOperation,
   DeleteAttachmentOperation,
   GetThumbnailOperation,
+  GetChecklistOperation,
+  AddChecklistItemOperation,
+  UpdateChecklistItemOperation,
+  DeleteChecklistItemOperation,
 ] as const;
 
 /**

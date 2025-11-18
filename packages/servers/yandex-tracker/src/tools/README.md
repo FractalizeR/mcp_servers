@@ -427,40 +427,15 @@ ESSENTIAL_TOOLS=ping,search_tools
 
 **6 MCP Tools для работы с очередями:**
 
-### Read Operations
-- `get_queue` — получение одной очереди по ID/ключу
-  - Параметры: `queueId`, `expand` (optional)
-  - Кеширование: ✅
+**Read:**
+- `get_queue` — получение очереди (queueId, expand?, кеш ✅)
+- `get_queues` — список очередей (expand?, perPage?, page?, кеш ✅)
+- `get_queue_fields` — поля очереди (queueId, кеш ✅)
 
-- `get_queues` — список всех очередей
-  - Параметры: `expand`, `perPage`, `page` (optional)
-  - Кеширование: ✅
-
-- `get_queue_fields` — получение полей очереди
-  - Параметры: `queueId`
-  - Кеширование: ✅
-
-### Write Operations (Admin)
-- `create_queue` — создание новой очереди
-  - Параметры: `key` (A-Z, 2-10 символов), `name`, `lead`, `defaultType`, `defaultPriority`
-  - Safety: `requiresExplicitUserConsent: true` ⚠️
-  - Валидация ключа: `^[A-Z]{2,10}$`
-
-- `update_queue` — обновление настроек очереди
-  - Параметры: `queueId`, `name`, `lead`, `assignAuto`, etc.
-  - Safety: `requiresExplicitUserConsent: true` ⚠️
-  - Поддержка версионности (optimistic locking)
-
-- `manage_queue_access` — управление доступом к очереди
-  - Параметры: `queueId`, `role`, `add` (users/groups), `remove` (users/groups)
-  - Роли: `queue-lead`, `team-member`, `follower`, `access`
-  - Safety: `requiresExplicitUserConsent: true` ⚠️
-
-**Ключевые особенности:**
-- ✅ Админ права для create/update/manage-access
-- ✅ Версионность для оптимистичных блокировок
-- ✅ Кеширование очередей по ключу
-- ✅ Batch операции для manage_queue_access
+**Write (Admin):**
+- `create_queue` — создание (key ^[A-Z]{2,10}$, name, lead, defaultType, defaultPriority) ⚠️
+- `update_queue` — обновление (queueId, name?, lead?, assignAuto?, версионность) ⚠️
+- `manage_queue_access` — доступ (queueId, role, add?, remove?, роли: queue-lead/team-member/follower/access) ⚠️
 
 См. файлы в `src/tools/api/queues/` для деталей.
 
@@ -481,6 +456,25 @@ ESSENTIAL_TOOLS=ping,search_tools
 - `assignAuto` — автоназначение исполнителя
 
 См. файлы в `src/tools/api/components/` для деталей.
+
+---
+
+## ✅ Checklists API — Complete Tools
+
+**4 MCP Tools для работы с чеклистами задач:**
+
+- `get_checklist` — получение всех элементов чеклиста (issueId)
+- `add_checklist_item` — добавление элемента (issueId, text, checked?, assignee?, deadline?) ⚠️
+- `update_checklist_item` — обновление элемента (issueId, checklistItemId, text?, checked?, assignee?, deadline?) ⚠️
+- `delete_checklist_item` — удаление элемента (issueId, checklistItemId) ⚠️
+
+**Ключевые особенности:**
+- **API v2** (не v3)
+- **Safety:** add/update/delete требуют `requiresExplicitUserConsent: true`
+- **Scope:** Чеклисты привязаны к конкретной задаче
+- **Поля:** id, text, checked, assignee (UserRef, optional), deadline (ISO 8601, optional)
+
+См. файлы в `src/tools/api/checklists/` для деталей.
 
 ---
 

@@ -1463,6 +1463,150 @@ export class MockServer {
     return this;
   }
 
+  // ============================================================
+  // CHECKLISTS API МЕТОДЫ
+  // ============================================================
+
+  /**
+   * Mock успешного получения чеклиста задачи
+   */
+  mockGetChecklistSuccess(issueKey: string, checklist?: unknown[]): this {
+    const mockKey = `GET /v2/issues/${issueKey}/checklistItems`;
+    this.mockAdapter.onGet(`/v2/issues/${issueKey}/checklistItems`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, checklist ?? []];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при получении чеклиста (задача не найдена)
+   */
+  mockGetChecklist404(issueKey: string): this {
+    const response = generateError404();
+    const mockKey = `GET /v2/issues/${issueKey}/checklistItems`;
+    this.mockAdapter.onGet(`/v2/issues/${issueKey}/checklistItems`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного добавления элемента в чеклист
+   */
+  mockAddChecklistItemSuccess(issueKey: string, item: unknown): this {
+    const mockKey = `POST /v2/issues/${issueKey}/checklistItems`;
+    this.mockAdapter.onPost(`/v2/issues/${issueKey}/checklistItems`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [201, item];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при добавлении элемента (задача не найдена)
+   */
+  mockAddChecklistItem404(issueKey: string): this {
+    const response = generateError404();
+    const mockKey = `POST /v2/issues/${issueKey}/checklistItems`;
+    this.mockAdapter.onPost(`/v2/issues/${issueKey}/checklistItems`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного обновления элемента чеклиста
+   */
+  mockUpdateChecklistItemSuccess(issueKey: string, checklistItemId: string, item: unknown): this {
+    const mockKey = `PATCH /v2/issues/${issueKey}/checklistItems/${checklistItemId}`;
+    this.mockAdapter
+      .onPatch(`/v2/issues/${issueKey}/checklistItems/${checklistItemId}`)
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [200, item];
+      });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при обновлении элемента (элемент не найден)
+   */
+  mockUpdateChecklistItem404(issueKey: string, checklistItemId: string): this {
+    const response = generateError404();
+    const mockKey = `PATCH /v2/issues/${issueKey}/checklistItems/${checklistItemId}`;
+    this.mockAdapter
+      .onPatch(`/v2/issues/${issueKey}/checklistItems/${checklistItemId}`)
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [404, response];
+      });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного удаления элемента из чеклиста
+   */
+  mockDeleteChecklistItemSuccess(issueKey: string, checklistItemId: string): this {
+    const mockKey = `DELETE /v2/issues/${issueKey}/checklistItems/${checklistItemId}`;
+    this.mockAdapter
+      .onDelete(`/v2/issues/${issueKey}/checklistItems/${checklistItemId}`)
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [204, ''];
+      });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при удалении элемента (элемент не найден)
+   */
+  mockDeleteChecklistItem404(issueKey: string, checklistItemId: string): this {
+    const response = generateError404();
+    const mockKey = `DELETE /v2/issues/${issueKey}/checklistItems/${checklistItemId}`;
+    this.mockAdapter
+      .onDelete(`/v2/issues/${issueKey}/checklistItems/${checklistItemId}`)
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [404, response];
+      });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
   /**
    * Очистить все моки и восстановить оригинальный адаптер
    */

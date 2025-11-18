@@ -392,6 +392,67 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 
 ---
 
+## ✅ Checklist Operations (Complete API)
+
+**4 операции для работы с чеклистами задач:**
+
+### 1. GetChecklistOperation
+`GET /v2/issues/{issueId}/checklistItems` — получение всех элементов чеклиста задачи
+
+**Пример использования:**
+```typescript
+const checklist = await getChecklistOperation.execute('QUEUE-123');
+// Возвращает: ChecklistItemWithUnknownFields[]
+```
+
+### 2. AddChecklistItemOperation
+`POST /v2/issues/{issueId}/checklistItems` — добавление нового элемента в чеклист
+
+**Пример использования:**
+```typescript
+const newItem = await addChecklistItemOperation.execute('QUEUE-123', {
+  text: 'Проверить документацию',
+  checked: false,
+  assignee: 'user-login',
+  deadline: '2025-12-31T23:59:59Z'
+});
+// Возвращает: ChecklistItemWithUnknownFields
+```
+
+### 3. UpdateChecklistItemOperation
+`PATCH /v2/issues/{issueId}/checklistItems/{checklistItemId}` — обновление существующего элемента
+
+**Пример использования:**
+```typescript
+const updated = await updateChecklistItemOperation.execute(
+  'QUEUE-123',
+  'checklist-item-id',
+  {
+    text: 'Обновленный текст',
+    checked: true
+  }
+);
+// Возвращает: ChecklistItemWithUnknownFields
+```
+
+### 4. DeleteChecklistItemOperation
+`DELETE /v2/issues/{issueId}/checklistItems/{checklistItemId}` — удаление элемента чеклиста
+
+**Пример использования:**
+```typescript
+await deleteChecklistItemOperation.execute('QUEUE-123', 'checklist-item-id');
+// Возвращает: void
+```
+
+**Ключевые аспекты:**
+- **API версия:** Чеклисты используют API v2 (не v3)
+- **Scope:** Чеклисты привязаны к конкретной задаче
+- **Assignee:** Опциональное назначение ответственного за элемент (UserRef)
+- **Deadline:** Опциональный дедлайн в формате ISO 8601
+- **Checked:** Boolean статус выполнения элемента
+
+---
+
 ## 🔗 См. также
 
 - **Facade конвенции:** [src/tracker_api/facade/README.md](../facade/README.md) (если создашь)
