@@ -47,6 +47,13 @@ import {
   UpdateChecklistItemTool,
   DeleteChecklistItemTool,
 } from '@tools/api/checklists/index.js';
+import {
+  GetProjectsTool,
+  GetProjectTool,
+  CreateProjectTool,
+  UpdateProjectTool,
+  DeleteProjectTool,
+} from '@tools/api/projects/index.js';
 import { IssueUrlTool } from '@tools/helpers/issue-url/index.js';
 import { DemoTool } from '@tools/helpers/demo/index.js';
 
@@ -101,6 +108,11 @@ export const TOOL_CLASSES = [
   AddChecklistItemTool,
   UpdateChecklistItemTool,
   DeleteChecklistItemTool,
+  GetProjectsTool,
+  GetProjectTool,
+  CreateProjectTool,
+  UpdateProjectTool,
+  DeleteProjectTool,
   IssueUrlTool,
   DemoTool,
 ] as const;

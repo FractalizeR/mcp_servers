@@ -55,6 +55,13 @@ import {
   UpdateChecklistItemOperation,
   DeleteChecklistItemOperation,
 } from '@tracker_api/api_operations/checklist/index.js';
+import {
+  GetProjectsOperation,
+  GetProjectOperation,
+  CreateProjectOperation,
+  UpdateProjectOperation,
+  DeleteProjectOperation,
+} from '@tracker_api/api_operations/project/index.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -99,6 +106,11 @@ export const OPERATION_CLASSES = [
   AddChecklistItemOperation,
   UpdateChecklistItemOperation,
   DeleteChecklistItemOperation,
+  GetProjectsOperation,
+  GetProjectOperation,
+  CreateProjectOperation,
+  UpdateProjectOperation,
+  DeleteProjectOperation,
 ] as const;
 
 /**
