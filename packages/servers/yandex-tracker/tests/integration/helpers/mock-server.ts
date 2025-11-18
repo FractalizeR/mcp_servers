@@ -743,6 +743,109 @@ export class MockServer {
     return this;
   }
 
+  // ============================================================
+  // LINKS API МЕТОДЫ
+  // ============================================================
+
+  /**
+   * Mock успешного создания связи между задачами
+   */
+  mockCreateLinkSuccess(issueKey: string, targetIssue: string, link: unknown): this {
+    const mockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/links`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/issues/${issueKey}/links`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, link];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при создании связи (задача не найдена)
+   */
+  mockCreateLink404(issueKey: string): this {
+    const response = generateError404();
+    const mockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/links`;
+    this.mockAdapter.onPost(`${TRACKER_API_V3}/issues/${issueKey}/links`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного получения списка связей задачи
+   */
+  mockGetLinksSuccess(issueKey: string, links: unknown[]): this {
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/links`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/links`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, links];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при получении связей (задача не найдена)
+   */
+  mockGetLinks404(issueKey: string): this {
+    const response = generateError404();
+    const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/links`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/links`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock успешного удаления связи
+   */
+  mockDeleteLinkSuccess(issueKey: string, linkId: string): this {
+    const mockKey = `DELETE ${TRACKER_API_V3}/issues/${issueKey}/links/${linkId}`;
+    this.mockAdapter.onDelete(`${TRACKER_API_V3}/issues/${issueKey}/links/${linkId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [204];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
+  /**
+   * Mock ошибки 404 при удалении связи (связь не найдена)
+   */
+  mockDeleteLink404(issueKey: string, linkId: string): this {
+    const response = generateError404();
+    const mockKey = `DELETE ${TRACKER_API_V3}/issues/${issueKey}/links/${linkId}`;
+    this.mockAdapter.onDelete(`${TRACKER_API_V3}/issues/${issueKey}/links/${linkId}`).reply(() => {
+      const index = this.pendingMocks.indexOf(mockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [404, response];
+    });
+    this.pendingMocks.push(mockKey);
+    return this;
+  }
+
   /**
    * Очистить все моки и восстановить оригинальный адаптер
    */

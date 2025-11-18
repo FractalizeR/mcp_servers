@@ -73,7 +73,6 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
       this.logger.info(`Связь создана: ${link.id} (${link.type.id})`);
 
       return this.formatSuccess({
-        success: true,
         message: `Связь создана: ${issueId} ${relationship} ${targetIssue}`,
         link: {
           id: link.id,
