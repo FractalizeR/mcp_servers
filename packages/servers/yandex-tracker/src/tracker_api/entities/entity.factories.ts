@@ -7,7 +7,9 @@
 
 import type { User } from './user.entity.js';
 import type { UserRef } from './common/user-ref.entity.js';
-import type { Queue } from './queue.entity.js';
+import type { Queue, QueueDictionaryRef } from './queue.entity.js';
+import type { QueueField, QueueFieldCategory } from './queue-field.entity.js';
+import type { QueuePermission } from './queue-permission.entity.js';
 import type { Status } from './status.entity.js';
 import type { Priority } from './priority.entity.js';
 import type { IssueType } from './issue-type.entity.js';
@@ -56,13 +58,102 @@ export function createUserRef(overrides?: Partial<UserRef>): UserRef {
 }
 
 /**
- * Создает валидный Queue entity
+ * Создает валидный QueueDictionaryRef
+ */
+export function createQueueDictionaryRef(
+  overrides?: Partial<QueueDictionaryRef>
+): QueueDictionaryRef {
+  return {
+    id: '1',
+    key: 'task',
+    display: 'Task',
+    ...overrides,
+  };
+}
+
+/**
+ * Создает валидный Queue entity (только обязательные поля)
  */
 export function createQueue(overrides?: Partial<Queue>): Queue {
   return {
     id: '1',
+    self: 'https://api.tracker.yandex.net/v3/queues/TEST',
     key: 'TEST',
+    version: 1,
     name: 'Test Queue',
+    lead: createUserRef(),
+    assignAuto: false,
+    defaultType: createQueueDictionaryRef({ key: 'task', display: 'Task' }),
+    defaultPriority: createQueueDictionaryRef({ key: 'normal', display: 'Normal' }),
+    ...overrides,
+  };
+}
+
+/**
+ * Создает полный Queue entity (со всеми опциональными полями)
+ */
+export function createFullQueue(overrides?: Partial<Queue>): Queue {
+  return {
+    id: '1',
+    self: 'https://api.tracker.yandex.net/v3/queues/TEST',
+    key: 'TEST',
+    version: 1,
+    name: 'Test Queue',
+    description: 'Test Queue Description',
+    lead: createUserRef(),
+    assignAuto: false,
+    defaultType: createQueueDictionaryRef({ key: 'task', display: 'Task' }),
+    defaultPriority: createQueueDictionaryRef({ key: 'normal', display: 'Normal' }),
+    issueTypes: [
+      createQueueDictionaryRef({ key: 'task', display: 'Task' }),
+      createQueueDictionaryRef({ id: '2', key: 'bug', display: 'Bug' }),
+    ],
+    denyVoting: false,
+    ...overrides,
+  };
+}
+
+/**
+ * Создает валидный QueueField entity
+ */
+export function createQueueField(overrides?: Partial<QueueField>): QueueField {
+  return {
+    id: 'summary',
+    key: 'summary',
+    name: 'Summary',
+    required: true,
+    type: 'string',
+    ...overrides,
+  };
+}
+
+/**
+ * Создает валидный QueueField entity с категорией
+ */
+export function createQueueFieldWithCategory(overrides?: Partial<QueueField>): QueueField {
+  const category: QueueFieldCategory = {
+    id: 'system',
+    display: 'System Fields',
+  };
+  return {
+    id: 'assignee',
+    key: 'assignee',
+    name: 'Assignee',
+    required: false,
+    type: 'user',
+    category,
+    ...overrides,
+  };
+}
+
+/**
+ * Создает валидный QueuePermission entity
+ */
+export function createQueuePermission(overrides?: Partial<QueuePermission>): QueuePermission {
+  return {
+    id: 'user123',
+    self: 'https://api.tracker.yandex.net/v3/users/user123',
+    display: 'Test User',
     ...overrides,
   };
 }

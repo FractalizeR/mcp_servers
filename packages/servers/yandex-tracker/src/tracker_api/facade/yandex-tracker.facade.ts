@@ -25,6 +25,14 @@ import type {
   CreateIssueDto,
   UpdateIssueDto,
   ExecuteTransitionDto,
+  GetQueuesDto,
+  GetQueueDto,
+  CreateQueueDto,
+  GetQueueFieldsDto,
+  QueueOutput,
+  QueuesListOutput,
+  QueueFieldsOutput,
+  QueuePermissionsOutput,
   CreateLinkDto,
 } from '@tracker_api/dto/index.js';
 import type {
@@ -33,6 +41,10 @@ import type {
   TransitionWithUnknownFields,
   LinkWithUnknownFields,
 } from '@tracker_api/entities/index.js';
+import type {
+  UpdateQueueParams,
+  ManageQueueAccessParams,
+} from '@tracker_api/api_operations/index.js';
 
 export class YandexTrackerFacade {
   constructor(private readonly container: Container) {}
@@ -159,6 +171,80 @@ export class YandexTrackerFacade {
       ) => Promise<IssueWithUnknownFields>;
     }>('TransitionIssueOperation');
     return operation.execute(issueKey, transitionId, transitionData);
+  }
+
+  // === Queue Methods ===
+
+  /**
+   * Получает список очередей с пагинацией
+   * @param params - параметры запроса (perPage, page, expand)
+   * @returns массив очередей
+   */
+  async getQueues(params?: GetQueuesDto): Promise<QueuesListOutput> {
+    const operation = this.getOperation<{
+      execute: (params?: GetQueuesDto) => Promise<QueuesListOutput>;
+    }>('GetQueuesOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Получает одну очередь по ID или ключу
+   * @param params - параметры запроса (queueId, expand)
+   * @returns очередь с полными данными
+   */
+  async getQueue(params: GetQueueDto): Promise<QueueOutput> {
+    const operation = this.getOperation<{
+      execute: (params: GetQueueDto) => Promise<QueueOutput>;
+    }>('GetQueueOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Создаёт новую очередь
+   * @param queueData - данные очереди
+   * @returns созданная очередь
+   */
+  async createQueue(queueData: CreateQueueDto): Promise<QueueOutput> {
+    const operation = this.getOperation<{
+      execute: (data: CreateQueueDto) => Promise<QueueOutput>;
+    }>('CreateQueueOperation');
+    return operation.execute(queueData);
+  }
+
+  /**
+   * Обновляет существующую очередь
+   * @param params - параметры (queueId и updates)
+   * @returns обновлённая очередь
+   */
+  async updateQueue(params: UpdateQueueParams): Promise<QueueOutput> {
+    const operation = this.getOperation<{
+      execute: (params: UpdateQueueParams) => Promise<QueueOutput>;
+    }>('UpdateQueueOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Получает список обязательных полей очереди
+   * @param params - параметры запроса (queueId)
+   * @returns массив полей очереди
+   */
+  async getQueueFields(params: GetQueueFieldsDto): Promise<QueueFieldsOutput> {
+    const operation = this.getOperation<{
+      execute: (params: GetQueueFieldsDto) => Promise<QueueFieldsOutput>;
+    }>('GetQueueFieldsOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Управляет правами доступа к очереди
+   * @param params - параметры (queueId и accessData)
+   * @returns массив прав доступа
+   */
+  async manageQueueAccess(params: ManageQueueAccessParams): Promise<QueuePermissionsOutput> {
+    const operation = this.getOperation<{
+      execute: (params: ManageQueueAccessParams) => Promise<QueuePermissionsOutput>;
+    }>('ManageQueueAccessOperation');
+    return operation.execute(params);
   }
 
   // === Issue Methods - Links ===

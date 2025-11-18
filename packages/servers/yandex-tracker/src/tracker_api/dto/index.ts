@@ -15,6 +15,21 @@ export type {
   ExecuteTransitionDto,
 } from './issue/index.js';
 
+// Queue DTO
+export type {
+  GetQueuesDto,
+  GetQueueDto,
+  CreateQueueDto,
+  UpdateQueueDto,
+  GetQueueFieldsDto,
+  ManageQueueAccessDto,
+  AccessAction,
+  QueueOutput,
+  QueuesListOutput,
+  QueueFieldsOutput,
+  QueuePermissionsOutput,
+} from './queue/index.js';
+
 // Link DTO
 export type { CreateLinkDto } from './link/index.js';
 
@@ -29,6 +44,7 @@ export type {
 
 // DTO Factories (runtime code for coverage)
 export {
+  // Issue factories
   createMinimalCreateIssueDto,
   createFullCreateIssueDto,
   createUpdateIssueDto,
@@ -40,3 +56,15 @@ export {
   createExecuteTransitionDto,
   createEmptyExecuteTransitionDto,
 } from './issue/index.js';
+
+export {
+  // Queue factories
+  createGetQueuesDto,
+  createGetQueueDto,
+  createMinimalCreateQueueDto,
+  createFullCreateQueueDto,
+  createUpdateQueueDto,
+  createGetQueueFieldsDto,
+  createAddQueueAccessDto,
+  createRemoveQueueAccessDto,
+} from './queue/index.js';

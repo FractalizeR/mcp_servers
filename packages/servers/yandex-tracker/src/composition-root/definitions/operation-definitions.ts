@@ -18,6 +18,14 @@ import {
   TransitionIssueOperation,
 } from '@tracker_api/api_operations/issue/index.js';
 import {
+  GetQueuesOperation,
+  GetQueueOperation,
+  CreateQueueOperation,
+  UpdateQueueOperation,
+  GetQueueFieldsOperation,
+  ManageQueueAccessOperation,
+} from '@tracker_api/api_operations/queue/index.js';
+import {
   GetIssueLinksOperation,
   CreateLinkOperation,
   DeleteLinkOperation,
@@ -40,6 +48,12 @@ export const OPERATION_CLASSES = [
   GetIssueChangelogOperation,
   GetIssueTransitionsOperation,
   TransitionIssueOperation,
+  GetQueuesOperation,
+  GetQueueOperation,
+  CreateQueueOperation,
+  UpdateQueueOperation,
+  GetQueueFieldsOperation,
+  ManageQueueAccessOperation,
   GetIssueLinksOperation,
   CreateLinkOperation,
   DeleteLinkOperation,

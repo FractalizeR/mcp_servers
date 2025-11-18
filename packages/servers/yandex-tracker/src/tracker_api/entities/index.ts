@@ -14,7 +14,26 @@ export type { TimestampFields } from './common/timestamp.entity.js';
 export type { User, UserWithUnknownFields } from './user.entity.js';
 
 // Queue
-export type { Queue, QueueWithUnknownFields } from './queue.entity.js';
+export type {
+  Queue,
+  QueueWithUnknownFields,
+  QueueDictionaryRef,
+  QueueIssueTypeConfig,
+} from './queue.entity.js';
+
+// Queue Field
+export type {
+  QueueField,
+  QueueFieldWithUnknownFields,
+  QueueFieldCategory,
+} from './queue-field.entity.js';
+
+// Queue Permission
+export type {
+  QueuePermission,
+  QueuePermissionWithUnknownFields,
+  QueueRole,
+} from './queue-permission.entity.js';
 
 // Status
 export type { Status, StatusWithUnknownFields } from './status.entity.js';
@@ -52,7 +71,12 @@ export {
   createUser,
   createMinimalUser,
   createUserRef,
+  createQueueDictionaryRef,
   createQueue,
+  createFullQueue,
+  createQueueField,
+  createQueueFieldWithCategory,
+  createQueuePermission,
   createStatus,
   createPriority,
   createIssueType,
