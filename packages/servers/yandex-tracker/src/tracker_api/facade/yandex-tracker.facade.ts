@@ -40,6 +40,8 @@ import type {
   AddCommentInput,
   EditCommentInput,
   GetCommentsInput,
+  AddWorklogInput,
+  UpdateWorklogInput,
   UploadAttachmentInput,
   DownloadAttachmentInput,
   DownloadAttachmentOutput,
@@ -56,6 +58,7 @@ import type {
   TransitionWithUnknownFields,
   LinkWithUnknownFields,
   CommentWithUnknownFields,
+  WorklogWithUnknownFields,
   AttachmentWithUnknownFields,
   ChecklistItemWithUnknownFields,
 } from '@tracker_api/entities/index.js';
@@ -268,6 +271,68 @@ export class YandexTrackerFacade {
     return operation.execute(params);
   }
 
+  // === Project Methods ===
+
+  /**
+   * Получает список проектов
+   * @param params - параметры запроса (опционально)
+   * @returns список проектов
+   */
+  async getProjects(params?: GetProjectsDto): Promise<ProjectsListOutput> {
+    const operation = this.getOperation<{
+      execute: (params?: GetProjectsDto) => Promise<ProjectsListOutput>;
+    }>('GetProjectsOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Получает один проект по ID
+   * @param params - параметры запроса (projectId, expand)
+   * @returns проект
+   */
+  async getProject(params: GetProjectParams): Promise<ProjectOutput> {
+    const operation = this.getOperation<{
+      execute: (params: GetProjectParams) => Promise<ProjectOutput>;
+    }>('GetProjectOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Создаёт новый проект
+   * @param data - данные проекта
+   * @returns созданный проект
+   */
+  async createProject(data: CreateProjectDto): Promise<ProjectOutput> {
+    const operation = this.getOperation<{
+      execute: (data: CreateProjectDto) => Promise<ProjectOutput>;
+    }>('CreateProjectOperation');
+    return operation.execute(data);
+  }
+
+  /**
+   * Обновляет проект
+   * @param params - параметры обновления (projectId, data)
+   * @returns обновлённый проект
+   */
+  async updateProject(params: UpdateProjectParams): Promise<ProjectOutput> {
+    const operation = this.getOperation<{
+      execute: (params: UpdateProjectParams) => Promise<ProjectOutput>;
+    }>('UpdateProjectOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Удаляет проект
+   * @param params - параметры удаления (projectId)
+   * @returns void
+   */
+  async deleteProject(params: DeleteProjectParams): Promise<void> {
+    const operation = this.getOperation<{
+      execute: (params: DeleteProjectParams) => Promise<void>;
+    }>('DeleteProjectOperation');
+    return operation.execute(params);
+  }
+
   // === Issue Methods - Links ===
 
   /**
@@ -438,6 +503,68 @@ export class YandexTrackerFacade {
     return operation.execute(issueId, checklistItemId);
   }
 
+  // === Worklog Methods ===
+
+  /**
+   * Получает список записей времени задачи
+   * @param issueId - идентификатор или ключ задачи
+   * @returns массив записей времени
+   */
+  async getWorklogs(issueId: string): Promise<WorklogWithUnknownFields[]> {
+    const operation = this.getOperation<{
+      execute: (id: string) => Promise<WorklogWithUnknownFields[]>;
+    }>('GetWorklogsOperation');
+    return operation.execute(issueId);
+  }
+
+  /**
+   * Добавляет запись времени к задаче
+   * @param issueId - идентификатор или ключ задачи
+   * @param input - данные записи времени
+   * @returns созданная запись времени
+   */
+  async addWorklog(issueId: string, input: AddWorklogInput): Promise<WorklogWithUnknownFields> {
+    const operation = this.getOperation<{
+      execute: (id: string, data: AddWorklogInput) => Promise<WorklogWithUnknownFields>;
+    }>('AddWorklogOperation');
+    return operation.execute(issueId, input);
+  }
+
+  /**
+   * Обновляет запись времени
+   * @param issueId - идентификатор или ключ задачи
+   * @param worklogId - идентификатор записи времени
+   * @param input - новые данные записи времени
+   * @returns обновлённая запись времени
+   */
+  async updateWorklog(
+    issueId: string,
+    worklogId: string,
+    input: UpdateWorklogInput
+  ): Promise<WorklogWithUnknownFields> {
+    const operation = this.getOperation<{
+      execute: (
+        id: string,
+        wId: string,
+        data: UpdateWorklogInput
+      ) => Promise<WorklogWithUnknownFields>;
+    }>('UpdateWorklogOperation');
+    return operation.execute(issueId, worklogId, input);
+  }
+
+  /**
+   * Удаляет запись времени
+   * @param issueId - идентификатор или ключ задачи
+   * @param worklogId - идентификатор записи времени
+   * @returns void
+   */
+  async deleteWorklog(issueId: string, worklogId: string): Promise<void> {
+    const operation = this.getOperation<{
+      execute: (id: string, wId: string) => Promise<void>;
+    }>('DeleteWorklogOperation');
+    return operation.execute(issueId, worklogId);
+  }
+
   // === Issue Methods - Attachments ===
 
   /**
@@ -544,67 +671,5 @@ export class YandexTrackerFacade {
       content,
       metadata,
     };
-  }
-
-  // === Project Methods ===
-
-  /**
-   * Получает список проектов с пагинацией и фильтрацией
-   * @param params - параметры запроса (page, perPage, expand, queueId)
-   * @returns список проектов
-   */
-  async getProjects(params?: GetProjectsDto): Promise<ProjectsListOutput> {
-    const operation = this.getOperation<{
-      execute: (params?: GetProjectsDto) => Promise<ProjectsListOutput>;
-    }>('GetProjectsOperation');
-    return operation.execute(params);
-  }
-
-  /**
-   * Получает один проект по ID или ключу
-   * @param params - параметры запроса (projectId, expand)
-   * @returns проект с полными данными
-   */
-  async getProject(params: GetProjectParams): Promise<ProjectOutput> {
-    const operation = this.getOperation<{
-      execute: (params: GetProjectParams) => Promise<ProjectOutput>;
-    }>('GetProjectOperation');
-    return operation.execute(params);
-  }
-
-  /**
-   * Создаёт новый проект
-   * @param projectData - данные проекта
-   * @returns созданный проект
-   */
-  async createProject(projectData: CreateProjectDto): Promise<ProjectOutput> {
-    const operation = this.getOperation<{
-      execute: (data: CreateProjectDto) => Promise<ProjectOutput>;
-    }>('CreateProjectOperation');
-    return operation.execute(projectData);
-  }
-
-  /**
-   * Обновляет существующий проект
-   * @param params - параметры (projectId и data)
-   * @returns обновлённый проект
-   */
-  async updateProject(params: UpdateProjectParams): Promise<ProjectOutput> {
-    const operation = this.getOperation<{
-      execute: (params: UpdateProjectParams) => Promise<ProjectOutput>;
-    }>('UpdateProjectOperation');
-    return operation.execute(params);
-  }
-
-  /**
-   * Удаляет проект
-   * @param params - параметры удаления (projectId)
-   * @returns void
-   */
-  async deleteProject(params: DeleteProjectParams): Promise<void> {
-    const operation = this.getOperation<{
-      execute: (params: DeleteProjectParams) => Promise<void>;
-    }>('DeleteProjectOperation');
-    return operation.execute(params);
   }
 }
