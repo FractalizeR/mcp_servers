@@ -75,8 +75,26 @@ describe('Entity Factories', () => {
 
       expect(queue).toEqual({
         id: '1',
+        self: 'https://api.tracker.yandex.net/v3/queues/TEST',
         key: 'TEST',
+        version: 1,
         name: 'Test Queue',
+        lead: {
+          self: 'https://api.tracker.yandex.net/v3/users/1234567890',
+          id: '1234567890',
+          display: 'Test User',
+        },
+        assignAuto: false,
+        defaultType: {
+          id: '1',
+          key: 'task',
+          display: 'Task',
+        },
+        defaultPriority: {
+          id: '1',
+          key: 'normal',
+          display: 'Normal',
+        },
       });
     });
 
