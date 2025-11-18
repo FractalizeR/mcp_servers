@@ -137,9 +137,7 @@ export function createGetCommentsInputWithExpandFixture(
  * });
  * ```
  */
-export function createCommentOutputFixture(
-  overrides?: Partial<CommentOutput>
-): CommentOutput {
+export function createCommentOutputFixture(overrides?: Partial<CommentOutput>): CommentOutput {
   return {
     comment: createCommentFixture(),
     ...overrides,

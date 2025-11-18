@@ -53,9 +53,7 @@ export function createCommentAttachmentFixture(
  * });
  * ```
  */
-export function createCommentFixture(
-  overrides?: Partial<Comment>
-): CommentWithUnknownFields {
+export function createCommentFixture(overrides?: Partial<Comment>): CommentWithUnknownFields {
   const id = overrides?.id || '12345';
   const issueKey = 'TEST-123';
 
@@ -99,9 +97,7 @@ export function createCommentWithAttachmentsFixture(
  * const editedComment = createEditedCommentFixture();
  * ```
  */
-export function createEditedCommentFixture(
-  overrides?: Partial<Comment>
-): CommentWithUnknownFields {
+export function createEditedCommentFixture(overrides?: Partial<Comment>): CommentWithUnknownFields {
   const createdAt = new Date('2025-01-18T10:00:00.000Z').toISOString();
   const updatedAt = new Date('2025-01-18T12:00:00.000Z').toISOString();
 
@@ -145,10 +141,7 @@ export function createCommentListFixture(
  * const minimal = createMinimalCommentFixture();
  * ```
  */
-export function createMinimalCommentFixture(
-  id = '12345',
-  issueKey = 'TEST-123'
-): Comment {
+export function createMinimalCommentFixture(id = '12345', issueKey = 'TEST-123'): Comment {
   return {
     id,
     self: `https://api.tracker.yandex.net/v2/issues/${issueKey}/comments/${id}`,
@@ -166,9 +159,7 @@ export function createMinimalCommentFixture(
  * const emailComment = createEmailCommentFixture();
  * ```
  */
-export function createEmailCommentFixture(
-  overrides?: Partial<Comment>
-): CommentWithUnknownFields {
+export function createEmailCommentFixture(overrides?: Partial<Comment>): CommentWithUnknownFields {
   return createCommentFixture({
     transport: 'email',
     ...overrides,
