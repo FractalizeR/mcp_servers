@@ -32,6 +32,10 @@ export default [
       '**/.mcpb-build/**',
       '**/manifest.json',
       '**/*.mcpb',
+      // Vitest config files (не в tsconfig.json)
+      '**/vitest.config.ts',
+      'vitest.shared.ts',
+      'vitest.workspace.ts',
     ],
   },
 

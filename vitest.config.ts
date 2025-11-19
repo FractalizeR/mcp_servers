@@ -3,23 +3,43 @@ import { defineConfig } from 'vitest/config';
 /**
  * Корневая конфигурация Vitest для monorepo
  *
- * Тесты выполняются через workspace packages:
- * - packages/infrastructure/tests/
- * - packages/core/tests/
- * - packages/search/tests/
- * - packages/servers/yandex-tracker/tests/
+ * При использовании workspace (vitest.workspace.ts), эта конфигурация
+ * влияет только на глобальные опции (reporters, coverage).
  *
- * Каждый пакет имеет свой vitest.config.ts
+ * Тесты выполняются через workspace packages.
  */
 export default defineConfig({
   test: {
-    // Базовые настройки для monorepo
-    globals: true,
-    environment: 'node',
+    // Coverage агрегируется здесь
+    coverage: {
+      // Включаем все packages в coverage
+      include: ['packages/**/src/**/*.ts'],
 
-    // Исключаем тесты из корня (их больше нет)
-    // Тесты запускаются через workspaces
-    include: [],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/packages/**'],
+      // Providers и reporters
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov', 'text-summary'],
+
+      // Exclude patterns
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        '**/index.ts',
+        '**/*.config.{ts,js,mjs}',
+        '**/tests/**',
+        '**/scripts/**',
+      ],
+
+      // Пороги покрытия
+      thresholds: {
+        lines: 90,
+        functions: 90,
+        branches: 85,
+        statements: 90,
+        autoUpdate: false,
+        perFile: false,
+      },
+    },
   },
 });
