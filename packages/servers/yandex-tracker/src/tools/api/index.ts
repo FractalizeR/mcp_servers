@@ -10,3 +10,4 @@ export * from '@tools/api/components/index.js';
 export * from '@tools/api/comments/index.js';
 export * from '@tools/api/projects/index.js';
 export * from '@tools/api/worklog/index.js';
+export * from '@tools/api/bulk-change/index.js';
