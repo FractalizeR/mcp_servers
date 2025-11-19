@@ -234,7 +234,7 @@ npm install
 # Сборка всех пакетов (topological order)
 npm run build
 
-# Тесты всех пакетов
+# Тесты всех пакетов (рекомендуется)
 npm run test
 
 # Валидация всего monorepo
@@ -268,6 +268,23 @@ npm run test:quiet  # для ИИ агентов
 ```
 
 **ВАЖНО:** Команды с `--workspace` работают только из корня monorepo!
+
+### ⚠️ Важно о тестировании
+
+**Проблема с vitest workspace mode:**
+Из-за ограничений vitest в workspace mode, wildcard path aliases (`@mcp-framework/infrastructure/*`)
+не всегда корректно резолвятся при запуске через `vitest workspace`.
+
+**Решение:**
+- `npm run test` в корне использует `--workspaces` (запускает тесты для каждого пакета отдельно)
+- Это обеспечивает корректную работу всех path aliases и subpath imports
+- Для запуска тестов конкретного пакета: `npm run test --workspace=<package-name>`
+
+**Результаты при правильном запуске:**
+- ✅ infrastructure: 11/11 тестов
+- ✅ core: 5/5 тестов
+- ✅ search: 6/7 тестов
+- ✅ yandex-tracker: 455/455 тестов
 
 ---
 
