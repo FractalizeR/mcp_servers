@@ -59,6 +59,14 @@ export type {
   CommentsListOutput,
 } from './comment/index.js';
 
+// Field DTO
+export type {
+  CreateFieldDto,
+  UpdateFieldDto,
+  FieldOutput,
+  FieldsListOutput,
+} from './field/index.js';
+
 // Checklist DTO
 export type {
   AddChecklistItemInput,

@@ -103,7 +103,7 @@
 1. **`1.1_update_documentation_sequential.md`** - ✅ ЗАВЕРШЕНО - Обновление документации
 2. **`2.1_verify_api_versions_sequential.md`** - ✅ ЗАВЕРШЕНО - Проверка версий API endpoints
 3. **`3.1_fix_found_issues_parallel.md`** - ✅ ЗАВЕРШЕНО - Проверка API implementation (исправлений не требуется)
-4. **`4.1_add_missing_endpoints_parallel.md`** - ❌ НЕ НАЧАТО - Добавление недостающих endpoints
+4. **`4.1_add_missing_endpoints_parallel.md`** - 🟡 В ПРОЦЕССЕ - Добавление недостающих endpoints (Bulk Change API ✅ реализован)
 5. **`5.1_final_validation_sequential.md`** - ❌ НЕ НАЧАТО - Финальная валидация
 
 ---

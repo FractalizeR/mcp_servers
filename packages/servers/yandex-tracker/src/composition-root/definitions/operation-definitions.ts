@@ -74,6 +74,13 @@ import {
   BulkMoveIssuesOperation,
   GetBulkChangeStatusOperation,
 } from '@tracker_api/api_operations/bulk-change/index.js';
+import {
+  GetFieldsOperation,
+  GetFieldOperation,
+  CreateFieldOperation,
+  UpdateFieldOperation,
+  DeleteFieldOperation,
+} from '@tracker_api/api_operations/field/index.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -131,6 +138,11 @@ export const OPERATION_CLASSES = [
   BulkTransitionIssuesOperation,
   BulkMoveIssuesOperation,
   GetBulkChangeStatusOperation,
+  GetFieldsOperation,
+  GetFieldOperation,
+  CreateFieldOperation,
+  UpdateFieldOperation,
+  DeleteFieldOperation,
 ] as const;
 
 /**
