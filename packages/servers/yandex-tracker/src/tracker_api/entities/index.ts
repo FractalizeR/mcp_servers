@@ -28,6 +28,15 @@ export type {
   QueueFieldCategory,
 } from './queue-field.entity.js';
 
+// Field
+export type {
+  Field,
+  FieldWithUnknownFields,
+  FieldSchema,
+  FieldOption,
+  FieldOptionsProvider,
+} from './field.entity.js';
+
 // Queue Permission
 export type {
   QueuePermission,

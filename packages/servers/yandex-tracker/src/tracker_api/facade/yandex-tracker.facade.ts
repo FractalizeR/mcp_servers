@@ -58,6 +58,10 @@ import type {
   BulkUpdateIssuesInputDto,
   BulkTransitionIssuesInputDto,
   BulkMoveIssuesInputDto,
+  CreateFieldDto,
+  UpdateFieldDto,
+  FieldOutput,
+  FieldsListOutput,
 } from '@tracker_api/dto/index.js';
 import type {
   IssueWithUnknownFields,
@@ -882,5 +886,66 @@ export class YandexTrackerFacade {
       execute: (id: string) => Promise<BulkChangeOperationWithUnknownFields>;
     }>('GetBulkChangeStatusOperation');
     return operation.execute(operationId);
+  }
+
+  // === Field Methods ===
+
+  /**
+   * Получает список всех полей трекера
+   * @returns массив всех полей (системных и кастомных)
+   */
+  async getFields(): Promise<FieldsListOutput> {
+    const operation = this.getOperation<{ execute: () => Promise<FieldsListOutput> }>(
+      'GetFieldsOperation'
+    );
+    return operation.execute();
+  }
+
+  /**
+   * Получает поле по ID
+   * @param fieldId - идентификатор поля
+   * @returns данные поля
+   */
+  async getField(fieldId: string): Promise<FieldOutput> {
+    const operation = this.getOperation<{ execute: (id: string) => Promise<FieldOutput> }>(
+      'GetFieldOperation'
+    );
+    return operation.execute(fieldId);
+  }
+
+  /**
+   * Создает кастомное поле
+   * @param input - данные для создания поля
+   * @returns созданное поле
+   */
+  async createField(input: CreateFieldDto): Promise<FieldOutput> {
+    const operation = this.getOperation<{
+      execute: (input: CreateFieldDto) => Promise<FieldOutput>;
+    }>('CreateFieldOperation');
+    return operation.execute(input);
+  }
+
+  /**
+   * Обновляет поле
+   * @param fieldId - идентификатор поля
+   * @param input - данные для обновления
+   * @returns обновленное поле
+   */
+  async updateField(fieldId: string, input: UpdateFieldDto): Promise<FieldOutput> {
+    const operation = this.getOperation<{
+      execute: (id: string, input: UpdateFieldDto) => Promise<FieldOutput>;
+    }>('UpdateFieldOperation');
+    return operation.execute(fieldId, input);
+  }
+
+  /**
+   * Удаляет поле
+   * @param fieldId - идентификатор поля
+   */
+  async deleteField(fieldId: string): Promise<void> {
+    const operation = this.getOperation<{ execute: (id: string) => Promise<void> }>(
+      'DeleteFieldOperation'
+    );
+    return operation.execute(fieldId);
   }
 }
