@@ -2,29 +2,20 @@
  * MCP Tool для обновления компонента в Яндекс.Трекере
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { UpdateComponentDefinition } from './update-component.definition.js';
 import { UpdateComponentParamsSchema } from './update-component.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
+import { UPDATE_COMPONENT_TOOL_METADATA } from './update-component.metadata.js';
 
 /**
  * Инструмент для обновления компонента
  */
 export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
-  static override readonly METADATA = {
-    name: buildToolName('update_component', MCP_TOOL_PREFIX),
-    description: '[Components/Write] Обновить компонент',
-    category: ToolCategory.COMPONENTS,
-    subcategory: 'write',
-    priority: ToolPriority.HIGH,
-    tags: ['components', 'update', 'write', 'modify'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = UPDATE_COMPONENT_TOOL_METADATA;
 
   private readonly definition = new UpdateComponentDefinition();
 

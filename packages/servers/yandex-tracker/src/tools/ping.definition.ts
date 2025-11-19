@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { PingTool } from './ping.tool.js';
+import { PING_TOOL_METADATA } from './ping.metadata.js';
 
 /**
  * Definition для PingTool
@@ -19,7 +19,7 @@ import { PingTool } from './ping.tool.js';
  */
 export class PingDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return PingTool.METADATA;
+    return PING_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

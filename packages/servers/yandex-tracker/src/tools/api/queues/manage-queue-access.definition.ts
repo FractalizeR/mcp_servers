@@ -7,11 +7,11 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { ManageQueueAccessTool } from './manage-queue-access.tool.js';
+import { MANAGE_QUEUE_ACCESS_TOOL_METADATA } from './manage-queue-access.metadata.js';
 
 export class ManageQueueAccessDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return ManageQueueAccessTool.METADATA;
+    return MANAGE_QUEUE_ACCESS_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

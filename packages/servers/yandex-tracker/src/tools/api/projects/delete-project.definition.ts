@@ -7,11 +7,11 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { DeleteProjectTool } from './delete-project.tool.js';
+import { DELETE_PROJECT_TOOL_METADATA } from './delete-project.metadata.js';
 
 export class DeleteProjectDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return DeleteProjectTool.METADATA;
+    return DELETE_PROJECT_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

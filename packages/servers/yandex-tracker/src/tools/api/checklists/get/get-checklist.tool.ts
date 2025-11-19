@@ -7,15 +7,15 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { ChecklistItemWithUnknownFields } from '@tracker_api/entities/index.js';
 import { GetChecklistDefinition } from '@tools/api/checklists/get/get-checklist.definition.js';
 import { GetChecklistParamsSchema } from '@tools/api/checklists/get/get-checklist.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { GET_CHECKLIST_TOOL_METADATA } from './get-checklist.metadata.js';
 
 /**
  * Инструмент для получения чеклиста задачи
@@ -29,16 +29,7 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('get_checklist', MCP_TOOL_PREFIX),
-    description: '[Checklist/Read] Получить чеклист задачи',
-    category: ToolCategory.CHECKLISTS,
-    subcategory: 'read',
-    priority: ToolPriority.HIGH,
-    tags: ['checklist', 'get', 'read'],
-    isHelper: false,
-    requiresExplicitUserConsent: false,
-  } as const;
+  static override readonly METADATA = GET_CHECKLIST_TOOL_METADATA;
 
   private readonly definition = new GetChecklistDefinition();
 

@@ -8,14 +8,14 @@
  * - Batch-режим: обработка нескольких задач одновременно
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { IssueUrlDefinition } from '@tools/helpers/issue-url/issue-url.definition.js';
 import { IssueUrlParamsSchema } from '@tools/helpers/issue-url/issue-url.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
+import { ISSUE_URL_TOOL_METADATA } from './issue-url.metadata.js';
 
 /**
  * Инструмент для получения URL задач
@@ -31,15 +31,7 @@ export class IssueUrlTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('get_issue_urls', MCP_TOOL_PREFIX),
-    description: '[Helpers/URL] URL задачи',
-    category: ToolCategory.HELPERS,
-    subcategory: 'url',
-    priority: ToolPriority.NORMAL,
-    tags: ['url', 'link', 'helper'],
-    isHelper: true,
-  } as const;
+  static override readonly METADATA = ISSUE_URL_TOOL_METADATA;
 
   private readonly definition = new IssueUrlDefinition();
   private readonly TRACKER_BASE_URL = 'https://tracker.yandex.ru';
@@ -48,7 +40,7 @@ export class IssueUrlTool extends BaseTool<YandexTrackerFacade> {
     return this.definition.build();
   }
 
-  async execute(params: ToolCallParams): Promise<ToolResult> {
+  execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, IssueUrlParamsSchema);
     if (!validation.success) {

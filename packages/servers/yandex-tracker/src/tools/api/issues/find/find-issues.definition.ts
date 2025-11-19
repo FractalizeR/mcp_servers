@@ -8,7 +8,7 @@ import {
   type StaticToolMetadata,
 } from '@mcp-framework/core';
 
-import { FindIssuesTool } from './find-issues.tool.js';
+import { FIND_ISSUES_TOOL_METADATA } from './find-issues.metadata.js';
 /**
  * Definition для FindIssuesTool
  *
@@ -20,7 +20,7 @@ import { FindIssuesTool } from './find-issues.tool.js';
  */
 export class FindIssuesDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return FindIssuesTool.METADATA;
+    return FIND_ISSUES_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

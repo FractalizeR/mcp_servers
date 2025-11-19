@@ -2,27 +2,18 @@
  * MCP Tool для обновления очереди в Яндекс.Трекере
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { UpdateQueueDefinition } from './update-queue.definition.js';
 import { UpdateQueueParamsSchema } from './update-queue.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
 import type { UpdateQueueDto } from '@tracker_api/dto/index.js';
+import { UPDATE_QUEUE_TOOL_METADATA } from './update-queue.metadata.js';
 
 export class UpdateQueueTool extends BaseTool<YandexTrackerFacade> {
-  static override readonly METADATA = {
-    name: buildToolName('update_queue', MCP_TOOL_PREFIX),
-    description: '[Queues/Write] Обновить параметры очереди',
-    category: ToolCategory.QUEUES,
-    subcategory: 'write',
-    priority: ToolPriority.CRITICAL,
-    tags: ['queue', 'update', 'write'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = UPDATE_QUEUE_TOOL_METADATA;
 
   private readonly definition = new UpdateQueueDefinition();
 

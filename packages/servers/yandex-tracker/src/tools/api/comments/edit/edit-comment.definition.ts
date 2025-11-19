@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { EditCommentTool } from './edit-comment.tool.js';
+import { EDIT_COMMENT_TOOL_METADATA } from './edit-comment.metadata.js';
 
 /**
  * Definition для EditCommentTool
  */
 export class EditCommentDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return EditCommentTool.METADATA;
+    return EDIT_COMMENT_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

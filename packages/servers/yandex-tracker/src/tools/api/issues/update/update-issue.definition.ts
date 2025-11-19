@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { UpdateIssueTool } from './update-issue.tool.js';
+import { UPDATE_ISSUE_TOOL_METADATA } from './update-issue.metadata.js';
 
 /**
  * Definition для UpdateIssueTool
@@ -20,7 +20,7 @@ import { UpdateIssueTool } from './update-issue.tool.js';
  */
 export class UpdateIssueDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return UpdateIssueTool.METADATA;
+    return UPDATE_ISSUE_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

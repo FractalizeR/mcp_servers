@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { GetThumbnailTool } from './get-thumbnail.tool.js';
+import { GET_THUMBNAIL_TOOL_METADATA } from './get-thumbnail.metadata.js';
 
 /**
  * Definition для GetThumbnailTool
@@ -20,7 +20,7 @@ import { GetThumbnailTool } from './get-thumbnail.tool.js';
  */
 export class GetThumbnailDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return GetThumbnailTool.METADATA;
+    return GET_THUMBNAIL_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

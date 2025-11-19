@@ -9,29 +9,20 @@
  * 3. Всё остальное происходит АВТОМАТИЧЕСКИ
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { DemoDefinition } from './demo.definition.js';
 import { DemoParamsSchema } from './demo.schema.js';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+import { DEMO_TOOL_METADATA } from './demo.metadata.js';
 
 export class DemoTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('demo', MCP_TOOL_PREFIX),
-    description: '[Helpers/Demo] Тестовый инструмент',
-    category: ToolCategory.HELPERS,
-    subcategory: 'demo',
-    priority: ToolPriority.LOW,
-    tags: ['demo', 'example', 'test'],
-    isHelper: true,
-  } as const;
+  static override readonly METADATA = DEMO_TOOL_METADATA;
 
   private readonly definition = new DemoDefinition();
 

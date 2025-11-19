@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { DeleteChecklistItemTool } from './delete-checklist-item.tool.js';
+import { DELETE_CHECKLIST_ITEM_TOOL_METADATA } from './delete-checklist-item.metadata.js';
 
 /**
  * Definition для DeleteChecklistItemTool
@@ -20,7 +20,7 @@ import { DeleteChecklistItemTool } from './delete-checklist-item.tool.js';
  */
 export class DeleteChecklistItemDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return DeleteChecklistItemTool.METADATA;
+    return DELETE_CHECKLIST_ITEM_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

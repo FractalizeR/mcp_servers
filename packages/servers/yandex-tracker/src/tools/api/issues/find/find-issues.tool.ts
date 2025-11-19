@@ -7,7 +7,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -16,8 +16,7 @@ import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { FindIssuesDefinition } from '@tools/api/issues/find/find-issues.definition.js';
 import { FindIssuesParamsSchema } from '@tools/api/issues/find/find-issues.schema.js';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+import { FIND_ISSUES_TOOL_METADATA } from './find-issues.metadata.js';
 /**
  * Инструмент для поиска задач
  *
@@ -36,15 +35,7 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('find_issues', MCP_TOOL_PREFIX),
-    description: '[Issues/Read] Поиск по фильтру',
-    category: ToolCategory.ISSUES,
-    subcategory: 'read',
-    priority: ToolPriority.CRITICAL,
-    tags: ['search', 'query', 'filter', 'issues'],
-    isHelper: false,
-  } as const;
+  static override readonly METADATA = FIND_ISSUES_TOOL_METADATA;
 
   private readonly definition = new FindIssuesDefinition();
 

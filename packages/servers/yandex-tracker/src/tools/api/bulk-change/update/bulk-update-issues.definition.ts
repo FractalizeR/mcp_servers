@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { BulkUpdateIssuesTool } from './bulk-update-issues.tool.js';
+import { BULK_UPDATE_ISSUES_TOOL_METADATA } from './bulk-update-issues.metadata.js';
 
 /**
  * Definition для BulkUpdateIssuesTool
@@ -20,7 +20,7 @@ import { BulkUpdateIssuesTool } from './bulk-update-issues.tool.js';
  */
 export class BulkUpdateIssuesDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return BulkUpdateIssuesTool.METADATA;
+    return BULK_UPDATE_ISSUES_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

@@ -7,14 +7,14 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { GetBulkChangeStatusDefinition } from './get-bulk-change-status.definition.js';
 import { GetBulkChangeStatusParamsSchema } from './get-bulk-change-status.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { GET_BULK_CHANGE_STATUS_TOOL_METADATA } from './get-bulk-change-status.metadata.js';
 
 /**
  * Инструмент для получения статуса bulk операции
@@ -33,16 +33,7 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('get_bulk_change_status', MCP_TOOL_PREFIX),
-    description: '[Bulk/Read] Получить статус bulk операции',
-    category: ToolCategory.ISSUES,
-    subcategory: 'bulk',
-    priority: ToolPriority.NORMAL,
-    tags: ['bulk', 'status', 'progress', 'read'],
-    isHelper: false,
-    requiresExplicitUserConsent: false,
-  } as const;
+  static override readonly METADATA = GET_BULK_CHANGE_STATUS_TOOL_METADATA;
 
   private readonly definition = new GetBulkChangeStatusDefinition();
 

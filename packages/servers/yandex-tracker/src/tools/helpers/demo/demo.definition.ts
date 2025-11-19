@@ -6,11 +6,11 @@
 
 import type { ToolDefinition, StaticToolMetadata } from '@mcp-framework/core';
 import { BaseToolDefinition } from '@mcp-framework/core';
-import { DemoTool } from './demo.tool.js';
+import { DEMO_TOOL_METADATA } from './demo.metadata.js';
 
 export class DemoDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return DemoTool.METADATA;
+    return DEMO_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

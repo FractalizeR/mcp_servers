@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { GetComponentsTool } from './get-components.tool.js';
+import { GET_COMPONENTS_TOOL_METADATA } from './get-components.metadata.js';
 
 /**
  * Definition для GetComponentsTool
  */
 export class GetComponentsDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return GetComponentsTool.METADATA;
+    return GET_COMPONENTS_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

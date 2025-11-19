@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { UpdateChecklistItemTool } from './update-checklist-item.tool.js';
+import { UPDATE_CHECKLIST_ITEM_TOOL_METADATA } from './update-checklist-item.metadata.js';
 
 /**
  * Definition для UpdateChecklistItemTool
@@ -20,7 +20,7 @@ import { UpdateChecklistItemTool } from './update-checklist-item.tool.js';
  */
 export class UpdateChecklistItemDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return UpdateChecklistItemTool.METADATA;
+    return UPDATE_CHECKLIST_ITEM_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

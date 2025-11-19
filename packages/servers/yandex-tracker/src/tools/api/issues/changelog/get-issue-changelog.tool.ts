@@ -7,7 +7,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -16,8 +16,7 @@ import type { ChangelogEntryWithUnknownFields } from '@tracker_api/entities/inde
 import { GetIssueChangelogDefinition } from '@tools/api/issues/changelog/get-issue-changelog.definition.js';
 import { GetIssueChangelogParamsSchema } from '@tools/api/issues/changelog/get-issue-changelog.schema.js';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+import { GET_ISSUE_CHANGELOG_TOOL_METADATA } from './get-issue-changelog.metadata.js';
 
 /**
  * Инструмент для получения истории изменений задачи
@@ -38,15 +37,7 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
-    description: '[Issues/Read] История изменений задачи',
-    category: ToolCategory.ISSUES,
-    subcategory: 'read',
-    priority: ToolPriority.HIGH,
-    tags: ['history', 'changelog', 'audit', 'read'],
-    isHelper: false,
-  } as const;
+  static override readonly METADATA = GET_ISSUE_CHANGELOG_TOOL_METADATA;
 
   private readonly definition = new GetIssueChangelogDefinition();
 

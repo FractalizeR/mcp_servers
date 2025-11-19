@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { IssueUrlTool } from './issue-url.tool.js';
+import { ISSUE_URL_TOOL_METADATA } from './issue-url.metadata.js';
 
 /**
  * Definition для IssueUrlTool
@@ -19,7 +19,7 @@ import { IssueUrlTool } from './issue-url.tool.js';
  */
 export class IssueUrlDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return IssueUrlTool.METADATA;
+    return ISSUE_URL_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

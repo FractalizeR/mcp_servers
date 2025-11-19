@@ -7,15 +7,14 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { CreateLinkDefinition } from './create-link.definition.js';
 import { CreateLinkParamsSchema } from './create-link.schema.js';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
+import { CREATE_LINK_TOOL_METADATA } from './create-link.metadata.js';
 
 /**
  * Инструмент для создания связи между задачами
@@ -34,15 +33,7 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('create_link', MCP_TOOL_PREFIX),
-    description: '[Issues/Links] Создать связь между задачами',
-    category: ToolCategory.ISSUES,
-    subcategory: 'links',
-    priority: ToolPriority.HIGH,
-    tags: ['links', 'write', 'create', 'relationships', 'subtasks'],
-    isHelper: false,
-  } as const;
+  static override readonly METADATA = CREATE_LINK_TOOL_METADATA;
 
   private readonly definition = new CreateLinkDefinition();
 

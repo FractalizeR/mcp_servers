@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { DeleteLinkTool } from './delete-link.tool.js';
+import { DELETE_LINK_TOOL_METADATA } from './delete-link.metadata.js';
 
 /**
  * Definition для DeleteLinkTool
@@ -20,7 +20,7 @@ import { DeleteLinkTool } from './delete-link.tool.js';
  */
 export class DeleteLinkDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return DeleteLinkTool.METADATA;
+    return DELETE_LINK_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

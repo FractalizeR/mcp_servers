@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { DownloadAttachmentTool } from './download-attachment.tool.js';
+import { DOWNLOAD_ATTACHMENT_TOOL_METADATA } from './download-attachment.metadata.js';
 
 /**
  * Definition для DownloadAttachmentTool
@@ -20,7 +20,7 @@ import { DownloadAttachmentTool } from './download-attachment.tool.js';
  */
 export class DownloadAttachmentDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return DownloadAttachmentTool.METADATA;
+    return DOWNLOAD_ATTACHMENT_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

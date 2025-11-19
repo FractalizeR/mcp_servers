@@ -7,14 +7,14 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { DeleteWorklogDefinition } from '@tools/api/worklog/delete/delete-worklog.definition.js';
 import { DeleteWorklogParamsSchema } from '@tools/api/worklog/delete/delete-worklog.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { DELETE_WORKLOG_TOOL_METADATA } from './delete-worklog.metadata.js';
 
 /**
  * Инструмент для удаления записи времени
@@ -28,16 +28,7 @@ export class DeleteWorklogTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('delete_worklog', MCP_TOOL_PREFIX),
-    description: '[Worklog/Delete] Удалить запись времени задачи',
-    category: ToolCategory.ISSUES,
-    subcategory: 'worklog',
-    priority: ToolPriority.HIGH,
-    tags: ['worklog', 'delete', 'remove', 'time'],
-    isHelper: false,
-    requiresExplicitUserConsent: false,
-  } as const;
+  static override readonly METADATA = DELETE_WORKLOG_TOOL_METADATA;
 
   private readonly definition = new DeleteWorklogDefinition();
 

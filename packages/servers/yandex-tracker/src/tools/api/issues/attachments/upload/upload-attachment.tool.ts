@@ -7,7 +7,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -15,8 +15,7 @@ import { UploadAttachmentDefinition } from './upload-attachment.definition.js';
 import { UploadAttachmentParamsSchema } from './upload-attachment.schema.js';
 import { readFile } from 'node:fs/promises';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
+import { UPLOAD_ATTACHMENT_TOOL_METADATA } from './upload-attachment.metadata.js';
 
 /**
  * Инструмент для загрузки файла в задачу
@@ -36,15 +35,7 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('upload_attachment', MCP_TOOL_PREFIX),
-    description: '[Issues/Attachments] Загрузить файл в задачу',
-    category: ToolCategory.ISSUES,
-    subcategory: 'attachments',
-    priority: ToolPriority.HIGH,
-    tags: ['attachments', 'write', 'upload', 'files'],
-    isHelper: false,
-  } as const;
+  static override readonly METADATA = UPLOAD_ATTACHMENT_TOOL_METADATA;
 
   private readonly definition = new UploadAttachmentDefinition();
 

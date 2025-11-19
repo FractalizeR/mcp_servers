@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { GetBulkChangeStatusTool } from './get-bulk-change-status.tool.js';
+import { GET_BULK_CHANGE_STATUS_TOOL_METADATA } from './get-bulk-change-status.metadata.js';
 
 /**
  * Definition для GetBulkChangeStatusTool
  */
 export class GetBulkChangeStatusDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return GetBulkChangeStatusTool.METADATA;
+    return GET_BULK_CHANGE_STATUS_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

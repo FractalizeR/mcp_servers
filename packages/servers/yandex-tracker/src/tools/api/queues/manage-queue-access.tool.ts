@@ -2,26 +2,17 @@
  * MCP Tool для управления доступом к очереди в Яндекс.Трекере
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { ManageQueueAccessDefinition } from './manage-queue-access.definition.js';
 import { ManageQueueAccessParamsSchema } from './manage-queue-access.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
+import { MANAGE_QUEUE_ACCESS_TOOL_METADATA } from './manage-queue-access.metadata.js';
 
 export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
-  static override readonly METADATA = {
-    name: buildToolName('manage_queue_access', MCP_TOOL_PREFIX),
-    description: '[Queues/Write] Управление доступом к очереди',
-    category: ToolCategory.QUEUES,
-    subcategory: 'write',
-    priority: ToolPriority.CRITICAL,
-    tags: ['queue', 'access', 'permissions', 'write'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = MANAGE_QUEUE_ACCESS_TOOL_METADATA;
 
   private readonly definition = new ManageQueueAccessDefinition();
 

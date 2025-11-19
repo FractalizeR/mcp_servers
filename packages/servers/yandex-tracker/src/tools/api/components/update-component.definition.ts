@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { UpdateComponentTool } from './update-component.tool.js';
+import { UPDATE_COMPONENT_TOOL_METADATA } from './update-component.metadata.js';
 
 /**
  * Definition для UpdateComponentTool
  */
 export class UpdateComponentDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return UpdateComponentTool.METADATA;
+    return UPDATE_COMPONENT_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

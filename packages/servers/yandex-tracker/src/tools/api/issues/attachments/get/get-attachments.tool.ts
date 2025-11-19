@@ -7,15 +7,14 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { GetAttachmentsDefinition } from './get-attachments.definition.js';
 import { GetAttachmentsParamsSchema } from './get-attachments.schema.js';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
+import { GET_ATTACHMENTS_TOOL_METADATA } from './get-attachments.metadata.js';
 
 /**
  * Инструмент для получения списка файлов задачи
@@ -34,15 +33,7 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('get_attachments', MCP_TOOL_PREFIX),
-    description: '[Issues/Attachments] Получить список файлов задачи',
-    category: ToolCategory.ISSUES,
-    subcategory: 'attachments',
-    priority: ToolPriority.HIGH,
-    tags: ['attachments', 'read', 'files', 'documents'],
-    isHelper: false,
-  } as const;
+  static override readonly METADATA = GET_ATTACHMENTS_TOOL_METADATA;
 
   private readonly definition = new GetAttachmentsDefinition();
 

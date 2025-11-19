@@ -8,7 +8,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -16,8 +16,7 @@ import { GetThumbnailDefinition } from './get-thumbnail.definition.js';
 import { GetThumbnailParamsSchema } from './get-thumbnail.schema.js';
 import { writeFile } from 'node:fs/promises';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
+import { GET_THUMBNAIL_TOOL_METADATA } from './get-thumbnail.metadata.js';
 
 /**
  * Инструмент для получения миниатюры изображения
@@ -37,15 +36,7 @@ export class GetThumbnailTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('get_thumbnail', MCP_TOOL_PREFIX),
-    description: '[Issues/Attachments] Получить миниатюру изображения',
-    category: ToolCategory.ISSUES,
-    subcategory: 'attachments',
-    priority: ToolPriority.NORMAL,
-    tags: ['attachments', 'read', 'thumbnail', 'images', 'preview'],
-    isHelper: false,
-  } as const;
+  static override readonly METADATA = GET_THUMBNAIL_TOOL_METADATA;
 
   private readonly definition = new GetThumbnailDefinition();
 

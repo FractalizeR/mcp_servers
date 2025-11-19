@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { GetIssueLinksTool } from './get-issue-links.tool.js';
+import { GET_ISSUE_LINKS_TOOL_METADATA } from './get-issue-links.metadata.js';
 
 /**
  * Definition для GetIssueLinksTool
@@ -20,7 +20,7 @@ import { GetIssueLinksTool } from './get-issue-links.tool.js';
  */
 export class GetIssueLinksDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return GetIssueLinksTool.METADATA;
+    return GET_ISSUE_LINKS_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

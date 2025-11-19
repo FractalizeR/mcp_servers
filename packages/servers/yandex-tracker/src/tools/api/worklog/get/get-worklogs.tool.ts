@@ -7,14 +7,14 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { GetWorklogsDefinition } from '@tools/api/worklog/get/get-worklogs.definition.js';
 import { GetWorklogsParamsSchema } from '@tools/api/worklog/get/get-worklogs.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { GET_WORKLOGS_TOOL_METADATA } from './get-worklogs.metadata.js';
 
 /**
  * Инструмент для получения записей времени задачи
@@ -28,16 +28,7 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('get_worklogs', MCP_TOOL_PREFIX),
-    description: '[Worklog/Read] Получить записи времени задачи',
-    category: ToolCategory.ISSUES,
-    subcategory: 'worklog',
-    priority: ToolPriority.HIGH,
-    tags: ['worklog', 'get', 'list', 'read', 'time'],
-    isHelper: false,
-    requiresExplicitUserConsent: false,
-  } as const;
+  static override readonly METADATA = GET_WORKLOGS_TOOL_METADATA;
 
   private readonly definition = new GetWorklogsDefinition();
 

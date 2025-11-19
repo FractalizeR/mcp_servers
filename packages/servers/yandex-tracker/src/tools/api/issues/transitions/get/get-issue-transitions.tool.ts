@@ -7,7 +7,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -16,8 +16,7 @@ import type { TransitionWithUnknownFields } from '@tracker_api/entities/index.js
 import { GetIssueTransitionsDefinition } from '@tools/api/issues/transitions/get/get-issue-transitions.definition.js';
 import { GetIssueTransitionsParamsSchema } from '@tools/api/issues/transitions/get/get-issue-transitions.schema.js';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
+import { GET_ISSUE_TRANSITIONS_TOOL_METADATA } from './get-issue-transitions.metadata.js';
 
 /**
  * Инструмент для получения доступных переходов статусов задачи
@@ -38,15 +37,7 @@ export class GetIssueTransitionsTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('get_issue_transitions', MCP_TOOL_PREFIX),
-    description: '[Issues/Workflow] Доступные переходы',
-    category: ToolCategory.ISSUES,
-    subcategory: 'workflow',
-    priority: ToolPriority.HIGH,
-    tags: ['transitions', 'statuses', 'workflow', 'read'],
-    isHelper: false,
-  } as const;
+  static override readonly METADATA = GET_ISSUE_TRANSITIONS_TOOL_METADATA;
 
   private readonly definition = new GetIssueTransitionsDefinition();
 

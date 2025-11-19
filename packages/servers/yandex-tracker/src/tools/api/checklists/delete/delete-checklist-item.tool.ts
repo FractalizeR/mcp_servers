@@ -7,14 +7,14 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { DeleteChecklistItemDefinition } from '@tools/api/checklists/delete/delete-checklist-item.definition.js';
 import { DeleteChecklistItemParamsSchema } from '@tools/api/checklists/delete/delete-checklist-item.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { DELETE_CHECKLIST_ITEM_TOOL_METADATA } from './delete-checklist-item.metadata.js';
 
 /**
  * Инструмент для удаления элемента из чеклиста задачи
@@ -28,16 +28,7 @@ export class DeleteChecklistItemTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('delete_checklist_item', MCP_TOOL_PREFIX),
-    description: '[Checklist/Write] Удалить элемент из чеклиста',
-    category: ToolCategory.CHECKLISTS,
-    subcategory: 'write',
-    priority: ToolPriority.HIGH,
-    tags: ['checklist', 'delete', 'remove', 'write'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = DELETE_CHECKLIST_ITEM_TOOL_METADATA;
 
   private readonly definition = new DeleteChecklistItemDefinition();
 

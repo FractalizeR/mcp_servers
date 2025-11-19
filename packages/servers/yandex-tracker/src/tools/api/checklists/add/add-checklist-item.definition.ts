@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { AddChecklistItemTool } from './add-checklist-item.tool.js';
+import { ADD_CHECKLIST_ITEM_TOOL_METADATA } from './add-checklist-item.metadata.js';
 
 /**
  * Definition для AddChecklistItemTool
@@ -20,7 +20,7 @@ import { AddChecklistItemTool } from './add-checklist-item.tool.js';
  */
 export class AddChecklistItemDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return AddChecklistItemTool.METADATA;
+    return ADD_CHECKLIST_ITEM_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

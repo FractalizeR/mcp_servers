@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { AddCommentTool } from './add-comment.tool.js';
+import { ADD_COMMENT_TOOL_METADATA } from './add-comment.metadata.js';
 
 /**
  * Definition для AddCommentTool
@@ -20,7 +20,7 @@ import { AddCommentTool } from './add-comment.tool.js';
  */
 export class AddCommentDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return AddCommentTool.METADATA;
+    return ADD_COMMENT_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

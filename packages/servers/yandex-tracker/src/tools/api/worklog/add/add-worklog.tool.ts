@@ -8,14 +8,14 @@
  * - Автоматическая конвертация duration в ISO 8601
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { AddWorklogDefinition } from '@tools/api/worklog/add/add-worklog.definition.js';
 import { AddWorklogParamsSchema } from '@tools/api/worklog/add/add-worklog.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { ADD_WORKLOG_TOOL_METADATA } from './add-worklog.metadata.js';
 
 /**
  * Инструмент для добавления записи времени к задаче
@@ -29,16 +29,7 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('add_worklog', MCP_TOOL_PREFIX),
-    description: '[Worklog/Create] Добавить запись времени к задаче',
-    category: ToolCategory.ISSUES,
-    subcategory: 'worklog',
-    priority: ToolPriority.HIGH,
-    tags: ['worklog', 'add', 'create', 'time', 'log'],
-    isHelper: false,
-    requiresExplicitUserConsent: false,
-  } as const;
+  static override readonly METADATA = ADD_WORKLOG_TOOL_METADATA;
 
   private readonly definition = new AddWorklogDefinition();
 

@@ -8,7 +8,7 @@ import {
   type StaticToolMetadata,
 } from '@mcp-framework/core';
 
-import { GetIssueTransitionsTool } from './get-issue-transitions.tool.js';
+import { GET_ISSUE_TRANSITIONS_TOOL_METADATA } from './get-issue-transitions.metadata.js';
 
 /**
  * Definition для GetIssueTransitionsTool
@@ -21,7 +21,7 @@ import { GetIssueTransitionsTool } from './get-issue-transitions.tool.js';
  */
 export class GetIssueTransitionsDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return GetIssueTransitionsTool.METADATA;
+    return GET_ISSUE_TRANSITIONS_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

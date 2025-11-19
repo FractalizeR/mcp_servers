@@ -2,29 +2,20 @@
  * MCP Tool для создания компонента в Яндекс.Трекере
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { CreateComponentDefinition } from './create-component.definition.js';
 import { CreateComponentParamsSchema } from './create-component.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
+import { CREATE_COMPONENT_TOOL_METADATA } from './create-component.metadata.js';
 
 /**
  * Инструмент для создания компонента
  */
 export class CreateComponentTool extends BaseTool<YandexTrackerFacade> {
-  static override readonly METADATA = {
-    name: buildToolName('create_component', MCP_TOOL_PREFIX),
-    description: '[Components/Write] Создать компонент',
-    category: ToolCategory.COMPONENTS,
-    subcategory: 'write',
-    priority: ToolPriority.HIGH,
-    tags: ['components', 'create', 'write'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = CREATE_COMPONENT_TOOL_METADATA;
 
   private readonly definition = new CreateComponentDefinition();
 

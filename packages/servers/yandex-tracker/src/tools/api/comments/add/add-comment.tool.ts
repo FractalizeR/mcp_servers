@@ -7,15 +7,15 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { CommentWithUnknownFields } from '@tracker_api/entities/index.js';
 import { AddCommentDefinition } from '@tools/api/comments/add/add-comment.definition.js';
 import { AddCommentParamsSchema } from '@tools/api/comments/add/add-comment.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { ADD_COMMENT_TOOL_METADATA } from './add-comment.metadata.js';
 
 /**
  * Инструмент для добавления комментария к задаче
@@ -29,16 +29,7 @@ export class AddCommentTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('add_comment', MCP_TOOL_PREFIX),
-    description: '[Comments/Write] Добавить комментарий к задаче',
-    category: ToolCategory.COMMENTS,
-    subcategory: 'write',
-    priority: ToolPriority.CRITICAL,
-    tags: ['comment', 'add', 'create', 'write'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = ADD_COMMENT_TOOL_METADATA;
 
   private readonly definition = new AddCommentDefinition();
 

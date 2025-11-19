@@ -7,15 +7,14 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { DeleteLinkDefinition } from './delete-link.definition.js';
 import { DeleteLinkParamsSchema } from './delete-link.schema.js';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
+import { DELETE_LINK_TOOL_METADATA } from './delete-link.metadata.js';
 
 /**
  * Инструмент для удаления связи между задачами
@@ -34,15 +33,7 @@ export class DeleteLinkTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('delete_link', MCP_TOOL_PREFIX),
-    description: '[Issues/Links] Удалить связь между задачами',
-    category: ToolCategory.ISSUES,
-    subcategory: 'links',
-    priority: ToolPriority.HIGH,
-    tags: ['links', 'write', 'delete', 'remove', 'relationships'],
-    isHelper: false,
-  } as const;
+  static override readonly METADATA = DELETE_LINK_TOOL_METADATA;
 
   private readonly definition = new DeleteLinkDefinition();
 

@@ -7,15 +7,15 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { ChecklistItemWithUnknownFields } from '@tracker_api/entities/index.js';
 import { UpdateChecklistItemDefinition } from '@tools/api/checklists/update/update-checklist-item.definition.js';
 import { UpdateChecklistItemParamsSchema } from '@tools/api/checklists/update/update-checklist-item.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { UPDATE_CHECKLIST_ITEM_TOOL_METADATA } from './update-checklist-item.metadata.js';
 
 /**
  * Инструмент для обновления элемента чеклиста задачи
@@ -29,16 +29,7 @@ export class UpdateChecklistItemTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('update_checklist_item', MCP_TOOL_PREFIX),
-    description: '[Checklist/Write] Обновить элемент чеклиста',
-    category: ToolCategory.CHECKLISTS,
-    subcategory: 'write',
-    priority: ToolPriority.HIGH,
-    tags: ['checklist', 'update', 'edit', 'write'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = UPDATE_CHECKLIST_ITEM_TOOL_METADATA;
 
   private readonly definition = new UpdateChecklistItemDefinition();
 

@@ -7,11 +7,11 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { UpdateQueueTool } from './update-queue.tool.js';
+import { UPDATE_QUEUE_TOOL_METADATA } from './update-queue.metadata.js';
 
 export class UpdateQueueDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return UpdateQueueTool.METADATA;
+    return UPDATE_QUEUE_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

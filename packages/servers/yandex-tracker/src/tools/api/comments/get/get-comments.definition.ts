@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { GetCommentsTool } from './get-comments.tool.js';
+import { GET_COMMENTS_TOOL_METADATA } from './get-comments.metadata.js';
 
 /**
  * Definition для GetCommentsTool
  */
 export class GetCommentsDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return GetCommentsTool.METADATA;
+    return GET_COMMENTS_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

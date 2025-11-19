@@ -2,26 +2,17 @@
  * MCP Tool для получения списка проектов в Яндекс.Трекере
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { GetProjectsDefinition } from './get-projects.definition.js';
 import { GetProjectsParamsSchema } from './get-projects.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
+import { GET_PROJECTS_TOOL_METADATA } from './get-projects.metadata.js';
 
 export class GetProjectsTool extends BaseTool<YandexTrackerFacade> {
-  static override readonly METADATA = {
-    name: buildToolName('get_projects', MCP_TOOL_PREFIX),
-    description: '[Projects/Read] Получить список проектов',
-    category: ToolCategory.PROJECTS,
-    subcategory: 'read',
-    priority: ToolPriority.HIGH,
-    tags: ['project', 'read', 'list'],
-    isHelper: false,
-    requiresExplicitUserConsent: false,
-  } as const;
+  static override readonly METADATA = GET_PROJECTS_TOOL_METADATA;
 
   private readonly definition = new GetProjectsDefinition();
 

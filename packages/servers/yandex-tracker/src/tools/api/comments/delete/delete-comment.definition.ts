@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { DeleteCommentTool } from './delete-comment.tool.js';
+import { DELETE_COMMENT_TOOL_METADATA } from './delete-comment.metadata.js';
 
 /**
  * Definition для DeleteCommentTool
  */
 export class DeleteCommentDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return DeleteCommentTool.METADATA;
+    return DELETE_COMMENT_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

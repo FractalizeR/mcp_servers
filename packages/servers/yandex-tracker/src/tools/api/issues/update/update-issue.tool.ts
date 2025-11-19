@@ -7,7 +7,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -17,8 +17,7 @@ import type { UpdateIssueDto } from '@tracker_api/dto/index.js';
 import { UpdateIssueDefinition } from '@tools/api/issues/update/update-issue.definition.js';
 import { UpdateIssueParamsSchema } from '@tools/api/issues/update/update-issue.schema.js';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+import { UPDATE_ISSUE_TOOL_METADATA } from './update-issue.metadata.js';
 
 /**
  * Инструмент для обновления задачи
@@ -38,16 +37,7 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('update_issue', MCP_TOOL_PREFIX),
-    description: '[Issues/Write] Обновить поля задачи',
-    category: ToolCategory.ISSUES,
-    subcategory: 'write',
-    priority: ToolPriority.CRITICAL,
-    tags: ['update', 'edit', 'modify', 'write'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = UPDATE_ISSUE_TOOL_METADATA;
 
   private readonly definition = new UpdateIssueDefinition();
 

@@ -2,29 +2,20 @@
  * MCP Tool для получения списка компонентов очереди в Яндекс.Трекере
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { GetComponentsDefinition } from './get-components.definition.js';
 import { GetComponentsParamsSchema } from './get-components.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
+import { GET_COMPONENTS_TOOL_METADATA } from './get-components.metadata.js';
 
 /**
  * Инструмент для получения списка компонентов очереди
  */
 export class GetComponentsTool extends BaseTool<YandexTrackerFacade> {
-  static override readonly METADATA = {
-    name: buildToolName('get_components', MCP_TOOL_PREFIX),
-    description: '[Components/Read] Получить список компонентов очереди',
-    category: ToolCategory.COMPONENTS,
-    subcategory: 'read',
-    priority: ToolPriority.HIGH,
-    tags: ['components', 'list', 'read', 'queue'],
-    isHelper: false,
-    requiresExplicitUserConsent: false,
-  } as const;
+  static override readonly METADATA = GET_COMPONENTS_TOOL_METADATA;
 
   private readonly definition = new GetComponentsDefinition();
 

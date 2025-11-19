@@ -4,26 +4,17 @@
  * ВАЖНО: Удаление проектов - критическая операция! Необратима!
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { DeleteProjectDefinition } from './delete-project.definition.js';
 import { DeleteProjectParamsSchema } from './delete-project.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
+import { DELETE_PROJECT_TOOL_METADATA } from './delete-project.metadata.js';
 
 export class DeleteProjectTool extends BaseTool<YandexTrackerFacade> {
-  static override readonly METADATA = {
-    name: buildToolName('delete_project', MCP_TOOL_PREFIX),
-    description: '[Projects/Delete] Удалить проект',
-    category: ToolCategory.PROJECTS,
-    subcategory: 'delete',
-    priority: ToolPriority.CRITICAL,
-    tags: ['project', 'delete', 'remove'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = DELETE_PROJECT_TOOL_METADATA;
 
   private readonly definition = new DeleteProjectDefinition();
 

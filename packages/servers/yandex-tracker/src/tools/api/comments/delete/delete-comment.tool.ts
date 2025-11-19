@@ -7,14 +7,14 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { DeleteCommentDefinition } from '@tools/api/comments/delete/delete-comment.definition.js';
 import { DeleteCommentParamsSchema } from '@tools/api/comments/delete/delete-comment.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { DELETE_COMMENT_TOOL_METADATA } from './delete-comment.metadata.js';
 
 /**
  * Инструмент для удаления комментария
@@ -28,16 +28,7 @@ export class DeleteCommentTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('delete_comment', MCP_TOOL_PREFIX),
-    description: '[Comments/Write] Удалить комментарий',
-    category: ToolCategory.COMMENTS,
-    subcategory: 'write',
-    priority: ToolPriority.HIGH,
-    tags: ['comment', 'delete', 'remove', 'write'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = DELETE_COMMENT_TOOL_METADATA;
 
   private readonly definition = new DeleteCommentDefinition();
 

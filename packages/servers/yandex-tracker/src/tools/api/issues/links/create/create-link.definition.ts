@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { CreateLinkTool } from './create-link.tool.js';
+import { CREATE_LINK_TOOL_METADATA } from './create-link.metadata.js';
 
 /**
  * Definition для CreateLinkTool
@@ -20,7 +20,7 @@ import { CreateLinkTool } from './create-link.tool.js';
  */
 export class CreateLinkDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return CreateLinkTool.METADATA;
+    return CREATE_LINK_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

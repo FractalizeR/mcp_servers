@@ -8,15 +8,15 @@
  * - Асинхронная операция на сервере
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { ResultLogger } from '@mcp-framework/core';
 import { BulkTransitionIssuesDefinition } from './bulk-transition-issues.definition.js';
 import { BulkTransitionIssuesParamsSchema } from './bulk-transition-issues.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { BULK_TRANSITION_ISSUES_TOOL_METADATA } from './bulk-transition-issues.metadata.js';
 
 /**
  * Инструмент для массовой смены статусов задач
@@ -36,16 +36,7 @@ export class BulkTransitionIssuesTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('bulk_transition_issues', MCP_TOOL_PREFIX),
-    description: '[Bulk/Write] Массовая смена статусов задач',
-    category: ToolCategory.ISSUES,
-    subcategory: 'bulk',
-    priority: ToolPriority.HIGH,
-    tags: ['bulk', 'transition', 'status', 'workflow', 'write'],
-    isHelper: false,
-    requiresExplicitUserConsent: true,
-  } as const;
+  static override readonly METADATA = BULK_TRANSITION_ISSUES_TOOL_METADATA;
 
   private readonly definition = new BulkTransitionIssuesDefinition();
 

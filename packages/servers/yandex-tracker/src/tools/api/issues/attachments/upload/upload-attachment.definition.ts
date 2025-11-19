@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { UploadAttachmentTool } from './upload-attachment.tool.js';
+import { UPLOAD_ATTACHMENT_TOOL_METADATA } from './upload-attachment.metadata.js';
 
 /**
  * Definition для UploadAttachmentTool
@@ -20,7 +20,7 @@ import { UploadAttachmentTool } from './upload-attachment.tool.js';
  */
 export class UploadAttachmentDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return UploadAttachmentTool.METADATA;
+    return UPLOAD_ATTACHMENT_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

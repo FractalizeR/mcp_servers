@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { AddWorklogTool } from './add-worklog.tool.js';
+import { ADD_WORKLOG_TOOL_METADATA } from './add-worklog.metadata.js';
 
 /**
  * Definition для AddWorklogTool
  */
 export class AddWorklogDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return AddWorklogTool.METADATA;
+    return ADD_WORKLOG_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

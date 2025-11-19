@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { BulkMoveIssuesTool } from './bulk-move-issues.tool.js';
+import { BULK_MOVE_ISSUES_TOOL_METADATA } from './bulk-move-issues.metadata.js';
 
 /**
  * Definition для BulkMoveIssuesTool
  */
 export class BulkMoveIssuesDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return BulkMoveIssuesTool.METADATA;
+    return BULK_MOVE_ISSUES_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

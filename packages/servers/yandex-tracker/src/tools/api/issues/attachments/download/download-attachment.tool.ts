@@ -7,7 +7,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -15,8 +15,7 @@ import { DownloadAttachmentDefinition } from './download-attachment.definition.j
 import { DownloadAttachmentParamsSchema } from './download-attachment.schema.js';
 import { writeFile } from 'node:fs/promises';
 
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../../constants.js';
+import { DOWNLOAD_ATTACHMENT_TOOL_METADATA } from './download-attachment.metadata.js';
 
 /**
  * Инструмент для скачивания файла из задачи
@@ -36,15 +35,7 @@ export class DownloadAttachmentTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('download_attachment', MCP_TOOL_PREFIX),
-    description: '[Issues/Attachments] Скачать файл из задачи',
-    category: ToolCategory.ISSUES,
-    subcategory: 'attachments',
-    priority: ToolPriority.HIGH,
-    tags: ['attachments', 'read', 'download', 'files'],
-    isHelper: false,
-  } as const;
+  static override readonly METADATA = DOWNLOAD_ATTACHMENT_TOOL_METADATA;
 
   private readonly definition = new DownloadAttachmentDefinition();
 

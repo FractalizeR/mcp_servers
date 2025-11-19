@@ -8,7 +8,7 @@ import {
   type StaticToolMetadata,
 } from '@mcp-framework/core';
 
-import { GetIssueChangelogTool } from './get-issue-changelog.tool.js';
+import { GET_ISSUE_CHANGELOG_TOOL_METADATA } from './get-issue-changelog.metadata.js';
 
 /**
  * Definition для GetIssueChangelogTool
@@ -21,7 +21,7 @@ import { GetIssueChangelogTool } from './get-issue-changelog.tool.js';
  */
 export class GetIssueChangelogDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return GetIssueChangelogTool.METADATA;
+    return GET_ISSUE_CHANGELOG_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

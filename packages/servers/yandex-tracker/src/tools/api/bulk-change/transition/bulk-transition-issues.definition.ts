@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { BulkTransitionIssuesTool } from './bulk-transition-issues.tool.js';
+import { BULK_TRANSITION_ISSUES_TOOL_METADATA } from './bulk-transition-issues.metadata.js';
 
 /**
  * Definition для BulkTransitionIssuesTool
  */
 export class BulkTransitionIssuesDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return BulkTransitionIssuesTool.METADATA;
+    return BULK_TRANSITION_ISSUES_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

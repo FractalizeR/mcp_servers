@@ -7,11 +7,11 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { UpdateProjectTool } from './update-project.tool.js';
+import { UPDATE_PROJECT_TOOL_METADATA } from './update-project.metadata.js';
 
 export class UpdateProjectDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return UpdateProjectTool.METADATA;
+    return UPDATE_PROJECT_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

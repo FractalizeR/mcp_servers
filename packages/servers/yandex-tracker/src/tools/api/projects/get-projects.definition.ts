@@ -7,11 +7,11 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { GetProjectsTool } from './get-projects.tool.js';
+import { GET_PROJECTS_TOOL_METADATA } from './get-projects.metadata.js';
 
 export class GetProjectsDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return GetProjectsTool.METADATA;
+    return GET_PROJECTS_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

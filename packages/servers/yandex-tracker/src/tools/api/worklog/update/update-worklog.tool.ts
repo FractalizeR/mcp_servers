@@ -8,14 +8,14 @@
  * - Автоматическая конвертация duration в ISO 8601
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { UpdateWorklogDefinition } from '@tools/api/worklog/update/update-worklog.definition.js';
 import { UpdateWorklogParamsSchema } from '@tools/api/worklog/update/update-worklog.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../../constants.js';
+
+import { UPDATE_WORKLOG_TOOL_METADATA } from './update-worklog.metadata.js';
 
 /**
  * Инструмент для обновления записи времени
@@ -29,16 +29,7 @@ export class UpdateWorklogTool extends BaseTool<YandexTrackerFacade> {
   /**
    * Статические метаданные для compile-time индексации
    */
-  static override readonly METADATA = {
-    name: buildToolName('update_worklog', MCP_TOOL_PREFIX),
-    description: '[Worklog/Update] Обновить запись времени задачи',
-    category: ToolCategory.ISSUES,
-    subcategory: 'worklog',
-    priority: ToolPriority.HIGH,
-    tags: ['worklog', 'update', 'edit', 'modify', 'time'],
-    isHelper: false,
-    requiresExplicitUserConsent: false,
-  } as const;
+  static override readonly METADATA = UPDATE_WORKLOG_TOOL_METADATA;
 
   private readonly definition = new UpdateWorklogDefinition();
 

@@ -2,29 +2,20 @@
  * MCP Tool для получения списка очередей в Яндекс.Трекере
  */
 
-import { BaseTool, ToolCategory, ToolPriority } from '@mcp-framework/core';
+import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { GetQueuesDefinition } from './get-queues.definition.js';
 import { GetQueuesParamsSchema } from './get-queues.schema.js';
-import { buildToolName } from '@mcp-framework/core';
-import { MCP_TOOL_PREFIX } from '../../../constants.js';
+
+import { GET_QUEUES_TOOL_METADATA } from './get-queues.metadata.js';
 
 /**
  * Инструмент для получения списка очередей
  */
 export class GetQueuesTool extends BaseTool<YandexTrackerFacade> {
-  static override readonly METADATA = {
-    name: buildToolName('get_queues', MCP_TOOL_PREFIX),
-    description: '[Queues/Read] Получить список очередей',
-    category: ToolCategory.QUEUES,
-    subcategory: 'read',
-    priority: ToolPriority.HIGH,
-    tags: ['queues', 'list', 'read'],
-    isHelper: false,
-    requiresExplicitUserConsent: false,
-  } as const;
+  static override readonly METADATA = GET_QUEUES_TOOL_METADATA;
 
   private readonly definition = new GetQueuesDefinition();
 

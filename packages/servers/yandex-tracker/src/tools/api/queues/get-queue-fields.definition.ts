@@ -7,11 +7,11 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { GetQueueFieldsTool } from './get-queue-fields.tool.js';
+import { GET_QUEUE_FIELDS_TOOL_METADATA } from './get-queue-fields.metadata.js';
 
 export class GetQueueFieldsDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return GetQueueFieldsTool.METADATA;
+    return GET_QUEUE_FIELDS_TOOL_METADATA;
   }
 
   build(): ToolDefinition {

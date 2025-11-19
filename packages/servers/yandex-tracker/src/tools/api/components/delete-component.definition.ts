@@ -7,14 +7,14 @@ import {
   type ToolDefinition,
   type StaticToolMetadata,
 } from '@mcp-framework/core';
-import { DeleteComponentTool } from './delete-component.tool.js';
+import { DELETE_COMPONENT_TOOL_METADATA } from './delete-component.metadata.js';
 
 /**
  * Definition для DeleteComponentTool
  */
 export class DeleteComponentDefinition extends BaseToolDefinition {
   protected getStaticMetadata(): StaticToolMetadata {
-    return DeleteComponentTool.METADATA;
+    return DELETE_COMPONENT_TOOL_METADATA;
   }
 
   build(): ToolDefinition {
