@@ -222,7 +222,7 @@ function bindToolRegistry(container: Container): void {
     const loggerInstance = container.get<Logger>(TYPES.Logger);
     // Передаём контейнер, logger и только стандартные tool классы
     // SearchToolsTool будет добавлен позже через registerToolFromContainer
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
     return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any);
   });
 }
@@ -250,16 +250,20 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
   // 4. ToolRegistry (БЕЗ SearchToolsTool - разрываем циклическую зависимость)
   bindToolRegistry(container);
 
-  // 5. SearchEngine (требует ToolRegistry)
-  bindSearchEngine(container);
+  // 5-7. SearchEngine и SearchToolsTool ТОЛЬКО в lazy mode
+  // В eager mode Claude видит все инструменты, поэтому search_tools избыточен
+  if (config.toolDiscoveryMode === 'lazy') {
+    // 5. SearchEngine (требует ToolRegistry)
+    bindSearchEngine(container);
 
-  // 6. SearchToolsTool (требует SearchEngine)
-  await bindSearchToolsTool(container);
+    // 6. SearchToolsTool (требует SearchEngine)
+    await bindSearchToolsTool(container);
 
-  // 7. Добавляем SearchToolsTool в ToolRegistry (завершаем цепочку зависимостей)
-  const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-  // Используем строку вместо класса, т.к. компилятор переименовывает класс в _SearchToolsTool
-  toolRegistry.registerToolFromContainer('SearchToolsTool');
+    // 7. Добавляем SearchToolsTool в ToolRegistry (завершаем цепочку зависимостей)
+    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+    // Используем строку вместо класса, т.к. компилятор переименовывает класс в _SearchToolsTool
+    toolRegistry.registerToolFromContainer('SearchToolsTool');
+  }
 
   return container;
 }

@@ -22,8 +22,11 @@ describe('search-tools integration tests', () => {
 
   beforeEach(async () => {
     // Создаём MCP клиент с тестовой конфигурацией
+    // ВАЖНО: search_tools доступен только в lazy mode
     client = await createTestClient({
       logLevel: 'silent', // Отключаем логи в тестах
+      toolDiscoveryMode: 'lazy', // search_tools требует lazy mode
+      essentialTools: ['fr_yandex_tracker_ping', 'search_tools'],
     });
   });
 
