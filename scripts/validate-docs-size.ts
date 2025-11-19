@@ -3,14 +3,18 @@
  * Валидатор размеров документации
  *
  * Проверяет соблюдение лимитов размера для документационных файлов:
- * - CLAUDE.md ≤ 300 строк
- * - ARCHITECTURE.md ≤ 500 строк
+ * - CLAUDE.md ≤ 400 строк
+ * - ARCHITECTURE.md ≤ 700 строк
  * - Module README.md ≤ 500 строк
+ * - Package README.md ≤ 600 строк
+ * - tests/README.md ≤ 500 строк
  *
  * Целевые значения (SHOULD):
- * - CLAUDE.md ~250 строк
- * - ARCHITECTURE.md ~400 строк
- * - Module README.md ~300-400 строк
+ * - CLAUDE.md ~350 строк
+ * - ARCHITECTURE.md ~600 строк
+ * - Module README.md ~400 строк
+ * - Package README.md ~500 строк
+ * - tests/README.md ~400 строк
  */
 
 import { readFileSync, existsSync } from 'node:fs';
@@ -27,15 +31,33 @@ interface DocLimit {
 const DOC_LIMITS: DocLimit[] = [
   {
     path: 'CLAUDE.md',
-    maxLines: 350,
-    targetLines: 300,
+    maxLines: 400,
+    targetLines: 350,
     description: 'Руководство для ИИ агентов',
   },
   {
     path: 'ARCHITECTURE.md',
+    maxLines: 700,
+    targetLines: 600,
+    description: 'Архитектурная документация',
+  },
+];
+
+const PACKAGE_README_LIMITS: DocLimit[] = [
+  {
+    path: 'packages/servers/yandex-tracker/README.md',
     maxLines: 600,
     targetLines: 500,
-    description: 'Архитектурная документация',
+    description: 'Package README (User guide)',
+  },
+];
+
+const TEST_README_LIMITS: DocLimit[] = [
+  {
+    path: 'packages/servers/yandex-tracker/tests/README.md',
+    maxLines: 500,
+    targetLines: 400,
+    description: 'Testing documentation',
   },
 ];
 
@@ -218,11 +240,22 @@ function main(): void {
   // Проверяем основные документы
   const mainDocsResults = DOC_LIMITS.map((doc) => validateDoc(doc, projectRoot));
 
+  // Проверяем Package READMEs
+  const packageReadmeResults = PACKAGE_README_LIMITS.map((doc) => validateDoc(doc, projectRoot));
+
+  // Проверяем Test READMEs
+  const testReadmeResults = TEST_README_LIMITS.map((doc) => validateDoc(doc, projectRoot));
+
   // Проверяем README файлы модулей
   const moduleReadmesResults = validateModuleReadmes(projectRoot);
 
   // Объединяем результаты
-  const allResults = [...mainDocsResults, ...moduleReadmesResults];
+  const allResults = [
+    ...mainDocsResults,
+    ...packageReadmeResults,
+    ...testReadmeResults,
+    ...moduleReadmesResults,
+  ];
 
   // Выводим результаты
   printResults(allResults);

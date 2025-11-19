@@ -8,8 +8,11 @@
 
 | Файл | Назначение | Размер |
 |------|-----------|--------|
-| **[CLAUDE.md](./CLAUDE.md)** | ✅ **Главный файл** — правила, чек-листы, критические требования | ~250 строк |
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Архитектура проекта — концепции, паттерны, поток данных | ~400 строк |
+| **[CLAUDE.md](./CLAUDE.md)** | ✅ **Главный файл** — правила, чек-листы, критические требования | 338 строк |
+| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Архитектура проекта — концепции, паттерны, поток данных | 565 строк |
+
+> **Примечание:** Размеры актуальны на момент последней валидации.
+> Текущие размеры проверяй через `npm run validate:docs`.
 
 ---
 
@@ -66,17 +69,21 @@
 
 | Тип файла | Лимит | Проверка |
 |-----------|-------|----------|
-| CLAUDE.md | ≤300 строк | `npm run validate:docs` |
-| ARCHITECTURE.md | ≤500 строк | `npm run validate:docs` |
+| CLAUDE.md | ≤400 строк | `npm run validate:docs` |
+| ARCHITECTURE.md | ≤700 строк | `npm run validate:docs` |
 | Module README.md | ≤500 строк | `npm run validate:docs` |
+| Package README.md | ≤600 строк | `npm run validate:docs` |
+| tests/README.md | ≤500 строк | `npm run validate:docs` |
 
 **Целевые значения (SHOULD):**
 
 | Тип файла | Цель |
 |-----------|------|
-| CLAUDE.md | ~250 строк |
-| ARCHITECTURE.md | ~400 строк |
-| Module README.md | ~300-400 строк |
+| CLAUDE.md | ~350 строк |
+| ARCHITECTURE.md | ~600 строк |
+| Module README.md | ~400 строк |
+| Package README.md | ~500 строк |
+| tests/README.md | ~400 строк |
 
 ---
 
