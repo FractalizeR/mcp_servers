@@ -51,7 +51,7 @@ describe('ManageQueueAccessTool', () => {
   describe('execute', () => {
     describe('валидация параметров (Zod)', () => {
       it('должен вернуть ошибку если обязательные поля не указаны', async () => {
-        const result = await tool.execute({});
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -68,6 +68,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: ['user1'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -85,6 +86,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'invalid-role',
           subjects: ['user1'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -108,6 +110,7 @@ describe('ManageQueueAccessTool', () => {
             role,
             subjects: ['user1'],
             action: 'add',
+            fields: ['id', 'key', 'name'],
           });
 
           expect(result.isError).toBeUndefined();
@@ -120,6 +123,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: [],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -137,6 +141,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: ['user1'],
           action: 'invalid-action',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -159,6 +164,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: ['user1'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -207,6 +213,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: ['user1'],
           action: 'remove',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -235,6 +242,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'follower',
           subjects: ['user1', 'user2', 'user3'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -271,6 +279,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'queue-lead',
           subjects: ['admin'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -293,6 +302,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'access',
           subjects: ['user1', 'user2'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -315,6 +325,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: ['user1', 'user2'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -339,6 +350,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: ['user1'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -361,6 +373,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: ['user1'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -381,6 +394,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: ['invalid-user'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -401,6 +415,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'team-member',
           subjects: ['user1'],
           action: 'add',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -421,6 +436,7 @@ describe('ManageQueueAccessTool', () => {
           role: 'queue-lead',
           subjects: ['last-lead'],
           action: 'remove',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);

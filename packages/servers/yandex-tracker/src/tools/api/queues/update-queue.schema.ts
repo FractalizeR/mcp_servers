@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { FieldsSchema } from '../../../common/schemas/index.js';
 
 /**
  * Схема параметров для обновления очереди
@@ -42,6 +43,11 @@ export const UpdateQueueParamsSchema = z.object({
    * Массив ID доступных типов задач (опционально)
    */
   issueTypes: z.array(z.string()).optional(),
+
+  /**
+   * Список полей для возврата (обязательно)
+   */
+  fields: FieldsSchema,
 });
 
 /**

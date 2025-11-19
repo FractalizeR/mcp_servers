@@ -2,7 +2,7 @@
  * MCP Tool для обновления очереди в Яндекс.Трекере
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -10,6 +10,7 @@ import { UpdateQueueDefinition } from './update-queue.definition.js';
 import { UpdateQueueParamsSchema } from './update-queue.schema.js';
 
 import type { UpdateQueueDto } from '@tracker_api/dto/index.js';
+import type { QueueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { UPDATE_QUEUE_TOOL_METADATA } from './update-queue.metadata.js';
 
 export class UpdateQueueTool extends BaseTool<YandexTrackerFacade> {
@@ -27,13 +28,15 @@ export class UpdateQueueTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { queueId, name, lead, defaultType, defaultPriority, description, issueTypes } =
+    const { fields, queueId, name, lead, defaultType, defaultPriority, description, issueTypes } =
       validation.data;
 
     try {
       this.logger.info('Обновление очереди', {
         queueId,
-        fieldsToUpdate: Object.keys(validation.data).filter((k) => k !== 'queueId'),
+        fieldsToUpdate: Object.keys(validation.data).filter(
+          (k) => k !== 'queueId' && k !== 'fields'
+        ),
       });
 
       const updates: UpdateQueueDto = {};
@@ -51,9 +54,15 @@ export class UpdateQueueTool extends BaseTool<YandexTrackerFacade> {
         queueName: updatedQueue.name,
       });
 
+      const filteredQueue = ResponseFieldFilter.filter<QueueWithUnknownFields>(
+        updatedQueue,
+        fields
+      );
+
       return this.formatSuccess({
         queueKey: updatedQueue.key,
-        queue: updatedQueue,
+        queue: filteredQueue,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(`Ошибка при обновлении очереди ${queueId}`, error as Error);

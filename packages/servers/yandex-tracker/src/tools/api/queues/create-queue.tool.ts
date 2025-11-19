@@ -4,7 +4,7 @@
  * ВАЖНО: Создание очередей - администраторская операция!
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -12,6 +12,7 @@ import { CreateQueueDefinition } from './create-queue.definition.js';
 import { CreateQueueParamsSchema } from './create-queue.schema.js';
 
 import type { CreateQueueDto } from '@tracker_api/dto/index.js';
+import type { QueueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { CREATE_QUEUE_TOOL_METADATA } from './create-queue.metadata.js';
 
 export class CreateQueueTool extends BaseTool<YandexTrackerFacade> {
@@ -29,7 +30,7 @@ export class CreateQueueTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { key, name, lead, defaultType, defaultPriority, description, issueTypes } =
+    const { fields, key, name, lead, defaultType, defaultPriority, description, issueTypes } =
       validation.data;
 
     try {
@@ -56,9 +57,15 @@ export class CreateQueueTool extends BaseTool<YandexTrackerFacade> {
         queueName: createdQueue.name,
       });
 
+      const filteredQueue = ResponseFieldFilter.filter<QueueWithUnknownFields>(
+        createdQueue,
+        fields
+      );
+
       return this.formatSuccess({
         queueKey: createdQueue.key,
-        queue: createdQueue,
+        queue: filteredQueue,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(`Ошибка при создании очереди ${key}`, error as Error);

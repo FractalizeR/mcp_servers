@@ -52,7 +52,7 @@ describe('CreateQueueTool', () => {
   describe('execute', () => {
     describe('валидация параметров (Zod)', () => {
       it('должен вернуть ошибку если обязательные поля не указаны', async () => {
-        const result = await tool.execute({});
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -70,6 +70,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -88,6 +89,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -106,6 +108,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -124,6 +127,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -145,6 +149,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -161,6 +166,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -174,6 +180,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -197,6 +204,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -247,6 +255,7 @@ describe('CreateQueueTool', () => {
           defaultType: '1',
           defaultPriority: '2',
           description: 'Project description',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -271,6 +280,7 @@ describe('CreateQueueTool', () => {
           defaultType: '1',
           defaultPriority: '2',
           issueTypes: ['1', '2', '3'],
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -296,6 +306,7 @@ describe('CreateQueueTool', () => {
           defaultPriority: '3',
           description: 'Full queue description',
           issueTypes: ['1', '2', '3', '4'],
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -322,6 +333,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -345,6 +357,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -366,6 +379,7 @@ describe('CreateQueueTool', () => {
           lead: 'invalid-user',
           defaultType: '1',
           defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);

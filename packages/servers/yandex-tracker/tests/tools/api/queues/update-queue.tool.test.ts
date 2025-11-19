@@ -51,7 +51,7 @@ describe('UpdateQueueTool', () => {
   describe('execute', () => {
     describe('валидация параметров (Zod)', () => {
       it('должен вернуть ошибку если queueId не указан', async () => {
-        const result = await tool.execute({});
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -63,7 +63,7 @@ describe('UpdateQueueTool', () => {
       });
 
       it('должен вернуть ошибку для пустого queueId', async () => {
-        const result = await tool.execute({ queueId: '' });
+        const result = await tool.execute({ queueId: '', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -78,7 +78,7 @@ describe('UpdateQueueTool', () => {
         const mockQueue = createQueueFixture({ key: 'TEST' });
         vi.mocked(mockTrackerFacade.updateQueue).mockResolvedValue(mockQueue);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.updateQueue).toHaveBeenCalledWith({
@@ -96,6 +96,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           name: 'Updated Queue',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -138,6 +139,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           description: 'New description',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -156,6 +158,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           lead: 'newuser',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -175,6 +178,7 @@ describe('UpdateQueueTool', () => {
           queueId: 'TEST',
           defaultType: '2',
           defaultPriority: '3',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -198,6 +202,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           issueTypes: ['1', '2', '3'],
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -223,6 +228,7 @@ describe('UpdateQueueTool', () => {
           description: 'Updated description',
           lead: 'admin',
           defaultType: '3',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -253,6 +259,7 @@ describe('UpdateQueueTool', () => {
           defaultType: '2',
           defaultPriority: '3',
           issueTypes: ['1', '2', '3', '4'],
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -278,6 +285,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({
           queueId: 'NOTEXIST',
           name: 'New Name',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -298,6 +306,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           name: 'New Name',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -316,6 +325,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           lead: 'invalid-user',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -334,6 +344,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           description: 'New description',
+          fields: ['id', 'key', 'name'],
         });
 
         expect(result.isError).toBe(true);
