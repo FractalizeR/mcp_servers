@@ -7,10 +7,11 @@
  * - Валидация через Zod
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { LinkWithUnknownFields } from '@tracker_api/entities/index.js';
 import { CreateLinkDefinition } from './create-link.definition.js';
 import { CreateLinkParamsSchema } from './create-link.schema.js';
 
@@ -48,7 +49,7 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, relationship, targetIssue } = validation.data;
+    const { issueId, relationship, targetIssue, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -60,31 +61,16 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
         issue: targetIssue,
       });
 
-      // 4. Логирование результатов
+      // 4. Фильтрация полей ответа
+      const filtered = ResponseFieldFilter.filter<LinkWithUnknownFields>(link, fields);
+
+      // 5. Логирование результатов
       this.logger.info(`Связь создана: ${link.id} (${link.type.id})`);
 
       return this.formatSuccess({
-        success: true,
         message: `Связь создана: ${issueId} ${relationship} ${targetIssue}`,
-        link: {
-          id: link.id,
-          type: {
-            id: link.type.id,
-            inward: link.type.inward,
-            outward: link.type.outward,
-          },
-          direction: link.direction,
-          linkedIssue: {
-            id: link.object.id,
-            key: link.object.key,
-            display: link.object.display,
-          },
-          createdBy: {
-            id: link.createdBy.id,
-            display: link.createdBy.display,
-          },
-          createdAt: link.createdAt,
-        },
+        link: filtered,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(

@@ -40,10 +40,16 @@ describe('CreateLinkTool', () => {
       expect(definition.name).toBe(buildToolName('create_link', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('Создать связь между задачами');
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId', 'relationship', 'targetIssue']);
+      expect(definition.inputSchema.required).toEqual([
+        'issueId',
+        'relationship',
+        'targetIssue',
+        'fields',
+      ]);
       expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['relationship']).toBeDefined();
       expect(definition.inputSchema.properties?.['targetIssue']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
@@ -52,6 +58,7 @@ describe('CreateLinkTool', () => {
       const result = await tool.execute({
         relationship: 'relates',
         targetIssue: 'TEST-456',
+        fields: ['id', 'type'],
       });
 
       expect(result.isError).toBe(true);
@@ -67,6 +74,7 @@ describe('CreateLinkTool', () => {
       const result = await tool.execute({
         issueId: 'TEST-123',
         targetIssue: 'TEST-456',
+        fields: ['id', 'type'],
       });
 
       expect(result.isError).toBe(true);
@@ -82,6 +90,7 @@ describe('CreateLinkTool', () => {
       const result = await tool.execute({
         issueId: 'TEST-123',
         relationship: 'relates',
+        fields: ['id', 'type'],
       });
 
       expect(result.isError).toBe(true);
@@ -98,6 +107,7 @@ describe('CreateLinkTool', () => {
         issueId: 'TEST-123',
         relationship: 'invalid_relationship',
         targetIssue: 'TEST-456',
+        fields: ['id', 'type'],
       });
 
       expect(result.isError).toBe(true);
@@ -124,6 +134,7 @@ describe('CreateLinkTool', () => {
           issueId: 'TEST-123',
           relationship,
           targetIssue: 'TEST-456',
+          fields: ['id', 'type', 'object'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -140,6 +151,7 @@ describe('CreateLinkTool', () => {
         issueId: 'TEST-123',
         relationship: 'has subtasks',
         targetIssue: 'TEST-456',
+        fields: ['id', 'type', 'object'],
       });
 
       expect(mockTrackerFacade.createLink).toHaveBeenCalledWith('TEST-123', {
@@ -156,25 +168,26 @@ describe('CreateLinkTool', () => {
         issueId: 'TEST-123',
         relationship: 'has subtasks',
         targetIssue: 'TEST-456',
+        fields: ['id', 'type'],
       });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          success: boolean;
           message: string;
           link: {
             id: string;
             type: { id: string };
           };
+          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.success).toBe(true);
       expect(parsed.data.message).toContain('Связь создана');
       expect(parsed.data.link.id).toBe(mockLink.id);
       expect(parsed.data.link.type.id).toBe(mockLink.type.id);
+      expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
     });
 
     it('должен создать связь типа relates', async () => {
@@ -191,6 +204,7 @@ describe('CreateLinkTool', () => {
         issueId: 'TEST-100',
         relationship: 'relates',
         targetIssue: 'TEST-200',
+        fields: ['id', 'type'],
       });
 
       expect(result.isError).toBeUndefined();
@@ -217,6 +231,7 @@ describe('CreateLinkTool', () => {
         issueId: 'TEST-300',
         relationship: 'depends on',
         targetIssue: 'TEST-400',
+        fields: ['id', 'type'],
       });
 
       expect(result.isError).toBeUndefined();
@@ -237,6 +252,7 @@ describe('CreateLinkTool', () => {
         issueId: 'TEST-123',
         relationship: 'relates',
         targetIssue: 'TEST-456',
+        fields: ['id', 'type'],
       });
 
       expect(result.isError).toBe(true);
@@ -251,6 +267,7 @@ describe('CreateLinkTool', () => {
         issueId: 'TEST-123',
         relationship: 'has subtasks',
         targetIssue: 'TEST-456',
+        fields: ['id', 'type', 'object'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -267,6 +284,7 @@ describe('CreateLinkTool', () => {
         issueId: 'ABC-123',
         relationship: 'relates',
         targetIssue: 'XYZ-789',
+        fields: ['id', 'type', 'object'],
       });
 
       if (result.isError) {

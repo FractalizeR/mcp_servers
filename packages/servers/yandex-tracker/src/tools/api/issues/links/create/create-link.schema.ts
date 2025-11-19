@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema } from '../../../../../common/schemas/index.js';
+import { IssueKeySchema, FieldsSchema } from '../../../../../common/schemas/index.js';
 
 /**
  * Enum для типов связей (relationship)
@@ -40,6 +40,12 @@ export const CreateLinkParamsSchema = z.object({
    * Ключ или ID связываемой задачи
    */
   targetIssue: IssueKeySchema,
+
+  /**
+   * Массив полей для возврата в результате (обязательный)
+   * Примеры: ['id', 'type', 'object'], ['id', 'type.id', 'object.key']
+   */
+  fields: FieldsSchema,
 });
 
 /**

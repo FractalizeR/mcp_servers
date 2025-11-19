@@ -42,13 +42,13 @@ describe('create-link integration tests', () => {
       issueId: issueKey,
       relationship: 'has subtasks',
       targetIssue,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.data.success).toBe(true);
     expect(response.data.message).toContain('Связь создана');
     expect(response.data.link).toHaveProperty('id');
     expect(response.data.link.type.id).toBe('subtask');
@@ -75,13 +75,13 @@ describe('create-link integration tests', () => {
       issueId: issueKey,
       relationship: 'relates',
       targetIssue,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.data.success).toBe(true);
     expect(response.data.link.type.id).toBe('relates');
     mockServer.assertAllRequestsDone();
   });
@@ -112,13 +112,13 @@ describe('create-link integration tests', () => {
       issueId: issueKey,
       relationship: 'depends on',
       targetIssue,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.data.success).toBe(true);
     expect(response.data.link.type.id).toBe('depends');
     mockServer.assertAllRequestsDone();
   });
@@ -133,6 +133,7 @@ describe('create-link integration tests', () => {
       issueId: issueKey,
       relationship: 'relates',
       targetIssue: 'TEST-100',
+      fields: ['id', 'type'],
     });
 
     // Assert
@@ -160,6 +161,7 @@ describe('create-link integration tests', () => {
       issueId: issueKey,
       relationship: 'has subtasks',
       targetIssue,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
@@ -167,10 +169,7 @@ describe('create-link integration tests', () => {
     const response = JSON.parse(result.content[0]!.text);
     expect(response.data.link).toHaveProperty('id');
     expect(response.data.link).toHaveProperty('type');
-    expect(response.data.link).toHaveProperty('direction');
-    expect(response.data.link).toHaveProperty('linkedIssue');
-    expect(response.data.link).toHaveProperty('createdBy');
-    expect(response.data.link).toHaveProperty('createdAt');
+    expect(response.data.link).toHaveProperty('object');
     mockServer.assertAllRequestsDone();
   });
 });

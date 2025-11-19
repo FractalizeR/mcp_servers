@@ -31,8 +31,9 @@ export class GetIssueLinksDefinition extends BaseToolDefinition {
         type: 'object',
         properties: {
           issueId: this.buildIssueIdParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['issueId'],
+        required: ['issueId', 'fields'],
       },
     };
   }
@@ -44,6 +45,8 @@ export class GetIssueLinksDefinition extends BaseToolDefinition {
     return (
       'Получить все связи задачи (subtask, depends, relates, duplicates, epic). ' +
       'Возвращает массив связей с информацией о типе, направлении и связанной задаче. ' +
+      'Обязательные поля: issueId и fields. ' +
+      'Параметр fields определяет, какие поля каждой связи вернуть в ответе (например: ["id", "type", "object"]). ' +
       '\n\n' +
       'Для: просмотра связей задачи, анализа зависимостей, поиска подзадач. ' +
       '\n' +
@@ -60,6 +63,26 @@ export class GetIssueLinksDefinition extends BaseToolDefinition {
       {
         pattern: '^([A-Z][A-Z0-9]+-\\d+|[a-f0-9]+)$',
         examples: ['PROJ-123', 'abc123def456'],
+      }
+    );
+  }
+
+  /**
+   * Построить описание параметра fields
+   */
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Массив полей для возврата в результате. ' +
+        'Указывайте только необходимые поля для экономии токенов. ' +
+        '\n\n' +
+        'Доступные поля: id, type, direction, object, createdBy, createdAt, updatedBy, updatedAt.',
+      {
+        items: { type: 'string' },
+        examples: [
+          ['id', 'type', 'object'],
+          ['id', 'type', 'direction', 'object'],
+          ['id', 'type.id', 'object.key', 'object.display'],
+        ],
       }
     );
   }

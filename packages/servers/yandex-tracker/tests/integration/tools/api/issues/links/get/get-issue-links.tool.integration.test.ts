@@ -32,6 +32,7 @@ describe('get-issue-links integration tests', () => {
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_links', {
       issueId: issueKey,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
@@ -52,6 +53,7 @@ describe('get-issue-links integration tests', () => {
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_links', {
       issueId: issueKey,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
@@ -75,6 +77,7 @@ describe('get-issue-links integration tests', () => {
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_links', {
       issueId: issueKey,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
@@ -95,6 +98,7 @@ describe('get-issue-links integration tests', () => {
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_links', {
       issueId: issueKey,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
@@ -111,6 +115,7 @@ describe('get-issue-links integration tests', () => {
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_links', {
       issueId: issueKey,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
@@ -120,10 +125,7 @@ describe('get-issue-links integration tests', () => {
     const link = response.data.links[0];
     expect(link).toHaveProperty('id');
     expect(link).toHaveProperty('type');
-    expect(link).toHaveProperty('direction');
-    expect(link).toHaveProperty('linkedIssue');
-    expect(link).toHaveProperty('createdBy');
-    expect(link).toHaveProperty('createdAt');
+    expect(link).toHaveProperty('object');
     mockServer.assertAllRequestsDone();
   });
 
@@ -136,6 +138,7 @@ describe('get-issue-links integration tests', () => {
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_links', {
       issueId: issueKey,
+      fields: ['id', 'type', 'object'],
     });
 
     // Assert
@@ -165,6 +168,7 @@ describe('get-issue-links integration tests', () => {
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_links', {
       issueId: issueKey,
+      fields: ['id', 'updatedBy', 'updatedAt'],
     });
 
     // Assert

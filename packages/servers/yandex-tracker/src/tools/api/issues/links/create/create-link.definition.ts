@@ -33,8 +33,9 @@ export class CreateLinkDefinition extends BaseToolDefinition {
           issueId: this.buildIssueIdParam(),
           relationship: this.buildRelationshipParam(),
           targetIssue: this.buildTargetIssueParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['issueId', 'relationship', 'targetIssue'],
+        required: ['issueId', 'relationship', 'targetIssue', 'fields'],
       },
     };
   }
@@ -46,6 +47,8 @@ export class CreateLinkDefinition extends BaseToolDefinition {
     return (
       'Создать связь между задачами (subtask, depends, relates, duplicates, epic). ' +
       'API автоматически создаёт обратную связь для целевой задачи. ' +
+      'Обязательные поля: issueId, relationship, targetIssue и fields. ' +
+      'Параметр fields определяет, какие поля созданной связи вернуть в ответе (например: ["id", "type", "object"]). ' +
       '\n\n' +
       'Типы связей:\n' +
       "- 'has subtasks' / 'is subtask of' - родитель/подзадача\n" +
@@ -103,5 +106,25 @@ export class CreateLinkDefinition extends BaseToolDefinition {
       pattern: '^([A-Z][A-Z0-9]+-\\d+|[a-f0-9]+)$',
       examples: ['PROJ-456', 'def789ghi012'],
     });
+  }
+
+  /**
+   * Построить описание параметра fields
+   */
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Массив полей для возврата в результате. ' +
+        'Указывайте только необходимые поля для экономии токенов. ' +
+        '\n\n' +
+        'Доступные поля: id, type, direction, object, createdBy, createdAt.',
+      {
+        items: { type: 'string' },
+        examples: [
+          ['id', 'type', 'object'],
+          ['id', 'type', 'direction', 'object'],
+          ['id', 'type.id', 'object.key', 'object.display'],
+        ],
+      }
+    );
   }
 }

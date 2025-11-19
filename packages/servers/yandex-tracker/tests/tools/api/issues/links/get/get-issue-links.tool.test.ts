@@ -42,8 +42,9 @@ describe('GetIssueLinksTool', () => {
       expect(definition.description).toContain('Получить');
       expect(definition.description).toContain('связи');
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId']);
+      expect(definition.inputSchema.required).toEqual(['issueId', 'fields']);
       expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
@@ -61,7 +62,7 @@ describe('GetIssueLinksTool', () => {
     });
 
     it('должен отклонить пустой issueId', async () => {
-      const result = await tool.execute({ issueId: '' });
+      const result = await tool.execute({ issueId: '', fields: ['id', 'type'] });
 
       expect(result.isError).toBe(true);
     });
@@ -72,7 +73,7 @@ describe('GetIssueLinksTool', () => {
       const mockLinks = createLinkListFixture(3);
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      await tool.execute({ issueId: 'TEST-123' });
+      await tool.execute({ issueId: 'TEST-123', fields: ['id', 'type', 'object'] });
 
       expect(mockTrackerFacade.getIssueLinks).toHaveBeenCalledWith('TEST-123');
     });
@@ -81,7 +82,7 @@ describe('GetIssueLinksTool', () => {
       const mockLinks = createLinkListFixture(2);
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      const result = await tool.execute({ issueId: 'TEST-123' });
+      const result = await tool.execute({ issueId: 'TEST-123', fields: ['id', 'type'] });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -93,17 +94,19 @@ describe('GetIssueLinksTool', () => {
             id: string;
             type: { id: string };
           }>;
+          fieldsReturned: string[];
         };
       };
       expect(parsed.data.issueId).toBe('TEST-123');
       expect(parsed.data.linksCount).toBe(2);
       expect(parsed.data.links).toHaveLength(2);
+      expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
     });
 
     it('должен вернуть пустой массив когда нет связей', async () => {
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue([]);
 
-      const result = await tool.execute({ issueId: 'TEST-456' });
+      const result = await tool.execute({ issueId: 'TEST-456', fields: ['id', 'type'] });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -121,7 +124,10 @@ describe('GetIssueLinksTool', () => {
       const mockLinks = [createSubtaskLinkFixture()];
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      const result = await tool.execute({ issueId: 'TEST-100' });
+      const result = await tool.execute({
+        issueId: 'TEST-100',
+        fields: ['id', 'type', 'direction', 'object', 'createdBy', 'createdAt'],
+      });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -131,7 +137,7 @@ describe('GetIssueLinksTool', () => {
             id: string;
             type: { id: string; inward: string; outward: string };
             direction: string;
-            linkedIssue: { id: string; key: string; display: string };
+            object: { id: string; key: string; display: string };
             createdBy: { id: string; display: string };
             createdAt: string;
           }>;
@@ -140,7 +146,7 @@ describe('GetIssueLinksTool', () => {
       expect(parsed.data.links[0]).toHaveProperty('id');
       expect(parsed.data.links[0]).toHaveProperty('type');
       expect(parsed.data.links[0]).toHaveProperty('direction');
-      expect(parsed.data.links[0]).toHaveProperty('linkedIssue');
+      expect(parsed.data.links[0]).toHaveProperty('object');
       expect(parsed.data.links[0]).toHaveProperty('createdBy');
       expect(parsed.data.links[0]).toHaveProperty('createdAt');
     });
@@ -152,7 +158,7 @@ describe('GetIssueLinksTool', () => {
       ];
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      const result = await tool.execute({ issueId: 'TEST-200' });
+      const result = await tool.execute({ issueId: 'TEST-200', fields: ['id', 'type'] });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -178,7 +184,10 @@ describe('GetIssueLinksTool', () => {
       ];
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      const result = await tool.execute({ issueId: 'TEST-300' });
+      const result = await tool.execute({
+        issueId: 'TEST-300',
+        fields: ['id', 'updatedBy', 'updatedAt'],
+      });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -199,7 +208,7 @@ describe('GetIssueLinksTool', () => {
       const error = new Error('Failed to get links');
       vi.mocked(mockTrackerFacade.getIssueLinks).mockRejectedValue(error);
 
-      const result = await tool.execute({ issueId: 'TEST-123' });
+      const result = await tool.execute({ issueId: 'TEST-123', fields: ['id', 'type'] });
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('Ошибка');
@@ -209,7 +218,7 @@ describe('GetIssueLinksTool', () => {
       const mockLinks = createLinkListFixture(5);
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      await tool.execute({ issueId: 'TEST-789' });
+      await tool.execute({ issueId: 'TEST-789', fields: ['id', 'type', 'object'] });
 
       expect(mockLogger.info).toHaveBeenCalledWith('Получение связей задачи TEST-789');
       expect(mockLogger.info).toHaveBeenCalledWith('Получено 5 связей для задачи TEST-789');
@@ -219,7 +228,7 @@ describe('GetIssueLinksTool', () => {
       const mockLinks = createLinkListFixture(1);
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      const result = await tool.execute({ issueId: 'ABC-123' });
+      const result = await tool.execute({ issueId: 'ABC-123', fields: ['id', 'type'] });
 
       expect(result.isError).toBeUndefined();
       expect(mockTrackerFacade.getIssueLinks).toHaveBeenCalledWith('ABC-123');
@@ -229,7 +238,7 @@ describe('GetIssueLinksTool', () => {
       const mockLinks = createLinkListFixture(100);
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue(mockLinks);
 
-      const result = await tool.execute({ issueId: 'TEST-999' });
+      const result = await tool.execute({ issueId: 'TEST-999', fields: ['id', 'type'] });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
