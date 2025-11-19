@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema } from '../../../../../common/schemas/index.js';
+import { IssueKeySchema, FieldsSchema } from '../../../../../common/schemas/index.js';
 
 /**
  * Схема параметров для загрузки файла в задачу
@@ -34,6 +34,12 @@ export const UploadAttachmentParamsSchema = z
      * MIME тип файла (опционально, определится автоматически)
      */
     mimetype: z.string().optional(),
+
+    /**
+     * Массив полей для возврата в результате (обязательный)
+     * Примеры: ['id', 'name', 'size'], ['id', 'name', 'createdBy.display']
+     */
+    fields: FieldsSchema,
   })
   .refine((data) => data.fileContent || data.filePath, {
     message: 'Необходимо указать либо fileContent (base64), либо filePath',

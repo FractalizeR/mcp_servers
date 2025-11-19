@@ -80,7 +80,7 @@
 - [x] 2.1 Checklists (3 tools) - ✅ Завершено
 - [x] 2.2 Comments (3 tools) - ✅ Завершено
 - [x] 2.3 Components (3 tools) - ✅ Завершено
-- [ ] 2.4 Attachments (2 tools)
+- [x] 2.4 Attachments (2 tools) - ✅ Завершено
 - [ ] 2.5 Links (2 tools)
 - [ ] 2.6 Projects (4 tools)
 - [ ] 2.7 Queues (6 tools)
@@ -92,7 +92,7 @@
 ### Этап 4: Документация
 - [ ] 4.1 Documentation
 
-**Итого tools:** 9/27 завершено (33%)
+**Итого tools:** 11/27 завершено (41%)
 
 ---
 

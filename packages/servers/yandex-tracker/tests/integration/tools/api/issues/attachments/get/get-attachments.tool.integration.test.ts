@@ -44,6 +44,7 @@ describe('get-attachments integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
         issueId,
+        fields: ['id', 'name', 'size', 'mimetype', 'content', 'createdBy', 'createdAt'],
       });
 
       // Assert
@@ -63,7 +64,7 @@ describe('get-attachments integration tests', () => {
       expect(response.attachments[0]).toHaveProperty('name');
       expect(response.attachments[0]).toHaveProperty('mimetype');
       expect(response.attachments[0]).toHaveProperty('size');
-      expect(response.attachments[0]).toHaveProperty('downloadUrl');
+      expect(response.attachments[0]).toHaveProperty('content');
       expect(response.attachments[0]).toHaveProperty('createdBy');
       expect(response.attachments[0]).toHaveProperty('createdAt');
 
@@ -78,6 +79,7 @@ describe('get-attachments integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
         issueId,
+        fields: ['id', 'name', 'size', 'mimetype', 'content', 'createdBy', 'createdAt'],
       });
 
       // Assert
@@ -95,7 +97,7 @@ describe('get-attachments integration tests', () => {
       mockServer.assertAllRequestsDone();
     });
 
-    it('должен включать thumbnailUrl для изображений', async () => {
+    it('должен включать thumbnail для изображений', async () => {
       // Arrange
       const issueId = 'QUEUE-3';
       const imageAttachment = createImageAttachmentFixture({
@@ -106,6 +108,7 @@ describe('get-attachments integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
         issueId,
+        fields: ['id', 'name', 'size', 'thumbnail'],
       });
 
       // Assert
@@ -114,8 +117,8 @@ describe('get-attachments integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.attachments[0]).toHaveProperty('thumbnailUrl');
-      expect(response.attachments[0].thumbnailUrl).toContain('thumbnails');
+      expect(response.attachments[0]).toHaveProperty('thumbnail');
+      expect(response.attachments[0].thumbnail).toContain('thumbnails');
 
       mockServer.assertAllRequestsDone();
     });
@@ -130,6 +133,7 @@ describe('get-attachments integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
         issueId,
+        fields: ['id', 'name', 'size', 'mimetype', 'content', 'createdBy', 'createdAt'],
       });
 
       // Assert
@@ -154,7 +158,20 @@ describe('get-attachments integration tests', () => {
 
     it('должен вернуть ошибку при отсутствии issueId', async () => {
       // Act
-      const result = await client.callTool('fr_yandex_tracker_get_attachments', {});
+      const result = await client.callTool('fr_yandex_tracker_get_attachments', {
+        fields: ['id', 'name'],
+      });
+
+      // Assert
+      expect(result.isError).toBe(true);
+      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+    });
+
+    it('должен вернуть ошибку при отсутствии fields', async () => {
+      // Act
+      const result = await client.callTool('fr_yandex_tracker_get_attachments', {
+        issueId: 'QUEUE-1',
+      });
 
       // Assert
       expect(result.isError).toBe(true);

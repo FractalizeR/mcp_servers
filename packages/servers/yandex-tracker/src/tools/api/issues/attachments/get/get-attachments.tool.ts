@@ -7,10 +7,11 @@
  * - Валидация через Zod
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { AttachmentWithUnknownFields } from '@tracker_api/entities/index.js';
 import { GetAttachmentsDefinition } from './get-attachments.definition.js';
 import { GetAttachmentsParamsSchema } from './get-attachments.schema.js';
 
@@ -48,7 +49,7 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId } = validation.data;
+    const { issueId, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -57,25 +58,19 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
       // 3. API v2: получение списка файлов задачи
       const attachments = await this.facade.getAttachments(issueId);
 
-      // 4. Логирование результатов
-      this.logger.info(`Получено ${attachments.length} файлов для задачи ${issueId}`);
+      // 4. Фильтрация полей ответа для каждого attachment
+      const filtered = attachments.map((attachment) =>
+        ResponseFieldFilter.filter<AttachmentWithUnknownFields>(attachment, fields)
+      );
+
+      // 5. Логирование результатов
+      this.logger.info(`Получено ${filtered.length} файлов для задачи ${issueId}`);
 
       return this.formatSuccess({
         issueId,
-        attachmentsCount: attachments.length,
-        attachments: attachments.map((attachment) => ({
-          id: attachment.id,
-          name: attachment.name,
-          mimetype: attachment.mimetype,
-          size: attachment.size,
-          downloadUrl: attachment.content,
-          ...(attachment.thumbnail && { thumbnailUrl: attachment.thumbnail }),
-          createdBy: {
-            id: attachment.createdBy.id,
-            display: attachment.createdBy.display,
-          },
-          createdAt: attachment.createdAt,
-        })),
+        attachmentsCount: filtered.length,
+        attachments: filtered,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(

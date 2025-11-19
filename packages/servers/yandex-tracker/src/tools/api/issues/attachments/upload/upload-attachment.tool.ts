@@ -7,10 +7,11 @@
  * - Валидация через Zod
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { AttachmentWithUnknownFields } from '@tracker_api/entities/index.js';
 import { UploadAttachmentDefinition } from './upload-attachment.definition.js';
 import { UploadAttachmentParamsSchema } from './upload-attachment.schema.js';
 import { readFile } from 'node:fs/promises';
@@ -50,7 +51,7 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, filename, fileContent, filePath, mimetype } = validation.data;
+    const { issueId, filename, fileContent, filePath, mimetype, fields } = validation.data;
 
     try {
       // 2. Получение содержимого файла
@@ -85,26 +86,18 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
         mimetype,
       });
 
-      // 5. Логирование результатов
+      // 5. Фильтрация полей ответа
+      const filtered = ResponseFieldFilter.filter<AttachmentWithUnknownFields>(attachment, fields);
+
+      // 6. Логирование результатов
       this.logger.info(
         `Файл ${filename} успешно загружен в задачу ${issueId}, attachmentId=${attachment.id}`
       );
 
       return this.formatSuccess({
         issueId,
-        attachment: {
-          id: attachment.id,
-          name: attachment.name,
-          mimetype: attachment.mimetype,
-          size: attachment.size,
-          downloadUrl: attachment.content,
-          ...(attachment.thumbnail && { thumbnailUrl: attachment.thumbnail }),
-          createdBy: {
-            id: attachment.createdBy.id,
-            display: attachment.createdBy.display,
-          },
-          createdAt: attachment.createdAt,
-        },
+        attachment: filtered,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(

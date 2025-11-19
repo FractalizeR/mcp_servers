@@ -35,8 +35,9 @@ export class UploadAttachmentDefinition extends BaseToolDefinition {
           fileContent: this.buildFileContentParam(),
           filePath: this.buildFilePathParam(),
           mimetype: this.buildMimetypeParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['issueId', 'filename'],
+        required: ['issueId', 'filename', 'fields'],
       },
     };
   }
@@ -47,6 +48,8 @@ export class UploadAttachmentDefinition extends BaseToolDefinition {
   private buildDescription(): string {
     return (
       'Загрузить файл в задачу Яндекс.Трекера. ' +
+      'Обязательные поля: issueId, filename и fields. ' +
+      'Параметр fields определяет, какие поля загруженного файла вернуть в ответе (например: ["id", "name", "size"]). ' +
       'Поддерживает загрузку через base64 (fileContent) или путь к файлу (filePath). ' +
       'Максимальный размер файла: 10 MB. ' +
       '\n\n' +
@@ -120,5 +123,25 @@ export class UploadAttachmentDefinition extends BaseToolDefinition {
         'Если не указан, определится автоматически по расширению файла. ' +
         'Примеры: application/pdf, image/png, text/plain',
     };
+  }
+
+  /**
+   * Построить описание параметра fields
+   */
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Массив полей для возврата в результате. ' +
+        'Указывайте только необходимые поля для экономии токенов. ' +
+        '\n\n' +
+        'Доступные поля: id, name, mimetype, size, content (downloadUrl), thumbnail, createdBy, createdAt.',
+      {
+        items: { type: 'string' },
+        examples: [
+          ['id', 'name', 'size'],
+          ['id', 'name', 'mimetype', 'size'],
+          ['id', 'name', 'size', 'createdBy.display', 'createdAt'],
+        ],
+      }
+    );
   }
 }

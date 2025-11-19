@@ -31,8 +31,9 @@ export class GetAttachmentsDefinition extends BaseToolDefinition {
         type: 'object',
         properties: {
           issueId: this.buildIssueIdParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['issueId'],
+        required: ['issueId', 'fields'],
       },
     };
   }
@@ -43,7 +44,8 @@ export class GetAttachmentsDefinition extends BaseToolDefinition {
   private buildDescription(): string {
     return (
       'Получить список всех прикрепленных файлов задачи (attachments). ' +
-      'Возвращает массив файлов с информацией о имени, размере, типе и URL для скачивания. ' +
+      'Обязательные поля: issueId и fields. ' +
+      'Параметр fields определяет, какие поля каждого файла вернуть в ответе (например: ["id", "name", "size"]). ' +
       '\n\n' +
       'Для: просмотра прикрепленных файлов, анализа вложений, проверки наличия документов. ' +
       '\n' +
@@ -60,6 +62,26 @@ export class GetAttachmentsDefinition extends BaseToolDefinition {
       {
         pattern: '^([A-Z][A-Z0-9]+-\\d+|[a-f0-9]+)$',
         examples: ['PROJ-123', 'abc123def456'],
+      }
+    );
+  }
+
+  /**
+   * Построить описание параметра fields
+   */
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Массив полей для возврата в результате. ' +
+        'Указывайте только необходимые поля для экономии токенов. ' +
+        '\n\n' +
+        'Доступные поля: id, name, mimetype, size, content (downloadUrl), thumbnail, createdBy, createdAt.',
+      {
+        items: { type: 'string' },
+        examples: [
+          ['id', 'name', 'size'],
+          ['id', 'name', 'mimetype', 'size'],
+          ['id', 'name', 'size', 'createdBy.display', 'createdAt'],
+        ],
       }
     );
   }

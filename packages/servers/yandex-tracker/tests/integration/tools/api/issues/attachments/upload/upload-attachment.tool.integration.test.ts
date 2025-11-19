@@ -48,6 +48,7 @@ describe('upload-attachment integration tests', () => {
         issueId,
         filename,
         fileContent,
+        fields: ['id', 'name', 'size', 'mimetype', 'content', 'createdBy', 'createdAt'],
       });
 
       // Assert
@@ -65,7 +66,7 @@ describe('upload-attachment integration tests', () => {
       expect(response.attachment).toHaveProperty('name', filename);
       expect(response.attachment).toHaveProperty('mimetype');
       expect(response.attachment).toHaveProperty('size');
-      expect(response.attachment).toHaveProperty('downloadUrl');
+      expect(response.attachment).toHaveProperty('content');
       expect(response.attachment).toHaveProperty('createdBy');
       expect(response.attachment).toHaveProperty('createdAt');
 
@@ -91,6 +92,7 @@ describe('upload-attachment integration tests', () => {
         filename,
         fileContent,
         mimetype,
+        fields: ['id', 'name', 'size', 'mimetype', 'content', 'createdBy', 'createdAt'],
       });
 
       // Assert
@@ -123,6 +125,7 @@ describe('upload-attachment integration tests', () => {
         filename,
         fileContent,
         mimetype: 'image/png',
+        fields: ['id', 'name', 'size', 'mimetype', 'createdBy', 'createdAt', 'thumbnail'],
       });
 
       // Assert
@@ -131,7 +134,7 @@ describe('upload-attachment integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.attachment).toHaveProperty('thumbnailUrl');
+      expect(response.attachment).toHaveProperty('thumbnail');
 
       mockServer.assertAllRequestsDone();
     });
@@ -151,6 +154,7 @@ describe('upload-attachment integration tests', () => {
         issueId,
         filename,
         fileContent,
+        fields: ['id', 'name', 'size', 'mimetype', 'content', 'createdBy', 'createdAt'],
       });
 
       // Assert
@@ -168,6 +172,7 @@ describe('upload-attachment integration tests', () => {
         issueId: '',
         filename: 'test.txt',
         fileContent: 'dGVzdA==',
+        fields: ['id', 'name'],
       });
 
       // Assert
@@ -181,6 +186,7 @@ describe('upload-attachment integration tests', () => {
         issueId: 'QUEUE-1',
         filename: '',
         fileContent: 'dGVzdA==',
+        fields: ['id', 'name'],
       });
 
       // Assert
@@ -193,6 +199,20 @@ describe('upload-attachment integration tests', () => {
       const result = await client.callTool('fr_yandex_tracker_upload_attachment', {
         issueId: 'QUEUE-1',
         filename: 'test.txt',
+        fields: ['id', 'name'],
+      });
+
+      // Assert
+      expect(result.isError).toBe(true);
+      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+    });
+
+    it('должен вернуть ошибку при отсутствии fields', async () => {
+      // Act
+      const result = await client.callTool('fr_yandex_tracker_upload_attachment', {
+        issueId: 'QUEUE-1',
+        filename: 'test.txt',
+        fileContent: 'dGVzdA==',
       });
 
       // Assert
