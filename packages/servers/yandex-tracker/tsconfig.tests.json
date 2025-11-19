@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@tracker_api/*": ["./src/tracker_api/*"],
+      "@tools/*": ["./src/tools/*"],
+      "@composition-root/*": ["./src/composition-root/*"],
+      "@cli/*": ["./src/cli/*"],
+      "@constants": ["./src/constants.ts"],
+      "@integration/*": ["./tests/integration/*"]
+    }
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}
