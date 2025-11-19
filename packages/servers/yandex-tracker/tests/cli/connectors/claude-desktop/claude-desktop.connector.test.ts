@@ -28,7 +28,7 @@ const { FileManager } = vi.hoisted(() => {
 });
 
 // Mock FileManager
-vi.mock('@cli/utils/file-manager.js', () => ({
+vi.mock('#cli/utils/file-manager.js', () => ({
   FileManager,
 }));
 

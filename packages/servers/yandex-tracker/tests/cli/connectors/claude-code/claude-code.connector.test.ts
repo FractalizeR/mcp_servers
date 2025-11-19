@@ -16,7 +16,7 @@ import type { MCPServerConfig } from '#cli/connectors/base/connector.interface.j
 import { MCP_SERVER_NAME } from '#constants';
 
 // Mock CommandExecutor
-vi.mock('@cli/utils/command-executor.js', () => ({
+vi.mock('#cli/utils/command-executor.js', () => ({
   CommandExecutor: {
     isCommandAvailable: vi.fn(),
     exec: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock('@cli/utils/command-executor.js', () => ({
 
 // Импортируем CommandExecutor после мока
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Динамический импорт модуля для тестирования
-const { CommandExecutor } = (await import('@cli/utils/command-executor.js')) as any;
+const { CommandExecutor } = (await import('#cli/utils/command-executor.js')) as any;
 
 describe('ClaudeCodeConnector', () => {
   let connector: ClaudeCodeConnector;

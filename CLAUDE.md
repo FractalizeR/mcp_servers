@@ -144,24 +144,42 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 import { BaseTool } from '@core/tools/base/base-tool.js';              // WRONG!
 ```
 
-**Внутри пакета:**
-- ✅ Относительные пути (`./`, `../`) для внутренних импортов
-- ✅ Алиасы только если настроены в `tsconfig.json` пакета
+### 3. Внутрипакетные импорты (Node.js Subpath Imports)
 
-### 3. Типобезопасность
+**Короткие (≤2 уровня) - относительные:**
+```typescript
+import { validateInput } from './utils.js';
+```
+
+**Глубокие (≥3 уровня) - # префиксы:**
+```typescript
+import { MCP_TOOL_PREFIX } from '#constants';
+import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
+```
+
+**Доступные # префиксы:** `#tracker_api/*`, `#tools/*`, `#composition-root/*`, `#cli/*`, `#constants`, `#common/*`, `#integration/*`, `#helpers/*`
+
+**❌ НЕ используй @ алиасы:**
+```typescript
+import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
+```
+
+**Подробности:** [ARCHITECTURE.md](./ARCHITECTURE.md) секция "Module System"
+
+### 4. Типобезопасность
 
 - ❌ `any` / `unknown` / `null` / `undefined` (где можно избежать)
 - ✅ Явные типы для всех публичных функций и параметров
 - ✅ `import type` для type-only импортов
 - ✅ Strict mode во всех пакетах
 
-### 4. Single Responsibility Principle (SRP)
+### 5. Single Responsibility Principle (SRP)
 
 - Один класс = один файл = одна ответственность
 - Каждый пакет имеет чёткую границу ответственности (см. README.md пакетов)
 - Не смешивай логику разных слоёв в одном файле
 
-### 5. Консистентность npm скриптов
+### 6. Консистентность npm скриптов
 
 **Все workspaces ОБЯЗАНЫ иметь одинаковый набор базовых команд:**
 - `build` — `tsc -b && tsc-alias` (НЕ `tsc` без `-b`!)

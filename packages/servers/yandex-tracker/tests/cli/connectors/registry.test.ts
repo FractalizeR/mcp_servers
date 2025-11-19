@@ -33,11 +33,11 @@ const { CommandExecutor, FileManager } = vi.hoisted(() => {
 });
 
 // Mock зависимостей коннекторов
-vi.mock('@cli/utils/command-executor.js', () => ({
+vi.mock('#cli/utils/command-executor.js', () => ({
   CommandExecutor,
 }));
 
-vi.mock('@cli/utils/file-manager.js', () => ({
+vi.mock('#cli/utils/file-manager.js', () => ({
   FileManager,
 }));
 

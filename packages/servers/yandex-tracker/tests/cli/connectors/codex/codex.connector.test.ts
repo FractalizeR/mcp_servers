@@ -32,12 +32,12 @@ const { CommandExecutor, FileManager } = vi.hoisted(() => {
 });
 
 // Mock CommandExecutor
-vi.mock('@cli/utils/command-executor.js', () => ({
+vi.mock('#cli/utils/command-executor.js', () => ({
   CommandExecutor,
 }));
 
 // Mock FileManager
-vi.mock('@cli/utils/file-manager.js', () => ({
+vi.mock('#cli/utils/file-manager.js', () => ({
   FileManager,
 }));
 

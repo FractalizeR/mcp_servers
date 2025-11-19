@@ -172,6 +172,85 @@ handlers/
 
 ---
 
+## 📥 Module System: Node.js Subpath Imports
+
+**Решение (2025):** Проект использует Node.js Subpath Imports вместо TypeScript path aliases.
+
+### Почему Subpath Imports?
+
+1. **Нативная поддержка Node.js** (12.19.0+) - не требует tsc-alias для внутренних импортов
+2. **Рекомендация Turborepo team** для monorepo проектов
+3. **Одна точка конфигурации** - только package.json (не нужны tsconfig paths)
+4. **Полная поддержка TypeScript 5.4+** - автокомплит, LSP, навигация
+5. **Избежание конфликтов** - префикс `#` не конфликтует с npm scoped packages
+
+### Конфигурация
+
+**package.json (yandex-tracker):**
+```json
+{
+  "imports": {
+    "#tracker_api/*": "./src/tracker_api/*",
+    "#tools/*": "./src/tools/*",
+    "#composition-root/*": "./src/composition-root/*",
+    "#cli/*": "./src/cli/*",
+    "#constants": "./src/constants.ts",
+    "#common/*": "./src/common/*",
+    "#integration/*": "./tests/integration/*",
+    "#helpers/*": "./tests/helpers/*"
+  }
+}
+```
+
+### Правила импортов
+
+**1. Междупакетные (npm package names):**
+```typescript
+import { BaseTool } from '@mcp-framework/core';
+import { HttpClient } from '@mcp-framework/infrastructure';
+```
+
+**2. Внутрипакетные короткие (≤2 уровня - относительные пути):**
+```typescript
+import { validateInput } from './utils.js';
+import { BaseOperation } from '../base-operation.js';
+```
+
+**3. Внутрипакетные глубокие (≥3 уровня - subpath imports):**
+```typescript
+import { MCP_TOOL_PREFIX } from '#constants';
+import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
+import { createFixture } from '#helpers/queue.fixture.js';
+```
+
+### Миграция с TypeScript Path Aliases
+
+**Было (TypeScript paths):**
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@tracker_api/*": ["./src/tracker_api/*"],
+      "@tools/*": ["./src/tools/*"]
+    }
+  }
+}
+```
+
+**Стало (Node.js subpath imports):**
+```json
+{
+  "imports": {
+    "#tracker_api/*": "./src/tracker_api/*",
+    "#tools/*": "./src/tools/*"
+  }
+}
+```
+
+**Детали миграции:** См. `.agentic-planning/plan_migrate_to_subpath_imports/`
+
+---
+
 ## 🔄 Data Flow (Yandex Tracker Server)
 
 **Request Chain:**
