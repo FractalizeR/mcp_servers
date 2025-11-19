@@ -178,6 +178,42 @@ ResultLogger.logBatchSuccess(this.logger, 'get_issues', {
 
 ---
 
+### 5. Обязательный параметр `fields`
+
+**❌ ЗАПРЕЩЕНО возвращать полные объекты без фильтрации:**
+```typescript
+return this.formatSuccess({
+  data: fullObject  // WRONG! 10KB избыточных данных
+});
+```
+
+**✅ ПРАВИЛЬНО - всегда фильтровать через fields:**
+```typescript
+const { fields, ...params } = validation.data;
+const data = await this.facade.getData(params);
+
+const filtered = ResponseFieldFilter.filter(data, fields);
+return this.formatSuccess({
+  data: filtered,
+  fieldsReturned: fields
+});
+```
+
+**Правило:**
+- ВСЕ tools, возвращающие объекты API, ДОЛЖНЫ иметь обязательный параметр `fields: FieldsSchema`
+- Применяется к: get, find, create, update, add, edit операциям
+- НЕ применяется к: delete (void), download (binary), bulk status операциям
+- Экономия контекста: до 80-90%
+
+**Для массивов объектов:**
+```typescript
+const filtered = items.map(item =>
+  ResponseFieldFilter.filter<EntityWithUnknownFields>(item, fields)
+);
+```
+
+---
+
 ## 📋 Процесс создания нового API Tool
 
 ### Шаг 1: Создать структуру файлов
@@ -202,15 +238,20 @@ import { IssueKeySchema, FieldsSchema } from '@mcp-framework/core';
 
 export const GetIssuesParamsSchema = z.object({
   keys: z.array(IssueKeySchema).min(1).max(200),
-  fields: FieldsSchema.optional(),
+  /**
+   * ⚠️ ОБЯЗАТЕЛЬНЫЙ параметр - список возвращаемых полей
+   */
+  fields: FieldsSchema,  // БЕЗ .optional()!
 });
 
 export type GetIssuesParams = z.infer<typeof GetIssuesParamsSchema>;
 ```
 
+**КРИТИЧНО:** НЕ используйте `.optional()` для `fields`!
+
 **Переиспользуй схемы** из `@mcp-framework/core`:
 - `IssueKeySchema` — ключ задачи
-- `FieldsSchema` — фильтр полей
+- `FieldsSchema` — фильтр полей (обязательный!)
 - `ExpandSchema` — expand параметры
 
 ---
@@ -374,29 +415,10 @@ ResultLogger.logBatchSuccess(logger, 'operation_name', {
 
 ## 📊 Tool Discovery Modes
 
-### Eager (по умолчанию)
+**Eager (по умолчанию):** Все tools видны сразу (Claude Code on the Web, production)
+**Lazy (экспериментально):** Только essential tools + search (Claude Desktop, 30+ tools)
 
-```bash
-TOOL_DISCOVERY_MODE=eager  # Все tools при старте
-```
-
-**Когда использовать:** Claude Code on the Web, production
-
----
-
-### Lazy (экспериментальный)
-
-```bash
-TOOL_DISCOVERY_MODE=lazy
-ESSENTIAL_TOOLS=ping,search_tools
-```
-
-**Workflow:**
-1. Claude видит только `[ping, search_tools]`
-2. Использует `search_tools` для поиска нужного tool
-3. Вызывает найденный tool
-
-**Когда использовать:** Claude Desktop, 30+ tools
+**Детали:** [../../CLAUDE.md](../../CLAUDE.md#51-tool-discovery-mode)
 
 ---
 
@@ -444,16 +466,7 @@ ESSENTIAL_TOOLS=ping,search_tools
 ## 📦 Components API — Complete Tools
 
 **4 MCP Tools для работы с компонентами очередей:**
-
-- `get_components` — список компонентов очереди (кеш ✅, API v2)
-- `create_component` — создание (queueId, name, description?, lead?, assignAuto?) ⚠️
-- `update_component` — обновление (componentId, name?, description?, lead?, assignAuto?) ⚠️
-- `delete_component` — удаление компонента ⚠️
-
-**Ключевые особенности:**
-- API v2 (не v3)
-- Компоненты привязаны к очереди
-- `assignAuto` — автоназначение исполнителя
+- `get_components`, `create_component`, `update_component`, `delete_component`
 
 См. файлы в `src/tools/api/components/` для деталей.
 
@@ -462,17 +475,7 @@ ESSENTIAL_TOOLS=ping,search_tools
 ## ✅ Checklists API — Complete Tools
 
 **4 MCP Tools для работы с чеклистами задач:**
-
-- `get_checklist` — получение всех элементов чеклиста (issueId)
-- `add_checklist_item` — добавление элемента (issueId, text, checked?, assignee?, deadline?) ⚠️
-- `update_checklist_item` — обновление элемента (issueId, checklistItemId, text?, checked?, assignee?, deadline?) ⚠️
-- `delete_checklist_item` — удаление элемента (issueId, checklistItemId) ⚠️
-
-**Ключевые особенности:**
-- **API v2** (не v3)
-- **Safety:** add/update/delete требуют `requiresExplicitUserConsent: true`
-- **Scope:** Чеклисты привязаны к конкретной задаче
-- **Поля:** id, text, checked, assignee (UserRef, optional), deadline (ISO 8601, optional)
+- `get_checklist`, `add_checklist_item`, `update_checklist_item`, `delete_checklist_item`
 
 См. файлы в `src/tools/api/checklists/` для деталей.
 
