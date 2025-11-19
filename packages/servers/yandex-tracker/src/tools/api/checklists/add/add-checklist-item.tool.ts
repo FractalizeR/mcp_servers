@@ -7,7 +7,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -44,7 +44,7 @@ export class AddChecklistItemTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, text, checked, assignee, deadline } = validation.data;
+    const { fields, issueId, text, checked, assignee, deadline } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -53,6 +53,7 @@ export class AddChecklistItemTool extends BaseTool<YandexTrackerFacade> {
         textLength: text.length,
         hasAssignee: Boolean(assignee),
         hasDeadline: Boolean(deadline),
+        fieldsCount: fields.length,
       });
 
       // 3. API v2: добавление элемента
@@ -63,17 +64,22 @@ export class AddChecklistItemTool extends BaseTool<YandexTrackerFacade> {
         deadline,
       });
 
-      // 4. Логирование результата
+      // 4. Фильтрация полей ответа
+      const filtered = ResponseFieldFilter.filter<ChecklistItemWithUnknownFields>(item, fields);
+
+      // 5. Логирование результата
       this.logger.info('Элемент успешно добавлен в чеклист', {
         issueId,
         itemId: item.id,
         checked: item.checked,
+        fieldsReturned: fields.length,
       });
 
       return this.formatSuccess({
         itemId: item.id,
-        item,
+        item: filtered,
         issueId,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(

@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema } from '../../../../common/schemas/index.js';
+import { IssueKeySchema, FieldsSchema } from '../../../../common/schemas/index.js';
 
 /**
  * Схема параметров для обновления элемента чеклиста
@@ -38,6 +38,12 @@ export const UpdateChecklistItemParamsSchema = z.object({
    * Дедлайн в формате ISO 8601 (опционально)
    */
   deadline: z.string().optional(),
+
+  /**
+   * Массив полей для возврата в результате (обязательный)
+   * Примеры: ['id', 'text', 'checked'], ['id', 'text', 'assignee.login']
+   */
+  fields: FieldsSchema,
 });
 
 /**

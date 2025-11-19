@@ -7,7 +7,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
@@ -44,25 +44,32 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId } = validation.data;
+    const { issueId, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      this.logger.info('Получение чеклиста задачи', { issueId });
+      this.logger.info('Получение чеклиста задачи', { issueId, fieldsCount: fields.length });
 
       // 3. API v2: получение чеклиста
       const checklist: ChecklistItemWithUnknownFields[] = await this.facade.getChecklist(issueId);
 
-      // 4. Логирование результата
+      // 4. Фильтрация полей для каждого элемента массива
+      const filtered = checklist.map((item) =>
+        ResponseFieldFilter.filter<ChecklistItemWithUnknownFields>(item, fields)
+      );
+
+      // 5. Логирование результата
       this.logger.info('Чеклист успешно получен', {
         issueId,
-        itemsCount: checklist.length,
+        itemsCount: filtered.length,
+        fieldsReturned: fields.length,
       });
 
       return this.formatSuccess({
-        checklist,
+        checklist: filtered,
         issueId,
-        itemsCount: checklist.length,
+        itemsCount: filtered.length,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении чеклиста задачи ${issueId}`, error as Error);
