@@ -8,10 +8,11 @@
  * - Автоматическая конвертация duration в ISO 8601
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { WorklogWithUnknownFields } from '@tracker_api/entities/index.js';
 import { AddWorklogDefinition } from '@tools/api/worklog/add/add-worklog.definition.js';
 import { AddWorklogParamsSchema } from '@tools/api/worklog/add/add-worklog.schema.js';
 
@@ -44,7 +45,7 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, start, duration, comment } = validation.data;
+    const { issueId, start, duration, comment, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -63,7 +64,10 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
         comment,
       });
 
-      // 4. Логирование результата
+      // 4. Фильтрация полей ответа
+      const filteredWorklog = ResponseFieldFilter.filter<WorklogWithUnknownFields>(worklog, fields);
+
+      // 5. Логирование результата
       this.logger.info('Запись времени успешно добавлена', {
         issueId,
         worklogId: worklog.id,
@@ -71,9 +75,8 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
       });
 
       return this.formatSuccess({
-        issueId,
-        worklog,
-        message: `Запись времени успешно добавлена к задаче ${issueId}`,
+        data: filteredWorklog,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(

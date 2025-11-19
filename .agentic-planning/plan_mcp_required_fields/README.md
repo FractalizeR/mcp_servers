@@ -84,7 +84,7 @@
 - [x] 2.5 Links (2 tools) - ✅ Завершено
 - [x] 2.6 Projects (4 tools) - ✅ Завершено
 - [ ] 2.7 Queues (6 tools)
-- [ ] 2.8 Worklogs (3 tools)
+- [x] 2.8 Worklogs (3 tools) - ✅ Завершено
 
 ### Этап 3: Валидация
 - [ ] 3.1 Validation
@@ -92,7 +92,7 @@
 ### Этап 4: Документация
 - [ ] 4.1 Documentation
 
-**Итого tools:** 17/27 завершено (63%)
+**Итого tools:** 20/27 завершено (74%)
 
 ---
 

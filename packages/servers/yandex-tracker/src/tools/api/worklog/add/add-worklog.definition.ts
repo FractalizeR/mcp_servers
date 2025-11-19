@@ -28,8 +28,9 @@ export class AddWorklogDefinition extends BaseToolDefinition {
           start: this.buildStartParam(),
           duration: this.buildDurationParam(),
           comment: this.buildCommentParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['issueId', 'start', 'duration'],
+        required: ['issueId', 'start', 'duration', 'fields'],
       },
     };
   }
@@ -72,6 +73,20 @@ export class AddWorklogDefinition extends BaseToolDefinition {
       'Опциональный комментарий к записи времени (описание выполненной работы).',
       {
         examples: ['Работал над реализацией API', 'Тестирование и отладка'],
+      }
+    );
+  }
+
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Список полей, которые нужно вернуть в ответе. ' +
+        'Сокращает объем ответа, возвращая только нужные поля.',
+      {
+        items: { type: 'string' },
+        examples: [
+          ['id', 'duration', 'comment'],
+          ['id', 'start', 'createdBy'],
+        ],
       }
     );
   }

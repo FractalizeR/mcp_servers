@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema } from '../../../../common/schemas/index.js';
+import { IssueKeySchema, FieldsSchema } from '../../../../common/schemas/index.js';
 
 /**
  * Схема параметров для обновления записи времени
@@ -36,6 +36,11 @@ export const UpdateWorklogParamsSchema = z.object({
    * Комментарий к записи времени (опционально)
    */
   comment: z.string().optional(),
+
+  /**
+   * Поля, которые нужно вернуть (обязательно)
+   */
+  fields: FieldsSchema,
 });
 
 /**

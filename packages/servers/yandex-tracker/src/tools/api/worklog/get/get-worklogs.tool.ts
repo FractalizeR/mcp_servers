@@ -7,10 +7,11 @@
  * - Валидация через Zod
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { WorklogWithUnknownFields } from '@tracker_api/entities/index.js';
 import { GetWorklogsDefinition } from '@tools/api/worklog/get/get-worklogs.definition.js';
 import { GetWorklogsParamsSchema } from '@tools/api/worklog/get/get-worklogs.schema.js';
 
@@ -43,7 +44,7 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId } = validation.data;
+    const { issueId, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -54,16 +55,20 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
       // 3. API v2: получение записей времени
       const worklogs = await this.facade.getWorklogs(issueId);
 
-      // 4. Логирование результата
+      // 4. Фильтрация полей ответа
+      const filteredWorklogs = worklogs.map((worklog) =>
+        ResponseFieldFilter.filter<WorklogWithUnknownFields>(worklog, fields)
+      );
+
+      // 5. Логирование результата
       this.logger.info('Записи времени успешно получены', {
         issueId,
         worklogsCount: worklogs.length,
       });
 
       return this.formatSuccess({
-        issueId,
-        worklogs,
-        count: worklogs.length,
+        data: filteredWorklogs,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(

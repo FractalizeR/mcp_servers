@@ -25,8 +25,9 @@ export class GetWorklogsDefinition extends BaseToolDefinition {
         type: 'object',
         properties: {
           issueId: this.buildIssueIdParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['issueId'],
+        required: ['issueId', 'fields'],
       },
     };
   }
@@ -46,5 +47,19 @@ export class GetWorklogsDefinition extends BaseToolDefinition {
     return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи.', {
       examples: ['TEST-123', 'PROJ-456'],
     });
+  }
+
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Список полей, которые нужно вернуть в ответе. ' +
+        'Сокращает объем ответа, возвращая только нужные поля.',
+      {
+        items: { type: 'string' },
+        examples: [
+          ['id', 'duration', 'comment'],
+          ['id', 'start', 'createdBy'],
+        ],
+      }
+    );
   }
 }
