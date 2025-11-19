@@ -118,6 +118,7 @@ export class Logger {
           stream: createStream('combined.log', {
             path: logsPath,
             size: sizeStr,
+            interval: '1d',
             maxFiles,
             compress: 'gzip',
           }),
@@ -128,6 +129,7 @@ export class Logger {
           stream: createStream('error.log', {
             path: logsPath,
             size: sizeStr,
+            interval: '1d',
             maxFiles,
             compress: 'gzip',
           }),

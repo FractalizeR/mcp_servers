@@ -132,7 +132,7 @@ results.forEach((result) => {
 
 **Key features:**
 - ✅ Structured JSON logs
-- ✅ Automatic rotation (old logs → `.gz`)
+- ✅ Automatic rotation (daily + size-based, old logs → `.gz` with date)
 - ✅ Dual output (error/warn → stderr + file, info/debug → file only)
 - ✅ Request tracing (child loggers)
 
@@ -142,6 +142,8 @@ results.forEach((result) => {
 - `PRETTY_LOGS` — pretty-printing for development
 - `LOG_MAX_SIZE` — rotation size (default: 50KB)
 - `LOG_MAX_FILES` — rotated files count (default: 20)
+
+**Rotation:** Logs rotate daily at midnight OR when size limit is reached. Rotated files include date in filename (e.g., `20251119-combined.log.gz`)
 
 **Usage:**
 ```typescript
