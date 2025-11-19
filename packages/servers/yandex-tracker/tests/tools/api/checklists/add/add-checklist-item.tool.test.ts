@@ -60,18 +60,19 @@ describe('AddChecklistItemTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId', 'text']);
+      expect(definition.inputSchema.required).toEqual(['issueId', 'text', 'fields']);
       expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['text']).toBeDefined();
       expect(definition.inputSchema.properties?.['checked']).toBeDefined();
       expect(definition.inputSchema.properties?.['assignee']).toBeDefined();
       expect(definition.inputSchema.properties?.['deadline']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
   describe('Validation', () => {
     it('должен требовать параметр issueId', async () => {
-      const result = await tool.execute({ text: 'Test item' });
+      const result = await tool.execute({ text: 'Test item', fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -83,7 +84,19 @@ describe('AddChecklistItemTool', () => {
     });
 
     it('должен требовать параметр text', async () => {
-      const result = await tool.execute({ issueId: 'TEST-123' });
+      const result = await tool.execute({ issueId: 'TEST-123', fields: ['id', 'text'] });
+
+      expect(result.isError).toBe(true);
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        message: string;
+      };
+      expect(parsed.success).toBe(false);
+      expect(parsed.message).toContain('валидации');
+    });
+
+    it('должен требовать параметр fields', async () => {
+      const result = await tool.execute({ issueId: 'TEST-123', text: 'Test item' });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -95,14 +108,14 @@ describe('AddChecklistItemTool', () => {
     });
 
     it('должен отклонить пустой issueId', async () => {
-      const result = await tool.execute({ issueId: '', text: 'Test item' });
+      const result = await tool.execute({ issueId: '', text: 'Test item', fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('валидации');
     });
 
     it('должен отклонить пустой text', async () => {
-      const result = await tool.execute({ issueId: 'TEST-123', text: '' });
+      const result = await tool.execute({ issueId: 'TEST-123', text: '', fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('валидации');
@@ -114,6 +127,7 @@ describe('AddChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'TEST-123',
         text: 'Test item',
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(result.isError).toBeUndefined();
@@ -127,6 +141,7 @@ describe('AddChecklistItemTool', () => {
       await tool.execute({
         issueId: 'TEST-123',
         text: 'Test item',
+        fields: ['id', 'text'],
       });
 
       expect(mockTrackerFacade.addChecklistItem).toHaveBeenCalledWith('TEST-123', {
@@ -144,6 +159,7 @@ describe('AddChecklistItemTool', () => {
         issueId: 'TEST-123',
         text: 'Test item',
         checked: true,
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(mockTrackerFacade.addChecklistItem).toHaveBeenCalledWith('TEST-123', {
@@ -161,6 +177,7 @@ describe('AddChecklistItemTool', () => {
         issueId: 'TEST-123',
         text: 'Test item',
         assignee: 'user123',
+        fields: ['id', 'text', 'assignee'],
       });
 
       expect(mockTrackerFacade.addChecklistItem).toHaveBeenCalledWith('TEST-123', {
@@ -178,6 +195,7 @@ describe('AddChecklistItemTool', () => {
         issueId: 'TEST-123',
         text: 'Test item',
         deadline: '2025-12-31T23:59:59.000Z',
+        fields: ['id', 'text', 'deadline'],
       });
 
       expect(mockTrackerFacade.addChecklistItem).toHaveBeenCalledWith('TEST-123', {
@@ -197,6 +215,7 @@ describe('AddChecklistItemTool', () => {
         checked: true,
         assignee: 'user123',
         deadline: '2025-12-31T23:59:59.000Z',
+        fields: ['id', 'text', 'checked', 'assignee', 'deadline'],
       });
 
       expect(mockTrackerFacade.addChecklistItem).toHaveBeenCalledWith('TEST-123', {
@@ -213,6 +232,7 @@ describe('AddChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'TEST-123',
         text: 'Test item',
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(result.isError).toBeUndefined();
@@ -242,6 +262,7 @@ describe('AddChecklistItemTool', () => {
       await tool.execute({
         issueId: 'TEST-123',
         text: 'Test item',
+        fields: ['id', 'text'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -251,6 +272,7 @@ describe('AddChecklistItemTool', () => {
           textLength: 9,
           hasAssignee: false,
           hasDeadline: false,
+          fieldsCount: 2,
         })
       );
     });
@@ -262,6 +284,7 @@ describe('AddChecklistItemTool', () => {
         issueId: 'TEST-123',
         text: 'Test item',
         assignee: 'user123',
+        fields: ['id', 'text', 'assignee'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -279,6 +302,7 @@ describe('AddChecklistItemTool', () => {
         issueId: 'TEST-123',
         text: 'Test item',
         deadline: '2025-12-31T23:59:59.000Z',
+        fields: ['id', 'text', 'deadline'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -295,6 +319,7 @@ describe('AddChecklistItemTool', () => {
       await tool.execute({
         issueId: 'TEST-123',
         text: 'Test item',
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -303,6 +328,7 @@ describe('AddChecklistItemTool', () => {
           issueId: 'TEST-123',
           itemId: 'item-12345',
           checked: false,
+          fieldsReturned: 3,
         })
       );
     });
@@ -316,6 +342,7 @@ describe('AddChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'TEST-123',
         text: 'Test item',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
@@ -330,6 +357,7 @@ describe('AddChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'NONEXISTENT-999',
         text: 'Test item',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
@@ -344,6 +372,7 @@ describe('AddChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'PRIVATE-123',
         text: 'Test item',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);

@@ -60,19 +60,20 @@ describe('UpdateChecklistItemTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId', 'checklistItemId']);
+      expect(definition.inputSchema.required).toEqual(['issueId', 'checklistItemId', 'fields']);
       expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['checklistItemId']).toBeDefined();
       expect(definition.inputSchema.properties?.['text']).toBeDefined();
       expect(definition.inputSchema.properties?.['checked']).toBeDefined();
       expect(definition.inputSchema.properties?.['assignee']).toBeDefined();
       expect(definition.inputSchema.properties?.['deadline']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
   describe('Validation', () => {
     it('должен требовать параметр issueId', async () => {
-      const result = await tool.execute({ checklistItemId: 'item-123' });
+      const result = await tool.execute({ checklistItemId: 'item-123', fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -84,7 +85,19 @@ describe('UpdateChecklistItemTool', () => {
     });
 
     it('должен требовать параметр checklistItemId', async () => {
-      const result = await tool.execute({ issueId: 'TEST-123' });
+      const result = await tool.execute({ issueId: 'TEST-123', fields: ['id', 'text'] });
+
+      expect(result.isError).toBe(true);
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        message: string;
+      };
+      expect(parsed.success).toBe(false);
+      expect(parsed.message).toContain('валидации');
+    });
+
+    it('должен требовать параметр fields', async () => {
+      const result = await tool.execute({ issueId: 'TEST-123', checklistItemId: 'item-123' });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -96,14 +109,14 @@ describe('UpdateChecklistItemTool', () => {
     });
 
     it('должен отклонить пустой issueId', async () => {
-      const result = await tool.execute({ issueId: '', checklistItemId: 'item-123' });
+      const result = await tool.execute({ issueId: '', checklistItemId: 'item-123', fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('валидации');
     });
 
     it('должен отклонить пустой checklistItemId', async () => {
-      const result = await tool.execute({ issueId: 'TEST-123', checklistItemId: '' });
+      const result = await tool.execute({ issueId: 'TEST-123', checklistItemId: '', fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('валидации');
@@ -115,6 +128,7 @@ describe('UpdateChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(result.isError).toBeUndefined();
@@ -128,6 +142,7 @@ describe('UpdateChecklistItemTool', () => {
       await tool.execute({
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
+        fields: ['id', 'text'],
       });
 
       expect(mockTrackerFacade.updateChecklistItem).toHaveBeenCalledWith('TEST-123', 'item-123', {
@@ -145,6 +160,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         text: 'Updated text',
+        fields: ['id', 'text'],
       });
 
       expect(mockTrackerFacade.updateChecklistItem).toHaveBeenCalledWith('TEST-123', 'item-123', {
@@ -162,6 +178,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         checked: true,
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(mockTrackerFacade.updateChecklistItem).toHaveBeenCalledWith('TEST-123', 'item-123', {
@@ -179,6 +196,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         assignee: 'user123',
+        fields: ['id', 'text', 'assignee'],
       });
 
       expect(mockTrackerFacade.updateChecklistItem).toHaveBeenCalledWith('TEST-123', 'item-123', {
@@ -196,6 +214,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         deadline: '2025-12-31T23:59:59.000Z',
+        fields: ['id', 'text', 'deadline'],
       });
 
       expect(mockTrackerFacade.updateChecklistItem).toHaveBeenCalledWith('TEST-123', 'item-123', {
@@ -216,6 +235,7 @@ describe('UpdateChecklistItemTool', () => {
         checked: true,
         assignee: 'user123',
         deadline: '2025-12-31T23:59:59.000Z',
+        fields: ['id', 'text', 'checked', 'assignee', 'deadline'],
       });
 
       expect(mockTrackerFacade.updateChecklistItem).toHaveBeenCalledWith('TEST-123', 'item-123', {
@@ -233,6 +253,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         checked: true,
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(result.isError).toBeUndefined();
@@ -263,6 +284,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         checked: true,
+        fields: ['id', 'text'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -274,6 +296,7 @@ describe('UpdateChecklistItemTool', () => {
           hasChecked: true,
           hasAssignee: false,
           hasDeadline: false,
+          fieldsCount: 2,
         })
       );
     });
@@ -285,6 +308,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         text: 'Updated text',
+        fields: ['id', 'text'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -302,6 +326,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         assignee: 'user123',
+        fields: ['id', 'text', 'assignee'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -319,6 +344,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         deadline: '2025-12-31T23:59:59.000Z',
+        fields: ['id', 'text', 'deadline'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -336,6 +362,7 @@ describe('UpdateChecklistItemTool', () => {
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
         checked: true,
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -344,6 +371,7 @@ describe('UpdateChecklistItemTool', () => {
           issueId: 'TEST-123',
           itemId: 'item-12345',
           checked: true,
+          fieldsReturned: 3,
         })
       );
     });
@@ -357,6 +385,7 @@ describe('UpdateChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'TEST-123',
         checklistItemId: 'item-123',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
@@ -372,6 +401,7 @@ describe('UpdateChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'NONEXISTENT-999',
         checklistItemId: 'item-123',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
@@ -386,6 +416,7 @@ describe('UpdateChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'TEST-123',
         checklistItemId: 'nonexistent-item',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
@@ -400,6 +431,7 @@ describe('UpdateChecklistItemTool', () => {
       const result = await tool.execute({
         issueId: 'PRIVATE-123',
         checklistItemId: 'item-123',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);

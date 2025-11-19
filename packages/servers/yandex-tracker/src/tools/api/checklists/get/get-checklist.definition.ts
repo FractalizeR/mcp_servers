@@ -31,8 +31,9 @@ export class GetChecklistDefinition extends BaseToolDefinition {
         type: 'object',
         properties: {
           issueId: this.buildIssueIdParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['issueId'],
+        required: ['issueId', 'fields'],
       },
     };
   }
@@ -58,6 +59,22 @@ export class GetChecklistDefinition extends BaseToolDefinition {
       '⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи (примеры: TEST-123, PROJ-456).',
       {
         examples: ['TEST-123', 'PROJ-456'],
+      }
+    );
+  }
+
+  /**
+   * Построить описание параметра fields
+   */
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Массив полей для возврата для каждого элемента чеклиста. Используйте только необходимые поля для экономии контекста.',
+      {
+        items: { type: 'string' },
+        examples: [
+          ['id', 'text', 'checked'],
+          ['id', 'text', 'assignee.login', 'deadline'],
+        ],
       }
     );
   }

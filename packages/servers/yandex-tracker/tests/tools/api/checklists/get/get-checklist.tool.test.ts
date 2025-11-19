@@ -56,14 +56,27 @@ describe('GetChecklistTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId']);
+      expect(definition.inputSchema.required).toEqual(['issueId', 'fields']);
       expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
   describe('Validation', () => {
     it('должен требовать параметр issueId', async () => {
-      const result = await tool.execute({});
+      const result = await tool.execute({ fields: ['id', 'text'] });
+
+      expect(result.isError).toBe(true);
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        message: string;
+      };
+      expect(parsed.success).toBe(false);
+      expect(parsed.message).toContain('валидации');
+    });
+
+    it('должен требовать параметр fields', async () => {
+      const result = await tool.execute({ issueId: 'TEST-123' });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -75,7 +88,7 @@ describe('GetChecklistTool', () => {
     });
 
     it('должен отклонить пустой issueId', async () => {
-      const result = await tool.execute({ issueId: '' });
+      const result = await tool.execute({ issueId: '', fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('валидации');
@@ -86,6 +99,7 @@ describe('GetChecklistTool', () => {
 
       const result = await tool.execute({
         issueId: 'TEST-123',
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(result.isError).toBeUndefined();
@@ -98,6 +112,7 @@ describe('GetChecklistTool', () => {
 
       await tool.execute({
         issueId: 'TEST-123',
+        fields: ['id', 'text'],
       });
 
       expect(mockTrackerFacade.getChecklist).toHaveBeenCalledWith('TEST-123');
@@ -108,6 +123,7 @@ describe('GetChecklistTool', () => {
 
       const result = await tool.execute({
         issueId: 'TEST-123',
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(result.isError).toBeUndefined();
@@ -123,7 +139,6 @@ describe('GetChecklistTool', () => {
       expect(parsed.data.issueId).toBe('TEST-123');
       expect(parsed.data.itemsCount).toBe(3);
       expect(parsed.data.checklist).toHaveLength(3);
-      expect(parsed.data.checklist).toEqual(mockChecklist);
     });
 
     it('должен вернуть пустой чеклист', async () => {
@@ -131,6 +146,7 @@ describe('GetChecklistTool', () => {
 
       const result = await tool.execute({
         issueId: 'TEST-123',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBeUndefined();
@@ -154,12 +170,14 @@ describe('GetChecklistTool', () => {
 
       await tool.execute({
         issueId: 'TEST-123',
+        fields: ['id', 'text'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Получение чеклиста задачи',
         expect.objectContaining({
           issueId: 'TEST-123',
+          fieldsCount: 2,
         })
       );
     });
@@ -169,6 +187,7 @@ describe('GetChecklistTool', () => {
 
       await tool.execute({
         issueId: 'TEST-123',
+        fields: ['id', 'text', 'checked'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -176,6 +195,7 @@ describe('GetChecklistTool', () => {
         expect.objectContaining({
           issueId: 'TEST-123',
           itemsCount: 3,
+          fieldsReturned: 3,
         })
       );
     });
@@ -188,6 +208,7 @@ describe('GetChecklistTool', () => {
 
       const result = await tool.execute({
         issueId: 'TEST-123',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
@@ -201,6 +222,7 @@ describe('GetChecklistTool', () => {
 
       const result = await tool.execute({
         issueId: 'NONEXISTENT-999',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
@@ -214,6 +236,7 @@ describe('GetChecklistTool', () => {
 
       const result = await tool.execute({
         issueId: 'PRIVATE-123',
+        fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
