@@ -34,21 +34,13 @@ export class UpdateChecklistItemOperation extends BaseOperation {
   ): Promise<ChecklistItemWithUnknownFields> {
     this.logger.info(`Обновление элемента ${checklistItemId} чеклиста задачи ${issueId}`);
 
-    try {
-      const item = await this.httpClient.patch<ChecklistItemWithUnknownFields>(
-        `/v2/issues/${issueId}/checklistItems/${checklistItemId}`,
-        input
-      );
+    const item = await this.httpClient.patch<ChecklistItemWithUnknownFields>(
+      `/v2/issues/${issueId}/checklistItems/${checklistItemId}`,
+      input
+    );
 
-      this.logger.info(`Элемент ${checklistItemId} чеклиста задачи ${issueId} успешно обновлён`);
+    this.logger.info(`Элемент ${checklistItemId} чеклиста задачи ${issueId} успешно обновлён`);
 
-      return item;
-    } catch (error) {
-      this.logger.error(
-        `Ошибка при обновлении элемента ${checklistItemId} чеклиста задачи ${issueId}:`,
-        error
-      );
-      throw error;
-    }
+    return item;
   }
 }

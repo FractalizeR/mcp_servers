@@ -32,18 +32,13 @@ export class GetIssueChangelogOperation extends BaseOperation {
   async execute(issueKey: string): Promise<ChangelogEntryWithUnknownFields[]> {
     this.logger.info(`Получение истории изменений задачи: ${issueKey}`);
 
-    try {
-      // API v3: GET /v3/issues/{issueKey}/changelog
-      // Возвращает массив записей истории
-      const changelog = await this.httpClient.get<ChangelogEntryWithUnknownFields[]>(
-        `/v3/issues/${issueKey}/changelog`
-      );
+    // API v3: GET /v3/issues/{issueKey}/changelog
+    // Возвращает массив записей истории
+    const changelog = await this.httpClient.get<ChangelogEntryWithUnknownFields[]>(
+      `/v3/issues/${issueKey}/changelog`
+    );
 
-      this.logger.info(`История изменений получена: ${changelog.length} записей`);
-      return changelog;
-    } catch (error: unknown) {
-      this.logger.error(`Ошибка при получении истории изменений задачи ${issueKey}`, error);
-      throw error;
-    }
+    this.logger.info(`История изменений получена: ${changelog.length} записей`);
+    return changelog;
   }
 }

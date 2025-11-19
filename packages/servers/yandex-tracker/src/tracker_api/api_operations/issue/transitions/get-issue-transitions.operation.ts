@@ -32,18 +32,13 @@ export class GetIssueTransitionsOperation extends BaseOperation {
   async execute(issueKey: string): Promise<TransitionWithUnknownFields[]> {
     this.logger.info(`Получение доступных переходов для задачи: ${issueKey}`);
 
-    try {
-      // API v3: GET /v3/issues/{issueKey}/transitions
-      // Возвращает массив доступных переходов
-      const transitions = await this.httpClient.get<TransitionWithUnknownFields[]>(
-        `/v3/issues/${issueKey}/transitions`
-      );
+    // API v3: GET /v3/issues/{issueKey}/transitions
+    // Возвращает массив доступных переходов
+    const transitions = await this.httpClient.get<TransitionWithUnknownFields[]>(
+      `/v3/issues/${issueKey}/transitions`
+    );
 
-      this.logger.info(`Доступные переходы получены: ${transitions.length} шт.`);
-      return transitions;
-    } catch (error: unknown) {
-      this.logger.error(`Ошибка при получении переходов для задачи ${issueKey}`, error);
-      throw error;
-    }
+    this.logger.info(`Доступные переходы получены: ${transitions.length} шт.`);
+    return transitions;
   }
 }

@@ -35,23 +35,18 @@ export class UpdateIssueOperation extends BaseOperation {
       fields: Object.keys(updateData),
     });
 
-    try {
-      // Выполняем PATCH запрос (retry встроен в httpClient)
-      const updatedIssue = await this.httpClient.patch<IssueWithUnknownFields>(
-        `/v3/issues/${issueKey}`,
-        updateData
-      );
+    // Выполняем PATCH запрос (retry встроен в httpClient)
+    const updatedIssue = await this.httpClient.patch<IssueWithUnknownFields>(
+      `/v3/issues/${issueKey}`,
+      updateData
+    );
 
-      // Инвалидируем кеш для обновлённой задачи
-      const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, issueKey);
-      this.cacheManager.delete(cacheKey);
+    // Инвалидируем кеш для обновлённой задачи
+    const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, issueKey);
+    this.cacheManager.delete(cacheKey);
 
-      this.logger.info(`Задача ${issueKey} успешно обновлена`);
+    this.logger.info(`Задача ${issueKey} успешно обновлена`);
 
-      return updatedIssue;
-    } catch (error) {
-      this.logger.error(`Ошибка при обновлении задачи ${issueKey}:`, error);
-      throw error;
-    }
+    return updatedIssue;
   }
 }

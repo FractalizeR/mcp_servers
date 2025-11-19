@@ -143,7 +143,6 @@ describe('PingOperation', () => {
       expect(result.message).toContain('Ошибка подключения');
       expect(result.message).toContain('Unauthorized');
       expect(result.message).toContain('401');
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('должна обработать сетевую ошибку', async () => {
@@ -161,7 +160,6 @@ describe('PingOperation', () => {
       // Assert
       expect(result.success).toBe(false);
       expect(result.message).toContain('Network timeout');
-      expect(mockLogger.error).toHaveBeenCalled();
     });
   });
 });

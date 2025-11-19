@@ -27,16 +27,8 @@ export class DeleteWorklogOperation extends BaseOperation {
   async execute(issueId: string, worklogId: string): Promise<void> {
     this.logger.info(`Удаление записи времени ${worklogId} задачи ${issueId}`);
 
-    try {
-      await this.deleteRequest<void>(`/v2/issues/${issueId}/worklog/${worklogId}`);
+    await this.deleteRequest<void>(`/v2/issues/${issueId}/worklog/${worklogId}`);
 
-      this.logger.info(`Запись времени ${worklogId} задачи ${issueId} успешно удалена`);
-    } catch (error) {
-      this.logger.error(
-        `Ошибка при удалении записи времени ${worklogId} задачи ${issueId}:`,
-        error
-      );
-      throw error;
-    }
+    this.logger.info(`Запись времени ${worklogId} задачи ${issueId} успешно удалена`);
   }
 }

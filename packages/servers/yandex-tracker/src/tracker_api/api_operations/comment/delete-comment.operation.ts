@@ -26,13 +26,8 @@ export class DeleteCommentOperation extends BaseOperation {
   async execute(issueId: string, commentId: string): Promise<void> {
     this.logger.info(`Удаление комментария ${commentId} задачи ${issueId}`);
 
-    try {
-      await this.deleteRequest<void>(`/v3/issues/${issueId}/comments/${commentId}`);
+    await this.deleteRequest<void>(`/v3/issues/${issueId}/comments/${commentId}`);
 
-      this.logger.info(`Комментарий ${commentId} задачи ${issueId} успешно удалён`);
-    } catch (error) {
-      this.logger.error(`Ошибка при удалении комментария ${commentId} задачи ${issueId}:`, error);
-      throw error;
-    }
+    this.logger.info(`Комментарий ${commentId} задачи ${issueId} успешно удалён`);
   }
 }

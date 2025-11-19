@@ -26,19 +26,14 @@ export class GetChecklistOperation extends BaseOperation {
   async execute(issueId: string): Promise<ChecklistItemWithUnknownFields[]> {
     this.logger.info(`Получение чеклиста задачи ${issueId}`);
 
-    try {
-      const checklist = await this.httpClient.get<ChecklistItemWithUnknownFields[]>(
-        `/v2/issues/${issueId}/checklistItems`
-      );
+    const checklist = await this.httpClient.get<ChecklistItemWithUnknownFields[]>(
+      `/v2/issues/${issueId}/checklistItems`
+    );
 
-      this.logger.info(
-        `Получено ${Array.isArray(checklist) ? checklist.length : 0} элементов чеклиста для задачи ${issueId}`
-      );
+    this.logger.info(
+      `Получено ${Array.isArray(checklist) ? checklist.length : 0} элементов чеклиста для задачи ${issueId}`
+    );
 
-      return Array.isArray(checklist) ? checklist : [];
-    } catch (error) {
-      this.logger.error(`Ошибка при получении чеклиста задачи ${issueId}:`, error);
-      throw error;
-    }
+    return Array.isArray(checklist) ? checklist : [];
   }
 }

@@ -27,19 +27,14 @@ export class GetWorklogsOperation extends BaseOperation {
   async execute(issueId: string): Promise<WorklogWithUnknownFields[]> {
     this.logger.info(`Получение записей времени задачи ${issueId}`);
 
-    try {
-      const endpoint = `/v2/issues/${issueId}/worklog`;
+    const endpoint = `/v2/issues/${issueId}/worklog`;
 
-      const worklogs = await this.httpClient.get<WorklogWithUnknownFields[]>(endpoint);
+    const worklogs = await this.httpClient.get<WorklogWithUnknownFields[]>(endpoint);
 
-      this.logger.info(
-        `Получено ${Array.isArray(worklogs) ? worklogs.length : 1} записей времени для задачи ${issueId}`
-      );
+    this.logger.info(
+      `Получено ${Array.isArray(worklogs) ? worklogs.length : 1} записей времени для задачи ${issueId}`
+    );
 
-      return Array.isArray(worklogs) ? worklogs : [worklogs];
-    } catch (error) {
-      this.logger.error(`Ошибка при получении записей времени задачи ${issueId}:`, error);
-      throw error;
-    }
+    return Array.isArray(worklogs) ? worklogs : [worklogs];
   }
 }

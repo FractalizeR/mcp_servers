@@ -61,7 +61,6 @@ describe('DeleteCommentOperation', () => {
       await expect(operation.execute('TEST-1', '123')).rejects.toThrow(
         'API Error: Comment not found'
       );
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should log info messages', async () => {

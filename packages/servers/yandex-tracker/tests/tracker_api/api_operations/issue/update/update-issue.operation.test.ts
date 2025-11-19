@@ -133,10 +133,6 @@ describe('UpdateIssueOperation', () => {
       await expect(operation.execute(issueKey, updateData)).rejects.toThrow(
         'HTTP 400: Validation failed'
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `Ошибка при обновлении задачи ${issueKey}:`,
-        mockError
-      );
     });
 
     it('should handle not found errors (404)', async () => {

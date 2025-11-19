@@ -124,10 +124,6 @@ describe('GetIssueChangelogOperation', () => {
       vi.mocked(mockHttpClient.get).mockRejectedValue(mockError);
 
       await expect(operation.execute(issueKey)).rejects.toThrow('HTTP 404: Issue not found');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `Ошибка при получении истории изменений задачи ${issueKey}`,
-        mockError
-      );
     });
 
     it('should pass logger to BaseOperation', () => {

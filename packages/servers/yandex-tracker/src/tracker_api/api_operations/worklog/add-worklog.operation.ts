@@ -33,34 +33,29 @@ export class AddWorklogOperation extends BaseOperation {
   async execute(issueId: string, input: AddWorklogInput): Promise<WorklogWithUnknownFields> {
     this.logger.info(`Добавление записи времени к задаче ${issueId}`);
 
-    try {
-      // Подготовка payload - конвертация duration если нужно
-      const payload = {
-        ...input,
-        // Конвертируем duration в ISO 8601, если это human-readable формат
-        duration: DurationUtil.isValidIsoDuration(input.duration)
-          ? input.duration
-          : DurationUtil.parseHumanReadable(input.duration),
-      };
+    // Подготовка payload - конвертация duration если нужно
+    const payload = {
+      ...input,
+      // Конвертируем duration в ISO 8601, если это human-readable формат
+      duration: DurationUtil.isValidIsoDuration(input.duration)
+        ? input.duration
+        : DurationUtil.parseHumanReadable(input.duration),
+    };
 
-      this.logger.debug(`Payload для API:`, {
-        issueId,
-        start: payload.start,
-        duration: payload.duration,
-        hasComment: !!payload.comment,
-      });
+    this.logger.debug(`Payload для API:`, {
+      issueId,
+      start: payload.start,
+      duration: payload.duration,
+      hasComment: !!payload.comment,
+    });
 
-      const worklog = await this.httpClient.post<WorklogWithUnknownFields>(
-        `/v2/issues/${issueId}/worklog`,
-        payload
-      );
+    const worklog = await this.httpClient.post<WorklogWithUnknownFields>(
+      `/v2/issues/${issueId}/worklog`,
+      payload
+    );
 
-      this.logger.info(`Запись времени успешно добавлена к задаче ${issueId}: ${worklog.id}`);
+    this.logger.info(`Запись времени успешно добавлена к задаче ${issueId}: ${worklog.id}`);
 
-      return worklog;
-    } catch (error) {
-      this.logger.error(`Ошибка при добавлении записи времени к задаче ${issueId}:`, error);
-      throw error;
-    }
+    return worklog;
   }
 }

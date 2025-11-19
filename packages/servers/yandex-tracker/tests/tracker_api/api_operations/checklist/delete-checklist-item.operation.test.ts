@@ -68,7 +68,6 @@ describe('DeleteChecklistItemOperation', () => {
       deleteRequestSpy.mockRejectedValue(error);
 
       await expect(operation.execute('TEST-1', '123')).rejects.toThrow('API Error');
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should log info messages', async () => {

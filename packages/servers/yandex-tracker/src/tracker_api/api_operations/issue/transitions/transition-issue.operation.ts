@@ -42,25 +42,17 @@ export class TransitionIssueOperation extends BaseOperation {
       hasData: !!transitionData,
     });
 
-    try {
-      // API v3: POST /v3/issues/{issueKey}/transitions/{transitionId}/_execute
-      const result = await this.httpClient.post<IssueWithUnknownFields>(
-        `/v3/issues/${issueKey}/transitions/${transitionId}/_execute`,
-        transitionData || {}
-      );
+    // API v3: POST /v3/issues/{issueKey}/transitions/{transitionId}/_execute
+    const result = await this.httpClient.post<IssueWithUnknownFields>(
+      `/v3/issues/${issueKey}/transitions/${transitionId}/_execute`,
+      transitionData || {}
+    );
 
-      // Инвалидируем кеш задачи после изменения статуса
-      const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, issueKey);
-      this.cacheManager.delete(cacheKey);
+    // Инвалидируем кеш задачи после изменения статуса
+    const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, issueKey);
+    this.cacheManager.delete(cacheKey);
 
-      this.logger.info(`Переход выполнен успешно: ${issueKey} → ${result.status.key}`);
-      return result;
-    } catch (error: unknown) {
-      this.logger.error(
-        `Ошибка при выполнении перехода ${transitionId} для задачи ${issueKey}`,
-        error
-      );
-      throw error;
-    }
+    this.logger.info(`Переход выполнен успешно: ${issueKey} → ${result.status.key}`);
+    return result;
   }
 }

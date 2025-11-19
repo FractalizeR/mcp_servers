@@ -91,10 +91,6 @@ describe('GetIssueTransitionsOperation', () => {
       vi.mocked(mockHttpClient.get).mockRejectedValue(mockError);
 
       await expect(operation.execute(issueKey)).rejects.toThrow('HTTP 404: Issue not found');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `Ошибка при получении переходов для задачи ${issueKey}`,
-        mockError
-      );
     });
 
     it('should handle HTTP errors', async () => {

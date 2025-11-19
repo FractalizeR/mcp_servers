@@ -26,16 +26,8 @@ export class DeleteChecklistItemOperation extends BaseOperation {
   async execute(issueId: string, checklistItemId: string): Promise<void> {
     this.logger.info(`Удаление элемента ${checklistItemId} из чеклиста задачи ${issueId}`);
 
-    try {
-      await this.deleteRequest<void>(`/v2/issues/${issueId}/checklistItems/${checklistItemId}`);
+    await this.deleteRequest<void>(`/v2/issues/${issueId}/checklistItems/${checklistItemId}`);
 
-      this.logger.info(`Элемент ${checklistItemId} чеклиста задачи ${issueId} успешно удалён`);
-    } catch (error) {
-      this.logger.error(
-        `Ошибка при удалении элемента ${checklistItemId} из чеклиста задачи ${issueId}:`,
-        error
-      );
-      throw error;
-    }
+    this.logger.info(`Элемент ${checklistItemId} чеклиста задачи ${issueId} успешно удалён`);
   }
 }

@@ -31,18 +31,13 @@ export class AddChecklistItemOperation extends BaseOperation {
   ): Promise<ChecklistItemWithUnknownFields> {
     this.logger.info(`Добавление элемента в чеклист задачи ${issueId}`);
 
-    try {
-      const item = await this.httpClient.post<ChecklistItemWithUnknownFields>(
-        `/v2/issues/${issueId}/checklistItems`,
-        input
-      );
+    const item = await this.httpClient.post<ChecklistItemWithUnknownFields>(
+      `/v2/issues/${issueId}/checklistItems`,
+      input
+    );
 
-      this.logger.info(`Элемент успешно добавлен в чеклист задачи ${issueId}: ${item.id}`);
+    this.logger.info(`Элемент успешно добавлен в чеклист задачи ${issueId}: ${item.id}`);
 
-      return item;
-    } catch (error) {
-      this.logger.error(`Ошибка при добавлении элемента в чеклист задачи ${issueId}:`, error);
-      throw error;
-    }
+    return item;
   }
 }

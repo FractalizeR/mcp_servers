@@ -37,39 +37,31 @@ export class UpdateWorklogOperation extends BaseOperation {
   ): Promise<WorklogWithUnknownFields> {
     this.logger.info(`Обновление записи времени ${worklogId} задачи ${issueId}`);
 
-    try {
-      // Подготовка payload - конвертация duration если нужно
-      const payload = { ...input };
+    // Подготовка payload - конвертация duration если нужно
+    const payload = { ...input };
 
-      // Конвертируем duration в ISO 8601, если он передан и в human-readable формате
-      if (input.duration !== undefined) {
-        payload.duration = DurationUtil.isValidIsoDuration(input.duration)
-          ? input.duration
-          : DurationUtil.parseHumanReadable(input.duration);
-      }
-
-      this.logger.debug(`Payload для API:`, {
-        issueId,
-        worklogId,
-        start: payload.start,
-        duration: payload.duration,
-        hasComment: !!payload.comment,
-      });
-
-      const worklog = await this.httpClient.patch<WorklogWithUnknownFields>(
-        `/v2/issues/${issueId}/worklog/${worklogId}`,
-        payload
-      );
-
-      this.logger.info(`Запись времени ${worklogId} задачи ${issueId} успешно обновлена`);
-
-      return worklog;
-    } catch (error) {
-      this.logger.error(
-        `Ошибка при обновлении записи времени ${worklogId} задачи ${issueId}:`,
-        error
-      );
-      throw error;
+    // Конвертируем duration в ISO 8601, если он передан и в human-readable формате
+    if (input.duration !== undefined) {
+      payload.duration = DurationUtil.isValidIsoDuration(input.duration)
+        ? input.duration
+        : DurationUtil.parseHumanReadable(input.duration);
     }
+
+    this.logger.debug(`Payload для API:`, {
+      issueId,
+      worklogId,
+      start: payload.start,
+      duration: payload.duration,
+      hasComment: !!payload.comment,
+    });
+
+    const worklog = await this.httpClient.patch<WorklogWithUnknownFields>(
+      `/v2/issues/${issueId}/worklog/${worklogId}`,
+      payload
+    );
+
+    this.logger.info(`Запись времени ${worklogId} задачи ${issueId} успешно обновлена`);
+
+    return worklog;
   }
 }

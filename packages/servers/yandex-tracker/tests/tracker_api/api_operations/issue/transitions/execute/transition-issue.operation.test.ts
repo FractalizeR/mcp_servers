@@ -129,10 +129,6 @@ describe('TransitionIssueOperation', () => {
       await expect(operation.execute(issueKey, transitionId)).rejects.toThrow(
         'HTTP 400: Invalid transition'
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `Ошибка при выполнении перехода ${transitionId} для задачи ${issueKey}`,
-        mockError
-      );
     });
 
     it('should handle not found errors (404)', async () => {

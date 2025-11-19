@@ -60,7 +60,6 @@ describe('DeleteWorklogOperation', () => {
       await expect(operation.execute('TEST-1', '123')).rejects.toThrow(
         'API Error: Worklog not found'
       );
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should log info messages', async () => {
@@ -86,7 +85,6 @@ describe('DeleteWorklogOperation', () => {
       vi.mocked(mockHttpClient.delete).mockRejectedValue(error);
 
       await expect(operation.execute('TEST-4', '111')).rejects.toThrow('403 Forbidden');
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should handle network errors', async () => {
@@ -94,7 +92,6 @@ describe('DeleteWorklogOperation', () => {
       vi.mocked(mockHttpClient.delete).mockRejectedValue(error);
 
       await expect(operation.execute('TEST-5', '222')).rejects.toThrow('Network error');
-      expect(mockLogger.error).toHaveBeenCalled();
     });
   });
 });

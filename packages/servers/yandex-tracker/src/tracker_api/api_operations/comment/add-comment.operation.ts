@@ -29,18 +29,13 @@ export class AddCommentOperation extends BaseOperation {
   async execute(issueId: string, input: AddCommentInput): Promise<CommentWithUnknownFields> {
     this.logger.info(`Добавление комментария к задаче ${issueId}`);
 
-    try {
-      const comment = await this.httpClient.post<CommentWithUnknownFields>(
-        `/v3/issues/${issueId}/comments`,
-        input
-      );
+    const comment = await this.httpClient.post<CommentWithUnknownFields>(
+      `/v3/issues/${issueId}/comments`,
+      input
+    );
 
-      this.logger.info(`Комментарий успешно добавлен к задаче ${issueId}: ${comment.id}`);
+    this.logger.info(`Комментарий успешно добавлен к задаче ${issueId}: ${comment.id}`);
 
-      return comment;
-    } catch (error) {
-      this.logger.error(`Ошибка при добавлении комментария к задаче ${issueId}:`, error);
-      throw error;
-    }
+    return comment;
   }
 }

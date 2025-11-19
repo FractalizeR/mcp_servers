@@ -33,21 +33,13 @@ export class EditCommentOperation extends BaseOperation {
   ): Promise<CommentWithUnknownFields> {
     this.logger.info(`Редактирование комментария ${commentId} задачи ${issueId}`);
 
-    try {
-      const comment = await this.httpClient.patch<CommentWithUnknownFields>(
-        `/v3/issues/${issueId}/comments/${commentId}`,
-        input
-      );
+    const comment = await this.httpClient.patch<CommentWithUnknownFields>(
+      `/v3/issues/${issueId}/comments/${commentId}`,
+      input
+    );
 
-      this.logger.info(`Комментарий ${commentId} задачи ${issueId} успешно обновлён`);
+    this.logger.info(`Комментарий ${commentId} задачи ${issueId} успешно обновлён`);
 
-      return comment;
-    } catch (error) {
-      this.logger.error(
-        `Ошибка при редактировании комментария ${commentId} задачи ${issueId}:`,
-        error
-      );
-      throw error;
-    }
+    return comment;
   }
 }

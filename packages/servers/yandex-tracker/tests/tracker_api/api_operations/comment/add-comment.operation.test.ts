@@ -105,7 +105,6 @@ describe('AddCommentOperation', () => {
       vi.mocked(mockHttpClient.post).mockRejectedValue(error);
 
       await expect(operation.execute('TEST-1', input)).rejects.toThrow('API Error');
-      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should log info messages', async () => {

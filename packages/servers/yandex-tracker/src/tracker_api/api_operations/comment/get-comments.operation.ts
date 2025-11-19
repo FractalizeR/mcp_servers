@@ -33,39 +33,34 @@ export class GetCommentsOperation extends BaseOperation {
   ): Promise<CommentWithUnknownFields[]> {
     this.logger.info(`Получение комментариев задачи ${issueId}`);
 
-    try {
-      // Подготовка query параметров
-      const queryParams: Record<string, string> = {};
-      if (input.perPage !== undefined) {
-        queryParams['perPage'] = String(input.perPage);
-      }
-      if (input.page !== undefined) {
-        queryParams['page'] = String(input.page);
-      }
-      if (input.expand !== undefined) {
-        queryParams['expand'] = input.expand;
-      }
-
-      // Формирование URL с query параметрами
-      const queryString =
-        Object.keys(queryParams).length > 0
-          ? `?${Object.entries(queryParams)
-              .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-              .join('&')}`
-          : '';
-
-      const endpoint = `/v3/issues/${issueId}/comments${queryString}`;
-
-      const comments = await this.httpClient.get<CommentWithUnknownFields[]>(endpoint);
-
-      this.logger.info(
-        `Получено ${Array.isArray(comments) ? comments.length : 1} комментариев для задачи ${issueId}`
-      );
-
-      return Array.isArray(comments) ? comments : [comments];
-    } catch (error) {
-      this.logger.error(`Ошибка при получении комментариев задачи ${issueId}:`, error);
-      throw error;
+    // Подготовка query параметров
+    const queryParams: Record<string, string> = {};
+    if (input.perPage !== undefined) {
+      queryParams['perPage'] = String(input.perPage);
     }
+    if (input.page !== undefined) {
+      queryParams['page'] = String(input.page);
+    }
+    if (input.expand !== undefined) {
+      queryParams['expand'] = input.expand;
+    }
+
+    // Формирование URL с query параметрами
+    const queryString =
+      Object.keys(queryParams).length > 0
+        ? `?${Object.entries(queryParams)
+            .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+            .join('&')}`
+        : '';
+
+    const endpoint = `/v3/issues/${issueId}/comments${queryString}`;
+
+    const comments = await this.httpClient.get<CommentWithUnknownFields[]>(endpoint);
+
+    this.logger.info(
+      `Получено ${Array.isArray(comments) ? comments.length : 1} комментариев для задачи ${issueId}`
+    );
+
+    return Array.isArray(comments) ? comments : [comments];
   }
 }
