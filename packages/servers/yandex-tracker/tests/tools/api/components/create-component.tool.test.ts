@@ -39,11 +39,13 @@ describe('CreateComponentTool', () => {
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('queueId');
       expect(definition.inputSchema.required).toContain('name');
+      expect(definition.inputSchema.required).toContain('fields');
       expect(definition.inputSchema.properties?.['queueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['name']).toBeDefined();
       expect(definition.inputSchema.properties?.['description']).toBeDefined();
       expect(definition.inputSchema.properties?.['lead']).toBeDefined();
       expect(definition.inputSchema.properties?.['assignAuto']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
@@ -64,6 +66,7 @@ describe('CreateComponentTool', () => {
       it('должен вернуть ошибку если queueId не указан', async () => {
         const result = await tool.execute({
           name: 'Test Component',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -78,6 +81,7 @@ describe('CreateComponentTool', () => {
       it('должен вернуть ошибку если name не указан', async () => {
         const result = await tool.execute({
           queueId: 'TEST',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -93,6 +97,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({
           queueId: '',
           name: 'Test Component',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -108,6 +113,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           name: '',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -126,6 +132,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           name: 'Test Component',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -144,6 +151,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           name: 'Test Component',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -171,12 +179,14 @@ describe('CreateComponentTool', () => {
           data: {
             component: { id: string; name: string };
             message: string;
+            fieldsReturned: string[];
           };
         };
         expect(parsed.success).toBe(true);
         expect(parsed.data.component.id).toBe('123');
         expect(parsed.data.component.name).toBe('Test Component');
         expect(parsed.data.message).toContain('успешно создан');
+        expect(parsed.data.fieldsReturned).toEqual(['id', 'name']);
       });
 
       it('должен создать компонент с описанием', async () => {
@@ -190,6 +200,7 @@ describe('CreateComponentTool', () => {
           queueId: 'PROJ',
           name: 'Backend',
           description: 'Backend services',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -219,6 +230,7 @@ describe('CreateComponentTool', () => {
           queueId: 'PROJ',
           name: 'Frontend',
           lead: 'user-login',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -249,6 +261,7 @@ describe('CreateComponentTool', () => {
           queueId: 'PROJ',
           name: 'Mobile',
           assignAuto: true,
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -282,6 +295,7 @@ describe('CreateComponentTool', () => {
           description: 'Full description',
           lead: 'admin',
           assignAuto: true,
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -312,6 +326,7 @@ describe('CreateComponentTool', () => {
           queueId: 'TEST',
           name: 'No Auto',
           assignAuto: false,
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -333,6 +348,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           name: 'Duplicate',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -353,6 +369,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({
           queueId: 'NOTEXIST',
           name: 'Test',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -371,6 +388,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           name: 'Test Component',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -390,6 +408,7 @@ describe('CreateComponentTool', () => {
           queueId: 'TEST',
           name: 'Test Component',
           lead: 'invalid-user',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -408,6 +427,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           name: 'Test Component',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -426,6 +446,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({
           queueId: 'TEST',
           name: 'Test Component',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);

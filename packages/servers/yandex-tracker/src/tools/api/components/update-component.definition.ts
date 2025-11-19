@@ -29,8 +29,9 @@ export class UpdateComponentDefinition extends BaseToolDefinition {
           description: this.buildDescriptionParam(),
           lead: this.buildLeadParam(),
           assignAuto: this.buildAssignAutoParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['componentId'],
+        required: ['componentId', 'fields'],
       },
     };
   }
@@ -38,7 +39,9 @@ export class UpdateComponentDefinition extends BaseToolDefinition {
   private buildDescription(): string {
     return (
       'Обновить параметры компонента. ' +
+      'Требует указания componentId и fields. ' +
       'Можно изменить название, описание, руководителя или настройку автоназначения. ' +
+      'Параметр fields определяет, какие поля компонента вернуть в ответе (например: ["id", "name"]). ' +
       '\n\n' +
       'Для: изменения существующего компонента. ' +
       '\n' +
@@ -73,6 +76,26 @@ export class UpdateComponentDefinition extends BaseToolDefinition {
   private buildAssignAutoParam(): Record<string, unknown> {
     return this.buildBooleanParam(
       'Автоматически назначать задачи руководителю компонента (опционально).'
+    );
+  }
+
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Фильтр полей ответа. ' +
+        'Указывайте только необходимые поля для экономии токенов. ' +
+        '\n\n' +
+        'Доступные поля: id, name, description, lead, queue, assignAuto.',
+      this.buildStringParam('Имя поля', {
+        minLength: 1,
+        examples: ['id', 'name', 'description', 'lead'],
+      }),
+      {
+        minItems: 1,
+        examples: [
+          ['id', 'name'],
+          ['id', 'name', 'description', 'lead'],
+        ],
+      }
     );
   }
 }

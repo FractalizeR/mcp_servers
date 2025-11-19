@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { FieldsSchema } from '../../../common/schemas/index.js';
 
 /**
  * Схема параметров для обновления компонента
@@ -32,6 +33,12 @@ export const UpdateComponentParamsSchema = z.object({
    * Автоматическое назначение задач (опционально)
    */
   assignAuto: z.boolean().optional(),
+
+  /**
+   * Массив полей для возврата в результате (обязательный)
+   * Примеры: ['id', 'name'], ['id', 'name', 'description', 'lead.login']
+   */
+  fields: FieldsSchema,
 });
 
 /**

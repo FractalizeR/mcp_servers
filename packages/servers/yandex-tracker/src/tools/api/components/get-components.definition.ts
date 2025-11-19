@@ -25,8 +25,9 @@ export class GetComponentsDefinition extends BaseToolDefinition {
         type: 'object',
         properties: {
           queueId: this.buildQueueIdParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['queueId'],
+        required: ['queueId', 'fields'],
       },
     };
   }
@@ -34,7 +35,8 @@ export class GetComponentsDefinition extends BaseToolDefinition {
   private buildDescription(): string {
     return (
       'Получить список компонентов очереди. ' +
-      'Возвращает все компоненты с их параметрами. ' +
+      'Требует указания queueId и fields. ' +
+      'Параметр fields определяет, какие поля компонентов вернуть в ответе (например: ["id", "name"]). ' +
       '\n\n' +
       'Для: просмотра компонентов очереди, управления компонентами. ' +
       '\n' +
@@ -46,5 +48,25 @@ export class GetComponentsDefinition extends BaseToolDefinition {
     return this.buildStringParam('ID или ключ очереди (обязательно).', {
       examples: ['QUEUE', '1'],
     });
+  }
+
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Фильтр полей ответа. ' +
+        'Указывайте только необходимые поля для экономии токенов. ' +
+        '\n\n' +
+        'Доступные поля: id, name, description, lead, queue, assignAuto.',
+      this.buildStringParam('Имя поля', {
+        minLength: 1,
+        examples: ['id', 'name', 'description', 'lead'],
+      }),
+      {
+        minItems: 1,
+        examples: [
+          ['id', 'name'],
+          ['id', 'name', 'description', 'lead'],
+        ],
+      }
+    );
   }
 }

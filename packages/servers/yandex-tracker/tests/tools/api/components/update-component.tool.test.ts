@@ -38,11 +38,13 @@ describe('UpdateComponentTool', () => {
       expect(definition.description).toContain('параметры компонента');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('componentId');
+      expect(definition.inputSchema.required).toContain('fields');
       expect(definition.inputSchema.properties?.['componentId']).toBeDefined();
       expect(definition.inputSchema.properties?.['name']).toBeDefined();
       expect(definition.inputSchema.properties?.['description']).toBeDefined();
       expect(definition.inputSchema.properties?.['lead']).toBeDefined();
       expect(definition.inputSchema.properties?.['assignAuto']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
@@ -61,7 +63,7 @@ describe('UpdateComponentTool', () => {
       });
 
       it('должен вернуть ошибку для пустого componentId', async () => {
-        const result = await tool.execute({ componentId: '' });
+        const result = await tool.execute({ componentId: '', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -76,7 +78,7 @@ describe('UpdateComponentTool', () => {
         const mockComponent = createComponentFixture({ id: '123' });
         vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(mockComponent);
 
-        const result = await tool.execute({ componentId: '123' });
+        const result = await tool.execute({ componentId: '123', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.updateComponent).toHaveBeenCalledWith({
@@ -92,6 +94,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           name: '',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -115,6 +118,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           name: 'Updated Component',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -159,6 +163,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           description: 'New description',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -185,6 +190,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           lead: 'new-lead',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -214,6 +220,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           assignAuto: true,
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -246,6 +253,7 @@ describe('UpdateComponentTool', () => {
           name: 'Updated',
           description: 'Updated description',
           lead: 'admin',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -280,6 +288,7 @@ describe('UpdateComponentTool', () => {
           description: 'Full description',
           lead: 'newlead',
           assignAuto: true,
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -309,6 +318,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           assignAuto: false,
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -331,6 +341,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           description: '',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -352,6 +363,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: 'NOTEXIST',
           name: 'New Name',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -372,6 +384,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           name: 'New Name',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -390,6 +403,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           lead: 'invalid-user',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -408,6 +422,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           description: 'New description',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);
@@ -426,6 +441,7 @@ describe('UpdateComponentTool', () => {
         const result = await tool.execute({
           componentId: '123',
           name: 'New Name',
+          fields: ['id', 'name'],
         });
 
         expect(result.isError).toBe(true);

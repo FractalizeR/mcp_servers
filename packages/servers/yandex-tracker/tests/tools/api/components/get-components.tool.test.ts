@@ -38,7 +38,9 @@ describe('GetComponentsTool', () => {
       expect(definition.description).toContain('список компонентов');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('queueId');
+      expect(definition.inputSchema.required).toContain('fields');
       expect(definition.inputSchema.properties?.['queueId']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
@@ -57,7 +59,7 @@ describe('GetComponentsTool', () => {
       });
 
       it('должен вернуть ошибку для пустого queueId', async () => {
-        const result = await tool.execute({ queueId: '' });
+        const result = await tool.execute({ queueId: '', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -75,7 +77,7 @@ describe('GetComponentsTool', () => {
         ];
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getComponents).toHaveBeenCalledWith({
@@ -93,7 +95,7 @@ describe('GetComponentsTool', () => {
         ];
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
 
-        const result = await tool.execute({ queueId: 'MYQUEUE' });
+        const result = await tool.execute({ queueId: 'MYQUEUE', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getComponents).toHaveBeenCalledWith({
@@ -113,18 +115,20 @@ describe('GetComponentsTool', () => {
             components: unknown[];
             count: number;
             queueId: string;
+            fieldsReturned: string[];
           };
         };
         expect(parsed.success).toBe(true);
         expect(parsed.data.components).toHaveLength(3);
         expect(parsed.data.count).toBe(3);
         expect(parsed.data.queueId).toBe('MYQUEUE');
+        expect(parsed.data.fieldsReturned).toEqual(['id', 'name']);
       });
 
       it('должен обработать пустой список компонентов', async () => {
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue([]);
 
-        const result = await tool.execute({ queueId: 'EMPTY' });
+        const result = await tool.execute({ queueId: 'EMPTY', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockLogger.info).toHaveBeenCalledWith('Список компонентов получен', {
@@ -159,7 +163,7 @@ describe('GetComponentsTool', () => {
         ];
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
 
-        const result = await tool.execute({ queueId: 'PROJECT' });
+        const result = await tool.execute({ queueId: 'PROJECT', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -177,7 +181,7 @@ describe('GetComponentsTool', () => {
         const mockComponents = [createComponentFixture({ id: '1', name: 'Single Component' })];
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
 
-        const result = await tool.execute({ queueId: 'SINGLE' });
+        const result = await tool.execute({ queueId: 'SINGLE', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -198,7 +202,7 @@ describe('GetComponentsTool', () => {
         );
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
 
-        const result = await tool.execute({ queueId: 'LARGE' });
+        const result = await tool.execute({ queueId: 'LARGE', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -218,7 +222,7 @@ describe('GetComponentsTool', () => {
         const error = new Error('Queue not found');
         vi.mocked(mockTrackerFacade.getComponents).mockRejectedValue(error);
 
-        const result = await tool.execute({ queueId: 'NOTEXIST' });
+        const result = await tool.execute({ queueId: 'NOTEXIST', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -235,7 +239,7 @@ describe('GetComponentsTool', () => {
         const error = new Error('Network timeout');
         vi.mocked(mockTrackerFacade.getComponents).mockRejectedValue(error);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -250,7 +254,7 @@ describe('GetComponentsTool', () => {
         const error = new Error('Permission denied');
         vi.mocked(mockTrackerFacade.getComponents).mockRejectedValue(error);
 
-        const result = await tool.execute({ queueId: 'RESTRICTED' });
+        const result = await tool.execute({ queueId: 'RESTRICTED', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -265,7 +269,7 @@ describe('GetComponentsTool', () => {
         const error = new Error('API Error: 500 Internal Server Error');
         vi.mocked(mockTrackerFacade.getComponents).mockRejectedValue(error);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {

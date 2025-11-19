@@ -2,10 +2,11 @@
  * MCP Tool для получения списка компонентов очереди в Яндекс.Трекере
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ComponentWithUnknownFields } from '@tracker_api/entities/index.js';
 import { GetComponentsDefinition } from './get-components.definition.js';
 import { GetComponentsParamsSchema } from './get-components.schema.js';
 
@@ -29,7 +30,7 @@ export class GetComponentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { queueId } = validation.data;
+    const { queueId, fields } = validation.data;
 
     try {
       this.logger.info('Получение списка компонентов очереди', {
@@ -38,15 +39,21 @@ export class GetComponentsTool extends BaseTool<YandexTrackerFacade> {
 
       const components = await this.facade.getComponents({ queueId });
 
+      // Фильтрация полей для каждого компонента
+      const filteredComponents = components.map((component) =>
+        ResponseFieldFilter.filter<ComponentWithUnknownFields>(component, fields)
+      );
+
       this.logger.info('Список компонентов получен', {
         count: components.length,
         queueId,
       });
 
       return this.formatSuccess({
-        components,
-        count: components.length,
+        components: filteredComponents,
+        count: filteredComponents.length,
         queueId,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка компонентов', error as Error);

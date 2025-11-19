@@ -18,10 +18,10 @@ export class WorkflowClient {
     summary: string;
     description?: string;
   }): Promise<string> {
-    const result = await this.client.callTool(
-      buildToolName('create_issue', MCP_TOOL_PREFIX),
-      params
-    );
+    const result = await this.client.callTool(buildToolName('create_issue', MCP_TOOL_PREFIX), {
+      ...params,
+      fields: ['key'],
+    });
 
     if (result.isError) {
       throw new Error(`Failed to create issue: ${result.content[0]?.text}`);
@@ -37,6 +37,7 @@ export class WorkflowClient {
   async getIssue(issueKey: string): Promise<unknown> {
     const result = await this.client.callTool(buildToolName('get_issues', MCP_TOOL_PREFIX), {
       issueKeys: [issueKey],
+      fields: ['key', 'summary', 'status', 'description'],
     });
 
     if (result.isError) {
@@ -54,6 +55,7 @@ export class WorkflowClient {
     const result = await this.client.callTool(buildToolName('update_issue', MCP_TOOL_PREFIX), {
       issueKey,
       ...updates,
+      fields: ['key'],
     });
 
     if (result.isError) {
@@ -68,6 +70,7 @@ export class WorkflowClient {
     const result = await this.client.callTool(buildToolName('transition_issue', MCP_TOOL_PREFIX), {
       issueKey,
       transitionId,
+      fields: ['key', 'status'],
     });
 
     if (result.isError) {
@@ -81,6 +84,7 @@ export class WorkflowClient {
   async findIssues(query: string): Promise<unknown[]> {
     const result = await this.client.callTool(buildToolName('find_issues', MCP_TOOL_PREFIX), {
       query,
+      fields: ['key', 'summary', 'status'],
     });
 
     if (result.isError) {
@@ -99,6 +103,7 @@ export class WorkflowClient {
       buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
       {
         issueKey,
+        fields: ['id', 'updatedAt', 'updatedBy'],
       }
     );
 
@@ -116,7 +121,7 @@ export class WorkflowClient {
   async getTransitions(issueKey: string): Promise<unknown[]> {
     const result = await this.client.callTool(
       buildToolName('get_issue_transitions', MCP_TOOL_PREFIX),
-      { issueKey }
+      { issueKey, fields: ['id', 'display'] }
     );
 
     if (result.isError) {

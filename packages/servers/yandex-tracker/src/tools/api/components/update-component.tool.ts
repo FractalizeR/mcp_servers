@@ -2,10 +2,11 @@
  * MCP Tool для обновления компонента в Яндекс.Трекере
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ComponentWithUnknownFields } from '@tracker_api/entities/index.js';
 import { UpdateComponentDefinition } from './update-component.definition.js';
 import { UpdateComponentParamsSchema } from './update-component.schema.js';
 
@@ -29,7 +30,7 @@ export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { componentId, name, description, lead, assignAuto } = validation.data;
+    const { componentId, name, description, lead, assignAuto, fields } = validation.data;
 
     try {
       this.logger.info('Обновление компонента', {
@@ -40,7 +41,7 @@ export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
         hasAssignAuto: assignAuto !== undefined,
       });
 
-      const component = await this.facade.updateComponent({
+      const component: ComponentWithUnknownFields = await this.facade.updateComponent({
         componentId,
         name,
         description,
@@ -48,14 +49,18 @@ export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
         assignAuto,
       });
 
+      // Фильтрация полей ответа
+      const filtered = ResponseFieldFilter.filter<ComponentWithUnknownFields>(component, fields);
+
       this.logger.info('Компонент обновлен', {
         componentId: component.id,
         name: component.name,
       });
 
       return this.formatSuccess({
-        component,
+        component: filtered,
         message: `Компонент ${componentId} успешно обновлен`,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError('Ошибка при обновлении компонента', error as Error);
