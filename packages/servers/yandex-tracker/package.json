@@ -61,6 +61,7 @@
     "commander": "^14.0.2",
     "inquirer": "^13.0.1",
     "inversify": "^7.10.4",
+    "mime-types": "^3.0.1",
     "ora": "^9.0.0",
     "pino": "^10.1.0",
     "zod": "^4.1.12"
@@ -68,6 +69,7 @@
   "devDependencies": {
     "@anthropic-ai/mcpb": "^2.0.1",
     "@types/inquirer": "^9.0.7",
+    "@types/mime-types": "^3.0.1",
     "@types/node": "^24.10.1",
     "axios-mock-adapter": "^2.1.0",
     "esbuild": "^0.27.0",
