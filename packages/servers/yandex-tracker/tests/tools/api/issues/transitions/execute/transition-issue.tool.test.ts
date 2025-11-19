@@ -135,6 +135,7 @@ describe('TransitionIssueTool', () => {
       await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'close',
+        fields: STANDARD_ISSUE_FIELDS,
         customFields: {
           resolution: 'fixed',
         },
@@ -151,6 +152,7 @@ describe('TransitionIssueTool', () => {
       await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'close',
+        fields: STANDARD_ISSUE_FIELDS,
         comment: 'Closing',
         customFields: {
           resolution: 'fixed',

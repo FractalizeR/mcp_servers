@@ -7,7 +7,7 @@ import { createTestClient } from '@integration/helpers/mcp-client.js';
 import { createMockServer } from '@integration/helpers/mock-server.js';
 import type { TestMCPClient } from '@integration/helpers/mcp-client.js';
 import type { MockServer } from '@integration/helpers/mock-server.js';
-import { STANDARD_QUEUE_FIELDS } from '@helpers/test-fields.js';
+import { STANDARD_QUEUE_FIELD_FIELDS } from '@helpers/test-fields.js';
 
 describe('get-queue-fields integration tests', () => {
   let client: TestMCPClient;
@@ -31,7 +31,7 @@ describe('get-queue-fields integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_queue_fields', {
         queueId: queueKey,
-        fields: STANDARD_QUEUE_FIELDS,
+        fields: STANDARD_QUEUE_FIELD_FIELDS,
       });
 
       // Assert
@@ -53,7 +53,7 @@ describe('get-queue-fields integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_queue_fields', {
         queueId: queueKey,
-        fields: STANDARD_QUEUE_FIELDS,
+        fields: STANDARD_QUEUE_FIELD_FIELDS,
       });
 
       // Assert

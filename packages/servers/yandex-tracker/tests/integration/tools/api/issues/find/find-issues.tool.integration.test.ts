@@ -55,7 +55,7 @@ describe('find-issues integration tests', () => {
 
       expect(response.count).toBe(2);
       expect(response.issues).toHaveLength(2);
-      expect(response.fieldsReturned).toBe('all');
+      expect(response.fieldsReturned).toEqual(STANDARD_ISSUE_FIELDS);
       expect(response.searchCriteria).toMatchObject({
         hasQuery: false,
         hasFilter: false,
@@ -199,6 +199,7 @@ describe('find-issues integration tests', () => {
       const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'Author: me()',
         order,
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       // Assert
@@ -292,6 +293,7 @@ describe('find-issues integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'invalid JQL syntax',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       // Assert
@@ -310,6 +312,7 @@ describe('find-issues integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'nonexistent task',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       // Assert
@@ -328,7 +331,9 @@ describe('find-issues integration tests', () => {
   describe('Validation', () => {
     it('должен вернуть ошибку если не указан ни один параметр поиска', async () => {
       // Act
-      const result = await client.callTool('fr_yandex_tracker_find_issues', {});
+      const result = await client.callTool('fr_yandex_tracker_find_issues', {
+        fields: STANDARD_ISSUE_FIELDS,
+      });
 
       // Assert
       expect(result.isError).toBe(true);

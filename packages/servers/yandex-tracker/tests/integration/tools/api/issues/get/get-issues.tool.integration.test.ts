@@ -54,8 +54,8 @@ describe('get-issues integration tests', () => {
         total: 1,
         successful: 1,
         failed: 0,
-        fieldsReturned: 'all',
       });
+      expect(response.fieldsReturned).toEqual(STANDARD_ISSUE_FIELDS);
 
       expect(response.issues).toHaveLength(1);
       expect(response.issues[0].issueKey).toBe(issueKey);
@@ -193,6 +193,7 @@ describe('get-issues integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [issueKey],
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       // Assert
@@ -226,6 +227,7 @@ describe('get-issues integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [issueKey],
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       // Assert
@@ -248,6 +250,7 @@ describe('get-issues integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: [issueKey],
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       // Assert
@@ -277,6 +280,7 @@ describe('get-issues integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
         issueKeys: ['QUEUE-1', 'QUEUE-2', 'QUEUE-3'],
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       // Assert

@@ -7,6 +7,7 @@ import { createTestClient } from '@integration/helpers/mcp-client.js';
 import { createMockServer } from '@integration/helpers/mock-server.js';
 import type { TestMCPClient } from '@integration/helpers/mcp-client.js';
 import type { MockServer } from '@integration/helpers/mock-server.js';
+import { STANDARD_QUEUE_PERMISSION_FIELDS } from '@helpers/test-fields.js';
 
 describe('manage-queue-access integration tests', () => {
   let client: TestMCPClient;
@@ -33,6 +34,7 @@ describe('manage-queue-access integration tests', () => {
         action: 'add',
         subjects: ['testuser'],
         role: 'follower',
+        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
       });
 
       // Assert
@@ -55,6 +57,7 @@ describe('manage-queue-access integration tests', () => {
         action: 'remove',
         subjects: ['testuser'],
         role: 'follower',
+        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
       });
 
       // Assert
@@ -75,6 +78,7 @@ describe('manage-queue-access integration tests', () => {
         action: 'add',
         subjects: ['developer'],
         role: 'team-member',
+        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
       });
 
       // Assert
@@ -95,6 +99,7 @@ describe('manage-queue-access integration tests', () => {
         action: 'add',
         subjects: ['assignee1'],
         role: 'access',
+        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
       });
 
       // Assert
@@ -117,6 +122,7 @@ describe('manage-queue-access integration tests', () => {
         action: 'add',
         subjects: ['testuser'],
         role: 'follower',
+        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
       });
 
       // Assert

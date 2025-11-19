@@ -19,7 +19,17 @@ export const STANDARD_ISSUE_FIELDS = [
 
 export const MINIMAL_ISSUE_FIELDS = ['id', 'key', 'summary'] as const;
 
-export const STANDARD_QUEUE_FIELDS = ['id', 'key', 'name', 'description', 'lead'] as const;
+export const STANDARD_QUEUE_FIELDS = [
+  'id',
+  'key',
+  'name',
+  'description',
+  'lead',
+  'assignAuto',
+  'version',
+  'defaultType',
+  'defaultPriority',
+] as const;
 
 export const MINIMAL_QUEUE_FIELDS = ['id', 'key', 'name'] as const;
 
@@ -35,11 +45,18 @@ export const STANDARD_PROJECT_FIELDS = ['id', 'key', 'name', 'description', 'lea
 
 export const STANDARD_WORKLOG_FIELDS = ['id', 'duration', 'createdAt', 'createdBy'] as const;
 
-export const STANDARD_TRANSITION_FIELDS = ['id', 'to'] as const;
+export const STANDARD_TRANSITION_FIELDS = ['id', 'to', 'display'] as const;
 
 export const STANDARD_CHANGELOG_FIELDS = ['id', 'updatedAt', 'updatedBy', 'fields'] as const;
 
-export const STANDARD_COMPONENT_FIELDS = ['id', 'name', 'description', 'lead', 'queue'] as const;
+export const STANDARD_COMPONENT_FIELDS = [
+  'id',
+  'name',
+  'description',
+  'lead',
+  'queue',
+  'assignAuto',
+] as const;
 
 /**
  * Хелпер для создания кастомного набора полей
@@ -47,3 +64,7 @@ export const STANDARD_COMPONENT_FIELDS = ['id', 'name', 'description', 'lead', '
 export function createFieldsSet(...fields: string[]): string[] {
   return fields;
 }
+
+export const STANDARD_QUEUE_FIELD_FIELDS = ['id', 'key', 'name', 'required', 'type'] as const;
+
+export const STANDARD_QUEUE_PERMISSION_FIELDS = ['id', 'self', 'display'] as const;
