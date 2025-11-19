@@ -1,12 +1,14 @@
 #!/usr/bin/env tsx
 /**
- * Скрипт для установки build hash в manifest.json
+ * Скрипт для синхронизации версии и установки build hash в manifest.json
  *
- * Автоматически вызывается при каждой сборке бандла для избежания кеширования.
+ * Автоматически вызывается при каждой сборке бандла:
+ * 1. Синхронизирует версию из package.json в manifest.json
+ * 2. Устанавливает build hash для избежания кеширования
+ *
  * Build hash хранится в manifest.json в секции _meta.build.hash
- *
  * Формат версии: {version}+{gitHash}
- * Пример: 0.1.0+a1b2c3d
+ * Пример: 2.0.0+a1b2c3d
  */
 
 import { execSync } from 'node:child_process';
@@ -33,16 +35,34 @@ interface Manifest {
 function getGitHash(): string {
   try {
     // Получаем короткий hash (7 символов) текущего коммита
-    const hash = execSync('git rev-parse --short=7 HEAD', {
+    return execSync('git rev-parse --short=7 HEAD', {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
     }).trim();
-
-    return hash;
-  } catch (error) {
+  } catch {
     console.warn('⚠️  Не удалось получить git hash, используем fallback');
     // Fallback: используем timestamp если git недоступен
     return Date.now().toString(36);
+  }
+}
+
+/**
+ * Читает версию из package.json yandex-tracker пакета
+ */
+async function getPackageVersion(): Promise<string> {
+  const projectRoot = path.resolve(process.cwd());
+  const isInWorkspace = projectRoot.includes('packages/servers/yandex-tracker');
+  const packageJsonPath = isInWorkspace
+    ? path.join(projectRoot, 'package.json')
+    : path.join(projectRoot, 'packages/servers/yandex-tracker/package.json');
+
+  try {
+    const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
+    const packageJson = JSON.parse(packageJsonContent) as { version: string };
+    return packageJson.version;
+  } catch {
+    console.warn('⚠️  Не удалось прочитать версию из package.json');
+    return '0.0.0';
   }
 }
 
@@ -58,7 +78,7 @@ async function setBuildHash(): Promise<void> {
   const manifestPath = path.join(monorepoRoot, 'manifest.json');
   const manifestTemplatePath = path.join(monorepoRoot, 'manifest.template.json');
 
-  console.log('🔢 Установка build hash...');
+  console.log('🔢 Установка build hash и версии...');
 
   try {
     // Если manifest.json не существует, копируем из template
@@ -72,6 +92,13 @@ async function setBuildHash(): Promise<void> {
     // Читаем manifest.json
     const manifestContent = await fs.readFile(manifestPath, 'utf-8');
     const manifest: Manifest = JSON.parse(manifestContent);
+
+    // Получаем версию из package.json
+    const packageVersion = await getPackageVersion();
+    if (manifest.version !== packageVersion) {
+      console.log(`📦 Обновление версии: ${manifest.version} → ${packageVersion}`);
+      manifest.version = packageVersion;
+    }
 
     // Получаем git hash текущего коммита
     const gitHash = getGitHash();
@@ -103,13 +130,13 @@ async function setBuildHash(): Promise<void> {
 /**
  * CLI точка входа
  */
-async function main() {
+async function main(): Promise<void> {
   await setBuildHash();
 }
 
 // Запускаем если скрипт вызван напрямую
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+  void main();
 }
 
 export { setBuildHash };
