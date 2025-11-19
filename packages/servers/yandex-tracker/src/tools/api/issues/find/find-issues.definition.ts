@@ -69,11 +69,19 @@ export class FindIssuesDefinition extends BaseToolDefinition {
       type: 'string',
       description:
         'Язык запросов Трекера. Формат: "Field: value" с пробелом между условиями (AND). ' +
-        'Функции: me(), empty(), week(), month(). Операторы: OR, !, >, <, >=, <=. ' +
+        '\n' +
+        'Операторы: OR, !, >, <, >=, <=, #(точное совпадение). ' +
+        '\n' +
+        'Функции: me(), empty(), notEmpty(), today(), now(), week(), month(), unresolved(). ' +
+        '\n' +
+        'Интервалы: "2024-01-01".."2024-12-31". Множество: author: "user1","user2". ' +
+        '\n' +
+        'История изменений: changed(from: "old" to: "new" by: "user" date: ">2024-01-01"). ' +
         '\n' +
         'Примеры: "Author: me() Resolution: empty()" | "Assignee: me() Deadline: week()" | ' +
         '"(Followers: me() OR Assignee: me()) Status: open" | "Priority: critical Status: open" | ' +
-        '"Created: >2024-01-01 Queue: PROJ"',
+        '"Created: >2024-01-01 Queue: PROJ" | "Status: changed(to: \\"В работе\\" date: >today()-1w)" | ' +
+        '"Created: \\"2024-01-01\\"..\\"2024-12-31\\" author: \\"user1\\",\\"user2\\""',
     };
   }
 
