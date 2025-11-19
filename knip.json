@@ -1,30 +1,42 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["src/index.ts", "scripts/**/*.ts", "src/cli/bin/**/*.ts"],
-  "project": ["src/**/*.ts", "scripts/**/*.ts"],
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/**/*.ts"],
+      "project": ["scripts/**/*.ts"]
+    },
+    "packages/framework/infrastructure": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/framework/core": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/framework/search": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/servers/yandex-tracker": {
+      "entry": ["src/index.ts", "src/cli/bin/*.ts"],
+      "project": ["src/**/*.ts"]
+    }
+  },
   "ignore": [
-    "tests/**",
     "**/*.test.ts",
     "**/*.spec.ts",
-    "**/index.ts"
+    "**/tests/**",
+    "**/dist/**",
+    "**/*.d.ts"
   ],
   "ignoreDependencies": [
-    "@modelcontextprotocol/sdk",
-    "tsx",
-    "vitest",
     "@vitest/coverage-v8",
-    "@iarna/toml",
-    "chalk",
-    "commander",
-    "inquirer",
-    "ora",
-    "axios",
-    "inversify",
-    "p-limit",
-    "pino",
-    "pino-pretty",
-    "rotating-file-stream",
-    "zod"
+    "@vitest/ui",
+    "vitest",
+    "tsx",
+    "@anthropic-ai/mcpb",
+    "tsup",
+    "esbuild"
   ],
   "ignoreExportsUsedInFile": true,
   "includeEntryExports": false

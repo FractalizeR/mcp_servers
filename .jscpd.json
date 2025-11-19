@@ -16,5 +16,6 @@
   "format": ["typescript", "javascript"],
   "minLines": 5,
   "minTokens": 50,
-  "output": "./jscpd-report"
+  "output": "./jscpd-report",
+  "exitCode": 1
 }

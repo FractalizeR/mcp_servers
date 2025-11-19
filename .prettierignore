@@ -26,6 +26,12 @@ logs/
 # Generated files
 dependency-graph.svg
 dependency-graph.html
+jscpd-report/
 
 # Documentation that shouldn't be reformatted
 CHANGELOG.md
+
+# Build artifacts
+*.mcpb
+.mcpb-build/
+manifest.json
