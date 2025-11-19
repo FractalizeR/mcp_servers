@@ -146,37 +146,25 @@ import { BaseTool } from '@core/tools/base/base-tool.js';              // WRONG!
 
 ### 3. Внутрипакетные импорты (Node.js Subpath Imports)
 
-**Проект использует Node.js Subpath Imports (# префикс) вместо TypeScript path aliases.**
-
-**Короткие импорты (≤2 уровня) - относительные пути:**
+**Короткие (≤2 уровня) - относительные:**
 ```typescript
 import { validateInput } from './utils.js';
-import { BaseOperation } from '../base-operation.js';
 ```
 
-**Глубокие импорты (≥3 уровня) - Node.js subpath imports:**
+**Глубокие (≥3 уровня) - # префиксы:**
 ```typescript
 import { MCP_TOOL_PREFIX } from '#constants';
 import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
-import { createFixture } from '#helpers/queue.fixture.js';
 ```
 
-**Доступные # префиксы (yandex-tracker пакет):**
-- `#tracker_api/*` - Tracker API слой
-- `#tools/*` - MCP Tools
-- `#composition-root/*` - DI контейнер
-- `#cli/*` - CLI модули
-- `#constants` - Константы проекта
-- `#common/*` - Общие утилиты
-- `#integration/*` - Интеграционные тесты
-- `#helpers/*` - Тестовые helpers
+**Доступные # префиксы:** `#tracker_api/*`, `#tools/*`, `#composition-root/*`, `#cli/*`, `#constants`, `#common/*`, `#integration/*`, `#helpers/*`
 
-**❌ НЕ используй старые @ алиасы:**
+**❌ НЕ используй @ алиасы:**
 ```typescript
-import { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js'; // WRONG! Use #
+import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 ```
 
-**Подробности:** См. [ARCHITECTURE.md](./ARCHITECTURE.md) секция "Module System"
+**Подробности:** [ARCHITECTURE.md](./ARCHITECTURE.md) секция "Module System"
 
 ### 4. Типобезопасность
 

@@ -93,6 +93,7 @@ async function main(): Promise<void> {
         LOG_LEVEL: 'error', // Минимальный уровень логирования
         YANDEX_TRACKER_TOKEN: 'dummy-token-for-smoke-test', // Фейковый токен для теста
         YANDEX_ORG_ID: '123456', // Фейковый ID организации для теста
+        // TOOL_DISCOVERY_MODE: 'eager' (по умолчанию) - тестируем полный список инструментов
       },
     });
 
@@ -240,7 +241,7 @@ async function main(): Promise<void> {
 
     // Проверяем наличие критически важных инструментов
     const toolNames = response.result.tools.map((t) => t.name);
-    const requiredTools = ['fr_yandex_tracker_ping', 'search_tools'];
+    const requiredTools = ['fr_yandex_tracker_ping'];
     for (const requiredTool of requiredTools) {
       if (!toolNames.includes(requiredTool)) {
         throw new Error(
@@ -248,6 +249,14 @@ async function main(): Promise<void> {
             `Доступные: ${toolNames.join(', ')}`
         );
       }
+    }
+
+    // Проверяем, что search_tools НЕ присутствует (в eager mode его не должно быть)
+    if (toolNames.includes('search_tools')) {
+      throw new Error(
+        'Инструмент "search_tools" присутствует в списке, хотя сервер работает в eager mode. ' +
+          'В eager mode search_tools избыточен.'
+      );
     }
   }
 }
