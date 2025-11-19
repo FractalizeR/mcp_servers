@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { FieldsSchema } from '../../../common/schemas/index.js';
 
 /**
  * Схема параметров для управления доступом к очереди
@@ -27,6 +28,11 @@ export const ManageQueueAccessParamsSchema = z.object({
    * Действие (обязательно)
    */
   action: z.enum(['add', 'remove']),
+
+  /**
+   * Список полей для возврата (обязательно)
+   */
+  fields: FieldsSchema,
 });
 
 /**

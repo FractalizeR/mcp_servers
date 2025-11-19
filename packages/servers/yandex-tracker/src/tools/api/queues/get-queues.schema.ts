@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { FieldsSchema } from '../../../common/schemas/index.js';
 
 /**
  * Схема параметров для получения списка очередей
@@ -22,6 +23,11 @@ export const GetQueuesParamsSchema = z.object({
    * Дополнительные поля для включения в ответ (опционально)
    */
   expand: z.string().optional(),
+
+  /**
+   * Список полей для возврата (обязательно)
+   */
+  fields: FieldsSchema,
 });
 
 /**

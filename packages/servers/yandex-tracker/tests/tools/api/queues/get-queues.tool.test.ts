@@ -49,7 +49,7 @@ describe('GetQueuesTool', () => {
         const mockQueues = createQueueListFixture(3);
         vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
 
-        const result = await tool.execute({});
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getQueues).toHaveBeenCalledWith({
@@ -60,7 +60,7 @@ describe('GetQueuesTool', () => {
       });
 
       it('должен вернуть ошибку для некорректного perPage (отрицательное)', async () => {
-        const result = await tool.execute({ perPage: -1 });
+        const result = await tool.execute({ perPage: -1, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -72,7 +72,7 @@ describe('GetQueuesTool', () => {
       });
 
       it('должен вернуть ошибку для некорректного perPage (больше 100)', async () => {
-        const result = await tool.execute({ perPage: 101 });
+        const result = await tool.execute({ perPage: 101, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -84,7 +84,7 @@ describe('GetQueuesTool', () => {
       });
 
       it('должен вернуть ошибку для некорректного page (отрицательное)', async () => {
-        const result = await tool.execute({ page: 0 });
+        const result = await tool.execute({ page: 0, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -99,7 +99,7 @@ describe('GetQueuesTool', () => {
         const mockQueues = createQueueListFixture(10);
         vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
 
-        const result = await tool.execute({ perPage: 10, page: 2 });
+        const result = await tool.execute({ perPage: 10, page: 2, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getQueues).toHaveBeenCalledWith({
@@ -115,7 +115,7 @@ describe('GetQueuesTool', () => {
         const mockQueues = createQueueListFixture(3);
         vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
 
-        const result = await tool.execute({});
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getQueues).toHaveBeenCalledWith({
@@ -153,7 +153,7 @@ describe('GetQueuesTool', () => {
         const mockQueues = createQueueListFixture(2);
         vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
 
-        const result = await tool.execute({ expand: 'projects' });
+        const result = await tool.execute({ expand: 'projects', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getQueues).toHaveBeenCalledWith({
@@ -172,7 +172,7 @@ describe('GetQueuesTool', () => {
         const mockQueues = createQueueListFixture(5);
         vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
 
-        const result = await tool.execute({ perPage: 5, page: 3 });
+        const result = await tool.execute({ perPage: 5, page: 3, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getQueues).toHaveBeenCalledWith({
@@ -195,7 +195,7 @@ describe('GetQueuesTool', () => {
       it('должен обработать пустой результат', async () => {
         vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue([]);
 
-        const result = await tool.execute({});
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockLogger.info).toHaveBeenCalledWith('Список очередей получен', {
@@ -221,7 +221,7 @@ describe('GetQueuesTool', () => {
         const error = new Error('API Error');
         vi.mocked(mockTrackerFacade.getQueues).mockRejectedValue(error);
 
-        const result = await tool.execute({});
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -238,7 +238,7 @@ describe('GetQueuesTool', () => {
         const error = new Error('Network timeout');
         vi.mocked(mockTrackerFacade.getQueues).mockRejectedValue(error);
 
-        const result = await tool.execute({ perPage: 10, page: 1 });
+        const result = await tool.execute({ perPage: 10, page: 1, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {

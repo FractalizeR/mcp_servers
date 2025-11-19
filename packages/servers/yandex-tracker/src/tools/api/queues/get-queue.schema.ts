@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { FieldsSchema } from '../../../common/schemas/index.js';
 
 /**
  * Схема параметров для получения одной очереди
@@ -17,6 +18,11 @@ export const GetQueueParamsSchema = z.object({
    * Дополнительные поля для включения в ответ (опционально)
    */
   expand: z.string().optional(),
+
+  /**
+   * Список полей для возврата (обязательно)
+   */
+  fields: FieldsSchema,
 });
 
 /**

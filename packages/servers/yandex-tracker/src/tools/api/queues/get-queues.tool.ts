@@ -2,13 +2,14 @@
  * MCP Tool для получения списка очередей в Яндекс.Трекере
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { GetQueuesDefinition } from './get-queues.definition.js';
 import { GetQueuesParamsSchema } from './get-queues.schema.js';
 
+import type { QueueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { GET_QUEUES_TOOL_METADATA } from './get-queues.metadata.js';
 
 /**
@@ -29,7 +30,7 @@ export class GetQueuesTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { perPage = 50, page = 1, expand } = validation.data;
+    const { fields, perPage = 50, page = 1, expand } = validation.data;
 
     try {
       this.logger.info('Получение списка очередей', {
@@ -45,11 +46,16 @@ export class GetQueuesTool extends BaseTool<YandexTrackerFacade> {
         page,
       });
 
+      const filteredQueues = queues.map((queue) =>
+        ResponseFieldFilter.filter<QueueWithUnknownFields>(queue, fields)
+      );
+
       return this.formatSuccess({
-        queues,
-        count: queues.length,
+        queues: filteredQueues,
+        count: filteredQueues.length,
         page,
         perPage,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка очередей', error as Error);

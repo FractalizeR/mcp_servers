@@ -2,13 +2,14 @@
  * MCP Tool для управления доступом к очереди в Яндекс.Трекере
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { ManageQueueAccessDefinition } from './manage-queue-access.definition.js';
 import { ManageQueueAccessParamsSchema } from './manage-queue-access.schema.js';
 
+import type { QueuePermissionWithUnknownFields } from '@tracker_api/entities/index.js';
 import { MANAGE_QUEUE_ACCESS_TOOL_METADATA } from './manage-queue-access.metadata.js';
 
 export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
@@ -26,7 +27,7 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { queueId, role, subjects, action } = validation.data;
+    const { fields, queueId, role, subjects, action } = validation.data;
 
     try {
       this.logger.info('Управление доступом к очереди', {
@@ -47,12 +48,17 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
         subjectsCount: subjects.length,
       });
 
+      const filteredPermissions = permissions.map((permission) =>
+        ResponseFieldFilter.filter<QueuePermissionWithUnknownFields>(permission, fields)
+      );
+
       return this.formatSuccess({
         queueId,
         role,
         action,
         subjectsProcessed: subjects.length,
-        permissions,
+        permissions: filteredPermissions,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(

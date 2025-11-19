@@ -2,13 +2,14 @@
  * MCP Tool для получения одной очереди в Яндекс.Трекере
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '@tracker_api/facade/index.js';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { GetQueueDefinition } from './get-queue.definition.js';
 import { GetQueueParamsSchema } from './get-queue.schema.js';
 
+import type { QueueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { GET_QUEUE_TOOL_METADATA } from './get-queue.metadata.js';
 
 export class GetQueueTool extends BaseTool<YandexTrackerFacade> {
@@ -26,7 +27,7 @@ export class GetQueueTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { queueId, expand } = validation.data;
+    const { fields, queueId, expand } = validation.data;
 
     try {
       this.logger.info('Получение очереди', {
@@ -41,8 +42,11 @@ export class GetQueueTool extends BaseTool<YandexTrackerFacade> {
         queueName: queue.name,
       });
 
+      const filteredQueue = ResponseFieldFilter.filter<QueueWithUnknownFields>(queue, fields);
+
       return this.formatSuccess({
-        queue,
+        queue: filteredQueue,
+        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении очереди ${queueId}`, error as Error);

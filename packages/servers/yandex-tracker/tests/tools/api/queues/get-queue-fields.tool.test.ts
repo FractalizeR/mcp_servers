@@ -49,7 +49,7 @@ describe('GetQueueFieldsTool', () => {
   describe('execute', () => {
     describe('валидация параметров (Zod)', () => {
       it('должен вернуть ошибку если queueId не указан', async () => {
-        const result = await tool.execute({});
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -61,7 +61,7 @@ describe('GetQueueFieldsTool', () => {
       });
 
       it('должен вернуть ошибку для пустого queueId', async () => {
-        const result = await tool.execute({ queueId: '' });
+        const result = await tool.execute({ queueId: '', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -76,7 +76,7 @@ describe('GetQueueFieldsTool', () => {
         const mockFields = createQueueFieldListFixture(3);
         vi.mocked(mockTrackerFacade.getQueueFields).mockResolvedValue(mockFields);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getQueueFields).toHaveBeenCalledWith({
@@ -90,7 +90,7 @@ describe('GetQueueFieldsTool', () => {
         const mockFields = createQueueFieldListFixture(5);
         vi.mocked(mockTrackerFacade.getQueueFields).mockResolvedValue(mockFields);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getQueueFields).toHaveBeenCalledWith({
@@ -120,7 +120,7 @@ describe('GetQueueFieldsTool', () => {
         const mockFields = createStandardSystemFields();
         vi.mocked(mockTrackerFacade.getQueueFields).mockResolvedValue(mockFields);
 
-        const result = await tool.execute({ queueId: 'PROJ' });
+        const result = await tool.execute({ queueId: 'PROJ', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockLogger.info).toHaveBeenCalledWith('Поля очереди получены', {
@@ -151,7 +151,10 @@ describe('GetQueueFieldsTool', () => {
         ];
         vi.mocked(mockTrackerFacade.getQueueFields).mockResolvedValue(mockFields);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({
+          queueId: 'TEST',
+          fields: ['id', 'key', 'name', 'required'],
+        });
 
         expect(result.isError).toBeUndefined();
 
@@ -172,7 +175,7 @@ describe('GetQueueFieldsTool', () => {
       it('должен обработать пустой список полей', async () => {
         vi.mocked(mockTrackerFacade.getQueueFields).mockResolvedValue([]);
 
-        const result = await tool.execute({ queueId: 'EMPTY' });
+        const result = await tool.execute({ queueId: 'EMPTY', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockLogger.info).toHaveBeenCalledWith('Поля очереди получены', {
@@ -196,7 +199,7 @@ describe('GetQueueFieldsTool', () => {
         const mockFields = createQueueFieldListFixture(3);
         vi.mocked(mockTrackerFacade.getQueueFields).mockResolvedValue(mockFields);
 
-        const result = await tool.execute({ queueId: 'queue123' });
+        const result = await tool.execute({ queueId: 'queue123', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getQueueFields).toHaveBeenCalledWith({
@@ -224,7 +227,10 @@ describe('GetQueueFieldsTool', () => {
         ];
         vi.mocked(mockTrackerFacade.getQueueFields).mockResolvedValue(mockFields);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({
+          queueId: 'TEST',
+          fields: ['id', 'key', 'name', 'type'],
+        });
 
         expect(result.isError).toBeUndefined();
 
@@ -247,7 +253,7 @@ describe('GetQueueFieldsTool', () => {
         const error = new Error('Queue not found');
         vi.mocked(mockTrackerFacade.getQueueFields).mockRejectedValue(error);
 
-        const result = await tool.execute({ queueId: 'NOTEXIST' });
+        const result = await tool.execute({ queueId: 'NOTEXIST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -264,7 +270,7 @@ describe('GetQueueFieldsTool', () => {
         const error = new Error('Access denied');
         vi.mocked(mockTrackerFacade.getQueueFields).mockRejectedValue(error);
 
-        const result = await tool.execute({ queueId: 'PRIVATE' });
+        const result = await tool.execute({ queueId: 'PRIVATE', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -279,7 +285,7 @@ describe('GetQueueFieldsTool', () => {
         const error = new Error('Network timeout');
         vi.mocked(mockTrackerFacade.getQueueFields).mockRejectedValue(error);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -294,7 +300,7 @@ describe('GetQueueFieldsTool', () => {
         const error = new Error('Invalid response format');
         vi.mocked(mockTrackerFacade.getQueueFields).mockRejectedValue(error);
 
-        const result = await tool.execute({ queueId: 'TEST' });
+        const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
