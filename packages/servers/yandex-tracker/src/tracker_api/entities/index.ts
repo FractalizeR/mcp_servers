@@ -104,6 +104,18 @@ export type {
   BulkChangeError,
 } from './bulk-change.entity.js';
 
+// Board
+export type {
+  Board,
+  BoardWithUnknownFields,
+  BoardColumn,
+  BoardFilter,
+  CountryRef,
+} from './board.entity.js';
+
+// Sprint
+export type { Sprint, SprintWithUnknownFields, SprintStatus, BoardRef } from './sprint.entity.js';
+
 // Entity Factories (runtime code for coverage)
 export {
   createUser,

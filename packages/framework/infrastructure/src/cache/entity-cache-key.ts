@@ -22,6 +22,7 @@ export enum EntityType {
   COMMENT = 'comment',
   COMPONENT = 'component',
   SPRINT = 'sprint',
+  BOARD = 'board',
   PROJECT = 'project',
   ATTACHMENT = 'attachment',
   FIELD = 'field',

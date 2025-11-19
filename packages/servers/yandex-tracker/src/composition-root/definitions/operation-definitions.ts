@@ -81,6 +81,19 @@ import {
   UpdateFieldOperation,
   DeleteFieldOperation,
 } from '@tracker_api/api_operations/field/index.js';
+import {
+  GetBoardsOperation,
+  GetBoardOperation,
+  CreateBoardOperation,
+  UpdateBoardOperation,
+  DeleteBoardOperation,
+} from '@tracker_api/api_operations/board/index.js';
+import {
+  GetSprintsOperation,
+  GetSprintOperation,
+  CreateSprintOperation,
+  UpdateSprintOperation,
+} from '@tracker_api/api_operations/sprint/index.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -143,6 +156,15 @@ export const OPERATION_CLASSES = [
   CreateFieldOperation,
   UpdateFieldOperation,
   DeleteFieldOperation,
+  GetBoardsOperation,
+  GetBoardOperation,
+  CreateBoardOperation,
+  UpdateBoardOperation,
+  DeleteBoardOperation,
+  GetSprintsOperation,
+  GetSprintOperation,
+  CreateSprintOperation,
+  UpdateSprintOperation,
 ] as const;
 
 /**

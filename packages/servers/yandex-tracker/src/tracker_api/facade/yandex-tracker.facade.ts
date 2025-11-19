@@ -62,6 +62,18 @@ import type {
   UpdateFieldDto,
   FieldOutput,
   FieldsListOutput,
+  GetBoardsDto,
+  GetBoardDto,
+  CreateBoardDto,
+  UpdateBoardDto,
+  BoardOutput,
+  BoardsListOutput,
+  GetSprintsDto,
+  GetSprintDto,
+  CreateSprintDto,
+  UpdateSprintDto,
+  SprintOutput,
+  SprintsListOutput,
 } from '@tracker_api/dto/index.js';
 import type {
   IssueWithUnknownFields,
@@ -947,5 +959,122 @@ export class YandexTrackerFacade {
       'DeleteFieldOperation'
     );
     return operation.execute(fieldId);
+  }
+
+  // === Board Methods ===
+
+  /**
+   * Получает список всех досок
+   * @param params - параметры запроса (опционально)
+   * @returns массив досок
+   */
+  async getBoards(params?: GetBoardsDto): Promise<BoardsListOutput> {
+    const operation = this.getOperation<{
+      execute: (params?: GetBoardsDto) => Promise<BoardsListOutput>;
+    }>('GetBoardsOperation');
+    return operation.execute(params);
+  }
+
+  /**
+   * Получает доску по ID
+   * @param boardId - идентификатор доски
+   * @param params - дополнительные параметры (localized)
+   * @returns данные доски
+   */
+  async getBoard(boardId: string, params?: Omit<GetBoardDto, 'boardId'>): Promise<BoardOutput> {
+    const operation = this.getOperation<{
+      execute: (params: GetBoardDto) => Promise<BoardOutput>;
+    }>('GetBoardOperation');
+    return operation.execute({ boardId, ...params });
+  }
+
+  /**
+   * Создает новую доску
+   * @param input - данные для создания доски
+   * @returns созданная доска
+   */
+  async createBoard(input: CreateBoardDto): Promise<BoardOutput> {
+    const operation = this.getOperation<{
+      execute: (input: CreateBoardDto) => Promise<BoardOutput>;
+    }>('CreateBoardOperation');
+    return operation.execute(input);
+  }
+
+  /**
+   * Обновляет доску
+   * @param boardId - идентификатор доски
+   * @param input - данные для обновления
+   * @returns обновленная доска
+   */
+  async updateBoard(boardId: string, input: Omit<UpdateBoardDto, 'boardId'>): Promise<BoardOutput> {
+    const operation = this.getOperation<{
+      execute: (input: UpdateBoardDto) => Promise<BoardOutput>;
+    }>('UpdateBoardOperation');
+    return operation.execute({ boardId, ...input });
+  }
+
+  /**
+   * Удаляет доску
+   * @param boardId - идентификатор доски
+   */
+  async deleteBoard(boardId: string): Promise<void> {
+    const operation = this.getOperation<{
+      execute: (params: { boardId: string }) => Promise<void>;
+    }>('DeleteBoardOperation');
+    return operation.execute({ boardId });
+  }
+
+  // === Sprint Methods ===
+
+  /**
+   * Получает список спринтов доски
+   * @param boardId - идентификатор доски
+   * @returns массив спринтов
+   */
+  async getSprints(boardId: string): Promise<SprintsListOutput> {
+    const operation = this.getOperation<{
+      execute: (params: GetSprintsDto) => Promise<SprintsListOutput>;
+    }>('GetSprintsOperation');
+    return operation.execute({ boardId });
+  }
+
+  /**
+   * Получает спринт по ID
+   * @param sprintId - идентификатор спринта
+   * @returns данные спринта
+   */
+  async getSprint(sprintId: string): Promise<SprintOutput> {
+    const operation = this.getOperation<{
+      execute: (params: GetSprintDto) => Promise<SprintOutput>;
+    }>('GetSprintOperation');
+    return operation.execute({ sprintId });
+  }
+
+  /**
+   * Создает новый спринт
+   * @param input - данные для создания спринта
+   * @returns созданный спринт
+   */
+  async createSprint(input: CreateSprintDto): Promise<SprintOutput> {
+    const operation = this.getOperation<{
+      execute: (input: CreateSprintDto) => Promise<SprintOutput>;
+    }>('CreateSprintOperation');
+    return operation.execute(input);
+  }
+
+  /**
+   * Обновляет спринт
+   * @param sprintId - идентификатор спринта
+   * @param input - данные для обновления
+   * @returns обновленный спринт
+   */
+  async updateSprint(
+    sprintId: string,
+    input: Omit<UpdateSprintDto, 'sprintId'>
+  ): Promise<SprintOutput> {
+    const operation = this.getOperation<{
+      execute: (input: UpdateSprintDto) => Promise<SprintOutput>;
+    }>('UpdateSprintOperation');
+    return operation.execute({ sprintId, ...input });
   }
 }

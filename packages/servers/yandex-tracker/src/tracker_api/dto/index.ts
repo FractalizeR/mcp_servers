@@ -100,6 +100,29 @@ export type {
   BulkMoveIssuesInputDto,
 } from './bulk-change/index.js';
 
+// Board DTO
+export type {
+  GetBoardsDto,
+  GetBoardDto,
+  CreateBoardDto,
+  CreateBoardColumnDto,
+  CreateBoardFilterDto,
+  UpdateBoardDto,
+  DeleteBoardDto,
+  BoardOutput,
+  BoardsListOutput,
+} from './board/index.js';
+
+// Sprint DTO
+export type {
+  GetSprintsDto,
+  GetSprintDto,
+  CreateSprintDto,
+  UpdateSprintDto,
+  SprintOutput,
+  SprintsListOutput,
+} from './sprint/index.js';
+
 // DTO Factories (runtime code for coverage)
 export {
   // Issue factories

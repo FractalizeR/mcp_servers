@@ -38,3 +38,9 @@ export * from '@tracker_api/api_operations/attachment/index.js';
 
 // Bulk Change operations
 export * from '@tracker_api/api_operations/bulk-change/index.js';
+
+// Board operations
+export * from '@tracker_api/api_operations/board/index.js';
+
+// Sprint operations
+export * from '@tracker_api/api_operations/sprint/index.js';
