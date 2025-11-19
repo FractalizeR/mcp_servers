@@ -195,7 +195,6 @@ describe('GetIssueTransitionsTool', () => {
 
       await tool.execute({
         issueKey: 'QUEUE-123',
-      fields: STANDARD_TRANSITION_FIELDS,
         fields: STANDARD_TRANSITION_FIELDS,
       });
 
@@ -230,7 +229,6 @@ describe('GetIssueTransitionsTool', () => {
 
       const result = await tool.execute({
         issueKey: 'NOTFOUND-999',
-      fields: STANDARD_TRANSITION_FIELDS,
         fields: STANDARD_TRANSITION_FIELDS,
       });
 

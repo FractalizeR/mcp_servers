@@ -9,7 +9,6 @@ import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { ChecklistItemWithUnknownFields } from '@tracker_api/entities/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
-import { STANDARD_CHECKLIST_FIELDS } from '../../../../helpers/test-fields.js';
 import { createChecklistOutputFixture } from '../../../../helpers/checklist-dto.fixture.js';
 
 describe('GetChecklistTool', () => {

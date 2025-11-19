@@ -73,9 +73,7 @@ describe('TransitionIssueTool', () => {
 
   describe('Validation', () => {
     it('должен требовать параметр issueKey', async () => {
-      const result = await tool.execute({ transitionId: 'close' ,
-        fields: STANDARD_ISSUE_FIELDS,
-      });
+      const result = await tool.execute({ transitionId: 'close', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -87,9 +85,7 @@ describe('TransitionIssueTool', () => {
     });
 
     it('должен требовать параметр transitionId', async () => {
-      const result = await tool.execute({ issueKey: 'QUEUE-123' ,
-        fields: STANDARD_ISSUE_FIELDS,
-      });
+      const result = await tool.execute({ issueKey: 'QUEUE-123', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -173,7 +169,6 @@ describe('TransitionIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'start-progress',
-      fields: STANDARD_ISSUE_FIELDS,
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -224,7 +219,6 @@ describe('TransitionIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'close',
-      fields: STANDARD_ISSUE_FIELDS,
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -252,7 +246,6 @@ describe('TransitionIssueTool', () => {
       await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'close',
-      fields: STANDARD_ISSUE_FIELDS,
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -279,7 +272,6 @@ describe('TransitionIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'close',
-      fields: STANDARD_ISSUE_FIELDS,
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -296,7 +288,6 @@ describe('TransitionIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'invalid-transition',
-      fields: STANDARD_ISSUE_FIELDS,
         fields: STANDARD_ISSUE_FIELDS,
       });
 

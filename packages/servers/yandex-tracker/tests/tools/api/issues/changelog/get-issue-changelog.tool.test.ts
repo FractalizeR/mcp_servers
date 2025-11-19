@@ -222,7 +222,6 @@ describe('GetIssueChangelogTool', () => {
 
       await tool.execute({
         issueKey: 'QUEUE-123',
-      fields: STANDARD_CHANGELOG_FIELDS,
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
@@ -257,7 +256,6 @@ describe('GetIssueChangelogTool', () => {
 
       const result = await tool.execute({
         issueKey: 'NOTFOUND-999',
-      fields: STANDARD_CHANGELOG_FIELDS,
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 

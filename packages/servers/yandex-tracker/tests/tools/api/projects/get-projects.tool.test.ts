@@ -8,7 +8,6 @@ import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
-import { STANDARD_PROJECT_FIELDS } from '../../../helpers/test-fields.js';
 import { createProjectListFixture } from '../../../helpers/project.fixture.js';
 
 describe('GetProjectsTool', () => {
