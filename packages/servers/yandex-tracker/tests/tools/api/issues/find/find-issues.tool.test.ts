@@ -9,6 +9,7 @@ import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { FindIssuesTool } from '@tools/api/issues/find/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
+import { STANDARD_ISSUE_FIELDS } from '../../../../helpers/test-fields.js';
 
 describe('FindIssuesTool', () => {
   let tool: FindIssuesTool;
@@ -124,7 +125,7 @@ describe('FindIssuesTool', () => {
     it('должен принять валидный query параметр', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
-      const result = await tool.execute({ query: 'Author: me()' });
+      const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
       expect(mockTrackerFacade.findIssues).toHaveBeenCalled();
@@ -133,7 +134,7 @@ describe('FindIssuesTool', () => {
     it('должен принять валидный keys параметр', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
-      const result = await tool.execute({ keys: ['QUEUE-123'] });
+      const result = await tool.execute({ keys: ['QUEUE-123'], fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
       expect(mockTrackerFacade.findIssues).toHaveBeenCalled();
@@ -142,7 +143,7 @@ describe('FindIssuesTool', () => {
     it('должен принять валидный queue параметр', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
-      const result = await tool.execute({ queue: 'QUEUE' });
+      const result = await tool.execute({ queue: 'QUEUE', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
       expect(mockTrackerFacade.findIssues).toHaveBeenCalled();
@@ -151,7 +152,7 @@ describe('FindIssuesTool', () => {
     it('должен принять валидный filter параметр', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
-      const result = await tool.execute({ filter: { status: 'open' } });
+      const result = await tool.execute({ filter: { status: 'open' }, fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
       expect(mockTrackerFacade.findIssues).toHaveBeenCalled();
@@ -162,7 +163,7 @@ describe('FindIssuesTool', () => {
     it('должен вызвать FindIssuesOperation с query параметром', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
-      await tool.execute({ query: 'Author: me() Status: open' });
+      await tool.execute({ query: 'Author: me() Status: open', fields: STANDARD_ISSUE_FIELDS });
 
       expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
         expect.objectContaining({ query: 'Author: me() Status: open' })
@@ -172,7 +173,7 @@ describe('FindIssuesTool', () => {
     it('должен вызвать FindIssuesOperation с keys параметром', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1, mockIssue2]);
 
-      await tool.execute({ keys: ['QUEUE-123', 'QUEUE-456'] });
+      await tool.execute({ keys: ['QUEUE-123', 'QUEUE-456'], fields: STANDARD_ISSUE_FIELDS });
 
       expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
         expect.objectContaining({ keys: ['QUEUE-123', 'QUEUE-456'] })
@@ -182,7 +183,7 @@ describe('FindIssuesTool', () => {
     it('должен вызвать FindIssuesOperation с queue параметром', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
-      await tool.execute({ queue: 'MYQUEUE' });
+      await tool.execute({ queue: 'MYQUEUE', fields: STANDARD_ISSUE_FIELDS });
 
       expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
         expect.objectContaining({ queue: 'MYQUEUE' })
@@ -193,7 +194,7 @@ describe('FindIssuesTool', () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
       const filter = { status: 'open', priority: 'high' };
-      await tool.execute({ filter });
+      await tool.execute({ filter, fields: STANDARD_ISSUE_FIELDS });
 
       expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
         expect.objectContaining({ filter })
@@ -203,7 +204,7 @@ describe('FindIssuesTool', () => {
     it('должен передать параметры пагинации (perPage, page)', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
-      await tool.execute({ query: 'Author: me()', perPage: 20, page: 2 });
+      await tool.execute({ query: 'Author: me()', perPage: 20, page: 2, fields: STANDARD_ISSUE_FIELDS });
 
       expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
         expect.objectContaining({ perPage: 20, page: 2 })
@@ -214,7 +215,7 @@ describe('FindIssuesTool', () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
       const order = ['+created', '-priority'];
-      await tool.execute({ query: 'Author: me()', order });
+      await tool.execute({ query: 'Author: me()', order, fields: STANDARD_ISSUE_FIELDS });
 
       expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(expect.objectContaining({ order }));
     });
@@ -223,7 +224,7 @@ describe('FindIssuesTool', () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
       const expand = ['transitions', 'attachments'];
-      await tool.execute({ query: 'Author: me()', expand });
+      await tool.execute({ query: 'Author: me()', expand, fields: STANDARD_ISSUE_FIELDS });
 
       expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
         expect.objectContaining({ expand })
@@ -257,22 +258,22 @@ describe('FindIssuesTool', () => {
       expect(parsed.data.fieldsReturned).toEqual(['key', 'summary']);
     });
 
-    it('должен вернуть все поля когда fields не указан', async () => {
+    it('должен вернуть поля с фильтрацией', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
 
-      const result = await tool.execute({ query: 'Author: me()' });
+      const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
           issues: IssueWithUnknownFields[];
-          fieldsReturned: string;
+          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.issues[0]).toHaveProperty('description');
-      expect(parsed.data.fieldsReturned).toBe('all');
+      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
 
     it('должен правильно фильтровать вложенные поля', async () => {
@@ -300,7 +301,7 @@ describe('FindIssuesTool', () => {
     it('должен обработать пустые результаты', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([]);
 
-      const result = await tool.execute({ query: 'Author: me()' });
+      const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -316,7 +317,7 @@ describe('FindIssuesTool', () => {
       const error = new Error('Network timeout');
       vi.mocked(mockTrackerFacade.findIssues).mockRejectedValue(error);
 
-      const result = await tool.execute({ query: 'Author: me()' });
+      const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -358,7 +359,7 @@ describe('FindIssuesTool', () => {
     it('должен логировать начало и результаты операции', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1, mockIssue2]);
 
-      await tool.execute({ query: 'Author: me()' });
+      await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Задачи найдены',
@@ -374,6 +375,7 @@ describe('FindIssuesTool', () => {
         query: 'Status: open',
         keys: ['TEST-1'],
         perPage: 20,
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -391,7 +393,7 @@ describe('FindIssuesTool', () => {
     it('должен возвращать корректный формат ответа', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1, mockIssue2]);
 
-      const result = await tool.execute({ query: 'Author: me()' });
+      const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -399,7 +401,7 @@ describe('FindIssuesTool', () => {
         data: {
           count: number;
           issues: IssueWithUnknownFields[];
-          fieldsReturned: string;
+          fieldsReturned: string[];
           searchCriteria: {
             hasQuery: boolean;
             hasFilter: boolean;

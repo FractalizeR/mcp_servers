@@ -9,6 +9,7 @@ import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
+import { STANDARD_ISSUE_FIELDS } from '../../../../../helpers/test-fields.js';
 
 describe('TransitionIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -72,7 +73,9 @@ describe('TransitionIssueTool', () => {
 
   describe('Validation', () => {
     it('должен требовать параметр issueKey', async () => {
-      const result = await tool.execute({ transitionId: 'close' });
+      const result = await tool.execute({ transitionId: 'close' ,
+        fields: STANDARD_ISSUE_FIELDS,
+      });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -84,7 +87,9 @@ describe('TransitionIssueTool', () => {
     });
 
     it('должен требовать параметр transitionId', async () => {
-      const result = await tool.execute({ issueKey: 'QUEUE-123' });
+      const result = await tool.execute({ issueKey: 'QUEUE-123' ,
+        fields: STANDARD_ISSUE_FIELDS,
+      });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -103,6 +108,7 @@ describe('TransitionIssueTool', () => {
       await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'close',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockTrackerFacade.transitionIssue).toHaveBeenCalledWith(
@@ -119,6 +125,7 @@ describe('TransitionIssueTool', () => {
         issueKey: 'QUEUE-123',
         transitionId: 'close',
         comment: 'Closing the issue',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockTrackerFacade.transitionIssue).toHaveBeenCalledWith('QUEUE-123', 'close', {
@@ -166,6 +173,8 @@ describe('TransitionIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'start-progress',
+      fields: STANDARD_ISSUE_FIELDS,
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -209,12 +218,14 @@ describe('TransitionIssueTool', () => {
       expect(parsed.data.issue).not.toHaveProperty('queue');
     });
 
-    it('должен вернуть все поля когда fields не указан', async () => {
+    it('должен вернуть поля с фильтрацией', async () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockResolvedValue(mockTransitionedIssue);
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'close',
+      fields: STANDARD_ISSUE_FIELDS,
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -222,7 +233,7 @@ describe('TransitionIssueTool', () => {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
-          fieldsReturned: string;
+          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
@@ -230,7 +241,7 @@ describe('TransitionIssueTool', () => {
       expect(parsed.data.issue).toHaveProperty('key');
       expect(parsed.data.issue).toHaveProperty('status');
       expect(parsed.data.issue).toHaveProperty('summary');
-      expect(parsed.data.fieldsReturned).toBe('all');
+      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
   });
 
@@ -241,6 +252,8 @@ describe('TransitionIssueTool', () => {
       await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'close',
+      fields: STANDARD_ISSUE_FIELDS,
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -266,6 +279,8 @@ describe('TransitionIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'close',
+      fields: STANDARD_ISSUE_FIELDS,
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBe(true);
@@ -281,6 +296,8 @@ describe('TransitionIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         transitionId: 'invalid-transition',
+      fields: STANDARD_ISSUE_FIELDS,
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBe(true);

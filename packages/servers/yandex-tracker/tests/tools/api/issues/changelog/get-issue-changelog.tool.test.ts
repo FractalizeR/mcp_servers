@@ -9,6 +9,7 @@ import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { ChangelogEntryWithUnknownFields } from '@tracker_api/entities/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
+import { STANDARD_CHANGELOG_FIELDS } from '../../../../helpers/test-fields.js';
 
 describe('GetIssueChangelogTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -111,6 +112,7 @@ describe('GetIssueChangelogTool', () => {
 
       await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_CHANGELOG_FIELDS,
       });
 
       expect(mockTrackerFacade.getIssueChangelog).toHaveBeenCalledWith('QUEUE-123');
@@ -124,6 +126,7 @@ describe('GetIssueChangelogTool', () => {
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_CHANGELOG_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -148,6 +151,7 @@ describe('GetIssueChangelogTool', () => {
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_CHANGELOG_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -187,11 +191,12 @@ describe('GetIssueChangelogTool', () => {
       expect(parsed.data.changelog[0]).not.toHaveProperty('fields');
     });
 
-    it('должен вернуть все поля когда fields не указан', async () => {
+    it('должен вернуть поля с фильтрацией', async () => {
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue([mockChangelogEntry1]);
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_CHANGELOG_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -199,7 +204,7 @@ describe('GetIssueChangelogTool', () => {
         success: boolean;
         data: {
           changelog: ChangelogEntryWithUnknownFields[];
-          fieldsReturned: string;
+          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
@@ -207,7 +212,7 @@ describe('GetIssueChangelogTool', () => {
       expect(parsed.data.changelog[0]).toHaveProperty('updatedAt');
       expect(parsed.data.changelog[0]).toHaveProperty('updatedBy');
       expect(parsed.data.changelog[0]).toHaveProperty('fields');
-      expect(parsed.data.fieldsReturned).toBe('all');
+      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_CHANGELOG_FIELDS));
     });
   });
 
@@ -217,6 +222,8 @@ describe('GetIssueChangelogTool', () => {
 
       await tool.execute({
         issueKey: 'QUEUE-123',
+      fields: STANDARD_CHANGELOG_FIELDS,
+        fields: STANDARD_CHANGELOG_FIELDS,
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -236,6 +243,7 @@ describe('GetIssueChangelogTool', () => {
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_CHANGELOG_FIELDS,
       });
 
       expect(result.isError).toBe(true);
@@ -249,6 +257,8 @@ describe('GetIssueChangelogTool', () => {
 
       const result = await tool.execute({
         issueKey: 'NOTFOUND-999',
+      fields: STANDARD_CHANGELOG_FIELDS,
+        fields: STANDARD_CHANGELOG_FIELDS,
       });
 
       expect(result.isError).toBe(true);

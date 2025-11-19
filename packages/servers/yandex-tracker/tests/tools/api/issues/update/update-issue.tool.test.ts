@@ -9,6 +9,7 @@ import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
+import { STANDARD_ISSUE_FIELDS } from '../../../../helpers/test-fields.js';
 
 describe('UpdateIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -89,6 +90,7 @@ describe('UpdateIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         summary: 'New Summary',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -105,6 +107,7 @@ describe('UpdateIssueTool', () => {
       await tool.execute({
         issueKey: 'QUEUE-123',
         summary: 'New Summary',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith('QUEUE-123', {
@@ -121,6 +124,7 @@ describe('UpdateIssueTool', () => {
         description: 'New Description',
         assignee: 'user1',
         priority: 'high',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith('QUEUE-123', {
@@ -139,6 +143,7 @@ describe('UpdateIssueTool', () => {
         customFields: {
           customField1: 'value1',
         },
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith('QUEUE-123', {
@@ -152,6 +157,7 @@ describe('UpdateIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         summary: 'New Summary',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -161,12 +167,14 @@ describe('UpdateIssueTool', () => {
           issueKey: string;
           updatedFields: string[];
           issue: IssueWithUnknownFields;
+          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.issueKey).toBe('QUEUE-123');
       expect(parsed.data.updatedFields).toContain('summary');
       expect(parsed.data.issue.summary).toBe('Updated Summary');
+      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
   });
 
@@ -195,12 +203,13 @@ describe('UpdateIssueTool', () => {
       expect(parsed.data.issue).not.toHaveProperty('queue');
     });
 
-    it('должен вернуть все поля когда fields не указан', async () => {
+    it('должен вернуть поля с фильтрацией', async () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         summary: 'New Summary',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -208,14 +217,14 @@ describe('UpdateIssueTool', () => {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
-          fieldsReturned: string;
+          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.issue).toHaveProperty('id');
       expect(parsed.data.issue).toHaveProperty('summary');
       expect(parsed.data.issue).toHaveProperty('queue');
-      expect(parsed.data.fieldsReturned).toBe('all');
+      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
   });
 
@@ -226,6 +235,7 @@ describe('UpdateIssueTool', () => {
       await tool.execute({
         issueKey: 'QUEUE-123',
         summary: 'New Summary',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -249,6 +259,7 @@ describe('UpdateIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
         summary: 'New Summary',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBe(true);
@@ -263,6 +274,7 @@ describe('UpdateIssueTool', () => {
       const result = await tool.execute({
         issueKey: 'NOTFOUND-999',
         summary: 'New Summary',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBe(true);

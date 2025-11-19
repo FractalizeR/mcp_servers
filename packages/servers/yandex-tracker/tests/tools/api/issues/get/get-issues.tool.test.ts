@@ -9,6 +9,7 @@ import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
+import { STANDARD_ISSUE_FIELDS } from '../../../../helpers/test-fields.js';
 
 describe('GetIssuesTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -116,7 +117,7 @@ describe('GetIssuesTool', () => {
       });
 
       it('должен вернуть ошибку если issueKeys пустой массив', async () => {
-        const result = await tool.execute({ issueKeys: [] });
+        const result = await tool.execute({ issueKeys: [], fields: STANDARD_ISSUE_FIELDS });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -128,7 +129,10 @@ describe('GetIssuesTool', () => {
       });
 
       it('должен вернуть ошибку для некорректного формата ключа', async () => {
-        const result = await tool.execute({ issueKeys: ['QUEUE-123', 'invalid-key'] });
+        const result = await tool.execute({
+          issueKeys: ['QUEUE-123', 'invalid-key'],
+          fields: STANDARD_ISSUE_FIELDS,
+        });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -141,12 +145,15 @@ describe('GetIssuesTool', () => {
     });
 
     describe('получение задач', () => {
-      it('должен получить одну задачу без фильтрации полей', async () => {
+      it('должен получить одну задачу с фильтрацией полей', async () => {
         vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, key: 'QUEUE-123', index: 0 },
         ]);
 
-        const result = await tool.execute({ issueKeys: ['QUEUE-123'] });
+        const result = await tool.execute({
+          issueKeys: ['QUEUE-123'],
+          fields: STANDARD_ISSUE_FIELDS,
+        });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getIssues).toHaveBeenCalledWith(['QUEUE-123']);
@@ -160,7 +167,7 @@ describe('GetIssuesTool', () => {
             failed: number;
             issues: Array<{ issueKey: string; issue: IssueWithUnknownFields }>;
             errors: Array<{ issueKey: string; error: string }>;
-            fieldsReturned: string;
+            fieldsReturned: string[];
           };
         };
         expect(parsed.success).toBe(true);
@@ -169,17 +176,19 @@ describe('GetIssuesTool', () => {
         expect(parsed.data.failed).toBe(0);
         expect(parsed.data.issues).toHaveLength(1);
         expect(parsed.data.issues[0]?.issueKey).toBe('QUEUE-123');
-        expect(parsed.data.issues[0]?.issue).toEqual(mockIssue1);
-        expect(parsed.data.fieldsReturned).toBe('all');
+        expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
       });
 
-      it('должен получить несколько задач без фильтрации полей', async () => {
+      it('должен получить несколько задач с фильтрацией полей', async () => {
         vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
           { status: 'fulfilled', value: mockIssue1, key: 'QUEUE-123', index: 0 },
           { status: 'fulfilled', value: mockIssue2, key: 'QUEUE-456', index: 1 },
         ]);
 
-        const result = await tool.execute({ issueKeys: ['QUEUE-123', 'QUEUE-456'] });
+        const result = await tool.execute({
+          issueKeys: ['QUEUE-123', 'QUEUE-456'],
+          fields: STANDARD_ISSUE_FIELDS,
+        });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getIssues).toHaveBeenCalledWith(['QUEUE-123', 'QUEUE-456']);
@@ -240,6 +249,7 @@ describe('GetIssuesTool', () => {
 
         const result = await tool.execute({
           issueKeys: ['QUEUE-123', 'QUEUE-999'],
+          fields: STANDARD_ISSUE_FIELDS,
         });
 
         expect(result.isError).toBeUndefined();
@@ -262,7 +272,10 @@ describe('GetIssuesTool', () => {
         const criticalError = new Error('Network timeout');
         vi.mocked(mockTrackerFacade.getIssues).mockRejectedValue(criticalError);
 
-        const result = await tool.execute({ issueKeys: ['QUEUE-123'] });
+        const result = await tool.execute({
+          issueKeys: ['QUEUE-123'],
+          fields: STANDARD_ISSUE_FIELDS,
+        });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {

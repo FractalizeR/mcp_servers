@@ -9,6 +9,7 @@ import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { IssueWithUnknownFields } from '@tracker_api/entities/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
+import { STANDARD_ISSUE_FIELDS } from '../../../../helpers/test-fields.js';
 
 describe('CreateIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -117,6 +118,7 @@ describe('CreateIssueTool', () => {
       await tool.execute({
         queue: 'TESTQUEUE',
         summary: 'Test Issue',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockTrackerFacade.createIssue).toHaveBeenCalledWith({
@@ -135,6 +137,7 @@ describe('CreateIssueTool', () => {
         assignee: 'user1',
         priority: 'high',
         type: 'task',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockTrackerFacade.createIssue).toHaveBeenCalledWith({
@@ -157,6 +160,7 @@ describe('CreateIssueTool', () => {
           customField1: 'value1',
           customField2: 123,
         },
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockTrackerFacade.createIssue).toHaveBeenCalledWith({
@@ -173,6 +177,7 @@ describe('CreateIssueTool', () => {
       const result = await tool.execute({
         queue: 'TESTQUEUE',
         summary: 'Test Issue',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -181,7 +186,7 @@ describe('CreateIssueTool', () => {
         data: {
           issueKey: string;
           issue: IssueWithUnknownFields;
-          fieldsReturned: string | string[];
+          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
@@ -191,6 +196,7 @@ describe('CreateIssueTool', () => {
         key: 'TESTQUEUE-1',
         summary: 'Test Issue',
       });
+      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
   });
 
@@ -221,12 +227,13 @@ describe('CreateIssueTool', () => {
       expect(parsed.data.issue).not.toHaveProperty('status');
     });
 
-    it('должен вернуть все поля когда fields не указан', async () => {
+    it('должен вернуть поля с фильтрацией', async () => {
       vi.mocked(mockTrackerFacade.createIssue).mockResolvedValue(mockCreatedIssue);
 
       const result = await tool.execute({
         queue: 'TESTQUEUE',
         summary: 'Test Issue',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -234,7 +241,7 @@ describe('CreateIssueTool', () => {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
-          fieldsReturned: string | string[];
+          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
@@ -244,7 +251,7 @@ describe('CreateIssueTool', () => {
       expect(parsed.data.issue).toHaveProperty('description');
       expect(parsed.data.issue).toHaveProperty('queue');
       expect(parsed.data.issue).toHaveProperty('status');
-      expect(parsed.data.fieldsReturned).toBe('all');
+      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
 
     it('должен фильтровать вложенные поля', async () => {
@@ -281,6 +288,7 @@ describe('CreateIssueTool', () => {
         queue: 'TESTQUEUE',
         summary: 'Test Issue',
         description: 'Test Description',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -299,6 +307,7 @@ describe('CreateIssueTool', () => {
       await tool.execute({
         queue: 'TESTQUEUE',
         summary: 'Test Issue',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -318,6 +327,7 @@ describe('CreateIssueTool', () => {
       const result = await tool.execute({
         queue: 'TESTQUEUE',
         summary: 'Test Issue',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBe(true);
@@ -332,6 +342,7 @@ describe('CreateIssueTool', () => {
       const result = await tool.execute({
         queue: 'INVALID',
         summary: 'Test Issue',
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBe(true);

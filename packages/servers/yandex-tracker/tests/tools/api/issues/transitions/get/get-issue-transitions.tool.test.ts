@@ -9,6 +9,7 @@ import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { TransitionWithUnknownFields } from '@tracker_api/entities/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
+import { STANDARD_TRANSITION_FIELDS } from '../../../../../helpers/test-fields.js';
 
 describe('GetIssueTransitionsTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -86,6 +87,7 @@ describe('GetIssueTransitionsTool', () => {
 
       await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_TRANSITION_FIELDS,
       });
 
       expect(mockTrackerFacade.getIssueTransitions).toHaveBeenCalledWith('QUEUE-123');
@@ -99,6 +101,7 @@ describe('GetIssueTransitionsTool', () => {
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_TRANSITION_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -123,6 +126,7 @@ describe('GetIssueTransitionsTool', () => {
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_TRANSITION_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -161,11 +165,12 @@ describe('GetIssueTransitionsTool', () => {
       expect(parsed.data.transitions[0]).not.toHaveProperty('to');
     });
 
-    it('должен вернуть все поля когда fields не указан', async () => {
+    it('должен вернуть поля с фильтрацией', async () => {
       vi.mocked(mockTrackerFacade.getIssueTransitions).mockResolvedValue([mockTransition1]);
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_TRANSITION_FIELDS,
       });
 
       expect(result.isError).toBeUndefined();
@@ -173,14 +178,14 @@ describe('GetIssueTransitionsTool', () => {
         success: boolean;
         data: {
           transitions: TransitionWithUnknownFields[];
-          fieldsReturned: string;
+          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.transitions[0]).toHaveProperty('id');
       expect(parsed.data.transitions[0]).toHaveProperty('display');
       expect(parsed.data.transitions[0]).toHaveProperty('to');
-      expect(parsed.data.fieldsReturned).toBe('all');
+      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_TRANSITION_FIELDS));
     });
   });
 
@@ -190,6 +195,8 @@ describe('GetIssueTransitionsTool', () => {
 
       await tool.execute({
         issueKey: 'QUEUE-123',
+      fields: STANDARD_TRANSITION_FIELDS,
+        fields: STANDARD_TRANSITION_FIELDS,
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -209,6 +216,7 @@ describe('GetIssueTransitionsTool', () => {
 
       const result = await tool.execute({
         issueKey: 'QUEUE-123',
+        fields: STANDARD_TRANSITION_FIELDS,
       });
 
       expect(result.isError).toBe(true);
@@ -222,6 +230,8 @@ describe('GetIssueTransitionsTool', () => {
 
       const result = await tool.execute({
         issueKey: 'NOTFOUND-999',
+      fields: STANDARD_TRANSITION_FIELDS,
+        fields: STANDARD_TRANSITION_FIELDS,
       });
 
       expect(result.isError).toBe(true);

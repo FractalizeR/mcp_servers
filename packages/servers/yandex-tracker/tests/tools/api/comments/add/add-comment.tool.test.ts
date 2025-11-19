@@ -9,6 +9,7 @@ import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { CommentWithUnknownFields } from '@tracker_api/entities/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '@constants';
+import { STANDARD_COMMENT_FIELDS } from '../../../../helpers/test-fields.js';
 import { createCommentFixture } from '../../../../helpers/comment.fixture.js';
 
 describe('AddCommentTool', () => {
