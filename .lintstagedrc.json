@@ -2,8 +2,11 @@
   "**/package.json": [
     "sort-package-json"
   ],
-  "*.ts": [
+  "!(packages/servers/yandex-tracker/scripts)/**/*.ts": [
     "prettier --write",
     "eslint --fix"
+  ],
+  "packages/servers/yandex-tracker/scripts/**/*.ts": [
+    "prettier --write"
   ]
 }

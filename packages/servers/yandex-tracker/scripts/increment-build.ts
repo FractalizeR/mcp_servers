@@ -95,13 +95,17 @@ async function setBuildHash(): Promise<void> {
 
     // Получаем версию из package.json
     const packageVersion = await getPackageVersion();
-    if (manifest.version !== packageVersion) {
-      console.log(`📦 Обновление версии: ${manifest.version} → ${packageVersion}`);
-      manifest.version = packageVersion;
-    }
 
     // Получаем git hash текущего коммита
     const gitHash = getGitHash();
+
+    // Формируем полную версию с git hash (SemVer build metadata)
+    const fullVersion = `${packageVersion}+${gitHash}`;
+
+    if (manifest.version !== fullVersion) {
+      console.log(`📦 Обновление версии: ${manifest.version} → ${fullVersion}`);
+      manifest.version = fullVersion;
+    }
 
     // Обновляем _meta секцию
     if (!manifest._meta) {
@@ -119,7 +123,7 @@ async function setBuildHash(): Promise<void> {
     await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n', 'utf-8');
 
     console.log(`✅ Build hash установлен: ${gitHash}`);
-    console.log(`📦 Полная версия: ${manifest.version}+${gitHash}`);
+    console.log(`📦 Полная версия: ${manifest.version}`);
   } catch (error) {
     console.error('❌ Ошибка при установке build hash:');
     console.error(error);
