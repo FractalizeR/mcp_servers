@@ -24,7 +24,7 @@
 - **dependency-cruiser** (валидация архитектурных правил)
 - **MCP SDK** (Model Context Protocol)
 - **Tool Search System** (из @mcp-framework/search)
-- **API:** Яндекс.Трекер v3 (ТОЛЬКО `/v3/*` endpoints)
+- **API:** Яндекс.Трекер v2/v3 (используются обе официально поддерживаемые версии)
 
 ---
 
@@ -53,9 +53,49 @@ import { GetIssuesOperation } from '../../api_operations/issue/get/index.js';
 import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 ```
 
-### 2. API Яндекс.Трекер
+### 2. Использование API v2 и v3
 
-- ✅ ТОЛЬКО v3: `/v3/issues`, `/v3/myself`
+**Яндекс.Трекер поддерживает два API:**
+- **API v3** — новая версия (issues, queues, comments, links, changelog, transitions)
+- **API v2** — старая версия (attachments, checklists, components, projects, worklogs)
+
+**Правило:** Используй версию API согласно таблице ниже:
+
+| Категория | API версия | Endpoint пример |
+|-----------|------------|-----------------|
+| Issues Core | v3 | `/v3/issues/{key}` |
+| Queues | v3 | `/v3/queues/{id}` |
+| Comments | v3 | `/v3/issues/{id}/comments` |
+| Links | v3 | `/v3/issues/{id}/links` |
+| Transitions | v3 | `/v3/issues/{id}/transitions` |
+| Changelog | v3 | `/v3/issues/{id}/changelog` |
+| User | v3 | `/v3/myself` |
+| Attachments | v2 | `/v2/issues/{id}/attachments` |
+| Checklists | v2 | `/v2/issues/{id}/checklistItems` |
+| Components | v2 | `/v2/queues/{id}/components` |
+| Projects | v2 | `/v2/projects` |
+| Worklogs | v2 | `/v2/issues/{id}/worklog` |
+
+✅ **Правильно:**
+```typescript
+// v3 для issues
+this.httpClient.get('/v3/issues/PROJ-123');
+this.httpClient.get('/v3/myself');
+
+// v2 для attachments и worklogs
+this.httpClient.get('/v2/issues/PROJ-123/attachments');
+this.httpClient.post('/v2/issues/PROJ-123/worklog', {...});
+```
+
+❌ **Неправильно:**
+```typescript
+this.httpClient.get('/issues');    // Без версии
+this.httpClient.get('/v1/issues'); // Неверная версия
+```
+
+**Примечание:** При появлении v3 версий для категорий на v2, приоритет отдаётся v3.
+
+**Дополнительно:**
 - ✅ Batch-операции: `getIssues([keys])`, НЕ `getIssue(key)`
 - ✅ Справка: `yandex_tracker_client/` (Python SDK)
 - ✅ Batch-результаты: используй типы `BatchResult<T>`, `FulfilledResult<T>`, `RejectedResult`

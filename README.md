@@ -25,7 +25,7 @@ This repository provides:
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| [mcp-server-yandex-tracker](packages/servers/yandex-tracker) | 0.1.0 | MCP server for Yandex.Tracker API v3 integration |
+| [mcp-server-yandex-tracker](packages/servers/yandex-tracker) | 0.1.0 | MCP server for Yandex.Tracker API integration (v2/v3) |
 
 ---
 

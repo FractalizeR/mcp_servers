@@ -193,19 +193,47 @@ const issue = await this.withCache(cacheKey, async () => {
 
 ## 🚨 Критические правила
 
-### 1. API v3 ТОЛЬКО
+### 1. Использование API v2 и v3
+
+**Яндекс.Трекер поддерживает два API:**
+- **API v3** — новая версия (issues, queues, comments, links, changelog, transitions)
+- **API v2** — старая версия (attachments, checklists, components, projects, worklogs)
+
+**Правило:** Используй версию API согласно таблице ниже:
+
+| Категория | API версия | Endpoint пример |
+|-----------|------------|-----------------|
+| Issues Core | v3 | `/v3/issues/{key}` |
+| Queues | v3 | `/v3/queues/{id}` |
+| Comments | v3 | `/v3/issues/{id}/comments` |
+| Links | v3 | `/v3/issues/{id}/links` |
+| Transitions | v3 | `/v3/issues/{id}/transitions` |
+| Changelog | v3 | `/v3/issues/{id}/changelog` |
+| User | v3 | `/v3/myself` |
+| Attachments | v2 | `/v2/issues/{id}/attachments` |
+| Checklists | v2 | `/v2/issues/{id}/checklistItems` |
+| Components | v2 | `/v2/queues/{id}/components` |
+| Projects | v2 | `/v2/projects` |
+| Worklogs | v2 | `/v2/issues/{id}/worklog` |
 
 ✅ **Правильно:**
 ```typescript
+// v3 для issues
 this.httpClient.get('/v3/issues/PROJ-123');
 this.httpClient.get('/v3/myself');
+
+// v2 для attachments и worklogs
+this.httpClient.get('/v2/issues/PROJ-123/attachments');
+this.httpClient.post('/v2/issues/PROJ-123/worklog', {...});
 ```
 
 ❌ **Неправильно:**
 ```typescript
-this.httpClient.get('/v2/issues'); // Старый API
 this.httpClient.get('/issues');    // Без версии
+this.httpClient.get('/v1/issues'); // Неверная версия
 ```
+
+**Примечание:** При появлении v3 версий для категорий на v2, приоритет отдаётся v3.
 
 ---
 
