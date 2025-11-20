@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"],
@@ -18,27 +18,23 @@
     },
     "test": {
       "dependsOn": ["build"],
-      "outputs": ["coverage/**"],
-      "cache": true,
-      "outputMode": "full"
+      "outputs": [],
+      "cache": true
     },
     "test:coverage": {
       "dependsOn": ["build"],
       "outputs": ["coverage/**"],
-      "cache": true,
-      "outputMode": "full"
+      "cache": true
     },
     "test:quiet": {
       "dependsOn": ["build"],
-      "outputs": ["coverage/**"],
-      "cache": true,
-      "outputMode": "errors-only"
+      "outputs": [],
+      "cache": true
     },
     "test:verbose": {
       "dependsOn": ["build"],
-      "outputs": ["coverage/**"],
-      "cache": true,
-      "outputMode": "full"
+      "outputs": [],
+      "cache": true
     },
     "test:watch": {
       "dependsOn": ["build"],
@@ -47,22 +43,18 @@
     },
     "test:smoke": {
       "dependsOn": ["build"],
-      "cache": false,
-      "outputMode": "full"
+      "cache": false
     },
     "lint": {
       "cache": true,
-      "inputs": ["src/**/*.ts", "eslint.config.js", "package.json"],
-      "outputMode": "errors-only"
+      "inputs": ["src/**/*.ts", "eslint.config.js", "package.json"]
     },
     "lint:fix": {
-      "cache": false,
-      "outputMode": "errors-only"
+      "cache": false
     },
     "lint:quiet": {
       "cache": true,
-      "inputs": ["src/**/*.ts", "eslint.config.js", "package.json"],
-      "outputMode": "errors-only"
+      "inputs": ["src/**/*.ts", "eslint.config.js", "package.json"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
@@ -73,20 +65,17 @@
     "cpd": {
       "cache": true,
       "inputs": ["packages/**/src/**/*.ts", ".jscpd.json", "package.json"],
-      "outputs": [],
-      "outputMode": "errors-only"
+      "outputs": []
     },
     "cpd:quiet": {
       "cache": true,
       "inputs": ["packages/**/src/**/*.ts", ".jscpd.json", "package.json"],
-      "outputs": [],
-      "outputMode": "errors-only"
+      "outputs": []
     },
     "cpd:report": {
       "cache": true,
       "inputs": ["packages/**/src/**/*.ts", ".jscpd.json", "package.json"],
-      "outputs": ["jscpd-report/**"],
-      "outputMode": "full"
+      "outputs": ["jscpd-report/**"]
     },
     "depcruise": {
       "cache": true,
@@ -95,14 +84,12 @@
         ".dependency-cruiser.cjs",
         "tsconfig*.json"
       ],
-      "outputs": [],
-      "outputMode": "errors-only"
+      "outputs": []
     },
     "validate:docs": {
       "cache": true,
       "inputs": ["**/*.md", "!node_modules/**", "scripts/validate-docs-size.ts"],
-      "outputs": [],
-      "outputMode": "errors-only"
+      "outputs": []
     },
     "knip": {
       "cache": true,
@@ -112,8 +99,7 @@
         "package.json",
         "packages/**/package.json"
       ],
-      "outputs": ["knip-report.json"],
-      "outputMode": "errors-only"
+      "outputs": ["knip-report.json"]
     }
   },
   "globalDependencies": [".npmrc", "package-lock.json"],
