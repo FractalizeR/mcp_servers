@@ -48,11 +48,29 @@ export class TransitionIssueOperation extends BaseOperation {
       transitionData ?? {}
     );
 
+    // ВАЖНО: API иногда возвращает массив вместо одного объекта (известная проблема API)
+    // Нормализуем ответ, беря первый элемент если это массив
+    let normalizedResult: IssueWithUnknownFields;
+    if (Array.isArray(result)) {
+      if (result.length === 0) {
+        throw new Error(`API вернул пустой массив при выполнении перехода ${transitionId}`);
+      }
+      this.logger.warn(
+        `API вернул массив вместо объекта для transition ${transitionId} задачи ${issueKey}. Берем первый элемент.`,
+        { arrayLength: result.length }
+      );
+      normalizedResult = result[0] as IssueWithUnknownFields;
+    } else {
+      normalizedResult = result;
+    }
+
     // Инвалидируем кеш задачи после изменения статуса
     const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, issueKey);
     this.cacheManager.delete(cacheKey);
 
-    this.logger.info(`Переход выполнен успешно: ${issueKey} → ${result.status?.key ?? 'unknown'}`);
-    return result;
+    this.logger.info(
+      `Переход выполнен успешно: ${issueKey} → ${normalizedResult.status?.key ?? 'unknown'}`
+    );
+    return normalizedResult;
   }
 }

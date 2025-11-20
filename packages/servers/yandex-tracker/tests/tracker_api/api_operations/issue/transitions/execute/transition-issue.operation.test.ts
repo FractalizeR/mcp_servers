@@ -198,5 +198,97 @@ describe('TransitionIssueOperation', () => {
         `Переход выполнен успешно: ${issueKey} → unknown`
       );
     });
+
+    it('should normalize array response by taking first element', async () => {
+      const issueKey = 'TEST-456';
+      const transitionId = 'start';
+
+      // Имитация некорректного ответа API - массив вместо объекта
+      const mockIssue: IssueWithUnknownFields = {
+        id: '2',
+        key: 'TEST-456',
+        summary: 'Test Issue',
+        queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+        status: { id: '2', key: 'inProgress', display: 'In Progress' },
+        createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+        createdAt: '2024-01-01T10:00:00.000Z',
+        updatedAt: '2024-01-02T10:00:00.000Z',
+      };
+
+      // API вернул массив (известная проблема API)
+      vi.mocked(mockHttpClient.post).mockResolvedValue([
+        mockIssue,
+      ] as unknown as IssueWithUnknownFields);
+
+      const result = await operation.execute(issueKey, transitionId);
+
+      // Должен вернуть первый элемент массива
+      expect(result).toEqual(mockIssue);
+      expect(result.key).toBe('TEST-456');
+      expect(result.status?.key).toBe('inProgress');
+
+      // Должен залогировать предупреждение
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('API вернул массив вместо объекта'),
+        expect.objectContaining({ arrayLength: 1 })
+      );
+    });
+
+    it('should throw error if API returns empty array', async () => {
+      const issueKey = 'TEST-789';
+      const transitionId = 'close';
+
+      // API вернул пустой массив
+      vi.mocked(mockHttpClient.post).mockResolvedValue([] as unknown as IssueWithUnknownFields);
+
+      await expect(operation.execute(issueKey, transitionId)).rejects.toThrow(
+        'API вернул пустой массив при выполнении перехода close'
+      );
+    });
+
+    it('should handle array with multiple elements by taking first one', async () => {
+      const issueKey = 'TEST-999';
+      const transitionId = 'resolve';
+
+      const mockIssue1: IssueWithUnknownFields = {
+        id: '3',
+        key: 'TEST-999',
+        summary: 'First Issue',
+        queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+        status: { id: '3', key: 'resolved', display: 'Resolved' },
+        createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+        createdAt: '2024-01-01T10:00:00.000Z',
+        updatedAt: '2024-01-02T10:00:00.000Z',
+      };
+
+      const mockIssue2: IssueWithUnknownFields = {
+        id: '4',
+        key: 'TEST-1000',
+        summary: 'Second Issue',
+        queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+        status: { id: '3', key: 'resolved', display: 'Resolved' },
+        createdBy: { uid: 'user2', display: 'User 2', login: 'user2', isActive: true },
+        createdAt: '2024-01-01T10:00:00.000Z',
+        updatedAt: '2024-01-02T10:00:00.000Z',
+      };
+
+      // API вернул массив из нескольких элементов
+      vi.mocked(mockHttpClient.post).mockResolvedValue([
+        mockIssue1,
+        mockIssue2,
+      ] as unknown as IssueWithUnknownFields);
+
+      const result = await operation.execute(issueKey, transitionId);
+
+      // Должен вернуть ПЕРВЫЙ элемент массива
+      expect(result).toEqual(mockIssue1);
+      expect(result.key).toBe('TEST-999');
+
+      // Должен залогировать предупреждение с правильной длиной массива
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('API вернул массив вместо объекта'),
+        expect.objectContaining({ arrayLength: 2 })
+      );
+    });
   });
 });
