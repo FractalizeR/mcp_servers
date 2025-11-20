@@ -34,6 +34,27 @@ export enum HttpStatusCode {
 }
 
 /**
+ * Распарсенная структура фильтра категорий инструментов
+ *
+ * Используется для фильтрации tools в tools/list endpoint.
+ *
+ * Примеры использования:
+ * - includeAll=true: все категории
+ * - categories=['issues', 'comments']: только issues и comments (все подкатегории)
+ * - categoriesWithSubcategories={'issues': ['read', 'write']}: только issues/read и issues/write
+ */
+export interface ParsedCategoryFilter {
+  /** Категории без подкатегорий (все подкатегории включены) */
+  categories: Set<string>;
+
+  /** Категории с конкретными подкатегориями */
+  categoriesWithSubcategories: Map<string, Set<string>>;
+
+  /** Включить все категории (пустой фильтр) */
+  includeAll: boolean;
+}
+
+/**
  * Конфигурация сервера из переменных окружения
  */
 export interface ServerConfig {
@@ -87,6 +108,26 @@ export interface ServerConfig {
    * - Критически важных операций, которые Claude должен видеть сразу
    */
   essentialTools: readonly string[];
+  /**
+   * Фильтр категорий инструментов для eager режима
+   *
+   * Позволяет включить только определенные категории/подкатегории инструментов.
+   *
+   * Формат переменной окружения ENABLED_TOOL_CATEGORIES:
+   * - Пустая строка или undefined: все категории (по умолчанию)
+   * - "issues,comments": только категории issues и comments (все подкатегории)
+   * - "issues:read,comments:write": только issues/read и comments/write подкатегории
+   * - "issues,comments:write,queues:read": смешанный формат
+   *
+   * Graceful degradation:
+   * - Неизвестные категории: warning в лог, пропускаются
+   * - Неверный формат: warning, используется includeAll=true
+   *
+   * Работает только в eager режиме. В lazy режиме используется essentialTools.
+   *
+   * @default undefined (все категории)
+   */
+  enabledToolCategories?: ParsedCategoryFilter;
 }
 
 /**

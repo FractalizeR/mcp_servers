@@ -114,7 +114,8 @@ function setupServer(
 
     const definitions = toolRegistry.getDefinitionsByMode(
       config.toolDiscoveryMode,
-      config.essentialTools
+      config.essentialTools,
+      config.enabledToolCategories
     );
 
     // Подсчёт метрик
@@ -130,6 +131,19 @@ function setupServer(
         estimatedTokens: metrics.estimatedTokens,
       }
     );
+
+    // Логирование фильтрации по категориям (если применялась)
+    if (config.enabledToolCategories && !config.enabledToolCategories.includeAll) {
+      logger.info('✂️  Применена фильтрация по категориям', {
+        categories: Array.from(config.enabledToolCategories.categories),
+        categoriesWithSubcategories: Array.from(
+          config.enabledToolCategories.categoriesWithSubcategories.entries()
+        ).map(([cat, subcats]) => ({
+          category: cat,
+          subcategories: Array.from(subcats),
+        })),
+      });
+    }
 
     // Debug level: детальная разбивка
     logger.debug('📊 Распределение инструментов', {

@@ -4,7 +4,7 @@
 
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { ServerConfig, LogLevel } from './types.js';
+import type { ServerConfig, LogLevel, ParsedCategoryFilter } from './types.js';
 import {
   DEFAULT_API_BASE,
   DEFAULT_LOG_LEVEL,
@@ -108,6 +108,77 @@ function parseEssentialTools(value: string | undefined): readonly string[] {
 }
 
 /**
+ * Парсинг фильтра категорий инструментов из переменной окружения
+ *
+ * Формат: "issues,comments" или "issues:read,comments:write"
+ *
+ * Graceful degradation:
+ * - Пустая строка или undefined → includeAll = true
+ * - Невалидные категории → пропускаем (логирование будет на уровне выше)
+ * - Невалидный формат элемента → пропускаем элемент
+ *
+ * @param value - значение переменной окружения ENABLED_TOOL_CATEGORIES
+ * @returns Распарсенная структура фильтра
+ */
+function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFilter {
+  // Default: все категории
+  if (!value || value.trim() === '') {
+    return {
+      categories: new Set(),
+      categoriesWithSubcategories: new Map(),
+      includeAll: true,
+    };
+  }
+
+  const categories = new Set<string>();
+  const categoriesWithSubcategories = new Map<string, Set<string>>();
+
+  const parts = value
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  for (const part of parts) {
+    if (part.includes(':')) {
+      // Формат: "category:subcategory"
+      const segments = part.split(':');
+
+      // Валидация: должно быть ровно 2 сегмента
+      if (segments.length !== 2) {
+        // Пропускаем невалидный формат (например, "issues::read" или "issues:read:write")
+        continue;
+      }
+
+      const [cat, subcat] = segments.map((s) => s.trim());
+
+      // Пропускаем пустые сегменты
+      if (!cat || !subcat) {
+        continue;
+      }
+
+      let subcategories = categoriesWithSubcategories.get(cat);
+      if (!subcategories) {
+        subcategories = new Set();
+        categoriesWithSubcategories.set(cat, subcategories);
+      }
+      subcategories.add(subcat);
+    } else {
+      // Формат: "category" (все подкатегории)
+      categories.add(part);
+    }
+  }
+
+  // Если ничего не распарсилось, возвращаем includeAll=true
+  const includeAll = categories.size === 0 && categoriesWithSubcategories.size === 0;
+
+  return {
+    categories,
+    categoriesWithSubcategories,
+    includeAll,
+  };
+}
+
+/**
  * Валидация ID организации
  * @throws {Error} если ID не указаны или указаны оба одновременно
  */
@@ -200,6 +271,12 @@ export function loadConfig(): ServerConfig {
   );
   const essentialTools = parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]);
 
+  // Парсинг фильтра категорий (опционально, только для eager режима)
+  const enabledToolCategoriesRaw = process.env[ENV_VAR_NAMES.ENABLED_TOOL_CATEGORIES];
+  const enabledToolCategories = enabledToolCategoriesRaw
+    ? parseEnabledToolCategories(enabledToolCategoriesRaw)
+    : undefined;
+
   return {
     token: token.trim(),
     ...validatedOrgIds,
@@ -214,5 +291,7 @@ export function loadConfig(): ServerConfig {
     logMaxFiles,
     toolDiscoveryMode,
     essentialTools,
+    // Условно добавляем enabledToolCategories только если оно определено
+    ...(enabledToolCategories && { enabledToolCategories }),
   };
 }
