@@ -179,6 +179,73 @@ function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFi
 }
 
 /**
+ * Парсинг списка отключенных групп инструментов
+ *
+ * Формат: "category" или "category:subcategory" через запятую
+ * Примеры:
+ * - "components,checklists" - отключить целые категории
+ * - "issues:worklog,issues:attachments" - отключить подкатегории
+ * - "components,issues:worklog,helpers:demo" - смешанный формат
+ *
+ * @param value - значение переменной окружения DISABLED_TOOL_GROUPS
+ * @returns Распарсенная структура отключенных групп
+ */
+function parseDisabledToolGroups(
+  value: string | undefined
+): ParsedCategoryFilter | undefined {
+  // Если не указано или пустая строка - ничего не отключаем
+  if (!value || value.trim() === '') {
+    return undefined;
+  }
+
+  const disabledCategories = new Set<string>();
+  const disabledCategoriesWithSubcategories = new Map<string, Set<string>>();
+
+  const parts = value
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  for (const part of parts) {
+    if (part.includes(':')) {
+      // Формат: "category:subcategory"
+      const segments = part.split(':');
+
+      if (segments.length !== 2) {
+        continue; // Пропускаем невалидный формат
+      }
+
+      const [cat, subcat] = segments.map((s) => s.trim().toLowerCase());
+
+      if (!cat || !subcat) {
+        continue; // Пропускаем пустые сегменты
+      }
+
+      let subcategories = disabledCategoriesWithSubcategories.get(cat);
+      if (!subcategories) {
+        subcategories = new Set();
+        disabledCategoriesWithSubcategories.set(cat, subcategories);
+      }
+      subcategories.add(subcat);
+    } else {
+      // Формат: "category" (отключить всю категорию)
+      disabledCategories.add(part.toLowerCase());
+    }
+  }
+
+  // Если ничего не распарсилось, возвращаем undefined
+  if (disabledCategories.size === 0 && disabledCategoriesWithSubcategories.size === 0) {
+    return undefined;
+  }
+
+  return {
+    categories: disabledCategories,
+    categoriesWithSubcategories: disabledCategoriesWithSubcategories,
+    includeAll: false, // Это список отключенных, а не включенных
+  };
+}
+
+/**
  * Валидация ID организации
  * @throws {Error} если ID не указаны или указаны оба одновременно
  */
@@ -278,6 +345,10 @@ export function loadConfig(): ServerConfig {
       ? parseEnabledToolCategories(enabledToolCategoriesRaw)
       : undefined;
 
+  // Парсинг отключенных групп инструментов (негативный фильтр)
+  const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
+  const disabledToolGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
+
   return {
     token: token.trim(),
     ...validatedOrgIds,
@@ -294,5 +365,7 @@ export function loadConfig(): ServerConfig {
     essentialTools,
     // Условно добавляем enabledToolCategories только если оно определено
     ...(enabledToolCategories && { enabledToolCategories }),
+    // Условно добавляем disabledToolGroups только если оно определено
+    ...(disabledToolGroups && { disabledToolGroups }),
   };
 }
