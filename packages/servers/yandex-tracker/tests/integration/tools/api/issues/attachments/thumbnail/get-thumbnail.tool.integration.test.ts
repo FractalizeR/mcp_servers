@@ -5,11 +5,25 @@
  * MCP Client → ToolRegistry → GetThumbnailTool → GetThumbnailOperation → HttpClient → API (mock)
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestClient } from '#integration/helpers/mcp-client.js';
 import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
+
+// Мокаем модуль fs/promises для возможности имитации ошибок
+const { writeFileMock } = vi.hoisted(() => ({
+  writeFileMock: vi.fn(),
+}));
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const actual: any = await importOriginal();
+  return {
+    ...actual,
+    writeFile: writeFileMock,
+  };
+});
 
 describe('get-thumbnail integration tests', () => {
   let client: TestMCPClient;
@@ -23,6 +37,13 @@ describe('get-thumbnail integration tests', () => {
 
     // Затем создаём MockServer с axios instance из клиента
     mockServer = createMockServer(client.getAxiosInstance());
+
+    // Сбрасываем мок writeFile и используем реальную реализацию по умолчанию
+    writeFileMock.mockReset();
+    writeFileMock.mockImplementation(async (...args) => {
+      const fs = await import('node:fs/promises');
+      return fs.writeFile(...args);
+    });
   });
 
   afterEach(() => {
@@ -209,6 +230,94 @@ describe('get-thumbnail integration tests', () => {
       // Assert
       expect(result.isError).toBe(true);
       expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+    });
+  });
+
+  describe('Error Handling при сохранении миниатюры', () => {
+    it('должен обработать ошибку EACCES при записи миниатюры', async () => {
+      // Arrange
+      const issueId = 'QUEUE-1';
+      const attachmentId = '12345';
+      const saveToPath = '/root/protected/thumbnail.png';
+
+      // Мокируем успешное получение миниатюры
+      mockServer.mockGetAttachmentsSuccess(issueId, [
+        {
+          id: attachmentId,
+          name: 'screenshot.png',
+          mimetype: 'image/png',
+          size: 1024,
+          createdBy: { id: '1', display: 'Test User' },
+          createdAt: '2024-01-01T00:00:00.000Z',
+          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/screenshot.png`,
+          thumbnail: `https://api.tracker.yandex.net/v2/issues/${issueId}/thumbnails/${attachmentId}`,
+        },
+      ]);
+      mockServer.mockGetThumbnailSuccess(issueId, attachmentId);
+
+      // Мокируем ошибку при записи миниатюры
+      const writeError = new Error('EACCES: permission denied');
+      // @ts-expect-error - мокируем системную ошибку
+      writeError.code = 'EACCES';
+      writeFileMock.mockRejectedValueOnce(writeError);
+
+      // Act
+      const result = await client.callTool('fr_yandex_tracker_get_thumbnail', {
+        issueId,
+        attachmentId,
+        saveToPath,
+      });
+
+      // Assert
+      expect(result.isError).toBe(true);
+      expect(result.content[0]!.text).toContain('Не удалось сохранить миниатюру');
+      expect(result.content[0]!.text).toContain(saveToPath);
+
+      mockServer.assertAllRequestsDone();
+    });
+
+    it('должен обработать ошибку при нехватке места на диске', async () => {
+      // Arrange
+      const issueId = 'QUEUE-2';
+      const attachmentId = '67890';
+      const saveToPath = '/tmp/thumbnail.jpg';
+
+      // Мокируем успешное получение миниатюры
+      mockServer.mockGetAttachmentsSuccess(issueId, [
+        {
+          id: attachmentId,
+          name: 'photo.jpg',
+          mimetype: 'image/jpeg',
+          size: 2048,
+          createdBy: { id: '1', display: 'Test User' },
+          createdAt: '2024-01-01T00:00:00.000Z',
+          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/photo.jpg`,
+          thumbnail: `https://api.tracker.yandex.net/v2/issues/${issueId}/thumbnails/${attachmentId}`,
+        },
+      ]);
+      mockServer.mockGetThumbnailSuccess(issueId, attachmentId);
+
+      // Мокируем ошибку при записи миниатюры (нет места на диске)
+      const writeError = new Error('ENOSPC: no space left on device');
+      // @ts-expect-error - мокируем системную ошибку
+      writeError.code = 'ENOSPC';
+      writeFileMock.mockRejectedValueOnce(writeError);
+
+      // Act
+      const result = await client.callTool('fr_yandex_tracker_get_thumbnail', {
+        issueId,
+        attachmentId,
+        saveToPath,
+      });
+
+      // Assert
+      expect(result.isError).toBe(true);
+      expect(result.content[0]!.text).toContain('Не удалось сохранить миниатюру');
+      expect(result.content[0]!.text).toContain(saveToPath);
+
+      mockServer.assertAllRequestsDone();
     });
   });
 });
