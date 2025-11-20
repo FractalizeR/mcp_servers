@@ -55,7 +55,7 @@ describe('GetCommentsTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId', 'fields']);
+      expect(definition.inputSchema.required).toEqual(['issueId', 'fields', 'perPage']);
       expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['perPage']).toBeDefined();
       expect(definition.inputSchema.properties?.['page']).toBeDefined();

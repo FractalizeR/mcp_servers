@@ -88,7 +88,7 @@ describe('FindIssuesTool', () => {
       expect(definition.name).toBe(buildToolName('find_issues', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('Ищет задачи');
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['fields']);
+      expect(definition.inputSchema.required).toEqual(['fields', 'perPage']);
       expect(definition.inputSchema.properties?.['query']).toBeDefined();
       expect(definition.inputSchema.properties?.['filter']).toBeDefined();
       expect(definition.inputSchema.properties?.['keys']).toBeDefined();

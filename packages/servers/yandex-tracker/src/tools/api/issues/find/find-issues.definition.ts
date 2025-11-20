@@ -41,8 +41,8 @@ export class FindIssuesDefinition extends BaseToolDefinition {
           expand: this.buildExpandParam(),
           fields: this.buildFieldsParam(),
         },
-        // fields обязателен; хотя бы один параметр поиска должен быть указан (валидация в schema)
-        required: ['fields'],
+        // fields и perPage обязательны; хотя бы один параметр поиска должен быть указан (валидация в schema)
+        required: ['fields', 'perPage'],
       },
     };
   }
@@ -53,7 +53,7 @@ export class FindIssuesDefinition extends BaseToolDefinition {
   private buildDescription(): string {
     return (
       'Ищет задачи по query (язык запросов Трекера), filter (key-value), keys, queue или filterId. ' +
-      'Параметр fields* обязателен для экономии токенов. Поддержка пагинации (perPage, page). ' +
+      'Параметры fields* и perPage* обязательны для экономии токенов. Поддержка пагинации (perPage, page). ' +
       'Для получения конкретных задач: get_issues (эффективнее).'
     );
   }
@@ -161,9 +161,9 @@ export class FindIssuesDefinition extends BaseToolDefinition {
     return {
       type: 'number',
       description:
-        'Количество результатов на странице (по умолчанию 50, рекомендуется 10-50). Используй fields для экономии токенов.',
+        '⚠️ ОБЯЗАТЕЛЬНЫЙ. Количество результатов на странице. Запрашивайте минимально необходимое количество для экономии токенов.',
       minimum: 1,
-      examples: [50],
+      examples: [10, 20],
     };
   }
 

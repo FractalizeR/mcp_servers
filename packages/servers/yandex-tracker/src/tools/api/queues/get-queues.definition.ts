@@ -29,7 +29,7 @@ export class GetQueuesDefinition extends BaseToolDefinition {
           expand: this.buildExpandParam(),
           fields: this.buildFieldsParam(),
         },
-        required: ['fields'],
+        required: ['fields', 'perPage'],
       },
     };
   }
@@ -37,18 +37,18 @@ export class GetQueuesDefinition extends BaseToolDefinition {
   private buildDescription(): string {
     return (
       'Получает список очередей с пагинацией. ' +
-      'Параметр fields обязателен для экономии токенов. ' +
+      'Параметры fields* и perPage* обязательны для экономии токенов. ' +
       'Для одной очереди: get_queue, создания: create_queue.'
     );
   }
 
   private buildPerPageParam(): Record<string, unknown> {
     return this.buildNumberParam(
-      'Количество очередей на странице (опционально, по умолчанию 50, максимум 100).',
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Количество очередей на странице. Запрашивайте минимально необходимое количество для экономии токенов (максимум 100).',
       {
         minimum: 1,
         maximum: 100,
-        examples: [50],
+        examples: [10, 20],
       }
     );
   }
