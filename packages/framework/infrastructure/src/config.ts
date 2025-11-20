@@ -273,9 +273,10 @@ export function loadConfig(): ServerConfig {
 
   // Парсинг фильтра категорий (опционально, только для eager режима)
   const enabledToolCategoriesRaw = process.env[ENV_VAR_NAMES.ENABLED_TOOL_CATEGORIES];
-  const enabledToolCategories = enabledToolCategoriesRaw
-    ? parseEnabledToolCategories(enabledToolCategoriesRaw)
-    : undefined;
+  const enabledToolCategories =
+    enabledToolCategoriesRaw !== undefined
+      ? parseEnabledToolCategories(enabledToolCategoriesRaw)
+      : undefined;
 
   return {
     token: token.trim(),
