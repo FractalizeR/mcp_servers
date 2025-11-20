@@ -81,6 +81,22 @@ describe('FindIssuesTool', () => {
     tool = new FindIssuesTool(mockTrackerFacade, mockLogger);
   });
 
+  describe('getDefinition', () => {
+    it('должен вернуть корректное определение инструмента', () => {
+      const definition = tool.getDefinition();
+
+      expect(definition.name).toBe(buildToolName('find_issues', MCP_TOOL_PREFIX));
+      expect(definition.description).toContain('Поиск задач');
+      expect(definition.inputSchema.type).toBe('object');
+      expect(definition.inputSchema.required).toEqual(['fields']);
+      expect(definition.inputSchema.properties?.['query']).toBeDefined();
+      expect(definition.inputSchema.properties?.['filter']).toBeDefined();
+      expect(definition.inputSchema.properties?.['keys']).toBeDefined();
+      expect(definition.inputSchema.properties?.['queue']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
+    });
+  });
+
   describe('Validation', () => {
     it('должен отклонить запрос без параметров поиска', async () => {
       const result = await tool.execute({});

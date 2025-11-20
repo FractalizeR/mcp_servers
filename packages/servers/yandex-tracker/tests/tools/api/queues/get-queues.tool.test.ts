@@ -37,9 +37,11 @@ describe('GetQueuesTool', () => {
       expect(definition.name).toBe(buildToolName('get_queues', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('список всех очередей');
       expect(definition.inputSchema.type).toBe('object');
+      expect(definition.inputSchema.required).toEqual(['fields']);
       expect(definition.inputSchema.properties?.['perPage']).toBeDefined();
       expect(definition.inputSchema.properties?.['page']).toBeDefined();
       expect(definition.inputSchema.properties?.['expand']).toBeDefined();
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
