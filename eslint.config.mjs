@@ -165,13 +165,56 @@ export default [
     },
   },
 
-  // 4. OVERRIDE для config файлов и скриптов
+  // 4. OVERRIDE для config файлов и скриптов (мягкие правила)
   {
     files: ['**/*.config.{ts,mjs,js}', '**/scripts/**/*.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        projectService: false, // Отключаем type-checking для скриптов
+      },
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
     rules: {
+      // Console разрешен (это CLI скрипты)
       'no-console': 'off',
+
+      // Type safety - мягче для скриптов
+      '@typescript-eslint/no-explicit-any': 'warn', // warn вместо error
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+
+      // Метрики сложности - OFF для скриптов
+      complexity: 'off',
+      'max-depth': 'off',
+      'max-lines-per-function': 'off',
+      'max-params': 'off',
+      'max-lines': 'off',
+      'max-statements': 'off',
+      'sonarjs/cognitive-complexity': 'off',
+      'sonarjs/no-duplicate-string': 'off',
+
+      // Базовые правила (важны для ИИ)
+      'prefer-const': 'error',
+      'no-var': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'warn', // warn вместо error
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
     },
   },
 
