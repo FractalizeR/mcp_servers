@@ -30,14 +30,14 @@ export class GetCommentsDefinition extends BaseToolDefinition {
           expand: this.buildExpandParam(),
           fields: this.buildFieldsParam(),
         },
-        required: ['issueId', 'fields'],
+        required: ['issueId', 'fields', 'perPage'],
       },
     };
   }
 
   private buildDescription(): string {
     return (
-      'Получает комментарии задачи (issueId*, fields*). Поддерживает пагинацию. ' +
+      'Получает комментарии задачи (issueId*, fields*, perPage*). Поддерживает пагинацию. ' +
       'Параметр fields определяет, какие поля каждого комментария вернуть в ответе (например: ["id", "text", "createdAt"]). ' +
       'Для добавления: add_comment, редактирования: edit_comment, удаления: delete_comment.'
     );
@@ -51,11 +51,11 @@ export class GetCommentsDefinition extends BaseToolDefinition {
 
   private buildPerPageParam(): Record<string, unknown> {
     return this.buildNumberParam(
-      'Опциональное количество комментариев на странице (по умолчанию: 50, максимум: 500).',
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Количество комментариев на странице. Запрашивайте минимально необходимое количество для экономии токенов (максимум 500).',
       {
         minimum: 1,
         maximum: 500,
-        examples: [50, 100],
+        examples: [10, 20],
       }
     );
   }

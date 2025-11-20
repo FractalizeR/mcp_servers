@@ -27,25 +27,28 @@ export class GetProjectsDefinition extends BaseToolDefinition {
           queueId: this.buildQueueIdParam(),
           fields: this.buildFieldsParam(),
         },
-        required: ['fields'],
+        required: ['fields', 'perPage'],
       },
     };
   }
 
   private buildDescription(): string {
     return (
-      'Получает список проектов (fields*, perPage, page, expand, queueId). ' +
+      'Получает список проектов (fields*, perPage*, page, expand, queueId). ' +
       'Возвращает массив проектов. Поддержка пагинации и фильтрации. ' +
       'Для одного проекта: get_project, создания: create_project.'
     );
   }
 
   private buildPerPageParam(): Record<string, unknown> {
-    return this.buildNumberParam('Количество записей на странице (1-100, по умолчанию 50).', {
-      minimum: 1,
-      maximum: 100,
-      examples: [50],
-    });
+    return this.buildNumberParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Количество проектов на странице. Запрашивайте минимально необходимое количество для экономии токенов (максимум 100).',
+      {
+        minimum: 1,
+        maximum: 100,
+        examples: [10, 20],
+      }
+    );
   }
 
   private buildPageParam(): Record<string, unknown> {
