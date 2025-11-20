@@ -33,7 +33,7 @@ export const TransitionIssueParamsSchema = z.object({
   /**
    * Опциональный массив полей для фильтрации ответа
    */
-  fields: FieldsSchema,
+  fields: FieldsSchema.optional(),
 });
 
 /**

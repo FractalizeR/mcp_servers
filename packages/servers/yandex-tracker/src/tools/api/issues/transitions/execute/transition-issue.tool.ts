@@ -69,7 +69,7 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
         comment !== undefined || customFields
           ? {
               ...(comment !== undefined && { comment }),
-              ...(customFields ?? {}),
+              ...customFields,
             }
           : undefined;
 
@@ -84,7 +84,7 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
       // 6. Логирование успешного результата
       this.logger.info(`Переход выполнен для задачи ${issueKey}`, {
         transitionId,
-        newStatus: issue.status,
+        newStatus: issue.status ?? 'unknown',
         fieldsCount: fields?.length ?? 'all',
       });
 

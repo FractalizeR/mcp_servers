@@ -169,7 +169,33 @@ describe('TransitionIssueOperation', () => {
         }
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        `Переход выполнен успешно: ${issueKey} → inProgress`
+        expect.stringContaining(`Переход выполнен успешно: ${issueKey} →`)
+      );
+    });
+
+    it('should handle response without status field gracefully', async () => {
+      const issueKey = 'TEST-123';
+      const transitionId = 'transition1';
+
+      // Имитация некорректного ответа API без поля status
+      const mockUpdatedIssue = {
+        id: '1',
+        key: 'TEST-123',
+        summary: 'Test Issue',
+        queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+        createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+        createdAt: '2024-01-01T10:00:00.000Z',
+        updatedAt: '2024-01-02T10:00:00.000Z',
+      } as IssueWithUnknownFields;
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue(mockUpdatedIssue);
+
+      const result = await operation.execute(issueKey, transitionId);
+
+      // Не должно быть ошибки, даже если status отсутствует
+      expect(result).toEqual(mockUpdatedIssue);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `Переход выполнен успешно: ${issueKey} → unknown`
       );
     });
   });

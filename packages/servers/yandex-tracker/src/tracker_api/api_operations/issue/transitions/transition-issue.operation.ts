@@ -45,14 +45,14 @@ export class TransitionIssueOperation extends BaseOperation {
     // API v3: POST /v3/issues/{issueKey}/transitions/{transitionId}/_execute
     const result = await this.httpClient.post<IssueWithUnknownFields>(
       `/v3/issues/${issueKey}/transitions/${transitionId}/_execute`,
-      transitionData || {}
+      transitionData ?? {}
     );
 
     // Инвалидируем кеш задачи после изменения статуса
     const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, issueKey);
     this.cacheManager.delete(cacheKey);
 
-    this.logger.info(`Переход выполнен успешно: ${issueKey} → ${result.status.key}`);
+    this.logger.info(`Переход выполнен успешно: ${issueKey} → ${result.status?.key ?? 'unknown'}`);
     return result;
   }
 }
