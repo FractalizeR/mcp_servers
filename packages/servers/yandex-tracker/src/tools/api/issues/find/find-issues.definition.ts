@@ -52,12 +52,9 @@ export class FindIssuesDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Поиск задач по query (язык запросов Трекера), filter (key-value), keys, queue или filterId. ' +
-      'Параметр fields обязателен для экономии токенов. Поддержка пагинации (perPage, page). ' +
-      '\n\n' +
-      'Для: поиска задач по условиям с логическими операторами. ' +
-      '\n' +
-      'Не для: получения конкретных задач по ключам (get_issues эффективнее).'
+      'Ищет задачи по query (язык запросов Трекера), filter (key-value), keys, queue или filterId. ' +
+      'Параметр fields* обязателен для экономии токенов. Поддержка пагинации (perPage, page). ' +
+      'Для получения конкретных задач: get_issues (эффективнее).'
     );
   }
 

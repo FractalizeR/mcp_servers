@@ -34,17 +34,14 @@ export class DeleteCommentDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      '⚠️ ДЕСТРУКТИВНАЯ ОПЕРАЦИЯ. Удалить комментарий. Все поля обязательны. ' +
+      '⚠️ ДЕСТРУКТИВНАЯ ОПЕРАЦИЯ. Удаляет комментарий (issueId*, commentId*). ' +
       'Операция необратима. ' +
-      '\n\n' +
-      'Для: удаления комментария из задачи. ' +
-      '\n' +
-      'Не для: добавления (add_comment), получения (get_comments), редактирования (edit_comment).'
+      'Для добавления: add_comment, получения: get_comments, редактирования: edit_comment.'
     );
   }
 
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи.', {
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ задачи (QUEUE-123)', {
       examples: ['TEST-123', 'PROJ-456'],
     });
   }

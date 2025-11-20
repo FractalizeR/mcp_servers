@@ -39,17 +39,14 @@ export class UpdateProjectDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Обновить существующий проект. Требуются права администратора. ' +
-      'Обновляются только переданные поля. ' +
-      '\n\n' +
-      'Для: изменения настроек проекта, смены руководителя, обновления статуса. ' +
-      '\n' +
-      'Не для: создания (create_project), удаления (delete_project).'
+      'Обновляет проект (projectId*, fields*, name, lead, status, description, startDate, endDate, queueIds, teamUserIds). ' +
+      'Требуются права администратора. Обновляются только переданные поля. ' +
+      'Для создания: create_project, удаления: delete_project.'
     );
   }
 
   private buildProjectIdParam(): Record<string, unknown> {
-    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. ID или ключ проекта для обновления.', {
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. ID проекта (PROJ)', {
       minLength: 1,
       examples: ['PROJ'],
     });
@@ -124,7 +121,7 @@ export class UpdateProjectDefinition extends BaseToolDefinition {
 
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Массив полей для возврата в обновленном проекте. Используйте только необходимые поля для экономии контекста.',
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
       {
         items: { type: 'string' },
         examples: [

@@ -38,13 +38,10 @@ export class BulkTransitionIssuesDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Массовая смена статусов нескольких задач одновременно через workflow-переходы. ' +
-      'Операция выполняется асинхронно на сервере и возвращает operationId для проверки статуса. ' +
+      'Массово меняет статусы через workflow (issues*, transition*, values). ' +
+      'Операция асинхронная, возвращает operationId для проверки статуса. ' +
       'Используй get_bulk_change_status для мониторинга прогресса. ' +
-      '\n\n' +
-      'Для: изменения статусов множества задач с соблюдением workflow (start_progress, close, reopen). ' +
-      '\n' +
-      'Не для: обновления других полей (используй bulk_update_issues) или одной задачи (используй execute_transition).'
+      'Для обновления полей: bulk_update_issues, одной задачи: transition_issue.'
     );
   }
 
@@ -53,8 +50,7 @@ export class BulkTransitionIssuesDefinition extends BaseToolDefinition {
    */
   private buildIssuesParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Массив ключей задач для перевода. Формат: QUEUE-123. ' +
-        'Все задачи должны поддерживать указанный переход.',
+      'Массив ключей задач (QUEUE-123), до 100 элементов',
       this.buildStringParam('Ключ задачи', {
         pattern: '^[A-Z][A-Z0-9]+-\\d+$',
         examples: ['PROJ-123'],

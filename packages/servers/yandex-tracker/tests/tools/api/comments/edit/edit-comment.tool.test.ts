@@ -52,8 +52,7 @@ describe('EditCommentTool', () => {
     it('должен иметь корректное описание', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.description).toContain('Редактировать');
-      expect(definition.description).toContain('комментарий');
+      expect(definition.description).toContain('Редактирует комментарий');
     });
 
     it('должен иметь корректную схему с обязательными полями', () => {

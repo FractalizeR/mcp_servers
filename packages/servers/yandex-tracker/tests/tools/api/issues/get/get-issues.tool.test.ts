@@ -93,8 +93,7 @@ describe('GetIssuesTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('get_issues', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Получить задачи по ключам');
-      expect(definition.description).toContain('Batch-режим');
+      expect(definition.description).toContain('Получает детали задач');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['issueKeys', 'fields']);
       expect(definition.inputSchema.properties?.['issueKeys']).toBeDefined();

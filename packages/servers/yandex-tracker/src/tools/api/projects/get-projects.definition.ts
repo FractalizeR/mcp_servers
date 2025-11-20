@@ -34,12 +34,9 @@ export class GetProjectsDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Получить список всех проектов с поддержкой пагинации и фильтрации. ' +
-      'Возвращает массив проектов. ' +
-      '\n\n' +
-      'Для: просмотра списка проектов, фильтрации по очереди. ' +
-      '\n' +
-      'Не для: получения одного проекта (get_project), создания (create_project).'
+      'Получает список проектов (fields*, perPage, page, expand, queueId). ' +
+      'Возвращает массив проектов. Поддержка пагинации и фильтрации. ' +
+      'Для одного проекта: get_project, создания: create_project.'
     );
   }
 
@@ -68,17 +65,14 @@ export class GetProjectsDefinition extends BaseToolDefinition {
   }
 
   private buildQueueIdParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      'Фильтр по ID или ключу очереди - вернет только проекты, связанные с этой очередью (опционально).',
-      {
-        examples: ['QUEUE'],
-      }
-    );
+    return this.buildStringParam('Ключ очереди (PROJ)', {
+      examples: ['QUEUE'],
+    });
   }
 
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Массив полей для возврата в каждом проекте. Используйте только необходимые поля для экономии контекста.',
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
       {
         items: { type: 'string' },
         examples: [

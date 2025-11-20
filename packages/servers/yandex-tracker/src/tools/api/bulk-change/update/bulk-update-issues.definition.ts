@@ -43,13 +43,10 @@ export class BulkUpdateIssuesDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Массовое обновление полей нескольких задач одновременно. ' +
-      'Операция выполняется асинхронно на сервере и возвращает operationId для проверки статуса. ' +
+      'Массово обновляет поля (issues*, values*). ' +
+      'Операция асинхронная, возвращает operationId для проверки статуса. ' +
       'Используй get_bulk_change_status для мониторинга прогресса. ' +
-      '\n\n' +
-      'Для: обновления одинаковых полей у множества задач (priority, assignee, tags, etc.). ' +
-      '\n' +
-      'Не для: обновления одной задачи (используй update_issue) или смены статусов (используй bulk_transition_issues).'
+      'Для одной задачи: update_issue, смены статусов: bulk_transition_issues.'
     );
   }
 
@@ -58,8 +55,7 @@ export class BulkUpdateIssuesDefinition extends BaseToolDefinition {
    */
   private buildIssuesParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Массив ключей задач для обновления. Формат: QUEUE-123. ' +
-        'Можно обновлять задачи из разных очередей одновременно.',
+      'Массив ключей задач (QUEUE-123), до 100 элементов',
       this.buildStringParam('Ключ задачи', {
         pattern: '^[A-Z][A-Z0-9]+-\\d+$',
         examples: ['PROJ-123'],

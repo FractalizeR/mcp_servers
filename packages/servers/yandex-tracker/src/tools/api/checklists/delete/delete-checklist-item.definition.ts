@@ -43,12 +43,9 @@ export class DeleteChecklistItemDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Удалить элемент из чеклиста задачи. Обязательные поля: issueId и checklistItemId. ' +
+      'Удаляет элемент чеклиста (issueId*, checklistItemId*). ' +
       '⚠️ ВНИМАНИЕ: Операция необратима! ' +
-      '\n\n' +
-      'Для: безвозвратного удаления элемента из чеклиста. ' +
-      '\n' +
-      'Не для: получения (get_checklist), добавления (add_checklist_item), обновления (update_checklist_item).'
+      'Для получения: get_checklist, добавления: add_checklist_item, обновления: update_checklist_item.'
     );
   }
 
@@ -56,12 +53,9 @@ export class DeleteChecklistItemDefinition extends BaseToolDefinition {
    * Построить описание параметра issueId
    */
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи (примеры: TEST-123, PROJ-456).',
-      {
-        examples: ['TEST-123', 'PROJ-456'],
-      }
-    );
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ задачи (QUEUE-123)', {
+      examples: ['TEST-123', 'PROJ-456'],
+    });
   }
 
   /**

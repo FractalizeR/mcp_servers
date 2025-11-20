@@ -39,17 +39,14 @@ export class CreateProjectDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Создать новый проект. Требуются права администратора. ' +
-      'Обязательные поля: key, name, lead. ' +
-      '\n\n' +
-      'Для: создания нового проекта для команды/инициативы. ' +
-      '\n' +
-      'Не для: обновления (update_project), получения (get_project).'
+      'Создаёт проект (key*, name*, lead*, fields*, status, description, startDate, endDate, queueIds, teamUserIds). ' +
+      'Требуются права администратора. ' +
+      'Для обновления: update_project, получения: get_project.'
     );
   }
 
   private buildKeyParam(): Record<string, unknown> {
-    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Уникальный ключ проекта.', {
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. ID проекта (PROJ)', {
       minLength: 1,
       examples: ['PROJ'],
     });
@@ -122,7 +119,7 @@ export class CreateProjectDefinition extends BaseToolDefinition {
 
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Массив полей для возврата в созданном проекте. Используйте только необходимые поля для экономии контекста.',
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
       {
         items: { type: 'string' },
         examples: [

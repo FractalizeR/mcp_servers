@@ -34,12 +34,9 @@ export class GetWorklogsDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Получить список записей времени (worklog) задачи. ' +
+      'Получает записи времени (worklog) задачи. ' +
       'Возвращает все записи времени, затраченного на выполнение задачи. ' +
-      '\n\n' +
-      'Для: получения учета времени задачи, просмотра затраченных часов. ' +
-      '\n' +
-      'Не для: добавления (add_worklog), редактирования (update_worklog), удаления (delete_worklog).'
+      'Для добавления: add_worklog, редактирования: update_worklog, удаления: delete_worklog.'
     );
   }
 

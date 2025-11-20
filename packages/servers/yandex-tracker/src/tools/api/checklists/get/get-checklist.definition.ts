@@ -43,11 +43,9 @@ export class GetChecklistDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Получить чеклист задачи. Возвращает все элементы чеклиста с их статусом выполнения. ' +
-      '\n\n' +
-      'Для: получения полного списка элементов чеклиста задачи. ' +
-      '\n' +
-      'Не для: добавления (add_checklist_item), обновления (update_checklist_item), удаления (delete_checklist_item).'
+      'Получает чеклист (issueId*, fields*). ' +
+      'Возвращает все элементы чеклиста с их статусом выполнения. ' +
+      'Для добавления: add_checklist_item, обновления: update_checklist_item, удаления: delete_checklist_item.'
     );
   }
 

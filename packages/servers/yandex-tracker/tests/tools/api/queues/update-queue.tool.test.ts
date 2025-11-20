@@ -35,7 +35,7 @@ describe('UpdateQueueTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('update_queue', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Обновить параметры очереди');
+      expect(definition.description).toContain('Обновляет параметры очереди');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('queueId');
       expect(definition.inputSchema.properties?.['queueId']).toBeDefined();

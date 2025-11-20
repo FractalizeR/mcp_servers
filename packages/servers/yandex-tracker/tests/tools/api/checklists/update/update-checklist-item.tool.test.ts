@@ -52,8 +52,7 @@ describe('UpdateChecklistItemTool', () => {
     it('должен иметь корректное описание', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.description).toContain('элемент');
-      expect(definition.description).toContain('чеклист');
+      expect(definition.description).toContain('Обновляет элемент чеклиста');
     });
 
     it('должен иметь корректную схему с обязательными полями', () => {

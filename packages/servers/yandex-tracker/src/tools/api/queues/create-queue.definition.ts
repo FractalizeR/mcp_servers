@@ -36,12 +36,9 @@ export class CreateQueueDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Создать новую очередь. Требуются права администратора. ' +
-      'Обязательные поля: key, name, lead, defaultType, defaultPriority. ' +
-      '\n\n' +
-      'Для: создания очереди для проекта/команды. ' +
-      '\n' +
-      'Не для: обновления (update_queue), получения (get_queue).'
+      'Создаёт очередь (key*, name*, lead*, defaultType*, defaultPriority*, description, issueTypes). ' +
+      'Требуются права администратора. ' +
+      'Для обновления: update_queue, получения: get_queue.'
     );
   }
 

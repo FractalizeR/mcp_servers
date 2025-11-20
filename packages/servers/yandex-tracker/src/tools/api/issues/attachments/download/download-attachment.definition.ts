@@ -45,14 +45,10 @@ export class DownloadAttachmentDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Скачать файл из задачи. По умолчанию возвращает base64. ' +
-      'Опционально можно сохранить на MCP сервере (saveToPath). ' +
-      '\n\n' +
-      'Для: получения документов, изображений, логов. ' +
-      '\n' +
-      'Не для: загрузки/удаления (upload_attachment, delete_attachment). ' +
-      '\n\n' +
-      'Требуются: issueId, attachmentId, filename (получить через get_attachments).'
+      'Скачивает файл (issueId*, attachmentId*, filename*, saveToPath). ' +
+      'По умолчанию возвращает base64. Опционально можно сохранить на MCP сервере (saveToPath). ' +
+      'Требуются: issueId, attachmentId, filename (получить через get_attachments). ' +
+      'Для загрузки/удаления: upload_attachment, delete_attachment.'
     );
   }
 

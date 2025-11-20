@@ -129,6 +129,36 @@ return this.formatSuccess({ issues: filtered });
 
 ---
 
+## 📏 Целевые метрики для Tool Descriptions
+
+**Измерение:** `npx tsx scripts/measure-descriptions.ts`
+
+### METADATA.description (короткие для discovery)
+- **Формат:** `[Category/Subcategory] Краткое описание`
+- **Лимит:** ≤80 символов
+- **Target total:** ~400 tokens для всех 41 tools
+
+### ToolDefinition.description (полные для MCP)
+- **Target per tool:** ~110 tokens (~440 chars)
+- **Maximum per tool:** ~150 tokens (~600 chars)
+- **Target total:** ≤4,500 tokens (~18,000 chars) для всех 41 tools
+
+**Current metrics (после оптимизации):**
+```
+METADATA.description: 408 tokens ✅
+ToolDefinition.description: 4,470 tokens ✅
+Average per tool: 110 tokens ✅
+```
+
+**Guidelines для buildDescription():**
+- Используй активные глаголы (Создаёт, Обновляет, Получает, Удаляет)
+- Обязательные поля отмечай звездочкой: `(field1*, field2*, optional)`
+- Ссылки на альтернативы: `Для X: tool_name`
+- Избегай многословных паттернов "Для:/Не для:"
+- Сохраняй важные предупреждения (⚠️)
+
+---
+
 ### 3. Флаг безопасности `requiresExplicitUserConsent`
 
 **⚠️ Если tool ИЗМЕНЯЕТ данные:**

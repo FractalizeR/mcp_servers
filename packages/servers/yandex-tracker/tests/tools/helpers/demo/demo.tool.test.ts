@@ -32,7 +32,7 @@ describe('DemoTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('demo', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Демонстрационный');
+      expect(definition.description).toContain('Демонстрационный инструмент');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['message']);
       expect(definition.inputSchema.properties?.['message']).toBeDefined();

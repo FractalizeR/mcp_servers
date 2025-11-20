@@ -45,13 +45,9 @@ export class AddCommentDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Добавить комментарий к задаче. Обязательные поля: issueId, text и fields. ' +
-      'Можно прикрепить вложения через attachmentIds. ' +
+      'Добавляет комментарий (issueId*, text*, fields*, attachmentIds). ' +
       'Параметр fields определяет, какие поля комментария вернуть в ответе (например: ["id", "text", "createdAt"]). ' +
-      '\n\n' +
-      'Для: добавления комментария с текстом и опциональными вложениями. ' +
-      '\n' +
-      'Не для: редактирования (edit_comment), получения (get_comments), удаления (delete_comment).'
+      'Для редактирования: edit_comment, получения: get_comments, удаления: delete_comment.'
     );
   }
 
@@ -59,12 +55,9 @@ export class AddCommentDefinition extends BaseToolDefinition {
    * Построить описание параметра issueId
    */
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи (примеры: TEST-123, PROJ-456).',
-      {
-        examples: ['TEST-123', 'PROJ-456'],
-      }
-    );
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ задачи (QUEUE-123)', {
+      examples: ['TEST-123', 'PROJ-456'],
+    });
   }
 
   /**

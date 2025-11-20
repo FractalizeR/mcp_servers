@@ -46,16 +46,12 @@ export class TransitionIssueDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Выполнить workflow-переход задачи (изменить статус). ' +
+      'Выполняет workflow-переход (issueKey*, transitionId*, comment, customFields). ' +
       'Можно добавить комментарий и заполнить обязательные поля формы через customFields. ' +
       'Параметр fields фильтрует ответ. ' +
-      '\n\n' +
       '⚠️ ВАЖНО: Сначала получи доступные переходы через get_issue_transitions! ' +
       'ID перехода зависит от workflow очереди и текущего статуса. ' +
-      '\n\n' +
-      'Для: изменения статуса с учетом workflow, добавления комментария при переходе, заполнения обязательных полей (resolution). ' +
-      '\n' +
-      'Не для: просмотра переходов (get_issue_transitions), обновления других полей (update_issue).'
+      'Для просмотра переходов: get_issue_transitions, обновления полей: update_issue.'
     );
   }
 
@@ -63,7 +59,7 @@ export class TransitionIssueDefinition extends BaseToolDefinition {
    * Построить описание параметра issueKey
    */
   private buildIssueKeyParam(): Record<string, unknown> {
-    return this.buildStringParam('Ключ задачи в формате QUEUE-123 (пример: PROJ-123, ABC-1)', {
+    return this.buildStringParam('Ключ задачи (QUEUE-123)', {
       pattern: '^[A-Z][A-Z0-9]+-\\d+$',
       examples: ['PROJ-123'],
     });
@@ -116,12 +112,7 @@ export class TransitionIssueDefinition extends BaseToolDefinition {
    */
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Фильтр полей ответа (опционально, по умолчанию все). ' +
-        'Рекомендуется указывать только необходимые поля для экономии токенов (без фильтрации: ~2000-5000 токенов, с фильтрацией: ~200-500). ' +
-        '\n\n' +
-        'Поля: key, summary, description, status, priority, type, assignee, author, queue, project, sprint, epic, tags, ' +
-        'resolution, createdAt, updatedAt, statusStartTime, start, end, followers, commentWithoutExternalMessageCount, votes. ' +
-        'Вложенные (dot-notation): assignee.login, status.key, queue.key, priority.key, type.key.',
+      'Поля для возврата. Указывайте минимум для экономии токенов.',
       this.buildStringParam('Имя поля', {
         minLength: 1,
         examples: ['key', 'summary', 'status', 'status.key'],

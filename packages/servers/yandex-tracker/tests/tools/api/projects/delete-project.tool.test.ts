@@ -34,7 +34,7 @@ describe('DeleteProjectTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('delete_project', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Удалить проект');
+      expect(definition.description).toContain('Удаляет проект');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('projectId');
       expect(definition.inputSchema.properties?.['projectId']).toBeDefined();

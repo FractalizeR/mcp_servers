@@ -34,7 +34,7 @@ describe('DeleteComponentTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('delete_component', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('компонент');
+      expect(definition.description).toContain('Удаляет компонент');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('componentId');
       expect(definition.inputSchema.properties?.['componentId']).toBeDefined();

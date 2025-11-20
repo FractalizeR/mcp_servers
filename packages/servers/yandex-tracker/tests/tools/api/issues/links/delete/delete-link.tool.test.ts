@@ -34,7 +34,7 @@ describe('DeleteLinkTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('delete_link', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Удалить связь между задачами');
+      expect(definition.description).toContain('Удаляет связь');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['issueId', 'linkId']);
       expect(definition.inputSchema.properties?.['issueId']).toBeDefined();

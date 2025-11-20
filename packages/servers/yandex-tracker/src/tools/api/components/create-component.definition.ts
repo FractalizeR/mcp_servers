@@ -38,18 +38,14 @@ export class CreateComponentDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Создать новый компонент в очереди. ' +
-      'Требует указания очереди, названия компонента и fields. ' +
+      'Создаёт компонент (queueId*, name*, fields*, description, lead, assignAuto). ' +
       'Параметр fields определяет, какие поля компонента вернуть в ответе (например: ["id", "name"]). ' +
-      '\n\n' +
-      'Для: создания нового компонента для группировки задач. ' +
-      '\n' +
-      'Не для: получения компонентов (get_components), изменения (update_component).'
+      'Для получения: get_components, изменения: update_component.'
     );
   }
 
   private buildQueueIdParam(): Record<string, unknown> {
-    return this.buildStringParam('ID или ключ очереди (обязательно).', {
+    return this.buildStringParam('Ключ очереди (PROJ)', {
       examples: ['QUEUE', '1'],
     });
   }
@@ -80,10 +76,7 @@ export class CreateComponentDefinition extends BaseToolDefinition {
 
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Фильтр полей ответа. ' +
-        'Указывайте только необходимые поля для экономии токенов. ' +
-        '\n\n' +
-        'Доступные поля: id, name, description, lead, queue, assignAuto.',
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
       this.buildStringParam('Имя поля', {
         minLength: 1,
         examples: ['id', 'name', 'description', 'lead'],

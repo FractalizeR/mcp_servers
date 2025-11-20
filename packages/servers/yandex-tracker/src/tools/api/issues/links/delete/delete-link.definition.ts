@@ -43,13 +43,10 @@ export class DeleteLinkDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Удалить связь между задачами. ' +
+      'Удаляет связь (issueId*, linkId*). ' +
       'API автоматически удаляет обратную связь для связанной задачи. ' +
       'ID связи можно получить через get_issue_links. ' +
-      '\n\n' +
-      'Для: удаления связей между задачами. ' +
-      '\n' +
-      'Не для: создания/получения связей (create_link, get_issue_links).'
+      'Для создания/получения: create_link, get_issue_links.'
     );
   }
 
@@ -57,13 +54,10 @@ export class DeleteLinkDefinition extends BaseToolDefinition {
    * Построить описание параметра issueId
    */
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      'Ключ или ID задачи, из которой удаляется связь (формат QUEUE-123 или abc123)',
-      {
-        pattern: '^([A-Z][A-Z0-9]+-\\d+|[a-f0-9]+)$',
-        examples: ['PROJ-123', 'abc123def456'],
-      }
-    );
+    return this.buildStringParam('Ключ задачи (QUEUE-123)', {
+      pattern: '^([A-Z][A-Z0-9]+-\\d+|[a-f0-9]+)$',
+      examples: ['PROJ-123', 'abc123def456'],
+    });
   }
 
   /**

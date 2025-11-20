@@ -39,7 +39,7 @@ describe('GetQueueFieldsTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('get_queue_fields', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('список обязательных полей очереди');
+      expect(definition.description).toContain('Получает обязательные поля');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('queueId');
       expect(definition.inputSchema.properties?.['queueId']).toBeDefined();

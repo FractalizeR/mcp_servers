@@ -39,13 +39,10 @@ export class BulkMoveIssuesDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Массовое перемещение задач из одной очереди в другую. ' +
-      'Операция выполняется асинхронно на сервере и возвращает operationId для проверки статуса. ' +
+      'Массово перемещает задачи между очередями (issues*, queue*, moveAllFields, values). ' +
+      'Операция асинхронная, возвращает operationId для проверки статуса. ' +
       'Используй get_bulk_change_status для мониторинга прогресса. ' +
-      '\n\n' +
-      'Для: перемещения множества задач между очередями с сохранением или обновлением полей. ' +
-      '\n' +
-      'Не для: перемещения одной задачи (используй update_issue с полем queue) или изменения других полей (используй bulk_update_issues).'
+      'Для одной задачи: update_issue (поле queue), изменения полей: bulk_update_issues.'
     );
   }
 
@@ -54,8 +51,7 @@ export class BulkMoveIssuesDefinition extends BaseToolDefinition {
    */
   private buildIssuesParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Массив ключей задач для перемещения. Формат: QUEUE-123. ' +
-        'Задачи могут быть из разных очередей, но все будут перемещены в одну целевую очередь.',
+      'Массив ключей задач (QUEUE-123), до 100 элементов',
       this.buildStringParam('Ключ задачи', {
         pattern: '^[A-Z][A-Z0-9]+-\\d+$',
         examples: ['PROJ-123'],

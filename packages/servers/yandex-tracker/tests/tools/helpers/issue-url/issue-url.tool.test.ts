@@ -32,7 +32,7 @@ describe('IssueUrlTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('get_issue_urls', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('URL');
+      expect(definition.description).toContain('Получить URL');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['issueKeys']);
       expect(definition.inputSchema.properties?.['issueKeys']).toBeDefined();

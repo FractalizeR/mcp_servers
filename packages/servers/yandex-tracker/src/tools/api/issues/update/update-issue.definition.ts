@@ -50,12 +50,10 @@ export class UpdateIssueDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Обновить существующую задачу. Partial update: изменяются только указанные поля. ' +
+      'Обновляет поля (summary, description, assignee, priority, type, status, customFields). ' +
+      'Partial update: изменяются только указанные поля. ' +
       'Параметр fields фильтрует ответ. ' +
-      '\n\n' +
-      'Для: изменения summary, description, assignee, priority, type, status, кастомных полей. ' +
-      '\n' +
-      'Не для: создания (create_issue) или workflow-переходов (execute_transition).'
+      'Для создания: create_issue, переходов: transition_issue.'
     );
   }
 
@@ -63,20 +61,17 @@ export class UpdateIssueDefinition extends BaseToolDefinition {
    * Построить описание параметра issueKey
    */
   private buildIssueKeyParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      'Ключ существующей задачи в формате QUEUE-123 (пример: PROJ-123, ABC-1)',
-      {
-        pattern: '^[A-Z][A-Z0-9]+-\\d+$',
-        examples: ['PROJ-123'],
-      }
-    );
+    return this.buildStringParam('Ключ задачи (QUEUE-123)', {
+      pattern: '^[A-Z][A-Z0-9]+-\\d+$',
+      examples: ['PROJ-123'],
+    });
   }
 
   /**
    * Построить описание параметра summary
    */
   private buildSummaryParam(): Record<string, unknown> {
-    return this.buildStringParam('Краткое описание задачи (заголовок). Обычно 5-10 слов.', {
+    return this.buildStringParam('Название задачи (5-10 слов)', {
       minLength: 1,
       examples: ['Исправить ошибку авторизации'],
     });
@@ -172,9 +167,7 @@ export class UpdateIssueDefinition extends BaseToolDefinition {
    */
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Фильтр полей ответа (опционально, по умолчанию все). Указывайте только нужные поля для экономии токенов. ' +
-        'Основные: key, summary, description, status, assignee, priority, type, updatedAt. ' +
-        'Вложенные (dot-notation): assignee.login, status.key.',
+      'Поля для возврата. Указывайте минимум для экономии токенов.',
       this.buildStringParam('Имя поля', {
         minLength: 1,
         examples: ['key', 'summary'],

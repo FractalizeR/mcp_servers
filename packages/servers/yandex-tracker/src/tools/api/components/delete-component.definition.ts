@@ -33,12 +33,9 @@ export class DeleteComponentDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Удалить компонент из очереди. ' +
+      'Удаляет компонент (componentId*). ' +
       'Операция необратима, компонент будет удален безвозвратно. ' +
-      '\n\n' +
-      'Для: удаления ненужного компонента. ' +
-      '\n' +
-      'Не для: изменения компонента (update_component), создания (create_component).'
+      'Для изменения: update_component, создания: create_component.'
     );
   }
 

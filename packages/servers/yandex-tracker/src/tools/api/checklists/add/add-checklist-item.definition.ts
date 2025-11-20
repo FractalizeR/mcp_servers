@@ -47,12 +47,9 @@ export class AddChecklistItemDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Добавить элемент в чеклист задачи. Обязательные поля: issueId и text. ' +
+      'Добавляет элемент в чеклист (issueId*, text*, fields*, checked, assignee, deadline). ' +
       'Можно указать статус, исполнителя и дедлайн. ' +
-      '\n\n' +
-      'Для: добавления нового элемента в чеклист. ' +
-      '\n' +
-      'Не для: получения (get_checklist), обновления (update_checklist_item), удаления (delete_checklist_item).'
+      'Для получения: get_checklist, обновления: update_checklist_item, удаления: delete_checklist_item.'
     );
   }
 
@@ -60,12 +57,9 @@ export class AddChecklistItemDefinition extends BaseToolDefinition {
    * Построить описание параметра issueId
    */
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи (примеры: TEST-123, PROJ-456).',
-      {
-        examples: ['TEST-123', 'PROJ-456'],
-      }
-    );
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ задачи (QUEUE-123)', {
+      examples: ['TEST-123', 'PROJ-456'],
+    });
   }
 
   /**

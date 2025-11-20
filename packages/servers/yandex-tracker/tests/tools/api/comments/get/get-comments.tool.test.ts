@@ -48,8 +48,7 @@ describe('GetCommentsTool', () => {
     it('должен иметь корректное описание', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.description).toContain('комментариев');
-      expect(definition.description).toContain('задачи');
+      expect(definition.description).toContain('Получает комментарии');
     });
 
     it('должен иметь корректную схему с обязательными полями', () => {

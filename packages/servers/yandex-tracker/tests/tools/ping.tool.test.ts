@@ -42,8 +42,7 @@ describe('PingTool', () => {
 
       // Assert
       expect(definition.name).toBe(buildToolName('ping', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('API Яндекс.Трекера');
-      expect(definition.description).toContain('OAuth токена');
+      expect(definition.description).toContain('Проверка доступности API');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.properties).toEqual({});
       expect(definition.inputSchema.required).toEqual([]);

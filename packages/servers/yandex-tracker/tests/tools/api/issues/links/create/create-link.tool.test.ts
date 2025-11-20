@@ -8,10 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import {
-  createLinkFixture,
-  createSubtaskLinkFixture,
-} from '#helpers/link.fixture.js';
+import { createLinkFixture, createSubtaskLinkFixture } from '#helpers/link.fixture.js';
 
 describe('CreateLinkTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -38,7 +35,7 @@ describe('CreateLinkTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('create_link', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Создать связь между задачами');
+      expect(definition.description).toContain('Создаёт связь');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual([
         'issueId',

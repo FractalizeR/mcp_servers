@@ -43,13 +43,9 @@ export class GetAttachmentsDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Получить список всех прикрепленных файлов задачи (attachments). ' +
-      'Обязательные поля: issueId и fields. ' +
+      'Получает список файлов (issueId*, fields*). ' +
       'Параметр fields определяет, какие поля каждого файла вернуть в ответе (например: ["id", "name", "size"]). ' +
-      '\n\n' +
-      'Для: просмотра прикрепленных файлов, анализа вложений, проверки наличия документов. ' +
-      '\n' +
-      'Не для: загрузки/скачивания/удаления файлов (upload_attachment, download_attachment, delete_attachment).'
+      'Для загрузки/скачивания/удаления: upload_attachment, download_attachment, delete_attachment.'
     );
   }
 

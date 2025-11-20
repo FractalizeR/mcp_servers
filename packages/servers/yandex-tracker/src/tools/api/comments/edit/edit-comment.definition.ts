@@ -36,17 +36,14 @@ export class EditCommentDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Редактировать существующий комментарий. Все поля обязательны: issueId, commentId, text и fields. ' +
+      'Редактирует комментарий (issueId*, commentId*, text*, fields*). ' +
       'Параметр fields определяет, какие поля обновленного комментария вернуть в ответе (например: ["id", "text", "updatedAt"]). ' +
-      '\n\n' +
-      'Для: изменения текста существующего комментария. ' +
-      '\n' +
-      'Не для: добавления (add_comment), получения (get_comments), удаления (delete_comment).'
+      'Для добавления: add_comment, получения: get_comments, удаления: delete_comment.'
     );
   }
 
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи.', {
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ задачи (QUEUE-123)', {
       examples: ['TEST-123', 'PROJ-456'],
     });
   }

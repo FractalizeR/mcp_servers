@@ -33,17 +33,14 @@ export class ManageQueueAccessDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Управление правами доступа к очереди: добавление/удаление пользователей в/из ролей. ' +
-      'Требуются права администратора очереди. ' +
-      '\n\n' +
-      'Для: предоставления/отзыва доступа пользователей к очереди. ' +
-      '\n' +
-      'Не для: создания очереди (create_queue), изменения параметров (update_queue).'
+      'Управляет правами доступа к очереди (role*, subjects*, action*). ' +
+      'Добавление/удаление пользователей в/из ролей. Требуются права администратора очереди. ' +
+      'Для создания: create_queue, изменения параметров: update_queue.'
     );
   }
 
   private buildQueueIdParam(): Record<string, unknown> {
-    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ очереди.', {
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ очереди (PROJ)', {
       examples: ['PROJ'],
     });
   }

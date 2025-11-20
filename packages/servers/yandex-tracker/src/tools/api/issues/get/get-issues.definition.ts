@@ -42,12 +42,9 @@ export class GetIssuesDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Получить задачи по ключам. Batch-режим: до 100 задач за раз. ' +
+      'Получает детали задач по ключам. Batch-режим: до 100 задач за раз. ' +
       'Параметр fields обязателен для экономии токенов. Partial success: возвращает успешные даже при частичных ошибках. ' +
-      '\n\n' +
-      'Для: получения детальной информации о конкретных задачах. ' +
-      '\n' +
-      'Не для: поиска по критериям (find_issues).'
+      'Для поиска: find_issues.'
     );
   }
 
@@ -56,8 +53,7 @@ export class GetIssuesDefinition extends BaseToolDefinition {
    */
   private buildIssueKeysParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      '⚠️ ОБЯЗАТЕЛЬНО МАССИВ! Даже для одной задачи используй ["PROJ-123"], НЕ "PROJ-123". ' +
-        'Массив ключей в формате QUEUE-123 (до 100 задач).',
+      'Массив ключей задач (QUEUE-123), до 100 элементов',
       this.buildStringParam('Ключ задачи', {
         pattern: '^[A-Z][A-Z0-9]+-\\d+$',
         examples: ['PROJ-123'],
@@ -75,12 +71,7 @@ export class GetIssuesDefinition extends BaseToolDefinition {
    */
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Фильтр полей ответа (опционально, по умолчанию все). ' +
-        'Рекомендуется указывать только необходимые поля для экономии токенов (без фильтрации: ~2000-5000 токенов/задача, с фильтрацией: ~200-500). ' +
-        '\n\n' +
-        'Поля: key, summary, description, status, priority, type, assignee, author, queue, project, sprint, epic, tags, ' +
-        'createdAt, updatedAt, statusStartTime, start, end, followers, commentWithoutExternalMessageCount, votes. ' +
-        'Вложенные (dot-notation): assignee.login, assignee.display, status.key, queue.key, priority.key, type.key.',
+      'Поля для возврата. Указывайте минимум для экономии токенов.',
       this.buildStringParam('Имя поля', {
         minLength: 1,
         examples: ['key', 'summary', 'status', 'assignee.login'],

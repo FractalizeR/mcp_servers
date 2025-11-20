@@ -48,12 +48,9 @@ export class UpdateChecklistItemDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Обновить элемент чеклиста задачи. Обязательные поля: issueId и checklistItemId. ' +
+      'Обновляет элемент чеклиста (issueId*, checklistItemId*, fields*, text, checked, assignee, deadline). ' +
       'Поддерживает partial update - можно обновить только нужные поля. ' +
-      '\n\n' +
-      'Для: обновления текста, статуса, исполнителя или дедлайна элемента. ' +
-      '\n' +
-      'Не для: получения (get_checklist), добавления (add_checklist_item), удаления (delete_checklist_item).'
+      'Для получения: get_checklist, добавления: add_checklist_item, удаления: delete_checklist_item.'
     );
   }
 
@@ -61,12 +58,9 @@ export class UpdateChecklistItemDefinition extends BaseToolDefinition {
    * Построить описание параметра issueId
    */
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи (примеры: TEST-123, PROJ-456).',
-      {
-        examples: ['TEST-123', 'PROJ-456'],
-      }
-    );
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ задачи (QUEUE-123)', {
+      examples: ['TEST-123', 'PROJ-456'],
+    });
   }
 
   /**

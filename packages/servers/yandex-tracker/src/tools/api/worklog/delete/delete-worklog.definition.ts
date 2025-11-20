@@ -34,17 +34,14 @@ export class DeleteWorklogDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Удалить запись времени (worklog) задачи. ' +
+      'Удаляет запись времени (worklog) задачи. ' +
       '⚠️ ВНИМАНИЕ: Операция необратима! ' +
-      '\n\n' +
-      'Для: удаления ошибочных или ненужных записей времени. ' +
-      '\n' +
-      'Не для: получения (get_worklogs), добавления (add_worklog), редактирования (update_worklog).'
+      'Для получения: get_worklogs, добавления: add_worklog, редактирования: update_worklog.'
     );
   }
 
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи.', {
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ задачи (QUEUE-123)', {
       examples: ['TEST-123', 'PROJ-456'],
     });
   }

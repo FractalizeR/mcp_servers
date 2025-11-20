@@ -43,14 +43,10 @@ export class DeleteAttachmentDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Удалить прикрепленный файл из задачи Яндекс.Трекера. ' +
+      'Удаляет файл (issueId*, attachmentId*). ' +
       '⚠️ ВНИМАНИЕ: Операция необратима! Файл будет удален безвозвратно. ' +
-      '\n\n' +
-      'Для: удаления устаревших документов, ошибочно загруженных файлов. ' +
-      '\n' +
-      'Не для: загрузки/скачивания файлов (upload_attachment, download_attachment).' +
-      '\n\n' +
-      'ВАЖНО: Получить attachmentId можно через get_attachments.'
+      'ВАЖНО: Получить attachmentId можно через get_attachments. ' +
+      'Для загрузки/скачивания: upload_attachment, download_attachment.'
     );
   }
 
@@ -58,7 +54,7 @@ export class DeleteAttachmentDefinition extends BaseToolDefinition {
    * Построить описание параметра issueId
    */
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam('Ключ или ID задачи (формат QUEUE-123 или abc123)', {
+    return this.buildStringParam('Ключ задачи (QUEUE-123)', {
       pattern: '^([A-Z][A-Z0-9]+-\\d+|[a-f0-9]+)$',
       examples: ['PROJ-123', 'abc123def456'],
     });

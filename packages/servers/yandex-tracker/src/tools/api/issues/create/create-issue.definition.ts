@@ -49,12 +49,9 @@ export class CreateIssueDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Создать новую задачу. Обязательные поля: queue и summary. ' +
+      'Создаёт задачу (queue*, summary*, description, assignee, priority, type, customFields). ' +
       'Параметр fields фильтрует ответ. ' +
-      '\n\n' +
-      'Для: создания задачи с полями summary, description, assignee, priority, type, customFields. ' +
-      '\n' +
-      'Не для: обновления (update_issue).'
+      'Для обновления: update_issue.'
     );
   }
 
@@ -62,26 +59,20 @@ export class CreateIssueDefinition extends BaseToolDefinition {
    * Построить описание параметра queue
    */
   private buildQueueParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ очереди в формате 1-10 заглавных букв/цифр, начинается с буквы (примеры: PROJ, TEST, DEV2024).',
-      {
-        pattern: '^[A-Z][A-Z0-9]{0,9}$',
-        examples: ['PROJ'],
-      }
-    );
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ очереди (PROJ)', {
+      pattern: '^[A-Z][A-Z0-9]{0,9}$',
+      examples: ['PROJ'],
+    });
   }
 
   /**
    * Построить описание параметра summary
    */
   private buildSummaryParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Краткое описание задачи (название). Обычно 5-10 слов.',
-      {
-        minLength: 1,
-        examples: ['Исправить баг с авторизацией'],
-      }
-    );
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Название задачи (5-10 слов)', {
+      minLength: 1,
+      examples: ['Исправить баг с авторизацией'],
+    });
   }
 
   /**
@@ -148,8 +139,7 @@ export class CreateIssueDefinition extends BaseToolDefinition {
    */
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Фильтр полей ответа (опционально, по умолчанию все). Указывайте только нужные поля для экономии токенов. ' +
-        'Основные: key, summary, description, status, assignee, createdAt.',
+      'Поля для возврата. Указывайте минимум для экономии токенов.',
       this.buildStringParam('Имя поля', {
         minLength: 1,
         examples: ['key'],

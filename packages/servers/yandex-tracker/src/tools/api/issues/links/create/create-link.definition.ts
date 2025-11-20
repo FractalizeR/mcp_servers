@@ -45,21 +45,11 @@ export class CreateLinkDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Создать связь между задачами (subtask, depends, relates, duplicates, epic). ' +
+      'Создаёт связь (issueId*, relationship*, targetIssue*, fields*). Типы: subtask, depends, relates, duplicates, epic. ' +
       'API автоматически создаёт обратную связь для целевой задачи. ' +
-      'Обязательные поля: issueId, relationship, targetIssue и fields. ' +
       'Параметр fields определяет, какие поля созданной связи вернуть в ответе (например: ["id", "type", "object"]). ' +
-      '\n\n' +
-      'Типы связей:\n' +
-      "- 'has subtasks' / 'is subtask of' - родитель/подзадача\n" +
-      "- 'depends on' / 'is dependent by' - зависимость/блокировка\n" +
-      "- 'relates' - общая связь\n" +
-      "- 'duplicates' / 'is duplicated by' - дублирование\n" +
-      "- 'has epic' / 'is epic of' - epic связь\n" +
-      '\n' +
-      'Для: создания связей между задачами. ' +
-      '\n' +
-      'Не для: получения/удаления связей (get_issue_links, delete_link).'
+      "Типы связей: 'has subtasks', 'is subtask of', 'depends on', 'is dependent by', 'relates', 'duplicates', 'is duplicated by', 'has epic', 'is epic of'. " +
+      'Для получения/удаления: get_issue_links, delete_link.'
     );
   }
 
@@ -67,7 +57,7 @@ export class CreateLinkDefinition extends BaseToolDefinition {
    * Построить описание параметра issueId
    */
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam('Ключ или ID текущей задачи (формат QUEUE-123 или abc123)', {
+    return this.buildStringParam('Ключ задачи (QUEUE-123)', {
       pattern: '^([A-Z][A-Z0-9]+-\\d+|[a-f0-9]+)$',
       examples: ['PROJ-123', 'abc123def456'],
     });

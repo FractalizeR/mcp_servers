@@ -38,14 +38,9 @@ export class UpdateComponentDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Обновить параметры компонента. ' +
-      'Требует указания componentId и fields. ' +
-      'Можно изменить название, описание, руководителя или настройку автоназначения. ' +
+      'Обновляет компонент (componentId*, fields*, name, description, lead, assignAuto). ' +
       'Параметр fields определяет, какие поля компонента вернуть в ответе (например: ["id", "name"]). ' +
-      '\n\n' +
-      'Для: изменения существующего компонента. ' +
-      '\n' +
-      'Не для: создания компонента (create_component), удаления (delete_component).'
+      'Для создания: create_component, удаления: delete_component.'
     );
   }
 

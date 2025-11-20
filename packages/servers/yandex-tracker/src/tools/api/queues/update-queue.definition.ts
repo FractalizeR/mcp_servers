@@ -36,17 +36,14 @@ export class UpdateQueueDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Обновить параметры очереди. Требуются права администратора. ' +
-      'Все поля опциональны кроме queueId. ' +
-      '\n\n' +
-      'Для: изменения настроек очереди, смены руководителя. ' +
-      '\n' +
-      'Не для: создания (create_queue), получения (get_queue).'
+      'Обновляет параметры очереди (name, lead, defaultType, defaultPriority, description, issueTypes). ' +
+      'Требуются права администратора. Все поля опциональны кроме queueId. ' +
+      'Для создания: create_queue, получения: get_queue.'
     );
   }
 
   private buildQueueIdParam(): Record<string, unknown> {
-    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ очереди.', {
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ очереди (PROJ)', {
       examples: ['PROJ'],
     });
   }

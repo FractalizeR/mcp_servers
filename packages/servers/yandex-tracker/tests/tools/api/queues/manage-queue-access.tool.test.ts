@@ -35,7 +35,7 @@ describe('ManageQueueAccessTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('manage_queue_access', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('правами доступа к очереди');
+      expect(definition.description).toContain('Управляет правами доступа');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('queueId');
       expect(definition.inputSchema.required).toContain('role');

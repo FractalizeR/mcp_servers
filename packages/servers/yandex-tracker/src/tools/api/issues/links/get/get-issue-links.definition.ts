@@ -43,14 +43,10 @@ export class GetIssueLinksDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Получить все связи задачи (subtask, depends, relates, duplicates, epic). ' +
+      'Получает связи задачи (issueId*, fields*). Типы: subtask, depends, relates, duplicates, epic. ' +
       'Возвращает массив связей с информацией о типе, направлении и связанной задаче. ' +
-      'Обязательные поля: issueId и fields. ' +
       'Параметр fields определяет, какие поля каждой связи вернуть в ответе (например: ["id", "type", "object"]). ' +
-      '\n\n' +
-      'Для: просмотра связей задачи, анализа зависимостей, поиска подзадач. ' +
-      '\n' +
-      'Не для: создания/удаления связей (create_link, delete_link).'
+      'Для создания/удаления: create_link, delete_link.'
     );
   }
 

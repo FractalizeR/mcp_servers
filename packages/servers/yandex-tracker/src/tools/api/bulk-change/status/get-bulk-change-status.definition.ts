@@ -36,19 +36,11 @@ export class GetBulkChangeStatusDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Получить статус выполнения асинхронной bulk операции (массовое обновление, переход или перемещение). ' +
-      'Операция возвращает текущий статус, прогресс выполнения, количество обработанных задач и ошибки (если есть). ' +
-      '\n\n' +
-      'Статусы операции: ' +
-      '\n- PENDING: операция в очереди на выполнение ' +
-      '\n- RUNNING: операция выполняется ' +
-      '\n- COMPLETED: операция успешно завершена ' +
-      '\n- FAILED: операция завершена с ошибкой ' +
-      '\n- CANCELLED: операция отменена ' +
-      '\n\n' +
-      'Для: проверки статуса операций bulk_update_issues, bulk_transition_issues, bulk_move_issues. ' +
-      '\n' +
-      'Используй operationId, полученный при создании bulk операции.'
+      'Получает статус bulk операции (operationId*). ' +
+      'Возвращает текущий статус, прогресс выполнения, количество обработанных задач и ошибки. ' +
+      'Статусы: PENDING, RUNNING, COMPLETED, FAILED, CANCELLED. ' +
+      'Используется для операций bulk_update_issues, bulk_transition_issues, bulk_move_issues. ' +
+      'operationId получается при создании bulk операции.'
     );
   }
 

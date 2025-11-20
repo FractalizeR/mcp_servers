@@ -44,13 +44,10 @@ export class GetIssueTransitionsDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Получить доступные workflow-переходы для задачи. ' +
+      'Получает доступные workflow-переходы (issueKey*). ' +
       'Возвращает только переходы, доступные из текущего статуса. ' +
       'Параметр fields фильтрует ответ. ' +
-      '\n\n' +
-      'Для: просмотра доступных переходов статусов, получения ID переходов для execute_transition. ' +
-      '\n' +
-      'Не для: выполнения перехода (execute_transition), истории изменений (get_issue_changelog).'
+      'Для выполнения: transition_issue, истории: get_issue_changelog.'
     );
   }
 

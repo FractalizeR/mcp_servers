@@ -36,12 +36,9 @@ export class GetQueuesDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Получить список всех очередей с поддержкой пагинации. ' +
+      'Получает список очередей с пагинацией. ' +
       'Параметр fields обязателен для экономии токенов. ' +
-      '\n\n' +
-      'Для: просмотра доступных очередей, навигации по очередям. ' +
-      '\n' +
-      'Не для: получения одной очереди (get_queue), создания (create_queue).'
+      'Для одной очереди: get_queue, создания: create_queue.'
     );
   }
 
@@ -74,12 +71,7 @@ export class GetQueuesDefinition extends BaseToolDefinition {
 
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ параметр - список возвращаемых полей для экономии токенов. ' +
-        'Укажите только необходимые поля. ' +
-        '\n\n' +
-        'Поля очереди: key, name, description, lead, assignAuto, defaultType, defaultPriority, ' +
-        'teamUsers, issueTypes, versions, workflows, denyVoting, issueTypesConfig. ' +
-        'Вложенные (dot-notation): lead.login, lead.display, defaultType.key, defaultPriority.key.',
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
       this.buildStringParam('Имя поля', {
         minLength: 1,
         examples: ['key', 'name', 'lead.login'],

@@ -35,7 +35,7 @@ describe('GetQueueTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('get_queue', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('детальную информацию об одной очереди');
+      expect(definition.description).toContain('Получает детали очереди');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['queueId', 'fields']);
       expect(definition.inputSchema.properties?.['queueId']).toBeDefined();

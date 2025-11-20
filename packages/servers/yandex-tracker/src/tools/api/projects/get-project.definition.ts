@@ -32,23 +32,17 @@ export class GetProjectDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Получить детальную информацию об одном проекте по ID или ключу. ' +
+      'Получает детали проекта (projectId*, fields*, expand). ' +
       'Возвращает полные параметры проекта. ' +
-      '\n\n' +
-      'Для: просмотра настроек проекта, получения руководителя, связанных очередей. ' +
-      '\n' +
-      'Не для: списка проектов (get_projects), создания (create_project).'
+      'Для списка: get_projects, создания: create_project.'
     );
   }
 
   private buildProjectIdParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ проекта (например: "PROJ", "project123").',
-      {
-        minLength: 1,
-        examples: ['PROJ'],
-      }
-    );
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. ID проекта (PROJ)', {
+      minLength: 1,
+      examples: ['PROJ'],
+    });
   }
 
   private buildExpandParam(): Record<string, unknown> {
@@ -62,7 +56,7 @@ export class GetProjectDefinition extends BaseToolDefinition {
 
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Массив полей для возврата в проекте. Используйте только необходимые поля для экономии контекста.',
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
       {
         items: { type: 'string' },
         examples: [

@@ -35,7 +35,7 @@ describe('GetComponentsTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('get_components', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('список компонентов');
+      expect(definition.description).toContain('Получает компоненты');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('queueId');
       expect(definition.inputSchema.required).toContain('fields');

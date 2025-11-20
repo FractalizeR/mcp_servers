@@ -37,18 +37,14 @@ export class AddWorklogDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Добавить запись времени (worklog) к задаче. ' +
-      'Указывает время начала работы и продолжительность. ' +
+      'Добавляет запись времени (start*, duration*, comment). ' +
       'Duration поддерживает человекочитаемый формат: "1h", "30m", "1h 30m", "2 hours 15 minutes". ' +
-      '\n\n' +
-      'Для: добавления учета времени, логирования затраченных часов. ' +
-      '\n' +
-      'Не для: получения (get_worklogs), редактирования (update_worklog), удаления (delete_worklog).'
+      'Для получения: get_worklogs, редактирования: update_worklog, удаления: delete_worklog.'
     );
   }
 
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Идентификатор или ключ задачи.', {
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ задачи (QUEUE-123)', {
       examples: ['TEST-123', 'PROJ-456'],
     });
   }
@@ -79,8 +75,7 @@ export class AddWorklogDefinition extends BaseToolDefinition {
 
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Список полей, которые нужно вернуть в ответе. ' +
-        'Указывайте только нужные поля для экономии токенов.',
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
       {
         items: { type: 'string' },
         examples: [

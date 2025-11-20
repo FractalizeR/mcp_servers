@@ -47,13 +47,10 @@ export class UploadAttachmentDefinition extends BaseToolDefinition {
    */
   private buildDescription(): string {
     return (
-      'Загрузить файл в задачу. Обязательные поля: issueId, filename и fields. ' +
+      'Загружает файл (issueId*, filename*, fields*, fileContent/filePath, mimetype). ' +
       'Поддерживает base64 (fileContent) или путь на MCP сервере (filePath). ' +
       'Максимальный размер: 10 MB. MIME тип определится автоматически. ' +
-      '\n\n' +
-      'Для: прикрепления документов, изображений, логов к задаче. ' +
-      '\n' +
-      'Не для: скачивания/удаления (download_attachment, delete_attachment).'
+      'Для скачивания/удаления: download_attachment, delete_attachment.'
     );
   }
 
@@ -61,13 +58,10 @@ export class UploadAttachmentDefinition extends BaseToolDefinition {
    * Построить описание параметра issueId
    */
   private buildIssueIdParam(): Record<string, unknown> {
-    return this.buildStringParam(
-      'Ключ или ID задачи для загрузки файла (формат QUEUE-123 или abc123)',
-      {
-        pattern: '^([A-Z][A-Z0-9]+-\\d+|[a-f0-9]+)$',
-        examples: ['PROJ-123', 'abc123def456'],
-      }
-    );
+    return this.buildStringParam('Ключ задачи (QUEUE-123)', {
+      pattern: '^([A-Z][A-Z0-9]+-\\d+|[a-f0-9]+)$',
+      examples: ['PROJ-123', 'abc123def456'],
+    });
   }
 
   /**

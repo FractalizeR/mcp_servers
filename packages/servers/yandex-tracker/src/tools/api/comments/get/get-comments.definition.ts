@@ -37,12 +37,9 @@ export class GetCommentsDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      'Получить список комментариев задачи. Обязательные поля: issueId и fields. Поддерживает пагинацию. ' +
+      'Получает комментарии задачи (issueId*, fields*). Поддерживает пагинацию. ' +
       'Параметр fields определяет, какие поля каждого комментария вернуть в ответе (например: ["id", "text", "createdAt"]). ' +
-      '\n\n' +
-      'Для: получения всех комментариев задачи с пагинацией. ' +
-      '\n' +
-      'Не для: добавления (add_comment), редактирования (edit_comment), удаления (delete_comment).'
+      'Для добавления: add_comment, редактирования: edit_comment, удаления: delete_comment.'
     );
   }
 

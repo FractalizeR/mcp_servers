@@ -30,17 +30,14 @@ export class DeleteProjectDefinition extends BaseToolDefinition {
 
   private buildDescription(): string {
     return (
-      '⚠️ ОПАСНАЯ ОПЕРАЦИЯ! Удалить проект. Требуются права администратора. ' +
-      'Операция необратима! ' +
-      '\n\n' +
-      'Для: удаления ненужного или тестового проекта. ' +
-      '\n' +
-      'Не для: деактивации (используй update_project со статусом postponed).'
+      '⚠️ ОПАСНАЯ ОПЕРАЦИЯ! Удаляет проект безвозвратно. ' +
+      'Требуются права администратора. Операция необратима! ' +
+      'Для деактивации: update_project (статус postponed).'
     );
   }
 
   private buildProjectIdParam(): Record<string, unknown> {
-    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. ID или ключ проекта для удаления.', {
+    return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. ID проекта (PROJ)', {
       minLength: 1,
       examples: ['PROJ'],
     });
