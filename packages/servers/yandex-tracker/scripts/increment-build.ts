@@ -70,13 +70,13 @@ async function getPackageVersion(): Promise<string> {
  * Устанавливает build hash в manifest.json
  */
 async function setBuildHash(): Promise<void> {
-  // Определяем корень монорепо (поднимаемся вверх от packages/servers/yandex-tracker)
+  // Определяем корень пакета (packages/servers/yandex-tracker)
   const projectRoot = path.resolve(process.cwd());
   const isInWorkspace = projectRoot.includes('packages/servers/yandex-tracker');
-  const monorepoRoot = isInWorkspace ? path.resolve(projectRoot, '../../..') : projectRoot;
+  const packageRoot = isInWorkspace ? projectRoot : path.join(projectRoot, 'packages/servers/yandex-tracker');
 
-  const manifestPath = path.join(monorepoRoot, 'manifest.json');
-  const manifestTemplatePath = path.join(monorepoRoot, 'manifest.template.json');
+  const manifestPath = path.join(packageRoot, 'manifest.json');
+  const manifestTemplatePath = path.join(packageRoot, 'manifest.template.json');
 
   console.log('🔢 Установка build hash и версии...');
 

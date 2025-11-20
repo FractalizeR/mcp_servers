@@ -39,15 +39,16 @@ async function buildMcpb(options: BuildOptions): Promise<void> {
 
   log('🚀 Начало сборки MCPB архива...');
 
-  // Определяем корень монорепо (поднимаемся вверх от packages/servers/yandex-tracker)
+  // Определяем корень пакета и монорепо
   // Если запускается из workspace, cwd будет packages/servers/yandex-tracker
   // Если запускается из корня, cwd будет корень
   const isInWorkspace = projectRoot.includes('packages/servers/yandex-tracker');
+  const packageRoot = isInWorkspace ? projectRoot : path.join(projectRoot, 'packages/servers/yandex-tracker');
   const monorepoRoot = isInWorkspace ? path.resolve(projectRoot, '../../..') : projectRoot;
 
   // Проверяем существование необходимых файлов
-  const manifestPath = path.join(monorepoRoot, 'manifest.json');
-  const distPath = path.join(projectRoot, 'dist');
+  const manifestPath = path.join(packageRoot, 'manifest.json');
+  const distPath = path.join(packageRoot, 'dist');
 
   try {
     await fs.access(manifestPath);
@@ -96,7 +97,7 @@ async function buildMcpb(options: BuildOptions): Promise<void> {
     await copyDirectory(distPath, path.join(tempBuildDir, 'dist'));
 
     // Копируем package.json (опционально)
-    const packageJsonPath = path.join(projectRoot, 'package.json');
+    const packageJsonPath = path.join(packageRoot, 'package.json');
     try {
       await fs.copyFile(packageJsonPath, path.join(tempBuildDir, 'package.json'));
       log('✅ package.json скопирован');

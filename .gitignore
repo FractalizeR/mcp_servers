@@ -69,7 +69,7 @@ jscpd-report/
 .mcpb-build/
 
 # Динамически генерируемые файлы (build hash обновляется при каждой сборке)
-manifest.json
+packages/servers/*/manifest.json
 
 # Turborepo
 .turbo/

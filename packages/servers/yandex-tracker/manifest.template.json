@@ -76,31 +76,11 @@
       "sensitive": false
     },
     "disabled_tool_groups": {
-      "type": "array",
+      "type": "string",
       "title": "Disabled Tool Groups",
-      "description": "Список групп инструментов, которые необходимо отключить. Доступные группы: 'issues', 'queues', 'users', 'projects', 'boards', 'sprints', 'comments', 'checklists', 'components' (API операции); 'system' (системные); 'helpers', 'search', 'url-generation', 'validation', 'demo' (вспомогательные инструменты). Пример: ['demo', 'validation'] отключит инструменты демонстрации и валидации.",
+      "description": "Список групп инструментов для отключения (через запятую). Доступные группы: issues, queues, users, projects, boards, sprints, comments, checklists, components (API операции); system (системные); helpers, search, url-generation, validation, demo (вспомогательные). Пример: 'demo,validation' или 'demo, validation' отключит демо-инструменты и валидацию. Оставьте пустым для включения всех групп.",
       "required": false,
-      "default": [],
-      "items": {
-        "type": "string",
-        "enum": [
-          "issues",
-          "queues",
-          "users",
-          "projects",
-          "boards",
-          "sprints",
-          "comments",
-          "checklists",
-          "components",
-          "system",
-          "helpers",
-          "search",
-          "url-generation",
-          "validation",
-          "demo"
-        ]
-      },
+      "default": "",
       "sensitive": false
     }
   },
