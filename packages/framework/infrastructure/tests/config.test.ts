@@ -392,5 +392,21 @@ describe('loadConfig', () => {
       expect(config.enabledToolCategories).toBeDefined();
       expect(config.enabledToolCategories?.includeAll).toBe(true);
     });
+
+    it('должен обрабатывать категории case-insensitive', () => {
+      process.env['ENABLED_TOOL_CATEGORIES'] = 'ISSUES,Comments:WRITE,Queues:Read';
+
+      const config = loadConfig();
+
+      expect(config.enabledToolCategories).toBeDefined();
+      // Все категории должны быть в lowercase
+      expect(config.enabledToolCategories?.categories).toEqual(new Set(['issues']));
+      expect(config.enabledToolCategories?.categoriesWithSubcategories.get('comments')).toEqual(
+        new Set(['write'])
+      );
+      expect(config.enabledToolCategories?.categoriesWithSubcategories.get('queues')).toEqual(
+        new Set(['read'])
+      );
+    });
   });
 });

@@ -149,7 +149,7 @@ function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFi
         continue;
       }
 
-      const [cat, subcat] = segments.map((s) => s.trim());
+      const [cat, subcat] = segments.map((s) => s.trim().toLowerCase());
 
       // Пропускаем пустые сегменты
       if (!cat || !subcat) {
@@ -164,7 +164,7 @@ function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFi
       subcategories.add(subcat);
     } else {
       // Формат: "category" (все подкатегории)
-      categories.add(part);
+      categories.add(part.toLowerCase());
     }
   }
 

@@ -185,6 +185,11 @@ LOGS_DIR=./logs
 LOG_MAX_SIZE=50K
 LOG_MAX_FILES=20
 PRETTY_LOGS=false
+
+# Tool Discovery
+TOOL_DISCOVERY_MODE=lazy        # lazy|eager
+ESSENTIAL_TOOLS=ping,search_tools
+ENABLED_TOOL_CATEGORIES=        # issues,comments or issues:read,comments:write
 ```
 
 **Usage:**

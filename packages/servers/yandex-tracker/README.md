@@ -249,6 +249,37 @@ npm run build
 | `REQUEST_TIMEOUT` | Таймаут запросов (мс), 5000-120000 | `30000` |
 | `MAX_BATCH_SIZE` | Макс. задач в одном запросе, 1-1000 | `200` |
 | `MAX_CONCURRENT_REQUESTS` | Одновременных запросов к API, 1-20 | `5` |
+| `TOOL_DISCOVERY_MODE` | Режим обнаружения: `lazy` или `eager` | `lazy` |
+| `ENABLED_TOOL_CATEGORIES` | Фильтр категорий (через запятую, case-insensitive) | Все категории |
+
+### Управление инструментами
+
+**Tool Discovery Mode:**
+- `lazy` — Claude видит только essential инструменты (ping, search_tools), остальные находит через search_tools
+- `eager` — Claude видит все инструменты сразу (рекомендуется для большинства случаев)
+
+**Фильтрация по категориям** (работает в `eager` режиме):
+
+Формат `ENABLED_TOOL_CATEGORIES`:
+- `issues,comments` — все подкатегории issues и comments
+- `issues:read,comments:write` — только конкретные подкатегории
+- `issues,comments:write,queues` — смешанный формат
+
+Доступные категории: `issues`, `queues`, `projects`, `components`, `comments`, `checklists`, `system`, `helpers`
+
+Доступные подкатегории: `read`, `write`, `delete`, `workflow`, `links`, `attachments`, `bulk`, `worklog`
+
+**Примеры использования:**
+```bash
+# Только чтение задач и комментариев
+ENABLED_TOOL_CATEGORIES="issues:read,comments:read"
+
+# Работа с задачами и очередями
+ENABLED_TOOL_CATEGORIES="issues,queues"
+
+# Все категории (по умолчанию)
+ENABLED_TOOL_CATEGORIES=""
+```
 
 ### Пример полной конфигурации
 
@@ -262,7 +293,9 @@ npm run build
         "YANDEX_TRACKER_TOKEN": "y0_your_token_here",
         "YANDEX_ORG_ID": "12345678",
         "LOG_LEVEL": "info",
-        "REQUEST_TIMEOUT": "30000"
+        "REQUEST_TIMEOUT": "30000",
+        "TOOL_DISCOVERY_MODE": "eager",
+        "ENABLED_TOOL_CATEGORIES": "issues,comments:read,queues"
       }
     }
   }
@@ -278,6 +311,7 @@ npm run build
 | Claude не видит инструменты | Проверь токен/org ID, перезапусти Claude, проверь логи |
 | Invalid token | Проверь токен (начинается с `y0_`), права (`tracker:read`, `tracker:write`) |
 | Organization not found | Проверь ID организации и доступ к ней |
+| Инструментов меньше, чем ожидалось | Проверь `ENABLED_TOOL_CATEGORIES`, посмотри логи с `LOG_LEVEL=debug` |
 
 ---
 
