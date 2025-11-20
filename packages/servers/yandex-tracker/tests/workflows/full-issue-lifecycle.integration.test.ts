@@ -1,17 +1,20 @@
-// tests/workflows/full-issue-lifecycle.e2e.test.ts
+// tests/workflows/full-issue-lifecycle.integration.test.ts
 /**
- * E2E тест полного lifecycle задачи с использованием всех API
+ * Интеграционный тест полного lifecycle задачи с использованием всех API
+ *
+ * Этот тест проверяет комплексный workflow работы с задачей, используя MockServer
+ * для эмуляции API Яндекс.Трекер. Тест не требует реальных credentials и подходит
+ * для автоматизированного тестирования в CI/CD.
  *
  * Workflow:
- * 1. Создать очередь (Queues)
- * 2. Создать задачу (Issues)
- * 3. Добавить комментарий (Comments)
- * 4. Прикрепить файл (Attachments)
- * 5. Создать чеклист (Checklists)
- * 6. Добавить worklog (Worklog)
- * 7. Создать связь с другой задачей (Links)
- * 8. Изменить статус (Transitions)
- * 9. Проверить changelog (Changelog)
+ * 1. Создать задачу (Issues)
+ * 2. Добавить комментарий (Comments)
+ * 3. Прикрепить файл (Attachments)
+ * 4. Создать чеклист (Checklists)
+ * 5. Создать вторую задачу для связи
+ * 6. Создать связь между задачами (Links)
+ * 7. Изменить статус (Transitions)
+ * 8. Проверить changelog (Changelog)
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createTestClient } from '#integration/helpers/mcp-client.js';
@@ -21,7 +24,7 @@ import type { MockServer } from '#integration/helpers/mock-server.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '#constants';
 
-describe('Full Issue Lifecycle E2E', () => {
+describe('Full Issue Lifecycle (Integration)', () => {
   let client: TestMCPClient;
   let mockServer: MockServer;
 
@@ -34,7 +37,7 @@ describe('Full Issue Lifecycle E2E', () => {
     mockServer.cleanup();
   });
 
-  it.skip('должен выполнить полный workflow: задача → комментарий → чеклист → вложение → связь → переход → changelog', async () => {
+  it('должен выполнить полный workflow: задача → комментарий → чеклист → вложение → связь → переход → changelog', async () => {
     // Используем существующую очередь TEST
     const queueKey = 'TEST';
 
@@ -52,9 +55,10 @@ describe('Full Issue Lifecycle E2E', () => {
         queue: queueKey,
         summary: 'E2E Test Issue',
         description: 'Testing full lifecycle',
+        fields: ['key', 'summary', 'description'],
       }
     );
-    expect(createIssueResult.isError).toBeUndefined();
+    expect(createIssueResult.isError).toBeFalsy();
     const issueData = JSON.parse(createIssueResult.content[0]!.text);
     const issueKey = issueData.data.issueKey;
     expect(issueKey).toBe('TEST-1');
@@ -68,8 +72,9 @@ describe('Full Issue Lifecycle E2E', () => {
     const addCommentResult = await client.callTool(buildToolName('add_comment', MCP_TOOL_PREFIX), {
       issueId: issueKey,
       text: 'First comment on this issue',
+      fields: ['id', 'text'],
     });
-    expect(addCommentResult.isError).toBeUndefined();
+    expect(addCommentResult.isError).toBeFalsy();
     const commentData = JSON.parse(addCommentResult.content[0]!.text);
     expect(commentData.data.comment).toBeDefined();
 
@@ -93,9 +98,10 @@ describe('Full Issue Lifecycle E2E', () => {
         issueId: issueKey,
         filename: 'test-file.txt',
         fileContent: 'Base64 encoded content',
+        fields: ['id', 'name', 'size'],
       }
     );
-    expect(uploadResult.isError).toBeUndefined();
+    expect(uploadResult.isError).toBeFalsy();
     const attachmentData = JSON.parse(uploadResult.content[0]!.text);
     expect(attachmentData.success).toBe(true);
 
@@ -111,9 +117,10 @@ describe('Full Issue Lifecycle E2E', () => {
       {
         issueId: issueKey,
         text: 'First checklist item',
+        fields: ['id', 'text', 'checked'],
       }
     );
-    expect(addChecklistResult.isError).toBeUndefined();
+    expect(addChecklistResult.isError).toBeFalsy();
     const checklistData = JSON.parse(addChecklistResult.content[0]!.text);
     expect(checklistData.success).toBe(true);
 
@@ -129,9 +136,10 @@ describe('Full Issue Lifecycle E2E', () => {
       {
         queue: queueKey,
         summary: 'Related issue',
+        fields: ['key', 'summary'],
       }
     );
-    expect(createIssue2Result.isError).toBeUndefined();
+    expect(createIssue2Result.isError).toBeFalsy();
     const issue2Data = JSON.parse(createIssue2Result.content[0]!.text);
     const issueKey2 = issue2Data.data.issueKey;
 
@@ -146,11 +154,13 @@ describe('Full Issue Lifecycle E2E', () => {
       issueId: issueKey,
       relationship: 'relates',
       targetIssue: issueKey2,
+      fields: ['id', 'type', 'object'],
     });
-    expect(createLinkResult.isError).toBeUndefined();
+    expect(createLinkResult.isError).toBeFalsy();
     const linkData = JSON.parse(createLinkResult.content[0]!.text);
     expect(linkData.success).toBe(true);
-    expect(linkData.data.success).toBe(true);
+    expect(linkData.data.link).toBeDefined();
+    expect(linkData.data.link.id).toBe('link-1');
 
     // 7. Изменить статус задачи
     mockServer.mockTransitionIssueSuccess(issueKey, 'inProgress');
@@ -158,20 +168,24 @@ describe('Full Issue Lifecycle E2E', () => {
     const transitionResult = await client.callTool(
       buildToolName('transition_issue', MCP_TOOL_PREFIX),
       {
-        issueId: issueKey,
+        issueKey: issueKey,
         transitionId: 'inProgress',
+        fields: ['key', 'status'],
       }
     );
-    expect(transitionResult.isError).toBeUndefined();
+    expect(transitionResult.isError).toBeFalsy();
 
     // 8. Получить changelog и убедиться, что все изменения записаны
     mockServer.mockGetChangelogSuccess(issueKey);
 
     const changelogResult = await client.callTool(
       buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
-      { issueId: issueKey }
+      {
+        issueKey: issueKey,
+        fields: ['id', 'updatedAt', 'updatedBy'],
+      }
     );
-    expect(changelogResult.isError).toBeUndefined();
+    expect(changelogResult.isError).toBeFalsy();
     const changelogData = JSON.parse(changelogResult.content[0]!.text);
     expect(changelogData.data.changelog).toBeInstanceOf(Array);
     expect(changelogData.data.changelog.length).toBeGreaterThan(0);
@@ -180,7 +194,7 @@ describe('Full Issue Lifecycle E2E', () => {
     mockServer.assertAllRequestsDone();
   });
 
-  it.skip('должен обработать workflow с несколькими комментариями и чеклистами', async () => {
+  it('должен обработать workflow с несколькими комментариями и чеклистами', async () => {
     const issueKey = 'TEST-10';
 
     // Создать задачу
@@ -193,6 +207,7 @@ describe('Full Issue Lifecycle E2E', () => {
     await client.callTool(buildToolName('create_issue', MCP_TOOL_PREFIX), {
       queue: 'TEST',
       summary: 'Multiple comments test',
+      fields: ['key'],
     });
 
     // Добавить 3 комментария
@@ -205,8 +220,9 @@ describe('Full Issue Lifecycle E2E', () => {
       const result = await client.callTool(buildToolName('add_comment', MCP_TOOL_PREFIX), {
         issueId: issueKey,
         text: `Comment ${i}`,
+        fields: ['id', 'text'],
       });
-      expect(result.isError).toBeUndefined();
+      expect(result.isError).toBeFalsy();
     }
 
     // Добавить 3 элемента чеклиста
@@ -220,8 +236,9 @@ describe('Full Issue Lifecycle E2E', () => {
       const result = await client.callTool(buildToolName('add_checklist_item', MCP_TOOL_PREFIX), {
         issueId: issueKey,
         text: `Checklist item ${i}`,
+        fields: ['id', 'text', 'checked'],
       });
-      expect(result.isError).toBeUndefined();
+      expect(result.isError).toBeFalsy();
     }
 
     // Получить все комментарии
@@ -233,26 +250,26 @@ describe('Full Issue Lifecycle E2E', () => {
 
     const commentsResult = await client.callTool(buildToolName('get_comments', MCP_TOOL_PREFIX), {
       issueId: issueKey,
+      fields: ['id', 'text'],
     });
-    expect(commentsResult.isError).toBeUndefined();
+    expect(commentsResult.isError).toBeFalsy();
     const commentsData = JSON.parse(commentsResult.content[0]!.text);
     expect(commentsData.data.comments).toHaveLength(3);
 
     // Получить чеклист
-    mockServer.mockGetChecklistSuccess(issueKey, {
-      items: [
-        { id: 'checklist-1', text: 'Checklist item 1', checked: false },
-        { id: 'checklist-2', text: 'Checklist item 2', checked: false },
-        { id: 'checklist-3', text: 'Checklist item 3', checked: false },
-      ],
-    });
+    mockServer.mockGetChecklistSuccess(issueKey, [
+      { id: 'checklist-1', text: 'Checklist item 1', checked: false },
+      { id: 'checklist-2', text: 'Checklist item 2', checked: false },
+      { id: 'checklist-3', text: 'Checklist item 3', checked: false },
+    ]);
 
     const checklistResult = await client.callTool(buildToolName('get_checklist', MCP_TOOL_PREFIX), {
       issueId: issueKey,
+      fields: ['id', 'text', 'checked'],
     });
-    expect(checklistResult.isError).toBeUndefined();
+    expect(checklistResult.isError).toBeFalsy();
     const checklistData = JSON.parse(checklistResult.content[0]!.text);
-    expect(checklistData.data.checklist.items).toHaveLength(3);
+    expect(checklistData.data.checklist).toHaveLength(3);
 
     mockServer.assertAllRequestsDone();
   });
