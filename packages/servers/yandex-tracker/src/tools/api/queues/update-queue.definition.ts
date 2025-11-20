@@ -28,8 +28,9 @@ export class UpdateQueueDefinition extends BaseToolDefinition {
           defaultPriority: this.buildDefaultPriorityParam(),
           description: this.buildDescriptionParam(),
           issueTypes: this.buildIssueTypesParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['queueId'],
+        required: ['queueId', 'fields'],
       },
     };
   }
@@ -86,6 +87,23 @@ export class UpdateQueueDefinition extends BaseToolDefinition {
       }),
       {
         examples: [['1', '2', '3']],
+      }
+    );
+  }
+
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
+      this.buildStringParam('Имя поля', {
+        minLength: 1,
+        examples: ['key', 'name', 'lead.login'],
+      }),
+      {
+        minItems: 1,
+        examples: [
+          ['key', 'name', 'lead'],
+          ['key', 'name', 'lead.login', 'defaultType.key'],
+        ],
       }
     );
   }

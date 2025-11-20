@@ -46,6 +46,13 @@ describe('ManageQueueAccessTool', () => {
       expect(definition.inputSchema.properties?.['subjects']).toBeDefined();
       expect(definition.inputSchema.properties?.['action']).toBeDefined();
     });
+
+    it('должен включать параметр fields в inputSchema', () => {
+      const definition = tool.getDefinition();
+
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
+      expect(definition.inputSchema.required).toContain('fields');
+    });
   });
 
   describe('execute', () => {

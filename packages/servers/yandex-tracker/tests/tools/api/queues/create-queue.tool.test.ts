@@ -47,6 +47,13 @@ describe('CreateQueueTool', () => {
       expect(definition.inputSchema.properties?.['description']).toBeDefined();
       expect(definition.inputSchema.properties?.['issueTypes']).toBeDefined();
     });
+
+    it('должен включать параметр fields в inputSchema', () => {
+      const definition = tool.getDefinition();
+
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
+      expect(definition.inputSchema.required).toContain('fields');
+    });
   });
 
   describe('execute', () => {
