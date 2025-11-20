@@ -25,8 +25,9 @@ export class ManageQueueAccessDefinition extends BaseToolDefinition {
           role: this.buildRoleParam(),
           subjects: this.buildSubjectsParam(),
           action: this.buildActionParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['queueId', 'role', 'subjects', 'action'],
+        required: ['queueId', 'role', 'subjects', 'action', 'fields'],
       },
     };
   }
@@ -76,5 +77,22 @@ export class ManageQueueAccessDefinition extends BaseToolDefinition {
       description: '⚠️ ОБЯЗАТЕЛЬНЫЙ. Действие: add - добавить, remove - удалить.',
       examples: ['add'],
     };
+  }
+
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
+      this.buildStringParam('Имя поля', {
+        minLength: 1,
+        examples: ['key', 'name', 'lead.login'],
+      }),
+      {
+        minItems: 1,
+        examples: [
+          ['key', 'name', 'lead'],
+          ['key', 'name', 'lead.login', 'defaultType.key'],
+        ],
+      }
+    );
   }
 }

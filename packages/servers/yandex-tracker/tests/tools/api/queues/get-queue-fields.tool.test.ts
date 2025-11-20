@@ -44,6 +44,13 @@ describe('GetQueueFieldsTool', () => {
       expect(definition.inputSchema.required).toContain('queueId');
       expect(definition.inputSchema.properties?.['queueId']).toBeDefined();
     });
+
+    it('должен включать параметр fields в inputSchema', () => {
+      const definition = tool.getDefinition();
+
+      expect(definition.inputSchema.properties?.['fields']).toBeDefined();
+      expect(definition.inputSchema.required).toContain('fields');
+    });
   });
 
   describe('execute', () => {

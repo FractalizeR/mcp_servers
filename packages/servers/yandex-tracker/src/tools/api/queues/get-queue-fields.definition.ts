@@ -22,8 +22,9 @@ export class GetQueueFieldsDefinition extends BaseToolDefinition {
         type: 'object',
         properties: {
           queueId: this.buildQueueIdParam(),
+          fields: this.buildFieldsParam(),
         },
-        required: ['queueId'],
+        required: ['queueId', 'fields'],
       },
     };
   }
@@ -40,5 +41,22 @@ export class GetQueueFieldsDefinition extends BaseToolDefinition {
     return this.buildStringParam('⚠️ ОБЯЗАТЕЛЬНЫЙ. Ключ очереди (PROJ)', {
       examples: ['PROJ'],
     });
+  }
+
+  private buildFieldsParam(): Record<string, unknown> {
+    return this.buildArrayParam(
+      '⚠️ ОБЯЗАТЕЛЬНЫЙ. Поля для возврата. Указывайте минимум для экономии токенов.',
+      this.buildStringParam('Имя поля', {
+        minLength: 1,
+        examples: ['id', 'key', 'name', 'type', 'required'],
+      }),
+      {
+        minItems: 1,
+        examples: [
+          ['id', 'key', 'name'],
+          ['id', 'key', 'name', 'type', 'required'],
+        ],
+      }
+    );
   }
 }
