@@ -66,12 +66,9 @@ export class GetIssueChangelogDefinition extends BaseToolDefinition {
    */
   private buildFieldsParam(): Record<string, unknown> {
     return this.buildArrayParam(
-      'Фильтр полей ответа (опционально, по умолчанию все). ' +
-        'Рекомендуется указывать только необходимые поля для экономии токенов (без фильтрации: ~1000-3000 токенов/запись, с фильтрацией: ~100-300). ' +
-        '\n\n' +
-        'Поля: id, updatedAt, updatedBy, type, transport, fields, issue, attachments, comments, worklog, messages, links, ranks. ' +
-        'Типичные type: IssueUpdated, IssueCreated, IssueMoved. Типичные transport: web, email, api. ' +
-        'Вложенные (dot-notation): updatedBy.login, updatedBy.display, issue.key.',
+      'Фильтр полей ответа (опционально, по умолчанию все). Указывайте только нужные поля для экономии токенов. ' +
+        'Основные: id, self, updatedAt, updatedBy, type, transport, fields, issue, attachments, comments, worklog, messages, links, ranks. ' +
+        'Вложенные (dot-notation): updatedBy.uid/.login/.display/.email/.firstName/.lastName/.isActive, issue.id/.key/.display, fields[].field.id/.display/.from/.to.',
       this.buildStringParam('Имя поля', {
         minLength: 1,
         examples: ['id', 'updatedAt', 'updatedBy', 'type', 'fields'],
@@ -79,8 +76,9 @@ export class GetIssueChangelogDefinition extends BaseToolDefinition {
       {
         minItems: 1,
         examples: [
-          ['id', 'updatedAt', 'updatedBy', 'type'],
-          ['id', 'updatedAt', 'updatedBy.login', 'type', 'fields'],
+          ['id', 'updatedAt', 'updatedBy.login', 'type'],
+          ['id', 'updatedAt', 'updatedBy.display', 'type', 'fields'],
+          ['id', 'fields', 'issue.key', 'updatedBy.login'],
         ],
       }
     );
