@@ -302,7 +302,7 @@ export class ToolRegistry {
       const toolClass = tool.constructor as typeof BaseTool;
       const metadata = toolClass.METADATA;
 
-      if (!metadata || !metadata.category) {
+      if (!metadata?.category) {
         // Инструменты без категории всегда включены (backwards compatibility)
         return true;
       }
@@ -342,17 +342,59 @@ export class ToolRegistry {
   }
 
   /**
+   * Применить негативный фильтр (исключение отключенных групп)
+   *
+   * @param tools - Список инструментов
+   * @param disabledFilter - Фильтр отключенных категорий/подкатегорий
+   * @returns Отфильтрованный список инструментов
+   */
+  private applyDisabledFilter(
+    tools: BaseTool[],
+    disabledFilter: ParsedCategoryFilter
+  ): BaseTool[] {
+    return tools.filter((tool) => {
+      const toolClass = tool.constructor as typeof BaseTool;
+      const metadata = toolClass.METADATA;
+
+      if (!metadata?.category) {
+        // Инструменты без категории всегда включены
+        return true;
+      }
+
+      const category = metadata.category;
+      const subcategory = metadata.subcategory;
+
+      // Проверка 1: категория полностью отключена
+      if (disabledFilter.categories.has(category)) {
+        return false;
+      }
+
+      // Проверка 2: подкатегория отключена
+      if (subcategory && disabledFilter.categoriesWithSubcategories.has(category)) {
+        const disabledSubcategories = disabledFilter.categoriesWithSubcategories.get(category);
+        if (disabledSubcategories?.has(subcategory)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  /**
    * Получить определения в зависимости от режима discovery
    *
    * @param mode - режим обнаружения ('lazy' или 'eager')
    * @param essentialNames - список essential инструментов (для lazy режима)
    * @param categoryFilter - фильтр категорий (для eager режима с фильтрацией)
+   * @param disabledFilter - негативный фильтр (отключенные группы, приоритет над categoryFilter)
    * @returns Определения инструментов
    */
   getDefinitionsByMode(
     mode: 'lazy' | 'eager',
     essentialNames?: readonly string[],
-    categoryFilter?: ParsedCategoryFilter
+    categoryFilter?: ParsedCategoryFilter,
+    disabledFilter?: ParsedCategoryFilter
   ): ToolDefinition[] {
     if (mode === 'lazy') {
       // Lazy mode: только essential tools
@@ -360,13 +402,71 @@ export class ToolRegistry {
       return this.getEssentialDefinitions(names);
     }
 
-    // Eager mode: фильтрация по категориям (если указано)
+    // Eager mode
+    let tools: BaseTool[];
+
+    // Шаг 1: позитивный фильтр (если указан)
     if (categoryFilter && !categoryFilter.includeAll) {
-      return this.getDefinitionsByCategories(categoryFilter);
+      this.ensureInitialized();
+      if (!this.tools) {
+        return [];
+      }
+
+      tools = Array.from(this.tools.values()).filter((tool) => {
+        const toolClass = tool.constructor as typeof BaseTool;
+        const metadata = toolClass.METADATA;
+
+        if (!metadata?.category) {
+          return true; // Инструменты без категории всегда включены
+        }
+
+        const category = metadata.category;
+        const subcategory = metadata.subcategory;
+
+        // Проверка категории без подкатегории
+        if (categoryFilter.categories.has(category)) {
+          return true;
+        }
+
+        // Проверка категории с конкретными подкатегориями
+        if (subcategory && categoryFilter.categoriesWithSubcategories.has(category)) {
+          const allowedSubcategories = categoryFilter.categoriesWithSubcategories.get(category);
+          if (allowedSubcategories) {
+            return allowedSubcategories.has(subcategory);
+          }
+        }
+
+        return false;
+      });
+    } else {
+      // Все инструменты
+      this.ensureInitialized();
+      if (!this.tools) {
+        return [];
+      }
+      tools = Array.from(this.tools.values());
     }
 
-    // Eager mode без фильтра: все инструменты
-    return this.getDefinitions();
+    // Шаг 2: негативный фильтр (если указан, имеет приоритет)
+    if (disabledFilter) {
+      tools = this.applyDisabledFilter(tools, disabledFilter);
+
+      // Логирование отключенных групп
+      this.logger.info('✂️  Применён фильтр отключенных групп', {
+        disabledCategories: Array.from(disabledFilter.categories),
+        disabledCategoriesWithSubcategories: Array.from(
+          disabledFilter.categoriesWithSubcategories.entries()
+        ).map(([cat, subcats]) => ({
+          category: cat,
+          subcategories: Array.from(subcats),
+        })),
+        totalToolsAfterFilter: tools.length,
+      });
+    }
+
+    // Сортировка по приоритету
+    const sorted = this.sortByPriority(tools);
+    return sorted.map((tool) => tool.getDefinition());
   }
 
   /**

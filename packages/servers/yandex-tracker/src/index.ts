@@ -115,7 +115,8 @@ function setupServer(
     const definitions = toolRegistry.getDefinitionsByMode(
       config.toolDiscoveryMode,
       config.essentialTools,
-      config.enabledToolCategories
+      config.enabledToolCategories,
+      config.disabledToolGroups
     );
 
     // Подсчёт метрик

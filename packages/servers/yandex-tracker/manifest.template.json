@@ -78,9 +78,9 @@
     "disabled_tool_groups": {
       "type": "string",
       "title": "Disabled Tool Groups",
-      "description": "Список групп инструментов для отключения (через запятую). Доступные группы: issues, queues, users, projects, boards, sprints, comments, checklists, components (API операции); system (системные); helpers, search, url-generation, validation, demo (вспомогательные). Пример: 'demo,validation' или 'demo, validation' отключит демо-инструменты и валидацию. Оставьте пустым для включения всех групп.",
+      "description": "Список групп инструментов для отключения (через запятую) для экономии контекста модели. По умолчанию отключены редко используемые инструменты: работа с вложениями, учёт времени, связи задач, массовые операции, компоненты, чек-листы и демо. Формат: 'category' или 'category:subcategory'. Примеры: 'components,checklists' отключит целые категории; 'issues:worklog,issues:attachments' отключит подкатегории; 'components,issues:worklog' - смешанный формат. Основные группы: issues (read/write/workflow/worklog/attachments/links/bulk), queues, projects, comments, checklists, components, helpers (demo/url). Оставьте пустым для включения всех инструментов.",
       "required": false,
-      "default": "",
+      "default": "issues:worklog,issues:attachments,issues:links,issues:bulk,components,checklists,helpers:demo",
       "sensitive": false
     }
   },

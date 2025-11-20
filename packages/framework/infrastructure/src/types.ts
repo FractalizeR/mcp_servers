@@ -109,7 +109,7 @@ export interface ServerConfig {
    */
   essentialTools: readonly string[];
   /**
-   * Фильтр категорий инструментов для eager режима
+   * Фильтр категорий инструментов для eager режима (позитивный фильтр)
    *
    * Позволяет включить только определенные категории/подкатегории инструментов.
    *
@@ -125,9 +125,31 @@ export interface ServerConfig {
    *
    * Работает только в eager режиме. В lazy режиме используется essentialTools.
    *
+   * @deprecated Используйте disabledToolGroups вместо этого (более интуитивный негативный фильтр)
    * @default undefined (все категории)
    */
   enabledToolCategories?: ParsedCategoryFilter;
+  /**
+   * Отключенные группы инструментов (негативный фильтр)
+   *
+   * Позволяет отключить определенные категории/подкатегории инструментов.
+   *
+   * Формат переменной окружения DISABLED_TOOL_GROUPS:
+   * - Пустая строка или undefined: все инструменты включены (по умолчанию)
+   * - "components,checklists": отключить целые категории components и checklists
+   * - "issues:worklog,issues:attachments": отключить подкатегории worklog и attachments в issues
+   * - "components,issues:worklog,helpers:demo": смешанный формат
+   *
+   * Graceful degradation:
+   * - Неизвестные категории: warning в лог, пропускаются
+   * - Неверный формат: warning, игнорируется
+   *
+   * Работает в обоих режимах (lazy и eager).
+   * Имеет приоритет над enabledToolCategories если указаны оба.
+   *
+   * @default undefined (все инструменты включены)
+   */
+  disabledToolGroups?: ParsedCategoryFilter;
 }
 
 /**
