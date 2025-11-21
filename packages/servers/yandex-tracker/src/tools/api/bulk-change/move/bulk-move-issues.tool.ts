@@ -10,10 +10,8 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { ResultLogger } from '@mcp-framework/core';
-import { BulkMoveIssuesDefinition } from './bulk-move-issues.definition.js';
 import { BulkMoveIssuesParamsSchema } from './bulk-move-issues.schema.js';
 
 import { BULK_MOVE_ISSUES_TOOL_METADATA } from './bulk-move-issues.metadata.js';
@@ -37,9 +35,6 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = BULK_MOVE_ISSUES_TOOL_METADATA;
-
-  private readonly definition = new BulkMoveIssuesDefinition();
-
   /**
    * Автоматическая генерация definition из Zod schema
    * Это исключает возможность несоответствия schema ↔ definition
@@ -47,15 +42,6 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof BulkMoveIssuesParamsSchema {
     return BulkMoveIssuesParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    return this.definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, BulkMoveIssuesParamsSchema);

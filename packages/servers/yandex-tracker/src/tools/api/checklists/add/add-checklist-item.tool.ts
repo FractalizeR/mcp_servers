@@ -9,10 +9,8 @@
 
 import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
-import { AddChecklistItemDefinition } from '#tools/api/checklists/add/add-checklist-item.definition.js';
 import { AddChecklistItemParamsSchema } from '#tools/api/checklists/add/add-checklist-item.schema.js';
 
 import { ADD_CHECKLIST_ITEM_TOOL_METADATA } from './add-checklist-item.metadata.js';
@@ -38,16 +36,6 @@ export class AddChecklistItemTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof AddChecklistItemParamsSchema {
     return AddChecklistItemParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new AddChecklistItemDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, AddChecklistItemParamsSchema);

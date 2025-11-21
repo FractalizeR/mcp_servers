@@ -42,10 +42,11 @@ describe('PingTool', () => {
 
       // Assert
       expect(definition.name).toBe(buildToolName('ping', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Проверка доступности API');
+      expect(definition.description).toContain('Проверка доступности сервера');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.properties).toEqual({});
-      expect(definition.inputSchema.required).toEqual([]);
+      // required может быть undefined или [] для пустой schema
+      expect(definition.inputSchema.required ?? []).toEqual([]);
     });
   });
 

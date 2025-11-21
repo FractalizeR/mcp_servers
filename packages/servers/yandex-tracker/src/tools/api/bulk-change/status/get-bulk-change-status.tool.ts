@@ -9,9 +9,7 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { GetBulkChangeStatusDefinition } from './get-bulk-change-status.definition.js';
 import { GetBulkChangeStatusParamsSchema } from './get-bulk-change-status.schema.js';
 
 import { GET_BULK_CHANGE_STATUS_TOOL_METADATA } from './get-bulk-change-status.metadata.js';
@@ -34,9 +32,6 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = GET_BULK_CHANGE_STATUS_TOOL_METADATA;
-
-  private readonly definition = new GetBulkChangeStatusDefinition();
-
   /**
    * Автоматическая генерация definition из Zod schema
    * Это исключает возможность несоответствия schema ↔ definition
@@ -44,15 +39,6 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetBulkChangeStatusParamsSchema {
     return GetBulkChangeStatusParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    return this.definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, GetBulkChangeStatusParamsSchema);

@@ -9,10 +9,8 @@
 
 import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js';
-import { UploadAttachmentDefinition } from './upload-attachment.definition.js';
 import { UploadAttachmentParamsSchema } from './upload-attachment.schema.js';
 import { readFile } from 'node:fs/promises';
 
@@ -45,16 +43,6 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof UploadAttachmentParamsSchema {
     return UploadAttachmentParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new UploadAttachmentDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, UploadAttachmentParamsSchema);

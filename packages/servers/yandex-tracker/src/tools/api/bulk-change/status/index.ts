@@ -3,7 +3,6 @@
  */
 
 export { GetBulkChangeStatusTool } from './get-bulk-change-status.tool.js';
-export { GetBulkChangeStatusDefinition } from './get-bulk-change-status.definition.js';
 export {
   GetBulkChangeStatusParamsSchema,
   type GetBulkChangeStatusParams,

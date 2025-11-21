@@ -9,12 +9,10 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { ResponseFieldFilter } from '@mcp-framework/core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { CreateIssueDto } from '#tracker_api/dto/index.js';
-import { CreateIssueDefinition } from '#tools/api/issues/create/create-issue.definition.js';
 import { CreateIssueParamsSchema } from '#tools/api/issues/create/create-issue.schema.js';
 
 import { CREATE_ISSUE_TOOL_METADATA } from './create-issue.metadata.js';
@@ -44,16 +42,6 @@ export class CreateIssueTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof CreateIssueParamsSchema {
     return CreateIssueParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new CreateIssueDefinition();
-    return definition.build();
-  }
-
   /**
    * Построить объект с опциональными полями (только с заполненными значениями)
    * ВАЖНО: Не включаем поля со значением undefined для совместимости с exactOptionalPropertyTypes

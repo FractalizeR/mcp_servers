@@ -9,10 +9,8 @@
 
 import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
-import { GetCommentsDefinition } from '#tools/api/comments/get/get-comments.definition.js';
 import { GetCommentsParamsSchema } from '#tools/api/comments/get/get-comments.schema.js';
 
 import { GET_COMMENTS_TOOL_METADATA } from './get-comments.metadata.js';
@@ -30,9 +28,6 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = GET_COMMENTS_TOOL_METADATA;
-
-  private readonly definition = new GetCommentsDefinition();
-
   /**
    * Автоматическая генерация definition из Zod schema
    * Это исключает возможность несоответствия schema ↔ definition
@@ -40,15 +35,6 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetCommentsParamsSchema {
     return GetCommentsParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    return this.definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, GetCommentsParamsSchema);

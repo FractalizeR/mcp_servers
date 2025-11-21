@@ -5,7 +5,6 @@
 // Bulk Update
 export {
   BulkUpdateIssuesTool,
-  BulkUpdateIssuesDefinition,
   BulkUpdateIssuesParamsSchema,
   type BulkUpdateIssuesParams,
 } from './update/index.js';
@@ -13,7 +12,6 @@ export {
 // Bulk Transition
 export {
   BulkTransitionIssuesTool,
-  BulkTransitionIssuesDefinition,
   BulkTransitionIssuesParamsSchema,
   type BulkTransitionIssuesParams,
 } from './transition/index.js';
@@ -21,7 +19,6 @@ export {
 // Bulk Move
 export {
   BulkMoveIssuesTool,
-  BulkMoveIssuesDefinition,
   BulkMoveIssuesParamsSchema,
   type BulkMoveIssuesParams,
 } from './move/index.js';
@@ -29,7 +26,6 @@ export {
 // Get Bulk Change Status
 export {
   GetBulkChangeStatusTool,
-  GetBulkChangeStatusDefinition,
   GetBulkChangeStatusParamsSchema,
   type GetBulkChangeStatusParams,
 } from './status/index.js';

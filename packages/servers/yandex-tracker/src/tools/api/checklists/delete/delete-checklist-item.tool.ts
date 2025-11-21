@@ -9,9 +9,7 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { DeleteChecklistItemDefinition } from '#tools/api/checklists/delete/delete-checklist-item.definition.js';
 import { DeleteChecklistItemParamsSchema } from '#tools/api/checklists/delete/delete-checklist-item.schema.js';
 
 import { DELETE_CHECKLIST_ITEM_TOOL_METADATA } from './delete-checklist-item.metadata.js';
@@ -37,16 +35,6 @@ export class DeleteChecklistItemTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DeleteChecklistItemParamsSchema {
     return DeleteChecklistItemParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new DeleteChecklistItemDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, DeleteChecklistItemParamsSchema);

@@ -9,12 +9,10 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { ResponseFieldFilter, ResultLogger } from '@mcp-framework/core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { UpdateIssueDto } from '#tracker_api/dto/index.js';
-import { UpdateIssueDefinition } from '#tools/api/issues/update/update-issue.definition.js';
 import { UpdateIssueParamsSchema } from '#tools/api/issues/update/update-issue.schema.js';
 
 import { UPDATE_ISSUE_TOOL_METADATA } from './update-issue.metadata.js';
@@ -46,16 +44,6 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof UpdateIssueParamsSchema {
     return UpdateIssueParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new UpdateIssueDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, UpdateIssueParamsSchema);

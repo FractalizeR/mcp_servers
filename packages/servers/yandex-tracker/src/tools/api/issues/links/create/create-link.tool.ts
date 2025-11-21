@@ -9,10 +9,8 @@
 
 import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
-import { CreateLinkDefinition } from './create-link.definition.js';
 import { CreateLinkParamsSchema } from './create-link.schema.js';
 
 import { CREATE_LINK_TOOL_METADATA } from './create-link.metadata.js';
@@ -43,16 +41,6 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof CreateLinkParamsSchema {
     return CreateLinkParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new CreateLinkDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, CreateLinkParamsSchema);

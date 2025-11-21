@@ -151,7 +151,7 @@ describe('ToolRegistry', () => {
       expect(getIssuesDef).toBeDefined();
       expect(demoDef).toBeDefined();
 
-      expect(pingDef?.description).toContain('API Яндекс.Трекера');
+      expect(pingDef?.description).toContain('Проверка доступности сервера');
       expect(getIssuesDef?.description).toContain('задач');
       expect(demoDef?.description).toContain('Тестовый');
     });

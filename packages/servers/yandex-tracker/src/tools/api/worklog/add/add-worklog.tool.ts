@@ -10,10 +10,8 @@
 
 import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
-import { AddWorklogDefinition } from '#tools/api/worklog/add/add-worklog.definition.js';
 import { AddWorklogParamsSchema } from '#tools/api/worklog/add/add-worklog.schema.js';
 
 import { ADD_WORKLOG_TOOL_METADATA } from './add-worklog.metadata.js';
@@ -39,16 +37,6 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof AddWorklogParamsSchema {
     return AddWorklogParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new AddWorklogDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, AddWorklogParamsSchema);

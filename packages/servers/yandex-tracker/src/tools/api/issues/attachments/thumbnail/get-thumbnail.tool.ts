@@ -10,9 +10,7 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { GetThumbnailDefinition } from './get-thumbnail.definition.js';
 import { GetThumbnailParamsSchema } from './get-thumbnail.schema.js';
 import { writeFile } from 'node:fs/promises';
 
@@ -45,16 +43,6 @@ export class GetThumbnailTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetThumbnailParamsSchema {
     return GetThumbnailParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new GetThumbnailDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, GetThumbnailParamsSchema);

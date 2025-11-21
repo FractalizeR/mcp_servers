@@ -4,9 +4,7 @@
 
 import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { UpdateQueueDefinition } from './update-queue.definition.js';
 import { UpdateQueueParamsSchema } from './update-queue.schema.js';
 
 import type { UpdateQueueDto } from '#tracker_api/dto/index.js';
@@ -23,16 +21,6 @@ export class UpdateQueueTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof UpdateQueueParamsSchema {
     return UpdateQueueParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new UpdateQueueDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     const validation = this.validateParams(params, UpdateQueueParamsSchema);
     if (!validation.success) {

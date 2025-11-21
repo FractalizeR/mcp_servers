@@ -3,7 +3,6 @@
  */
 
 export { BulkUpdateIssuesTool } from './bulk-update-issues.tool.js';
-export { BulkUpdateIssuesDefinition } from './bulk-update-issues.definition.js';
 export {
   BulkUpdateIssuesParamsSchema,
   type BulkUpdateIssuesParams,

@@ -4,9 +4,7 @@
 
 import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { GetProjectsDefinition } from './get-projects.definition.js';
 import { GetProjectsParamsSchema } from './get-projects.schema.js';
 import type { ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
 
@@ -22,16 +20,6 @@ export class GetProjectsTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetProjectsParamsSchema {
     return GetProjectsParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new GetProjectsDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     const validation = this.validateParams(params, GetProjectsParamsSchema);
     if (!validation.success) {

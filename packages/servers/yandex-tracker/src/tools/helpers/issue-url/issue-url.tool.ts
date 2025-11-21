@@ -10,9 +10,7 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { IssueUrlDefinition } from '#tools/helpers/issue-url/issue-url.definition.js';
 import { IssueUrlParamsSchema } from '#tools/helpers/issue-url/issue-url.schema.js';
 
 import { ISSUE_URL_TOOL_METADATA } from './issue-url.metadata.js';
@@ -42,16 +40,6 @@ export class IssueUrlTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof IssueUrlParamsSchema {
     return IssueUrlParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new IssueUrlDefinition();
-    return definition.build();
-  }
-
   execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, IssueUrlParamsSchema);

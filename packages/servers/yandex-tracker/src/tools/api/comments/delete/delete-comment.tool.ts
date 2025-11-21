@@ -9,9 +9,7 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { DeleteCommentDefinition } from '#tools/api/comments/delete/delete-comment.definition.js';
 import { DeleteCommentParamsSchema } from '#tools/api/comments/delete/delete-comment.schema.js';
 
 import { DELETE_COMMENT_TOOL_METADATA } from './delete-comment.metadata.js';
@@ -29,9 +27,6 @@ export class DeleteCommentTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = DELETE_COMMENT_TOOL_METADATA;
-
-  private readonly definition = new DeleteCommentDefinition();
-
   /**
    * Автоматическая генерация definition из Zod schema
    * Это исключает возможность несоответствия schema ↔ definition
@@ -39,15 +34,6 @@ export class DeleteCommentTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DeleteCommentParamsSchema {
     return DeleteCommentParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    return this.definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, DeleteCommentParamsSchema);

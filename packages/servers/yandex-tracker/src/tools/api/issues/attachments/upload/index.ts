@@ -3,7 +3,6 @@
  */
 
 export { UploadAttachmentTool } from './upload-attachment.tool.js';
-export { UploadAttachmentDefinition } from './upload-attachment.definition.js';
 export {
   UploadAttachmentParamsSchema,
   type UploadAttachmentParams,

@@ -3,7 +3,6 @@
  */
 
 export { DeleteAttachmentTool } from './delete-attachment.tool.js';
-export { DeleteAttachmentDefinition } from './delete-attachment.definition.js';
 export {
   DeleteAttachmentParamsSchema,
   type DeleteAttachmentParams,

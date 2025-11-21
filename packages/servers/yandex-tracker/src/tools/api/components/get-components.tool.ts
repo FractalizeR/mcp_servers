@@ -4,10 +4,8 @@
 
 import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { ComponentWithUnknownFields } from '#tracker_api/entities/index.js';
-import { GetComponentsDefinition } from './get-components.definition.js';
 import { GetComponentsParamsSchema } from './get-components.schema.js';
 
 import { GET_COMPONENTS_TOOL_METADATA } from './get-components.metadata.js';
@@ -25,16 +23,6 @@ export class GetComponentsTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetComponentsParamsSchema {
     return GetComponentsParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new GetComponentsDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     const validation = this.validateParams(params, GetComponentsParamsSchema);
     if (!validation.success) {

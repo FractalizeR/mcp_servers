@@ -9,10 +9,8 @@
 
 import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
-import { EditCommentDefinition } from '#tools/api/comments/edit/edit-comment.definition.js';
 import { EditCommentParamsSchema } from '#tools/api/comments/edit/edit-comment.schema.js';
 
 import { EDIT_COMMENT_TOOL_METADATA } from './edit-comment.metadata.js';
@@ -30,9 +28,6 @@ export class EditCommentTool extends BaseTool<YandexTrackerFacade> {
    * Статические метаданные для compile-time индексации
    */
   static override readonly METADATA = EDIT_COMMENT_TOOL_METADATA;
-
-  private readonly definition = new EditCommentDefinition();
-
   /**
    * Автоматическая генерация definition из Zod schema
    * Это исключает возможность несоответствия schema ↔ definition
@@ -40,15 +35,6 @@ export class EditCommentTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof EditCommentParamsSchema {
     return EditCommentParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    return this.definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, EditCommentParamsSchema);

@@ -10,10 +10,8 @@
  */
 
 import { BaseTool } from '@mcp-framework/core';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { DemoDefinition } from './demo.definition.js';
 import { DemoParamsSchema } from './demo.schema.js';
 
 import { DEMO_TOOL_METADATA } from './demo.metadata.js';
@@ -31,16 +29,6 @@ export class DemoTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DemoParamsSchema {
     return DemoParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new DemoDefinition();
-    return definition.build();
-  }
-
   execute(params: ToolCallParams): Promise<ToolResult> {
     // Валидация параметров через BaseTool
     const validation = this.validateParams(params, DemoParamsSchema);

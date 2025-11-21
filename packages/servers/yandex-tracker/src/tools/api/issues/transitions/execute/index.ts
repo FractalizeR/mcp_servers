@@ -3,6 +3,5 @@
  */
 
 export { TransitionIssueTool } from '#tools/api/issues/transitions/execute/transition-issue.tool.js';
-export { TransitionIssueDefinition } from '#tools/api/issues/transitions/execute/transition-issue.definition.js';
 export { TransitionIssueParamsSchema } from '#tools/api/issues/transitions/execute/transition-issue.schema.js';
 export type { TransitionIssueParams } from '#tools/api/issues/transitions/execute/transition-issue.schema.js';

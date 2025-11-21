@@ -9,9 +9,7 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { DeleteWorklogDefinition } from '#tools/api/worklog/delete/delete-worklog.definition.js';
 import { DeleteWorklogParamsSchema } from '#tools/api/worklog/delete/delete-worklog.schema.js';
 
 import { DELETE_WORKLOG_TOOL_METADATA } from './delete-worklog.metadata.js';
@@ -37,16 +35,6 @@ export class DeleteWorklogTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DeleteWorklogParamsSchema {
     return DeleteWorklogParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new DeleteWorklogDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, DeleteWorklogParamsSchema);

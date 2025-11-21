@@ -6,7 +6,6 @@
 // Get Attachments
 export {
   GetAttachmentsTool,
-  GetAttachmentsDefinition,
   GetAttachmentsParamsSchema,
   type GetAttachmentsParams,
 } from './get/index.js';
@@ -14,7 +13,6 @@ export {
 // Upload Attachment
 export {
   UploadAttachmentTool,
-  UploadAttachmentDefinition,
   UploadAttachmentParamsSchema,
   type UploadAttachmentParams,
 } from './upload/index.js';
@@ -22,7 +20,6 @@ export {
 // Download Attachment
 export {
   DownloadAttachmentTool,
-  DownloadAttachmentDefinition,
   DownloadAttachmentParamsSchema,
   type DownloadAttachmentParams,
 } from './download/index.js';
@@ -30,7 +27,6 @@ export {
 // Delete Attachment
 export {
   DeleteAttachmentTool,
-  DeleteAttachmentDefinition,
   DeleteAttachmentParamsSchema,
   type DeleteAttachmentParams,
 } from './delete/index.js';
@@ -38,7 +34,6 @@ export {
 // Get Thumbnail
 export {
   GetThumbnailTool,
-  GetThumbnailDefinition,
   GetThumbnailParamsSchema,
   type GetThumbnailParams,
 } from './thumbnail/index.js';

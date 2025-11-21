@@ -6,9 +6,7 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { DeleteProjectDefinition } from './delete-project.definition.js';
 import { DeleteProjectParamsSchema } from './delete-project.schema.js';
 
 import { DELETE_PROJECT_TOOL_METADATA } from './delete-project.metadata.js';
@@ -23,16 +21,6 @@ export class DeleteProjectTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DeleteProjectParamsSchema {
     return DeleteProjectParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new DeleteProjectDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     const validation = this.validateParams(params, DeleteProjectParamsSchema);
     if (!validation.success) {

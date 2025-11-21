@@ -137,7 +137,12 @@ export abstract class BaseTool<TFacade = unknown> {
    *
    * @deprecated Используйте getParamsSchema() для автоматической генерации
    */
-  protected abstract buildDefinition(): ToolDefinition;
+  protected buildDefinition(): ToolDefinition {
+    throw new Error(
+      `${this.constructor.name}: Не определен ни getParamsSchema(), ни buildDefinition(). ` +
+        `Реализуйте хотя бы один из этих методов.`
+    );
+  }
 
   /**
    * Получить метаданные (runtime)

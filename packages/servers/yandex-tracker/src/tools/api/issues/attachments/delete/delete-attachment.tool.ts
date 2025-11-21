@@ -9,9 +9,7 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { DeleteAttachmentDefinition } from './delete-attachment.definition.js';
 import { DeleteAttachmentParamsSchema } from './delete-attachment.schema.js';
 import { DELETE_ATTACHMENT_TOOL_METADATA } from './delete-attachment.metadata.js';
 
@@ -41,16 +39,6 @@ export class DeleteAttachmentTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DeleteAttachmentParamsSchema {
     return DeleteAttachmentParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new DeleteAttachmentDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, DeleteAttachmentParamsSchema);

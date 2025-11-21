@@ -9,9 +9,7 @@
 
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { DownloadAttachmentDefinition } from './download-attachment.definition.js';
 import { DownloadAttachmentParamsSchema } from './download-attachment.schema.js';
 import { writeFile } from 'node:fs/promises';
 
@@ -44,16 +42,6 @@ export class DownloadAttachmentTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DownloadAttachmentParamsSchema {
     return DownloadAttachmentParamsSchema;
   }
-
-  /**
-   * @deprecated Используется автогенерация через getParamsSchema()
-   */
-  protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
-    const definition = new DownloadAttachmentDefinition();
-    return definition.build();
-  }
-
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, DownloadAttachmentParamsSchema);

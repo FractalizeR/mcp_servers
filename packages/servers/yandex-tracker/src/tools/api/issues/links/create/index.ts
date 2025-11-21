@@ -3,7 +3,6 @@
  */
 
 export { CreateLinkTool } from './create-link.tool.js';
-export { CreateLinkDefinition } from './create-link.definition.js';
 export {
   CreateLinkParamsSchema,
   LinkRelationshipSchema,

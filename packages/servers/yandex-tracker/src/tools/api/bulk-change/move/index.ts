@@ -3,7 +3,6 @@
  */
 
 export { BulkMoveIssuesTool } from './bulk-move-issues.tool.js';
-export { BulkMoveIssuesDefinition } from './bulk-move-issues.definition.js';
 export {
   BulkMoveIssuesParamsSchema,
   type BulkMoveIssuesParams,
