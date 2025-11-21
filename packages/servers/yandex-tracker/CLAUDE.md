@@ -135,6 +135,30 @@ this.httpClient.get('/v1/issues'); // Неверная версия
 - ✅ Type inference: `type Params = z.infer<typeof ParamsSchema>`
 - **Примеры:** любой `*.tool.ts` файл
 
+### 4.1. Автогенерация MCP Definition из Schema
+
+**Принцип:** Zod schema = единственный источник истины для MCP definition.
+
+**✅ Новый подход (используй):**
+```typescript
+export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
+  getDefinition(): ToolDefinition {
+    return generateDefinitionFromSchema(this.metadata, GetIssuesSchema);
+  }
+}
+```
+
+**❌ Старый подход (НЕ используй):**
+- Отдельные `*.definition.ts` файлы — удалены
+- Ручная синхронизация schema ↔ definition — источник багов
+
+**Преимущества:**
+- ✅ DRY принцип (schema = единственный источник)
+- ✅ Невозможен schema-definition mismatch
+- ✅ Упрощение создания tools (меньше файлов)
+
+**Детали:** См. [../../ARCHITECTURE.md](../../ARCHITECTURE.md#schema-to-definition-generator), [packages/framework/core/README.md](../../framework/core/README.md)
+
 ### 5. Статические метаданные для Tool Search
 
 - ✅ ОБЯЗАТЕЛЬНО добавляй `static readonly METADATA: StaticToolMetadata` во все tools
@@ -142,7 +166,7 @@ this.httpClient.get('/v1/issues'); // Неверная версия
 - ✅ Позволяет SearchToolsTool находить tools без загрузки всего кода
 - ⚠️ При добавлении нового tool — запусти `npm run build` (автоматически обновит индекс)
 
-### 5.1. Tool Discovery Mode
+### 6. Tool Discovery Mode
 
 **⚠️ ВАЖНО:** По умолчанию используется `eager` режим из-за ограничений Claude Code on the Web.
 
@@ -260,13 +284,13 @@ ESSENTIAL_TOOLS=ping,search_tools
 ### Добавление MCP Tool
 
 - [ ] 📖 Прочитай [src/tools/README.md](src/tools/README.md)
-- [ ] Создай структуру: `{feature}/{action}/{name}.schema.ts`, `.definition.ts`, `.tool.ts`, `index.ts`
+- [ ] Создай структуру: `{feature}/{action}/{name}.schema.ts`, `.tool.ts`, `index.ts`
 - [ ] Добавь `static readonly METADATA`:
   - [ ] ⚠️ Если tool ИЗМЕНЯЕТ данные → `requiresExplicitUserConsent: true`
   - [ ] ✅ Если tool только ЧИТАЕТ → НЕ добавляй флаг (или `false`)
-- [ ] В `Definition.build()`:
-  - [ ] Реализуй `getStaticMetadata()` → возврат `ToolClass.METADATA`
-  - [ ] Оберни description: `this.wrapWithSafetyWarning(this.buildDescription())`
+- [ ] В `getDefinition()`:
+  - [ ] Используй `generateDefinitionFromSchema(this.metadata, YourSchema)` — автогенерация
+  - [ ] ❌ НЕ создавай отдельный `.definition.ts` файл (устарело)
 - [ ] Используй утилиты: `validateParams()`, `BatchResultProcessor`, `ResultLogger`
 - [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:** Добавь **1 строку** в `src/composition-root/definitions/tool-definitions.ts`
 - [ ] Тесты + `npm run validate` (автоматически проверит флаг)

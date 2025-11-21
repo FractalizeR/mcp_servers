@@ -37,7 +37,8 @@ src/
 ├── tools/
 │   ├── base/                         # Base classes for tools
 │   │   ├── base-tool.ts             # Generic BaseTool<TFacade>
-│   │   ├── base-definition.ts       # BaseDefinition abstract class
+│   │   ├── generate-definition.ts   # Auto-generate definitions from Zod
+│   │   ├── base-definition.ts       # BaseDefinition (deprecated)
 │   │   └── tool-metadata.ts         # StaticToolMetadata interface
 │   └── common/                       # Common utilities
 │       └── utils/                    # Tool utilities
@@ -104,40 +105,76 @@ class GetItemTool extends BaseTool<MyApiFacade> {
 }
 ```
 
-### BaseDefinition
+### generateDefinitionFromSchema()
 
-**Abstract class** for creating MCP tool definitions (schema + description).
+**✅ NEW: Auto-generate MCP definitions from Zod schemas**
+
+**Purpose:** Eliminates schema-definition mismatch by generating MCP ToolDefinition directly from Zod schema.
+
+**Key features:**
+- ✅ Single source of truth (Zod schema)
+- ✅ Physically impossible to create schema-definition mismatch
+- ✅ Uses Zod v4 native `toJSONSchema()` API
+- ✅ Extracts descriptions from `.describe()` calls
+- ✅ Automatic required/optional field detection
 
 **Usage:**
 ```typescript
-import { BaseDefinition } from '@mcp-framework/core';
+import { BaseTool, generateDefinitionFromSchema } from '@mcp-framework/core';
+import { z } from 'zod';
 
+// Define schema with descriptions
+const GetItemSchema = z.object({
+  id: z.string().describe('Item ID to retrieve'),
+  fields: z.array(z.string()).optional().describe('Fields to include'),
+});
+
+// Tool uses auto-generation
+class GetItemTool extends BaseTool<MyApiFacade> {
+  static readonly METADATA = {
+    name: 'get_item',
+    description: '[API] Get item by ID',
+  };
+
+  getDefinition() {
+    return generateDefinitionFromSchema(
+      GetItemTool.METADATA,
+      GetItemSchema
+    );
+  }
+}
+```
+
+**Benefits:**
+- DRY principle — no duplicate schema definitions
+- Type-safe — schema and definition always match
+- Simpler tools — no separate `*.definition.ts` files
+- Auto-sync — changes to schema instantly reflected in definition
+
+**Migration:** See `../../ARCHITECTURE.md#schema-to-definition-generator`
+
+---
+
+### BaseDefinition (Deprecated)
+
+**⚠️ Deprecated:** Use `generateDefinitionFromSchema()` instead.
+
+**Old approach** (manual definition):
+```typescript
 class GetItemDefinition extends BaseDefinition {
   build() {
     return {
       name: GetItemTool.METADATA.name,
-      description: this.wrapWithSafetyWarning(
-        this.buildDescription()
-      ),
-      inputSchema: {
-        type: 'object',
-        properties: {
-          id: { type: 'string', description: 'Item ID' },
-        },
-        required: ['id'],
-      },
+      description: this.buildDescription(),
+      inputSchema: { /* manual JSON schema */ },
     };
-  }
-
-  protected buildDescription(): string {
-    return 'Retrieve item details by ID';
-  }
-
-  protected getStaticMetadata() {
-    return GetItemTool.METADATA;
   }
 }
 ```
+
+**Problem:** Manual sync between Zod schema and MCP definition → mismatch bugs
+
+---
 
 ### ToolRegistry
 

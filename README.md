@@ -6,7 +6,7 @@
 **Monorepo containing MCP Framework packages and Yandex Tracker integration**
 
 This repository provides:
-- 🏗️ **MCP Framework** — reusable packages for building MCP tools
+- 🏗️ **MCP Framework** — reusable packages for building MCP tools (auto-generated definitions from schema)
 - 🚀 **Yandex Tracker Server** — complete MCP server for Yandex.Tracker API
 
 ---
@@ -18,7 +18,7 @@ This repository provides:
 | Package | Version | Description |
 |---------|---------|-------------|
 | [@mcp-framework/infrastructure](packages/infrastructure) | 0.1.0 | HTTP client, cache, logging, async utilities |
-| [@mcp-framework/core](packages/core) | 0.1.0 | Base classes, type system, tool registry |
+| [@mcp-framework/core](packages/core) | 0.1.0 | Base classes, type system, tool registry, schema→definition generator |
 | [@mcp-framework/search](packages/search) | 0.1.0 | Advanced tool search engine with compile-time indexing |
 
 ### Application Package

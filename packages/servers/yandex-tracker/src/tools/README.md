@@ -26,9 +26,8 @@ src/tools/
 ├── api/                          # API tools (работа с Tracker)
 │   ├── issues/
 │   │   ├── get/
-│   │   │   ├── get-issues.definition.ts
-│   │   │   ├── get-issues.schema.ts
-│   │   │   └── get-issues.tool.ts
+│   │   │   ├── get-issues.schema.ts   # Zod schema (источник истины)
+│   │   │   └── get-issues.tool.ts     # Tool (definition автогенерируется)
 │   │   ├── create/
 │   │   ├── update/
 │   │   ├── links/                # Связи между задачами
@@ -44,8 +43,7 @@ src/tools/
 ├── helpers/                      # Вспомогательные tools
 │   ├── ping/
 │   └── search-tools/
-├── ping.definition.ts            # Корневой ping tool
-└── ping.tool.ts
+└── ping.tool.ts                  # Корневой ping tool
 ```
 
 ---
@@ -93,21 +91,23 @@ static readonly METADATA: ToolMetadata = {
 };
 ```
 
-2. **Zod Schema** — валидация параметров
+2. **Zod Schema** — валидация параметров (источник истины)
 ```typescript
 const GetIssuesParamsSchema = z.object({
-  keys: z.array(z.string()).min(1).max(200),
-  fields: FieldsSchema.optional(),
-  expand: ExpandSchema.optional(),
+  keys: z.array(z.string()).min(1).max(200).describe('Issue keys'),
+  fields: FieldsSchema.optional().describe('Fields to return'),
+  expand: ExpandSchema.optional().describe('Expand objects'),
 });
 ```
 
-3. **Definition** — MCP ToolDefinition
+3. **Auto-generated Definition** — генерируется из schema
 ```typescript
 getDefinition(): ToolDefinition {
-  return GetIssuesDefinition.build();
+  return generateDefinitionFromSchema(this.metadata, GetIssuesParamsSchema);
 }
 ```
+
+**❌ Устарело:** Отдельные `*.definition.ts` файлы (удалены)
 
 4. **Response Field Filter** — экономия токенов (80-90%)
 ```typescript
@@ -126,6 +126,61 @@ return this.formatSuccess({ issues: filtered });
 - `tags` — для поиска через search_tools (опционально)
 
 **Description формат:** `[Category/Subcategory] Краткое описание` (≤80 символов)
+
+---
+
+## 🔄 Schema → Definition (Автогенерация)
+
+**Принцип:** Zod schema = единственный источник истины для MCP definition.
+
+### Новый подход (✅ используй)
+
+**Структура файлов:**
+```
+{feature}/{action}/
+├── {name}.schema.ts       # ✅ Zod schema с .describe()
+└── {name}.tool.ts         # ✅ Tool с автогенерацией
+```
+
+**Schema с описаниями:**
+```typescript
+export const GetIssuesSchema = z.object({
+  keys: z.array(z.string()).min(1).max(200)
+    .describe('Issue keys to retrieve (e.g., ["PROJ-1", "PROJ-2"])'),
+  fields: FieldsSchema.optional()
+    .describe('Fields to include in response')
+});
+```
+
+**Tool класс:**
+```typescript
+export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
+  getDefinition(): ToolDefinition {
+    return generateDefinitionFromSchema(this.metadata, GetIssuesSchema);
+  }
+}
+```
+
+### Старый подход (❌ устарел)
+
+**Было:**
+```
+{feature}/{action}/
+├── {name}.schema.ts       # Zod schema
+├── {name}.definition.ts   # ❌ Ручная definition (удалено)
+└── {name}.tool.ts         # Tool
+```
+
+**Проблема:** Schema-definition mismatch → инструменты не работали
+
+### Преимущества автогенерации
+
+- ✅ DRY принцип — schema = единственный источник
+- ✅ Физически невозможен mismatch
+- ✅ Меньше кода — нет отдельных `*.definition.ts`
+- ✅ Автосинхронизация — изменения schema сразу в definition
+
+**Детали:** См. `packages/framework/core/README.md` (generateDefinitionFromSchema)
 
 ---
 
@@ -253,10 +308,9 @@ mkdir -p src/tools/api/{feature}/{action}/
 cd src/tools/api/{feature}/{action}/
 
 # Создать файлы:
-# - {action}-{feature}.schema.ts
-# - {action}-{feature}.definition.ts
-# - {action}-{feature}.tool.ts
-# - index.ts
+# - {action}-{feature}.schema.ts   # ✅ Zod schema с .describe()
+# - {action}-{feature}.tool.ts     # ✅ Tool с автогенерацией
+# - index.ts                       # ✅ Экспорты
 ```
 
 ### Шаг 2: Schema (Zod валидация)
@@ -286,36 +340,7 @@ export type GetIssuesParams = z.infer<typeof GetIssuesParamsSchema>;
 
 ---
 
-### Шаг 3: Definition (MCP ToolDefinition)
-
-```typescript
-// get-issues.definition.ts
-export class GetIssuesDefinition {
-  static build(): ToolDefinition {
-    return {
-      name: GetIssuesTool.METADATA.name,
-      description: this.buildDescription(),
-      inputSchema: zodToJsonSchema(GetIssuesParamsSchema),
-    };
-  }
-
-  private static buildDescription(): string {
-    return wrapWithSafetyWarning(`
-      Получить информацию о задачах в Яндекс.Трекере.
-
-      Параметры:
-      - keys: Массив ключей задач (например, ["QUEUE-1", "QUEUE-2"])
-      - fields: Опциональный фильтр полей (экономия токенов)
-    `);
-  }
-}
-```
-
-**⚠️ Для опасных операций:** Используй `wrapWithSafetyWarning()`
-
----
-
-### Шаг 4: Tool (реализация)
+### Шаг 3: Tool (реализация)
 
 ```typescript
 // get-issues.tool.ts
@@ -333,7 +358,7 @@ export class GetIssuesTool extends BaseTool<YandexTrackerFacade> {
   };
 
   getDefinition(): ToolDefinition {
-    return GetIssuesDefinition.build();
+    return generateDefinitionFromSchema(GetIssuesTool.METADATA, GetIssuesParamsSchema);
   }
 
   async execute(params: unknown): Promise<ToolResponse> {
@@ -364,7 +389,7 @@ export class GetIssuesTool extends BaseTool<YandexTrackerFacade> {
 
 ---
 
-### Шаг 5: Регистрация
+### Шаг 4: Регистрация
 
 **Добавить 1 строку в `src/composition-root/definitions/tool-definitions.ts`:**
 ```typescript
@@ -452,62 +477,13 @@ ResultLogger.logBatchSuccess(logger, 'operation_name', {
 
 ---
 
-## 📚 Attachments API — Complete Tools
+## 📚 Доступные API категории
 
-**5 MCP Tools для работы с вложениями:**
-- `get_attachments` — список файлов задачи
-- `upload_attachment` — загрузка (base64 или file path, max 10MB)
-- `download_attachment` — скачивание файла
-- `delete_attachment` — удаление файла
-- `get_thumbnail` — миниатюра изображения
-
-См. файлы в `src/tools/api/issues/attachments/` для деталей.
-
-## 💬 Comments API — Complete Tools
-
-**4 MCP Tools для работы с комментариями:**
-- `add_comment` — добавление комментария (markdown, attachments)
-- `get_comments` — список комментариев (пагинация)
-- `edit_comment` — редактирование комментария
-- `delete_comment` — удаление комментария
-
-См. файлы в `src/tools/api/issues/comments/` для деталей.
-
----
-
-## 🗂️ Queues API — Complete Tools
-
-**6 MCP Tools для работы с очередями:**
-
-**Read:**
-- `get_queue` — получение очереди (queueId, expand?, кеш ✅)
-- `get_queues` — список очередей (expand?, perPage?, page?, кеш ✅)
-- `get_queue_fields` — поля очереди (queueId, кеш ✅)
-
-**Write (Admin):**
-- `create_queue` — создание (key ^[A-Z]{2,10}$, name, lead, defaultType, defaultPriority) ⚠️
-- `update_queue` — обновление (queueId, name?, lead?, assignAuto?, версионность) ⚠️
-- `manage_queue_access` — доступ (queueId, role, add?, remove?, роли: queue-lead/team-member/follower/access) ⚠️
-
-См. файлы в `src/tools/api/queues/` для деталей.
-
----
-
-## 📦 Components API — Complete Tools
-
-**4 MCP Tools для работы с компонентами очередей:**
-- `get_components`, `create_component`, `update_component`, `delete_component`
-
-См. файлы в `src/tools/api/components/` для деталей.
-
----
-
-## ✅ Checklists API — Complete Tools
-
-**4 MCP Tools для работы с чеклистами задач:**
-- `get_checklist`, `add_checklist_item`, `update_checklist_item`, `delete_checklist_item`
-
-См. файлы в `src/tools/api/checklists/` для деталей.
+**Attachments (5 tools):** См. `src/tools/api/issues/attachments/`
+**Comments (4 tools):** См. `src/tools/api/issues/comments/`
+**Queues (6 tools):** См. `src/tools/api/queues/`
+**Components (4 tools):** См. `src/tools/api/components/`
+**Checklists (4 tools):** См. `src/tools/api/checklists/`
 
 ---
 
