@@ -40,7 +40,19 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new BulkMoveIssuesDefinition();
 
+  /**
+   * Автоматическая генерация definition из Zod schema
+   * Это исключает возможность несоответствия schema ↔ definition
+   */
+  protected override getParamsSchema(): typeof BulkMoveIssuesParamsSchema {
+    return BulkMoveIssuesParamsSchema;
+  }
+
+  /**
+   * @deprecated Используется автогенерация через getParamsSchema()
+   */
   protected buildDefinition(): ToolDefinition {
+    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
     return this.definition.build();
   }
 

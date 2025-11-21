@@ -37,7 +37,19 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new GetBulkChangeStatusDefinition();
 
+  /**
+   * Автоматическая генерация definition из Zod schema
+   * Это исключает возможность несоответствия schema ↔ definition
+   */
+  protected override getParamsSchema(): typeof GetBulkChangeStatusParamsSchema {
+    return GetBulkChangeStatusParamsSchema;
+  }
+
+  /**
+   * @deprecated Используется автогенерация через getParamsSchema()
+   */
   protected buildDefinition(): ToolDefinition {
+    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
     return this.definition.build();
   }
 

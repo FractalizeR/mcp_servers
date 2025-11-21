@@ -12,6 +12,7 @@ import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import { PingDefinition } from './ping.definition.js';
+import { PingParamsSchema } from './ping.schema.js';
 import { PING_TOOL_METADATA } from './ping.metadata.js';
 
 /**
@@ -24,11 +25,18 @@ export class PingTool extends BaseTool<YandexTrackerFacade> {
   static override readonly METADATA = PING_TOOL_METADATA;
 
   /**
-   * Ping не имеет параметров, schema не нужна
-   * @deprecated Используется автогенерация через отсутствие параметров
+   * Автоматическая генерация definition из Zod schema
+   * Это исключает возможность несоответствия schema ↔ definition
+   */
+  protected override getParamsSchema(): typeof PingParamsSchema {
+    return PingParamsSchema;
+  }
+
+  /**
+   * @deprecated Используется автогенерация через getParamsSchema()
    */
   protected buildDefinition(): ToolDefinition {
-    // Fallback для обратной совместимости
+    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
     const definition = new PingDefinition();
     return definition.build();
   }
