@@ -18,10 +18,21 @@ import { UPDATE_PROJECT_TOOL_METADATA } from './update-project.metadata.js';
 export class UpdateProjectTool extends BaseTool<YandexTrackerFacade> {
   static override readonly METADATA = UPDATE_PROJECT_TOOL_METADATA;
 
-  private readonly definition = new UpdateProjectDefinition();
+  /**
+   * Автоматическая генерация definition из Zod schema
+   * Это исключает возможность несоответствия schema ↔ definition
+   */
+  protected override getParamsSchema(): typeof UpdateProjectParamsSchema {
+    return UpdateProjectParamsSchema;
+  }
 
+  /**
+   * @deprecated Используется автогенерация через getParamsSchema()
+   */
   protected buildDefinition(): ToolDefinition {
-    return this.definition.build();
+    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
+    const definition = new UpdateProjectDefinition();
+    return definition.build();
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {
