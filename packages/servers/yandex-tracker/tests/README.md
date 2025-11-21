@@ -141,6 +141,40 @@ Mock HTTP сервера для имитации API Яндекс.Трекер.
 
 **Подробнее:** `tests/integration/templates/README.md`
 
+### Schema-Definition Matcher
+
+Helper для проверки соответствия Zod Schema ↔ MCP Definition.
+
+**Назначение:**
+- Автоматическая проверка, что MCP definition корректно генерируется из Zod schema
+- Предотвращение багов schema-definition mismatch
+- Используется в unit-тестах инструментов и smoke-тестах
+
+**Доступные функции:**
+- `expectDefinitionMatchesSchema(definition, schema)` — проверяет соответствие schema ↔ definition
+- `validateGeneratedDefinition(definition)` — проверяет корректность структуры definition
+- `expectDefinitionFullyValid(definition, schema)` — полная проверка (структура + соответствие)
+- `getValidationResult(definition, schema)` — возвращает результат валидации без выбрасывания ошибки
+
+**Пример использования в unit-тесте:**
+```typescript
+import { expectDefinitionMatchesSchema } from '#helpers/schema-definition-matcher.js';
+import { GetQueueFieldsParamsSchema } from '#tools/api/queues/get-queue-fields.schema.js';
+
+it('должен генерировать definition, соответствующий Zod schema', () => {
+  const tool = new GetQueueFieldsTool(mockFacade, mockLogger);
+  const definition = tool.getDefinition();
+
+  // Проверяем, что definition соответствует schema
+  expectDefinitionMatchesSchema(definition.inputSchema, GetQueueFieldsParamsSchema);
+});
+```
+
+**Расположение:** `tests/helpers/schema-definition-matcher.ts`
+
+**Smoke тесты:**
+- `tests/smoke/definition-generation.smoke.test.ts` — проверяет все инструменты на корректность генерации definition
+
 ## ✅ Принципы написания интеграционных тестов
 
 ### 1. Структура теста (AAA Pattern)

@@ -13,6 +13,8 @@ import {
   createStandardSystemFields,
   createRequiredQueueFieldFixture,
 } from '#helpers/queue-field.fixture.js';
+import { expectDefinitionMatchesSchema } from '#helpers/schema-definition-matcher.js';
+import { GetQueueFieldsParamsSchema } from '#tools/api/queues/get-queue-fields.schema.js';
 
 describe('GetQueueFieldsTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -50,6 +52,13 @@ describe('GetQueueFieldsTool', () => {
 
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
       expect(definition.inputSchema.required).toContain('fields');
+    });
+
+    it('должен генерировать definition, соответствующий Zod schema', () => {
+      const definition = tool.getDefinition();
+
+      // Проверяем, что definition соответствует schema
+      expectDefinitionMatchesSchema(definition.inputSchema, GetQueueFieldsParamsSchema);
     });
   });
 
