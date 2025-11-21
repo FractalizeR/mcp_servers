@@ -33,7 +33,19 @@ export class EditCommentTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new EditCommentDefinition();
 
+  /**
+   * Автоматическая генерация definition из Zod schema
+   * Это исключает возможность несоответствия schema ↔ definition
+   */
+  protected override getParamsSchema(): typeof EditCommentParamsSchema {
+    return EditCommentParamsSchema;
+  }
+
+  /**
+   * @deprecated Используется автогенерация через getParamsSchema()
+   */
   protected buildDefinition(): ToolDefinition {
+    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
     return this.definition.build();
   }
 

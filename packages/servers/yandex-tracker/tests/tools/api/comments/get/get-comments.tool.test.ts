@@ -48,14 +48,14 @@ describe('GetCommentsTool', () => {
     it('должен иметь корректное описание', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.description).toContain('Получает комментарии');
+      expect(definition.description).toContain('Получить комментарии');
     });
 
     it('должен иметь корректную схему с обязательными полями', () => {
       const definition = tool.getDefinition();
 
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId', 'fields', 'perPage']);
+      expect(definition.inputSchema.required).toEqual(['issueId', 'fields']);
       expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['perPage']).toBeDefined();
       expect(definition.inputSchema.properties?.['page']).toBeDefined();

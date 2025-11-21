@@ -51,7 +51,7 @@ describe('AddCommentTool', () => {
     it('должен иметь корректное описание', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.description).toContain('Добавляет комментарий');
+      expect(definition.description).toContain('Добавить комментарий');
     });
 
     it('должен иметь корректную схему с обязательными полями', () => {

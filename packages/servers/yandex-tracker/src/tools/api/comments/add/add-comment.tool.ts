@@ -33,7 +33,19 @@ export class AddCommentTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new AddCommentDefinition();
 
+  /**
+   * Автоматическая генерация definition из Zod schema
+   * Это исключает возможность несоответствия schema ↔ definition
+   */
+  protected override getParamsSchema(): typeof AddCommentParamsSchema {
+    return AddCommentParamsSchema;
+  }
+
+  /**
+   * @deprecated Используется автогенерация через getParamsSchema()
+   */
   protected buildDefinition(): ToolDefinition {
+    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
     return this.definition.build();
   }
 

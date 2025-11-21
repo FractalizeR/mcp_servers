@@ -44,7 +44,7 @@ describe('DeleteCommentTool', () => {
     it('должен иметь корректное описание', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.description).toContain('Удаляет комментарий');
+      expect(definition.description).toContain('Удалить комментарий');
     });
 
     it('должен иметь корректную схему с обязательными полями', () => {

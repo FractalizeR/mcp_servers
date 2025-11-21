@@ -33,7 +33,19 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new GetCommentsDefinition();
 
+  /**
+   * Автоматическая генерация definition из Zod schema
+   * Это исключает возможность несоответствия schema ↔ definition
+   */
+  protected override getParamsSchema(): typeof GetCommentsParamsSchema {
+    return GetCommentsParamsSchema;
+  }
+
+  /**
+   * @deprecated Используется автогенерация через getParamsSchema()
+   */
   protected buildDefinition(): ToolDefinition {
+    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
     return this.definition.build();
   }
 

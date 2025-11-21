@@ -32,7 +32,19 @@ export class DeleteCommentTool extends BaseTool<YandexTrackerFacade> {
 
   private readonly definition = new DeleteCommentDefinition();
 
+  /**
+   * Автоматическая генерация definition из Zod schema
+   * Это исключает возможность несоответствия schema ↔ definition
+   */
+  protected override getParamsSchema(): typeof DeleteCommentParamsSchema {
+    return DeleteCommentParamsSchema;
+  }
+
+  /**
+   * @deprecated Используется автогенерация через getParamsSchema()
+   */
   protected buildDefinition(): ToolDefinition {
+    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
     return this.definition.build();
   }
 
