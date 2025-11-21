@@ -159,11 +159,13 @@ describe('zodToMcpInputSchema', () => {
   });
 
   describe('Nullable поля', () => {
-    it('должен обрабатывать nullable через type: ["string", "null"]', () => {
+    it('должен обрабатывать nullable через anyOf (Zod v4)', () => {
       const result = zodToMcpInputSchema(NullableSchema);
 
       const assigneeProperty = result.properties['assignee'] as Record<string, unknown>;
-      expect(assigneeProperty.type).toEqual(['string', 'null']);
+      // Zod v4 использует anyOf для nullable полей
+      expect(assigneeProperty.anyOf).toBeDefined();
+      expect(assigneeProperty.anyOf).toEqual([{ type: 'string' }, { type: 'null' }]);
     });
   });
 

@@ -149,8 +149,10 @@ describe('generateDefinitionFromSchema', () => {
       const inputSchema = generateDefinitionFromSchema(NullableSchema);
 
       // assignee - nullable (обязательное, но может быть null)
+      // Zod v4 использует anyOf для nullable полей
       const assigneeProperty = inputSchema.properties['assignee'] as Record<string, unknown>;
-      expect(assigneeProperty.type).toEqual(['string', 'null']);
+      expect(assigneeProperty.anyOf).toBeDefined();
+      expect(assigneeProperty.anyOf).toEqual([{ type: 'string' }, { type: 'null' }]);
       expect(inputSchema.required).toContain('assignee');
 
       // dueDate - optional.nullable (может отсутствовать или быть null)
