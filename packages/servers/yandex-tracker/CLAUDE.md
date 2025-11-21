@@ -260,14 +260,18 @@ ESSENTIAL_TOOLS=ping,search_tools
 ### Добавление MCP Tool
 
 - [ ] 📖 Прочитай [src/tools/README.md](src/tools/README.md)
-- [ ] Создай структуру: `{feature}/{action}/{name}.schema.ts`, `.definition.ts`, `.tool.ts`, `index.ts`
+- [ ] Создай структуру: `{feature}/{action}/{name}.schema.ts`, `.tool.ts`, `index.ts`
+  - ⚠️ **НЕ создавай** `.definition.ts` — definition генерируется автоматически из schema!
+- [ ] В `*.schema.ts`:
+  - [ ] Используй `.describe()` для каждого поля (используется при автогенерации)
+  - [ ] Schema = единственный источник истины для MCP definition
 - [ ] Добавь `static readonly METADATA`:
   - [ ] ⚠️ Если tool ИЗМЕНЯЕТ данные → `requiresExplicitUserConsent: true`
   - [ ] ✅ Если tool только ЧИТАЕТ → НЕ добавляй флаг (или `false`)
-- [ ] В `Definition.build()`:
-  - [ ] Реализуй `getStaticMetadata()` → возврат `ToolClass.METADATA`
-  - [ ] Оберни description: `this.wrapWithSafetyWarning(this.buildDescription())`
-- [ ] Используй утилиты: `validateParams()`, `BatchResultProcessor`, `ResultLogger`
+- [ ] В `getDefinition()`:
+  - [ ] Используй `generateDefinitionFromSchema(this.metadata, YourSchema)`
+  - [ ] **НЕ создавай** отдельные классы Definition!
+- [ ] Используй утилиты: `BatchResultProcessor`, `ResultLogger`, `ResponseFieldFilter`
 - [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:** Добавь **1 строку** в `src/composition-root/definitions/tool-definitions.ts`
 - [ ] Тесты + `npm run validate` (автоматически проверит флаг)
 
