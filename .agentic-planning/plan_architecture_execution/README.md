@@ -31,7 +31,7 @@
 ### Этап 2: Architecture Foundation (SEQUENTIAL + Partial Parallel)
 
 **SEQUENTIAL (блокеры):**
-- **[2.1_facade_refactoring_sequential.md](./2.1_facade_refactoring_sequential.md)** - YandexTrackerFacade рефакторинг (TBD, ~10-15ч)
+- **[2.1_facade_refactoring_sequential.md](./2.1_facade_refactoring_sequential.md)** - YandexTrackerFacade рефакторинг (17-24ч последовательно / 12-17ч параллельно)
 - **[2.2_tool_registry_sequential.md](./2.2_tool_registry_sequential.md)** - ToolRegistry refactoring (4-6ч)
 
 **PARALLEL (могут идти вместе с 2.2):**
@@ -70,7 +70,7 @@
 [Merge веток 1B]
 
 Этап 2: Architecture Foundation (после 1A)
-   ├─> 2.1 Facade Refactoring (TBD, 1 agent, BLOCKER)
+   ├─> 2.1 Facade Refactoring (17-24h последовательно / 12-17h с 4 агентами, BLOCKER)
    ├─> 2.2 ToolRegistry (4-6h, 1 agent, после 1.1)
    └─> 2.3 Framework improvements (3-5h, parallel с 2.2)
 
@@ -91,10 +91,10 @@
 | Этап 1A | 6-8h | 1 | Этап 0 done |
 | Этап 1B | 11-12h | 3 parallel | Может быть parallel с 1A |
 | Merge 1B | 1-2h | 1 | Этап 1B done |
-| Этап 2 | 15-25h | 1-2 | Этап 1A done |
+| Этап 2 | 24-35h seq / 19-28h parallel | 1-4 | Этап 1A done |
 | Этап 3 | 3.5-5h | 1-2 | Этап 2 done |
 | Этап 4 | 6h | 1 | Этап 3 done |
-| **TOTAL** | **45-63h** | - | **8-10 дней** |
+| **TOTAL** | **54-73h** (seq) / **49-64h** (parallel) | - | **10-14 дней** |
 
 ---
 
