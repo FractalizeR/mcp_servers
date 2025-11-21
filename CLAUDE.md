@@ -173,13 +173,16 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - ✅ `import type` для type-only импортов
 - ✅ Strict mode во всех пакетах
 
-### 5. Single Responsibility Principle (SRP)
+### 5. Автогенерация MCP Definition из Schema
 
+**Zod schema = единственный источник истины. Используй `generateDefinitionFromSchema(metadata, schema)` вместо отдельных `*.definition.ts` файлов (устарело).** Детали: [ARCHITECTURE.md](./ARCHITECTURE.md#schema-to-definition-generator)
+
+### 6. Single Responsibility Principle (SRP)
 - Один класс = один файл = одна ответственность
 - Каждый пакет имеет чёткую границу ответственности (см. README.md пакетов)
 - Не смешивай логику разных слоёв в одном файле
 
-### 6. Консистентность npm скриптов
+### 7. Консистентность npm скриптов
 
 **Все workspaces ОБЯЗАНЫ иметь одинаковый набор базовых команд:**
 - `build` — `tsc -b && tsc-alias` (НЕ `tsc` без `-b`!)

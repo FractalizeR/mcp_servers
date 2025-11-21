@@ -287,6 +287,57 @@ import { createFixture } from '#helpers/queue.fixture.js';
 
 ---
 
+## 🔄 Schema-to-Definition Generator
+
+**Problem:**
+Manual creation of MCP definitions leads to schema-definition mismatch bugs.
+
+**Solution:**
+Automatic generation of MCP definition from Zod schema.
+
+### Architecture
+
+```
+Zod Schema (*.schema.ts)
+    ↓
+generateDefinitionFromSchema()
+    ↓
+MCP Definition (runtime)
+```
+
+### Implementation
+
+**Tool class:**
+```typescript
+export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
+  getDefinition(): ToolDefinition {
+    return generateDefinitionFromSchema(this.metadata, GetIssuesSchema);
+  }
+}
+```
+
+**Generator (`@mcp-framework/core`):**
+- Uses Zod v4 native `toJSONSchema()` API
+- Converts JSON Schema to MCP Definition format
+- Extracts descriptions from `.describe()` calls
+- Validates required vs optional fields
+
+### Benefits
+
+- ✅ **DRY Principle** — single source of truth (schema)
+- ✅ **No Mismatch** — physically impossible to create inconsistency
+- ✅ **Simpler Tools** — no separate `*.definition.ts` files
+- ✅ **Auto-sync** — schema changes automatically reflected in definition
+
+### Migration
+
+**Old:** Separate `*.schema.ts` + `*.definition.ts` files (removed)
+**New:** Only `*.schema.ts` with `generateDefinitionFromSchema()`
+
+**Details:** `.agentic-planning/plan_prevent_schema_definition_mismatch_bugs/`
+
+---
+
 ## 📦 Entities & DTO: Forward Compatibility
 
 **Pattern:** Separate types by data flow direction
