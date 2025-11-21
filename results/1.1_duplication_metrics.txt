@@ -1,0 +1,17 @@
+=== Code Duplication Metrics ===
+
+CPD Analysis (jscpd):
+  Files analyzed: 531
+  Total lines: 30,981
+  Total tokens: 165,294
+  Clones found: 75
+  Duplicated lines: 1,240 (4%)
+  Duplicated tokens: 8,739 (5.29%)
+
+Status: ✅ PASS (threshold: ≤5%, actual: 4%)
+
+Top duplicate patterns:
+  - Tool definition files (schema validation)
+  - CLI connectors (configuration logic)
+  - Entity factories (transformation logic)
+  - API operations (error handling)

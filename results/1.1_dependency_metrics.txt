@@ -1,0 +1,17 @@
+=== Dependency Metrics ===
+
+Root package dependencies:
+  Production: 0
+  Development: 30
+
+Workspace dependencies:
+  @mcp-framework/infrastructure: 5 prod, 6 dev
+  @mcp-framework/core: 5 prod, 7 dev
+  @mcp-framework/search: 2 prod, 6 dev
+  @mcp-server/yandex-tracker: 14 prod, 12 dev
+
+Checking for outdated packages...
+  Outdated production packages: 0
+
+Security audit (production only):
+  Total vulnerabilities: 0

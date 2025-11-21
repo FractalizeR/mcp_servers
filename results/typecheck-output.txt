@@ -1,0 +1,53 @@
+
+> mcp-framework-monorepo@0.0.0 typecheck
+> turbo run typecheck
+
+turbo 2.6.1
+
+• Packages in scope: @mcp-framework/core, @mcp-framework/infrastructure, @mcp-framework/search, @mcp-server/yandex-tracker
+• Running typecheck in 4 packages
+• Remote caching disabled
+@mcp-framework/infrastructure:typecheck: cache miss, executing c0f53266bed7227d
+@mcp-framework/infrastructure:build: cache miss, executing 89b24f257ce602e3
+@mcp-framework/infrastructure:build: 
+@mcp-framework/infrastructure:build: > @mcp-framework/infrastructure@0.1.0 build
+@mcp-framework/infrastructure:build: > tsc -b && tsc-alias
+@mcp-framework/infrastructure:build: 
+@mcp-framework/infrastructure:typecheck: 
+@mcp-framework/infrastructure:typecheck: > @mcp-framework/infrastructure@0.1.0 typecheck
+@mcp-framework/infrastructure:typecheck: > tsc --noEmit
+@mcp-framework/infrastructure:typecheck: 
+@mcp-framework/core:typecheck: cache miss, executing 4a352362c042121b
+@mcp-framework/core:build: cache miss, executing df9f61c01165e28e
+@mcp-framework/core:typecheck: 
+@mcp-framework/core:typecheck: > @mcp-framework/core@0.1.0 typecheck
+@mcp-framework/core:typecheck: > tsc --noEmit
+@mcp-framework/core:typecheck: 
+@mcp-framework/core:build: 
+@mcp-framework/core:build: > @mcp-framework/core@0.1.0 build
+@mcp-framework/core:build: > tsc -b && tsc-alias
+@mcp-framework/core:build: 
+@mcp-framework/search:typecheck: cache miss, executing 23f2768b3b3d301c
+@mcp-framework/search:build: cache miss, executing 2198f69ae747f856
+@mcp-framework/search:typecheck: 
+@mcp-framework/search:typecheck: > @mcp-framework/search@0.1.0 typecheck
+@mcp-framework/search:typecheck: > tsc --noEmit
+@mcp-framework/search:typecheck: 
+@mcp-framework/search:build: 
+@mcp-framework/search:build: > @mcp-framework/search@0.1.0 build
+@mcp-framework/search:build: > tsc -b && tsc-alias
+@mcp-framework/search:build: 
+@mcp-server/yandex-tracker:typecheck: cache miss, executing 9f80f3db6a1b34c4
+@mcp-server/yandex-tracker:typecheck: 
+@mcp-server/yandex-tracker:typecheck: > @mcp-server/yandex-tracker@2.0.0 typecheck
+@mcp-server/yandex-tracker:typecheck: > tsc --noEmit
+@mcp-server/yandex-tracker:typecheck: 
+
+ Tasks:    7 successful, 7 total
+Cached:    0 cached, 7 total
+  Time:    11.659s 
+
+ WARNING  no output files found for task @mcp-framework/core#typecheck. Please check your `outputs` key in `turbo.json`
+ WARNING  no output files found for task @mcp-framework/infrastructure#typecheck. Please check your `outputs` key in `turbo.json`
+ WARNING  no output files found for task @mcp-framework/search#typecheck. Please check your `outputs` key in `turbo.json`
+ WARNING  no output files found for task @mcp-server/yandex-tracker#typecheck. Please check your `outputs` key in `turbo.json`

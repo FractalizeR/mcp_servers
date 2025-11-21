@@ -1,0 +1,21 @@
+=== Code Complexity Metrics ===
+
+ESLint Statistics:
+  Errors: 6
+  Warnings: 29
+
+Violation types:
+  max-lines violations: 14
+  max-lines-per-function violations: 13
+  complexity violations: 10
+  cognitive-complexity violations: 4
+  max-depth violations: 1
+
+TypeScript:
+  Errors: 0 (typecheck passed)
+
+Violations by package:
+  @mcp-framework/infrastructure: 9 warnings
+  @mcp-framework/core: 8 warnings
+  @mcp-framework/search: 6 warnings
+  @mcp-server/yandex-tracker: 6 warnings

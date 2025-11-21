@@ -1,0 +1,115 @@
+
+> mcp-framework-monorepo@0.0.0 lint
+> turbo run lint
+
+
+Attention:
+Turborepo now collects completely anonymous telemetry regarding usage.
+This information is used to shape the Turborepo roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://turborepo.com/docs/telemetry
+
+turbo 2.6.1
+
+• Packages in scope: @mcp-framework/core, @mcp-framework/infrastructure, @mcp-framework/search, @mcp-server/yandex-tracker
+• Running lint in 4 packages
+• Remote caching disabled
+@mcp-framework/core:lint: cache miss, executing 7c73062f276144a3
+@mcp-server/yandex-tracker:lint: cache miss, executing 07d1d9a7291a5b1c
+@mcp-framework/infrastructure:lint: cache miss, executing 59ffd02c4ebe1fac
+@mcp-framework/search:lint: cache miss, executing 50772ec0b8c723b8
+@mcp-framework/core:lint: 
+@mcp-framework/core:lint: > @mcp-framework/core@0.1.0 lint
+@mcp-framework/core:lint: > eslint src --ext .ts
+@mcp-framework/core:lint: 
+@mcp-server/yandex-tracker:lint: 
+@mcp-server/yandex-tracker:lint: > @mcp-server/yandex-tracker@2.0.0 lint
+@mcp-server/yandex-tracker:lint: > eslint src --ext .ts
+@mcp-server/yandex-tracker:lint: 
+@mcp-framework/infrastructure:lint: 
+@mcp-framework/infrastructure:lint: > @mcp-framework/infrastructure@0.1.0 lint
+@mcp-framework/infrastructure:lint: > eslint src --ext .ts
+@mcp-framework/infrastructure:lint: 
+@mcp-framework/search:lint: 
+@mcp-framework/search:lint: > @mcp-framework/search@0.1.0 lint
+@mcp-framework/search:lint: > eslint src --ext .ts
+@mcp-framework/search:lint: 
+@mcp-framework/search:lint: 
+@mcp-framework/search:lint: /home/user/mcp_server_yandex_tracker/packages/framework/search/src/strategies/fuzzy-search.strategy.ts
+@mcp-framework/search:lint:   140:3   warning  Method 'levenshteinDistance' has a complexity of 18. Maximum allowed is 10           complexity
+@mcp-framework/search:lint:   140:11  warning  Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed  sonarjs/cognitive-complexity
+@mcp-framework/search:lint: 
+@mcp-framework/search:lint: /home/user/mcp_server_yandex_tracker/packages/framework/search/src/strategies/weighted-combined.strategy.ts
+@mcp-framework/search:lint:   55:11  warning  Refactor this function to reduce its Cognitive Complexity from 21 to the 15 allowed  sonarjs/cognitive-complexity
+@mcp-framework/search:lint:   85:13  warning  Blocks are nested too deeply (5). Maximum allowed is 4                               max-depth
+@mcp-framework/search:lint: 
+@mcp-framework/search:lint: /home/user/mcp_server_yandex_tracker/packages/framework/search/src/tools/search-tools.definition.ts
+@mcp-framework/search:lint:   23:3  warning  Method 'build' has too many lines (79). Maximum allowed is 50  max-lines-per-function
+@mcp-framework/search:lint: 
+@mcp-framework/search:lint: /home/user/mcp_server_yandex_tracker/packages/framework/search/src/tools/search-tools.tool.ts
+@mcp-framework/search:lint:   70:3  warning  Async method 'execute' has too many lines (55). Maximum allowed is 50  max-lines-per-function
+@mcp-framework/search:lint: 
+@mcp-framework/search:lint: ✖ 6 problems (0 errors, 6 warnings)
+@mcp-framework/search:lint: 
+@mcp-framework/infrastructure:lint: 
+@mcp-framework/infrastructure:lint: /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/src/config.ts
+@mcp-framework/infrastructure:lint:   123:1   warning  Function 'parseEnabledToolCategories' has too many lines (57). Maximum allowed is 50  max-lines-per-function
+@mcp-framework/infrastructure:lint:   193:1   warning  Function 'parseDisabledToolGroups' has too many lines (54). Maximum allowed is 50     max-lines-per-function
+@mcp-framework/infrastructure:lint:   193:1   warning  Function 'parseDisabledToolGroups' has a complexity of 11. Maximum allowed is 10      complexity
+@mcp-framework/infrastructure:lint:   193:10  warning  Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed   sonarjs/cognitive-complexity
+@mcp-framework/infrastructure:lint:   284:8   warning  Function 'loadConfig' has too many lines (88). Maximum allowed is 50                  max-lines-per-function
+@mcp-framework/infrastructure:lint:   284:8   warning  Function 'loadConfig' has a complexity of 14. Maximum allowed is 10                   complexity
+@mcp-framework/infrastructure:lint: 
+@mcp-framework/infrastructure:lint: /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/src/http/error/error-mapper.ts
+@mcp-framework/infrastructure:lint:   48:3  warning  Static method 'mapResponseError' has a complexity of 11. Maximum allowed is 10  complexity
+@mcp-framework/infrastructure:lint: 
+@mcp-framework/infrastructure:lint: /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/src/logging/logger.ts
+@mcp-framework/infrastructure:lint:   65:3  warning  Method 'createPinoLogger' has too many lines (137). Maximum allowed is 50  max-lines-per-function
+@mcp-framework/infrastructure:lint:   65:3  warning  Method 'createPinoLogger' has a complexity of 18. Maximum allowed is 10    complexity
+@mcp-framework/infrastructure:lint: 
+@mcp-framework/infrastructure:lint: ✖ 9 problems (0 errors, 9 warnings)
+@mcp-framework/infrastructure:lint: 
+@mcp-framework/core:lint: 
+@mcp-framework/core:lint: /home/user/mcp_server_yandex_tracker/packages/framework/core/src/definition/definition-validator.ts
+@mcp-framework/core:lint:   100:8  warning  Function 'validateSchemaDefinitionMatch' has too many lines (72). Maximum allowed is 50  max-lines-per-function
+@mcp-framework/core:lint: 
+@mcp-framework/core:lint: /home/user/mcp_server_yandex_tracker/packages/framework/core/src/definition/zod-json-schema-adapter.ts
+@mcp-framework/core:lint:   75:8  warning  Function 'zodToMcpInputSchema' has too many lines (52). Maximum allowed is 50  max-lines-per-function
+@mcp-framework/core:lint: 
+@mcp-framework/core:lint: /home/user/mcp_server_yandex_tracker/packages/framework/core/src/tool-registry.ts
+@mcp-framework/core:lint:   227:3  warning  Method 'getDefinitionsByCategories' has too many lines (116). Maximum allowed is 50  max-lines-per-function
+@mcp-framework/core:lint:   227:3  warning  Refactor this function to reduce its Cognitive Complexity from 28 to the 15 allowed  sonarjs/cognitive-complexity
+@mcp-framework/core:lint:   227:3  warning  Method 'getDefinitionsByCategories' has a complexity of 17. Maximum allowed is 10    complexity
+@mcp-framework/core:lint:   393:3  warning  Method 'getDefinitionsByMode' has too many lines (78). Maximum allowed is 50         max-lines-per-function
+@mcp-framework/core:lint:   401:1  warning  File has too many lines (549). Maximum allowed is 400                                max-lines
+@mcp-framework/core:lint:   475:3  warning  Async method 'execute' has too many lines (74). Maximum allowed is 50                max-lines-per-function
+@mcp-framework/core:lint: 
+@mcp-framework/core:lint: ✖ 8 problems (0 errors, 8 warnings)
+@mcp-framework/core:lint: 
+@mcp-server/yandex-tracker:lint: 
+@mcp-server/yandex-tracker:lint: /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/commands/connect.command.ts
+@mcp-server/yandex-tracker:lint:   14:8  warning  Async function 'connectCommand' has too many lines (106). Maximum allowed is 100  max-lines-per-function
+@mcp-server/yandex-tracker:lint: 
+@mcp-server/yandex-tracker:lint: /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/composition-root/container.ts
+@mcp-server/yandex-tracker:lint:   225:5  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-argument')
+@mcp-server/yandex-tracker:lint: 
+@mcp-server/yandex-tracker:lint: /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/index.ts
+@mcp-server/yandex-tracker:lint:   83:1  warning  Function 'setupServer' has too many lines (214). Maximum allowed is 100  max-lines-per-function
+@mcp-server/yandex-tracker:lint: 
+@mcp-server/yandex-tracker:lint: /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/update/update-issue.tool.ts
+@mcp-server/yandex-tracker:lint:   87:13  warning  Correct one of the identical sub-expressions on both sides of operator "&&"  sonarjs/no-identical-expressions
+@mcp-server/yandex-tracker:lint: 
+@mcp-server/yandex-tracker:lint: /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/board/get-boards.operation.ts
+@mcp-server/yandex-tracker:lint:   39:60  warning  Refactor this code to not use nested template literals  sonarjs/no-nested-template-literals
+@mcp-server/yandex-tracker:lint: 
+@mcp-server/yandex-tracker:lint: /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/project/get-projects.operation.ts
+@mcp-server/yandex-tracker:lint:   39:62  warning  Refactor this code to not use nested template literals  sonarjs/no-nested-template-literals
+@mcp-server/yandex-tracker:lint: 
+@mcp-server/yandex-tracker:lint: ✖ 6 problems (0 errors, 6 warnings)
+@mcp-server/yandex-tracker:lint:   0 errors and 1 warning potentially fixable with the `--fix` option.
+@mcp-server/yandex-tracker:lint: 
+
+ Tasks:    4 successful, 4 total
+Cached:    0 cached, 4 total
+  Time:    10.235s 
+

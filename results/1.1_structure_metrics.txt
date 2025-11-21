@@ -1,0 +1,26 @@
+=== Package structure ===
+
+TypeScript files per package:
+  packages/framework/infrastructure: 22 files
+  packages/framework/core: 21 files
+  packages/framework/search: 20 files
+  packages/servers/yandex-tracker: 471 files
+
+Total TypeScript files: 745
+
+=== Lines of code per package ===
+  packages/framework/infrastructure: 1969 lines
+  packages/framework/core: 2338 lines
+  packages/framework/search: 1837 lines
+  packages/servers/yandex-tracker: 26450 lines
+
+Total lines: 82848
+
+=== File distribution by type ===
+Source files (src/): 534
+Test files: 196
+Config files: 14
+
+=== Directory depth analysis ===
+Maximum directory depth: 10 levels
+Average directory depth: 6 levels

@@ -1,0 +1,159 @@
+
+> mcp-framework-monorepo@0.0.0 test:coverage
+> turbo run test:coverage
+
+turbo 2.6.1
+
+• Packages in scope: @mcp-framework/core, @mcp-framework/infrastructure, @mcp-framework/search, @mcp-server/yandex-tracker
+• Running test:coverage in 4 packages
+• Remote caching disabled
+@mcp-framework/infrastructure:build: cache hit, replaying logs 89b24f257ce602e3
+@mcp-framework/infrastructure:build: 
+@mcp-framework/infrastructure:build: > @mcp-framework/infrastructure@0.1.0 build
+@mcp-framework/infrastructure:build: > tsc -b && tsc-alias
+@mcp-framework/infrastructure:build: 
+@mcp-framework/infrastructure:test:coverage: cache miss, executing 9ab7f372348b9b59
+@mcp-framework/core:build: cache hit, replaying logs df9f61c01165e28e
+@mcp-framework/core:build: 
+@mcp-framework/core:build: > @mcp-framework/core@0.1.0 build
+@mcp-framework/core:build: > tsc -b && tsc-alias
+@mcp-framework/core:build: 
+@mcp-framework/core:test:coverage: cache miss, executing 8f77532f70cb8764
+@mcp-framework/search:build: cache hit, replaying logs 2198f69ae747f856
+@mcp-framework/search:build: 
+@mcp-framework/search:build: > @mcp-framework/search@0.1.0 build
+@mcp-framework/search:build: > tsc -b && tsc-alias
+@mcp-framework/search:build: 
+@mcp-server/yandex-tracker:build: cache miss, executing 28056cb063e42ddf
+@mcp-framework/search:test:coverage: cache miss, executing d3a480791b0679ab
+@mcp-framework/infrastructure:test:coverage: 
+@mcp-framework/infrastructure:test:coverage: > @mcp-framework/infrastructure@0.1.0 test:coverage
+@mcp-framework/infrastructure:test:coverage: > vitest run --coverage
+@mcp-framework/infrastructure:test:coverage: 
+@mcp-framework/core:test:coverage: 
+@mcp-framework/core:test:coverage: > @mcp-framework/core@0.1.0 test:coverage
+@mcp-framework/core:test:coverage: > vitest run --coverage
+@mcp-framework/core:test:coverage: 
+@mcp-server/yandex-tracker:build: 
+@mcp-server/yandex-tracker:build: > @mcp-server/yandex-tracker@2.0.0 build
+@mcp-server/yandex-tracker:build: > tsc -b && tsc-alias && npm run build:bundle
+@mcp-server/yandex-tracker:build: 
+@mcp-framework/search:test:coverage: 
+@mcp-framework/search:test:coverage: > @mcp-framework/search@0.1.0 test:coverage
+@mcp-framework/search:test:coverage: > vitest run --coverage
+@mcp-framework/search:test:coverage: 
+@mcp-framework/infrastructure:test:coverage: 
+@mcp-framework/infrastructure:test:coverage: [1m[46m RUN [49m[22m [36mv4.0.9 [39m[90m/home/user/mcp_server_yandex_tracker/packages/framework/infrastructure[39m
+@mcp-framework/infrastructure:test:coverage:       [2mCoverage enabled with [22m[33mv8[39m
+@mcp-framework/infrastructure:test:coverage: 
+@mcp-framework/core:test:coverage: 
+@mcp-framework/core:test:coverage: [1m[46m RUN [49m[22m [36mv4.0.9 [39m[90m/home/user/mcp_server_yandex_tracker/packages/framework/core[39m
+@mcp-framework/core:test:coverage:       [2mCoverage enabled with [22m[33mv8[39m
+@mcp-framework/core:test:coverage: 
+@mcp-framework/search:test:coverage: 
+@mcp-framework/search:test:coverage: [1m[46m RUN [49m[22m [36mv4.0.9 [39m[90m/home/user/mcp_server_yandex_tracker/packages/framework/search[39m
+@mcp-framework/search:test:coverage:       [2mCoverage enabled with [22m[33mv8[39m
+@mcp-framework/search:test:coverage: 
+@mcp-framework/core:test:coverage:  [32m✓[39m [30m[45m core [49m[39m tests/tools/common/utils/tool-name.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+@mcp-framework/core:test:coverage:  [32m✓[39m [30m[45m core [49m[39m tests/utils/result-logger.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+@mcp-framework/core:test:coverage:  [32m✓[39m [30m[45m core [49m[39m tests/utils/batch-result-processor.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+@mcp-framework/core:test:coverage:  [32m✓[39m [30m[45m core [49m[39m tests/utils/response-field-filter.test.ts [2m([22m[2m36 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+@mcp-framework/core:test:coverage:  [32m✓[39m [30m[45m core [49m[39m tests/tools/base-definition.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+@mcp-framework/infrastructure:test:coverage:  [32m✓[39m [30m[43m infrastructure [49m[39m tests/config.test.ts [2m([22m[2m37 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+@mcp-framework/infrastructure:test:coverage:  [32m✓[39m [30m[43m infrastructure [49m[39m tests/cache/entity-cache-key.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+@mcp-framework/infrastructure:test:coverage:  [32m✓[39m [30m[43m infrastructure [49m[39m tests/cache/no-op-cache.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+@mcp-framework/infrastructure:test:coverage:  [32m✓[39m [30m[43m infrastructure [49m[39m tests/http/error/error-mapper.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+@mcp-framework/infrastructure:test:coverage:  [32m✓[39m [30m[43m infrastructure [49m[39m tests/http/retry/exponential-backoff.strategy.test.ts [2m([22m[2m39 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+@mcp-framework/infrastructure:test:coverage:  [32m✓[39m [30m[43m infrastructure [49m[39m tests/async/parallel-executor.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 87[2mms[22m[39m
+@mcp-framework/infrastructure:test:coverage: {"level":"info","time":"2025-11-21T17:15:32.846Z","pid":8640,"msg":"test message"}
+@mcp-framework/infrastructure:test:coverage: {"level":"debug","time":"2025-11-21T17:15:32.847Z","pid":8640,"msg":"test message"}
+@mcp-framework/infrastructure:test:coverage: {"level":"error","time":"2025-11-21T17:15:32.848Z","pid":8640,"msg":"test message"}
+@mcp-framework/infrastructure:test:coverage: {"level":"warn","time":"2025-11-21T17:15:32.848Z","pid":8640,"msg":"test message"}
+@mcp-framework/infrastructure:test:coverage: {"level":"info","time":"2025-11-21T17:15:32.849Z","pid":8640,"userId":"123","action":"test","msg":"test message"}
+@mcp-framework/infrastructure:test:coverage: {"level":"info","time":"2025-11-21T17:15:32.851Z","pid":8640,"msg":"test message"}
+@mcp-framework/infrastructure:test:coverage: {"level":"error","time":"2025-11-21T17:15:32.856Z","pid":8640,"error":{"message":"Test error","stack":"Error: Test error\n    at /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/tests/logging/logger.test.ts:201:21\n    at file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:157:11\n    at file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:753:26\n    at file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1636:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1602:10)\n    at runTest (file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1309:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1468:8)\n    at runSuite (file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1468:8)","name":"Error"},"msg":"Error occurred"}
+@mcp-framework/infrastructure:test:coverage: {"level":"error","time":"2025-11-21T17:15:32.857Z","pid":8640,"requestId":"123","error":{"message":"Test error","stack":"Error: Test error\n    at /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/tests/logging/logger.test.ts:218:21\n    at file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:157:11\n    at file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:753:26\n    at file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1636:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1602:10)\n    at runTest (file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1309:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1468:8)\n    at runSuite (file:///home/user/mcp_server_yandex_tracker/node_modules/@vitest/runner/dist/index.js:1468:8)","name":"Error"},"msg":"Error occurred"}
+@mcp-framework/infrastructure:test:coverage: {"level":"error","time":"2025-11-21T17:15:32.860Z","pid":8640,"key":"value","msg":"Test error"}
+@mcp-framework/infrastructure:test:coverage: {"level":"warn","time":"2025-11-21T17:15:32.876Z","pid":8640,"key":"value","msg":"Test warning"}
+@mcp-framework/search:test:coverage:  [32m✓[39m [30m[46m search [49m[39m tests/strategies/weighted-combined.strategy.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+@mcp-framework/core:test:coverage:  [32m✓[39m [30m[45m core [49m[39m tests/definition/definition-validator.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+@mcp-framework/core:test:coverage:  [32m✓[39m [30m[45m core [49m[39m tests/definition/schema-to-definition.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+@mcp-framework/core:test:coverage:  [32m✓[39m [30m[45m core [49m[39m tests/definition/zod-json-schema-adapter.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+@mcp-framework/search:test:coverage:  [32m✓[39m [30m[46m search [49m[39m tests/tool-search-engine.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+@mcp-framework/search:test:coverage:  [32m✓[39m [30m[46m search [49m[39m tests/strategies/fuzzy-search.strategy.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+@mcp-framework/search:test:coverage:  [32m✓[39m [30m[46m search [49m[39m tests/strategies/category-search.strategy.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+@mcp-framework/search:test:coverage:  [32m✓[39m [30m[46m search [49m[39m tests/strategies/name-search.strategy.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+@mcp-framework/search:test:coverage:  [32m✓[39m [30m[46m search [49m[39m tests/strategies/description-search.strategy.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+@mcp-framework/search:test:coverage:  [32m✓[39m [30m[46m search [49m[39m tests/integration/tool-search-engine.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+@mcp-framework/core:test:coverage: 
+@mcp-framework/core:test:coverage: [2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+@mcp-framework/core:test:coverage: [2m      Tests [22m [1m[32m173 passed[39m[22m[90m (173)[39m
+@mcp-framework/core:test:coverage: [2m   Start at [22m 17:15:31
+@mcp-framework/core:test:coverage: [2m   Duration [22m 1.48s[2m (transform 1.13s, setup 0ms, collect 2.48s, tests 99ms, environment 1ms, prepare 1.16s)[22m
+@mcp-framework/core:test:coverage: 
+@mcp-framework/core:test:coverage: [34m % [39m[2mCoverage report from [22m[33mv8[39m
+@mcp-framework/infrastructure:test:coverage:  [32m✓[39m [30m[43m infrastructure [49m[39m tests/logging/logger.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 166[2mms[22m[39m
+@mcp-framework/core:test:coverage: -------------------|---------|----------|---------|---------|-------------------
+@mcp-framework/core:test:coverage: File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+@mcp-framework/core:test:coverage: -------------------|---------|----------|---------|---------|-------------------
+@mcp-framework/core:test:coverage: All files          |   92.82 |    85.35 |   94.28 |   92.64 |                   
+@mcp-framework/core:test:coverage:  definition        |   84.21 |    65.57 |   88.88 |   83.78 |                   
+@mcp-framework/core:test:coverage:   ...-validator.ts |     100 |    93.75 |     100 |     100 | 198               
+@mcp-framework/core:test:coverage:   ...definition.ts |     100 |     90.9 |     100 |     100 | 184               
+@mcp-framework/core:test:coverage:   ...ma-adapter.ts |   53.84 |    44.11 |   66.66 |   53.84 | ...01,106,133-149 
+@mcp-framework/core:test:coverage:  tools/base        |   98.27 |      100 |      90 |   98.21 |                   
+@mcp-framework/core:test:coverage:   ...definition.ts |   97.14 |      100 |    87.5 |   97.14 | 58                
+@mcp-framework/core:test:coverage:   tool-metadata.ts |     100 |      100 |     100 |     100 |                   
+@mcp-framework/core:test:coverage:  ...s/common/utils |     100 |      100 |     100 |     100 |                   
+@mcp-framework/core:test:coverage:   ...ng-builder.ts |     100 |      100 |     100 |     100 |                   
+@mcp-framework/core:test:coverage:   tool-name.ts     |     100 |      100 |     100 |     100 |                   
+@mcp-framework/core:test:coverage:  utils             |   97.14 |    96.87 |     100 |    97.1 |                   
+@mcp-framework/core:test:coverage:   ...-processor.ts |     100 |      100 |     100 |     100 |                   
+@mcp-framework/core:test:coverage:   ...eld-filter.ts |   96.07 |       96 |     100 |      96 | 84,92             
+@mcp-framework/core:test:coverage:   result-logger.ts |     100 |      100 |     100 |     100 |                   
+@mcp-framework/core:test:coverage: -------------------|---------|----------|---------|---------|-------------------
+@mcp-framework/search:test:coverage: 
+@mcp-framework/search:test:coverage: [2m Test Files [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+@mcp-framework/search:test:coverage: [2m      Tests [22m [1m[32m135 passed[39m[22m[90m (135)[39m
+@mcp-framework/search:test:coverage: [2m   Start at [22m 17:15:31
+@mcp-framework/search:test:coverage: [2m   Duration [22m 1.36s[2m (transform 1.02s, setup 0ms, collect 1.73s, tests 173ms, environment 1ms, prepare 742ms)[22m
+@mcp-framework/search:test:coverage: 
+@mcp-framework/search:test:coverage: [34m % [39m[2mCoverage report from [22m[33mv8[39m
+@mcp-framework/search:test:coverage: -------------------|---------|----------|---------|---------|-------------------
+@mcp-framework/search:test:coverage: File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+@mcp-framework/search:test:coverage: -------------------|---------|----------|---------|---------|-------------------
+@mcp-framework/search:test:coverage: All files          |   89.02 |    79.43 |   87.17 |   89.77 |                   
+@mcp-framework/search:test:coverage:  src               |     100 |      100 |     100 |     100 |                   
+@mcp-framework/search:test:coverage:   constants.ts     |     100 |      100 |     100 |     100 |                   
+@mcp-framework/search:test:coverage:  src/engine        |   71.64 |    60.46 |   72.22 |   71.42 |                   
+@mcp-framework/search:test:coverage:   ...rch-engine.ts |   71.64 |    60.46 |   72.22 |   71.42 | 56-108,152,207    
+@mcp-framework/search:test:coverage:  src/scoring       |     100 |      100 |     100 |     100 |                   
+@mcp-framework/search:test:coverage:   ...gy-weights.ts |     100 |      100 |     100 |     100 |                   
+@mcp-framework/search:test:coverage:  src/strategies    |    95.8 |    87.75 |     100 |   96.85 |                   
+@mcp-framework/search:test:coverage:   ...h.strategy.ts |     100 |      100 |     100 |     100 |                   
+@mcp-framework/search:test:coverage:   ...h.strategy.ts |     100 |      100 |     100 |     100 |                   
+@mcp-framework/search:test:coverage:   ...h.strategy.ts |   94.54 |    77.77 |     100 |   97.91 | 170               
+@mcp-framework/search:test:coverage:   ...h.strategy.ts |   91.66 |     87.5 |     100 |   91.66 | 91,95,118         
+@mcp-framework/search:test:coverage:   ...d.strategy.ts |   96.29 |    91.66 |     100 |   96.15 | 93                
+@mcp-framework/search:test:coverage: -------------------|---------|----------|---------|---------|-------------------
+@mcp-framework/infrastructure:test:coverage:  [32m✓[39m [30m[43m infrastructure [49m[39m tests/http/client/http-client.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+@mcp-framework/search:test:coverage: ERROR: Coverage for lines (89.77%) does not meet global threshold (90%)
+@mcp-framework/search:test:coverage: ERROR: Coverage for functions (87.17%) does not meet global threshold (90%)
+@mcp-framework/search:test:coverage: ERROR: Coverage for statements (89.02%) does not meet global threshold (90%)
+@mcp-framework/search:test:coverage: ERROR: Coverage for branches (79.43%) does not meet global threshold (85%)
+@mcp-framework/search:test:coverage: npm error Lifecycle script `test:coverage` failed with error:
+@mcp-framework/search:test:coverage: npm error code 1
+@mcp-framework/search:test:coverage: npm error path /home/user/mcp_server_yandex_tracker/packages/framework/search
+@mcp-framework/search:test:coverage: npm error workspace @mcp-framework/search@0.1.0
+@mcp-framework/search:test:coverage: npm error location /home/user/mcp_server_yandex_tracker/packages/framework/search
+@mcp-framework/search:test:coverage: npm error command failed
+@mcp-framework/search:test:coverage: npm error command sh -c vitest run --coverage
+@mcp-framework/search:test:coverage: ERROR: command finished with error: command (/home/user/mcp_server_yandex_tracker/packages/framework/search) /opt/node22/bin/npm run test:coverage exited (1)
+@mcp-framework/search#test:coverage: command (/home/user/mcp_server_yandex_tracker/packages/framework/search) /opt/node22/bin/npm run test:coverage exited (1)
+
+ Tasks:    4 successful, 7 total
+Cached:    3 cached, 7 total
+  Time:    3.711s 
+Failed:    @mcp-framework/search#test:coverage
+
+ ERROR  run failed: command  exited (1)

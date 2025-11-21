@@ -1,0 +1,314 @@
+
+> mcp-framework-monorepo@0.0.0 cpd:report:root
+> jscpd packages/framework/*/src packages/servers/*/src --reporters html,console
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/transitions/execute/transition-issue.definition.ts [23:31 - 34:13] (11 lines, 81 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/transitions/get/get-issue-transitions.definition.ts [24:36 - 35:7]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/get/get-attachments.definition.ts [23:30 - 46:47] (23 lines, 138 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/links/get/get-issue-links.definition.ts [23:30 - 46:97]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/get/get-attachments.definition.ts [62:2 - 84:2] (22 lines, 136 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/upload/upload-attachment.definition.ts [111:2 - 133:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/download/download-attachment.tool.ts [95:9 - 109:30] (14 lines, 114 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/thumbnail/get-thumbnail.tool.ts [93:13 - 107:50]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/download/download-attachment.definition.ts [23:34 - 35:9] (12 lines, 90 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/thumbnail/get-thumbnail.definition.ts [23:28 - 35:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/download/download-attachment.definition.ts [52:5 - 69:59] (17 lines, 96 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/thumbnail/get-thumbnail.definition.ts [51:5 - 68:65]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/delete/delete-attachment.definition.ts [23:32 - 35:2] (12 lines, 90 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/attachments/thumbnail/get-thumbnail.definition.ts [23:28 - 35:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/worklog/delete/delete-worklog.definition.ts [17:29 - 29:2] (12 lines, 85 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/worklog/update/update-worklog.definition.ts [17:29 - 29:6]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/worklog/delete/delete-worklog.definition.ts [40:5 - 50:62] (10 lines, 83 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/worklog/update/update-worklog.definition.ts [44:5 - 54:49]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/worklog/add/add-worklog.definition.ts [71:25 - 88:2] (17 lines, 105 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/worklog/update/update-worklog.definition.ts [76:29 - 92:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/update/update-issue.definition.ts [23:27 - 34:8] (11 lines, 81 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/transitions/get/get-issue-transitions.definition.ts [24:36 - 35:7]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/find/find-issues.tool.ts [10:1 - 16:2] (6 lines, 94 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/update/update-issue.tool.ts [10:1 - 16:5]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/create/create-issue.tool.ts [10:1 - 16:15] (6 lines, 95 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/transitions/execute/transition-issue.tool.ts [10:1 - 16:21]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/changelog/get-issue-changelog.definition.ts [24:34 - 47:69] (23 lines, 137 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/transitions/get/get-issue-transitions.definition.ts [24:36 - 47:53]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/edit/edit-comment.definition.ts [64:9 - 77:12] (13 lines, 90 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/get/get-comments.definition.ts [74:14 - 87:12]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/delete/delete-comment.definition.ts [17:29 - 29:2] (12 lines, 90 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/edit/edit-comment.definition.ts [17:27 - 29:5]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/delete/delete-comment.definition.ts [40:5 - 50:59] (10 lines, 83 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/edit/edit-comment.definition.ts [42:5 - 52:65]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/add/add-comment.definition.ts [95:3 - 114:2] (19 lines, 138 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/get/get-comments.definition.ts [79:3 - 98:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/get/get-checklist.definition.ts [23:28 - 46:41] (23 lines, 138 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/links/get/get-issue-links.definition.ts [23:30 - 46:97]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/delete/delete-checklist-item.definition.ts [23:36 - 35:2] (12 lines, 90 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/update/update-checklist-item.definition.ts [23:36 - 35:5]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/delete/delete-checklist-item.definition.ts [49:5 - 65:65] (16 lines, 89 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/update/update-checklist-item.definition.ts [54:5 - 70:52]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/add/add-checklist-item.tool.ts [82:37 - 97:50] (15 lines, 105 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/update/update-checklist-item.tool.ts [88:36 - 103:33]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/add/add-checklist-item.schema.ts [20:38 - 47:23] (27 lines, 82 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/update/update-checklist-item.schema.ts [25:2 - 52:26]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/add/add-checklist-item.definition.ts [23:33 - 35:8] (12 lines, 90 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/add/add-comment.definition.ts [23:26 - 35:14]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/add/add-checklist-item.definition.ts [33:18 - 40:7] (7 lines, 71 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/update/update-checklist-item.definition.ts [34:17 - 41:18]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/add/add-checklist-item.definition.ts [53:5 - 69:44] (16 lines, 89 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/comments/add/add-comment.definition.ts [51:5 - 68:76]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/add/add-checklist-item.definition.ts [101:64 - 121:2] (20 lines, 122 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/checklists/update/update-checklist-item.definition.ts [111:70 - 133:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/bulk-change/transition/bulk-transition-issues.definition.ts [45:5 - 60:11] (15 lines, 93 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/bulk-change/update/bulk-update-issues.definition.ts [50:5 - 65:12]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/bulk-change/move/bulk-move-issues.definition.ts [46:5 - 61:15] (15 lines, 87 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/bulk-change/update/bulk-update-issues.definition.ts [50:5 - 65:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/dto/project/create-project.dto.ts [17:7 - 45:2] (28 lines, 118 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/dto/project/update-project.dto.ts [14:10 - 42:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/dto/board/create-board.dto.ts [35:3 - 54:2] (19 lines, 107 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/dto/board/update-board.dto.ts [21:3 - 40:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/link/create-link.operation.ts [63:5 - 76:2] (13 lines, 78 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/link/delete-link.operation.ts [50:2 - 63:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/component/delete-component.operation.ts [66:2 - 90:2] (24 lines, 147 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/component/update-component.operation.ts [62:17 - 86:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/component/create-component.operation.ts [81:3 - 86:2] (5 lines, 68 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/component/update-component.operation.ts [81:3 - 86:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/attachment/download-attachment.operation.ts [78:69 - 97:2] (19 lines, 146 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/api_operations/attachment/get-thumbnail.operation.ts [74:63 - 109:6]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/helpers/issue-url/issue-url.definition.ts [22:24 - 33:2] (11 lines, 81 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/issues/get/get-issues.definition.ts [22:25 - 33:7]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.definition.ts [79:2 - 98:2] (19 lines, 130 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/update-queue.definition.ts [91:2 - 110:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/get-queues.definition.ts [67:11 - 88:2] (21 lines, 138 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/update-queue.definition.ts [89:2 - 110:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/get-queue.definition.ts [44:7 - 73:2] (29 lines, 189 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/get-queues.definition.ts [59:2 - 110:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/create-queue.definition.ts [24:14 - 33:6] (9 lines, 90 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/update-queue.definition.ts [24:18 - 33:10]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/create-queue.definition.ts [95:49 - 121:2] (26 lines, 181 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/update-queue.definition.ts [84:55 - 110:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/get-projects.definition.ts [14:27 - 27:8] (13 lines, 96 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/get-queues.definition.ts [17:25 - 30:7]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/get-projects.definition.ts [72:8 - 88:2] (16 lines, 109 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/update-project.definition.ts [117:2 - 134:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/get-project.definition.ts [52:9 - 69:2] (17 lines, 111 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/update-project.definition.ts [117:2 - 134:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/create-project.schema.ts [30:44 - 71:20] (41 lines, 145 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/update-project.schema.ts [30:2 - 71:20]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/create-project.definition.ts [14:29 - 27:7] (13 lines, 101 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/create-queue.definition.ts [14:27 - 27:12]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/create-project.definition.ts [24:14 - 35:6] (11 lines, 112 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/update-project.definition.ts [24:20 - 35:12]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/create-project.definition.ts [115:8 - 132:2] (17 lines, 112 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/projects/update-project.definition.ts [117:8 - 134:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/components/get-components.definition.ts [17:29 - 37:52] (20 lines, 130 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/get-queue-fields.definition.ts [14:31 - 34:39]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/components/get-components.definition.ts [51:79 - 65:2] (14 lines, 96 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/components/update-component.definition.ts [82:66 - 96:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/components/create-component.definition.ts [17:31 - 29:12] (12 lines, 90 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/queues/update-queue.definition.ts [14:27 - 26:5]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/components/create-component.definition.ts [66:54 - 79:79] (13 lines, 89 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/components/update-component.definition.ts [66:47 - 79:41]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/components/create-component.definition.ts [74:5 - 93:2] (19 lines, 131 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tools/api/components/get-components.definition.ts [46:2 - 96:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/gemini/gemini.connector.ts [5:1 - 23:13] (18 lines, 115 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/qwen/qwen.connector.ts [5:1 - 23:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/gemini/gemini.connector.ts [48:44 - 65:13] (17 lines, 158 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/qwen/qwen.connector.ts [48:43 - 65:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/gemini/gemini.connector.ts [65:13 - 92:13] (27 lines, 207 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/qwen/qwen.connector.ts [65:11 - 92:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/gemini/gemini.connector.ts [94:13 - 124:13] (30 lines, 273 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/qwen/qwen.connector.ts [94:11 - 124:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/codex/codex.connector.ts [71:12 - 86:6] (15 lines, 103 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/qwen/qwen.connector.ts [72:11 - 87:41]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/claude-desktop/claude-desktop.connector.ts [5:1 - 23:20] (18 lines, 115 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/qwen/qwen.connector.ts [5:1 - 23:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/claude-desktop/claude-desktop.connector.ts [61:56 - 78:20] (17 lines, 158 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/qwen/qwen.connector.ts [48:43 - 65:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/claude-desktop/claude-desktop.connector.ts [78:20 - 105:20] (27 lines, 207 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/qwen/qwen.connector.ts [65:11 - 92:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/claude-desktop/claude-desktop.connector.ts [107:20 - 137:20] (30 lines, 273 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/qwen/qwen.connector.ts [94:11 - 124:11]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/claude-code/claude-code.connector.ts [66:8 - 83:9] (17 lines, 152 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/connectors/codex/codex.connector.ts [88:6 - 105:8]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/utils/file-download.util.ts [100:3 - 123:6] (23 lines, 96 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/utils/file-upload.util.ts [105:3 - 129:6]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/utils/duration.util.ts [206:6 - 213:42] (7 lines, 98 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/utils/duration.util.ts [154:2 - 161:52]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/utils/duration.util.ts [240:7 - 247:7] (7 lines, 110 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/utils/duration.util.ts [154:7 - 161:52]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/entities/entity.factories.ts [303:25 - 315:10] (12 lines, 90 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/tracker_api/entities/entity.factories.ts [284:28 - 296:4]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/commands/status.command.ts [15:2 - 25:17] (10 lines, 106 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/cli/commands/validate.command.ts [18:2 - 28:24]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/framework/search/src/strategies/fuzzy-search.strategy.ts [45:3 - 53:6] (8 lines, 80 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/framework/search/src/strategies/name-search.strategy.ts [23:3 - 32:4]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/framework/search/src/strategies/category-search.strategy.ts [21:2 - 32:22] (11 lines, 103 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/framework/search/src/strategies/name-search.strategy.ts [22:2 - 33:6]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/framework/search/src/generated-index.ts [10:2 - 44:4] (34 lines, 107 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/framework/search/src/types.ts [10:2 - 42:4]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/src/logging/logger.ts [173:2 - 187:56] (14 lines, 163 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/src/logging/logger.ts [141:2 - 155:40]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/src/constants.ts [5:1 - 16:7] (11 lines, 124 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/constants.ts [64:1 - 78:4]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/src/constants.ts [17:2 - 35:20] (18 lines, 103 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/src/constants.ts [79:2 - 97:2]
+
+Clone found (typescript):
+ - /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/src/config.ts [202:2 - 214:3] (12 lines, 121 tokens)
+   /home/user/mcp_server_yandex_tracker/packages/framework/infrastructure/src/config.ts [134:2 - 146:43]
+
+HTML report saved to jscpd-report/html/
+┌────────────┬────────────────┬─────────────┬──────────────┬──────────────┬──────────────────┬───────────────────┐
+│ Format     │ Files analyzed │ Total lines │ Total tokens │ Clones found │ Duplicated lines │ Duplicated tokens │
+├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤
+│ typescript │ 531            │ 30981       │ 165294       │ 75           │ 1240 (4%)        │ 8739 (5.29%)      │
+├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤
+│ Total:     │ 531            │ 30981       │ 165294       │ 75           │ 1240 (4%)        │ 8739 (5.29%)      │
+└────────────┴────────────────┴─────────────┴──────────────┴──────────────┴──────────────────┴───────────────────┘
+Found 75 clones.
+Detection time:: 1.604s

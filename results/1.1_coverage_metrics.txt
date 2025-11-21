@@ -1,0 +1,26 @@
+=== Test Coverage Metrics ===
+
+Coverage by package:
+
+@mcp-framework/core:
+  Statements: 92.82%
+  Branches: 85.35%
+  Functions: 94.28%
+  Lines: 92.64%
+  Tests: 173 passed
+  Status: ✅ PASS
+
+@mcp-framework/search:
+  Statements: 89.02%
+  Branches: 79.43%
+  Functions: 87.17%
+  Lines: 89.77%
+  Tests: 135 passed
+  Status: ❌ FAIL (below thresholds: statements 90%, branches 85%, functions 90%, lines 90%)
+
+@mcp-framework/infrastructure:
+  Tests: 180 passed
+  Status: Running...
+
+Note: Full coverage data collection interrupted by test failure in @mcp-framework/search
+This is a baseline metric - issues will be addressed in later stages

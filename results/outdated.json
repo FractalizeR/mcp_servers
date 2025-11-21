@@ -1,0 +1,10 @@
+npm warn config production Use `--omit=dev` instead.
+{
+  "mime-types": {
+    "current": "3.0.1",
+    "wanted": "3.0.2",
+    "latest": "3.0.2",
+    "dependent": "yandex-tracker",
+    "location": "/home/user/mcp_server_yandex_tracker/packages/servers/yandex-tracker/node_modules/mime-types"
+  }
+}
