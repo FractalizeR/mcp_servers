@@ -1,12 +1,11 @@
 /**
  * Адаптер для конвертации Zod схем в JSON Schema (MCP-совместимый формат)
  *
- * Использует библиотеку zod-to-json-schema для базовой конверсии
+ * Использует нативную функцию Zod v4 toJSONSchema для конверсии
  * и адаптирует результат для MCP протокола
  */
 
-import { zodToJsonSchema } from 'zod-to-json-schema';
-import type { z } from 'zod';
+import { z } from 'zod';
 
 /**
  * JSON Schema для MCP inputSchema
@@ -72,18 +71,17 @@ export interface ZodToJsonSchemaOptions {
  * // }
  * ```
  */
+// eslint-disable-next-line complexity
 export function zodToMcpInputSchema<T extends z.ZodRawShape>(
   schema: z.ZodObject<T>,
   options?: ZodToJsonSchemaOptions
 ): ToolInputSchema {
-  const { includeDescriptions = true, includeExamples = true, strict = true } = options ?? {};
+  const { includeExamples = true, strict = true } = options ?? {};
 
-  // 1. Конвертируем через zod-to-json-schema
-  const jsonSchema = zodToJsonSchema(schema as unknown as Parameters<typeof zodToJsonSchema>[0], {
-    target: 'jsonSchema7',
-    $refStrategy: 'none', // MCP не поддерживает $ref
-    // Включаем descriptions только если опция включена
-    removeAdditionalStrategy: includeDescriptions ? 'passthrough' : 'strict',
+  // 1. Конвертируем через нативный Zod v4 toJSONSchema
+  const jsonSchema = z.toJSONSchema(schema, {
+    target: 'draft-7', // MCP использует JSON Schema draft-7
+    io: 'input', // Как в MCP SDK pipeStrategy: 'input'
   });
 
   // 2. Извлекаем только нужные поля для MCP
@@ -172,16 +170,11 @@ function removeExamplesFromSchema(properties: Record<string, unknown>): void {
  * ```
  */
 export function extractRequiredFields<T extends z.ZodRawShape>(schema: z.ZodObject<T>): string[] {
-  const shape = schema.shape;
-  const required: string[] = [];
+  // В Zod v4 используем toJSONSchema для получения required полей
+  const jsonSchema = z.toJSONSchema(schema, {
+    target: 'draft-7',
+    io: 'input',
+  }) as { required?: string[] };
 
-  for (const [key, value] of Object.entries(shape)) {
-    // Проверяем, является ли поле optional
-    // ZodOptional - это обертка для опциональных полей
-    if (!(value as { _def?: { typeName?: string } })._def?.typeName?.includes('Optional')) {
-      required.push(key);
-    }
-  }
-
-  return required;
+  return jsonSchema.required ?? [];
 }
