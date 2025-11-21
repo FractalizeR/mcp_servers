@@ -18,3 +18,5 @@ export { RetryHandler } from './retry/retry-handler.js';
 
 // Error
 export { ErrorMapper } from './error/error-mapper.js';
+export { ApiErrorClass } from './error/api-error.class.js';
+export type { ApiErrorDetails } from './error/api-error.class.js';

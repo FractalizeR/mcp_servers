@@ -1,11 +1,15 @@
 /**
  * Тесты для ErrorMapper
+ *
+ * ОБНОВЛЕНО:
+ * - Проверяет, что возвращается ApiErrorClass (extends Error), а не plain object
+ * - Проверяет instanceof Error для всех результатов
+ * - Проверяет toJSON() сериализацию
  */
 
 import { describe, it, expect } from 'vitest';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ErrorMapper } from '@mcp-framework/infrastructure/http/error/error-mapper.js';
-import type { ApiError } from '@mcp-framework/infrastructure/types.js';
+import { ErrorMapper, ApiErrorClass } from '@mcp-framework/infrastructure';
 
 /**
  * Вспомогательная функция для создания мок AxiosError
@@ -54,8 +58,11 @@ describe('ErrorMapper', () => {
           }),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
+        // НОВОЕ: Проверяем, что результат - это ApiErrorClass (extends Error)
+        expect(result).toBeInstanceOf(Error);
+        expect(result).toBeInstanceOf(ApiErrorClass);
         expect(result.statusCode).toBe(400);
         expect(result.message).toBe('Неверный запрос');
       });
@@ -67,7 +74,7 @@ describe('ErrorMapper', () => {
           }),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(401);
         expect(result.message).toBe('Не авторизован'); // Берёт первое сообщение
@@ -79,7 +86,7 @@ describe('ErrorMapper', () => {
           response: createAxiosResponse(404, {}),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(404);
         expect(result.message).toBe('Not Found'); // Использует error.message
@@ -96,7 +103,7 @@ describe('ErrorMapper', () => {
           }),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(500);
         expect(result.message).toBe('Внутренняя ошибка сервера');
@@ -112,7 +119,7 @@ describe('ErrorMapper', () => {
           response: createAxiosResponse(503, undefined),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(503);
         expect(result.message).toBe('Generic error');
@@ -126,7 +133,7 @@ describe('ErrorMapper', () => {
           }),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(400);
         expect(result.message).toBe('Fallback message');
@@ -141,7 +148,7 @@ describe('ErrorMapper', () => {
           }),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.message).toBe('Actual message');
       });
@@ -156,7 +163,7 @@ describe('ErrorMapper', () => {
 
         const axiosError = createAxiosError({ response });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(429);
         expect(result.message).toBe('Rate limit exceeded. Retry after 60 seconds.');
@@ -173,7 +180,7 @@ describe('ErrorMapper', () => {
           }),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(429);
         expect(result.message).toBe('Rate limit exceeded. Retry after 60 seconds.');
@@ -191,7 +198,7 @@ describe('ErrorMapper', () => {
 
         const axiosError = createAxiosError({ response });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(429);
         expect(result.message).toBe('Rate limit exceeded. Retry after 60 seconds.');
@@ -208,7 +215,7 @@ describe('ErrorMapper', () => {
 
         const axiosError = createAxiosError({ response });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(429);
         expect(result.message).toBe('Rate limit exceeded. Retry after 60 seconds.');
@@ -226,7 +233,7 @@ describe('ErrorMapper', () => {
           // response: undefined - не передаем, если нет ответа
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(0);
         expect(result.message).toBe('Нет ответа от сервера. Проверьте подключение к интернету.');
@@ -240,7 +247,7 @@ describe('ErrorMapper', () => {
           // response: undefined - не передаем, если нет ответа
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(0);
         expect(result.message).toBe('Нет ответа от сервера. Проверьте подключение к интернету.');
@@ -254,7 +261,7 @@ describe('ErrorMapper', () => {
           // request: undefined, response: undefined - не передаем, если нет
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(0);
         expect(result.message).toBe('Invalid URL');
@@ -266,7 +273,7 @@ describe('ErrorMapper', () => {
           // request: undefined, response: undefined - не передаем, если нет
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(0);
         expect(result.message).toBe('Неизвестная ошибка');
@@ -280,7 +287,7 @@ describe('ErrorMapper', () => {
           response: createAxiosResponse(500, null),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(500);
         expect(result.message).toBe('Error');
@@ -292,7 +299,7 @@ describe('ErrorMapper', () => {
           response: createAxiosResponse(500, 'Plain string error'),
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         expect(result.statusCode).toBe(500);
         expect(result.message).toBe('Error');
@@ -307,11 +314,152 @@ describe('ErrorMapper', () => {
           response,
         });
 
-        const result: ApiError = ErrorMapper.mapAxiosError(axiosError);
+        const result = ErrorMapper.mapAxiosError(axiosError);
 
         // Когда status undefined, используется response?.status ?? 0
         expect(result.statusCode).toBeUndefined();
         expect(result.message).toBe('No status');
+      });
+    });
+
+    describe('НОВОЕ: Интеграция с ApiErrorClass', () => {
+      it('должен возвращать ApiErrorClass (extends Error) вместо plain object', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(404, {
+            message: 'Not Found',
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        // КРИТИЧЕСКАЯ ПРОВЕРКА: результат должен быть instanceof Error
+        expect(result).toBeInstanceOf(Error);
+        expect(result).toBeInstanceOf(ApiErrorClass);
+        expect(result.name).toBe('ApiErrorClass');
+      });
+
+      it('НЕ должен превращаться в "[object Object]" при String()', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(404, {
+            message: 'Not Found',
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        // Это была критическая проблема с plain object ApiError
+        expect(String(result)).not.toBe('[object Object]');
+        expect(String(result)).toBe('ApiErrorClass [404]: Not Found');
+      });
+
+      it('должен корректно передаваться через Promise.reject()', async () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(500, {
+            message: 'Internal Server Error',
+            errors: { field: ['Error message'] },
+          }),
+        });
+
+        const error = ErrorMapper.mapAxiosError(axiosError);
+
+        try {
+          await Promise.reject(error);
+           
+        } catch (caught) {
+          // КРИТИЧЕСКАЯ ПРОВЕРКА: все детали должны сохраниться
+          expect(caught).toBeInstanceOf(ApiErrorClass);
+          expect((caught as ApiErrorClass).statusCode).toBe(500);
+          expect((caught as ApiErrorClass).message).toBe('Internal Server Error');
+          expect((caught as ApiErrorClass).errors).toEqual({ field: ['Error message'] });
+        }
+      });
+
+      it('должен иметь работающий toJSON() метод', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(400, {
+            message: 'Bad Request',
+            errors: {
+              summary: ['Required field'],
+              assignee: ['Invalid user'],
+            },
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+        const json = result.toJSON();
+
+        expect(json).toEqual({
+          statusCode: 400,
+          message: 'Bad Request',
+          errors: {
+            summary: ['Required field'],
+            assignee: ['Invalid user'],
+          },
+        });
+      });
+
+      it('должен сериализоваться через JSON.stringify()', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(404, {
+            message: 'Not Found',
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+        const jsonString = JSON.stringify(result);
+        const parsed = JSON.parse(jsonString);
+
+        expect(parsed).toEqual({
+          statusCode: 404,
+          message: 'Not Found',
+        });
+      });
+
+      it('должен сохранять retryAfter для 429 ошибок', () => {
+        const response = createAxiosResponse(429, {});
+        response.headers = { 'retry-after': '120' };
+
+        const axiosError = createAxiosError({ response });
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        expect(result).toBeInstanceOf(ApiErrorClass);
+        expect(result.statusCode).toBe(429);
+        expect(result.retryAfter).toBe(120);
+
+        const json = result.toJSON();
+        expect(json.retryAfter).toBe(120);
+      });
+
+      it('должен работать с try-catch блоками', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(403, {
+            message: 'Forbidden',
+          }),
+        });
+
+        const error = ErrorMapper.mapAxiosError(axiosError);
+
+        try {
+          throw error;
+        } catch (caught) {
+          expect(caught instanceof Error).toBe(true);
+          expect(caught instanceof ApiErrorClass).toBe(true);
+          expect((caught as ApiErrorClass).statusCode).toBe(403);
+          expect((caught as ApiErrorClass).message).toBe('Forbidden');
+        }
+      });
+
+      it('должен сохранять stack trace', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(500, {
+            message: 'Error',
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        expect(result.stack).toBeDefined();
+        expect(result.stack).toContain('ApiErrorClass');
       });
     });
   });

@@ -18,6 +18,8 @@ import type { ToolMetadata, StaticToolMetadata } from './tool-metadata.js';
 import type { ZodError, ZodSchema } from 'zod';
 import type { z } from 'zod';
 import { generateDefinitionFromSchema } from '../../definition/index.js';
+import { ApiErrorClass } from '@mcp-framework/infrastructure';
+import type { ApiErrorDetails } from '@mcp-framework/infrastructure';
 
 /**
  * Абстрактный базовый класс для всех инструментов
@@ -214,23 +216,40 @@ export abstract class BaseTool<TFacade = unknown> {
 
   /**
    * Форматирование ошибки
+   *
+   * ОБНОВЛЕНО:
+   * - Передает полную информацию об ApiErrorClass (statusCode, errors, retryAfter)
+   * - Для обычных Error передает только message
+   * - Решает проблему потери деталей ошибки при передаче в MCP client
    */
   protected formatError(message: string, error?: unknown): ToolResult {
     this.logger.error(message, error);
+
+    // КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: Сохраняем полную информацию об ApiErrorClass
+    // - Если ApiErrorClass → используем toJSON() (statusCode, message, errors, retryAfter)
+    // - Если обычный Error → только message
+    // - Иначе → undefined
+    let errorDetails: string | ApiErrorDetails | undefined;
+    if (error instanceof ApiErrorClass) {
+      errorDetails = error.toJSON();
+    } else if (error instanceof Error) {
+      errorDetails = error.message;
+    }
+
+    // Создаем объект результата с условным добавлением error поля
+    const result: { success: false; message: string; error?: string | ApiErrorDetails } = {
+      success: false,
+      message,
+    };
+    if (errorDetails !== undefined) {
+      result.error = errorDetails;
+    }
 
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(
-            {
-              success: false,
-              message,
-              error: error instanceof Error ? error.message : undefined,
-            },
-            null,
-            2
-          ),
+          text: JSON.stringify(result, null, 2),
         },
       ],
       isError: true,

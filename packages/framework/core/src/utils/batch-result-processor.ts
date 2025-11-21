@@ -6,10 +6,18 @@
  * - Применения фильтров к данным
  * - Стандартизированного форматирования результатов
  *
- * ОБНОВЛЕНО: Поддерживает unified BatchResult формат (с generic TKey)
+ * ОБНОВЛЕНО:
+ * - Поддерживает unified BatchResult формат (с generic TKey)
+ * - Сохраняет полную информацию об ApiErrorClass (statusCode, errors, retryAfter)
  */
 
-import type { BatchResult, FulfilledResult, RejectedResult } from '@mcp-framework/infrastructure';
+import type {
+  BatchResult,
+  FulfilledResult,
+  RejectedResult,
+  ApiErrorDetails,
+} from '@mcp-framework/infrastructure';
+import { ApiErrorClass } from '@mcp-framework/infrastructure';
 
 /**
  * Обработанный результат batch-операции
@@ -22,7 +30,7 @@ export interface ProcessedBatchResult<TKey, TValue> {
   /** Успешно обработанные элементы */
   successful: Array<{ key: TKey; data: TValue }>;
   /** Неудачные элементы с описанием ошибок */
-  failed: Array<{ key: TKey; error: string }>;
+  failed: Array<{ key: TKey; error: ApiErrorDetails | string }>;
 }
 
 /**
@@ -50,7 +58,7 @@ export class BatchResultProcessor {
     filterFn?: (item: TInputValue) => TOutputValue
   ): ProcessedBatchResult<TKey, TOutputValue> {
     const successful: Array<{ key: TKey; data: TOutputValue }> = [];
-    const failed: Array<{ key: TKey; error: string }> = [];
+    const failed: Array<{ key: TKey; error: ApiErrorDetails | string }> = [];
 
     for (const result of results) {
       if (this.isFulfilledResult(result)) {
@@ -73,8 +81,18 @@ export class BatchResultProcessor {
           data,
         });
       } else {
-        const error =
-          result.reason instanceof Error ? result.reason.message : String(result.reason);
+        // КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: Сохраняем полную информацию об ApiErrorClass
+        // - Если ApiErrorClass → используем toJSON() (statusCode, message, errors, retryAfter)
+        // - Если обычный Error → только message
+        // - Иначе → String(reason)
+        let error: ApiErrorDetails | string;
+        if (result.reason instanceof ApiErrorClass) {
+          error = result.reason.toJSON();
+        } else if (result.reason instanceof Error) {
+          error = result.reason.message;
+        } else {
+          error = String(result.reason);
+        }
 
         failed.push({
           key: result.key,
