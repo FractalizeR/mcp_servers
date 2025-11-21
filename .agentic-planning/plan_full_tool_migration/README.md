@@ -213,14 +213,14 @@ npm test -- my-tool.smoke.test.ts
 | 1.4 Components | ✅ Завершён | 100% | 4 tools |
 | 1.5 Helpers | ✅ Завершён | 100% | 3 tools |
 | 2.1 Issues | ✅ Завершён | 100% | 13 tools (включая links + attachments) |
-| 2.2 Queues | ⏳ Ожидает | 0% | 6 tools (parallel) |
-| 2.3 Projects | ⏳ Ожидает | 0% | 5 tools (parallel) |
+| 2.2 Queues | ✅ Завершён | 100% | 6 tools |
+| 2.3 Projects | ✅ Завершён | 100% | 5 tools |
 | 3.1 Bulk-change | ⏳ Ожидает | 0% | 4 tools |
 | 4.1 Cleanup | ⏳ Ожидает | 0% | Удаление .definition.ts |
 | 4.2 Validation | ⏳ Ожидает | 0% | Финальная проверка |
 
-**Итого:** 32/47 инструментов мигрировано (68.1%)
-**С учётом пилота:** 34/49 (69.4%)
+**Итого:** 43/47 инструментов мигрировано (91.5%)
+**С учётом пилота:** 45/49 (91.8%)
 
 ---
 

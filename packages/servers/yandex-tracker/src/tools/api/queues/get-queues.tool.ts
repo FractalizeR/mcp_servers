@@ -18,10 +18,21 @@ import { GET_QUEUES_TOOL_METADATA } from './get-queues.metadata.js';
 export class GetQueuesTool extends BaseTool<YandexTrackerFacade> {
   static override readonly METADATA = GET_QUEUES_TOOL_METADATA;
 
-  private readonly definition = new GetQueuesDefinition();
+  /**
+   * Автоматическая генерация definition из Zod schema
+   * Это исключает возможность несоответствия schema ↔ definition
+   */
+  protected override getParamsSchema(): typeof GetQueuesParamsSchema {
+    return GetQueuesParamsSchema;
+  }
 
+  /**
+   * @deprecated Используется автогенерация через getParamsSchema()
+   */
   protected buildDefinition(): ToolDefinition {
-    return this.definition.build();
+    // Fallback для обратной совместимости (не используется если getParamsSchema() определен)
+    const definition = new GetQueuesDefinition();
+    return definition.build();
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

@@ -35,7 +35,7 @@ describe('CreateQueueTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('create_queue', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Создаёт очередь');
+      expect(definition.description).toContain('Создать новую очередь');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('key');
       expect(definition.inputSchema.required).toContain('name');

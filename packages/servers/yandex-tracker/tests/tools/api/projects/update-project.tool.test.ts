@@ -35,7 +35,7 @@ describe('UpdateProjectTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('update_project', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('Обновляет проект');
+      expect(definition.description).toContain('[Projects/Write] Обновить проект');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('projectId');
       expect(definition.inputSchema.properties?.['projectId']).toBeDefined();
