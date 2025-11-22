@@ -14,6 +14,8 @@ export default mergeConfig(
     test: {
       // Package-specific настройки
       name: 'yandex-tracker',
+      // Performance monitoring: warn about tests slower than 300ms
+      slowTestThreshold: 300,
     },
     resolve: {
       alias: {

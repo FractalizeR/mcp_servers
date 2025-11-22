@@ -133,54 +133,16 @@ return this.formatSuccess({ issues: filtered });
 
 **Принцип:** Zod schema = единственный источник истины для MCP definition.
 
-### Новый подход (✅ используй)
-
 **Структура файлов:**
 ```
 {feature}/{action}/
-├── {name}.schema.ts       # ✅ Zod schema с .describe()
-└── {name}.tool.ts         # ✅ Tool с автогенерацией
+├── {name}.schema.ts   # Zod schema с .describe()
+└── {name}.tool.ts     # Tool с автогенерацией
 ```
 
-**Schema с описаниями:**
-```typescript
-export const GetIssuesSchema = z.object({
-  keys: z.array(z.string()).min(1).max(200)
-    .describe('Issue keys to retrieve (e.g., ["PROJ-1", "PROJ-2"])'),
-  fields: FieldsSchema.optional()
-    .describe('Fields to include in response')
-});
-```
+**Tool использует `generateDefinitionFromSchema(metadata, schema)` вместо отдельных `*.definition.ts` (удалены).**
 
-**Tool класс:**
-```typescript
-export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
-  getDefinition(): ToolDefinition {
-    return generateDefinitionFromSchema(this.metadata, GetIssuesSchema);
-  }
-}
-```
-
-### Старый подход (❌ устарел)
-
-**Было:**
-```
-{feature}/{action}/
-├── {name}.schema.ts       # Zod schema
-├── {name}.definition.ts   # ❌ Ручная definition (удалено)
-└── {name}.tool.ts         # Tool
-```
-
-**Проблема:** Schema-definition mismatch → инструменты не работали
-
-### Преимущества автогенерации
-
-- ✅ DRY принцип — schema = единственный источник
-- ✅ Физически невозможен mismatch
-- ✅ Меньше кода — нет отдельных `*.definition.ts`
-- ✅ Автосинхронизация — изменения schema сразу в definition
-
-**Детали:** См. `packages/framework/core/README.md` (generateDefinitionFromSchema)
+**Детали:** См. `packages/framework/core/README.md` и ARCHITECTURE.md
 
 ---
 
@@ -315,98 +277,50 @@ cd src/tools/api/{feature}/{action}/
 
 ### Шаг 2: Schema (Zod валидация) — ЕДИНСТВЕННЫЙ ИСТОЧНИК ИСТИНЫ
 
-```typescript
-// get-issues.schema.ts
-import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '@mcp-framework/core';
+**См. полный пример:** `src/tools/api/issues/get/get-issues.schema.ts`
 
-/**
- * Schema для инструмента GetIssues
- *
- * ⚠️ ВАЖНО: Это единственный источник истины!
- * MCP definition генерируется автоматически из этой schema.
- * Используйте .describe() для документирования полей.
- */
+```typescript
 export const GetIssuesParamsSchema = z.object({
   keys: z.array(IssueKeySchema).min(1).max(200)
-    .describe('Массив ключей задач (например, ["QUEUE-1", "QUEUE-2"])'),
-  /**
-   * ⚠️ ОБЯЗАТЕЛЬНЫЙ параметр - список возвращаемых полей
-   */
-  fields: FieldsSchema  // БЕЗ .optional()!
-    .describe('Список возвращаемых полей (например, ["key", "summary"])'),
+    .describe('Массив ключей задач (["QUEUE-1", "QUEUE-2"])'),
+  fields: FieldsSchema  // ОБЯЗАТЕЛЬНЫЙ! БЕЗ .optional()
+    .describe('Список возвращаемых полей (["key", "summary"])'),
 });
-
-export type GetIssuesParams = z.infer<typeof GetIssuesParamsSchema>;
 ```
 
-**КРИТИЧНО:**
-- НЕ используйте `.optional()` для `fields`!
-- ВСЕГДА добавляйте `.describe()` для каждого поля - это используется при автогенерации definition
+**КРИТИЧНО:** Используй `.describe()` для каждого поля - это генерирует MCP definition. НЕ используй `.optional()` для `fields`!
 
-**Переиспользуй схемы** из `@mcp-framework/core`:
-- `IssueKeySchema` — ключ задачи
-- `FieldsSchema` — фильтр полей (обязательный!)
-- `ExpandSchema` — expand параметры
+**Переиспользуй схемы** из `@mcp-framework/core`: `IssueKeySchema`, `FieldsSchema`, `ExpandSchema`
 
 ---
 
 ### Шаг 3: Tool (реализация с автогенерацией)
 
+**См. полный пример:** `src/tools/api/issues/get/get-issues.tool.ts`
+
 ```typescript
-// get-issues.tool.ts
-import { BaseTool, generateDefinitionFromSchema } from '@mcp-framework/core';
-import type { ToolDefinition } from '@modelcontextprotocol/sdk/types.js';
-import { injectable, inject } from 'inversify';
-
-import { GetIssuesParamsSchema } from './get-issues.schema.js';
-import { TOKENS } from '#composition-root/injection-tokens.js';
-import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-
 @injectable()
 export class GetIssuesTool extends BaseTool<typeof GetIssuesParamsSchema> {
-  static readonly METADATA: ToolMetadata = {
+  static readonly METADATA = {
     name: 'get_issues',
     description: '[Issues/Read] Получить задачи по ключам',
-    category: 'issues',
-    subcategory: 'read',
-    priority: 'critical',
-    tags: ['issues', 'read', 'get', 'fetch'],
+    category: 'issues', subcategory: 'read', priority: 'critical'
   };
 
-  constructor(
-    @inject(TOKENS.YandexTrackerFacade)
-    private readonly facade: YandexTrackerFacade
-  ) {
+  constructor(@inject(TOKENS.YandexTrackerFacade) private facade: YandexTrackerFacade) {
     super(GetIssuesTool.METADATA, GetIssuesParamsSchema);
   }
 
-  /**
-   * Definition генерируется автоматически из schema!
-   * НЕ нужно создавать отдельный *.definition.ts файл
-   */
-  getDefinition(): ToolDefinition {
+  getDefinition() {
     return generateDefinitionFromSchema(this.metadata, GetIssuesParamsSchema);
   }
 
-  protected async executeImpl(validatedInput: z.infer<typeof GetIssuesParamsSchema>): Promise<ToolResponse> {
-    // 1. Вызов facade
-    const results = await this.facade.getIssues(validatedInput.keys);
-
-    // 2. Обработка результатов
+  protected async executeImpl(input) {
+    const results = await this.facade.getIssues(input.keys);
     const processed = BatchResultProcessor.process(
-      results,
-      (item) => ResponseFieldFilter.filter(item, validatedInput.fields)
+      results, (item) => ResponseFieldFilter.filter(item, input.fields)
     );
-
-    // 3. Логирование
-    ResultLogger.logBatchSuccess(this.logger, 'get_issues', {
-      totalRequested: validatedInput.keys.length,
-      successful: processed.successful.length,
-      failed: processed.failed.length,
-    });
-
-    // 4. Форматирование ответа
+    ResultLogger.logBatchSuccess(this.logger, 'get_issues', {...});
     return this.formatSuccess({ issues: processed });
   }
 }

@@ -338,6 +338,74 @@ import {
 
 **Примеры:** См. любые unit тесты в `tests/unit/`
 
+## 🔌 DI Testing Patterns
+
+### Unit тесты (без DI контейнера)
+
+**Используй прямую инъекцию:**
+```typescript
+import { createMockLogger, createMockFacade } from '#helpers/mock-factories.js';
+
+it('should execute tool logic', () => {
+  const mockLogger = createMockLogger();
+  const mockFacade = createMockFacade();
+  const tool = new GetIssuesTool(mockFacade, mockLogger);
+
+  // Test implementation
+});
+```
+
+**Плюсы:** Быстрое выполнение, полный контроль над моками, изоляция
+**Минусы:** Не тестирует реальную DI конфигурацию
+
+### Integration тесты (с DI контейнером)
+
+**Используй TestMCPClient (реальный контейнер):**
+```typescript
+import { createTestClient } from '#integration/helpers/mcp-client.js';
+import { MockServer } from '#integration/helpers/mock-server.js';
+
+it('should work with real DI container', async () => {
+  const mockServer = new MockServer();
+  mockServer.mockGetIssues(['KEY-1'], [generateIssue({ key: 'KEY-1' })]);
+
+  const client = createTestClient({
+    tracker: { orgId: 'test', oauthToken: 'test' }
+  });
+
+  const result = await client.callTool('get_issues', { keys: ['KEY-1'], fields: ['key'] });
+  expect(result.content[0]?.text).toBeDefined();
+});
+```
+
+**Плюсы:** Тестирует реальную DI конфигурацию, обнаруживает проблемы с регистрацией
+**Минусы:** Медленнее unit тестов
+
+### Contract тесты (DI регистрация)
+
+**Проверка корректности регистрации:**
+```typescript
+// tests/composition-root/container.contract.test.ts
+import { createContainer } from '#composition-root/container.js';
+
+it('should resolve all tools', () => {
+  const container = createContainer({ tracker: {...} });
+  const tools = TOOL_CLASSES.map(ToolClass => container.get(ToolClass));
+
+  tools.forEach(tool => {
+    expect(tool).toBeDefined();
+    expect(tool.getDefinition()).toBeDefined();
+  });
+});
+```
+
+**Детали:** См. `tests/composition-root/` для примеров contract тестов
+
+**Best practices:**
+- Unit тесты: минимальная настройка, максимальная изоляция
+- Integration тесты: реальный DI + моки HTTP
+- Contract тесты: проверка регистрации без вызова логики
+
 ## 📚 Дополнительные материалы
 
 - **Документация Vitest:** https://vitest.dev/
