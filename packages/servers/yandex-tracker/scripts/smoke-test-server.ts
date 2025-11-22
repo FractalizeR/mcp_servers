@@ -7,6 +7,37 @@
  * 2. Отвечает на JSON-RPC запрос tools/list
  * 3. Возвращает валидный список инструментов
  * 4. Сервер корректно завершается
+ *
+ * **СТРАТЕГИЯ SMOKE ТЕСТИРОВАНИЯ:**
+ *
+ * Этот скрипт - базовый smoke test через stdio, проверяющий только MCP protocol.
+ * Для более детального тестирования используйте vitest smoke тесты:
+ *
+ * 1. **MCP Lifecycle** (`tests/smoke/mcp-server-lifecycle.smoke.test.ts`)
+ *    - Проверка создания MCP server instance без реального API
+ *    - Использует fake tokens
+ *
+ * 2. **Tool Search** (`tests/smoke/tool-search.smoke.test.ts`)
+ *    - Проверка ToolSearchEngine functionality
+ *    - Без обращения к API, статический индекс
+ *
+ * 3. **DI Container** (`tests/smoke/di-container.smoke.test.ts`)
+ *    - Проверка инициализации DI container
+ *    - Резолв всех базовых зависимостей
+ *
+ * 4. **E2E Tool Execution** (`tests/smoke/e2e-tool-execution.smoke.test.ts`)
+ *    - Проверка полного flow: Tool → Operation → DTO
+ *    - Использует mock HttpClient
+ *
+ * 5. **API Connectivity** (`tests/smoke/api-connectivity.smoke.test.ts`)
+ *    - Проверка реального подключения к Yandex Tracker API
+ *    - УСЛОВНЫЙ: запускается только если установлен YANDEX_TRACKER_TOKEN
+ *    - В CI пропускается (test.skipIf)
+ *
+ * **Запуск всех smoke тестов:**
+ * ```bash
+ * npm run test:smoke  # Все smoke тесты (кроме api-connectivity без токена)
+ * ```
  */
 
 import { spawn } from 'node:child_process';
