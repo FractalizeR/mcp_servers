@@ -8,7 +8,8 @@
 import { Container } from 'inversify';
 import type { ServerConfig } from '#config';
 import { Logger } from '@mcp-framework/infrastructure';
-import { TYPES } from '#composition-root/types.js';
+import { TYPES, TOOL_SYMBOLS, OPERATION_SYMBOLS } from '#composition-root/types.js';
+import { validateDIRegistrations } from '#composition-root/validation.js';
 
 // HTTP Layer
 import type { IHttpClient, RetryStrategy } from '@mcp-framework/infrastructure';
@@ -280,6 +281,9 @@ function bindToolRegistry(container: Container): void {
  * Создание и конфигурация DI контейнера
  */
 export async function createContainer(config: ServerConfig): Promise<Container> {
+  // Валидация уникальности имён классов перед созданием контейнера
+  validateDIRegistrations();
+
   const container = new Container({
     defaultScope: 'Singleton', // Все зависимости по умолчанию Singleton
   });
@@ -314,6 +318,15 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
     // Используем строку вместо класса, т.к. компилятор переименовывает класс в _SearchToolsTool
     toolRegistry.registerToolFromContainer('SearchToolsTool');
   }
+
+  // Логирование зарегистрированных DI символов
+  const logger = container.get<Logger>(TYPES.Logger);
+  logger.debug('DI symbols registered successfully', {
+    toolSymbols: Object.keys(TOOL_SYMBOLS),
+    operationSymbols: Object.keys(OPERATION_SYMBOLS),
+    totalTools: Object.keys(TOOL_SYMBOLS).length,
+    totalOperations: Object.keys(OPERATION_SYMBOLS).length,
+  });
 
   return container;
 }
