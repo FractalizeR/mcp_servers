@@ -111,10 +111,10 @@
 |------|------|--------|------|
 | 0.1 | Facade Planning | ✅ Completed | 2025-11-21 |
 | 1.1 | Infrastructure | ✅ Completed | 2025-11-22 |
-| 1.2 | Test Coverage | ⏸️ Pending | - |
+| 1.2 | Test Coverage | ✅ Completed | 2025-11-22 |
 | 1.3 | Code Quality | ✅ Completed | 2025-11-22 |
 | 1.4 | Yandex-Tracker | ✅ Completed | 2025-11-22 |
-| 2.1 | Facade Refactoring | ⏸️ Pending | - |
+| 2.1 | Facade Refactoring | 🏗️ In Progress (Фазы 0-2 done, Фаза 3 current) | 2025-11-22 |
 | 2.2 | ToolRegistry | ⏸️ Pending | - |
 | 2.3 | Framework Improvements | ⏸️ Pending | - |
 | 3.1 | Post-Architecture | ⏸️ Pending | - |
