@@ -9,4 +9,4 @@ export * from './definition/index.js';
 export * from './utils/index.js';
 
 // Registry
-export * from './tool-registry.js';
+export * from './tool-registry/index.js';

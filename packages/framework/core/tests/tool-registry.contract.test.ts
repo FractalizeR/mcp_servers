@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ToolRegistry, type ToolConstructor } from '../src/tool-registry.js';
+import { ToolRegistry, type ToolConstructor } from '../src/tool-registry/index.js';
 import { BaseTool } from '../src/tools/base/base-tool.js';
 import type { Container } from 'inversify';
 import type { Logger, ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
