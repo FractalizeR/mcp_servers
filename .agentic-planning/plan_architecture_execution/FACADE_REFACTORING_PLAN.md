@@ -139,42 +139,68 @@ packages/servers/yandex-tracker/src/tracker_api/facade/
 
 **Total: ~1320 LOC** (было 1080, +240 LOC для инфраструктуры)
 
-### Паттерн сервисов
+### Паттерн сервисов (✅ Type-Safe DI)
 
-**Base класс (base-facade-service.ts):**
+## ⚠️ АРХИТЕКТУРНОЕ ИЗМЕНЕНИЕ
+
+**Проблема старого подхода (был в плане):**
+- Container injection + Symbol.for(operationName) - **строковые токены**
+- **Runtime resolution** без compile-time type safety
+- **Не устраняет** корневую проблему God Object
+
+**Новый подход (ИСПРАВЛЕНО):**
+- ✅ **Прямые инъекции операций** через class-based tokens
+- ✅ **Compile-time type safety** (TypeScript проверит типы)
+- ✅ **Нет Container dependency** в сервисах
+
+---
+
+**Base класс (НЕ НУЖЕН!):**
+
+Вместо BaseFacadeService используем прямые инъекции:
+
+**Пример сервиса (IssueService):**
 ```typescript
-import type { Container } from 'inversify';
-
-export abstract class BaseFacadeService {
-  constructor(protected readonly container: Container) {}
-
-  /**
-   * Helper для ленивого получения операции из DI
-   */
-  protected getOperation<T>(operationName: string): T {
-    return this.container.get<T>(Symbol.for(operationName));
-  }
-}
-```
-
-**Пример сервиса:**
-```typescript
-import { injectable } from 'inversify';
-import { BaseFacadeService } from '../base-facade-service.js';
+import { injectable, inject } from 'inversify';
 import type { CreateIssueDto, IssueWithUnknownFields } from '#tracker_api/dto/index.js';
+import { CreateIssueOperation } from '#tracker_api/api_operations/issue/create-issue.operation.js';
+import { FindIssuesOperation } from '#tracker_api/api_operations/issue/find/find-issues.operation.js';
+import { GetIssuesOperation } from '#tracker_api/api_operations/issue/get-issues.operation.js';
+import { UpdateIssueOperation } from '#tracker_api/api_operations/issue/update-issue.operation.js';
+import { GetIssueChangelogOperation } from '#tracker_api/api_operations/issue/get-issue-changelog.operation.js';
+import { GetIssueTransitionsOperation } from '#tracker_api/api_operations/issue/get-issue-transitions.operation.js';
+import { TransitionIssueOperation } from '#tracker_api/api_operations/issue/transition-issue.operation.js';
 
 @injectable()
-export class IssueService extends BaseFacadeService {
+export class IssueService {
+  constructor(
+    @inject(CreateIssueOperation) private readonly createOp: CreateIssueOperation,
+    @inject(FindIssuesOperation) private readonly findOp: FindIssuesOperation,
+    @inject(GetIssuesOperation) private readonly getOp: GetIssuesOperation,
+    @inject(UpdateIssueOperation) private readonly updateOp: UpdateIssueOperation,
+    @inject(GetIssueChangelogOperation) private readonly changelogOp: GetIssueChangelogOperation,
+    @inject(GetIssueTransitionsOperation) private readonly transitionsOp: GetIssueTransitionsOperation,
+    @inject(TransitionIssueOperation) private readonly transitionOp: TransitionIssueOperation,
+  ) {}
+
   async createIssue(data: CreateIssueDto): Promise<IssueWithUnknownFields> {
-    const operation = this.getOperation<{
-      execute: (d: CreateIssueDto) => Promise<IssueWithUnknownFields>;
-    }>('CreateIssueOperation');
-    return operation.execute(data);
+    return this.createOp.execute(data);
   }
 
-  // ... остальные 6 методов
+  async findIssues(params: FindIssuesInputDto) {
+    return this.findOp.execute(params);
+  }
+
+  // ... остальные 5 методов (прямые вызовы операций)
 }
 ```
+
+**Преимущества нового подхода:**
+- ✅ **Type safety**: TypeScript видит типы операций
+- ✅ **IDE автодополнение**: this.createOp. → показывает execute()
+- ✅ **Рефакторинг безопасен**: переименование операции = compile error
+- ✅ **Тестируемость**: легко mock конкретные операции
+- ✅ **Нет строковых токенов**: Symbol.for() больше не используется
 
 **Новый Facade (делегирование):**
 ```typescript
@@ -238,10 +264,11 @@ Service  Service  Service
 
 ### Пошаговый план
 
-#### Фаза 0: Подготовка (1-1.5h)
+#### Фаза 0: Подготовка (30 мин)
 
-- **Шаг 0.1**: Создать `base-facade-service.ts` (20 мин)
-  - Abstract class с `getOperation<T>(name)` helper
+**⚠️ ИЗМЕНЕНО:** BaseFacadeService НЕ СОЗДАЁМ (используем прямые инъекции)
+
+- **Шаг 0.1**: ~~Создать `base-facade-service.ts`~~ **УДАЛЕНО** (не нужен!)
 - **Шаг 0.2**: Создать `services/` директорию (5 мин)
 - **Шаг 0.3**: Создать `services/index.ts` (5 мин)
 - **Шаг 0.4**: Обновить `facade/index.ts` (10 мин)
@@ -252,19 +279,27 @@ Service  Service  Service
 
 **Порядок:** UserService → IssueLinkService → ComponentService → FieldService
 
-| Шаг | Сервис | Методов | Effort | Commit |
-|-----|--------|---------|--------|--------|
-| 1.1 | UserService | 1 | 20 мин | `refactor(facade): extract UserService` |
-| 1.2 | IssueLinkService | 3 | 30 мин | `refactor(facade): extract IssueLinkService` |
-| 1.3 | ComponentService | 4 | 30 мин | `refactor(facade): extract ComponentService` |
-| 1.4 | FieldService | 5 | 40 мин | `refactor(facade): extract FieldService` |
+| Шаг | Сервис | Методов | Operations | Effort | Commit |
+|-----|--------|---------|-----------|--------|--------|
+| 1.1 | UserService | 1 | PingOperation | 20 мин | `refactor(facade): extract UserService` |
+| 1.2 | IssueLinkService | 3 | CreateLink, DeleteLink, GetLinks | 30 мин | `refactor(facade): extract IssueLinkService` |
+| 1.3 | ComponentService | 4 | Create, Update, Delete, Get | 30 мин | `refactor(facade): extract ComponentService` |
+| 1.4 | FieldService | 5 | Create, Update, Delete, Get, List | 40 мин | `refactor(facade): extract FieldService` |
+
+**⚠️ ВАЖНО: Используем прямые инъекции операций!**
 
 **Для каждого шага:**
-1. Создать `services/{name}.service.ts`
-2. Извлечь методы из Facade
-3. Обновить Facade (inject сервис, делегировать методы)
-4. Запустить `npm run validate`
-5. Коммит
+1. Создать `services/{name}.service.ts` с @injectable()
+2. **Inject операции напрямую** (НЕ через Container!)
+   ```typescript
+   constructor(
+     @inject(PingOperation) private readonly pingOp: PingOperation
+   ) {}
+   ```
+3. Извлечь методы из Facade (прямые вызовы операций)
+4. Обновить Facade (inject сервис, делегировать методы)
+5. Запустить `npm run validate`
+6. Коммит
 
 #### Фаза 2: Средние сервисы (3-4h, можно параллельно)
 
@@ -302,15 +337,16 @@ Service  Service  Service
 - Извлечь: getIssues, findIssues, createIssue, updateIssue, getIssueChangelog, getIssueTransitions, transitionIssue
 - Commit: `refactor(facade): extract IssueService`
 
-#### Фаза 5: Финализация Facade (1-2h)
+#### Фаза 5: Финализация Facade (1h)
+
+**⚠️ УПРОЩЕНО:** Не нужно удалять getOperation (его вообще не было!)
 
 **Шаг 5.1**: Обновить конструктор Facade (30 мин)
-- Удалить `private readonly container: Container`
-- Inject все 14 сервисов через `@inject()`
+- ~~Удалить `private readonly container: Container`~~ **Уже удалено** (не было с самого начала)
+- Проверить что все 14 сервисов инжектятся через `@inject()`
 
-**Шаг 5.2**: Удалить метод `getOperation` (20 мин)
+**Шаг 5.2**: ~~Удалить метод `getOperation`~~ **УДАЛЕНО** (не было!)
 - Проверить что все методы делегируют сервисам
-- Удалить приватный метод `getOperation()`
 
 **Шаг 5.3**: Обновить DI регистрацию (40 мин)
 - Зарегистрировать все 14 сервисов в container
