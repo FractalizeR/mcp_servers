@@ -12,7 +12,7 @@ import { TYPES, TOOL_SYMBOLS, OPERATION_SYMBOLS } from '#composition-root/types.
 import { validateDIRegistrations } from '#composition-root/validation.js';
 
 // HTTP Layer
-import type { IHttpClient } from '@mcp-framework/infrastructure';
+import type { IHttpClient, RetryStrategy } from '@mcp-framework/infrastructure';
 import { AxiosHttpClient, ExponentialBackoffStrategy } from '@mcp-framework/infrastructure';
 
 // Cache Layer
@@ -62,9 +62,10 @@ function bindInfrastructure(container: Container, config: ServerConfig): void {
  * Регистрация HTTP слоя (retry, http client)
  */
 function bindHttpLayer(container: Container): void {
-  container.bind<IHttpClient>(TYPES.HttpClient).toDynamicValue(() => {
-    const loggerInstance = container.get<Logger>(TYPES.Logger);
+  // Регистрируем RetryStrategy как отдельный сервис
+  container.bind(TYPES.RetryStrategy).toDynamicValue(() => {
     const configInstance = container.get<ServerConfig>(TYPES.ServerConfig);
+    const loggerInstance = container.get<Logger>(TYPES.Logger);
 
     // Создаём retry стратегию с конфигурируемыми параметрами
     const retryStrategy = new ExponentialBackoffStrategy(
@@ -79,6 +80,14 @@ function bindHttpLayer(container: Container): void {
         `minDelay=${configInstance.retryMinDelay ?? 1000}ms, ` +
         `maxDelay=${configInstance.retryMaxDelay ?? 10000}ms`
     );
+
+    return retryStrategy;
+  });
+
+  container.bind<IHttpClient>(TYPES.HttpClient).toDynamicValue(() => {
+    const loggerInstance = container.get<Logger>(TYPES.Logger);
+    const configInstance = container.get<ServerConfig>(TYPES.ServerConfig);
+    const retryStrategy = container.get<RetryStrategy>(TYPES.RetryStrategy);
 
     return new AxiosHttpClient(
       {
