@@ -47,7 +47,7 @@ export class DeleteComponentTool extends BaseTool<YandexTrackerFacade> {
         message: `Компонент ${componentId} успешно удален`,
       });
     } catch (error: unknown) {
-      return this.formatError('Ошибка при удалении компонента', error as Error);
+      return this.formatError('Ошибка при удалении компонента', error);
     }
   }
 }

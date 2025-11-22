@@ -72,10 +72,7 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при получении списка файлов задачи ${issueId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при получении списка файлов задачи ${issueId}`, error);
     }
   }
 }

@@ -67,7 +67,7 @@ export class DeleteAttachmentTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при удалении файла attachmentId=${attachmentId} из задачи ${issueId}`,
-        error as Error
+        error
       );
     }
   }

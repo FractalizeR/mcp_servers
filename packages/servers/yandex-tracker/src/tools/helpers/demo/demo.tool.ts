@@ -49,7 +49,7 @@ export class DemoTool extends BaseTool<YandexTrackerFacade> {
 
       return Promise.resolve(this.formatSuccess(result));
     } catch (error: unknown) {
-      return Promise.resolve(this.formatError('Ошибка выполнения DemoTool', error as Error));
+      return Promise.resolve(this.formatError('Ошибка выполнения DemoTool', error));
     }
   }
 }

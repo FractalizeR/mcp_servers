@@ -67,7 +67,7 @@ export class CreateQueueTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при создании очереди ${key}`, error as Error);
+      return this.formatError(`Ошибка при создании очереди ${key}`, error);
     }
   }
 }

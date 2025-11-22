@@ -79,10 +79,7 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при получении истории изменений задачи ${issueKey}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при получении истории изменений задачи ${issueKey}`, error);
     }
   }
 }

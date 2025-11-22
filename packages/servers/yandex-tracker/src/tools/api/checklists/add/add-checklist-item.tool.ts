@@ -81,10 +81,7 @@ export class AddChecklistItemTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при добавлении элемента в чеклист задачи ${issueId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при добавлении элемента в чеклист задачи ${issueId}`, error);
     }
   }
 }

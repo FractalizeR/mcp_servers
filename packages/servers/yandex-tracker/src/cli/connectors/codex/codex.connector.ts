@@ -4,9 +4,14 @@
 
 import * as os from 'os';
 import * as path from 'path';
-import { FileBasedConnector } from '../base/file-based-connector.js';
-import type { MCPClientInfo, MCPServerConfig } from '../base/connector.interface.js';
+import { BaseConnector } from '../base/base-connector.js';
+import type {
+  MCPClientInfo,
+  MCPServerConfig,
+  ConnectionStatus,
+} from '../base/connector.interface.js';
 import { CommandExecutor } from '../../utils/command-executor.js';
+import { FileManager } from '../../utils/file-manager.js';
 import {
   MCP_SERVER_NAME,
   SERVER_ENTRY_POINT,
@@ -15,8 +20,20 @@ import {
   DEFAULT_REQUEST_TIMEOUT,
   ENV_VAR_NAMES,
 } from '#constants';
+import { isError } from '#common/type-guards.js';
 
-export class CodexConnector extends FileBasedConnector<'mcp_servers', 'toml'> {
+interface CodexConfig {
+  mcp_servers?: Record<
+    string,
+    {
+      command: string;
+      args: string[];
+      env: Record<string, string>;
+    }
+  >;
+}
+
+export class CodexConnector extends BaseConnector {
   private readonly configPath: string;
 
   constructor() {
@@ -24,19 +41,7 @@ export class CodexConnector extends FileBasedConnector<'mcp_servers', 'toml'> {
     this.configPath = path.join(os.homedir(), '.codex/config.toml');
   }
 
-  protected override getConfigPath(): string {
-    return this.configPath;
-  }
-
-  protected override getServerKey(): 'mcp_servers' {
-    return 'mcp_servers';
-  }
-
-  protected override getConfigFormat(): 'toml' {
-    return 'toml';
-  }
-
-  override getClientInfo(): MCPClientInfo {
+  getClientInfo(): MCPClientInfo {
     return {
       name: 'codex',
       displayName: 'Codex',
@@ -47,14 +52,38 @@ export class CodexConnector extends FileBasedConnector<'mcp_servers', 'toml'> {
     };
   }
 
-  override async isInstalled(): Promise<boolean> {
+  isInstalled(): Promise<boolean> {
     return Promise.resolve(CommandExecutor.isCommandAvailable('codex'));
   }
 
-  /**
-   * Переопределяем connect для использования CLI команды
-   */
-  override async connect(serverConfig: MCPServerConfig): Promise<void> {
+  async getStatus(): Promise<ConnectionStatus> {
+    try {
+      if (!(await FileManager.exists(this.configPath))) {
+        return { connected: false };
+      }
+
+      const config = await FileManager.readTOML<CodexConfig>(this.configPath);
+
+      if (config.mcp_servers?.[MCP_SERVER_NAME]) {
+        return {
+          connected: true,
+          details: {
+            configPath: this.configPath,
+            metadata: { serverConfig: config.mcp_servers[MCP_SERVER_NAME] },
+          },
+        };
+      }
+
+      return { connected: false };
+    } catch (error) {
+      return {
+        connected: false,
+        error: `Ошибка чтения конфига: ${isError(error) ? error.message : String(error)}`,
+      };
+    }
+  }
+
+  async connect(serverConfig: MCPServerConfig): Promise<void> {
     const args = [
       'mcp',
       'add',
@@ -75,5 +104,19 @@ export class CodexConnector extends FileBasedConnector<'mcp_servers', 'toml'> {
     ];
 
     await CommandExecutor.execInteractive('codex', args);
+  }
+
+  async disconnect(): Promise<void> {
+    // Codex может не иметь команды remove, поэтому удаляем из TOML
+    if (!(await FileManager.exists(this.configPath))) {
+      return;
+    }
+
+    const config = await FileManager.readTOML<CodexConfig>(this.configPath);
+
+    if (config.mcp_servers?.[MCP_SERVER_NAME]) {
+      delete config.mcp_servers[MCP_SERVER_NAME];
+      await FileManager.writeTOML(this.configPath, config);
+    }
   }
 }

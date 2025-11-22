@@ -19,6 +19,7 @@ import {
   DEFAULT_REQUEST_TIMEOUT,
   ENV_VAR_NAMES,
 } from '#constants';
+import { isError } from '#common/type-guards.js';
 
 /**
  * Формат конфигурационного файла
@@ -108,9 +109,10 @@ export abstract class FileBasedConnector<
 
       return { connected: false };
     } catch (error) {
+      const errorMessage = isError(error) ? error.message : String(error);
       return {
         connected: false,
-        error: `Ошибка чтения конфига: ${(error as Error).message}`,
+        error: `Ошибка чтения конфига: ${errorMessage}`,
       };
     }
   }

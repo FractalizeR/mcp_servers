@@ -113,7 +113,7 @@ export class CreateIssueTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при создании задачи в очереди ${queue}`, error as Error);
+      return this.formatError(`Ошибка при создании задачи в очереди ${queue}`, error);
     }
   }
 }

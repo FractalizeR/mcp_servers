@@ -80,7 +80,7 @@ export class CreateProjectTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при создании проекта ${key}`, error as Error);
+      return this.formatError(`Ошибка при создании проекта ${key}`, error);
     }
   }
 }

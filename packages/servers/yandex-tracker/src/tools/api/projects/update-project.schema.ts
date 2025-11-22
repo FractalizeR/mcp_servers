@@ -4,66 +4,28 @@
 
 import { z } from 'zod';
 import { FieldsSchema } from '#common/schemas/index.js';
-
-/**
- * Возможные статусы проекта
- */
-const ProjectStatusSchema = z.enum(['draft', 'in_progress', 'launched', 'postponed', 'at_risk']);
+import { BaseProjectFieldsSchema } from './base-project.schema.js';
 
 /**
  * Схема параметров для обновления проекта
+ *
+ * Использует базовую схему проекта с:
+ * - projectId: обязательно (вместо key)
+ * - все остальные поля: опционально (через .partial())
  */
-export const UpdateProjectParamsSchema = z.object({
-  /**
-   * ID или ключ проекта (обязательно)
-   */
-  projectId: z.string().min(1, 'ID проекта не может быть пустым'),
+export const UpdateProjectParamsSchema = z
+  .object({
+    /**
+     * ID или ключ проекта (обязательно)
+     */
+    projectId: z.string().min(1, 'ID проекта не может быть пустым'),
 
-  /**
-   * Название проекта (опционально)
-   */
-  name: z.string().optional(),
-
-  /**
-   * ID или login руководителя проекта (опционально)
-   */
-  lead: z.string().optional(),
-
-  /**
-   * Статус проекта (опционально)
-   */
-  status: ProjectStatusSchema.optional(),
-
-  /**
-   * Описание проекта (опционально)
-   */
-  description: z.string().optional(),
-
-  /**
-   * Дата начала проекта в формате YYYY-MM-DD (опционально)
-   */
-  startDate: z.string().optional(),
-
-  /**
-   * Дата окончания проекта в формате YYYY-MM-DD (опционально)
-   */
-  endDate: z.string().optional(),
-
-  /**
-   * Массив ключей очередей, связанных с проектом (опционально)
-   */
-  queueIds: z.array(z.string()).optional(),
-
-  /**
-   * Массив ID или login участников проекта (опционально)
-   */
-  teamUserIds: z.array(z.string()).optional(),
-
-  /**
-   * Список полей для возврата (обязательно)
-   */
-  fields: FieldsSchema,
-});
+    /**
+     * Список полей для возврата (обязательно)
+     */
+    fields: FieldsSchema,
+  })
+  .merge(BaseProjectFieldsSchema.partial());
 
 /**
  * Вывод типа из схемы

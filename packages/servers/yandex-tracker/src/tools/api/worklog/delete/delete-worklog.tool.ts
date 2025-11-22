@@ -68,7 +68,7 @@ export class DeleteWorklogTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при удалении записи времени ${worklogId} задачи ${issueId}`,
-        error as Error
+        error
       );
     }
   }

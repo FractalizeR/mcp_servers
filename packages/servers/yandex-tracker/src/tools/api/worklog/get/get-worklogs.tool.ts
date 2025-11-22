@@ -70,10 +70,7 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при получении записей времени задачи ${issueId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при получении записей времени задачи ${issueId}`, error);
     }
   }
 }

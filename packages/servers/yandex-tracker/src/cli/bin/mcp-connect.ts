@@ -15,6 +15,7 @@ import { listCommand } from '../commands/list.command.js';
 import { validateCommand } from '../commands/validate.command.js';
 import { Logger } from '../utils/logger.js';
 import { MCP_SERVER_DISPLAY_NAME, MCP_SERVER_NAME } from '../../constants.js';
+import { isError } from '#common/type-guards.js';
 import type { ConnectCommandOptions } from '../commands/connect.command.js';
 import type { DisconnectCommandOptions } from '../commands/disconnect.command.js';
 
@@ -49,7 +50,7 @@ program
     try {
       await connectCommand(options);
     } catch (error) {
-      Logger.error(`Ошибка: ${(error as Error).message}`);
+      Logger.error(`Ошибка: ${isError(error) ? error.message : String(error)}`);
       process.exit(1);
     }
   });
@@ -63,7 +64,7 @@ program
     try {
       await disconnectCommand(options);
     } catch (error) {
-      Logger.error(`Ошибка: ${(error as Error).message}`);
+      Logger.error(`Ошибка: ${isError(error) ? error.message : String(error)}`);
       process.exit(1);
     }
   });
@@ -76,7 +77,7 @@ program
     try {
       await statusCommand();
     } catch (error) {
-      Logger.error(`Ошибка: ${(error as Error).message}`);
+      Logger.error(`Ошибка: ${isError(error) ? error.message : String(error)}`);
       process.exit(1);
     }
   });
@@ -89,7 +90,7 @@ program
     try {
       await listCommand();
     } catch (error) {
-      Logger.error(`Ошибка: ${(error as Error).message}`);
+      Logger.error(`Ошибка: ${isError(error) ? error.message : String(error)}`);
       process.exit(1);
     }
   });
@@ -102,7 +103,7 @@ program
     try {
       await validateCommand();
     } catch (error) {
-      Logger.error(`Ошибка: ${(error as Error).message}`);
+      Logger.error(`Ошибка: ${isError(error) ? error.message : String(error)}`);
       process.exit(1);
     }
   });

@@ -59,7 +59,7 @@ export class GetProjectsTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError('Ошибка при получении списка проектов', error as Error);
+      return this.formatError('Ошибка при получении списка проектов', error);
     }
   }
 }

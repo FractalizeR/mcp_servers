@@ -74,7 +74,7 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при создании связи ${issueId} ${relationship} ${targetIssue}`,
-        error as Error
+        error
       );
     }
   }

@@ -66,7 +66,7 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
         try {
           fileBuffer = await readFile(filePath);
         } catch (error) {
-          return this.formatError(`Не удалось прочитать файл ${filePath}`, error as Error);
+          return this.formatError(`Не удалось прочитать файл ${filePath}`, error);
         }
       } else {
         // Не должно произойти из-за .refine() в схеме
@@ -99,10 +99,7 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при загрузке файла ${filename} в задачу ${issueId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при загрузке файла ${filename} в задачу ${issueId}`, error);
     }
   }
 }

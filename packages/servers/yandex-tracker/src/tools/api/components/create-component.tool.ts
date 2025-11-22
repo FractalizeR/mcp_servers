@@ -62,7 +62,7 @@ export class CreateComponentTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError('Ошибка при создании компонента', error as Error);
+      return this.formatError('Ошибка при создании компонента', error);
     }
   }
 }

@@ -57,7 +57,7 @@ export class GetQueuesTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError('Ошибка при получении списка очередей', error as Error);
+      return this.formatError('Ошибка при получении списка очередей', error);
     }
   }
 }

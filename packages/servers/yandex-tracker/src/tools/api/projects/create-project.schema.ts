@@ -4,66 +4,33 @@
 
 import { z } from 'zod';
 import { FieldsSchema } from '#common/schemas/index.js';
-
-/**
- * Возможные статусы проекта
- */
-const ProjectStatusSchema = z.enum(['draft', 'in_progress', 'launched', 'postponed', 'at_risk']);
+import { BaseProjectFieldsSchema } from './base-project.schema.js';
 
 /**
  * Схема параметров для создания проекта
+ *
+ * Использует базовую схему проекта с:
+ * - key: обязательно
+ * - name, lead: обязательно (из базовой схемы)
+ * - остальные поля: опционально (через .partial())
  */
-export const CreateProjectParamsSchema = z.object({
-  /**
-   * Уникальный ключ проекта (обязательно)
-   */
-  key: z.string().min(1, 'Ключ проекта не может быть пустым'),
-
-  /**
-   * Название проекта (обязательно)
-   */
-  name: z.string().min(1, 'Название проекта не может быть пустым'),
-
-  /**
-   * ID или login руководителя проекта (обязательно)
-   */
-  lead: z.string().min(1, 'Руководитель проекта не может быть пустым'),
-
-  /**
-   * Статус проекта (опционально)
-   */
-  status: ProjectStatusSchema.optional(),
-
-  /**
-   * Описание проекта (опционально)
-   */
-  description: z.string().optional(),
-
-  /**
-   * Дата начала проекта в формате YYYY-MM-DD (опционально)
-   */
-  startDate: z.string().optional(),
-
-  /**
-   * Дата окончания проекта в формате YYYY-MM-DD (опционально)
-   */
-  endDate: z.string().optional(),
-
-  /**
-   * Массив ключей очередей, связанных с проектом (опционально)
-   */
-  queueIds: z.array(z.string()).optional(),
-
-  /**
-   * Массив ID или login участников проекта (опционально)
-   */
-  teamUserIds: z.array(z.string()).optional(),
-
-  /**
-   * Список полей для возврата (обязательно)
-   */
-  fields: FieldsSchema,
-});
+export const CreateProjectParamsSchema = z
+  .object({
+    /**
+     * Уникальный ключ проекта (обязательно)
+     */
+    key: z.string().min(1, 'Ключ проекта не может быть пустым'),
+  })
+  .merge(BaseProjectFieldsSchema.pick({ name: true, lead: true }))
+  .merge(BaseProjectFieldsSchema.omit({ name: true, lead: true }).partial())
+  .merge(
+    z.object({
+      /**
+       * Список полей для возврата (обязательно)
+       */
+      fields: FieldsSchema,
+    })
+  );
 
 /**
  * Вывод типа из схемы

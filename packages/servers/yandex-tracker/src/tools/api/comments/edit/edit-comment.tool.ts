@@ -76,7 +76,7 @@ export class EditCommentTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при редактировании комментария ${commentId} задачи ${issueId}`,
-        error as Error
+        error
       );
     }
   }

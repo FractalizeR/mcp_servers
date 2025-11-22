@@ -78,10 +78,7 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при получении комментариев задачи ${issueId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при получении комментариев задачи ${issueId}`, error);
     }
   }
 }
