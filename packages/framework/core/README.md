@@ -34,21 +34,26 @@ npm install @mcp-framework/core
 
 ```
 src/
+├── definition/                       # Schema-to-Definition generation
+│   ├── schema-to-definition.ts      # Auto-generate definitions from Zod
+│   ├── definition-validator.ts      # ToolDefinition validation
+│   └── zod-json-schema-adapter.ts   # Zod → JSON Schema converter
+├── tool-registry/                    # Tool registration and filtering
+│   ├── tool-registry.ts             # Tool registration and routing
+│   ├── tool-filter.service.ts       # Category/subcategory filtering
+│   ├── tool-sorter.ts               # Priority-based sorting
+│   └── types.ts                     # Registry types
 ├── tools/
 │   ├── base/                         # Base classes for tools
-│   │   ├── base-tool.ts             # Generic BaseTool<TFacade>
-│   │   ├── generate-definition.ts   # Auto-generate definitions from Zod
-│   │   ├── base-definition.ts       # BaseDefinition (deprecated)
+│   │   ├── base-tool.ts             # Generic BaseTool<TSchema>
 │   │   └── tool-metadata.ts         # StaticToolMetadata interface
 │   └── common/                       # Common utilities
-│       └── utils/                    # Tool utilities
-│           ├── tool-name.ts         # Tool naming conventions
-│           └── safety-warning-builder.ts
+│       ├── schemas/                 # Reusable Zod schemas
+│       └── utils/                   # Tool utilities
 ├── utils/                            # General utilities
 │   ├── response-field-filter.ts     # Filter response fields
 │   ├── batch-result-processor.ts    # Process batch results
 │   └── result-logger.ts             # Log tool results
-├── tool-registry.ts                  # Tool registration and routing
 └── index.ts                          # Public exports
 ```
 

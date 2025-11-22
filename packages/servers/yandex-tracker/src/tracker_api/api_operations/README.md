@@ -141,7 +141,7 @@ async execute(issueKeys: string[]): Promise<BatchResult<IssueWithUnknownFields>>
 **Для GET операций с высокой частотой запросов:**
 
 ```typescript
-import { EntityCacheKey, EntityType } from '@infrastructure/cache/entity-cache-key.js';
+import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
 
 const cacheKey = EntityCacheKey.createKey(EntityType.Issue, issueKey);
 const issue = await this.withCache(cacheKey, async () => {
@@ -486,7 +486,8 @@ await deleteChecklistItemOperation.execute('QUEUE-123', 'checklist-item-id');
 
 ## 🔗 См. также
 
-- **Facade конвенции:** [src/tracker_api/facade/README.md](../facade/README.md) (если создашь)
-- **Entities:** [src/tracker_api/entities/CONVENTIONS.md](../entities/CONVENTIONS.md)
-- **DTO:** [src/tracker_api/dto/CONVENTIONS.md](../dto/CONVENTIONS.md)
-- **DI:** [src/composition-root/CONVENTIONS.md](../../composition-root/CONVENTIONS.md)
+- **Facade конвенции:** [src/tracker_api/facade/README.md](../facade/README.md)
+- **Entities:** [src/tracker_api/entities/README.md](../entities/README.md)
+- **DTO:** [src/tracker_api/dto/README.md](../dto/README.md)
+- **DI:** [src/composition-root/README.md](../../composition-root/README.md)
+- **MCP Tools:** [src/tools/README.md](../../tools/README.md)

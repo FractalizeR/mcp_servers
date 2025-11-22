@@ -142,7 +142,7 @@ return this.formatSuccess({ issues: filtered });
 
 **Tool использует `generateDefinitionFromSchema(metadata, schema)` вместо отдельных `*.definition.ts` (удалены).**
 
-**Детали:** См. `packages/framework/core/README.md` и ARCHITECTURE.md
+**Детали:** См. [Core Framework README](../../../../framework/core/README.md) и [ARCHITECTURE.md](../../../../ARCHITECTURE.md)
 
 ---
 

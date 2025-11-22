@@ -41,12 +41,15 @@ src/
 │       └── error-mapper.ts # AxiosError → ApiError
 ├── cache/                   # Caching (Strategy Pattern)
 │   ├── cache-manager.interface.ts
+│   ├── entity-cache-key.ts # Cache key generator for entities
 │   └── no-op-cache.ts      # Null Object
 ├── async/                   # Parallel execution
 │   └── parallel-executor.ts # Throttling for batch requests
 ├── logging/                 # Production logging (Pino)
 │   └── README.md           # Detailed docs
 ├── config.ts                # Configuration from env
+├── constants.ts             # @deprecated (will be removed in v3.0)
+├── types.ts                 # Type definitions
 └── index.ts                 # Public exports
 ```
 
@@ -260,8 +263,9 @@ export { ExponentialBackoffStrategy } from './http/retry/exponential-backoff.str
 export { ErrorMapper } from './http/error/error-mapper.js';
 
 // Cache
-export { CacheManager } from './cache/cache-manager.interface.js';
+export type { CacheManager } from './cache/cache-manager.interface.js';
 export { NoOpCache } from './cache/no-op-cache.js';
+export { EntityCacheKey, EntityType } from './cache/entity-cache-key.js';
 
 // Async
 export { ParallelExecutor } from './async/parallel-executor.js';
@@ -274,7 +278,10 @@ export { loadConfig } from './config.js';
 export type { ServerConfig } from './types.js';
 
 // Types
-export { ApiError } from './types.js';
+export type { ApiError, BatchResult } from './types.js';
+
+// Constants (deprecated, will be removed in v3.0)
+export * from './constants.js';
 ```
 
 ---

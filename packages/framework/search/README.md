@@ -51,9 +51,14 @@ src/
 │   └── strategy-weights.ts          # Configurable weights
 ├── tools/                            # MCP tool for search
 │   ├── search-tools.tool.ts
+│   ├── search-tools.metadata.ts     # Metadata
 │   ├── search-tools.definition.ts
 │   └── search-tools.schema.ts
-├── generated-index.ts                # Auto-generated at build time
+├── utils/                            # Utilities
+│   ├── build-index-from-registry.ts # Index builder
+│   └── text-utils.ts                # Text processing
+├── constants.ts                      # Constants
+├── types.ts                          # Type definitions
 └── index.ts                          # Public exports
 ```
 

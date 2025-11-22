@@ -349,23 +349,28 @@ ENABLED_TOOL_CATEGORIES=""
 ### Архитектура
 
 Этот пакет построен на **MCP Framework** — переиспользуемых компонентах:
-- **[@mcp-framework/infrastructure](../infrastructure/README.md)** — HTTP, cache, logging
-- **[@mcp-framework/core](../core/README.md)** — BaseTool, registry, utilities
-- **[@mcp-framework/search](../search/README.md)** — Tool search engine
+- **[@mcp-framework/infrastructure](../../framework/infrastructure/README.md)** — HTTP, cache, logging
+- **[@mcp-framework/core](../../framework/core/README.md)** — BaseTool, registry, utilities
+- **[@mcp-framework/search](../../framework/search/README.md)** — Tool search engine
 
 ### Структура пакета
 
 ```
 src/
+├── cli/                 # CLI утилиты для подключения к MCP клиентам
+├── common/              # Общие схемы и type guards
 ├── composition-root/    # DI контейнер (InversifyJS)
-├── api_operations/      # API операции (Facade pattern)
-├── entities/            # Domain entities (Issue, User, etc.)
-├── dto/                 # Data Transfer Objects
-├── mcp/                 # MCP tools
-│   └── tools/
-│       ├── api/        # API tools (get, find, create, update)
-│       └── helpers/    # Helper tools (ping, url)
-└── index.ts             # Entry point
+├── config/              # Конфигурация сервера
+├── tools/               # MCP tools
+│   ├── api/            # API tools (issues, comments, queues, etc.)
+│   └── helpers/        # Helper tools (ping, issue-url, demo)
+├── tracker_api/         # Yandex Tracker API слой
+│   ├── api_operations/ # API операции
+│   ├── dto/            # Data Transfer Objects
+│   ├── entities/       # Domain entities
+│   ├── facade/         # Facade для упрощения доступа к API
+│   └── utils/          # Утилиты (pagination, duration, file operations)
+└── index.ts            # Entry point
 ```
 
 **Details:** [CLAUDE.md](./CLAUDE.md)
@@ -374,21 +379,34 @@ src/
 
 ```bash
 # Сборка
-npm run build              # Полная сборка TypeScript → JavaScript
-                           # Автоматически инкрементирует build number в manifest.json
-npm run build:bundle       # Только бандл (с инкрементом build number)
+npm run build              # Полная сборка: TypeScript → JavaScript → bundle
+                           # (auto: generate index, increment build number)
+npm run build:bundle       # Только бандл с инкрементом build number
 npm run build:mcpb         # Создать .mcpb архив для публикации
 
 # Тестирование
-npm run test               # Все тесты
-npm run test:coverage      # С покрытием кода
+npm run test               # Все unit тесты
+npm run test:smoke         # Дымовой тест (запуск сервера)
+npm run test:coverage      # Тесты с покрытием кода
 npm run test:watch         # Watch mode
+npm run test:quiet         # Для ИИ агентов (минимум вывода)
 
 # Валидация
-npm run validate           # Полная проверка (lint + tests + архитектура)
+npm run validate           # Полная проверка (lint + typecheck + test +
+                           # test:smoke + cpd + validate:docs)
+npm run validate:quiet     # Для ИИ агентов (минимум вывода)
 npm run lint               # ESLint проверка
+npm run lint:quiet         # Только ошибки
 npm run typecheck          # TypeScript type checking
+npm run cpd                # Проверка дублирования кода (≤5%)
 npm run validate:tools     # Проверка регистрации tools/operations
+npm run validate:docs      # Проверка лимитов размеров документации
+
+# CLI утилиты
+npm run mcp:connect        # Подключить сервер к MCP клиенту
+npm run mcp:disconnect     # Отключить сервер
+npm run mcp:list           # Список доступных клиентов
+npm run mcp:status         # Статус подключения
 ```
 
 ### Добавление нового инструмента
@@ -397,9 +415,9 @@ npm run validate:tools     # Проверка регистрации tools/opera
 
 1. **Создай структуру файлов:**
    ```
-   src/mcp/tools/api/sprints/get/
+   src/tools/api/sprints/get/
    ├── get-sprints.schema.ts      # Zod схемы валидации
-   ├── get-sprints.definition.ts  # MCP ToolDefinition
+   ├── get-sprints.metadata.ts    # Метаданные (имя, категория, теги)
    ├── get-sprints.tool.ts        # Основной класс
    └── index.ts                   # Реэкспорт
    ```
@@ -407,7 +425,7 @@ npm run validate:tools     # Проверка регистрации tools/opera
 2. **Добавь 1 строку регистрации:**
    ```typescript
    // src/composition-root/definitions/tool-definitions.ts
-   import { GetSprintsTool } from '../mcp/tools/api/sprints/get/index.js';
+   import { GetSprintsTool } from '#tools/api/sprints/get/index.js';
 
    export const TOOL_CLASSES = [
      // ... существующие
@@ -439,6 +457,9 @@ npm run validate:tools     # Проверка регистрации tools/opera
 - **[src/tools/README.md](src/tools/README.md)** — добавление MCP tools
 - **[src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md)** — API операции
 - **[src/tracker_api/entities/README.md](src/tracker_api/entities/README.md)** — domain entities
+- **[src/tracker_api/dto/README.md](src/tracker_api/dto/README.md)** — Data Transfer Objects
+- **[src/tracker_api/facade/README.md](src/tracker_api/facade/README.md)** — Facade паттерн
+- **[src/cli/README.md](src/cli/README.md)** — CLI утилиты подключения
 - **[tests/README.md](tests/README.md)** — тестирование
 
 ### Monorepo
@@ -472,9 +493,9 @@ MIT License — свободное использование, модифика�
 - **GitHub:** https://github.com/FractalizeR/mcp_server_yandex_tracker
 - **Issues:** https://github.com/FractalizeR/mcp_server_yandex_tracker/issues
 - **MCP Framework packages:**
-  - [Infrastructure](../infrastructure/README.md)
-  - [Core](../core/README.md)
-  - [Search](../search/README.md)
+  - [Infrastructure](../../framework/infrastructure/README.md)
+  - [Core](../../framework/core/README.md)
+  - [Search](../../framework/search/README.md)
 - **API Яндекс.Трекера:** https://cloud.yandex.ru/docs/tracker/about-api
 - **OAuth Яндекс:** https://yandex.ru/dev/oauth/
 
