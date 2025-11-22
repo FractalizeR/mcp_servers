@@ -19,6 +19,9 @@ import {
   DEFAULT_LOG_MAX_FILES,
   DEFAULT_TOOL_DISCOVERY_MODE,
   DEFAULT_ESSENTIAL_TOOLS,
+  DEFAULT_RETRY_ATTEMPTS,
+  DEFAULT_RETRY_MIN_DELAY,
+  DEFAULT_RETRY_MAX_DELAY,
   ENV_VAR_NAMES,
 } from './constants.js';
 
@@ -247,6 +250,39 @@ function parseDisabledToolGroups(value: string | undefined): ParsedCategoryFilte
 }
 
 /**
+ * Валидация retry attempts
+ */
+function validateRetryAttempts(value: string | undefined, defaultValue: number): number {
+  if (!value) {
+    return defaultValue;
+  }
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < 0 || parsed > 10) {
+    return defaultValue;
+  }
+  return parsed;
+}
+
+/**
+ * Валидация retry delay
+ */
+function validateRetryDelay(
+  value: string | undefined,
+  defaultValue: number,
+  min: number,
+  max: number
+): number {
+  if (!value) {
+    return defaultValue;
+  }
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < min || parsed > max) {
+    return defaultValue;
+  }
+  return parsed;
+}
+
+/**
  * Валидация ID организации
  * @throws {Error} если ID не указаны или указаны оба одновременно
  */
@@ -350,6 +386,26 @@ export function loadConfig(): ServerConfig {
   const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
   const disabledToolGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
 
+  // Retry configuration
+  const retryAttempts = validateRetryAttempts(
+    process.env[ENV_VAR_NAMES.RETRY_ATTEMPTS],
+    DEFAULT_RETRY_ATTEMPTS
+  );
+
+  const retryMinDelay = validateRetryDelay(
+    process.env[ENV_VAR_NAMES.RETRY_MIN_DELAY],
+    DEFAULT_RETRY_MIN_DELAY,
+    100,
+    5000
+  );
+
+  const retryMaxDelay = validateRetryDelay(
+    process.env[ENV_VAR_NAMES.RETRY_MAX_DELAY],
+    DEFAULT_RETRY_MAX_DELAY,
+    1000,
+    60000
+  );
+
   return {
     token: token.trim(),
     ...validatedOrgIds,
@@ -368,5 +424,9 @@ export function loadConfig(): ServerConfig {
     ...(enabledToolCategories && { enabledToolCategories }),
     // Условно добавляем disabledToolGroups только если оно определено
     ...(disabledToolGroups && { disabledToolGroups }),
+    // Retry configuration
+    retryAttempts,
+    retryMinDelay,
+    retryMaxDelay,
   };
 }

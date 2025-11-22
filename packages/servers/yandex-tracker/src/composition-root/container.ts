@@ -11,7 +11,7 @@ import { Logger } from '@mcp-framework/infrastructure';
 import { TYPES } from '#composition-root/types.js';
 
 // HTTP Layer
-import type { IHttpClient, RetryStrategy } from '@mcp-framework/infrastructure';
+import type { IHttpClient } from '@mcp-framework/infrastructure';
 import { AxiosHttpClient, ExponentialBackoffStrategy } from '@mcp-framework/infrastructure';
 
 // Cache Layer
@@ -61,14 +61,23 @@ function bindInfrastructure(container: Container, config: ServerConfig): void {
  * Регистрация HTTP слоя (retry, http client)
  */
 function bindHttpLayer(container: Container): void {
-  container
-    .bind<RetryStrategy>(TYPES.RetryStrategy)
-    .toConstantValue(new ExponentialBackoffStrategy(3, 1000, 10000));
-
   container.bind<IHttpClient>(TYPES.HttpClient).toDynamicValue(() => {
-    const retryStrategy = container.get<RetryStrategy>(TYPES.RetryStrategy);
     const loggerInstance = container.get<Logger>(TYPES.Logger);
     const configInstance = container.get<ServerConfig>(TYPES.ServerConfig);
+
+    // Создаём retry стратегию с конфигурируемыми параметрами
+    const retryStrategy = new ExponentialBackoffStrategy(
+      configInstance.retryAttempts ?? 3,
+      configInstance.retryMinDelay ?? 1000,
+      configInstance.retryMaxDelay ?? 10000
+    );
+
+    // Логируем retry конфигурацию при инициализации
+    loggerInstance.info(
+      `HTTP retry configuration loaded: attempts=${configInstance.retryAttempts ?? 3}, ` +
+        `minDelay=${configInstance.retryMinDelay ?? 1000}ms, ` +
+        `maxDelay=${configInstance.retryMaxDelay ?? 10000}ms`
+    );
 
     return new AxiosHttpClient(
       {

@@ -18,6 +18,9 @@ export const DEFAULT_LOG_MAX_SIZE = 51200 as const; // 50KB в байтах
 export const DEFAULT_LOG_MAX_FILES = 20 as const;
 export const DEFAULT_TOOL_DISCOVERY_MODE = 'eager' as const;
 export const DEFAULT_ESSENTIAL_TOOLS = ['ping', 'search_tools'] as const;
+export const DEFAULT_RETRY_ATTEMPTS = 3 as const;
+export const DEFAULT_RETRY_MIN_DELAY = 1000 as const; // 1 секунда
+export const DEFAULT_RETRY_MAX_DELAY = 10000 as const; // 10 секунд
 
 /**
  * Названия переменных окружения
@@ -39,4 +42,7 @@ export const ENV_VAR_NAMES = {
   ESSENTIAL_TOOLS: 'ESSENTIAL_TOOLS',
   ENABLED_TOOL_CATEGORIES: 'ENABLED_TOOL_CATEGORIES',
   DISABLED_TOOL_GROUPS: 'DISABLED_TOOL_GROUPS',
+  RETRY_ATTEMPTS: 'YANDEX_TRACKER_RETRY_ATTEMPTS',
+  RETRY_MIN_DELAY: 'YANDEX_TRACKER_RETRY_MIN_DELAY',
+  RETRY_MAX_DELAY: 'YANDEX_TRACKER_RETRY_MAX_DELAY',
 } as const;

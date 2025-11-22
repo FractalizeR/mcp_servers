@@ -248,10 +248,49 @@ npm run build
 | `YANDEX_ORG_ID` | ID организации (**обязательно**) | — |
 | `LOG_LEVEL` | Уровень логов: `debug`, `info`, `warn`, `error` | `info` |
 | `REQUEST_TIMEOUT` | Таймаут запросов (мс), 5000-120000 | `30000` |
+| `YANDEX_TRACKER_RETRY_ATTEMPTS` | Попыток повтора запроса при ошибке, 0-10 | `3` |
+| `YANDEX_TRACKER_RETRY_MIN_DELAY` | Мин. задержка между попытками (мс), 100-5000 | `1000` |
+| `YANDEX_TRACKER_RETRY_MAX_DELAY` | Макс. задержка между попытками (мс), 1000-60000 | `10000` |
 | `MAX_BATCH_SIZE` | Макс. задач в одном запросе, 1-1000 | `200` |
 | `MAX_CONCURRENT_REQUESTS` | Одновременных запросов к API, 1-20 | `5` |
 | `TOOL_DISCOVERY_MODE` | Режим обнаружения: `lazy` или `eager` | `lazy` |
 | `ENABLED_TOOL_CATEGORIES` | Фильтр категорий (через запятую, case-insensitive) | Все категории |
+
+### Настройка Retry (повтор запросов)
+
+Сервер автоматически повторяет неудачные HTTP запросы при временных сетевых ошибках и перегрузке API (429, 503). Используется exponential backoff стратегия — задержка между попытками увеличивается экспоненциально.
+
+**Когда происходит retry:**
+- Временные сетевые ошибки (ECONNRESET, ETIMEDOUT)
+- 429 Too Many Requests (превышен rate limit)
+- 503 Service Unavailable (API перегружен)
+
+**Настройка параметров:**
+
+```bash
+# Количество попыток (0 = без повторов, 10 = максимум)
+YANDEX_TRACKER_RETRY_ATTEMPTS=5
+
+# Начальная задержка (мс) — для первой попытки
+YANDEX_TRACKER_RETRY_MIN_DELAY=500
+
+# Максимальная задержка (мс) — ограничение для exponential backoff
+YANDEX_TRACKER_RETRY_MAX_DELAY=30000
+```
+
+**Пример для высоконагруженного окружения:**
+
+```json
+{
+  "env": {
+    "YANDEX_TRACKER_RETRY_ATTEMPTS": "5",
+    "YANDEX_TRACKER_RETRY_MIN_DELAY": "2000",
+    "YANDEX_TRACKER_RETRY_MAX_DELAY": "20000"
+  }
+}
+```
+
+Это даст более устойчивое поведение при частых ошибках 429 и нестабильной сети.
 
 ### Управление инструментами
 
@@ -295,6 +334,9 @@ ENABLED_TOOL_CATEGORIES=""
         "YANDEX_ORG_ID": "12345678",
         "LOG_LEVEL": "info",
         "REQUEST_TIMEOUT": "30000",
+        "YANDEX_TRACKER_RETRY_ATTEMPTS": "3",
+        "YANDEX_TRACKER_RETRY_MIN_DELAY": "1000",
+        "YANDEX_TRACKER_RETRY_MAX_DELAY": "10000",
         "TOOL_DISCOVERY_MODE": "eager",
         "ENABLED_TOOL_CATEGORIES": "issues,comments:read,queues"
       }
