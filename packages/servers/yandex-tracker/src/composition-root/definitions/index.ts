@@ -4,3 +4,4 @@
 
 export { TOOL_CLASSES, type ToolClass } from './tool-definitions.js';
 export { OPERATION_CLASSES, type OperationClass } from './operation-definitions.js';
+export { bindFacadeServices } from './facade-services.js';

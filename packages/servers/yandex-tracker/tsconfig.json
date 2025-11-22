@@ -5,7 +5,9 @@
     "rootDir": "./src",
     "composite": true,
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "references": [
     { "path": "../../framework/core" },

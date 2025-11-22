@@ -1,0 +1,61 @@
+/**
+ * Issue Link Service - сервис для работы со связями между задачами
+ *
+ * Ответственность:
+ * - Получение связей задачи
+ * - Создание связей между задачами
+ * - Удаление связей
+ *
+ * Архитектура:
+ * - Прямая инъекция операций через декораторы (@injectable + @inject)
+ * - Нет зависимостей от других сервисов
+ * - Делегирование вызовов операциям
+ *
+ * ВАЖНО: Использует декораторы InversifyJS для DI.
+ * В отличие от Operations/Tools (ручная регистрация), новые сервисы
+ * используют декораторы для более чистого и type-safe кода.
+ */
+
+import { injectable, inject } from 'inversify';
+import { GetIssueLinksOperation } from '#tracker_api/api_operations/link/get-issue-links.operation.js';
+import { CreateLinkOperation } from '#tracker_api/api_operations/link/create-link.operation.js';
+import { DeleteLinkOperation } from '#tracker_api/api_operations/link/delete-link.operation.js';
+import type { LinkWithUnknownFields } from '#tracker_api/entities/link.entity.js';
+import type { CreateLinkDto } from '#tracker_api/dto/link/create-link.dto.js';
+
+@injectable()
+export class IssueLinkService {
+  constructor(
+    @inject(GetIssueLinksOperation) private readonly getLinksOp: GetIssueLinksOperation,
+    @inject(CreateLinkOperation) private readonly createOp: CreateLinkOperation,
+    @inject(DeleteLinkOperation) private readonly deleteOp: DeleteLinkOperation
+  ) {}
+
+  /**
+   * Получает все связи для указанной задачи
+   * @param issueId - ключ или ID задачи
+   * @returns массив связей задачи
+   */
+  async getIssueLinks(issueId: string): Promise<LinkWithUnknownFields[]> {
+    return this.getLinksOp.execute(issueId);
+  }
+
+  /**
+   * Создаёт связь между текущей и указанной задачей
+   * @param issueId - ключ или ID текущей задачи
+   * @param linkData - параметры связи (relationship и issue)
+   * @returns созданная связь
+   */
+  async createLink(issueId: string, linkData: CreateLinkDto): Promise<LinkWithUnknownFields> {
+    return this.createOp.execute(issueId, linkData);
+  }
+
+  /**
+   * Удаляет связь между задачами
+   * @param issueId - ключ или ID задачи
+   * @param linkId - ID связи для удаления
+   */
+  async deleteLink(issueId: string, linkId: string): Promise<void> {
+    return this.deleteOp.execute(issueId, linkId);
+  }
+}

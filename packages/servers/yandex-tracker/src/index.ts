@@ -7,6 +7,9 @@
  * позволяя LLM-моделям взаимодействовать с задачами и проектами.
  */
 
+// IMPORTANT: Must be imported before any inversify decorators are used
+import 'reflect-metadata';
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
