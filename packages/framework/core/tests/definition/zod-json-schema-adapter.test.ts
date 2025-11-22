@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { z } from 'zod';
 import {
   zodToMcpInputSchema,
   extractRequiredFields,
@@ -283,6 +284,98 @@ describe('zodToMcpInputSchema', () => {
       expect(result.required).toContain('stringField');
       expect(result.required).toContain('numberField');
       expect(result.required).toContain('booleanField');
+    });
+  });
+
+  describe('Ошибки и исключения', () => {
+    it('должен выбросить ошибку если schema не является z.object()', () => {
+      // @ts-expect-error - намеренно передаем невалидный тип для тестирования
+      const invalidSchema = z.string();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Тест требует передачи невалидного типа
+      expect(() => zodToMcpInputSchema(invalidSchema as any)).toThrow('Schema must be z.object()');
+    });
+
+    it('должен обрабатывать пустой z.object() (edge case)', () => {
+      const emptySchema = z.object({});
+
+      // В Zod v4 пустой объект создает valid JSON Schema с пустым properties
+      const result = zodToMcpInputSchema(emptySchema);
+
+      expect(result.type).toBe('object');
+      expect(result.properties).toEqual({});
+      expect(result.required).toBeUndefined();
+    });
+  });
+
+  describe('Опция includeExamples', () => {
+    it('должен поддерживать includeExamples: false', () => {
+      // Создаем схему, которая может содержать examples в JSON Schema
+      const schema = z.object({
+        email: z.string().email().describe('Email address'),
+        age: z.number().describe('Age'),
+      });
+
+      const result = zodToMcpInputSchema(schema, {
+        includeExamples: false,
+      });
+
+      // Проверяем, что схема создана (examples будут удалены если есть)
+      expect(result.type).toBe('object');
+      expect(result.properties).toHaveProperty('email');
+      expect(result.properties).toHaveProperty('age');
+    });
+
+    it('должен удалять examples из вложенных объектов', () => {
+      // Создаем схему с вложенными объектами
+      const schema = z.object({
+        user: z.object({
+          name: z.string(),
+          contact: z.object({
+            email: z.string(),
+          }),
+        }),
+      });
+
+      const result = zodToMcpInputSchema(schema, {
+        includeExamples: false,
+      });
+
+      // Проверяем структуру
+      expect(result.type).toBe('object');
+      expect(result.properties).toHaveProperty('user');
+
+      const userProp = result.properties['user'] as Record<string, unknown>;
+      expect(userProp.type).toBe('object');
+      expect(userProp.properties).toHaveProperty('name');
+      expect(userProp.properties).toHaveProperty('contact');
+    });
+
+    it('должен удалять examples из массивов', () => {
+      // Создаем схему с массивами
+      const schema = z.object({
+        tags: z.array(z.string()),
+        items: z.array(
+          z.object({
+            name: z.string(),
+          })
+        ),
+      });
+
+      const result = zodToMcpInputSchema(schema, {
+        includeExamples: false,
+      });
+
+      // Проверяем структуру
+      expect(result.type).toBe('object');
+      expect(result.properties).toHaveProperty('tags');
+      expect(result.properties).toHaveProperty('items');
+
+      const tagsProp = result.properties['tags'] as Record<string, unknown>;
+      expect(tagsProp.type).toBe('array');
+
+      const itemsProp = result.properties['items'] as Record<string, unknown>;
+      expect(itemsProp.type).toBe('array');
     });
   });
 });

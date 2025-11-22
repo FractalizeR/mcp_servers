@@ -289,4 +289,134 @@ describe('HttpClient', () => {
       });
     });
   });
+
+  describe('interceptors', () => {
+    it('должен установить request interceptor', () => {
+      // Assert
+      expect(mockAxiosInstance.interceptors.request.use).toHaveBeenCalledTimes(1);
+      expect(mockAxiosInstance.interceptors.request.use).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.any(Function)
+      );
+    });
+
+    it('должен установить response interceptor', () => {
+      // Assert
+      expect(mockAxiosInstance.interceptors.response.use).toHaveBeenCalledTimes(1);
+      expect(mockAxiosInstance.interceptors.response.use).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.any(Function)
+      );
+    });
+
+    it('request interceptor должен логировать успешные запросы', () => {
+      // Arrange - получаем request interceptor callback
+      const requestInterceptorCall = vi.mocked(mockAxiosInstance.interceptors.request.use).mock
+        .calls[0];
+      const onFulfilled = requestInterceptorCall?.[0];
+
+      if (!onFulfilled) {
+        throw new Error('Request interceptor onFulfilled not found');
+      }
+
+      const mockConfig = {
+        method: 'get',
+        url: '/v3/issues/TEST-1',
+      };
+
+      // Act
+      const result = onFulfilled(mockConfig);
+
+      // Assert
+      expect(logger.debug).toHaveBeenCalledWith('HTTP Request: GET /v3/issues/TEST-1');
+      expect(result).toBe(mockConfig);
+    });
+
+    it('request interceptor должен логировать ошибки запросов', async () => {
+      // Arrange - получаем request interceptor error callback
+      const requestInterceptorCall = vi.mocked(mockAxiosInstance.interceptors.request.use).mock
+        .calls[0];
+      const onRejected = requestInterceptorCall?.[1];
+
+      if (!onRejected) {
+        throw new Error('Request interceptor onRejected not found');
+      }
+
+      const mockError = new Error('Request setup error');
+
+      // Act & Assert
+      await expect(onRejected(mockError)).rejects.toThrow('Request setup error');
+      expect(logger.error).toHaveBeenCalledWith('HTTP Request Error:', mockError);
+    });
+
+    it('response interceptor должен логировать успешные ответы', () => {
+      // Arrange - получаем response interceptor callback
+      const responseInterceptorCall = vi.mocked(mockAxiosInstance.interceptors.response.use).mock
+        .calls[0];
+      const onFulfilled = responseInterceptorCall?.[0];
+
+      if (!onFulfilled) {
+        throw new Error('Response interceptor onFulfilled not found');
+      }
+
+      const mockResponse = {
+        status: 200,
+        config: { url: '/v3/issues/TEST-1' },
+        data: { id: '1' },
+      };
+
+      // Act
+      const result = onFulfilled(mockResponse);
+
+      // Assert
+      expect(logger.debug).toHaveBeenCalledWith('HTTP Response: 200 /v3/issues/TEST-1');
+      expect(result).toBe(mockResponse);
+    });
+
+    it('response interceptor должен логировать и преобразовывать ошибки', async () => {
+      // Arrange - получаем response interceptor error callback
+      const responseInterceptorCall = vi.mocked(mockAxiosInstance.interceptors.response.use).mock
+        .calls[0];
+      const onRejected = responseInterceptorCall?.[1];
+
+      if (!onRejected) {
+        throw new Error('Response interceptor onRejected not found');
+      }
+
+      const mockAxiosError = {
+        isAxiosError: true,
+        response: {
+          status: 500,
+          statusText: 'Internal Server Error',
+          data: { message: 'Server error' },
+        },
+        message: '500 Internal Server Error',
+        name: 'AxiosError',
+      };
+
+      // Act & Assert
+      await expect(onRejected(mockAxiosError)).rejects.toBeDefined();
+      expect(logger.error).toHaveBeenCalledWith('HTTP Response Error:', expect.any(Object));
+    });
+  });
+
+  describe('getAxiosInstance', () => {
+    it('должен вернуть axios instance', () => {
+      // Act
+      const instance = httpClient.getAxiosInstance();
+
+      // Assert
+      expect(instance).toBe(mockAxiosInstance);
+    });
+
+    it('должен вернуть тот же instance при повторном вызове', () => {
+      // Act
+      const instance1 = httpClient.getAxiosInstance();
+      const instance2 = httpClient.getAxiosInstance();
+
+      // Assert
+      expect(instance1).toBe(instance2);
+      expect(instance1).toBe(mockAxiosInstance);
+    });
+  });
 });

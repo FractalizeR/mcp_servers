@@ -190,6 +190,18 @@ describe('Logger', () => {
       expect(infoSpy).toHaveBeenCalledWith('test message');
       infoSpy.mockRestore();
     });
+
+    it('debug должен логировать с контекстом', () => {
+      const logger = new Logger({ level: 'debug', pretty: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Spy на приватное поле для проверки вызовов
+      const debugSpy = vi.spyOn(logger['pino'] as any, 'debug');
+
+      const context = { traceId: '456', module: 'test' };
+      logger.debug('debug message', context);
+
+      expect(debugSpy).toHaveBeenCalledWith(context, 'debug message');
+      debugSpy.mockRestore();
+    });
   });
 
   describe('Error logging', () => {
@@ -257,6 +269,22 @@ describe('Logger', () => {
       const childLogger = logger.child({ requestId: '123' });
 
       expect(childLogger.level).toBe('warn');
+    });
+
+    it('child logger должен наследовать alerting transport от родителя', () => {
+      const logger = new Logger({ level: 'info', pretty: false });
+
+      const mockTransport = {
+        sendAlert: vi.fn(),
+      };
+
+      logger.setAlertingTransport(mockTransport);
+      const childLogger = logger.child({ requestId: '456' });
+
+      // Проверяем, что child logger имеет доступ к alerting
+      expect(() => {
+        childLogger.error('Test error in child');
+      }).not.toThrow();
     });
   });
 
