@@ -18,8 +18,9 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { loadConfig } from '@mcp-framework/infrastructure';
-import type { Logger, ServerConfig } from '@mcp-framework/infrastructure';
+import { loadConfig } from '#config';
+import type { ServerConfig } from '#config';
+import type { Logger } from '@mcp-framework/infrastructure';
 import type { ToolRegistry, ToolDefinition } from '@mcp-framework/core';
 import {
   MCP_SERVER_NAME,
@@ -91,8 +92,8 @@ function setupServer(
     const { clientInfo, protocolVersion } = request.params;
 
     logger.info(`🤝 Подключение MCP клиента`, {
-      clientName: clientInfo?.name,
-      clientVersion: clientInfo?.version,
+      clientName: clientInfo.name,
+      clientVersion: clientInfo.version,
       protocolVersion,
     });
 
@@ -245,9 +246,9 @@ function setupServer(
           originalName,
           normalizedName: name,
           removedPrefix,
-          hasContent: result.content?.length > 0,
+          hasContent: result.content.length > 0,
           contentPreview:
-            result.content?.[0]?.type === 'text'
+            result.content[0]?.type === 'text'
               ? result.content[0].text.substring(0, 200)
               : undefined,
         });

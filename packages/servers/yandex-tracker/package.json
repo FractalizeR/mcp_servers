@@ -13,6 +13,8 @@
   "author": "Fractalizer",
   "type": "module",
   "imports": {
+    "#config": "./src/config/index.ts",
+    "#config/*": "./src/config/*",
     "#tracker_api/*": "./src/tracker_api/*",
     "#tools/*": "./src/tools/*",
     "#composition-root/*": "./src/composition-root/*",

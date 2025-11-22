@@ -3,7 +3,7 @@ import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
 import type { HttpClient } from '@mcp-framework/infrastructure/http/client/http-client.js';
 import { ParallelExecutor } from '@mcp-framework/infrastructure/async/parallel-executor.js';
-import type { ServerConfig } from '@mcp-framework/infrastructure/types.js';
+import type { ServerConfig } from '#config';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { BatchResult } from '@mcp-framework/infrastructure/types.js';
 import { GetIssuesOperation } from '#tracker_api/api_operations/issue/get-issues.operation.js';

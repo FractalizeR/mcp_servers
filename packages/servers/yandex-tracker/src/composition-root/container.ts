@@ -6,7 +6,7 @@
  */
 
 import { Container } from 'inversify';
-import type { ServerConfig } from '@mcp-framework/infrastructure';
+import type { ServerConfig } from '#config';
 import { Logger } from '@mcp-framework/infrastructure';
 import { TYPES } from '#composition-root/types.js';
 

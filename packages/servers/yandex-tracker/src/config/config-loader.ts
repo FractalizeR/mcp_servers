@@ -1,26 +1,13 @@
 /**
- * Configuration loader
+ * Configuration loader and validators
  *
- * @deprecated This module has been moved to @mcp-server/yandex-tracker
- * These exports will be removed in v2.0.0
- *
- * Migration guide:
- * ```typescript
- * // Before:
- * import { ServerConfig, loadConfig } from '@mcp-framework/infrastructure';
- *
- * // After:
- * import { ServerConfig, loadConfig } from '@mcp-server/yandex-tracker/config';
- * // or using alias (within yandex-tracker package):
- * import { ServerConfig, loadConfig } from '#config';
- * ```
- *
- * Reason: Infrastructure layer should not contain domain-specific code (Yandex Tracker)
+ * Moved from @mcp-framework/infrastructure to maintain clean separation:
+ * Infrastructure layer should not contain domain-specific code (Yandex Tracker)
  */
 
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { ServerConfig, LogLevel, ParsedCategoryFilter } from './types.js';
+import type { ServerConfig, LogLevel, ParsedCategoryFilter } from './server-config.interface.js';
 import {
   DEFAULT_API_BASE,
   DEFAULT_LOG_LEVEL,
@@ -42,7 +29,6 @@ const PROJECT_ROOT = resolve(__dirname, '../..');
 
 /**
  * Валидация уровня логирования
- * @deprecated Moved to @mcp-server/yandex-tracker/config
  */
 function validateLogLevel(level: string): LogLevel {
   const validLevels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
@@ -54,7 +40,6 @@ function validateLogLevel(level: string): LogLevel {
 
 /**
  * Валидация и парсинг таймаута
- * @deprecated Moved to @mcp-server/yandex-tracker/config
  */
 function validateTimeout(timeout: string | undefined, defaultValue: number): number {
   if (!timeout) {
@@ -71,7 +56,6 @@ function validateTimeout(timeout: string | undefined, defaultValue: number): num
 
 /**
  * Валидация и парсинг максимального размера batch-запроса
- * @deprecated Moved to @mcp-server/yandex-tracker/config
  */
 function validateMaxBatchSize(value: string | undefined, defaultValue: number): number {
   if (!value) {
@@ -88,7 +72,6 @@ function validateMaxBatchSize(value: string | undefined, defaultValue: number): 
 
 /**
  * Валидация и парсинг максимального количества одновременных запросов
- * @deprecated Moved to @mcp-server/yandex-tracker/config
  */
 function validateMaxConcurrentRequests(value: string | undefined, defaultValue: number): number {
   if (!value) {
@@ -105,7 +88,6 @@ function validateMaxConcurrentRequests(value: string | undefined, defaultValue: 
 
 /**
  * Валидация режима tool discovery
- * @deprecated Moved to @mcp-server/yandex-tracker/config
  */
 function validateToolDiscoveryMode(mode: string | undefined): 'lazy' | 'eager' {
   if (mode === 'eager' || mode === 'lazy') {
@@ -116,7 +98,6 @@ function validateToolDiscoveryMode(mode: string | undefined): 'lazy' | 'eager' {
 
 /**
  * Парсинг списка essential tools из переменной окружения
- * @deprecated Moved to @mcp-server/yandex-tracker/config
  */
 function parseEssentialTools(value: string | undefined): readonly string[] {
   if (!value || value.trim() === '') {
@@ -131,9 +112,19 @@ function parseEssentialTools(value: string | undefined): readonly string[] {
 
 /**
  * Парсинг фильтра категорий инструментов из переменной окружения
- * @deprecated Moved to @mcp-server/yandex-tracker/config
+ *
+ * Формат: "issues,comments" или "issues:read,comments:write"
+ *
+ * Graceful degradation:
+ * - Пустая строка или undefined → includeAll = true
+ * - Невалидные категории → пропускаем (логирование будет на уровне выше)
+ * - Невалидный формат элемента → пропускаем элемент
+ *
+ * @param value - значение переменной окружения ENABLED_TOOL_CATEGORIES
+ * @returns Распарсенная структура фильтра
  */
 function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFilter {
+  // Default: все категории
   if (!value || value.trim() === '') {
     return {
       categories: new Set(),
@@ -152,12 +143,18 @@ function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFi
 
   for (const part of parts) {
     if (part.includes(':')) {
+      // Формат: "category:subcategory"
       const segments = part.split(':');
+
+      // Валидация: должно быть ровно 2 сегмента
       if (segments.length !== 2) {
+        // Пропускаем невалидный формат (например, "issues::read" или "issues:read:write")
         continue;
       }
 
       const [cat, subcat] = segments.map((s) => s.trim().toLowerCase());
+
+      // Пропускаем пустые сегменты
       if (!cat || !subcat) {
         continue;
       }
@@ -169,10 +166,12 @@ function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFi
       }
       subcategories.add(subcat);
     } else {
+      // Формат: "category" (все подкатегории)
       categories.add(part.toLowerCase());
     }
   }
 
+  // Если ничего не распарсилось, возвращаем includeAll=true
   const includeAll = categories.size === 0 && categoriesWithSubcategories.size === 0;
 
   return {
@@ -184,9 +183,18 @@ function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFi
 
 /**
  * Парсинг списка отключенных групп инструментов
- * @deprecated Moved to @mcp-server/yandex-tracker/config
+ *
+ * Формат: "category" или "category:subcategory" через запятую
+ * Примеры:
+ * - "components,checklists" - отключить целые категории
+ * - "issues:worklog,issues:attachments" - отключить подкатегории
+ * - "components,issues:worklog,helpers:demo" - смешанный формат
+ *
+ * @param value - значение переменной окружения DISABLED_TOOL_GROUPS
+ * @returns Распарсенная структура отключенных групп
  */
 function parseDisabledToolGroups(value: string | undefined): ParsedCategoryFilter | undefined {
+  // Если не указано или пустая строка - ничего не отключаем
   if (!value || value.trim() === '') {
     return undefined;
   }
@@ -201,14 +209,17 @@ function parseDisabledToolGroups(value: string | undefined): ParsedCategoryFilte
 
   for (const part of parts) {
     if (part.includes(':')) {
+      // Формат: "category:subcategory"
       const segments = part.split(':');
+
       if (segments.length !== 2) {
-        continue;
+        continue; // Пропускаем невалидный формат
       }
 
       const [cat, subcat] = segments.map((s) => s.trim().toLowerCase());
+
       if (!cat || !subcat) {
-        continue;
+        continue; // Пропускаем пустые сегменты
       }
 
       let subcategories = disabledCategoriesWithSubcategories.get(cat);
@@ -218,10 +229,12 @@ function parseDisabledToolGroups(value: string | undefined): ParsedCategoryFilte
       }
       subcategories.add(subcat);
     } else {
+      // Формат: "category" (отключить всю категорию)
       disabledCategories.add(part.toLowerCase());
     }
   }
 
+  // Если ничего не распарсилось, возвращаем undefined
   if (disabledCategories.size === 0 && disabledCategoriesWithSubcategories.size === 0) {
     return undefined;
   }
@@ -229,13 +242,13 @@ function parseDisabledToolGroups(value: string | undefined): ParsedCategoryFilte
   return {
     categories: disabledCategories,
     categoriesWithSubcategories: disabledCategoriesWithSubcategories,
-    includeAll: false,
+    includeAll: false, // Это список отключенных, а не включенных
   };
 }
 
 /**
  * Валидация ID организации
- * @deprecated Moved to @mcp-server/yandex-tracker/config
+ * @throws {Error} если ID не указаны или указаны оба одновременно
  */
 function validateOrgIds(
   orgId: string | undefined,
@@ -267,7 +280,7 @@ function validateOrgIds(
 
 /**
  * Загрузка конфигурации из переменных окружения
- * @deprecated Moved to @mcp-server/yandex-tracker/config - Will be removed in v2.0.0
+ * @throws {Error} если обязательные переменные не установлены
  */
 export function loadConfig(): ServerConfig {
   const token = process.env[ENV_VAR_NAMES.YANDEX_TRACKER_TOKEN];
@@ -279,12 +292,16 @@ export function loadConfig(): ServerConfig {
     );
   }
 
+  // Валидация ID организации (выбрасывает ошибку при проблемах)
   const validatedOrgIds = validateOrgIds(
     process.env[ENV_VAR_NAMES.YANDEX_ORG_ID],
     process.env[ENV_VAR_NAMES.YANDEX_CLOUD_ORG_ID]
   );
 
+  // Используем || для дефолтных значений, так как пустая строка должна быть заменена
+
   const apiBase = process.env[ENV_VAR_NAMES.YANDEX_TRACKER_API_BASE]?.trim() || DEFAULT_API_BASE;
+
   const logLevel = validateLogLevel(
     process.env[ENV_VAR_NAMES.LOG_LEVEL]?.trim() || DEFAULT_LOG_LEVEL
   );
@@ -302,9 +319,11 @@ export function loadConfig(): ServerConfig {
   );
 
   const logsDirRaw = process.env[ENV_VAR_NAMES.LOGS_DIR]?.trim() || DEFAULT_LOGS_DIR;
+  // Если путь относительный - резолвим относительно PROJECT_ROOT
   const logsDir = resolve(PROJECT_ROOT, logsDirRaw);
   const prettyLogs = process.env[ENV_VAR_NAMES.PRETTY_LOGS] === 'true';
 
+  // Ротация логов (по умолчанию: 50KB, 20 файлов = максимум ~1MB на диске)
   const logMaxSize = parseInt(
     process.env[ENV_VAR_NAMES.LOG_MAX_SIZE] || String(DEFAULT_LOG_MAX_SIZE),
     10
@@ -314,17 +333,20 @@ export function loadConfig(): ServerConfig {
     10
   );
 
+  // Tool Discovery Mode (lazy по умолчанию для масштабируемости)
   const toolDiscoveryMode = validateToolDiscoveryMode(
     process.env[ENV_VAR_NAMES.TOOL_DISCOVERY_MODE]
   );
   const essentialTools = parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]);
 
+  // Парсинг фильтра категорий (опционально, только для eager режима)
   const enabledToolCategoriesRaw = process.env[ENV_VAR_NAMES.ENABLED_TOOL_CATEGORIES];
   const enabledToolCategories =
     enabledToolCategoriesRaw !== undefined
       ? parseEnabledToolCategories(enabledToolCategoriesRaw)
       : undefined;
 
+  // Парсинг отключенных групп инструментов (негативный фильтр)
   const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
   const disabledToolGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
 
@@ -342,7 +364,9 @@ export function loadConfig(): ServerConfig {
     logMaxFiles,
     toolDiscoveryMode,
     essentialTools,
+    // Условно добавляем enabledToolCategories только если оно определено
     ...(enabledToolCategories && { enabledToolCategories }),
+    // Условно добавляем disabledToolGroups только если оно определено
     ...(disabledToolGroups && { disabledToolGroups }),
   };
 }

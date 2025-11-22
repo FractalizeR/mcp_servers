@@ -110,7 +110,7 @@
 | Этап | Файл | Статус | Дата |
 |------|------|--------|------|
 | 0.1 | Facade Planning | ✅ Completed | 2025-11-21 |
-| 1.1 | Infrastructure | ⏸️ Pending | - |
+| 1.1 | Infrastructure | ✅ Completed | 2025-11-22 |
 | 1.2 | Test Coverage | ⏸️ Pending | - |
 | 1.3 | Code Quality | ⏸️ Pending | - |
 | 1.4 | Yandex-Tracker | ⏸️ Pending | - |
