@@ -13,8 +13,9 @@
  * - Type Safety (compile-time проверка типов)
  */
 
-// TODO: Будут добавлены экспорты сервисов по мере их создания
-// export { UserService } from './user.service.js';
+// Доменные сервисы
+export { UserService } from './user.service.js';
+// TODO: Будут добавлены экспорты остальных сервисов по мере их создания
 // export { IssueService } from './issue.service.js';
 // export { IssueLinkService } from './issue-link.service.js';
 // export { IssueAttachmentService } from './issue-attachment.service.js';

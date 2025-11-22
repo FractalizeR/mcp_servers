@@ -36,7 +36,7 @@ import type { ISearchStrategy } from '@mcp-framework/search';
 import type { StrategyType } from '@mcp-framework/search';
 
 // Автоматически импортируемые определения
-import { TOOL_CLASSES, OPERATION_CLASSES } from './definitions/index.js';
+import { TOOL_CLASSES, OPERATION_CLASSES, bindFacadeServices } from './definitions/index.js';
 
 /**
  * Регистрация базовых зависимостей (config, logger)
@@ -138,10 +138,10 @@ function bindOperations(container: Container): void {
 /**
  * Регистрация Facade
  *
- * КРИТИЧЕСКИЕ ИЗМЕНЕНИЯ:
- * - Передаём контейнер вместо зависимостей
- * - Facade извлекает Operations ленив но из контейнера
- * - Масштабируется до 50+ операций БЕЗ изменения регистрации
+ * АРХИТЕКТУРНЫЕ ИЗМЕНЕНИЯ (v2.0):
+ * - Facade теперь использует Service-based architecture
+ * - Сервисы извлекаются лениво из контейнера (обратная совместимость с тестами)
+ * - После завершения рефакторинга переключим на прямую инъекцию
  */
 function bindFacade(container: Container): void {
   container.bind<YandexTrackerFacade>(TYPES.YandexTrackerFacade).toDynamicValue(() => {
@@ -282,8 +282,9 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
   bindHttpLayer(container);
   bindCacheLayer(container);
 
-  // 2. Бизнес-логика (operations, facade)
+  // 2. Бизнес-логика (operations, facade services, facade)
   bindOperations(container);
+  bindFacadeServices(container);
   bindFacade(container);
 
   // 3. Стандартные tools (facade, logger)
