@@ -48,11 +48,11 @@ export class UpdateFieldOperation extends BaseOperation {
     const field = await this.httpClient.patch<FieldOutput>(`/v2/fields/${fieldId}`, input);
 
     // Инвалидируем кеш
-    this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, fieldId));
-    this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, 'all'));
+    await this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, fieldId));
+    await this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, 'all'));
 
     // Кешируем обновленное поле
-    this.cacheManager.set(EntityCacheKey.createKey(EntityType.FIELD, field.id), field);
+    await this.cacheManager.set(EntityCacheKey.createKey(EntityType.FIELD, field.id), field);
 
     this.logger.info(`Поле ${fieldId} успешно обновлено`);
 

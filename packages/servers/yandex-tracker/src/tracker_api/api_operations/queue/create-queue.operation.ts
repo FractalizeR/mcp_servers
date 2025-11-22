@@ -42,7 +42,7 @@ export class CreateQueueOperation extends BaseOperation {
 
     // Кешируем созданную очередь по её ключу
     const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, createdQueue.key);
-    this.cacheManager.set(cacheKey, createdQueue);
+    await this.cacheManager.set(cacheKey, createdQueue);
 
     this.logger.info(`Очередь успешно создана: ${createdQueue.key}`);
 

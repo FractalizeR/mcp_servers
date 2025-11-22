@@ -63,6 +63,102 @@ import { LogLevel } from '@mcp-framework/infrastructure';
 
 ---
 
+### BREAKING: CacheManager теперь асинхронный
+
+**Причина:** Подготовка к поддержке внешних кешей (Redis, Memcached). In-memory кеш не может использовать асинхронный интерфейс для совместимости с внешними кешами.
+
+#### Интерфейс CacheManager
+
+**ДО (v1.x):**
+```typescript
+interface CacheManager {
+  get<T>(key: string): T | undefined;
+  set<T>(key: string, value: T, ttl?: number): void;
+  delete(key: string): void;
+  clear(): void;
+  prune(): void;
+}
+```
+
+**ПОСЛЕ (v2.0.0):**
+```typescript
+interface CacheManager {
+  get<T>(key: string): Promise<T | null>;
+  set<T>(key: string, value: T, ttl?: number): Promise<void>;
+  delete(key: string): Promise<void>;
+  clear(): Promise<void>;
+  prune(): Promise<void>;
+}
+```
+
+#### Использование кеша
+
+**ДО (v1.x):**
+```typescript
+const value = cacheManager.get<Issue>('issue:123');
+cacheManager.set('issue:123', issue);
+cacheManager.delete('issue:123');
+```
+
+**ПОСЛЕ (v2.0.0):**
+```typescript
+const value = await cacheManager.get<Issue>('issue:123');
+await cacheManager.set('issue:123', issue);
+await cacheManager.delete('issue:123');
+```
+
+#### Новые реализации
+
+**ДО (v1.x):**
+- `NoOpCache` — единственная реализация (синхронная)
+
+**ПОСЛЕ (v2.0.0):**
+- `NoOpCache` — обновлён до async (возвращает `null` вместо `undefined`)
+- `InMemoryCacheManager` — новая реализация с async интерфейсом, TTL поддержкой
+
+#### Возвращаемые значения
+
+- `get()` теперь возвращает `null` (вместо `undefined`) при cache miss
+- Проверяйте `if (cached !== null)` вместо `if (cached !== undefined)`
+
+#### Миграция кода
+
+1. Добавьте `await` ко всем вызовам методов CacheManager
+2. Замените `undefined` на `null` в проверках кеша
+3. Убедитесь, что функции с вызовами кеша помечены как `async`
+
+**Пример миграции:**
+```typescript
+// ДО
+protected getCached<T>(key: string): T | undefined {
+  return this.cacheManager.get<T>(key);
+}
+
+// ПОСЛЕ
+protected async getCached<T>(key: string): Promise<T | null> {
+  return await this.cacheManager.get<T>(key);
+}
+```
+
+#### Использование в DI контейнере
+
+**ДО (v1.x):**
+```typescript
+container.bind<CacheManager>(TYPES.CacheManager).to(NoOpCache);
+```
+
+**ПОСЛЕ (v2.0.0):**
+```typescript
+// Рекомендуется InMemoryCacheManager для production
+const cacheManager = new InMemoryCacheManager(300000); // 5 минут TTL
+container.bind<CacheManager>(TYPES.CacheManager).toConstantValue(cacheManager);
+
+// Или NoOpCache для отключения кеша
+container.bind<CacheManager>(TYPES.CacheManager).to(NoOpCache);
+```
+
+---
+
 ## v2.x → v2.y: Обязательный параметр `fields`
 
 ### Breaking Change

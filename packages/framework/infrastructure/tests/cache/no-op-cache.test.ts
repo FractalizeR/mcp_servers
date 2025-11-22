@@ -13,109 +13,97 @@ describe('NoOpCache', () => {
   });
 
   describe('get', () => {
-    it('должен всегда возвращать undefined', () => {
-      const result = cache.get('any-key');
+    it('должен всегда возвращать null', async () => {
+      const result = await cache.get('any-key');
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
     });
 
-    it('должен возвращать undefined для любого типа', () => {
-      const stringResult = cache.get<string>('key1');
-      const numberResult = cache.get<number>('key2');
-      const objectResult = cache.get<{ foo: string }>('key3');
+    it('должен возвращать null для любого типа', async () => {
+      const stringResult = await cache.get<string>('key1');
+      const numberResult = await cache.get<number>('key2');
+      const objectResult = await cache.get<{ foo: string }>('key3');
 
-      expect(stringResult).toBeUndefined();
-      expect(numberResult).toBeUndefined();
-      expect(objectResult).toBeUndefined();
+      expect(stringResult).toBeNull();
+      expect(numberResult).toBeNull();
+      expect(objectResult).toBeNull();
     });
 
-    it('должен возвращать undefined даже после set', () => {
-      cache.set('key', 'value');
-      const result = cache.get('key');
+    it('должен возвращать null даже после set', async () => {
+      await cache.set('key', 'value');
+      const result = await cache.get('key');
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
     });
   });
 
   describe('set', () => {
-    it('не должен бросать ошибку при установке значения', () => {
-      expect(() => {
-        cache.set('key', 'value');
-      }).not.toThrow();
+    it('не должен бросать ошибку при установке значения', async () => {
+      await expect(cache.set('key', 'value')).resolves.toBeUndefined();
     });
 
-    it('не должен бросать ошибку при установке с TTL', () => {
-      expect(() => {
-        cache.set('key', 'value', 5000);
-      }).not.toThrow();
+    it('не должен бросать ошибку при установке с TTL', async () => {
+      await expect(cache.set('key', 'value', 5000)).resolves.toBeUndefined();
     });
 
-    it('не должен сохранять значение', () => {
-      cache.set('key', 'value');
+    it('не должен сохранять значение', async () => {
+      await cache.set('key', 'value');
 
-      const result = cache.get('key');
-      expect(result).toBeUndefined();
+      const result = await cache.get('key');
+      expect(result).toBeNull();
     });
 
-    it('должен работать с любыми типами данных', () => {
-      expect(() => {
-        cache.set('string', 'value');
-        cache.set('number', 123);
-        cache.set('object', { foo: 'bar' });
-        cache.set('array', [1, 2, 3]);
-        cache.set('null', null);
+    it('должен работать с любыми типами данных', async () => {
+      await expect(async () => {
+        await cache.set('string', 'value');
+        await cache.set('number', 123);
+        await cache.set('object', { foo: 'bar' });
+        await cache.set('array', [1, 2, 3]);
+        await cache.set('null', null);
       }).not.toThrow();
     });
   });
 
   describe('delete', () => {
-    it('не должен бросать ошибку при удалении', () => {
-      expect(() => {
-        cache.delete('any-key');
-      }).not.toThrow();
+    it('не должен бросать ошибку при удалении', async () => {
+      await expect(cache.delete('any-key')).resolves.toBeUndefined();
     });
 
-    it('не должен бросать ошибку при удалении несуществующего ключа', () => {
-      expect(() => {
-        cache.delete('non-existent-key');
-      }).not.toThrow();
+    it('не должен бросать ошибку при удалении несуществующего ключа', async () => {
+      await expect(cache.delete('non-existent-key')).resolves.toBeUndefined();
     });
   });
 
   describe('clear', () => {
-    it('не должен бросать ошибку при очистке', () => {
-      expect(() => {
-        cache.clear();
-      }).not.toThrow();
+    it('не должен бросать ошибку при очистке', async () => {
+      await expect(cache.clear()).resolves.toBeUndefined();
     });
 
-    it('не должен влиять на работу после очистки', () => {
-      cache.set('key', 'value');
-      cache.clear();
+    it('не должен влиять на работу после очистки', async () => {
+      await cache.set('key', 'value');
+      await cache.clear();
 
-      const result = cache.get('key');
-      expect(result).toBeUndefined();
+      const result = await cache.get('key');
+      expect(result).toBeNull();
     });
   });
 
   describe('prune', () => {
-    it('не должен бросать ошибку при очистке устаревших записей', () => {
-      expect(() => {
-        cache.prune();
-      }).not.toThrow();
+    it('не должен бросать ошибку при очистке устаревших записей', async () => {
+      await expect(cache.prune()).resolves.toBeUndefined();
     });
   });
 
   describe('Null Object Pattern', () => {
-    it('должен предоставлять безопасный API без проверок на null', () => {
+    it('должен предоставлять безопасный API без проверок на null', async () => {
       // Проверяем, что можно вызывать все методы без проверок
-      cache.set('key', 'value');
-      const value = cache.get('key');
-      cache.delete('key');
-      cache.clear();
-      cache.prune();
+      await cache.set('key', 'value');
+      const value = await cache.get('key');
+      await cache.delete('key');
+      await cache.clear();
+      await cache.prune();
 
-      expect(value).toBeUndefined();
+      expect(value).toBeNull();
     });
 
     it('должен быть взаимозаменяем с реальной реализацией CacheManager', () => {

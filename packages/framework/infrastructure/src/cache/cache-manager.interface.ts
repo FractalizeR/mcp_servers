@@ -2,7 +2,7 @@
  * Интерфейс менеджера кеша
  *
  * Паттерн: Strategy Pattern
- * Позволяет легко заменять реализации кеша (Memory → Redis → Memcached)
+ * Асинхронный интерфейс для поддержки внешних кешей (Redis, Memcached)
  *
  * Ответственность (SRP):
  * - Определение операций с кешем (get, set, delete, clear, prune)
@@ -13,9 +13,9 @@ export interface CacheManager {
   /**
    * Получить значение из кеша
    * @param key - ключ кеша
-   * @returns значение или undefined, если ключ не найден или истёк
+   * @returns значение или null, если ключ не найден или истёк
    */
-  get<T>(key: string): T | undefined;
+  get<T>(key: string): Promise<T | null>;
 
   /**
    * Сохранить значение в кеш
@@ -23,21 +23,21 @@ export interface CacheManager {
    * @param value - значение для сохранения
    * @param ttl - опциональное время жизни в миллисекундах (если не указано, используется значение по умолчанию)
    */
-  set<T>(key: string, value: T, ttl?: number): void;
+  set<T>(key: string, value: T, ttl?: number): Promise<void>;
 
   /**
    * Удалить значение из кеша
    * @param key - ключ кеша
    */
-  delete(key: string): void;
+  delete(key: string): Promise<void>;
 
   /**
    * Очистить весь кеш
    */
-  clear(): void;
+  clear(): Promise<void>;
 
   /**
    * Удалить устаревшие записи из кеша (с истёкшим TTL)
    */
-  prune(): void;
+  prune(): Promise<void>;
 }

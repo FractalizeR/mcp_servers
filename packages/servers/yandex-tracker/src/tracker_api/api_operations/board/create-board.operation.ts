@@ -33,7 +33,7 @@ export class CreateBoardOperation extends BaseOperation {
 
     // Инвалидация кеша для новой доски
     const cacheKey = EntityCacheKey.createKey(EntityType.BOARD, board.id);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Доска создана: ${board.id}`);
 

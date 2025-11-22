@@ -14,18 +14,18 @@ describe('GetProjectsOperation', () => {
 
   beforeEach(() => {
     mockHttpClient = {
-      get: vi.fn(),
+      get: vi.fn().mockResolvedValue(null),
       post: vi.fn(),
       patch: vi.fn(),
       put: vi.fn(),
-      delete: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
     } as unknown as HttpClient;
 
     mockCacheManager = {
       get: vi.fn().mockReturnValue(undefined),
-      set: vi.fn(),
-      delete: vi.fn(),
-      clear: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
       has: vi.fn(),
     } as unknown as CacheManager;
 

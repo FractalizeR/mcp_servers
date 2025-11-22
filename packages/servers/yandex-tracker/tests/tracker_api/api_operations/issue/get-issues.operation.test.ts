@@ -19,8 +19,8 @@ describe('GetIssuesOperation', () => {
   beforeEach(() => {
     mockHttpClient = {} as HttpClient;
     mockCacheManager = {
-      get: vi.fn(),
-      set: vi.fn(),
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(undefined),
     } as unknown as CacheManager;
     mockLogger = {
       warn: vi.fn(),
@@ -208,7 +208,7 @@ describe('GetIssuesOperation', () => {
       mockHttpClient.get = vi.fn().mockResolvedValue(mockIssue);
 
       // Мокируем cache (cache miss) - СИНХРОННО
-      vi.mocked(mockCacheManager.get).mockReturnValue(undefined);
+      vi.mocked(mockCacheManager.get).mockResolvedValue(undefined);
       vi.mocked(mockCacheManager.set).mockReturnValue(undefined);
 
       const result = await operation.execute([issueKey]);
@@ -249,7 +249,7 @@ describe('GetIssuesOperation', () => {
       (operation as any).parallelExecutor = realParallelExecutor;
 
       // Мокируем cache (cache hit) - СИНХРОННО
-      vi.mocked(mockCacheManager.get).mockReturnValue(cachedIssue);
+      vi.mocked(mockCacheManager.get).mockResolvedValue(cachedIssue);
 
       // httpClient.get НЕ должен быть вызван
       mockHttpClient.get = vi.fn();
@@ -297,7 +297,7 @@ describe('GetIssuesOperation', () => {
       });
 
       // Мокируем cache (все cache miss) - СИНХРОННО
-      vi.mocked(mockCacheManager.get).mockReturnValue(undefined);
+      vi.mocked(mockCacheManager.get).mockResolvedValue(undefined);
       vi.mocked(mockCacheManager.set).mockReturnValue(undefined);
 
       const result = await operation.execute(issueKeys);

@@ -15,18 +15,18 @@ describe('GetProjectOperation', () => {
 
   beforeEach(() => {
     mockHttpClient = {
-      get: vi.fn(),
+      get: vi.fn().mockResolvedValue(null),
       post: vi.fn(),
       patch: vi.fn(),
       put: vi.fn(),
-      delete: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
     } as unknown as HttpClient;
 
     mockCacheManager = {
       get: vi.fn().mockReturnValue(undefined), // По умолчанию кеш пустой (undefined, синхронно)
-      set: vi.fn(),
-      delete: vi.fn(),
-      clear: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
       has: vi.fn(),
     } as unknown as CacheManager;
 
@@ -74,7 +74,7 @@ describe('GetProjectOperation', () => {
     it('should return cached project if available', async () => {
       const cachedProject: ProjectWithUnknownFields = createProjectFixture({ id: 'cached' });
       const _cacheKey = EntityCacheKey.createKey(EntityType.PROJECT, 'cached');
-      vi.mocked(mockCacheManager.get).mockReturnValue(cachedProject); // синхронный возврат
+      vi.mocked(mockCacheManager.get).mockResolvedValue(cachedProject); // синхронный возврат
 
       const result = await operation.execute({ projectId: 'cached' });
 

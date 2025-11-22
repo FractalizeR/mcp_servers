@@ -61,10 +61,10 @@ export class CreateComponentOperation extends BaseOperation {
 
     // Кешируем созданный компонент по его ID
     const componentCacheKey = EntityCacheKey.createKey(EntityType.COMPONENT, createdComponent.id);
-    this.cacheManager.set(componentCacheKey, createdComponent);
+    await this.cacheManager.set(componentCacheKey, createdComponent);
 
     // Инвалидируем кеш списка компонентов очереди
-    this.invalidateComponentsCache(queueId);
+    await this.invalidateComponentsCache(queueId);
 
     this.logger.info(
       `Компонент успешно создан: ${createdComponent.name} (ID: ${createdComponent.id})`
@@ -78,9 +78,9 @@ export class CreateComponentOperation extends BaseOperation {
    *
    * @param queueId - ключ или ID очереди
    */
-  private invalidateComponentsCache(queueId: string): void {
+  private async invalidateComponentsCache(queueId: string): Promise<void> {
     const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, `${queueId}/components`);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
     this.logger.debug(`Инвалидирован кеш компонентов для очереди: ${queueId}`);
   }
 }

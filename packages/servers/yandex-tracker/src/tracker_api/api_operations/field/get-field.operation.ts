@@ -35,7 +35,7 @@ export class GetFieldOperation extends BaseOperation {
 
     // Проверяем кеш
     const cacheKey = EntityCacheKey.createKey(EntityType.FIELD, fieldId);
-    const cached = this.cacheManager.get<FieldOutput>(cacheKey);
+    const cached = await this.cacheManager.get<FieldOutput>(cacheKey);
 
     if (cached) {
       this.logger.debug(`Поле ${fieldId} получено из кеша`);
@@ -46,7 +46,7 @@ export class GetFieldOperation extends BaseOperation {
     const field = await this.httpClient.get<FieldOutput>(`/v2/fields/${fieldId}`);
 
     // Кешируем результат
-    this.cacheManager.set(cacheKey, field);
+    await this.cacheManager.set(cacheKey, field);
 
     this.logger.info(`Поле ${fieldId} успешно получено`);
 

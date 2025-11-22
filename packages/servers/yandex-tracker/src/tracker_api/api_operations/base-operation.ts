@@ -28,9 +28,9 @@ export abstract class BaseOperation {
    */
   protected async withCache<T>(cacheKey: string, fn: () => Promise<T>): Promise<T> {
     // Пытаемся получить из кеша
-    const cached = this.cacheManager.get<T>(cacheKey);
+    const cached = await this.cacheManager.get<T>(cacheKey);
 
-    if (cached !== undefined) {
+    if (cached !== null) {
       this.logger.debug(`Operation cache hit: ${cacheKey}`);
       return cached;
     }
@@ -40,7 +40,7 @@ export abstract class BaseOperation {
     const result = await fn();
 
     // Сохраняем в кеш
-    this.cacheManager.set(cacheKey, result);
+    await this.cacheManager.set(cacheKey, result);
 
     return result;
   }

@@ -36,7 +36,7 @@ export class UpdateSprintOperation extends BaseOperation {
 
     // Инвалидация кеша обновленного спринта
     const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, sprint.id);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Спринт обновлен: ${sprint.id}`);
 

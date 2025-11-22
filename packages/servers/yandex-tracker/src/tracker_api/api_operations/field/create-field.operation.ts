@@ -47,10 +47,10 @@ export class CreateFieldOperation extends BaseOperation {
     const field = await this.httpClient.post<FieldOutput>('/v2/fields', input);
 
     // Инвалидируем кеш списка полей
-    this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, 'all'));
+    await this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, 'all'));
 
     // Кешируем созданное поле
-    this.cacheManager.set(EntityCacheKey.createKey(EntityType.FIELD, field.id), field);
+    await this.cacheManager.set(EntityCacheKey.createKey(EntityType.FIELD, field.id), field);
 
     this.logger.info(`Поле ${field.id} успешно создано`);
 

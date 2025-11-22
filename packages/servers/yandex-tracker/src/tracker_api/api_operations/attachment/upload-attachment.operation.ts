@@ -103,7 +103,7 @@ export class UploadAttachmentOperation extends BaseOperation {
 
     // Инвалидация кеша списка файлов
     const listCacheKey = EntityCacheKey.createKey(EntityType.ATTACHMENT, `list:${issueId}`);
-    this.cacheManager.delete(listCacheKey);
+    await this.cacheManager.delete(listCacheKey);
 
     this.logger.info(
       `UploadAttachmentOperation: файл ${filename} загружен в ${issueId}, ` +

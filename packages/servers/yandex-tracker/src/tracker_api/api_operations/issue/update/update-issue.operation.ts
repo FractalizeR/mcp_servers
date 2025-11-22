@@ -43,7 +43,7 @@ export class UpdateIssueOperation extends BaseOperation {
 
     // Инвалидируем кеш для обновлённой задачи
     const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, issueKey);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Задача ${issueKey} успешно обновлена`);
 

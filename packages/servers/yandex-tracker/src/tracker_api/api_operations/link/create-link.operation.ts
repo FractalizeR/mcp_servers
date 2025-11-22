@@ -55,8 +55,8 @@ export class CreateLinkOperation extends BaseOperation {
 
     // Инвалидируем кеш связей для обеих задач
     // (API автоматически создал обратную связь)
-    this.invalidateLinksCache(issueId);
-    this.invalidateLinksCache(params.issue);
+    await this.invalidateLinksCache(issueId);
+    await this.invalidateLinksCache(params.issue);
 
     this.logger.debug(`Связь создана: ${link.id} (${link.type.id})`);
 
@@ -68,9 +68,9 @@ export class CreateLinkOperation extends BaseOperation {
    *
    * @param issueId - ключ или ID задачи
    */
-  private invalidateLinksCache(issueId: string): void {
+  private async invalidateLinksCache(issueId: string): Promise<void> {
     const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, `${issueId}/links`);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
     this.logger.debug(`Инвалидирован кеш связей для задачи: ${issueId}`);
   }
 }

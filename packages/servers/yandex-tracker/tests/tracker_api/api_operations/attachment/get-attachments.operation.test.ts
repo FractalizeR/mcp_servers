@@ -21,18 +21,18 @@ describe('GetAttachmentsOperation', () => {
 
   beforeEach(() => {
     mockHttpClient = {
-      get: vi.fn(),
+      get: vi.fn().mockResolvedValue(null),
       post: vi.fn(),
       patch: vi.fn(),
       put: vi.fn(),
-      delete: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
     } as unknown as HttpClient;
 
     mockCacheManager = {
       get: vi.fn().mockReturnValue(undefined),
-      set: vi.fn(),
-      delete: vi.fn(),
-      clear: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
       has: vi.fn(),
     } as unknown as CacheManager;
 
@@ -126,14 +126,14 @@ describe('GetAttachmentsOperation', () => {
       const mockAttachments: AttachmentWithUnknownFields[] = createAttachmentListFixture(2);
 
       // Первый раз кеша нет
-      vi.mocked(mockCacheManager.get).mockReturnValueOnce(undefined);
+      vi.mocked(mockCacheManager.get).mockResolvedValueOnce(undefined);
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockAttachments);
 
       // Act - первый вызов
       const result1 = await operation.execute(issueId);
 
       // Второй раз данные из кеша
-      vi.mocked(mockCacheManager.get).mockReturnValueOnce(mockAttachments);
+      vi.mocked(mockCacheManager.get).mockResolvedValueOnce(mockAttachments);
 
       // Act - второй вызов
       const result2 = await operation.execute(issueId);

@@ -32,28 +32,28 @@ class TestOperation extends BaseOperation {
 
 function createMockHttpClient(): IHttpClient {
   const mockAxiosInstance = {
-    get: vi.fn(),
+    get: vi.fn().mockResolvedValue(null),
     post: vi.fn(),
     patch: vi.fn(),
-    delete: vi.fn(),
+    delete: vi.fn().mockResolvedValue(undefined),
   };
 
   return {
-    get: vi.fn(),
+    get: vi.fn().mockResolvedValue(null),
     post: vi.fn(),
     patch: vi.fn(),
-    delete: vi.fn(),
+    delete: vi.fn().mockResolvedValue(undefined),
     getAxiosInstance: vi.fn(() => mockAxiosInstance),
   } as unknown as HttpClient;
 }
 
 function createMockCache(): CacheManager {
   return {
-    get: vi.fn(),
-    set: vi.fn(),
-    delete: vi.fn(),
-    clear: vi.fn(),
-    prune: vi.fn(),
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+    clear: vi.fn().mockResolvedValue(undefined),
+    prune: vi.fn().mockResolvedValue(undefined),
   } as unknown as CacheManager;
 }
 
@@ -87,7 +87,7 @@ describe('BaseOperation', () => {
       const cacheKey = 'test:key';
       const cachedValue = { data: 'cached' };
 
-      (mockCache.get as Mock).mockReturnValue(cachedValue);
+      (mockCache.get as Mock).mockResolvedValue(cachedValue);
 
       const fn = vi.fn<() => Promise<unknown>>();
       const result = await operation.executeWithCache(cacheKey, fn);
@@ -102,7 +102,7 @@ describe('BaseOperation', () => {
       const cacheKey = 'test:key';
       const freshValue = { data: 'fresh' };
 
-      (mockCache.get as Mock).mockReturnValue(undefined);
+      (mockCache.get as Mock).mockResolvedValue(undefined);
       const fn = vi.fn(async () => freshValue);
 
       const result = await operation.executeWithCache(cacheKey, fn);
@@ -118,7 +118,7 @@ describe('BaseOperation', () => {
       const cacheKey = 'test:key';
       const value = { data: 'new' };
 
-      (mockCache.get as Mock).mockReturnValue(undefined);
+      (mockCache.get as Mock).mockResolvedValue(undefined);
       const fn = vi.fn(async () => value);
 
       await operation.executeWithCache(cacheKey, fn);

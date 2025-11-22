@@ -35,11 +35,11 @@ export class CreateProjectOperation extends BaseOperation {
 
     // Инвалидируем кеш списка проектов
     const listCacheKey = EntityCacheKey.createKey(EntityType.PROJECT, 'list');
-    this.cacheManager.delete(listCacheKey);
+    await this.cacheManager.delete(listCacheKey);
 
     // Сохраняем в кеш созданный проект
     const cacheKey = EntityCacheKey.createKey(EntityType.PROJECT, project.id);
-    this.cacheManager.set(cacheKey, project);
+    await this.cacheManager.set(cacheKey, project);
 
     return project;
   }

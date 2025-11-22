@@ -41,7 +41,7 @@ export class DeleteAttachmentOperation extends BaseOperation {
 
     // Инвалидация кеша списка файлов
     const listCacheKey = EntityCacheKey.createKey(EntityType.ATTACHMENT, `list:${issueId}`);
-    this.cacheManager.delete(listCacheKey);
+    await this.cacheManager.delete(listCacheKey);
 
     this.logger.info(
       `DeleteAttachmentOperation: файл attachmentId=${attachmentId} удален из ${issueId}`

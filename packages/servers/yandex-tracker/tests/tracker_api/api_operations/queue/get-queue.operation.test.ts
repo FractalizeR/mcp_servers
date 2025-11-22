@@ -15,18 +15,18 @@ describe('GetQueueOperation', () => {
 
   beforeEach(() => {
     mockHttpClient = {
-      get: vi.fn(),
+      get: vi.fn().mockResolvedValue(null),
       post: vi.fn(),
       patch: vi.fn(),
       put: vi.fn(),
-      delete: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
     } as unknown as HttpClient;
 
     mockCacheManager = {
-      get: vi.fn().mockReturnValue(undefined), // По умолчанию кеш пустой (undefined, синхронно)
-      set: vi.fn(),
-      delete: vi.fn(),
-      clear: vi.fn(),
+      get: vi.fn().mockResolvedValue(null), // По умолчанию кеш пустой (null, асинхронно)
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
       has: vi.fn(),
     } as unknown as CacheManager;
 
@@ -74,7 +74,7 @@ describe('GetQueueOperation', () => {
     it('should return cached queue if available', async () => {
       const cachedQueue: QueueWithUnknownFields = createQueueFixture({ key: 'CACHED' });
       const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, 'CACHED');
-      vi.mocked(mockCacheManager.get).mockReturnValue(cachedQueue); // синхронный возврат
+      vi.mocked(mockCacheManager.get).mockResolvedValue(cachedQueue); // синхронный возврат
 
       const result = await operation.execute({ queueId: 'CACHED' });
 

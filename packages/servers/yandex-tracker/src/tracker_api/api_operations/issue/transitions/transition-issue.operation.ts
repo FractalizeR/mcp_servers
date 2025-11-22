@@ -66,7 +66,7 @@ export class TransitionIssueOperation extends BaseOperation {
 
     // Инвалидируем кеш задачи после изменения статуса
     const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, issueKey);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
 
     this.logger.info(
       `Переход выполнен успешно: ${issueKey} → ${normalizedResult.status?.key ?? 'unknown'}`

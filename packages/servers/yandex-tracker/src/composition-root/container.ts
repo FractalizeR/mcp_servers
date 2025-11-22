@@ -17,7 +17,7 @@ import { AxiosHttpClient, ExponentialBackoffStrategy } from '@mcp-framework/infr
 
 // Cache Layer
 import type { CacheManager } from '@mcp-framework/infrastructure';
-import { NoOpCache } from '@mcp-framework/infrastructure';
+import { InMemoryCacheManager } from '@mcp-framework/infrastructure';
 
 // Yandex Tracker Facade
 import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
@@ -98,7 +98,9 @@ function bindHttpLayer(container: Container): void {
  * Регистрация кеша
  */
 function bindCacheLayer(container: Container): void {
-  container.bind<CacheManager>(TYPES.CacheManager).to(NoOpCache);
+  // Используем InMemoryCacheManager с TTL 5 минут (300000 ms)
+  const cacheManager = new InMemoryCacheManager(300000);
+  container.bind<CacheManager>(TYPES.CacheManager).toConstantValue(cacheManager);
 }
 
 /**

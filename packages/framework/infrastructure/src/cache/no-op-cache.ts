@@ -23,37 +23,37 @@ import type { CacheManager } from './cache-manager.interface.js';
 
 export class NoOpCache implements CacheManager {
   /**
-   * Всегда возвращает undefined (cache miss)
+   * Всегда возвращает null (cache miss)
    */
-  get<T>(_key: string): T | undefined {
-    return undefined;
+  get<T>(_key: string): Promise<T | null> {
+    return Promise.resolve(null);
   }
 
   /**
    * Ничего не делает (не сохраняет)
    */
-  set<T>(_key: string, _value: T, _ttl?: number): void {
-    // Ничего не делаем
+  set<T>(_key: string, _value: T, _ttl?: number): Promise<void> {
+    return Promise.resolve();
   }
 
   /**
    * Ничего не делает (нечего удалять)
    */
-  delete(_key: string): void {
-    // Ничего не делаем
+  delete(_key: string): Promise<void> {
+    return Promise.resolve();
   }
 
   /**
    * Ничего не делает (нечего очищать)
    */
-  clear(): void {
-    // Ничего не делаем
+  clear(): Promise<void> {
+    return Promise.resolve();
   }
 
   /**
    * Ничего не делает (нечего удалять)
    */
-  prune(): void {
-    // Ничего не делаем
+  prune(): Promise<void> {
+    return Promise.resolve();
   }
 }

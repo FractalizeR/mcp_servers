@@ -33,7 +33,7 @@ export class CreateSprintOperation extends BaseOperation {
 
     // Инвалидация кеша для нового спринта
     const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, sprint.id);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Спринт создан: ${sprint.id}`);
 

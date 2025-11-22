@@ -40,7 +40,7 @@ export class CreateIssueOperation extends BaseOperation {
 
     // Кешируем созданную задачу по её ключу
     const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, createdIssue.key);
-    this.cacheManager.set(cacheKey, createdIssue);
+    await this.cacheManager.set(cacheKey, createdIssue);
 
     this.logger.info(`Задача успешно создана: ${createdIssue.key}`);
 

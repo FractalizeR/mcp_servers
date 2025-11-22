@@ -15,18 +15,18 @@ describe('GetComponentsOperation', () => {
 
   beforeEach(() => {
     mockHttpClient = {
-      get: vi.fn(),
+      get: vi.fn().mockResolvedValue(null),
       post: vi.fn(),
       patch: vi.fn(),
       put: vi.fn(),
-      delete: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
     } as unknown as HttpClient;
 
     mockCacheManager = {
-      get: vi.fn(),
-      set: vi.fn(),
-      delete: vi.fn(),
-      clear: vi.fn(),
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
       has: vi.fn(),
     } as unknown as CacheManager;
 
@@ -62,7 +62,7 @@ describe('GetComponentsOperation', () => {
       ];
 
       const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, 'QUEUE/components');
-      vi.mocked(mockCacheManager.get).mockReturnValue(mockComponents);
+      vi.mocked(mockCacheManager.get).mockResolvedValue(mockComponents);
 
       const result = await operation.execute('QUEUE');
 
@@ -131,7 +131,7 @@ describe('GetComponentsOperation', () => {
     it('should log debug message when returning from cache', async () => {
       const mockComponents: ComponentsListOutput = [createComponentFixture()];
 
-      vi.mocked(mockCacheManager.get).mockReturnValue(mockComponents);
+      vi.mocked(mockCacheManager.get).mockResolvedValue(mockComponents);
 
       await operation.execute('QUEUE');
 

@@ -56,11 +56,11 @@ export class DeleteComponentOperation extends BaseOperation {
     await this.deleteRequest<void>(`/v2/components/${componentId}`);
 
     // Инвалидируем кеш компонента
-    this.invalidateComponentCache(componentId);
+    await this.invalidateComponentCache(componentId);
 
     // Инвалидируем кеш списка компонентов очереди, если известен ID очереди
     if (queueId) {
-      this.invalidateComponentsCache(queueId);
+      await this.invalidateComponentsCache(queueId);
     }
 
     this.logger.info(`Компонент ${componentId} успешно удалён`);
@@ -71,9 +71,9 @@ export class DeleteComponentOperation extends BaseOperation {
    *
    * @param componentId - ID компонента
    */
-  private invalidateComponentCache(componentId: string): void {
+  private async invalidateComponentCache(componentId: string): Promise<void> {
     const cacheKey = EntityCacheKey.createKey(EntityType.COMPONENT, componentId);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
     this.logger.debug(`Инвалидирован кеш компонента: ${componentId}`);
   }
 
@@ -82,9 +82,9 @@ export class DeleteComponentOperation extends BaseOperation {
    *
    * @param queueId - ID очереди
    */
-  private invalidateComponentsCache(queueId: string): void {
+  private async invalidateComponentsCache(queueId: string): Promise<void> {
     const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, `${queueId}/components`);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
     this.logger.debug(`Инвалидирован кеш компонентов для очереди: ${queueId}`);
   }
 }

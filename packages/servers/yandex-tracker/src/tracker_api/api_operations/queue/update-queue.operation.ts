@@ -40,7 +40,7 @@ export class UpdateQueueOperation extends BaseOperation {
 
     // Инвалидируем кеш для обновлённой очереди
     const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, updatedQueue.key);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Очередь успешно обновлена: ${updatedQueue.key}`);
 

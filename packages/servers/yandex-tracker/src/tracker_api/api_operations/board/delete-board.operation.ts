@@ -38,7 +38,7 @@ export class DeleteBoardOperation extends BaseOperation {
 
     // Инвалидация кеша удаленной доски
     const cacheKey = EntityCacheKey.createKey(EntityType.BOARD, boardId);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Доска удалена: ${boardId}`);
   }

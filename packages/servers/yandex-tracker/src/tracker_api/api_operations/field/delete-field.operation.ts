@@ -42,8 +42,8 @@ export class DeleteFieldOperation extends BaseOperation {
     await this.httpClient.delete(`/v2/fields/${fieldId}`);
 
     // Инвалидируем кеш
-    this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, fieldId));
-    this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, 'all'));
+    await this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, fieldId));
+    await this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, 'all'));
 
     this.logger.info(`Поле ${fieldId} успешно удалено`);
   }

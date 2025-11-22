@@ -45,7 +45,7 @@ export class DeleteLinkOperation extends BaseOperation {
     await this.deleteRequest<void>(`/v3/issues/${issueId}/links/${linkId}`);
 
     // Инвалидируем кеш связей для текущей задачи
-    this.invalidateLinksCache(issueId);
+    await this.invalidateLinksCache(issueId);
 
     this.logger.debug(`Связь ${linkId} удалена из задачи ${issueId}`);
   }
@@ -55,9 +55,9 @@ export class DeleteLinkOperation extends BaseOperation {
    *
    * @param issueId - ключ или ID задачи
    */
-  private invalidateLinksCache(issueId: string): void {
+  private async invalidateLinksCache(issueId: string): Promise<void> {
     const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, `${issueId}/links`);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
     this.logger.debug(`Инвалидирован кеш связей для задачи: ${issueId}`);
   }
 }

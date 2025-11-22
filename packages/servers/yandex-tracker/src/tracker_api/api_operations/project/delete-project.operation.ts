@@ -41,10 +41,10 @@ export class DeleteProjectOperation extends BaseOperation {
 
     // Инвалидируем кеш проекта
     const cacheKey = EntityCacheKey.createKey(EntityType.PROJECT, projectId);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
 
     // Инвалидируем кеш списка проектов
     const listCacheKey = EntityCacheKey.createKey(EntityType.PROJECT, 'list');
-    this.cacheManager.delete(listCacheKey);
+    await this.cacheManager.delete(listCacheKey);
   }
 }

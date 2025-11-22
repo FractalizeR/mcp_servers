@@ -36,7 +36,7 @@ export class UpdateBoardOperation extends BaseOperation {
 
     // Инвалидация кеша обновленной доски
     const cacheKey = EntityCacheKey.createKey(EntityType.BOARD, board.id);
-    this.cacheManager.delete(cacheKey);
+    await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Доска обновлена: ${board.id}`);
 
