@@ -2,9 +2,9 @@
  * Unit тесты для DI Container
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { Container } from 'inversify';
-import type { ServerConfig } from '@mcp-framework/infrastructure/types.js';
+import type { ServerConfig } from '#config';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';

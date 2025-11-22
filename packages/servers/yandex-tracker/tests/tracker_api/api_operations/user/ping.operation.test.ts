@@ -4,8 +4,9 @@ import type { HttpClient } from '@mcp-framework/infrastructure/http/client/http-
 import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
 import type { User } from '#tracker_api/entities/user.entity.js';
-import type { ApiError, ServerConfig } from '@mcp-framework/infrastructure/types.js';
+import type { ApiError } from '@mcp-framework/infrastructure/types.js';
 import { HttpStatusCode } from '@mcp-framework/infrastructure/types.js';
+import type { ServerConfig } from '#config';
 
 describe('PingOperation', () => {
   let operation: PingOperation;

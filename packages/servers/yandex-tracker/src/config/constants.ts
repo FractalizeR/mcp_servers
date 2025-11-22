@@ -1,57 +1,26 @@
 /**
- * Constants for infrastructure layer
+ * Configuration constants for Yandex Tracker server
  *
- * @deprecated Domain-specific constants have been moved to @mcp-server/yandex-tracker
- * These exports will be removed in v2.0.0
- *
- * Migration guide:
- * ```typescript
- * // Before:
- * import { DEFAULT_API_BASE, ENV_VAR_NAMES } from '@mcp-framework/infrastructure';
- *
- * // After:
- * import { DEFAULT_API_BASE, ENV_VAR_NAMES } from '@mcp-server/yandex-tracker/config';
- * // or using alias (within yandex-tracker package):
- * import { DEFAULT_API_BASE, ENV_VAR_NAMES } from '#config';
- * ```
+ * Moved from @mcp-framework/infrastructure to maintain clean separation:
+ * Infrastructure layer should not contain domain-specific code
  */
 
 /**
  * Дефолтные значения конфигурации
- * @deprecated Moved to @mcp-server/yandex-tracker/config
  */
 export const DEFAULT_API_BASE = 'https://api.tracker.yandex.net' as const;
-
-/** @deprecated Moved to @mcp-server/yandex-tracker/config */
 export const DEFAULT_LOG_LEVEL = 'info' as const;
-
-/** @deprecated Moved to @mcp-server/yandex-tracker/config */
 export const DEFAULT_REQUEST_TIMEOUT = 30000 as const;
-
-/** @deprecated Moved to @mcp-server/yandex-tracker/config */
 export const DEFAULT_MAX_BATCH_SIZE = 200 as const;
-
-/** @deprecated Moved to @mcp-server/yandex-tracker/config */
 export const DEFAULT_MAX_CONCURRENT_REQUESTS = 5 as const;
-
-/** @deprecated Moved to @mcp-server/yandex-tracker/config */
 export const DEFAULT_LOGS_DIR = './logs' as const;
-
-/** @deprecated Moved to @mcp-server/yandex-tracker/config */
 export const DEFAULT_LOG_MAX_SIZE = 51200 as const; // 50KB в байтах
-
-/** @deprecated Moved to @mcp-server/yandex-tracker/config */
 export const DEFAULT_LOG_MAX_FILES = 20 as const;
-
-/** @deprecated Moved to @mcp-server/yandex-tracker/config */
 export const DEFAULT_TOOL_DISCOVERY_MODE = 'eager' as const;
-
-/** @deprecated Moved to @mcp-server/yandex-tracker/config */
 export const DEFAULT_ESSENTIAL_TOOLS = ['ping', 'search_tools'] as const;
 
 /**
  * Названия переменных окружения
- * @deprecated Moved to @mcp-server/yandex-tracker/config
  */
 export const ENV_VAR_NAMES = {
   YANDEX_TRACKER_TOKEN: 'YANDEX_TRACKER_TOKEN',
