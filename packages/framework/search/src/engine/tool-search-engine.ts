@@ -73,17 +73,16 @@ export class ToolSearchEngine {
       const definition = metadata.definition;
 
       // Skip tools without required fields
-      if (
-        definition.name.length === 0 ||
-        definition.description.length === 0 ||
-        metadata.category.length === 0
-      ) {
+      // Runtime safety: mock objects in tests may not have all required fields
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (!definition.name?.length || !definition.description?.length || !metadata.category?.length) {
         continue;
       }
 
       index.push({
         name: definition.name,
         category: metadata.category,
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Runtime safety: mock objects may not have tags
         tags: metadata.tags ? Array.from(metadata.tags) : [],
         isHelper: metadata.isHelper === true,
         nameTokens: tokenize(definition.name),
