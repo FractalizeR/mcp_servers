@@ -493,4 +493,356 @@ describe('ToolSearchEngine', () => {
       expect(stats.maxSize).toBe(100);
     });
   });
+
+  describe('Динамический индекс (без staticIndex)', () => {
+    it('должен построить индекс из ToolRegistry когда staticIndex === null', () => {
+      // Arrange
+      const mockTools: BaseTool[] = [
+        {
+          getMetadata: (): ToolMetadata => ({
+            definition: {
+              name: 'dynamic_tool_1',
+              description: 'First dynamic tool for testing',
+              inputSchema: { type: 'object', properties: {} },
+            },
+            category: ToolCategory.ISSUES,
+            tags: ['dynamic', 'test'],
+            isHelper: false,
+          }),
+        } as BaseTool,
+        {
+          getMetadata: (): ToolMetadata => ({
+            definition: {
+              name: 'dynamic_tool_2',
+              description: 'Second dynamic tool! With special-chars_test',
+              inputSchema: { type: 'object', properties: {} },
+            },
+            category: ToolCategory.SEARCH,
+            tags: ['helper'],
+            isHelper: true,
+          }),
+        } as BaseTool,
+      ];
+
+      const dynamicRegistry = {
+        getAllTools: vi.fn(() => mockTools),
+        getTool: vi.fn((name: string) =>
+          mockTools.find((t) => t.getMetadata().definition.name === name)
+        ),
+      } as unknown as ToolRegistry;
+
+      const strategyForDynamic = new MockSearchStrategy([
+        { toolName: 'dynamic_tool_1', score: 1.0, strategyType: 'name' as StrategyType },
+        { toolName: 'dynamic_tool_2', score: 0.9, strategyType: 'name' as StrategyType },
+      ]);
+
+      // Act - создаем engine без staticIndex
+      const dynamicEngine = new ToolSearchEngine(null, dynamicRegistry, strategyForDynamic);
+      const result = dynamicEngine.search({ query: 'dynamic' });
+
+      // Assert
+      expect(dynamicRegistry.getAllTools).toHaveBeenCalled();
+      expect(result.tools).toHaveLength(2);
+      expect(result.tools[0]!.name).toBe('dynamic_tool_1');
+    });
+
+    it('должен использовать lazy loading для динамического индекса', () => {
+      // Arrange
+      const mockTools: BaseTool[] = [
+        {
+          getMetadata: (): ToolMetadata => ({
+            definition: {
+              name: 'lazy_tool',
+              description: 'Lazy loaded tool',
+              inputSchema: { type: 'object', properties: {} },
+            },
+            category: ToolCategory.ISSUES,
+            isHelper: false,
+          }),
+        } as BaseTool,
+      ];
+
+      const lazyRegistry = {
+        getAllTools: vi.fn(() => mockTools),
+        getTool: vi.fn(),
+      } as unknown as ToolRegistry;
+
+      const lazyStrategy = new MockSearchStrategy([
+        { toolName: 'lazy_tool', score: 1.0, strategyType: 'name' as StrategyType },
+      ]);
+
+      const lazyEngine = new ToolSearchEngine(null, lazyRegistry, lazyStrategy);
+
+      // Act - первый поиск должен построить индекс
+      lazyEngine.search({ query: 'test1' });
+      const firstCallCount = (lazyRegistry.getAllTools as ReturnType<typeof vi.fn>).mock.calls
+        .length;
+
+      // Второй поиск должен использовать кеш индекса
+      lazyEngine.search({ query: 'test2' });
+      const secondCallCount = (lazyRegistry.getAllTools as ReturnType<typeof vi.fn>).mock.calls
+        .length;
+
+      // Assert - getAllTools должен быть вызван только один раз
+      expect(firstCallCount).toBe(1);
+      expect(secondCallCount).toBe(1); // Не увеличился
+    });
+
+    it('должен пропустить tools без обязательных полей при построении индекса', () => {
+      // Arrange
+      const incompleteTools: BaseTool[] = [
+        {
+          getMetadata: (): ToolMetadata => ({
+            definition: {
+              name: '', // Пустое имя
+              description: 'Tool without name',
+              inputSchema: { type: 'object', properties: {} },
+            },
+            category: ToolCategory.ISSUES,
+          }),
+        } as BaseTool,
+        {
+          getMetadata: (): ToolMetadata => ({
+            definition: {
+              name: 'valid_tool',
+              description: '', // Пустое описание
+              inputSchema: { type: 'object', properties: {} },
+            },
+            category: ToolCategory.ISSUES,
+          }),
+        } as BaseTool,
+        {
+          getMetadata: (): ToolMetadata => ({
+            definition: {
+              name: 'tool_without_category',
+              description: 'Valid description',
+              inputSchema: { type: 'object', properties: {} },
+            },
+            // Нет category
+          }),
+        } as BaseTool,
+        {
+          getMetadata: (): ToolMetadata => ({
+            definition: {
+              name: 'complete_tool',
+              description: 'Complete tool',
+              inputSchema: { type: 'object', properties: {} },
+            },
+            category: ToolCategory.ISSUES,
+          }),
+        } as BaseTool,
+      ];
+
+      const incompleteRegistry = {
+        getAllTools: vi.fn(() => incompleteTools),
+        getTool: vi.fn(),
+      } as unknown as ToolRegistry;
+
+      const incompleteStrategy = new MockSearchStrategy([
+        { toolName: 'complete_tool', score: 1.0, strategyType: 'name' as StrategyType },
+      ]);
+
+      // Act
+      const incompleteEngine = new ToolSearchEngine(null, incompleteRegistry, incompleteStrategy);
+      const result = incompleteEngine.search({ query: 'test' });
+
+      // Assert - только complete_tool должен быть в результатах
+      expect(result.tools).toHaveLength(1);
+      expect(result.tools[0]!.name).toBe('complete_tool');
+    });
+
+    it('должен корректно токенизировать имена с underscores и dashes', () => {
+      // Arrange
+      const toolsWithSpecialChars: BaseTool[] = [
+        {
+          getMetadata: (): ToolMetadata => ({
+            definition: {
+              name: 'get_user-info_test',
+              description: 'Test tokenization with special-chars_and_underscores',
+              inputSchema: { type: 'object', properties: {} },
+            },
+            category: ToolCategory.ISSUES,
+          }),
+        } as BaseTool,
+      ];
+
+      const specialRegistry = {
+        getAllTools: vi.fn(() => toolsWithSpecialChars),
+        getTool: vi.fn(),
+      } as unknown as ToolRegistry;
+
+      const specialStrategy = new MockSearchStrategy([
+        { toolName: 'get_user-info_test', score: 1.0, strategyType: 'name' as StrategyType },
+      ]);
+
+      // Act
+      const specialEngine = new ToolSearchEngine(null, specialRegistry, specialStrategy);
+      const result = specialEngine.search({ query: 'user' });
+
+      // Assert
+      expect(result.tools).toHaveLength(1);
+      expect(result.tools[0]!.name).toBe('get_user-info_test');
+    });
+
+    it('должен извлекать краткое описание из первого предложения', () => {
+      // Arrange
+      const toolsWithLongDesc: BaseTool[] = [
+        {
+          getMetadata: (): ToolMetadata => ({
+            definition: {
+              name: 'tool_with_long_description',
+              description: 'First sentence here. Second sentence should be ignored! Third one too?',
+              inputSchema: { type: 'object', properties: {} },
+            },
+            category: ToolCategory.ISSUES,
+          }),
+        } as BaseTool,
+      ];
+
+      const longDescRegistry = {
+        getAllTools: vi.fn(() => toolsWithLongDesc),
+        getTool: vi.fn(),
+      } as unknown as ToolRegistry;
+
+      const longDescStrategy = new MockSearchStrategy([
+        {
+          toolName: 'tool_with_long_description',
+          score: 1.0,
+          strategyType: 'name' as StrategyType,
+        },
+      ]);
+
+      // Act
+      const longDescEngine = new ToolSearchEngine(null, longDescRegistry, longDescStrategy);
+      const result = longDescEngine.search({ query: 'test', detailLevel: 'name_and_description' });
+
+      // Assert
+      const tool = result.tools[0] as { description?: string };
+      expect(tool.description).toBe('First sentence here');
+    });
+  });
+
+  describe('Поиск с пустым query', () => {
+    it('должен вернуть все отфильтрованные tools когда query пустой', () => {
+      // Arrange - используем стратегию которая ничего не вернет, чтобы проверить что используется fallback
+      const emptyStrategy = new MockSearchStrategy([]);
+      const emptyEngine = new ToolSearchEngine(mockStaticIndex, mockToolRegistry, emptyStrategy);
+
+      // Act
+      const result = emptyEngine.search({ query: '' });
+
+      // Assert
+      expect(result.tools).toHaveLength(3); // Все 3 tools из mockStaticIndex
+      expect(result.totalFound).toBe(3);
+    });
+
+    it('должен вернуть все отфильтрованные tools когда query = "*"', () => {
+      // Arrange
+      const wildCardStrategy = new MockSearchStrategy([]);
+      const wildCardEngine = new ToolSearchEngine(
+        mockStaticIndex,
+        mockToolRegistry,
+        wildCardStrategy
+      );
+
+      // Act
+      const result = wildCardEngine.search({ query: '*' });
+
+      // Assert
+      expect(result.tools).toHaveLength(3);
+      expect(result.totalFound).toBe(3);
+    });
+
+    it('должен вернуть все tools с score = 1.0 для пустого query', () => {
+      // Arrange
+      const allStrategy = new MockSearchStrategy([]);
+      const allEngine = new ToolSearchEngine(mockStaticIndex, mockToolRegistry, allStrategy);
+
+      // Act
+      const result = allEngine.search({ query: '', detailLevel: 'name_and_description' });
+
+      // Assert
+      result.tools.forEach((tool) => {
+        expect((tool as { score?: number }).score).toBe(1.0);
+      });
+    });
+
+    it('должен применять фильтры даже с пустым query', () => {
+      // Arrange
+      const filterStrategy = new MockSearchStrategy([]);
+      const filterEngine = new ToolSearchEngine(mockStaticIndex, mockToolRegistry, filterStrategy);
+
+      // Act
+      const result = filterEngine.search({
+        query: '',
+        category: ToolCategory.ISSUES,
+        detailLevel: 'name_and_description',
+      });
+
+      // Assert
+      expect(result.tools).toHaveLength(2); // Только ISSUES tools
+      expect(
+        result.tools.every(
+          (t) => (t as { category?: ToolCategory }).category === ToolCategory.ISSUES
+        )
+      ).toBe(true);
+    });
+  });
+
+  describe('Edge cases', () => {
+    it('должен обработать query со специальными символами', () => {
+      // Arrange
+      const specialCharsStrategy = new MockSearchStrategy([
+        { toolName: 'get_issues', score: 1.0, strategyType: 'name' as StrategyType },
+      ]);
+      const specialEngine = new ToolSearchEngine(
+        mockStaticIndex,
+        mockToolRegistry,
+        specialCharsStrategy
+      );
+
+      // Act
+      const result = specialEngine.search({ query: 'test@#$%^&*()' });
+
+      // Assert - должен работать без ошибок
+      expect(result.tools).toHaveLength(1);
+    });
+
+    it('должен обработать очень длинный query', () => {
+      // Arrange
+      const longQuery = 'a'.repeat(1000);
+      const longQueryStrategy = new MockSearchStrategy([]);
+      const longQueryEngine = new ToolSearchEngine(
+        mockStaticIndex,
+        mockToolRegistry,
+        longQueryStrategy
+      );
+
+      // Act
+      const result = longQueryEngine.search({ query: longQuery });
+
+      // Assert - должен работать без ошибок
+      expect(result).toBeDefined();
+      expect(result.tools).toBeDefined();
+    });
+
+    it('должен использовать DEFAULT_LIMIT когда limit = 0 (falsy)', () => {
+      // Arrange
+      const zeroLimitStrategy = new MockSearchStrategy([
+        { toolName: 'get_issues', score: 1.0, strategyType: 'name' as StrategyType },
+      ]);
+      const zeroLimitEngine = new ToolSearchEngine(
+        mockStaticIndex,
+        mockToolRegistry,
+        zeroLimitStrategy
+      );
+
+      // Act
+      const result = zeroLimitEngine.search({ query: 'test', limit: 0 });
+
+      // Assert - limit = 0 воспринимается как falsy и заменяется на DEFAULT_LIMIT
+      expect(result.tools.length).toBeGreaterThan(0);
+      expect(result.totalFound).toBe(1);
+    });
+  });
 });
