@@ -99,10 +99,31 @@ function bindCacheLayer(container: Container): void {
  * - Все операции из OPERATION_CLASSES автоматически регистрируются
  * - Символы создаются из имени класса (ClassName → Symbol.for('ClassName'))
  * - Для добавления новой операции: добавь класс в definitions/operation-definitions.ts
+ *
+ * VALIDATION:
+ * - Проверяет наличие имени класса
+ * - Проверяет, что класс является функцией-конструктором
  */
 function bindOperations(container: Container): void {
   for (const OperationClass of OPERATION_CLASSES) {
-    const symbol = Symbol.for(OperationClass.name);
+    // Validate operation class - check type first
+    if (typeof OperationClass !== 'function') {
+      throw new Error(
+        '[DI Validation Error] Operation must be a constructor function. ' +
+          `Received: ${typeof OperationClass}`
+      );
+    }
+
+    // Now safe to access .name
+    const className = OperationClass.name;
+    if (!className) {
+      throw new Error(
+        '[DI Validation Error] Operation class must have a name. ' +
+          'Ensure the class is properly defined and not minified.'
+      );
+    }
+
+    const symbol = Symbol.for(className);
 
     container.bind(symbol).toDynamicValue(() => {
       const httpClient = container.get<HttpClient>(TYPES.HttpClient);
@@ -171,14 +192,35 @@ function bindSearchEngine(container: Container): void {
  * ОСОБЫЕ СЛУЧАИ:
  * - SearchToolsTool требует (searchEngine, logger) вместо (facade, logger)
  * - Регистрируется отдельно для корректной типизации
+ *
+ * VALIDATION:
+ * - Проверяет наличие имени класса
+ * - Проверяет, что класс является функцией-конструктором
  */
 function bindTools(container: Container): void {
   // Стандартные tools: (facade, logger)
   for (const ToolClass of TOOL_CLASSES) {
-    const symbol = Symbol.for(ToolClass.name);
+    // Validate tool class - check type first
+    if (typeof ToolClass !== 'function') {
+      throw new Error(
+        '[DI Validation Error] Tool must be a constructor function. ' +
+          `Received: ${typeof ToolClass}`
+      );
+    }
+
+    // Now safe to access .name
+    const className = ToolClass.name;
+    if (!className) {
+      throw new Error(
+        '[DI Validation Error] Tool class must have a name. ' +
+          'Ensure the class is properly defined and not minified.'
+      );
+    }
+
+    const symbol = Symbol.for(className);
 
     // Пропускаем SearchToolsTool (регистрируется отдельно)
-    if (ToolClass.name === 'SearchToolsTool') {
+    if (className === 'SearchToolsTool') {
       continue;
     }
 
