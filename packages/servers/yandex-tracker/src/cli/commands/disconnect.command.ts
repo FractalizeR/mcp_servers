@@ -5,6 +5,7 @@
 import { ConnectorRegistry } from '../connectors/registry.js';
 import { InteractivePrompter } from '../utils/interactive-prompter.js';
 import { Logger } from '../utils/logger.js';
+import { isError } from '#common/type-guards.js';
 
 export interface DisconnectCommandOptions {
   client?: string;
@@ -71,6 +72,7 @@ export async function disconnectCommand(options: DisconnectCommandOptions): Prom
     await connector.disconnect();
     spinner.succeed(`MCP сервер успешно отключен от ${connector.getClientInfo().displayName}`);
   } catch (error) {
-    spinner.fail(`Ошибка отключения: ${(error as Error).message}`);
+    const errorMessage = isError(error) ? error.message : String(error);
+    spinner.fail(`Ошибка отключения: ${errorMessage}`);
   }
 }

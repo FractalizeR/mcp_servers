@@ -106,7 +106,7 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
         },
       });
     } catch (error: unknown) {
-      return this.formatError('Ошибка при поиске задач', error as Error);
+      return this.formatError('Ошибка при поиске задач', error);
     }
   }
 }

@@ -68,7 +68,7 @@ export class DeleteCommentTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при удалении комментария ${commentId} задачи ${issueId}`,
-        error as Error
+        error
       );
     }
   }

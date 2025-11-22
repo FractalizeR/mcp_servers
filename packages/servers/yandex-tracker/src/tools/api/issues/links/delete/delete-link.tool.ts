@@ -66,10 +66,7 @@ export class DeleteLinkTool extends BaseTool<YandexTrackerFacade> {
         linkId,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при удалении связи ${linkId} из задачи ${issueId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при удалении связи ${linkId} из задачи ${issueId}`, error);
     }
   }
 }

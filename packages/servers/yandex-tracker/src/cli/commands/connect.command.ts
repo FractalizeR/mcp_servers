@@ -6,6 +6,7 @@ import { ConnectorRegistry } from '../connectors/registry.js';
 import { ConfigManager } from '../utils/config-manager.js';
 import { InteractivePrompter } from '../utils/interactive-prompter.js';
 import { Logger } from '../utils/logger.js';
+import { isError } from '#common/type-guards.js';
 
 export interface ConnectCommandOptions {
   client?: string;
@@ -97,7 +98,8 @@ export async function connectCommand(options: ConnectCommandOptions): Promise<vo
       Logger.info(`Конфигурация: ${status.details.configPath}`);
     }
   } catch (error) {
-    connectSpinner.fail(`Ошибка подключения: ${(error as Error).message}`);
+    const errorMessage = isError(error) ? error.message : String(error);
+    connectSpinner.fail(`Ошибка подключения: ${errorMessage}`);
     return;
   }
 

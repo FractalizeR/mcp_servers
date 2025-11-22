@@ -18,6 +18,7 @@ import {
   DEFAULT_REQUEST_TIMEOUT,
   ENV_VAR_NAMES,
 } from '#constants';
+import { isError } from '#common/type-guards.js';
 
 export class ClaudeCodeConnector extends BaseConnector {
   getClientInfo(): MCPClientInfo {
@@ -53,7 +54,7 @@ export class ClaudeCodeConnector extends BaseConnector {
     } catch (error) {
       return Promise.resolve({
         connected: false,
-        error: `Ошибка проверки статуса: ${(error as Error).message}`,
+        error: `Ошибка проверки статуса: ${isError(error) ? error.message : String(error)}`,
       });
     }
   }

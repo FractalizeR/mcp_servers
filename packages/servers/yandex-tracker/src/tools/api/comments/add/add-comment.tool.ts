@@ -75,10 +75,7 @@ export class AddCommentTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при добавлении комментария к задаче ${issueId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при добавлении комментария к задаче ${issueId}`, error);
     }
   }
 }

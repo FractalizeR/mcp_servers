@@ -90,7 +90,7 @@ export class BulkTransitionIssuesTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при массовом переходе ${issues.length} задач в статус через "${transition}"`,
-        error as Error
+        error
       );
     }
   }

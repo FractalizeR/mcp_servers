@@ -60,10 +60,7 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при управлении доступом к очереди ${queueId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при управлении доступом к очереди ${queueId}`, error);
     }
   }
 }

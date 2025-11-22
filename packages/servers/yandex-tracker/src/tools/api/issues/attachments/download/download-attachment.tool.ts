@@ -68,7 +68,7 @@ export class DownloadAttachmentTool extends BaseTool<YandexTrackerFacade> {
           await writeFile(saveToPath, result.content);
           this.logger.info(`Файл ${filename} сохранен в ${saveToPath}`);
         } catch (error) {
-          return this.formatError(`Не удалось сохранить файл в ${saveToPath}`, error as Error);
+          return this.formatError(`Не удалось сохранить файл в ${saveToPath}`, error);
         }
       }
 
@@ -95,7 +95,7 @@ export class DownloadAttachmentTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при скачивании файла ${filename} из задачи ${issueId}`,
-        error as Error
+        error
       );
     }
   }

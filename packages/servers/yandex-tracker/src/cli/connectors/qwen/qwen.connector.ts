@@ -19,6 +19,7 @@ import {
   DEFAULT_REQUEST_TIMEOUT,
   ENV_VAR_NAMES,
 } from '#constants';
+import { isError } from '#common/type-guards.js';
 
 interface QwenConfig {
   mcpServers?: Record<
@@ -78,7 +79,7 @@ export class QwenConnector extends BaseConnector {
     } catch (error) {
       return {
         connected: false,
-        error: `Ошибка чтения конфига: ${(error as Error).message}`,
+        error: `Ошибка чтения конфига: ${isError(error) ? error.message : String(error)}`,
       };
     }
   }

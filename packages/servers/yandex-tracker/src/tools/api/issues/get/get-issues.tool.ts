@@ -91,10 +91,7 @@ export class GetIssuesTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при получении задач (${issueKeys.length} шт.)`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при получении задач (${issueKeys.length} шт.)`, error);
     }
   }
 }

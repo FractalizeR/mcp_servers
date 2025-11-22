@@ -78,10 +78,7 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при добавлении записи времени к задаче ${issueId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при добавлении записи времени к задаче ${issueId}`, error);
     }
   }
 }

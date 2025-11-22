@@ -96,7 +96,7 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при выполнении перехода задачи ${issueKey} (transition: ${transitionId})`,
-        error as Error
+        error
       );
     }
   }

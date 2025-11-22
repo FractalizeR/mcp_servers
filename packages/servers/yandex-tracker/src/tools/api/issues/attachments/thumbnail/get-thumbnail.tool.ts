@@ -67,7 +67,7 @@ export class GetThumbnailTool extends BaseTool<YandexTrackerFacade> {
           await writeFile(saveToPath, result.content);
           this.logger.info(`Миниатюра сохранена в ${saveToPath}`);
         } catch (error) {
-          return this.formatError(`Не удалось сохранить миниатюру в ${saveToPath}`, error as Error);
+          return this.formatError(`Не удалось сохранить миниатюру в ${saveToPath}`, error);
         }
       }
 
@@ -93,7 +93,7 @@ export class GetThumbnailTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при получении миниатюры для attachmentId=${attachmentId} из задачи ${issueId}`,
-        error as Error
+        error
       );
     }
   }

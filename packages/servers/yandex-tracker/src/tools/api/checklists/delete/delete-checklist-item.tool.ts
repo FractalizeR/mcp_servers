@@ -68,7 +68,7 @@ export class DeleteChecklistItemTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при удалении элемента ${checklistItemId} из чеклиста задачи ${issueId}`,
-        error as Error
+        error
       );
     }
   }

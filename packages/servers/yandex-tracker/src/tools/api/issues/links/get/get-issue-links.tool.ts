@@ -72,7 +72,7 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при получении связей задачи ${issueId}`, error as Error);
+      return this.formatError(`Ошибка при получении связей задачи ${issueId}`, error);
     }
   }
 }

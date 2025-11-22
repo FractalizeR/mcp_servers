@@ -62,7 +62,7 @@ export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError('Ошибка при обновлении компонента', error as Error);
+      return this.formatError('Ошибка при обновлении компонента', error);
     }
   }
 }

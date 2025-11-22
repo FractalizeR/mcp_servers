@@ -82,10 +82,7 @@ export class BulkUpdateIssuesTool extends BaseTool<YandexTrackerFacade> {
         note: 'Операция выполняется асинхронно. Используй get_bulk_change_status для проверки статуса.',
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при массовом обновлении ${issues.length} задач`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при массовом обновлении ${issues.length} задач`, error);
     }
   }
 }

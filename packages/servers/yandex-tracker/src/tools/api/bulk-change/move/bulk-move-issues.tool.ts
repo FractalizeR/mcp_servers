@@ -93,7 +93,7 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при массовом перемещении ${issues.length} задач в очередь "${queue}"`,
-        error as Error
+        error
       );
     }
   }

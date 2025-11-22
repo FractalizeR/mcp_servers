@@ -92,10 +92,7 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
 
       return this.formatSuccess(response);
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при получении статуса bulk операции ${operationId}`,
-        error as Error
-      );
+      return this.formatError(`Ошибка при получении статуса bulk операции ${operationId}`, error);
     }
   }
 

@@ -93,3 +93,20 @@ export interface MCPConnector {
   /** Валидировать конфигурацию перед подключением */
   validateConfig(config: MCPServerConfig): Promise<string[]>;
 }
+
+/**
+ * Конфигурация MCP сервера для клиента (JSON/TOML файлы)
+ */
+export interface MCPClientServerConfig {
+  command: string;
+  args: string[];
+  env: Record<string, string>;
+}
+
+/**
+ * Базовая структура конфигурационного файла MCP клиента
+ * Generic тип для разных форматов (mcpServers, mcp_servers и т.д.)
+ */
+export type MCPClientConfig<TKey extends string = 'mcpServers'> = {
+  [K in TKey]?: Record<string, MCPClientServerConfig>;
+};

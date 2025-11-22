@@ -50,7 +50,7 @@ export class GetQueueFieldsTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fieldsParam,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при получении полей очереди ${queueId}`, error as Error);
+      return this.formatError(`Ошибка при получении полей очереди ${queueId}`, error);
     }
   }
 }

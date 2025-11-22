@@ -105,7 +105,7 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при обновлении задачи ${issueKey}`, error as Error);
+      return this.formatError(`Ошибка при обновлении задачи ${issueKey}`, error);
     }
   }
 }

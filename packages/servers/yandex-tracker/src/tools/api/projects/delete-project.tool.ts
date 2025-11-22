@@ -45,7 +45,7 @@ export class DeleteProjectTool extends BaseTool<YandexTrackerFacade> {
         projectId,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при удалении проекта ${projectId}`, error as Error);
+      return this.formatError(`Ошибка при удалении проекта ${projectId}`, error);
     }
   }
 }
