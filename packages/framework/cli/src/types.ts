@@ -5,6 +5,9 @@
 
 // Import MCPConnector for use in forward declarations
 import type { MCPConnector } from './connectors/base/connector.interface.js';
+// Forward reference to ConfigManager (implemented in utils/config-manager.ts)
+ 
+import type { ConfigManager } from './utils/config-manager.js';
 
 /**
  * Базовая конфигурация для любого MCP сервера
@@ -200,16 +203,6 @@ export interface IConnectorRegistry<TConfig extends BaseMCPServerConfig = BaseMC
   getAll(): MCPConnector<TConfig>[];
   findInstalled(): Promise<MCPConnector<TConfig>[]>;
   checkAllStatuses(): Promise<Map<string, ConnectionStatus>>;
-}
-
-// Forward declarations for classes (will be implemented in separate files)
-export declare class ConfigManager<TConfig extends BaseMCPServerConfig> {
-  constructor(options: ConfigManagerOptions<TConfig>);
-  load(): Promise<Partial<TConfig> | undefined>;
-  save(config: TConfig): Promise<void>;
-  delete(): Promise<void>;
-  exists(): Promise<boolean>;
-  getConfigPath(): string;
 }
 
 // Re-export MCPConnector for convenience
