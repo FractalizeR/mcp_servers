@@ -103,6 +103,7 @@ import type {
   UpdateProjectParams,
   DeleteProjectParams,
 } from '#tracker_api/api_operations/index.js';
+import type { BatchResult } from '@mcp-framework/infrastructure';
 
 @injectable()
 export class YandexTrackerFacade {
@@ -421,6 +422,19 @@ export class YandexTrackerFacade {
     input?: GetCommentsInput
   ): Promise<CommentWithUnknownFields[]> {
     return this.commentService.getComments(issueId, input);
+  }
+
+  /**
+   * Получает комментарии для нескольких задач параллельно
+   * @param issueIds - массив идентификаторов задач
+   * @param input - параметры запроса (применяются ко всем задачам)
+   * @returns массив результатов в формате BatchResult
+   */
+  async getCommentsMany(
+    issueIds: string[],
+    input?: GetCommentsInput
+  ): Promise<BatchResult<string, CommentWithUnknownFields[]>> {
+    return this.commentService.getCommentsMany(issueIds, input);
   }
 
   /**

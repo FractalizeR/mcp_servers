@@ -28,6 +28,7 @@ import type {
   GetCommentsInput,
 } from '#tracker_api/dto/index.js';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { BatchResult } from '@mcp-framework/infrastructure';
 
 @injectable()
 export class CommentService {
@@ -59,6 +60,19 @@ export class CommentService {
     input?: GetCommentsInput
   ): Promise<CommentWithUnknownFields[]> {
     return this.getCommentsOp.execute(issueId, input);
+  }
+
+  /**
+   * Получает комментарии для нескольких задач параллельно
+   * @param issueIds - массив идентификаторов задач
+   * @param input - параметры запроса (применяются ко всем задачам)
+   * @returns массив результатов в формате BatchResult
+   */
+  async getCommentsMany(
+    issueIds: string[],
+    input?: GetCommentsInput
+  ): Promise<BatchResult<string, CommentWithUnknownFields[]>> {
+    return this.getCommentsOp.executeMany(issueIds, input);
   }
 
   /**

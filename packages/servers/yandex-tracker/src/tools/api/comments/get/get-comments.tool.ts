@@ -1,13 +1,18 @@
 /**
- * MCP Tool для получения комментариев задачи
+ * MCP Tool для получения комментариев задач
  *
  * API Tool (прямой доступ к API):
- * - 1 tool = 1 API вызов (get comments)
+ * - 1 tool = batch API вызов (get comments for multiple issues)
  * - Минимальная бизнес-логика
  * - Валидация через Zod
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import {
+  BaseTool,
+  ResponseFieldFilter,
+  BatchResultProcessor,
+  ResultLogger,
+} from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -16,11 +21,13 @@ import { GetCommentsParamsSchema } from '#tools/api/comments/get/get-comments.sc
 import { GET_COMMENTS_TOOL_METADATA } from './get-comments.metadata.js';
 
 /**
- * Инструмент для получения комментариев задачи
+ * Инструмент для получения комментариев задач (batch-режим)
  *
  * Ответственность (SRP):
- * - Координация процесса получения комментариев
+ * - Координация процесса получения комментариев для нескольких задач
  * - Делегирование валидации в BaseTool
+ * - Делегирование обработки результатов в BatchResultProcessor
+ * - Делегирование логирования в ResultLogger
  * - Форматирование итогового результата
  */
 export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
@@ -42,43 +49,63 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, perPage, page, expand, fields } = validation.data;
+    const { issueIds, perPage, page, expand, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      this.logger.info('Получение комментариев задачи', {
-        issueId,
-        perPage,
-        page,
-        expand,
-      });
+      ResultLogger.logOperationStart(
+        this.logger,
+        'Получение комментариев',
+        issueIds.length,
+        fields
+      );
 
-      // 3. API v3: получение комментариев
-      const comments = await this.facade.getComments(issueId, {
+      // 3. API v3: получение комментариев через batch-метод
+      const results = await this.facade.getCommentsMany(issueIds, {
         perPage,
         page,
         expand: expand?.join(','),
       });
 
-      // 4. Фильтрация полей ответа для каждого комментария
-      const filtered = comments.map((comment) =>
-        ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fields)
+      // 4. Обработка результатов через BatchResultProcessor
+      const processedResults = BatchResultProcessor.process(
+        results,
+        (comments: CommentWithUnknownFields[]): Partial<CommentWithUnknownFields>[] =>
+          comments.map((comment) =>
+            ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fields)
+          )
       );
 
-      // 5. Логирование результата
-      this.logger.info('Комментарии успешно получены', {
-        issueId,
-        commentsCount: filtered.length,
-      });
+      // 5. Логирование результатов
+      ResultLogger.logBatchResults(
+        this.logger,
+        'Комментарии получены',
+        {
+          totalRequested: issueIds.length,
+          successCount: processedResults.successful.length,
+          failedCount: processedResults.failed.length,
+          fieldsCount: fields.length,
+        },
+        processedResults
+      );
 
       return this.formatSuccess({
-        issueId,
-        comments: filtered,
-        count: filtered.length,
+        total: issueIds.length,
+        successful: processedResults.successful.length,
+        failed: processedResults.failed.length,
+        comments: processedResults.successful.map((item) => ({
+          issueId: item.key,
+          comments: item.data,
+          count: item.data.length,
+        })),
+        errors: processedResults.failed,
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при получении комментариев задачи ${issueId}`, error);
+      return this.formatError(
+        `Ошибка при получении комментариев (${issueIds.length} задач)`,
+        error
+      );
     }
   }
 }

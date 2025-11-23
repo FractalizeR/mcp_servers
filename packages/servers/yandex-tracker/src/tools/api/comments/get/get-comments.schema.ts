@@ -3,16 +3,16 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, ExpandSchema, FieldsSchema } from '#common/schemas/index.js';
+import { IssueKeysSchema, ExpandSchema, FieldsSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения комментариев
  */
 export const GetCommentsParamsSchema = z.object({
   /**
-   * Идентификатор или ключ задачи (обязательно)
+   * Массив идентификаторов или ключей задач (обязательно)
    */
-  issueId: IssueKeySchema.describe('Issue ID or key (e.g., TEST-123)'),
+  issueIds: IssueKeysSchema.describe("Array of issue IDs or keys (e.g., ['TEST-123', 'TEST-456'])"),
 
   /**
    * Количество комментариев на странице (опционально)

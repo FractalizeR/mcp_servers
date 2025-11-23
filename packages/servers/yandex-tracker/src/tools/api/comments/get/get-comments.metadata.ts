@@ -17,11 +17,11 @@ import { MCP_TOOL_PREFIX } from '#constants';
  */
 export const GET_COMMENTS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_comments', MCP_TOOL_PREFIX),
-  description: '[Comments/Read] Получить комментарии задачи',
+  description: '[Comments/Read] Получить комментарии задач (batch, пагинация)',
   category: ToolCategory.COMMENTS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,
-  tags: ['comment', 'get', 'list', 'read'],
+  tags: ['comment', 'get', 'list', 'read', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
 } as const;

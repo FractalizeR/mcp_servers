@@ -20,7 +20,7 @@ describe('GetCommentsTool', () => {
 
   beforeEach(() => {
     mockTrackerFacade = {
-      getComments: vi.fn(),
+      getCommentsMany: vi.fn(),
     } as unknown as YandexTrackerFacade;
 
     mockLogger = {
@@ -55,8 +55,8 @@ describe('GetCommentsTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId', 'fields']);
-      expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['issueIds', 'fields']);
+      expect(definition.inputSchema.properties?.['issueIds']).toBeDefined();
       expect(definition.inputSchema.properties?.['perPage']).toBeDefined();
       expect(definition.inputSchema.properties?.['page']).toBeDefined();
       expect(definition.inputSchema.properties?.['expand']).toBeDefined();
@@ -65,7 +65,7 @@ describe('GetCommentsTool', () => {
   });
 
   describe('Validation', () => {
-    it('должен требовать параметр issueId', async () => {
+    it('должен требовать параметр issueIds', async () => {
       const result = await tool.execute({ fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
@@ -78,7 +78,7 @@ describe('GetCommentsTool', () => {
     });
 
     it('должен требовать параметр fields', async () => {
-      const result = await tool.execute({ issueId: 'TEST-123' });
+      const result = await tool.execute({ issueIds: ['TEST-123'] });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -89,8 +89,8 @@ describe('GetCommentsTool', () => {
       expect(parsed.message).toContain('валидации');
     });
 
-    it('должен отклонить пустой issueId', async () => {
-      const result = await tool.execute({ issueId: '', fields: ['id', 'text'] });
+    it('должен отклонить пустой массив issueIds', async () => {
+      const result = await tool.execute({ issueIds: [], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('валидации');
@@ -98,7 +98,7 @@ describe('GetCommentsTool', () => {
 
     it('должен отклонить некорректный perPage (отрицательное число)', async () => {
       const result = await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         perPage: -1,
         fields: ['id', 'text'],
       });
@@ -109,7 +109,7 @@ describe('GetCommentsTool', () => {
 
     it('должен отклонить некорректный perPage (больше 500)', async () => {
       const result = await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         perPage: 501,
         fields: ['id', 'text'],
       });
@@ -120,7 +120,7 @@ describe('GetCommentsTool', () => {
 
     it('должен отклонить некорректный page (0)', async () => {
       const result = await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         page: 0,
         fields: ['id', 'text'],
       });
@@ -130,10 +130,17 @@ describe('GetCommentsTool', () => {
     });
 
     it('должен принять корректные параметры', async () => {
-      vi.mocked(mockTrackerFacade.getComments).mockResolvedValue(mockComments);
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: mockComments,
+        },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         fields: ['id', 'text'],
       });
 
@@ -142,59 +149,87 @@ describe('GetCommentsTool', () => {
   });
 
   describe('Operation calls', () => {
-    it('должен вызвать getComments с минимальными параметрами', async () => {
-      vi.mocked(mockTrackerFacade.getComments).mockResolvedValue(mockComments);
+    it('должен вызвать getCommentsMany с минимальными параметрами', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: mockComments,
+        },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         fields: ['id', 'text'],
       });
 
-      expect(mockTrackerFacade.getComments).toHaveBeenCalledWith('TEST-123', {
+      expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: undefined,
         page: undefined,
         expand: undefined,
       });
     });
 
-    it('должен вызвать getComments с параметрами пагинации', async () => {
-      vi.mocked(mockTrackerFacade.getComments).mockResolvedValue(mockComments);
+    it('должен вызвать getCommentsMany с параметрами пагинации', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: mockComments,
+        },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         perPage: 50,
         page: 2,
         fields: ['id', 'text'],
       });
 
-      expect(mockTrackerFacade.getComments).toHaveBeenCalledWith('TEST-123', {
+      expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: 50,
         page: 2,
         expand: undefined,
       });
     });
 
-    it('должен вызвать getComments с expand параметром', async () => {
-      vi.mocked(mockTrackerFacade.getComments).mockResolvedValue(mockComments);
+    it('должен вызвать getCommentsMany с expand параметром', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: mockComments,
+        },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         expand: ['attachments'],
         fields: ['id', 'text'],
       });
 
-      expect(mockTrackerFacade.getComments).toHaveBeenCalledWith('TEST-123', {
+      expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: undefined,
         page: undefined,
         expand: 'attachments',
       });
     });
 
-    it('должен вернуть список комментариев', async () => {
-      vi.mocked(mockTrackerFacade.getComments).mockResolvedValue(mockComments);
+    it('должен вернуть unified batch result', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: mockComments,
+        },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         fields: ['id', 'text'],
       });
 
@@ -202,24 +237,39 @@ describe('GetCommentsTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          issueId: string;
-          comments: CommentWithUnknownFields[];
-          count: number;
+          total: number;
+          successful: number;
+          failed: number;
+          comments: Array<{
+            issueId: string;
+            comments: CommentWithUnknownFields[];
+            count: number;
+          }>;
           fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.issueId).toBe('TEST-123');
-      expect(parsed.data.comments).toHaveLength(3);
-      expect(parsed.data.count).toBe(3);
+      expect(parsed.data.total).toBe(1);
+      expect(parsed.data.successful).toBe(1);
+      expect(parsed.data.failed).toBe(0);
+      expect(parsed.data.comments).toHaveLength(1);
+      expect(parsed.data.comments[0].issueId).toBe('TEST-123');
+      expect(parsed.data.comments[0].count).toBe(3);
       expect(parsed.data.fieldsReturned).toEqual(['id', 'text']);
     });
 
     it('должен вернуть пустой массив для задачи без комментариев', async () => {
-      vi.mocked(mockTrackerFacade.getComments).mockResolvedValue([]);
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: [],
+        },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         fields: ['id', 'text'],
       });
 
@@ -227,65 +277,115 @@ describe('GetCommentsTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          comments: CommentWithUnknownFields[];
-          count: number;
+          total: number;
+          successful: number;
+          comments: Array<{
+            count: number;
+          }>;
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.comments).toHaveLength(0);
-      expect(parsed.data.count).toBe(0);
+      expect(parsed.data.total).toBe(1);
+      expect(parsed.data.successful).toBe(1);
+      expect(parsed.data.comments[0].count).toBe(0);
+    });
+
+    it('должен обработать batch результаты для нескольких задач', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: mockComments,
+        },
+        {
+          status: 'fulfilled',
+          key: 'TEST-456',
+          index: 1,
+          value: [],
+        },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: ['TEST-123', 'TEST-456'],
+        fields: ['id', 'text'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          total: number;
+          successful: number;
+          comments: Array<{
+            issueId: string;
+            count: number;
+          }>;
+        };
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.data.total).toBe(2);
+      expect(parsed.data.successful).toBe(2);
+      expect(parsed.data.comments).toHaveLength(2);
+      expect(parsed.data.comments[0].issueId).toBe('TEST-123');
+      expect(parsed.data.comments[0].count).toBe(3);
+      expect(parsed.data.comments[1].issueId).toBe('TEST-456');
+      expect(parsed.data.comments[1].count).toBe(0);
     });
   });
 
   describe('Logging', () => {
-    it('должен логировать начало получения комментариев', async () => {
-      vi.mocked(mockTrackerFacade.getComments).mockResolvedValue(mockComments);
+    it('должен логировать начало batch операции', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: mockComments,
+        },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         fields: ['id', 'text'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Получение комментариев задачи',
+        expect.stringContaining('Получение комментариев'),
         expect.objectContaining({
-          issueId: 'TEST-123',
+          itemsCount: 1,
+          fields: 2,
         })
       );
     });
 
-    it('должен логировать параметры пагинации', async () => {
-      vi.mocked(mockTrackerFacade.getComments).mockResolvedValue(mockComments);
+    it('должен логировать результаты batch операции', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: mockComments,
+        },
+        {
+          status: 'fulfilled',
+          key: 'TEST-456',
+          index: 1,
+          value: [],
+        },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
-        perPage: 50,
-        page: 2,
+        issueIds: ['TEST-123', 'TEST-456'],
         fields: ['id', 'text'],
       });
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Получение комментариев задачи',
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Комментарии получены'),
         expect.objectContaining({
-          perPage: 50,
-          page: 2,
-        })
-      );
-    });
-
-    it('должен логировать успешное получение', async () => {
-      vi.mocked(mockTrackerFacade.getComments).mockResolvedValue(mockComments);
-
-      await tool.execute({
-        issueId: 'TEST-123',
-        fields: ['id', 'text'],
-      });
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Комментарии успешно получены',
-        expect.objectContaining({
-          issueId: 'TEST-123',
-          commentsCount: 3,
+          successful: 2,
+          failed: 0,
+          fieldsCount: 2,
         })
       );
     });
@@ -294,43 +394,89 @@ describe('GetCommentsTool', () => {
   describe('Error handling', () => {
     it('должен обработать ошибки от operation', async () => {
       const error = new Error('API Error');
-      vi.mocked(mockTrackerFacade.getComments).mockRejectedValue(error);
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockRejectedValue(error);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
+        issueIds: ['TEST-123'],
         fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('Ошибка при получении комментариев');
-      expect(result.content[0]?.text).toContain('TEST-123');
     });
 
-    it('должен обработать ошибку несуществующей задачи (404)', async () => {
-      const notFoundError = new Error('Issue not found');
-      vi.mocked(mockTrackerFacade.getComments).mockRejectedValue(notFoundError);
+    it('должен обработать частичные ошибки (partial failures)', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: mockComments,
+        },
+        {
+          status: 'rejected',
+          key: 'TEST-456',
+          index: 1,
+          reason: new Error('Not found'),
+        },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'NONEXISTENT-999',
+        issueIds: ['TEST-123', 'TEST-456'],
         fields: ['id', 'text'],
       });
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении комментариев');
-      expect(result.content[0]?.text).toContain('NONEXISTENT-999');
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          total: number;
+          successful: number;
+          failed: number;
+          errors: unknown[];
+        };
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.data.total).toBe(2);
+      expect(parsed.data.successful).toBe(1);
+      expect(parsed.data.failed).toBe(1);
+      expect(parsed.data.errors).toHaveLength(1);
     });
 
-    it('должен обработать ошибку доступа (403)', async () => {
-      const forbiddenError = new Error('Access denied');
-      vi.mocked(mockTrackerFacade.getComments).mockRejectedValue(forbiddenError);
+    it('должен обработать полный провал всех запросов', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'rejected',
+          key: 'TEST-123',
+          index: 0,
+          reason: new Error('Not found'),
+        },
+        {
+          status: 'rejected',
+          key: 'TEST-456',
+          index: 1,
+          reason: new Error('Access denied'),
+        },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'PRIVATE-123',
+        issueIds: ['TEST-123', 'TEST-456'],
         fields: ['id', 'text'],
       });
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении комментариев');
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          total: number;
+          successful: number;
+          failed: number;
+        };
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.data.total).toBe(2);
+      expect(parsed.data.successful).toBe(0);
+      expect(parsed.data.failed).toBe(2);
     });
   });
 });

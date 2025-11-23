@@ -249,12 +249,13 @@ describe('Full Issue Lifecycle (Integration)', () => {
     ]);
 
     const commentsResult = await client.callTool(buildToolName('get_comments', MCP_TOOL_PREFIX), {
-      issueId: issueKey,
+      issueIds: [issueKey],
       fields: ['id', 'text'],
     });
     expect(commentsResult.isError).toBeFalsy();
     const commentsData = JSON.parse(commentsResult.content[0]!.text);
-    expect(commentsData.data.comments).toHaveLength(3);
+    expect(commentsData.data.comments).toHaveLength(1);
+    expect(commentsData.data.comments[0].count).toBe(3);
 
     // Получить чеклист
     mockServer.mockGetChecklistSuccess(issueKey, [
