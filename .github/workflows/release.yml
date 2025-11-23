@@ -97,42 +97,47 @@ jobs:
         run: npm ci
 
       - name: Build MCPB bundle
-        run: npm run build:bundle
+        run: npm run build:mcpb
 
       - name: Extract version
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Create release archive
+      - name: Find MCPB file
+        id: find_mcpb
         run: |
-          mkdir -p release
-          cp packages/servers/yandex-tracker/dist/yandex-tracker.bundle.js release/
-          cp packages/servers/yandex-tracker/package.json release/
-          cp packages/servers/yandex-tracker/README.md release/
-          cd release
-          tar -czf ../mcp-server-yandex-tracker-${{ steps.version.outputs.VERSION }}.tar.gz *
+          MCPB_FILE=$(ls fractalizer_mcp_yandex_tracker-*.mcpb 2>/dev/null | head -n 1)
+          if [ -z "$MCPB_FILE" ]; then
+            echo "❌ MCPB файл не найден!"
+            exit 1
+          fi
+          echo "MCPB_FILE=$MCPB_FILE" >> $GITHUB_OUTPUT
+          echo "✅ Найден MCPB файл: $MCPB_FILE"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            mcp-server-yandex-tracker-${{ steps.version.outputs.VERSION }}.tar.gz
-            packages/servers/yandex-tracker/dist/yandex-tracker.bundle.js
+            ${{ steps.find_mcpb.outputs.MCPB_FILE }}
+            packages/servers/yandex-tracker/dist/yandex-tracker.bundle.cjs
           body: |
             ## 🚀 Release ${{ steps.version.outputs.VERSION }}
 
-            ### Installation
+            ### Installation Options
 
-            **NPM Registry:**
+            #### 1. NPM Registry (recommended)
             ```bash
             npm install -g @mcp-server/yandex-tracker@${{ steps.version.outputs.VERSION }}
             ```
 
-            **MCPB Bundle (standalone):**
-            Download `mcp-server-yandex-tracker-${{ steps.version.outputs.VERSION }}.tar.gz` or `yandex-tracker.bundle.js`
+            #### 2. MCPB Bundle (standalone, no npm required)
+            Download `${{ steps.find_mcpb.outputs.MCPB_FILE }}` from Assets below
+
+            #### 3. Direct Bundle (advanced)
+            Download `yandex-tracker.bundle.cjs` and run with Node.js
 
             ### Changes
-            See [CHANGELOG.md](CHANGELOG.md) for details.
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md) for details.
 
           draft: false
           prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
