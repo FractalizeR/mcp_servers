@@ -16,6 +16,8 @@ export default mergeConfig(
       name: 'yandex-tracker',
       // Performance monitoring: warn about tests slower than 300ms
       slowTestThreshold: 300,
+      // Исключить legacy тесты (сохранены для rollback, но не запускаются)
+      exclude: ['**/node_modules/**', '**/dist/**', '**/.{git,cache,output,temp}/**', 'tests/cli-legacy/**'],
     },
     resolve: {
       alias: {

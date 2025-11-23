@@ -1,0 +1,4 @@
+
+# Legacy CLI (сохранен для rollback, не проверяется линтером)
+src/cli-legacy/**
+tests/cli-legacy/**
