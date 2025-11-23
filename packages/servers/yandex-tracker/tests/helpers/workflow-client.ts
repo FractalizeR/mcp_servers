@@ -96,13 +96,13 @@ export class WorkflowClient {
   }
 
   /**
-   * Получить changelog задачи
+   * Получить changelog задачи (использует batch API)
    */
   async getChangelog(issueKey: string): Promise<unknown[]> {
     const result = await this.client.callTool(
       buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
       {
-        issueKey,
+        issueKeys: [issueKey],
         fields: ['id', 'updatedAt', 'updatedBy'],
       }
     );
@@ -112,7 +112,14 @@ export class WorkflowClient {
     }
 
     const response = JSON.parse(result.content[0]!.text);
-    return response.data.changelog;
+    // Извлекаем результат для первой (единственной) задачи из batch результата
+    if (response.data.successful && response.data.successful.length > 0) {
+      return response.data.successful[0].changelog;
+    }
+    if (response.data.failed && response.data.failed.length > 0) {
+      throw new Error(`Failed to get changelog: ${response.data.failed[0].error}`);
+    }
+    return [];
   }
 
   /**

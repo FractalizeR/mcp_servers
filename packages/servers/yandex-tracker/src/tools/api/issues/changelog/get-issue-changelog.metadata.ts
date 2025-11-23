@@ -17,10 +17,10 @@ import { MCP_TOOL_PREFIX } from '#constants';
  */
 export const GET_ISSUE_CHANGELOG_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
-  description: '[Issues/Read] История изменений задачи',
+  description: '[Issues/Read] История изменений задач (batch)',
   category: ToolCategory.ISSUES,
   subcategory: 'read',
   priority: ToolPriority.HIGH,
-  tags: ['history', 'changelog', 'audit', 'read'],
+  tags: ['history', 'changelog', 'audit', 'read', 'batch'],
   isHelper: false,
 } as const;

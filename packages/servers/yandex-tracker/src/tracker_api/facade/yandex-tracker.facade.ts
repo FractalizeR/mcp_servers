@@ -36,6 +36,7 @@ import {
 import type { PingResult } from '#tracker_api/api_operations/user/ping.operation.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
 import type { BatchIssueLinksResult } from '#tracker_api/api_operations/link/get-issue-links.operation.js';
+import type { BatchChangelogResult } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
 import type {
   FindIssuesInputDto,
@@ -87,7 +88,6 @@ import type {
 } from '#tracker_api/dto/index.js';
 import type {
   IssueWithUnknownFields,
-  ChangelogEntryWithUnknownFields,
   TransitionWithUnknownFields,
   LinkWithUnknownFields,
   CommentWithUnknownFields,
@@ -181,12 +181,12 @@ export class YandexTrackerFacade {
   // === Issue Methods - Changelog ===
 
   /**
-   * Получает историю изменений задачи
-   * @param issueKey - ключ задачи
-   * @returns массив записей истории
+   * Получает историю изменений задач (batch-режим)
+   * @param issueKeys - массив ключей задач
+   * @returns массив результатов (fulfilled | rejected)
    */
-  async getIssueChangelog(issueKey: string): Promise<ChangelogEntryWithUnknownFields[]> {
-    return this.issueService.getIssueChangelog(issueKey);
+  async getIssueChangelog(issueKeys: string[]): Promise<BatchChangelogResult[]> {
+    return this.issueService.getIssueChangelog(issueKeys);
   }
 
   // === Issue Methods - Transitions ===
