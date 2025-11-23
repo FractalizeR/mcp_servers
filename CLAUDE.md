@@ -92,6 +92,8 @@ npm run validate:docs
 packages/
 ├── infrastructure/     → @mcp-framework/infrastructure
 │   └── HTTP, cache, logging, async utilities
+├── cli/               → @mcp-framework/cli
+│   └── Generic CLI для MCP подключений
 ├── core/              → @mcp-framework/core
 │   └── BaseTool, registry, type system
 ├── search/            → @mcp-framework/search
@@ -102,6 +104,7 @@ packages/
 
 **Детали:**
 - **Infrastructure** — [packages/framework/infrastructure/README.md](packages/framework/infrastructure/README.md)
+- **CLI** — [packages/framework/cli/README.md](packages/framework/cli/README.md)
 - **Core** — [packages/framework/core/README.md](packages/framework/core/README.md)
 - **Search** — [packages/framework/search/README.md](packages/framework/search/README.md)
 - **Yandex Tracker** — [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
@@ -114,6 +117,8 @@ packages/
 
 ```
 infrastructure (база для всех, 0 зависимостей)
+    ↓
+cli (зависит от infrastructure)
     ↓
 core (зависит от infrastructure)
     ↓
@@ -393,6 +398,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - **Migration guide v1 → v2:** [MIGRATION.md](./MIGRATION.md)
 - **Framework packages:**
   - [Infrastructure API](packages/framework/infrastructure/README.md)
+  - [CLI Framework](packages/framework/cli/README.md)
   - [Core API](packages/framework/core/README.md)
   - [Search System](packages/framework/search/README.md)
 - **Yandex Tracker:**
