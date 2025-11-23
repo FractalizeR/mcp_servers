@@ -144,7 +144,7 @@ describe('ConfigManager', () => {
     await configManager.save(config);
 
     const stats = await fs.stat(configPath);
-     
+
     const mode = stats.mode & 0o777;
     expect(mode).toBe(0o600);
   });

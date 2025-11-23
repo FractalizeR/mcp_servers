@@ -6,7 +6,7 @@
 // Import MCPConnector for use in forward declarations
 import type { MCPConnector } from './connectors/base/connector.interface.js';
 // Forward reference to ConfigManager (implemented in utils/config-manager.ts)
- 
+
 import type { ConfigManager } from './utils/config-manager.js';
 
 /**
