@@ -273,7 +273,16 @@ ESSENTIAL_TOOLS=ping,search_tools
 - **Entities** — [src/tracker_api/entities/README.md](src/tracker_api/entities/README.md)
 - **DTO** — [src/tracker_api/dto/README.md](src/tracker_api/dto/README.md)
 - **Dependency Injection** — [src/composition-root/README.md](src/composition-root/README.md)
+- **CLI** — [src/cli/README.md](src/cli/README.md)
 - **Тестирование** — [tests/README.md](tests/README.md)
+
+### CLI для подключения к MCP клиентам
+
+- ✅ Использует `@mcp-framework/cli` для универсального управления подключениями
+- ✅ YT-специфичная конфигурация в `src/cli/types.ts` и `src/cli/prompts.ts`
+- ✅ Feature flags для миграции (USE_FRAMEWORK_CLI, DEBUG_CLI_MIGRATION)
+- 📖 Детали архитектуры: [packages/framework/cli/README.md](../../framework/cli/README.md)
+- 📖 Адаптер YT: [src/cli/README.md](src/cli/README.md)
 
 ---
 
