@@ -37,6 +37,10 @@
     "CHANGELOG.md"
   ],
   "scripts": {
+    "benchmark": "tsx benchmarks/cli-performance.ts",
+    "benchmark:all": "npm run benchmark && npm run benchmark:bundle && npm run benchmark:memory",
+    "benchmark:bundle": "bash benchmarks/bundle-size.sh",
+    "benchmark:memory": "tsx benchmarks/memory-usage.ts",
     "prebuild": "npm run generate:index",
     "build": "tsc -b && tsc-alias && npm run build:bundle",
     "build:bundle": "tsx scripts/increment-build.ts && tsup",
