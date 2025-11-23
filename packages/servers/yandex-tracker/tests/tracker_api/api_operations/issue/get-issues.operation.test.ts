@@ -207,9 +207,9 @@ describe('GetIssuesOperation', () => {
       // Мокируем httpClient.get чтобы он возвращал данные
       mockHttpClient.get = vi.fn().mockResolvedValue(mockIssue);
 
-      // Мокируем cache (cache miss) - СИНХРОННО
-      vi.mocked(mockCacheManager.get).mockResolvedValue(undefined);
-      vi.mocked(mockCacheManager.set).mockReturnValue(undefined);
+      // Мокируем cache (cache miss) - ASYNC
+      vi.mocked(mockCacheManager.get).mockResolvedValue(null);
+      vi.mocked(mockCacheManager.set).mockResolvedValue(undefined);
 
       const result = await operation.execute([issueKey]);
 
@@ -296,9 +296,9 @@ describe('GetIssuesOperation', () => {
         return Promise.resolve(issue);
       });
 
-      // Мокируем cache (все cache miss) - СИНХРОННО
-      vi.mocked(mockCacheManager.get).mockResolvedValue(undefined);
-      vi.mocked(mockCacheManager.set).mockReturnValue(undefined);
+      // Мокируем cache (все cache miss) - ASYNC
+      vi.mocked(mockCacheManager.get).mockResolvedValue(null);
+      vi.mocked(mockCacheManager.set).mockResolvedValue(undefined);
 
       const result = await operation.execute(issueKeys);
 

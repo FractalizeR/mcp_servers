@@ -26,10 +26,10 @@ describe('GetAttachmentsOperation', () => {
       patch: vi.fn(),
       put: vi.fn(),
       delete: vi.fn().mockResolvedValue(undefined),
-    } as unknown as HttpClient;
+    } as unknown as IHttpClient;
 
     mockCacheManager = {
-      get: vi.fn().mockReturnValue(undefined),
+      get: vi.fn().mockResolvedValue(null),
       set: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),
       clear: vi.fn().mockResolvedValue(undefined),
@@ -126,7 +126,7 @@ describe('GetAttachmentsOperation', () => {
       const mockAttachments: AttachmentWithUnknownFields[] = createAttachmentListFixture(2);
 
       // Первый раз кеша нет
-      vi.mocked(mockCacheManager.get).mockResolvedValueOnce(undefined);
+      vi.mocked(mockCacheManager.get).mockResolvedValueOnce(null);
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockAttachments);
 
       // Act - первый вызов

@@ -21,10 +21,10 @@ describe('DeleteAttachmentOperation', () => {
       patch: vi.fn(),
       put: vi.fn(),
       delete: vi.fn().mockResolvedValue(undefined),
-    } as unknown as HttpClient;
+    } as unknown as IHttpClient;
 
     mockCacheManager = {
-      get: vi.fn().mockReturnValue(undefined),
+      get: vi.fn().mockResolvedValue(null),
       set: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),
       clear: vi.fn().mockResolvedValue(undefined),

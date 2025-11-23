@@ -44,7 +44,7 @@ function createMockHttpClient(): IHttpClient {
     patch: vi.fn(),
     delete: vi.fn().mockResolvedValue(undefined),
     getAxiosInstance: vi.fn(() => mockAxiosInstance),
-  } as unknown as HttpClient;
+  } as unknown as IHttpClient;
 }
 
 function createMockCache(): CacheManager {
@@ -102,7 +102,7 @@ describe('BaseOperation', () => {
       const cacheKey = 'test:key';
       const freshValue = { data: 'fresh' };
 
-      (mockCache.get as Mock).mockResolvedValue(undefined);
+      (mockCache.get as Mock).mockResolvedValue(null);
       const fn = vi.fn(async () => freshValue);
 
       const result = await operation.executeWithCache(cacheKey, fn);
@@ -118,7 +118,7 @@ describe('BaseOperation', () => {
       const cacheKey = 'test:key';
       const value = { data: 'new' };
 
-      (mockCache.get as Mock).mockResolvedValue(undefined);
+      (mockCache.get as Mock).mockResolvedValue(null);
       const fn = vi.fn(async () => value);
 
       await operation.executeWithCache(cacheKey, fn);

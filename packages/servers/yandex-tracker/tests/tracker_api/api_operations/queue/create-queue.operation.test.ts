@@ -24,7 +24,7 @@ describe('CreateQueueOperation', () => {
       patch: vi.fn(),
       put: vi.fn(),
       delete: vi.fn().mockResolvedValue(undefined),
-    } as unknown as HttpClient;
+    } as unknown as IHttpClient;
 
     mockCacheManager = {
       get: vi.fn().mockResolvedValue(null),
