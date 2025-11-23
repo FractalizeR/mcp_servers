@@ -1,13 +1,18 @@
 /**
- * MCP Tool для добавления комментария к задаче
+ * MCP Tool для добавления комментария к задачам
  *
  * API Tool (прямой доступ к API):
- * - 1 tool = 1 API вызов (add comment)
+ * - Batch-режим: добавление комментариев к нескольким задачам
  * - Минимальная бизнес-логика
  * - Валидация через Zod
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import {
+  BaseTool,
+  ResponseFieldFilter,
+  BatchResultProcessor,
+  ResultLogger,
+} from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -16,11 +21,13 @@ import { AddCommentParamsSchema } from '#tools/api/comments/add/add-comment.sche
 import { ADD_COMMENT_TOOL_METADATA } from './add-comment.metadata.js';
 
 /**
- * Инструмент для добавления комментария к задаче
+ * Инструмент для добавления комментария к задачам (batch-режим)
  *
  * Ответственность (SRP):
- * - Координация процесса добавления комментария
+ * - Координация процесса добавления комментариев к нескольким задачам
  * - Делегирование валидации в BaseTool
+ * - Делегирование обработки результатов в BatchResultProcessor
+ * - Делегирование логирования в ResultLogger
  * - Форматирование итогового результата
  */
 export class AddCommentTool extends BaseTool<YandexTrackerFacade> {
@@ -42,40 +49,60 @@ export class AddCommentTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, text, attachmentIds, fields } = validation.data;
+    const { comments, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      this.logger.info('Добавление комментария к задаче', {
-        issueId,
-        textLength: text.length,
-        hasAttachments: Boolean(attachmentIds?.length),
-      });
+      ResultLogger.logOperationStart(
+        this.logger,
+        'Добавление комментариев',
+        comments.length,
+        fields
+      );
 
-      // 3. API v3: добавление комментария
-      const comment: CommentWithUnknownFields = await this.facade.addComment(issueId, {
-        text,
-        attachmentIds,
-      });
+      // 3. API v3: добавление комментариев через batch-метод
+      const results = await this.facade.addCommentsMany(comments);
 
-      // 4. Фильтрация полей ответа
-      const filtered = ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fields);
+      // 4. Обработка результатов через BatchResultProcessor
+      const processedResults = BatchResultProcessor.process(
+        results,
+        (comment: CommentWithUnknownFields): Partial<CommentWithUnknownFields> =>
+          ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fields)
+      );
 
-      // 5. Логирование результата
-      this.logger.info('Комментарий успешно добавлен', {
-        issueId,
-        commentId: comment.id,
-        hasAttachments: Boolean(comment.attachments?.length),
-      });
+      // 5. Логирование результатов
+      ResultLogger.logBatchResults(
+        this.logger,
+        'Комментарии добавлены',
+        {
+          totalRequested: comments.length,
+          successCount: processedResults.successful.length,
+          failedCount: processedResults.failed.length,
+          fieldsCount: fields.length,
+        },
+        processedResults
+      );
 
       return this.formatSuccess({
-        commentId: filtered.id,
-        comment: filtered,
-        issueId,
+        total: comments.length,
+        successful: processedResults.successful.length,
+        failed: processedResults.failed.length,
+        comments: processedResults.successful.map((item) => ({
+          issueId: item.key,
+          commentId: item.data.id,
+          comment: item.data,
+        })),
+        errors: processedResults.failed.map((item) => ({
+          issueId: item.key,
+          error: item.error,
+        })),
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при добавлении комментария к задаче ${issueId}`, error);
+      return this.formatError(
+        `Ошибка при добавлении комментариев (${comments.length} задач)`,
+        error
+      );
     }
   }
 }

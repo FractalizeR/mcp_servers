@@ -50,6 +50,17 @@ export class CommentService {
   }
 
   /**
+   * Добавляет комментарии к нескольким задачам параллельно
+   * @param comments - массив комментариев с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async addCommentsMany(
+    comments: Array<{ issueId: string; text: string; attachmentIds?: string[] | undefined }>
+  ): Promise<BatchResult<string, CommentWithUnknownFields>> {
+    return this.addCommentOp.executeMany(comments);
+  }
+
+  /**
    * Получает список комментариев задачи
    * @param issueId - идентификатор или ключ задачи
    * @param input - параметры запроса (пагинация, expand)
