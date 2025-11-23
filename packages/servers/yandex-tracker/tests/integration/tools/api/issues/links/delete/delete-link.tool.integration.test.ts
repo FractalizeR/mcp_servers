@@ -26,18 +26,23 @@ describe('delete-link integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_delete_link', {
-      issueId: issueKey,
-      linkId,
+      links: [
+        {
+          issueId: issueKey,
+          linkId,
+        },
+      ],
     });
 
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.data.success).toBe(true);
-    expect(response.data.message).toContain('удалена');
-    expect(response.data.issueId).toBe(issueKey);
-    expect(response.data.linkId).toBe(linkId);
+    expect(response.data.total).toBe(1);
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].issueId).toBe(issueKey);
+    expect(response.data.successful[0].linkId).toBe(linkId);
+    expect(response.data.successful[0].success).toBe(true);
     mockServer.assertAllRequestsDone();
   });
 
@@ -49,16 +54,25 @@ describe('delete-link integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_delete_link', {
-      issueId: issueKey,
-      linkId,
+      links: [
+        {
+          issueId: issueKey,
+          linkId,
+        },
+      ],
     });
 
     // Assert
-    expect(result.isError).toBe(true);
+    expect(result.isError).toBeUndefined();
+    const response = JSON.parse(result.content[0]!.text);
+    expect(response.data.failed).toHaveLength(1);
+    expect(response.data.failed[0].issueId).toBe(issueKey);
+    expect(response.data.failed[0].linkId).toBe(linkId);
+    expect(response.data.failed[0].error).toBeDefined();
     mockServer.assertAllRequestsDone();
   });
 
-  it('должен удалить несколько связей последовательно', async () => {
+  it('должен удалить несколько связей в одном batch запросе', async () => {
     // Arrange
     const issueKey = 'TEST-300';
     const link1 = 'link1';
@@ -70,27 +84,23 @@ describe('delete-link integration tests', () => {
     mockServer.mockDeleteLinkSuccess(issueKey, link3);
 
     // Act
-    const result1 = await client.callTool('fr_yandex_tracker_delete_link', {
-      issueId: issueKey,
-      linkId: link1,
-    });
-    const result2 = await client.callTool('fr_yandex_tracker_delete_link', {
-      issueId: issueKey,
-      linkId: link2,
-    });
-    const result3 = await client.callTool('fr_yandex_tracker_delete_link', {
-      issueId: issueKey,
-      linkId: link3,
+    const result = await client.callTool('fr_yandex_tracker_delete_link', {
+      links: [
+        { issueId: issueKey, linkId: link1 },
+        { issueId: issueKey, linkId: link2 },
+        { issueId: issueKey, linkId: link3 },
+      ],
     });
 
     // Assert
-    expect(result1.isError).toBeUndefined();
-    expect(result2.isError).toBeUndefined();
-    expect(result3.isError).toBeUndefined();
+    expect(result.isError).toBeUndefined();
+    const response = JSON.parse(result.content[0]!.text);
+    expect(response.data.total).toBe(3);
+    expect(response.data.successful).toHaveLength(3);
     mockServer.assertAllRequestsDone();
   });
 
-  it('должен удалить связь из разных задач', async () => {
+  it('должен удалить связь из разных задач в одном batch запросе', async () => {
     // Arrange
     const issue1 = 'PROJ-1';
     const issue2 = 'PROJ-2';
@@ -101,22 +111,20 @@ describe('delete-link integration tests', () => {
     mockServer.mockDeleteLinkSuccess(issue2, linkId2);
 
     // Act
-    const result1 = await client.callTool('fr_yandex_tracker_delete_link', {
-      issueId: issue1,
-      linkId: linkId1,
-    });
-    const result2 = await client.callTool('fr_yandex_tracker_delete_link', {
-      issueId: issue2,
-      linkId: linkId2,
+    const result = await client.callTool('fr_yandex_tracker_delete_link', {
+      links: [
+        { issueId: issue1, linkId: linkId1 },
+        { issueId: issue2, linkId: linkId2 },
+      ],
     });
 
     // Assert
-    expect(result1.isError).toBeUndefined();
-    expect(result2.isError).toBeUndefined();
-    const response1 = JSON.parse(result1.content[0]!.text);
-    const response2 = JSON.parse(result2.content[0]!.text);
-    expect(response1.data.issueId).toBe(issue1);
-    expect(response2.data.issueId).toBe(issue2);
+    expect(result.isError).toBeUndefined();
+    const response = JSON.parse(result.content[0]!.text);
+    expect(response.data.total).toBe(2);
+    expect(response.data.successful).toHaveLength(2);
+    expect(response.data.successful[0].issueId).toBe(issue1);
+    expect(response.data.successful[1].issueId).toBe(issue2);
     mockServer.assertAllRequestsDone();
   });
 
@@ -128,17 +136,22 @@ describe('delete-link integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_delete_link', {
-      issueId: issueKey,
-      linkId,
+      links: [
+        {
+          issueId: issueKey,
+          linkId,
+        },
+      ],
     });
 
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.data.success).toBe(true);
-    expect(response.data.message).toContain(linkId);
-    expect(response.data.message).toContain(issueKey);
+    expect(response.data.total).toBe(1);
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].issueId).toBe(issueKey);
+    expect(response.data.successful[0].linkId).toBe(linkId);
     mockServer.assertAllRequestsDone();
   });
 });

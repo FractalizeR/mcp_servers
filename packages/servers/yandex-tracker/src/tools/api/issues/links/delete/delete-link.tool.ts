@@ -1,13 +1,13 @@
 /**
- * MCP Tool для удаления связи между задачами в Яндекс.Трекере
+ * MCP Tool для удаления связей между задачами в Яндекс.Трекере
  *
  * API Tool (прямой доступ к API):
- * - 1 tool = 1 API вызов (delete link)
+ * - Batch-режим: удаление связей из нескольких задач
  * - Минимальная бизнес-логика
  * - Валидация через Zod
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool, ResultLogger } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import { DeleteLinkParamsSchema } from './delete-link.schema.js';
@@ -15,17 +15,14 @@ import { DeleteLinkParamsSchema } from './delete-link.schema.js';
 import { DELETE_LINK_TOOL_METADATA } from './delete-link.metadata.js';
 
 /**
- * Инструмент для удаления связи между задачами
+ * Инструмент для удаления связей между задачами (batch-режим)
  *
  * Ответственность (SRP):
- * - Координация процесса удаления связи в Яндекс.Трекере
+ * - Координация процесса удаления связей из нескольких задач
  * - Делегирование валидации в BaseTool
+ * - Ручная обработка результатов (void не поддерживается BatchResultProcessor)
  * - Делегирование логирования в ResultLogger
  * - Форматирование итогового результата
- *
- * Переиспользуемые компоненты:
- * - BaseTool.validateParams() - валидация через Zod
- * - ResultLogger - стандартизированное логирование
  */
 export class DeleteLinkTool extends BaseTool<YandexTrackerFacade> {
   /**
@@ -47,26 +44,68 @@ export class DeleteLinkTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, linkId } = validation.data;
+    const { links } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      this.logger.info(`Удаление связи ${linkId} из задачи ${issueId}`);
+      ResultLogger.logOperationStart(this.logger, 'Удаление связей', links.length);
 
-      // 3. API v3: удаление связи через facade
-      await this.facade.deleteLink(issueId, linkId);
+      // 3. API v3: удаление связей через batch-метод
+      const results = await this.facade.deleteLinksMany(links);
 
-      // 4. Логирование результатов
-      this.logger.info(`Связь ${linkId} удалена из задачи ${issueId}`);
+      // 4. Ручная обработка результатов (для void результатов)
+      // BatchResultProcessor не подходит для void, так как проверяет !result.value
+      const successful: Array<{ key: string; data: Record<string, never> }> = [];
+      const failed: Array<{ key: string; error: string }> = [];
+
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          successful.push({ key: result.key, data: {} });
+        } else {
+          const error =
+            result.reason instanceof Error ? result.reason.message : String(result.reason);
+          failed.push({ key: result.key, error });
+        }
+      }
+
+      const processedResults = { successful, failed };
+
+      // 5. Логирование результатов
+      ResultLogger.logBatchResults(
+        this.logger,
+        'Связи удалены',
+        {
+          totalRequested: links.length,
+          successCount: processedResults.successful.length,
+          failedCount: processedResults.failed.length,
+          fieldsCount: 0, // DELETE операция не возвращает поля
+        },
+        processedResults
+      );
 
       return this.formatSuccess({
-        success: true,
-        message: `Связь ${linkId} удалена из задачи ${issueId}`,
-        issueId,
-        linkId,
+        total: links.length,
+        successful: processedResults.successful.map((item) => {
+          // Разбираем ключ "issueId:linkId"
+          const [issueId, linkId] = item.key.split(':');
+          return {
+            issueId,
+            linkId,
+            success: true,
+          };
+        }),
+        failed: processedResults.failed.map((item) => {
+          // Разбираем ключ "issueId:linkId"
+          const [issueId, linkId] = item.key.split(':');
+          return {
+            issueId,
+            linkId,
+            error: item.error,
+          };
+        }),
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при удалении связи ${linkId} из задачи ${issueId}`, error);
+      return this.formatError(`Ошибка при удалении связей (${links.length} связей)`, error);
     }
   }
 }

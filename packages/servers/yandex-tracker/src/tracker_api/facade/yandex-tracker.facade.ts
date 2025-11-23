@@ -399,6 +399,17 @@ export class YandexTrackerFacade {
     return this.issueLinkService.deleteLink(issueId, linkId);
   }
 
+  /**
+   * Удаляет связи из нескольких задач параллельно
+   * @param links - массив связей для удаления с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async deleteLinksMany(
+    links: Array<{ issueId: string; linkId: string }>
+  ): Promise<BatchResult<string, void>> {
+    return this.issueLinkService.deleteLinksMany(links);
+  }
+
   // === Comment Methods ===
 
   /**

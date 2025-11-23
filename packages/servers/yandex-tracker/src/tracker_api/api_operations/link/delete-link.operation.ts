@@ -2,7 +2,8 @@
  * Операция удаления связи между задачами
  *
  * Ответственность (SRP):
- * - ТОЛЬКО удаление существующей связи
+ * - ТОЛЬКО удаление существующей связи (single и batch режимы)
+ * - Параллельное выполнение через ParallelExecutor (batch режим)
  * - Инвалидация кеша связей после удаления
  * - НЕТ создания/получения связей
  *
@@ -16,9 +17,26 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
+import { EntityCacheKey, EntityType, ParallelExecutor } from '@mcp-framework/infrastructure';
+import type { BatchResult } from '@mcp-framework/infrastructure';
+import type { ServerConfig } from '#config';
 
 export class DeleteLinkOperation extends BaseOperation {
+  private readonly parallelExecutor: ParallelExecutor;
+
+  constructor(
+    httpClient: ConstructorParameters<typeof BaseOperation>[0],
+    cacheManager: ConstructorParameters<typeof BaseOperation>[1],
+    logger: ConstructorParameters<typeof BaseOperation>[2],
+    config: ServerConfig
+  ) {
+    super(httpClient, cacheManager, logger);
+
+    this.parallelExecutor = new ParallelExecutor(logger, {
+      maxBatchSize: config.maxBatchSize,
+      maxConcurrentRequests: config.maxConcurrentRequests,
+    });
+  }
   /**
    * Удаляет связь между задачами
    *
@@ -48,6 +66,46 @@ export class DeleteLinkOperation extends BaseOperation {
     await this.invalidateLinksCache(issueId);
 
     this.logger.debug(`Связь ${linkId} удалена из задачи ${issueId}`);
+  }
+
+  /**
+   * Удаляет связи из нескольких задач параллельно
+   *
+   * @param links - массив связей для удаления с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   * @throws {Error} если количество задач превышает maxBatchSize
+   *
+   * ВАЖНО:
+   * - Каждая задача имеет свои параметры (issueId, linkId)
+   * - Использует ParallelExecutor для соблюдения maxConcurrentRequests
+   * - Retry делается автоматически в HttpClient.delete
+   * - Для DELETE операций возвращаем void, key - уникальная комбинация issueId+linkId
+   */
+  async executeMany(
+    links: Array<{ issueId: string; linkId: string }>
+  ): Promise<BatchResult<string, void>> {
+    // Проверка на пустой массив
+    if (links.length === 0) {
+      this.logger.warn('DeleteLinkOperation: пустой массив связей');
+      return [];
+    }
+
+    this.logger.info(
+      `Удаление ${links.length} связей параллельно: ${links.map((l) => `${l.issueId}/${l.linkId}`).join(', ')}`
+    );
+
+    // Создаём операции для каждой связи
+    const operations = links.map(({ issueId, linkId }) => ({
+      // Уникальный ключ: комбинация issueId + linkId
+      key: `${issueId}:${linkId}`,
+      fn: async (): Promise<void> => {
+        // Вызываем существующий метод execute() для каждой связи
+        return this.execute(issueId, linkId);
+      },
+    }));
+
+    // Выполняем через ParallelExecutor (централизованный throttling)
+    return this.parallelExecutor.executeParallel(operations, 'delete links');
   }
 
   /**

@@ -25,6 +25,7 @@ import { CreateLinkOperation } from '#tracker_api/api_operations/link/create-lin
 import { DeleteLinkOperation } from '#tracker_api/api_operations/link/delete-link.operation.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/link.entity.js';
 import type { CreateLinkDto } from '#tracker_api/dto/link/create-link.dto.js';
+import type { BatchResult } from '@mcp-framework/infrastructure';
 
 @injectable()
 export class IssueLinkService {
@@ -60,5 +61,16 @@ export class IssueLinkService {
    */
   async deleteLink(issueId: string, linkId: string): Promise<void> {
     return this.deleteOp.execute(issueId, linkId);
+  }
+
+  /**
+   * Удаляет связи из нескольких задач параллельно
+   * @param links - массив связей для удаления с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async deleteLinksMany(
+    links: Array<{ issueId: string; linkId: string }>
+  ): Promise<BatchResult<string, void>> {
+    return this.deleteOp.executeMany(links);
   }
 }
