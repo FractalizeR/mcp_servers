@@ -1,8 +1,8 @@
 /**
- * MCP Tool для получения истории изменений задачи из Яндекс.Трекера
+ * MCP Tool для получения истории изменений задач из Яндекс.Трекера
  *
  * API Tool (прямой доступ к API):
- * - 1 tool = 1 API вызов (get issue changelog)
+ * - 1 tool = batch API вызов (get issue changelog)
  * - Минимальная бизнес-логика
  * - Валидация через Zod
  */
@@ -10,25 +10,25 @@
 import { BaseTool } from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { ResponseFieldFilter, ResultLogger } from '@mcp-framework/core';
+import { ResponseFieldFilter, BatchResultProcessor, ResultLogger } from '@mcp-framework/core';
 import type { ChangelogEntryWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetIssueChangelogParamsSchema } from '#tools/api/issues/changelog/get-issue-changelog.schema.js';
 
 import { GET_ISSUE_CHANGELOG_TOOL_METADATA } from './get-issue-changelog.metadata.js';
 
 /**
- * Инструмент для получения истории изменений задачи
+ * Инструмент для получения истории изменений задач (batch-режим)
  *
  * Ответственность (SRP):
- * - Координация процесса получения истории изменений задачи из Яндекс.Трекера
+ * - Координация процесса получения истории изменений задач из Яндекс.Трекера (batch-режим)
  * - Делегирование валидации в BaseTool
- * - Делегирование фильтрации полей в ResponseFieldFilter
+ * - Делегирование обработки результатов в BatchResultProcessor
  * - Делегирование логирования в ResultLogger
  * - Форматирование итогового результата
  *
  * Переиспользуемые компоненты:
  * - BaseTool.validateParams() - валидация через Zod
- * - ResponseFieldFilter.filter() - фильтрация полей ответа
+ * - BatchResultProcessor.process() - обработка batch-результатов
  * - ResultLogger - стандартизированное логирование
  */
 export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
@@ -51,35 +51,59 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueKey, fields } = validation.data;
+    const { issueKeys, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      ResultLogger.logOperationStart(this.logger, 'Получение истории изменений задачи', 1, fields);
+      ResultLogger.logOperationStart(
+        this.logger,
+        'Получение истории изменений задач',
+        issueKeys.length,
+        fields
+      );
 
-      // 3. API v3: получение истории изменений
-      const changelog = await this.facade.getIssueChangelog(issueKey);
+      // 3. API v3: получение истории изменений через batch-метод
+      const results = await this.facade.getIssueChangelog(issueKeys);
 
-      // 4. Фильтрация полей
-      const filteredChangelog = changelog.map((entry) =>
-        ResponseFieldFilter.filter<ChangelogEntryWithUnknownFields>(entry, fields)
+      // 4. Обработка результатов через BatchResultProcessor
+      const processedResults = BatchResultProcessor.process(
+        results,
+        (
+          changelog: ChangelogEntryWithUnknownFields[]
+        ): Partial<ChangelogEntryWithUnknownFields>[] =>
+          changelog.map((entry) =>
+            ResponseFieldFilter.filter<ChangelogEntryWithUnknownFields>(entry, fields)
+          )
       );
 
       // 5. Логирование результатов
-      this.logger.info('История изменений получена', {
-        issueKey,
-        entriesCount: filteredChangelog.length,
-        fieldsCount: fields.length,
-      });
+      ResultLogger.logBatchResults(
+        this.logger,
+        'История изменений получена',
+        {
+          totalRequested: issueKeys.length,
+          successCount: processedResults.successful.length,
+          failedCount: processedResults.failed.length,
+          fieldsCount: fields.length,
+        },
+        processedResults
+      );
 
       return this.formatSuccess({
-        issueKey,
-        totalEntries: filteredChangelog.length,
-        changelog: filteredChangelog,
+        total: issueKeys.length,
+        successful: processedResults.successful.map((item) => ({
+          issueKey: item.key,
+          changelog: item.data,
+          totalEntries: Array.isArray(item.data) ? item.data.length : 0,
+        })),
+        failed: processedResults.failed,
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при получении истории изменений задачи ${issueKey}`, error);
+      return this.formatError(
+        `Ошибка при получении истории изменений задач (${issueKeys.length} шт.)`,
+        error
+      );
     }
   }
 }

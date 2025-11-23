@@ -3,16 +3,16 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import { IssueKeysSchema, FieldsSchema } from '#common/schemas/index.js';
 
 /**
- * Схема параметров для получения истории изменений задачи
+ * Схема параметров для получения истории изменений задач (batch-режим)
  */
 export const GetIssueChangelogParamsSchema = z.object({
   /**
-   * Ключ задачи для получения истории
+   * Массив ключей задач для получения истории
    */
-  issueKey: IssueKeySchema,
+  issueKeys: IssueKeysSchema.describe('Массив ключей задач (например, ["QUEUE-1", "QUEUE-2"])'),
 
   /**
    * Опциональный массив полей для фильтрации ответа

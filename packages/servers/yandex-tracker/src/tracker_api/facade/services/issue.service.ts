@@ -26,6 +26,7 @@ import { GetIssueChangelogOperation } from '#tracker_api/api_operations/issue/ch
 import { GetIssueTransitionsOperation } from '#tracker_api/api_operations/issue/transitions/get-issue-transitions.operation.js';
 import { TransitionIssueOperation } from '#tracker_api/api_operations/issue/transitions/transition-issue.operation.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
+import type { BatchChangelogResult } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
 import type {
   FindIssuesInputDto,
@@ -35,7 +36,6 @@ import type {
 } from '#tracker_api/dto/index.js';
 import type {
   IssueWithUnknownFields,
-  ChangelogEntryWithUnknownFields,
   TransitionWithUnknownFields,
 } from '#tracker_api/entities/index.js';
 
@@ -91,12 +91,12 @@ export class IssueService {
   }
 
   /**
-   * Получает историю изменений задачи
-   * @param issueKey - ключ задачи
-   * @returns массив записей истории
+   * Получает историю изменений задач (batch-режим)
+   * @param issueKeys - массив ключей задач
+   * @returns массив результатов (fulfilled | rejected)
    */
-  async getIssueChangelog(issueKey: string): Promise<ChangelogEntryWithUnknownFields[]> {
-    return this.getIssueChangelogOp.execute(issueKey);
+  async getIssueChangelog(issueKeys: string[]): Promise<BatchChangelogResult[]> {
+    return this.getIssueChangelogOp.execute(issueKeys);
   }
 
   /**

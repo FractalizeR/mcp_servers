@@ -64,11 +64,11 @@ export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
   {
     name: 'fr_yandex_tracker_get_issue_changelog',
     category: ToolCategory.ISSUES,
-    tags: ['history', 'changelog', 'audit', 'read'],
+    tags: ['history', 'changelog', 'audit', 'read', 'batch'],
     isHelper: false,
     nameTokens: ['fr', 'yandex', 'tracker', 'get', 'issue', 'changelog'],
-    descriptionTokens: ['issues', 'read'],
-    descriptionShort: '[Issues/Read] История изменений задачи',
+    descriptionTokens: ['issues', 'read', 'batch'],
+    descriptionShort: '[Issues/Read] История изменений задач (batch)',
   },
   {
     name: 'fr_yandex_tracker_get_issue_transitions',
