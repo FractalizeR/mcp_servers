@@ -281,13 +281,13 @@ describe('Full CLI Workflow Integration', () => {
 
       const allConnectors = registry.getAll();
       expect(allConnectors).toHaveLength(1);
-      expect(allConnectors[0]?.getClientInfo().id).toBe('test-client');
+      expect(allConnectors[0]?.getClientInfo().name).toBe('test-client');
     });
 
     it('should find installed clients', async () => {
       const installed = await registry.findInstalled();
       expect(installed).toHaveLength(1);
-      expect(installed[0]?.getClientInfo().id).toBe('test-client');
+      expect(installed[0]?.getClientInfo().name).toBe('test-client');
     });
 
     it('should check status of all clients', async () => {

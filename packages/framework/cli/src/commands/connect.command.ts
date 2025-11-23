@@ -99,8 +99,8 @@ export async function connectCommand<TConfig extends BaseMCPServerConfig>(
   const config = buildConfig
     ? buildConfig(serverConfig)
     : ({
-        ...serverConfig,
         projectPath: process.cwd(),
+        ...serverConfig,
       } as TConfig);
 
   Logger.newLine();
