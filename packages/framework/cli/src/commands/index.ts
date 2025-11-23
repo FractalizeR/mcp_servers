@@ -3,9 +3,11 @@
  * @packageDocumentation
  */
 
-// Commands will be implemented in stage 4
-// export * from './connect.js';
-// export * from './disconnect.js';
-// export * from './status.js';
-// export * from './list.js';
-// export * from './validate.js';
+// Basic commands (Stage 4.1)
+export * from './status.command.js';
+export * from './list.command.js';
+export * from './disconnect.command.js';
+
+// Connect and validate commands will be added in stages 4.2 and 4.3
+// export * from './connect.command.js';
+// export * from './validate.command.js';
