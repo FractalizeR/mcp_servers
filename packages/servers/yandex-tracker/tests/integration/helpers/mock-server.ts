@@ -176,7 +176,7 @@ export class MockServer {
    */
   mockFindIssuesSuccess(
     issueKeys: string[],
-    matcher?: (body: Record<string, unknown>) => boolean
+    matcher?: (body: Record<string, unknown>, params?: Record<string, unknown>) => boolean
   ): this {
     const responses = issueKeys.map((key) =>
       generateIssue({
@@ -184,9 +184,12 @@ export class MockServer {
       })
     );
 
+    // Используем RegExp для игнорирования query параметров в URL
+    const urlPattern = new RegExp(`^${TRACKER_API_V3}/issues/_search(\\?.*)?$`);
+
     // Если matcher не передан, мокируем все запросы
     if (!matcher) {
-      this.mockAdapter.onPost(`${TRACKER_API_V3}/issues/_search`).reply((_config) => {
+      this.mockAdapter.onPost(urlPattern).reply((_config) => {
         // Удаляем из pending при вызове
         const index = this.pendingMocks.indexOf(`POST ${TRACKER_API_V3}/issues/_search`);
         if (index !== -1) {
@@ -199,11 +202,20 @@ export class MockServer {
     }
 
     // Если matcher передан, используем reply callback для проверки
-    this.mockAdapter.onPost(`${TRACKER_API_V3}/issues/_search`).reply((config) => {
+    this.mockAdapter.onPost(urlPattern).reply((config) => {
       const data = config.data;
       const body = typeof data === 'string' ? JSON.parse(data) : (data as Record<string, unknown>);
 
-      if (matcher(body)) {
+      // Извлекаем query параметры из URL
+      const url = new URL(config.url || '', 'http://localhost');
+      const params: Record<string, unknown> = {};
+      url.searchParams.forEach((value, key) => {
+        // Преобразуем строковые числа обратно в числа
+        const numValue = Number(value);
+        params[key] = !isNaN(numValue) && value !== '' ? numValue : value;
+      });
+
+      if (matcher(body, params)) {
         // Удаляем из pending при успешном вызове
         const index = this.pendingMocks.indexOf(`POST ${TRACKER_API_V3}/issues/_search`);
         if (index !== -1) {

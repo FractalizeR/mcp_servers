@@ -2,7 +2,6 @@
 
 **Перед добавлением зависимости в DI ОБЯЗАТЕЛЬНО прочитай этот файл.**
 
----
 
 ## 🎯 Назначение Composition Root
 
@@ -13,7 +12,6 @@
 
 **⚠️ ВАЖНО:** Только `src/index.ts` может импортировать `@composition-root`
 
----
 
 ## 📁 Структура
 
@@ -29,7 +27,6 @@ src/composition-root/
 └── CONVENTIONS.md
 ```
 
----
 
 ## 🔑 types.ts — DI токены
 
@@ -37,45 +34,13 @@ src/composition-root/
 
 ```typescript
 export const TYPES = {
-  // === Config & Infrastructure ===
   ServerConfig: Symbol.for('ServerConfig'),
-  Logger: Symbol.for('Logger'),
-
-  // === HTTP Layer ===
   HttpClient: Symbol.for('HttpClient'),
-  RetryStrategy: Symbol.for('RetryStrategy'),
-  RetryHandler: Symbol.for('RetryHandler'),
-
-  // === Cache Layer ===
-  CacheManager: Symbol.for('CacheManager'),
-
-  // === Yandex Tracker Facade ===
   YandexTrackerFacade: Symbol.for('YandexTrackerFacade'),
-
-  // === Tool Registry ===
-  ToolRegistry: Symbol.for('ToolRegistry'),
-
-  // === Search Engine ===
-  ToolSearchEngine: Symbol.for('ToolSearchEngine'),
-
-  // === Operations (автоматически сгенерированы) ===
-  ...OPERATION_SYMBOLS,
-
-  // === Tools (автоматически сгенерированы) ===
-  ...TOOL_SYMBOLS,
+  // ... operations & tools symbols
 } as const;
 ```
 
-**⚠️ НЕ используй классы напрямую для DI:**
-```typescript
-// ❌ НЕПРАВИЛЬНО
-container.bind(HttpClient).toSelf();
-
-// ✅ ПРАВИЛЬНО
-container.bind<HttpClient>(TYPES.HttpClient).toDynamicValue(() => { ... });
-```
-
----
 
 ## 🤖 definitions/ — Автоматическая регистрация
 
@@ -119,7 +84,6 @@ export const TOOL_CLASSES = [
 
 **Эталон:** `src/composition-root/container.ts:189-199` (bindTools)
 
----
 
 ## 🛡️ Защита от коллизий имён
 
@@ -191,7 +155,6 @@ LOG_LEVEL=debug npm start
 2. ✅ **Избегать минификации:** Не минифицировать production build (или использовать `keep_classnames`)
 3. ✅ **Namespace separation:** `tool:*` и `operation:*` не могут конфликтовать между собой
 
----
 
 ## 🏗️ container.ts — Конфигурация контейнера
 
@@ -243,7 +206,6 @@ function bindOperations(container: Container): void {
 }
 ```
 
----
 
 ## 📋 Чек-лист добавления зависимости
 
@@ -270,7 +232,6 @@ function bindOperations(container: Container): void {
 ⚠️ **Особый случай:** Helper tools с нестандартным конструктором
 (как `SearchToolsTool`) требуют отдельной регистрации в `container.ts`.
 
----
 
 ## 🚨 Критические правила
 
@@ -302,7 +263,6 @@ container.bind<IHttpClient>(TYPES.HttpClient).toDynamicValue(() => {
 const httpClient = container.get<IHttpClient>(TYPES.HttpClient);
 ```
 
----
 
 #### **Class-based tokens (для Services & Facade)**
 
@@ -331,7 +291,6 @@ export class YandexTrackerFacade {
 
 **Преимущество:** InversifyJS автоматически разрешает зависимости через TypeScript metadata
 
----
 
 #### **Правила выбора:**
 
@@ -343,7 +302,6 @@ export class YandexTrackerFacade {
 | **Services** | Class | `.toSelf()` | `IssueService` |
 | **Facade** | Symbol + Class | `.to(Class)` | `TYPES.YandexTrackerFacade` |
 
----
 
 ### 2. Два паттерна DI: Factory vs Decorators
 
@@ -384,7 +342,6 @@ container.bind(IssueService).toSelf(); // Class-based token, auto-wiring
 
 **Используется в:** 14 Facade Services + YandexTrackerFacade (15 классов)
 
----
 
 #### **Паттерн B: Factory (для Operations, Tools, Infrastructure)**
 
@@ -429,7 +386,6 @@ for (const OperationClass of OPERATION_CLASSES) {
 
 **Используется в:** 65+ Operations, 48+ Tools, Infrastructure (Logger, HttpClient, etc.)
 
----
 
 #### **Когда использовать какой паттерн?**
 
@@ -443,7 +399,6 @@ for (const OperationClass of OPERATION_CLASSES) {
 
 **Вывод:** Hybrid approach — это не баг, а pragmatic engineering решение!
 
----
 
 ### 3. defaultScope: 'Singleton'
 
@@ -458,7 +413,6 @@ const container = new Container({ defaultScope: 'Singleton' });
 - ✅ Все зависимости — singleton по умолчанию
 - ✅ Для transient scope — явно укажи `.inTransientScope()`
 
----
 
 ### 4. Только index.ts импортирует Composition Root
 
@@ -477,54 +431,6 @@ import { createContainer } from '@composition-root/container.js'; // ЗАПРЕ�
 
 **Проверяется:** `dependency-cruiser` (правило "composition-root-top-level")
 
----
-
-## 📚 Примеры
-
-### Infrastructure зависимость
-
-```typescript
-function bindInfrastructure(container: Container): void {
-  container.bind<Logger>(TYPES.Logger).toDynamicValue((context) => {
-    const config = context.container.get<ServerConfig>(TYPES.Config);
-    return Logger.createPinoLogger({
-      logsDir: config.logsDir,
-      level: config.logLevel,
-      prettyPrint: config.prettyLogs,
-    });
-  });
-}
-```
-
-### Operation зависимость
-
-```typescript
-function bindOperations(container: Container): void {
-  container.bind<GetIssuesOperation>(TYPES.GetIssuesOperation).toDynamicValue((context) => {
-    return new GetIssuesOperation(
-      context.container.get<HttpClient>(TYPES.HttpClient),
-      context.container.get<Logger>(TYPES.Logger),
-      context.container.get<Cache<IssueWithUnknownFields>>(TYPES.Cache),
-      context.container.get<ParallelExecutor>(TYPES.ParallelExecutor)
-    );
-  });
-}
-```
-
-### MCP Tool зависимость
-
-```typescript
-function bindTools(container: Container): void {
-  container.bind<GetIssuesTool>(TYPES.GetIssuesTool).toDynamicValue((context) => {
-    return new GetIssuesTool(
-      context.container.get<YandexTrackerFacade>(TYPES.YandexTrackerFacade),
-      context.container.get<Logger>(TYPES.Logger)
-    );
-  });
-}
-```
-
----
 
 ## 💡 Примеры использования
 
@@ -541,78 +447,9 @@ const logger = container.get<Logger>(TYPES.Logger);
 logger.info('Приложение запущено');
 ```
 
-### Unit тесты: Mock Container с Operations
+### Unit тесты
 
-```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Container } from 'inversify';
-import { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
-import type { PingOperation } from '@tracker_api/api_operations/user/ping.operation.js';
-
-describe('YandexTrackerFacade', () => {
-  let facade: YandexTrackerFacade;
-  let mockContainer: Container;
-  let mockPingOperation: PingOperation;
-
-  beforeEach(() => {
-    mockPingOperation = { execute: vi.fn() } as unknown as PingOperation;
-
-    mockContainer = {
-      get: vi.fn((symbol: symbol) => {
-        if (symbol === Symbol.for('PingOperation')) return mockPingOperation;
-        throw new Error(`Unknown symbol: ${symbol.toString()}`);
-      }),
-    } as unknown as Container;
-
-    facade = new YandexTrackerFacade(mockContainer);
-  });
-
-  it('должна успешно вызвать операцию ping', async () => {
-    vi.mocked(mockPingOperation.execute).mockResolvedValue({ success: true });
-    const result = await facade.ping();
-    expect(result.success).toBe(true);
-  });
-});
-```
-
-### Unit тесты: Mock Facade
-
-```typescript
-import { ToolRegistry } from '@mcp/tool-registry.js';
-import type { YandexTrackerFacade } from '@tracker_api/facade/yandex-tracker.facade.js';
-import { PingTool } from '@mcp/tools/ping.tool.js';
-
-let mockFacade = { ping: vi.fn() } as unknown as YandexTrackerFacade;
-let mockContainer = {
-  get: vi.fn((symbol: symbol) => {
-    if (symbol.toString().includes('PingTool')) {
-      return new PingTool(mockFacade, mockLogger);
-    }
-    throw new Error(`Unknown symbol: ${symbol.toString()}`);
-  }),
-} as unknown as Container;
-
-const registry = new ToolRegistry(mockContainer, mockLogger);
-```
-
-### Интеграционные тесты: Реальный контейнер
-
-```typescript
-import { createContainer, TYPES } from '@composition-root/index.js';
-import type { ToolRegistry } from '@mcp/tool-registry.js';
-
-const config = {
-  apiBase: 'https://api.tracker.yandex.net',
-  orgId: 'test-org',
-  token: 'test-token',
-  logLevel: 'silent', // Отключаем логи
-  logsDir: '',
-};
-
-const container = await createContainer(config);
-const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-expect(registry.getDefinitions().length).toBeGreaterThan(0);
-```
+**См. примеры:** `tests/unit/tracker_api/**/*.test.ts`
 
 ### Типичные ошибки
 
@@ -647,7 +484,6 @@ container.rebind(TYPES.HttpClient).toConstantValue(mockHttp); // ❌ Ошибк�
 container.bind(TYPES.HttpClient).toConstantValue(mockHttp); // ✅
 ```
 
----
 
 ## 🔗 См. также
 

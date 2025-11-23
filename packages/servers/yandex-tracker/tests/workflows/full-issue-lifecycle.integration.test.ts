@@ -156,16 +156,20 @@ describe('Full Issue Lifecycle (Integration)', () => {
     });
 
     const createLinkResult = await client.callTool(buildToolName('create_link', MCP_TOOL_PREFIX), {
-      issueId: issueKey,
-      relationship: 'relates',
-      targetIssue: issueKey2,
+      links: [
+        {
+          issueId: issueKey,
+          relationship: 'relates',
+          targetIssue: issueKey2,
+        },
+      ],
       fields: ['id', 'type', 'object'],
     });
     expect(createLinkResult.isError).toBeFalsy();
     const linkData = JSON.parse(createLinkResult.content[0]!.text);
     expect(linkData.success).toBe(true);
-    expect(linkData.data.link).toBeDefined();
-    expect(linkData.data.link.id).toBe('link-1');
+    expect(linkData.data.links).toBeDefined();
+    expect(linkData.data.links[0].link.id).toBe('link-1');
 
     // 7. Изменить статус задачи
     mockServer.mockTransitionIssueSuccess(issueKey, 'inProgress');

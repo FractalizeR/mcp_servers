@@ -17,10 +17,7 @@ import { MCP_TOOL_PREFIX } from '#constants';
  */
 export const CREATE_LINK_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_link', MCP_TOOL_PREFIX),
-  description:
-    '[Issues/Links] Создать связи между задачами. ' +
-    'Batch-режим: каждая связь может иметь свои параметры (issueId, relationship, targetIssue). ' +
-    'Возвращает unified batch result format.',
+  description: '[Issues/Links] Создать связи между задачами (Batch-режим)',
   category: ToolCategory.ISSUES,
   subcategory: 'links',
   priority: ToolPriority.HIGH,

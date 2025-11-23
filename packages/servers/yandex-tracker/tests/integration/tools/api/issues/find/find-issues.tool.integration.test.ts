@@ -154,15 +154,18 @@ describe('find-issues integration tests', () => {
       mockServer.assertAllRequestsDone();
     });
 
-    // SKIP: perPage и page передаются как query параметры в URL, а не в body.
-    // Текущая реализация MockServer не поддерживает валидацию query параметров.
-    // Функциональность пагинации косвенно покрывается тестами валидации (строки 330-352).
-    it.skip('должен поддерживать пагинацию (perPage, page)', async () => {
+    it('должен поддерживать пагинацию (perPage, page)', async () => {
       // Arrange
       const issueKeys = ['QUEUE-1', 'QUEUE-2'];
 
-      mockServer.mockFindIssuesSuccess(issueKeys, (body) => {
-        return body['query'] === 'Author: me()';
+      mockServer.mockFindIssuesSuccess(issueKeys, (body, params) => {
+        // Проверяем и body, и query params
+        return (
+          body['query'] === 'Author: me()' &&
+          params !== undefined &&
+          params['perPage'] === 2 &&
+          params['page'] === 1
+        );
       });
 
       // Act
@@ -365,28 +368,6 @@ describe('find-issues integration tests', () => {
       // Assert
       expect(result.isError).toBe(true);
       expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
-    });
-
-    // SKIP: Избыточный тест - функциональность валидных параметров уже покрывается
-    // всеми другими тестами в этом файле (query, filter, keys, queue, order, fields и т.д.).
-    // perPage и page передаются как query параметры в URL, которые не валидируются в моках.
-    it.skip('должен принять валидные параметры', async () => {
-      // Arrange
-      mockServer.mockFindIssuesSuccess(['QUEUE-1'], (body) => {
-        return body['query'] === 'Author: me()';
-      });
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_find_issues', {
-        query: 'Author: me()',
-        perPage: 10,
-        page: 1,
-        fields: ['key', 'summary'],
-      });
-
-      // Assert
-      expect(result.isError).toBeUndefined();
-      mockServer.assertAllRequestsDone();
     });
   });
 });

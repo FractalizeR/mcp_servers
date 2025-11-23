@@ -4,10 +4,7 @@ import { createTestClient } from '#integration/helpers/mcp-client.js';
 import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
-import {
-  createSubtaskLinkFixture,
-  createRelatesLinkFixture,
-} from '#helpers/link.fixture.js';
+import { createSubtaskLinkFixture, createRelatesLinkFixture } from '#helpers/link.fixture.js';
 
 describe('create-link integration tests', () => {
   let client: TestMCPClient;
@@ -39,9 +36,13 @@ describe('create-link integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_create_link', {
-      issueId: issueKey,
-      relationship: 'has subtasks',
-      targetIssue,
+      links: [
+        {
+          issueId: issueKey,
+          relationship: 'has subtasks',
+          targetIssue,
+        },
+      ],
       fields: ['id', 'type', 'object'],
     });
 
@@ -49,9 +50,13 @@ describe('create-link integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.data.message).toContain('Связь создана');
-    expect(response.data.link).toHaveProperty('id');
-    expect(response.data.link.type.id).toBe('subtask');
+    expect(response.data.total).toBe(1);
+    expect(response.data.successful).toBe(1);
+    expect(response.data.failed).toBe(0);
+    expect(response.data.links).toHaveLength(1);
+    expect(response.data.links[0].issueId).toBe(issueKey);
+    expect(response.data.links[0].link).toHaveProperty('id');
+    expect(response.data.links[0].link.type.id).toBe('subtask');
     mockServer.assertAllRequestsDone();
   });
 
@@ -72,9 +77,13 @@ describe('create-link integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_create_link', {
-      issueId: issueKey,
-      relationship: 'relates',
-      targetIssue,
+      links: [
+        {
+          issueId: issueKey,
+          relationship: 'relates',
+          targetIssue,
+        },
+      ],
       fields: ['id', 'type', 'object'],
     });
 
@@ -82,7 +91,9 @@ describe('create-link integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.data.link.type.id).toBe('relates');
+    expect(response.data.total).toBe(1);
+    expect(response.data.successful).toBe(1);
+    expect(response.data.links[0].link.type.id).toBe('relates');
     mockServer.assertAllRequestsDone();
   });
 
@@ -109,9 +120,13 @@ describe('create-link integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_create_link', {
-      issueId: issueKey,
-      relationship: 'depends on',
-      targetIssue,
+      links: [
+        {
+          issueId: issueKey,
+          relationship: 'depends on',
+          targetIssue,
+        },
+      ],
       fields: ['id', 'type', 'object'],
     });
 
@@ -119,7 +134,9 @@ describe('create-link integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
     expect(response.success).toBe(true);
-    expect(response.data.link.type.id).toBe('depends');
+    expect(response.data.total).toBe(1);
+    expect(response.data.successful).toBe(1);
+    expect(response.data.links[0].link.type.id).toBe('depends');
     mockServer.assertAllRequestsDone();
   });
 
@@ -130,14 +147,25 @@ describe('create-link integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_create_link', {
-      issueId: issueKey,
-      relationship: 'relates',
-      targetIssue: 'TEST-100',
+      links: [
+        {
+          issueId: issueKey,
+          relationship: 'relates',
+          targetIssue: 'TEST-100',
+        },
+      ],
       fields: ['id', 'type'],
     });
 
     // Assert
-    expect(result.isError).toBe(true);
+    expect(result.isError).toBeUndefined();
+    const response = JSON.parse(result.content[0]!.text);
+    expect(response.success).toBe(true);
+    expect(response.data.total).toBe(1);
+    expect(response.data.successful).toBe(0);
+    expect(response.data.failed).toBe(1);
+    expect(response.data.errors).toHaveLength(1);
+    expect(response.data.errors[0].issueId).toBe(issueKey);
     mockServer.assertAllRequestsDone();
   });
 
@@ -158,18 +186,24 @@ describe('create-link integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_create_link', {
-      issueId: issueKey,
-      relationship: 'has subtasks',
-      targetIssue,
+      links: [
+        {
+          issueId: issueKey,
+          relationship: 'has subtasks',
+          targetIssue,
+        },
+      ],
       fields: ['id', 'type', 'object'],
     });
 
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    expect(response.data.link).toHaveProperty('id');
-    expect(response.data.link).toHaveProperty('type');
-    expect(response.data.link).toHaveProperty('object');
+    expect(response.success).toBe(true);
+    expect(response.data.links[0].link).toHaveProperty('id');
+    expect(response.data.links[0].link).toHaveProperty('type');
+    expect(response.data.links[0].link).toHaveProperty('object');
+    expect(response.data.fieldsReturned).toEqual(['id', 'type', 'object']);
     mockServer.assertAllRequestsDone();
   });
 });

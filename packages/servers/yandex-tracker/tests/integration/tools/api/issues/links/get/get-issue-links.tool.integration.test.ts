@@ -135,9 +135,9 @@ describe('get-issue-links integration tests', () => {
     mockServer.assertAllRequestsDone();
   });
 
-  it.skip('должен обработать большое количество связей', async () => {
+  it('должен обработать большое количество связей', async () => {
     // Arrange
-    const issueKey = 'TEST-EPIC';
+    const issueKey = 'TEST-999'; // Валидный формат: буквы-цифры
     const mockLinks = createLinkListFixture(50);
     mockServer.mockGetLinksSuccess(issueKey, mockLinks);
 

@@ -114,7 +114,7 @@ export class CreateLinkOperation extends BaseOperation {
 
     // Создаём операции для каждой связи
     const operations = links.map(({ issueId, relationship, targetIssue }) => ({
-      key: `${issueId}-${targetIssue}`,
+      key: issueId,
       fn: async (): Promise<LinkWithUnknownFields> => {
         // Вызываем существующий метод execute() для каждой связи с индивидуальными параметрами
         return this.execute(issueId, { relationship, issue: targetIssue });
