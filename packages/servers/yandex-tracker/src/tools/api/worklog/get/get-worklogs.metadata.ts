@@ -17,11 +17,11 @@ import { MCP_TOOL_PREFIX } from '#constants';
  */
 export const GET_WORKLOGS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_worklogs', MCP_TOOL_PREFIX),
-  description: '[Worklog/Read] Получить записи времени задачи',
+  description: '[Worklog/Read] Получить записи времени задач (batch)',
   category: ToolCategory.ISSUES,
   subcategory: 'worklog',
   priority: ToolPriority.HIGH,
-  tags: ['worklog', 'get', 'list', 'read', 'time'],
+  tags: ['worklog', 'get', 'list', 'read', 'time', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
 } as const;

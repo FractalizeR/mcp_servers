@@ -557,6 +557,17 @@ export class YandexTrackerFacade {
   }
 
   /**
+   * Получает записи времени для нескольких задач параллельно
+   * @param issueIds - массив идентификаторов задач
+   * @returns результаты в формате BatchResult
+   */
+  async getWorklogsMany(
+    issueIds: string[]
+  ): Promise<BatchResult<string, WorklogWithUnknownFields[]>> {
+    return this.worklogService.getWorklogsMany(issueIds);
+  }
+
+  /**
    * Добавляет запись времени к задаче
    * @param issueId - идентификатор или ключ задачи
    * @param input - данные записи времени

@@ -3,16 +3,16 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import { IssueKeysSchema, FieldsSchema } from '#common/schemas/index.js';
 
 /**
- * Схема параметров для получения записей времени
+ * Схема параметров для получения записей времени (batch режим)
  */
 export const GetWorklogsParamsSchema = z.object({
   /**
-   * Идентификатор или ключ задачи (обязательно)
+   * Массив идентификаторов или ключей задач (обязательно)
    */
-  issueId: IssueKeySchema.describe('Issue ID or key (e.g., TEST-123)'),
+  issueIds: IssueKeysSchema.describe("Array of issue IDs or keys (e.g., ['TEST-123', 'TEST-456'])"),
 
   /**
    * Поля, которые нужно вернуть (обязательно)
