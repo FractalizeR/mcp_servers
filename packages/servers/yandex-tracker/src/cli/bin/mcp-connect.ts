@@ -1,47 +1,107 @@
 #!/usr/bin/env node
 
 /**
- * CLI Router с feature flag для безопасного перехода
+ * CLI для Yandex Tracker MCP Server
  *
- * Выбирает между framework-based CLI и legacy CLI
- * в зависимости от переменной окружения USE_FRAMEWORK_CLI
+ * Использует @mcp-framework/cli для управления подключениями
  */
 
-import { USE_FRAMEWORK_CLI, DEBUG_CLI_MIGRATION } from '../feature-flags.js';
+import { program } from 'commander';
+import {
+  ConnectorRegistry,
+  ConfigManager,
+  connectCommand,
+  disconnectCommand,
+  statusCommand,
+  listCommand,
+  validateCommand,
+  // Импортируем коннекторы
+  ClaudeDesktopConnector,
+  ClaudeCodeConnector,
+  CodexConnector,
+  GeminiConnector,
+  QwenConnector,
+} from '@mcp-framework/cli';
+import { ytConfigPrompts } from '../prompts.js';
+import type { YandexTrackerMCPConfig } from '../types.js';
+import { PROJECT_BASE_NAME, SERVER_ENTRY_POINT } from '../../constants.js';
 
-if (DEBUG_CLI_MIGRATION) {
-  console.log(`[CLI Migration] USE_FRAMEWORK_CLI=${USE_FRAMEWORK_CLI}`);
-  console.log(`[CLI Migration] Using ${USE_FRAMEWORK_CLI ? 'framework' : 'legacy'} CLI`);
+/**
+ * Main entry point
+ */
+function main(): void {
+  // Создать реестр и зарегистрировать коннекторы
+  const registry = new ConnectorRegistry<YandexTrackerMCPConfig>();
+  registry.register(
+    new ClaudeDesktopConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
+  );
+  registry.register(
+    new ClaudeCodeConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
+  );
+  registry.register(
+    new CodexConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
+  );
+  registry.register(
+    new GeminiConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
+  );
+  registry.register(
+    new QwenConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
+  );
+
+  // Создать менеджер конфигурации
+  const configManager = new ConfigManager<YandexTrackerMCPConfig>({
+    projectName: PROJECT_BASE_NAME,
+    safeFields: ['orgId', 'apiBase', 'requestTimeout', 'logLevel', 'projectPath'],
+  });
+
+  // Команды
+  program
+    .command('connect')
+    .description('Подключить MCP сервер к клиенту')
+    .option('--client <name>', 'Название клиента')
+    .action(async (opts: { client?: string }) => {
+      await connectCommand({
+        registry,
+        configManager,
+        configPrompts: ytConfigPrompts,
+        cliOptions: opts,
+      });
+    });
+
+  program
+    .command('disconnect')
+    .description('Отключить MCP сервер от клиента')
+    .option('--client <name>', 'Название клиента')
+    .action(async (opts: { client?: string }) => {
+      await disconnectCommand({
+        registry,
+        cliOptions: opts,
+      });
+    });
+
+  program
+    .command('status')
+    .description('Проверить статус подключений')
+    .action(async () => {
+      await statusCommand({ registry });
+    });
+
+  program
+    .command('list')
+    .description('Показать список поддерживаемых клиентов')
+    .action(async () => {
+      await listCommand({ registry });
+    });
+
+  program
+    .command('validate')
+    .description('Проверить валидность конфигураций MCP клиентов')
+    .action(async () => {
+      await validateCommand({ registry });
+    });
+
+  program.parse();
 }
 
-if (USE_FRAMEWORK_CLI) {
-  // Новый framework-based CLI
-  import('./mcp-connect-framework.js')
-    .then(module => module.main())
-    .catch(error => {
-      console.error('[CLI Migration] Framework CLI failed, falling back to legacy');
-      console.error(error);
-
-      // Fallback на legacy при ошибке
-      import('../../cli-legacy/bin/mcp-connect.js')
-        .then(module => module.main())
-        .catch(legacyError => {
-          console.error('[CLI Migration] Legacy CLI also failed');
-          console.error(legacyError);
-          process.exit(1);
-        });
-    });
-} else {
-  // Legacy CLI
-  if (DEBUG_CLI_MIGRATION) {
-    console.log('[CLI Migration] Loading legacy CLI...');
-  }
-
-  import('../../cli-legacy/bin/mcp-connect.js')
-    .then(module => module.main())
-    .catch(error => {
-      console.error('CLI failed');
-      console.error(error);
-      process.exit(1);
-    });
-}
+// Запуск
+main();
