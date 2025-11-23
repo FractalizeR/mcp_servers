@@ -100,6 +100,17 @@ this.httpClient.get('/v1/issues'); // Неверная версия
 - ✅ Справка: `yandex_tracker_client/` (Python SDK)
 - ✅ Batch-результаты: используй типы `BatchResult<T>`, `FulfilledResult<T>`, `RejectedResult`
 
+### 2.1. Batch Operations Pattern
+
+**GET batch (одинаковые параметры):** `issueKeys: IssueKeysSchema`, ответ: `{ total, successful, failed, fieldsReturned }`
+**POST/DELETE batch (индивидуальные параметры):** массив `[{ issueId, ...params }]`, ответ: `{ total, successful, failed }`
+
+**Компоненты:**
+- `ParallelExecutor` - throttling, `BatchResultProcessor` - unified результаты
+- Типы: `BatchResult<TKey, TValue>` → `ProcessedBatchResult<TKey, TValue>`
+
+**Пример:** get-issues.tool.ts (GET batch с ParallelExecutor + BatchResultProcessor)
+
 ### 3. 🔍 Фильтрация полей (обязательно)
 
 **Все MCP tools требуют явного указания возвращаемых полей:**
@@ -398,3 +409,5 @@ packages/servers/yandex-tracker/
 - **Migration guide v1 → v2:** [../../MIGRATION.md](../../MIGRATION.md)
 - **Корневой CLAUDE.md:** [../../CLAUDE.md](../../CLAUDE.md)
 - **API справка:** `../../yandex_tracker_client/` (Python SDK)
+
+<!-- LIMIT_EXCEPTION: +11 строк (2.75%) для добавления секции Batch Operations Pattern -->
