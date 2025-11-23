@@ -151,7 +151,7 @@ export interface ConfigManagerOptions<TConfig extends BaseMCPServerConfig> {
  */
 export interface ConnectCommandOptions<TConfig extends BaseMCPServerConfig> {
   /** Реестр коннекторов */
-  registry: ConnectorRegistry<TConfig>;
+  registry: IConnectorRegistry<TConfig>;
 
   /** Менеджер конфигурации */
   configManager: ConfigManager<TConfig>;
@@ -172,7 +172,7 @@ export interface ConnectCommandOptions<TConfig extends BaseMCPServerConfig> {
  * Опции для команды disconnect
  */
 export interface DisconnectCommandOptions<TConfig extends BaseMCPServerConfig> {
-  registry: ConnectorRegistry<TConfig>;
+  registry: IConnectorRegistry<TConfig>;
   cliOptions?: {
     client?: string;
     all?: boolean;
@@ -183,16 +183,18 @@ export interface DisconnectCommandOptions<TConfig extends BaseMCPServerConfig> {
  * Опции для команды validate
  */
 export interface ValidateCommandOptions<TConfig extends BaseMCPServerConfig> {
-  registry: ConnectorRegistry<TConfig>;
+  registry: IConnectorRegistry<TConfig>;
   configManager: ConfigManager<TConfig>;
   cliOptions?: {
     client?: string;
   };
 }
 
-// Forward declarations for classes (will be implemented in separate files)
-export declare class ConnectorRegistry<TConfig extends BaseMCPServerConfig = BaseMCPServerConfig> {
-  constructor(autoRegister?: boolean);
+/**
+ * Интерфейс для реестра MCP коннекторов
+ * @internal - используется только для типизации command options
+ */
+export interface IConnectorRegistry<TConfig extends BaseMCPServerConfig = BaseMCPServerConfig> {
   register(connector: MCPConnector<TConfig>): void;
   get(name: string): MCPConnector<TConfig> | undefined;
   getAll(): MCPConnector<TConfig>[];
@@ -200,6 +202,7 @@ export declare class ConnectorRegistry<TConfig extends BaseMCPServerConfig = Bas
   checkAllStatuses(): Promise<Map<string, ConnectionStatus>>;
 }
 
+// Forward declarations for classes (will be implemented in separate files)
 export declare class ConfigManager<TConfig extends BaseMCPServerConfig> {
   constructor(options: ConfigManagerOptions<TConfig>);
   load(): Promise<Partial<TConfig> | undefined>;

@@ -8,11 +8,11 @@
 // Export all types
 export * from './types.js';
 
-// Export connectors (will be implemented in stage 2.3)
-// export * from './connectors/index.js';
+// Export connectors
+export * from './connectors/index.js';
+
+// Export utils
+export * from './utils/index.js';
 
 // Export commands (will be implemented in stage 4)
 // export * from './commands/index.js';
-
-// Export utils (will be implemented in stage 3)
-// export * from './utils/index.js';
