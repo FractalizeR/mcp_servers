@@ -1,51 +1,41 @@
-# 4.2 Connect команда с hooks
+/**
+ * Connect команда для подключения MCP сервера к клиенту
+ * @packageDocumentation
+ */
 
-**Тип:** Sequential
-**Зависимости:** 4.1 Базовые команды
-**Время:** ~1 час
-
----
-
-## Задача
-
-Создать generic версию команды `connect`, которая использует кастомизируемые промпты из InteractivePrompter.
-
----
-
-## Действия
-
-### 1. Создать connect команду
-
-**Файл:** `src/commands/connect.command.ts`
-
-```typescript
-import type { ConnectorRegistry } from '../connectors/registry.js';
-import type { ConfigManager } from '../utils/config-manager.js';
-import type { InteractivePrompter } from '../utils/interactive-prompter.js';
-import type { BaseMCPServerConfig } from '../types.js';
+import type { BaseMCPServerConfig, ConnectCommandOptions } from '../types.js';
+import { InteractivePrompter } from '../utils/interactive-prompter.js';
 import { Logger } from '../utils/logger.js';
-import { isError } from '@mcp-framework/infrastructure';
 
-export interface ConnectCommandOptions<TConfig extends BaseMCPServerConfig> {
-  /** Реестр коннекторов */
-  registry: ConnectorRegistry<TConfig>;
-
-  /** Менеджер конфигурации */
-  configManager: ConfigManager<TConfig>;
-
-  /** Prompter для сбора конфигурации */
-  prompter: InteractivePrompter<TConfig>;
-
-  /** CLI опции */
-  cliOptions?: {
-    client?: string;
-  };
-}
-
+/**
+ * Команда для подключения MCP сервера к выбранному клиенту
+ *
+ * @param options - Опции команды
+ *
+ * @example
+ * ```typescript
+ * const registry = new ConnectorRegistry<YourConfig>();
+ * const configManager = new ConfigManager<YourConfig>({
+ *   projectName: 'your-server',
+ *   safeFields: ['orgId', 'apiBase'],
+ * });
+ *
+ * const configPrompts = [
+ *   { name: 'token', type: 'password', message: 'OAuth токен:' },
+ *   { name: 'orgId', type: 'input', message: 'ID организации:' },
+ * ];
+ *
+ * await connectCommand({
+ *   registry,
+ *   configManager,
+ *   configPrompts,
+ * });
+ * ```
+ */
 export async function connectCommand<TConfig extends BaseMCPServerConfig>(
   options: ConnectCommandOptions<TConfig>
 ): Promise<void> {
-  const { registry, configManager, prompter, cliOptions } = options;
+  const { registry, configManager, configPrompts, cliOptions, buildConfig } = options;
 
   Logger.header('🔌 Подключение MCP сервера');
   Logger.newLine();
@@ -100,11 +90,16 @@ export async function connectCommand<TConfig extends BaseMCPServerConfig>(
     Logger.info('Найдена сохраненная конфигурация (секретные поля будут запрошены заново)');
   }
 
+  const prompter = new InteractivePrompter<TConfig>(configPrompts);
   const serverConfig = await prompter.promptServerConfig(savedConfig);
-  const config = {
-    ...serverConfig,
-    projectPath: process.cwd(),
-  } as TConfig;
+
+  // Построить полную конфигурацию
+  const config = buildConfig
+    ? buildConfig(serverConfig)
+    : ({
+        ...serverConfig,
+        projectPath: process.cwd(),
+      } as TConfig);
 
   Logger.newLine();
 
@@ -129,8 +124,8 @@ export async function connectCommand<TConfig extends BaseMCPServerConfig>(
     if (status.details) {
       Logger.info(`Конфигурация: ${status.details.configPath}`);
     }
-  } catch (error) {
-    const errorMessage = isError(error) ? error.message : String(error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     connectSpinner.fail(`Ошибка подключения: ${errorMessage}`);
     return;
   }
@@ -151,33 +146,3 @@ export async function connectCommand<TConfig extends BaseMCPServerConfig>(
   Logger.newLine();
   Logger.success('✅ Готово! Теперь вы можете использовать MCP сервер в выбранном клиенте.');
 }
-```
-
-### 2. Обновить exports
-
-**Файл:** `src/commands/index.ts`
-
-```typescript
-export * from './status.command.js';
-export * from './list.command.js';
-export * from './disconnect.command.js';
-export * from './connect.command.js';
-```
-
----
-
-## Результат
-
-- [x] `connect.command.ts` создан
-- [x] Exports обновлены
-- [x] `npm run build` проходит
-- [x] `npm run typecheck` проходит
-
----
-
-## Критерии готовности
-
-- [x] Connect команда работает с generic типами
-- [x] Использует InteractivePrompter для сбора конфигурации
-- [x] Использует ConfigManager для сохранения
-- [x] Нет зависимостей от YT специфики
