@@ -1,13 +1,18 @@
 /**
- * MCP Tool для создания связи между задачами в Яндекс.Трекере
+ * MCP Tool для создания связей между задачами в Яндекс.Трекере
  *
  * API Tool (прямой доступ к API):
- * - 1 tool = 1 API вызов (create link)
+ * - Batch-режим: создание связей для нескольких задач
  * - Минимальная бизнес-логика
  * - Валидация через Zod
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import {
+  BaseTool,
+  ResponseFieldFilter,
+  BatchResultProcessor,
+  ResultLogger,
+} from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -16,17 +21,14 @@ import { CreateLinkParamsSchema } from './create-link.schema.js';
 import { CREATE_LINK_TOOL_METADATA } from './create-link.metadata.js';
 
 /**
- * Инструмент для создания связи между задачами
+ * Инструмент для создания связей между задачами (batch-режим)
  *
  * Ответственность (SRP):
- * - Координация процесса создания связи в Яндекс.Трекере
+ * - Координация процесса создания связей для нескольких задач
  * - Делегирование валидации в BaseTool
+ * - Делегирование обработки результатов в BatchResultProcessor
  * - Делегирование логирования в ResultLogger
  * - Форматирование итогового результата
- *
- * Переиспользуемые компоненты:
- * - BaseTool.validateParams() - валидация через Zod
- * - ResultLogger - стандартизированное логирование
  */
 export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
   /**
@@ -48,34 +50,52 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, relationship, targetIssue, fields } = validation.data;
+    const { links, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      this.logger.info(`Создание связи: ${issueId} ${relationship} ${targetIssue}`);
+      ResultLogger.logOperationStart(this.logger, 'Создание связей', links.length, fields);
 
-      // 3. API v3: создание связи через facade
-      const link = await this.facade.createLink(issueId, {
-        relationship,
-        issue: targetIssue,
-      });
+      // 3. API v3: создание связей через batch-метод
+      const results = await this.facade.createLinksMany(links);
 
-      // 4. Фильтрация полей ответа
-      const filtered = ResponseFieldFilter.filter<LinkWithUnknownFields>(link, fields);
+      // 4. Обработка результатов через BatchResultProcessor
+      const processedResults = BatchResultProcessor.process(
+        results,
+        (link: LinkWithUnknownFields): Partial<LinkWithUnknownFields> =>
+          ResponseFieldFilter.filter<LinkWithUnknownFields>(link, fields)
+      );
 
       // 5. Логирование результатов
-      this.logger.info(`Связь создана: ${link.id} (${link.type.id})`);
+      ResultLogger.logBatchResults(
+        this.logger,
+        'Связи созданы',
+        {
+          totalRequested: links.length,
+          successCount: processedResults.successful.length,
+          failedCount: processedResults.failed.length,
+          fieldsCount: fields.length,
+        },
+        processedResults
+      );
 
       return this.formatSuccess({
-        message: `Связь создана: ${issueId} ${relationship} ${targetIssue}`,
-        link: filtered,
+        total: links.length,
+        successful: processedResults.successful.length,
+        failed: processedResults.failed.length,
+        links: processedResults.successful.map((item) => ({
+          issueId: item.key,
+          linkId: item.data.id,
+          link: item.data,
+        })),
+        errors: processedResults.failed.map((item) => ({
+          issueId: item.key,
+          error: item.error,
+        })),
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(
-        `Ошибка при создании связи ${issueId} ${relationship} ${targetIssue}`,
-        error
-      );
+      return this.formatError(`Ошибка при создании связей (${links.length} задач)`, error);
     }
   }
 }

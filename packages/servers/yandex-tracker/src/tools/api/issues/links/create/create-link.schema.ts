@@ -23,26 +23,29 @@ export const LinkRelationshipSchema = z.enum([
 ]);
 
 /**
- * Схема параметров для создания связи
+ * Схема параметров для создания связей (batch)
+ *
+ * Стратегия B: Индивидуальные данные
+ * - Каждая связь имеет свои issueId, relationship, targetIssue
+ * - Поля для возврата (fields) применяются ко всем связям
  */
 export const CreateLinkParamsSchema = z.object({
   /**
-   * Ключ или ID текущей задачи
+   * Массив связей с индивидуальными параметрами для каждой связи
    */
-  issueId: IssueKeySchema,
+  links: z
+    .array(
+      z.object({
+        issueId: IssueKeySchema.describe('Issue ID or key (from)'),
+        relationship: LinkRelationshipSchema.describe('Link type and direction'),
+        targetIssue: IssueKeySchema.describe('Target issue ID or key (to)'),
+      })
+    )
+    .min(1)
+    .describe('Array of links to create'),
 
   /**
-   * Тип и направление связи
-   */
-  relationship: LinkRelationshipSchema,
-
-  /**
-   * Ключ или ID связываемой задачи
-   */
-  targetIssue: IssueKeySchema,
-
-  /**
-   * Массив полей для возврата в результате (обязательный)
+   * Поля для возврата в результате (применяется ко всем связям)
    * Примеры: ['id', 'type', 'object'], ['id', 'type.id', 'object.key']
    */
   fields: FieldsSchema,

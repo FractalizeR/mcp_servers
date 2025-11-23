@@ -4,6 +4,7 @@ import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-man
 import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { CreateLinkDto } from '#tracker_api/dto/index.js';
+import type { ServerConfig } from '#config';
 import { CreateLinkOperation } from '#tracker_api/api_operations/link/create-link.operation.js';
 import { createLinkFixture, createSubtaskLinkFixture } from '#helpers/link.fixture.js';
 
@@ -12,6 +13,7 @@ describe('CreateLinkOperation', () => {
   let mockHttpClient: IHttpClient;
   let mockCacheManager: CacheManager;
   let mockLogger: Logger;
+  let mockConfig: ServerConfig;
 
   beforeEach(() => {
     mockHttpClient = {
@@ -38,7 +40,12 @@ describe('CreateLinkOperation', () => {
       debug: vi.fn(),
     } as unknown as Logger;
 
-    operation = new CreateLinkOperation(mockHttpClient, mockCacheManager, mockLogger);
+    mockConfig = {
+      maxBatchSize: 100,
+      maxConcurrentRequests: 5,
+    } as ServerConfig;
+
+    operation = new CreateLinkOperation(mockHttpClient, mockCacheManager, mockLogger, mockConfig);
   });
 
   describe('execute', () => {
@@ -214,6 +221,125 @@ describe('CreateLinkOperation', () => {
 
       expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/xyz789/links', input);
       expect(result.object.id).toBe('abc123def456');
+    });
+  });
+
+  describe('executeMany', () => {
+    it('should create multiple links with individual parameters', async () => {
+      const links = [
+        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+        { issueId: 'TEST-3', relationship: 'has subtasks', targetIssue: 'TEST-4' },
+      ];
+
+      const mockLink1 = createLinkFixture({
+        id: 'link-1',
+        type: { id: 'relates', inward: 'связана с', outward: 'связана с' },
+      });
+      const mockLink2 = createSubtaskLinkFixture({
+        id: 'link-2',
+      });
+
+      vi.mocked(mockHttpClient.post)
+        .mockResolvedValueOnce(mockLink1)
+        .mockResolvedValueOnce(mockLink2);
+
+      const results = await operation.executeMany(links);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].status).toBe('fulfilled');
+      expect(results[1].status).toBe('fulfilled');
+      expect(mockHttpClient.post).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle partial failures when creating links', async () => {
+      const links = [
+        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+        { issueId: 'TEST-3', relationship: 'invalid', targetIssue: 'TEST-4' },
+      ];
+
+      const mockLink = createLinkFixture();
+      const error = new Error('Invalid relationship');
+
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce(mockLink).mockRejectedValueOnce(error);
+
+      const results = await operation.executeMany(links);
+
+      expect(results).toHaveLength(2);
+      expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+      expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
+    });
+
+    it('should use individual parameters for each link', async () => {
+      const links = [
+        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+        { issueId: 'TEST-3', relationship: 'depends on', targetIssue: 'TEST-4' },
+      ];
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue(createLinkFixture());
+
+      await operation.executeMany(links);
+
+      expect(mockHttpClient.post).toHaveBeenNthCalledWith(1, '/v3/issues/TEST-1/links', {
+        relationship: 'relates',
+        issue: 'TEST-2',
+      });
+      expect(mockHttpClient.post).toHaveBeenNthCalledWith(2, '/v3/issues/TEST-3/links', {
+        relationship: 'depends on',
+        issue: 'TEST-4',
+      });
+    });
+
+    it('should return empty result for empty links array', async () => {
+      const result = await operation.executeMany([]);
+
+      expect(result).toEqual([]);
+      expect(mockHttpClient.post).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith('CreateLinkOperation: пустой массив связей');
+    });
+
+    it('should log batch operation start', async () => {
+      const links = [
+        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+        { issueId: 'TEST-3', relationship: 'has subtasks', targetIssue: 'TEST-4' },
+      ];
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue(createLinkFixture());
+
+      await operation.executeMany(links);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Создание 2 связей параллельно')
+      );
+    });
+
+    it('should handle all successful creations', async () => {
+      const links = [
+        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+        { issueId: 'TEST-3', relationship: 'relates', targetIssue: 'TEST-4' },
+        { issueId: 'TEST-5', relationship: 'relates', targetIssue: 'TEST-6' },
+      ];
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue(createLinkFixture());
+
+      const results = await operation.executeMany(links);
+
+      expect(results).toHaveLength(3);
+      expect(results.every((r) => r.status === 'fulfilled')).toBe(true);
+    });
+
+    it('should handle all failures', async () => {
+      const links = [
+        { issueId: 'TEST-1', relationship: 'invalid', targetIssue: 'TEST-2' },
+        { issueId: 'TEST-3', relationship: 'invalid', targetIssue: 'TEST-4' },
+      ];
+
+      const error = new Error('Invalid relationship');
+      vi.mocked(mockHttpClient.post).mockRejectedValue(error);
+
+      const results = await operation.executeMany(links);
+
+      expect(results).toHaveLength(2);
+      expect(results.every((r) => r.status === 'rejected')).toBe(true);
     });
   });
 });

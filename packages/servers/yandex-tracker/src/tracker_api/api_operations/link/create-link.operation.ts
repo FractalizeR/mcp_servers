@@ -2,7 +2,8 @@
  * Операция создания связи между задачами
  *
  * Ответственность (SRP):
- * - ТОЛЬКО создание связи между двумя задачами
+ * - ТОЛЬКО создание связи между двумя задачами (single и batch режимы)
+ * - Параллельное выполнение через ParallelExecutor (batch режим)
  * - Валидация входных параметров
  * - Инвалидация кеша связей после создания
  * - НЕТ получения/удаления связей
@@ -16,11 +17,32 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
-import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
+import {
+  EntityCacheKey,
+  EntityType,
+  ParallelExecutor,
+  type BatchResult,
+} from '@mcp-framework/infrastructure';
+import type { LinkWithUnknownFields, LinkRelationship } from '#tracker_api/entities/index.js';
 import type { CreateLinkDto } from '#tracker_api/dto/index.js';
+import type { ServerConfig } from '#config';
 
 export class CreateLinkOperation extends BaseOperation {
+  private readonly parallelExecutor: ParallelExecutor;
+
+  constructor(
+    httpClient: ConstructorParameters<typeof BaseOperation>[0],
+    cacheManager: ConstructorParameters<typeof BaseOperation>[1],
+    logger: ConstructorParameters<typeof BaseOperation>[2],
+    config: ServerConfig
+  ) {
+    super(httpClient, cacheManager, logger);
+
+    this.parallelExecutor = new ParallelExecutor(logger, {
+      maxBatchSize: config.maxBatchSize,
+      maxConcurrentRequests: config.maxConcurrentRequests,
+    });
+  }
   /**
    * Создаёт связь между текущей и указанной задачей
    *
@@ -61,6 +83,46 @@ export class CreateLinkOperation extends BaseOperation {
     this.logger.debug(`Связь создана: ${link.id} (${link.type.id})`);
 
     return link;
+  }
+
+  /**
+   * Создаёт связи для нескольких задач параллельно
+   *
+   * @param links - массив связей с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   * @throws {Error} если количество связей превышает maxBatchSize
+   *
+   * ВАЖНО:
+   * - Каждая связь имеет свои параметры (issueId, relationship, targetIssue)
+   * - Использует ParallelExecutor для соблюдения maxConcurrentRequests
+   * - API автоматически создаёт обратные связи
+   * - Retry делается автоматически в HttpClient.post
+   * - Кеш инвалидируется для всех задач (source и target)
+   */
+  async executeMany(
+    links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }>
+  ): Promise<BatchResult<string, LinkWithUnknownFields>> {
+    // Проверка на пустой массив
+    if (links.length === 0) {
+      this.logger.warn('CreateLinkOperation: пустой массив связей');
+      return [];
+    }
+
+    this.logger.info(
+      `Создание ${links.length} связей параллельно: ${links.map((l) => `${l.issueId} ${l.relationship} ${l.targetIssue}`).join(', ')}`
+    );
+
+    // Создаём операции для каждой связи
+    const operations = links.map(({ issueId, relationship, targetIssue }) => ({
+      key: `${issueId}-${targetIssue}`,
+      fn: async (): Promise<LinkWithUnknownFields> => {
+        // Вызываем существующий метод execute() для каждой связи с индивидуальными параметрами
+        return this.execute(issueId, { relationship, issue: targetIssue });
+      },
+    }));
+
+    // Выполняем через ParallelExecutor (централизованный throttling)
+    return this.parallelExecutor.executeParallel(operations, 'create links');
   }
 
   /**

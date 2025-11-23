@@ -90,6 +90,7 @@ import type {
   IssueWithUnknownFields,
   TransitionWithUnknownFields,
   LinkWithUnknownFields,
+  LinkRelationship,
   CommentWithUnknownFields,
   WorklogWithUnknownFields,
   AttachmentWithUnknownFields,
@@ -388,6 +389,17 @@ export class YandexTrackerFacade {
    */
   async createLink(issueId: string, linkData: CreateLinkDto): Promise<LinkWithUnknownFields> {
     return this.issueLinkService.createLink(issueId, linkData);
+  }
+
+  /**
+   * Создаёт связи для нескольких задач параллельно
+   * @param links - массив связей с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async createLinksMany(
+    links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }>
+  ): Promise<BatchResult<string, LinkWithUnknownFields>> {
+    return this.issueLinkService.createLinksMany(links);
   }
 
   /**

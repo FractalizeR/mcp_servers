@@ -23,8 +23,9 @@ import {
 } from '#tracker_api/api_operations/link/get-issue-links.operation.js';
 import { CreateLinkOperation } from '#tracker_api/api_operations/link/create-link.operation.js';
 import { DeleteLinkOperation } from '#tracker_api/api_operations/link/delete-link.operation.js';
-import type { LinkWithUnknownFields } from '#tracker_api/entities/link.entity.js';
+import type { LinkWithUnknownFields, LinkRelationship } from '#tracker_api/entities/link.entity.js';
 import type { CreateLinkDto } from '#tracker_api/dto/link/create-link.dto.js';
+import type { BatchResult } from '@mcp-framework/infrastructure';
 
 @injectable()
 export class IssueLinkService {
@@ -51,6 +52,17 @@ export class IssueLinkService {
    */
   async createLink(issueId: string, linkData: CreateLinkDto): Promise<LinkWithUnknownFields> {
     return this.createOp.execute(issueId, linkData);
+  }
+
+  /**
+   * Создаёт связи для нескольких задач параллельно
+   * @param links - массив связей с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async createLinksMany(
+    links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }>
+  ): Promise<BatchResult<string, LinkWithUnknownFields>> {
+    return this.createOp.executeMany(links);
   }
 
   /**
