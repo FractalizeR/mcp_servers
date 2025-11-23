@@ -3,6 +3,9 @@
  * @packageDocumentation
  */
 
+// Import MCPConnector for use in forward declarations
+import type { MCPConnector } from './connectors/base/connector.interface.js';
+
 /**
  * Базовая конфигурация для любого MCP сервера
  * Все MCP серверы должны расширять этот интерфейс
@@ -62,30 +65,6 @@ export interface ConnectionStatus {
 
   /** Ошибка (если есть) */
   error?: string;
-}
-
-/**
- * Базовый интерфейс для всех MCP коннекторов
- * Generic по типу конфигурации сервера
- */
-export interface MCPConnector<TConfig extends BaseMCPServerConfig = BaseMCPServerConfig> {
-  /** Получить информацию о клиенте */
-  getClientInfo(): MCPClientInfo;
-
-  /** Проверить, установлен ли клиент в системе */
-  isInstalled(): Promise<boolean>;
-
-  /** Получить текущий статус подключения */
-  getStatus(): Promise<ConnectionStatus>;
-
-  /** Подключить MCP сервер к клиенту */
-  connect(config: TConfig): Promise<void>;
-
-  /** Отключить MCP сервер от клиента */
-  disconnect(): Promise<void>;
-
-  /** Валидировать конфигурацию перед подключением */
-  validateConfig(config: TConfig): Promise<string[]>;
 }
 
 /**
@@ -229,3 +208,6 @@ export declare class ConfigManager<TConfig extends BaseMCPServerConfig> {
   exists(): Promise<boolean>;
   getConfigPath(): string;
 }
+
+// Re-export MCPConnector for convenience
+export type { MCPConnector };
