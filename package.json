@@ -75,7 +75,7 @@
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
     "@vitest/coverage-v8": "^4.0.8",
-    "@vitest/ui": "^4.0.9",
+    "@vitest/ui": "^4.0.13",
     "cloc": "^2.11.0",
     "dependency-cruiser": "^17.2.0",
     "esbuild": "^0.27.0",
