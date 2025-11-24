@@ -157,7 +157,6 @@ npm install @mcp-framework/core
 
 - **[CLAUDE.md](CLAUDE.md)** — AI agent guidelines for monorepo
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — Architecture overview
-- **[MIGRATION.md](MIGRATION.md)** — Migration guide v1 → v2
 - **[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)** — Contribution guidelines
 
 ### Packages

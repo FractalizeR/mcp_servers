@@ -406,4 +406,3 @@ MIT License
 - **Monorepo root:** [../../README.md](../../README.md)
 - **Architecture:** [../../ARCHITECTURE.md](../../ARCHITECTURE.md)
 - **Core package:** [../core/README.md](../core/README.md)
-- **Changelog:** [CHANGELOG.md](CHANGELOG.md)

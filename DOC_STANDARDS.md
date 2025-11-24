@@ -45,7 +45,7 @@
 10. `## 🧪 Testing` — запуск тестов
 11. `## 🤝 Contributing` — ссылка
 12. `## 📄 License`
-13. `## 🔗 Links` — monorepo root, architecture, changelog
+13. `## 🔗 Links` — monorepo root, architecture
 
 **Лимит:** ≤600 строк (целевое ~500)
 

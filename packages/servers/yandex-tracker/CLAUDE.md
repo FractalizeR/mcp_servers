@@ -509,7 +509,6 @@ packages/servers/yandex-tracker/
 ## 🔗 ДОПОЛНИТЕЛЬНО
 
 - **Архитектура monorepo:** [../../ARCHITECTURE.md](../../ARCHITECTURE.md)
-- **Migration guide v1 → v2:** [../../MIGRATION.md](../../MIGRATION.md)
 - **Корневой CLAUDE.md:** [../../CLAUDE.md](../../CLAUDE.md)
 - **API справка:** `../../yandex_tracker_client/` (Python SDK)
 

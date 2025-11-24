@@ -397,7 +397,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## 🔗 ДОПОЛНИТЕЛЬНО
 
 - **Архитектура monorepo:** [ARCHITECTURE.md](./ARCHITECTURE.md)
-- **Migration guide v1 → v2:** [MIGRATION.md](./MIGRATION.md)
 - **Framework packages:**
   - [Infrastructure API](packages/framework/infrastructure/README.md)
   - [CLI Framework](packages/framework/cli/README.md)

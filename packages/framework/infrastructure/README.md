@@ -164,7 +164,6 @@ import { ServerConfig, loadConfig } from '@mcp-server/yandex-tracker/config';
 // Implement your own config loader based on your domain requirements
 ```
 
-**See:** [MIGRATION.md](../../../MIGRATION.md) for details
 
 ---
 
@@ -280,4 +279,3 @@ MIT License
 
 - **Monorepo root:** [../../README.md](../../README.md)
 - **Architecture:** [../../ARCHITECTURE.md](../../ARCHITECTURE.md)
-- **Changelog:** [CHANGELOG.md](CHANGELOG.md)

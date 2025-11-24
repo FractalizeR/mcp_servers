@@ -18,7 +18,6 @@
 **Основные документы:**
 - **[README.md](./README.md)** — обзор monorepo и quick start
 - **[DOC_STANDARDS.md](./DOC_STANDARDS.md)** — стандарты структуры документации
-- **[MIGRATION.md](./MIGRATION.md)** — миграция между версиями
 - **[.github/CONTRIBUTING.md](./.github/CONTRIBUTING.md)** — вклад в проект
 
 ---

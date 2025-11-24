@@ -667,7 +667,6 @@ npm run validate
 - **[README.md](README.md)** — Overview, quick start
 - **[CLAUDE.md](CLAUDE.md)** — Monorepo rules for AI agents
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** (this file) — Architecture overview
-- **[MIGRATION.md](MIGRATION.md)** — Migration guide v1 → v2
 
 ### Framework Packages
 

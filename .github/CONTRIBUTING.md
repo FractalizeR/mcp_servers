@@ -125,29 +125,14 @@ npm version major
 - Создаст git tag `v{version}`
 - **НЕ** запушит (делаем вручную)
 
-### 2. Обновить CHANGELOG.md
-
-```markdown
-## [1.0.0] - 2024-01-15
-
-### Added
-- Новый функционал
-
-### Changed
-- Изменения в существующем функционале
-
-### Fixed
-- Исправленные баги
-```
-
-### 3. Закоммитить изменения
+### 2. Закоммитить изменения
 
 ```bash
-git add package.json package-lock.json CHANGELOG.md
+git add package.json package-lock.json
 git commit -m "chore: release v1.0.0"
 ```
 
-### 4. Запушить с тегом
+### 3. Запушить с тегом
 
 ```bash
 git push origin master

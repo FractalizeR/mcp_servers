@@ -100,18 +100,17 @@ Settings → About → Topics:
 После настройки всех secrets:
 
 ```bash
-# 1. Обнови CHANGELOG.md с финальной датой релиза
-# 2. Убедись что все тесты проходят
+# 1. Убедись что все тесты проходят
 npm run validate
 
-# 3. Создай версию
+# 2. Создай версию
 npm version 0.1.0
 
-# 4. Закоммить
-git add package.json package-lock.json CHANGELOG.md
+# 3. Закоммить
+git add package.json package-lock.json
 git commit -m "chore: release v0.1.0"
 
-# 5. Запуш с тегом (триггерит автоматический release)
+# 4. Запуш с тегом (триггерит автоматический release)
 git push origin master
 git push origin v0.1.0
 ```

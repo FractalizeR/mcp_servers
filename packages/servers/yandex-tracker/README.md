@@ -600,7 +600,6 @@ npm run mcp:status         # Статус подключения
 
 - **[Корневой README](../../README.md)** — обзор monorepo
 - **[ARCHITECTURE.md](../../ARCHITECTURE.md)** — архитектура
-- **[MIGRATION.md](../../MIGRATION.md)** — миграция v1 → v2
 - **[.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md)** — вклад в проект
 
 ---
