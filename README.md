@@ -17,9 +17,10 @@ This repository provides:
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| [@mcp-framework/infrastructure](packages/infrastructure) | 0.1.0 | HTTP client, cache, logging, async utilities |
-| [@mcp-framework/core](packages/core) | 0.1.0 | Base classes, type system, tool registry, schema→definition generator |
-| [@mcp-framework/search](packages/search) | 0.1.0 | Advanced tool search engine with compile-time indexing |
+| [@mcp-framework/infrastructure](packages/framework/infrastructure) | 0.1.0 | HTTP client, cache, logging, async utilities |
+| [@mcp-framework/cli](packages/framework/cli) | 0.1.0 | Generic CLI для MCP подключений |
+| [@mcp-framework/core](packages/framework/core) | 0.1.0 | Base classes, type system, tool registry, schema→definition generator |
+| [@mcp-framework/search](packages/framework/search) | 0.1.0 | Advanced tool search engine with compile-time indexing |
 
 ### Application Package
 
@@ -33,19 +34,25 @@ This repository provides:
 
 ```
 packages/
-├── infrastructure/     → @mcp-framework/infrastructure
-│   └── HTTP, cache, logging, async utilities
-├── core/              → @mcp-framework/core
-│   └── BaseTool, registry, type system
-├── search/            → @mcp-framework/search
-│   └── Tool Search Engine (compile-time indexing)
-└── yandex-tracker/    → mcp-server-yandex-tracker
-    └── Yandex API, tools, operations, DI
+├── framework/
+│   ├── infrastructure/     → @mcp-framework/infrastructure
+│   │   └── HTTP, cache, logging, async utilities
+│   ├── cli/               → @mcp-framework/cli
+│   │   └── Generic CLI для MCP подключений
+│   ├── core/              → @mcp-framework/core
+│   │   └── BaseTool, registry, type system
+│   └── search/            → @mcp-framework/search
+│       └── Tool Search Engine (compile-time indexing)
+└── servers/
+    └── yandex-tracker/    → mcp-server-yandex-tracker
+        └── Yandex API, tools, operations, DI
 ```
 
 **Dependency Graph:**
 ```
 infrastructure (0 dependencies)
+    ↓
+cli (depends on infrastructure)
     ↓
 core (depends on infrastructure)
     ↓

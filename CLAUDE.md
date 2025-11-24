@@ -90,16 +90,18 @@ npm run validate:docs
 
 ```
 packages/
-├── infrastructure/     → @mcp-framework/infrastructure
-│   └── HTTP, cache, logging, async utilities
-├── cli/               → @mcp-framework/cli
-│   └── Generic CLI для MCP подключений
-├── core/              → @mcp-framework/core
-│   └── BaseTool, registry, type system
-├── search/            → @mcp-framework/search
-│   └── Tool Search Engine (compile-time indexing)
-└── yandex-tracker/    → mcp-server-yandex-tracker
-    └── Yandex API, tools, operations, DI
+├── framework/
+│   ├── infrastructure/     → @mcp-framework/infrastructure
+│   │   └── HTTP, cache, logging, async utilities
+│   ├── cli/               → @mcp-framework/cli
+│   │   └── Generic CLI для MCP подключений
+│   ├── core/              → @mcp-framework/core
+│   │   └── BaseTool, registry, type system
+│   └── search/            → @mcp-framework/search
+│       └── Tool Search Engine (compile-time indexing)
+└── servers/
+    └── yandex-tracker/    → mcp-server-yandex-tracker
+        └── Yandex API, tools, operations, DI
 ```
 
 **Детали:**

@@ -24,18 +24,22 @@
 
 ```
 packages/
-├── infrastructure/     → @mcp-framework/infrastructure
-│   ├── http/, cache/, async/, logging/
-│   └── 0 dependencies
-├── core/              → @mcp-framework/core
-│   ├── tools/base/, utils/, tool-registry
-│   └── depends on: infrastructure
-├── search/            → @mcp-framework/search
-│   ├── engine/, strategies/, tools/
-│   └── depends on: core
-└── yandex-tracker/    → mcp-server-yandex-tracker
-    ├── api_operations/, entities/, mcp/, composition-root/
-    └── depends on: infrastructure, core, search
+├── framework/
+│   ├── infrastructure/     → @mcp-framework/infrastructure
+│   │   ├── http/, cache/, async/, logging/
+│   │   └── 0 dependencies
+│   ├── cli/               → @mcp-framework/cli
+│   │   └── depends on: infrastructure
+│   ├── core/              → @mcp-framework/core
+│   │   ├── tools/base/, utils/, tool-registry
+│   │   └── depends on: infrastructure
+│   └── search/            → @mcp-framework/search
+│       ├── engine/, strategies/, tools/
+│       └── depends on: core
+└── servers/
+    └── yandex-tracker/    → mcp-server-yandex-tracker
+        ├── api_operations/, entities/, tools/, composition-root/
+        └── depends on: infrastructure, cli, core, search
 ```
 
 ---
