@@ -1,14 +1,14 @@
 /**
- * Zod схема для валидации параметров DeleteChecklistItemTool
+ * Zod схема для валидации параметров DeleteChecklistItemTool (batch-режим)
  */
 
 import { z } from 'zod';
 import { IssueKeySchema } from '#common/schemas/index.js';
 
 /**
- * Схема параметров для удаления элемента чеклиста
+ * Схема элемента чеклиста для удаления
  */
-export const DeleteChecklistItemParamsSchema = z.object({
+const DeleteChecklistItemSchema = z.object({
   /**
    * Идентификатор или ключ задачи (обязательно)
    */
@@ -17,7 +17,23 @@ export const DeleteChecklistItemParamsSchema = z.object({
   /**
    * Идентификатор элемента чеклиста (обязательно)
    */
-  checklistItemId: z.string().min(1, 'ID элемента не может быть пустым'),
+  itemId: z.string().min(1, 'ID элемента не может быть пустым'),
+});
+
+/**
+ * Схема параметров для удаления элементов из чеклистов (batch-режим)
+ *
+ * Паттерн DELETE операций: Input Pattern - индивидуальные параметры
+ * Каждый элемент имеет свои параметры (issueId, itemId)
+ */
+export const DeleteChecklistItemParamsSchema = z.object({
+  /**
+   * Массив элементов чеклиста для удаления
+   */
+  items: z
+    .array(DeleteChecklistItemSchema)
+    .min(1, 'Массив items должен содержать минимум 1 элемент')
+    .describe('Array of checklist items to delete'),
 });
 
 /**

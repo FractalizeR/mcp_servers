@@ -130,9 +130,12 @@ describe('YandexTrackerFacade', () => {
 
     mockChecklistService = {
       getChecklist: vi.fn(),
+      getChecklistMany: vi.fn(),
       addChecklistItem: vi.fn(),
+      addChecklistItemMany: vi.fn(),
       updateChecklistItem: vi.fn(),
       deleteChecklistItem: vi.fn(),
+      deleteChecklistItemMany: vi.fn(),
     } as unknown as ChecklistService;
 
     mockWorklogService = {

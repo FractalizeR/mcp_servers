@@ -113,4 +113,15 @@ export class ChecklistService {
   async deleteChecklistItem(issueId: string, checklistItemId: string): Promise<void> {
     return this.deleteChecklistItemOp.execute(issueId, checklistItemId);
   }
+
+  /**
+   * Удаляет элементы из чеклистов нескольких задач параллельно
+   * @param items - массив элементов для удаления с индивидуальными параметрами
+   * @returns результаты batch-операции
+   */
+  async deleteChecklistItemMany(
+    items: Array<{ issueId: string; itemId: string }>
+  ): Promise<BatchResult<string, void>> {
+    return this.deleteChecklistItemOp.executeMany(items);
+  }
 }
