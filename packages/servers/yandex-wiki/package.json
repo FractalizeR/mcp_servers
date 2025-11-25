@@ -1,0 +1,79 @@
+{
+  "name": "@mcp-server/yandex-wiki",
+  "version": "0.1.0",
+  "description": "MCP Server for Yandex Wiki API integration",
+  "keywords": [
+    "mcp",
+    "yandex-wiki",
+    "documentation",
+    "api",
+    "claude"
+  ],
+  "license": "MIT",
+  "author": "Fractalizer",
+  "type": "module",
+  "imports": {
+    "#config": "./src/config/index.ts",
+    "#config/*": "./src/config/*",
+    "#wiki_api/*": "./src/wiki_api/*",
+    "#tools/*": "./src/tools/*",
+    "#composition-root/*": "./src/composition-root/*",
+    "#cli/*": "./src/cli/*",
+    "#constants": "./src/constants.ts",
+    "#common/*": "./src/common/*",
+    "#helpers/*": "./tests/helpers/*"
+  },
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-wiki-connect": "./dist/cli/bin/mcp-connect.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -b && tsc-alias",
+    "clean": "rimraf dist",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "lint:quiet": "eslint src --ext .ts --quiet",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:quiet": "vitest run --reporter=dot --silent",
+    "test:verbose": "vitest run --reporter=verbose",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run lint && npm run typecheck && npm run test",
+    "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet"
+  },
+  "dependencies": {
+    "@mcp-framework/cli": "*",
+    "@mcp-framework/core": "*",
+    "@mcp-framework/infrastructure": "*",
+    "@mcp-framework/search": "*",
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "axios": "^1.7.9",
+    "chalk": "^5.4.1",
+    "commander": "^14.0.2",
+    "inquirer": "^13.0.1",
+    "inversify": "^7.10.4",
+    "pino": "^10.1.0",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^24.10.1",
+    "axios-mock-adapter": "^2.1.0",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.0.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

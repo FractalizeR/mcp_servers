@@ -26,6 +26,10 @@ export enum ToolCategory {
   CHECKLISTS = 'checklists',
   COMPONENTS = 'components',
 
+  // Wiki API операции
+  PAGES = 'pages',
+  GRIDS = 'grids',
+
   // Системные инструменты
   SYSTEM = 'system',
 
