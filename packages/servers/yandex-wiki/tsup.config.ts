@@ -5,12 +5,14 @@ import { defineServerConfig } from '../tsup.config.base.js';
  * Build конфигурация для Yandex Wiki MCP Server
  *
  * Создает два бандла:
- * 1. yandex-wiki.bundle.cjs - основной MCP сервер
+ * 1. yandex-wiki.bundle.cjs - основной MCP сервер (из server.ts)
  * 2. mcp-connect.js - CLI инструмент для управления подключениями
  */
 export default defineConfig([
-  // Основной MCP сервер
-  defineServerConfig('yandex-wiki'),
+  // Основной MCP сервер - запускаемый бандл из server.ts
+  defineServerConfig('yandex-wiki', {
+    entry: { 'yandex-wiki.bundle': 'src/server.ts' },
+  }),
 
   // CLI инструмент
   {

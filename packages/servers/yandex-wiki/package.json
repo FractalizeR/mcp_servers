@@ -51,10 +51,11 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:quiet": "vitest run --reporter=dot --silent",
+    "test:smoke": "tsx scripts/smoke-test-server.ts",
     "test:verbose": "vitest run --reporter=verbose",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
-    "validate": "npm run lint && npm run typecheck && npm run test",
+    "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke",
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet"
   },
   "dependencies": {
