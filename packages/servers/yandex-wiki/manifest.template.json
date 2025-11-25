@@ -1,0 +1,94 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/dist/mcpb-manifest-v0.3.schema.json",
+  "manifest_version": "0.3",
+  "name": "fractalizer_mcp_yandex_wiki",
+  "version": "0.1.0",
+  "display_name": "FractalizeR's Yandex Wiki MCP",
+  "description": "FractalizeR's Yandex Wiki MCP server for API integration",
+  "long_description": "FractalizeR's Yandex Wiki MCP\n\nАвтор: Раструсный Владислав.\n\nПрофессиональный MCP сервер для полной интеграции с API Yandex Wiki. 21 инструмент для управления страницами, динамическими таблицами и ресурсами корпоративной вики.\n\nОсновные возможности:\n- Pages API (7 инструментов): создание, чтение, редактирование, удаление, клонирование страниц, добавление контента\n- Grids API (12 инструментов): работа с динамическими таблицами — строки, колонки, ячейки, клонирование\n- Resources API (1 инструмент): получение ресурсов страницы (вложения, таблицы, SharePoint)\n\nИдеален для автоматизации документации и интеграции Yandex Wiki в AI-powered рабочие процессы.",
+  "author": {
+    "name": "Fractalizer",
+    "email": "fractalizer@example.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/FractalizeR/mcp_server_yandex_tracker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FractalizeR/mcp_server_yandex_tracker"
+  },
+  "keywords": [
+    "yandex",
+    "wiki",
+    "documentation",
+    "knowledge-base",
+    "api",
+    "mcp"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/yandex-wiki.bundle.cjs",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/yandex-wiki.bundle.cjs"
+      ],
+      "env": {
+        "YANDEX_WIKI_TOKEN": "${user_config.oauth_token}",
+        "YANDEX_ORG_ID": "${user_config.org_id}",
+        "YANDEX_WIKI_API_BASE": "https://api.wiki.yandex.net",
+        "LOG_LEVEL": "${user_config.log_level}",
+        "REQUEST_TIMEOUT": "${user_config.request_timeout}"
+      }
+    }
+  },
+  "user_config": {
+    "oauth_token": {
+      "type": "string",
+      "title": "OAuth Token",
+      "description": "OAuth токен для доступа к API Yandex Wiki. Получить можно в настройках OAuth приложения Яндекса.",
+      "required": true,
+      "sensitive": true
+    },
+    "org_id": {
+      "type": "string",
+      "title": "Organization ID",
+      "description": "ID организации в Yandex Wiki. Можно найти в настройках организации.",
+      "required": true,
+      "sensitive": false
+    },
+    "log_level": {
+      "type": "string",
+      "title": "Log Level",
+      "description": "Уровень логирования: debug, info, warn, error",
+      "required": false,
+      "default": "info",
+      "sensitive": false
+    },
+    "request_timeout": {
+      "type": "number",
+      "title": "Request Timeout",
+      "description": "Таймаут запросов к API (в миллисекундах)",
+      "required": false,
+      "default": 30000,
+      "min": 5000,
+      "max": 120000,
+      "sensitive": false
+    }
+  },
+  "tools_generated": true,
+  "prompts_generated": false,
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": [
+      "darwin",
+      "linux",
+      "win32"
+    ],
+    "runtimes": {
+      "node": ">=22.0.0"
+    }
+  },
+  "privacy_policies": [
+    "https://yandex.ru/legal/confidential/"
+  ]
+}

@@ -1,0 +1,103 @@
+#!/usr/bin/env node
+
+/**
+ * CLI для Yandex Wiki MCP Server
+ *
+ * Использует @mcp-framework/cli для управления подключениями
+ */
+
+import { program } from 'commander';
+import {
+  ConnectorRegistry,
+  ConfigManager,
+  connectCommand,
+  disconnectCommand,
+  statusCommand,
+  listCommand,
+  validateCommand,
+  // Импортируем коннекторы
+  ClaudeDesktopConnector,
+  ClaudeCodeConnector,
+  CodexConnector,
+  GeminiConnector,
+  QwenConnector,
+} from '@mcp-framework/cli';
+import { ywConfigPrompts } from '../prompts.js';
+import type { YandexWikiMCPConfig } from '../types.js';
+import { PROJECT_BASE_NAME, SERVER_ENTRY_POINT } from '../../constants.js';
+
+/**
+ * Main entry point
+ */
+function main(): void {
+  // Создать реестр и зарегистрировать коннекторы
+  const registry = new ConnectorRegistry<YandexWikiMCPConfig>();
+  registry.register(
+    new ClaudeDesktopConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
+  );
+  registry.register(
+    new ClaudeCodeConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
+  );
+  registry.register(new CodexConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT));
+  registry.register(
+    new GeminiConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
+  );
+  registry.register(new QwenConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT));
+
+  // Создать менеджер конфигурации
+  const configManager = new ConfigManager<YandexWikiMCPConfig>({
+    projectName: PROJECT_BASE_NAME,
+    safeFields: ['orgId', 'requestTimeout', 'logLevel', 'projectPath'],
+  });
+
+  // Команды
+  program
+    .command('connect')
+    .description('Подключить MCP сервер к клиенту')
+    .option('--client <name>', 'Название клиента')
+    .action(async (opts: { client?: string }) => {
+      await connectCommand({
+        registry,
+        configManager,
+        configPrompts: ywConfigPrompts,
+        cliOptions: opts,
+      });
+    });
+
+  program
+    .command('disconnect')
+    .description('Отключить MCP сервер от клиента')
+    .option('--client <name>', 'Название клиента')
+    .action(async (opts: { client?: string }) => {
+      await disconnectCommand({
+        registry,
+        cliOptions: opts,
+      });
+    });
+
+  program
+    .command('status')
+    .description('Проверить статус подключений')
+    .action(async () => {
+      await statusCommand({ registry });
+    });
+
+  program
+    .command('list')
+    .description('Показать список поддерживаемых клиентов')
+    .action(async () => {
+      await listCommand({ registry });
+    });
+
+  program
+    .command('validate')
+    .description('Проверить валидность конфигураций MCP клиентов')
+    .action(async () => {
+      await validateCommand({ registry });
+    });
+
+  program.parse();
+}
+
+// Запуск
+main();
