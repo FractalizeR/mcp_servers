@@ -496,6 +496,17 @@ export class YandexTrackerFacade {
     return this.commentService.deleteComment(issueId, commentId);
   }
 
+  /**
+   * Удаляет комментарии из нескольких задач параллельно
+   * @param comments - массив комментариев для удаления с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async deleteCommentsMany(
+    comments: Array<{ issueId: string; commentId: string }>
+  ): Promise<BatchResult<string, void>> {
+    return this.commentService.deleteCommentsMany(comments);
+  }
+
   // === Checklist Methods ===
 
   /**
