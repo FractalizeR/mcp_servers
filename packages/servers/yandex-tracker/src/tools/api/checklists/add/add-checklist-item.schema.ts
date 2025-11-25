@@ -1,5 +1,5 @@
 /**
- * Zod схема для валидации параметров AddChecklistItemTool
+ * Zod схема для валидации параметров AddChecklistItemTool (batch-режим)
  */
 
 import { z } from 'zod';
@@ -7,13 +7,13 @@ import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
 import { BaseChecklistItemFieldsSchema } from '../base-checklist-item.schema.js';
 
 /**
- * Схема параметров для добавления элемента в чеклист
+ * Схема элемента чеклиста с индивидуальными параметрами
  *
  * Использует базовую схему с:
- * - text: обязательно (из базовой схемы)
+ * - issueId, text: обязательно
  * - checked, assignee, deadline: опционально (через .partial())
  */
-export const AddChecklistItemParamsSchema = z
+const ChecklistItemSchema = z
   .object({
     /**
      * Идентификатор или ключ задачи (обязательно)
@@ -23,16 +23,30 @@ export const AddChecklistItemParamsSchema = z
   .merge(BaseChecklistItemFieldsSchema.pick({ text: true }))
   .merge(
     BaseChecklistItemFieldsSchema.pick({ checked: true, assignee: true, deadline: true }).partial()
-  )
-  .merge(
-    z.object({
-      /**
-       * Массив полей для возврата в результате (обязательный)
-       * Примеры: ['id', 'text', 'checked'], ['id', 'text', 'assignee.login']
-       */
-      fields: FieldsSchema,
-    })
   );
+
+/**
+ * Схема параметров для добавления элементов в чеклисты (batch-режим)
+ *
+ * Паттерн POST операций: Input Pattern - индивидуальные параметры
+ * Каждая задача имеет свои параметры (text, checked, assignee, deadline)
+ */
+export const AddChecklistItemParamsSchema = z.object({
+  /**
+   * Массив элементов чеклиста с индивидуальными параметрами для каждой задачи
+   */
+  items: z
+    .array(ChecklistItemSchema)
+    .min(1, 'Массив items должен содержать минимум 1 элемент')
+    .describe('Array of checklist items to add to issues'),
+
+  /**
+   * Массив полей для возврата в результате (обязательный)
+   * Примеры: ['id', 'text', 'checked'], ['id', 'text', 'assignee.login']
+   * Применяется ко всем созданным элементам
+   */
+  fields: FieldsSchema,
+});
 
 /**
  * Вывод типа из схемы

@@ -298,11 +298,11 @@ export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
   {
     name: 'fr_yandex_tracker_add_checklist_item',
     category: ToolCategory.CHECKLISTS,
-    tags: ['checklist', 'add', 'create', 'write'],
+    tags: ['checklist', 'add', 'create', 'write', 'batch'],
     isHelper: false,
     nameTokens: ['fr', 'yandex', 'tracker', 'add', 'checklist', 'item'],
-    descriptionTokens: ['checklist', 'write'],
-    descriptionShort: '[Checklist/Write] Добавить элемент в чеклист',
+    descriptionTokens: ['checklist', 'write', 'batch'],
+    descriptionShort: '[Checklist/Write] Добавить элементы в чеклисты (batch)',
   },
   {
     name: 'fr_yandex_tracker_update_checklist_item',

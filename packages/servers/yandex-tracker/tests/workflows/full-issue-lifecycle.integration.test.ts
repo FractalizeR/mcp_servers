@@ -110,7 +110,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
     const attachmentData = JSON.parse(uploadResult.content[0]!.text);
     expect(attachmentData.success).toBe(true);
 
-    // 4. Создать чеклист
+    // 4. Создать чеклист (batch API)
     mockServer.mockAddChecklistItemSuccess(issueKey, {
       id: 'checklist-1',
       text: 'First checklist item',
@@ -120,8 +120,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
     const addChecklistResult = await client.callTool(
       buildToolName('add_checklist_item', MCP_TOOL_PREFIX),
       {
-        issueId: issueKey,
-        text: 'First checklist item',
+        items: [{ issueId: issueKey, text: 'First checklist item' }],
         fields: ['id', 'text', 'checked'],
       }
     );
@@ -248,8 +247,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       });
 
       const result = await client.callTool(buildToolName('add_checklist_item', MCP_TOOL_PREFIX), {
-        issueId: issueKey,
-        text: `Checklist item ${i}`,
+        items: [{ issueId: issueKey, text: `Checklist item ${i}` }],
         fields: ['id', 'text', 'checked'],
       });
       expect(result.isError).toBeFalsy();

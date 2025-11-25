@@ -73,6 +73,23 @@ export class ChecklistService {
   }
 
   /**
+   * Добавляет элементы в чеклисты нескольких задач параллельно
+   * @param items - массив элементов с индивидуальными параметрами
+   * @returns результаты batch-операции
+   */
+  async addChecklistItemMany(
+    items: Array<{
+      issueId: string;
+      text: string;
+      checked?: boolean | undefined;
+      assignee?: string | undefined;
+      deadline?: string | undefined;
+    }>
+  ): Promise<BatchResult<string, ChecklistItemWithUnknownFields>> {
+    return this.addChecklistItemOp.executeMany(items);
+  }
+
+  /**
    * Обновляет элемент чеклиста
    * @param issueId - идентификатор или ключ задачи
    * @param checklistItemId - идентификатор элемента чеклиста
