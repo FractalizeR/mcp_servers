@@ -75,7 +75,7 @@
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
     "@types/node": "^24.10.1",
-    "rimraf": "^6.1.0",
+    "rimraf": "^6.1.2",
     "tsc-alias": "^1.8.16",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
