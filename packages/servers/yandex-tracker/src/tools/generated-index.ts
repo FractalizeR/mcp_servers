@@ -226,11 +226,11 @@ export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
   {
     name: 'fr_yandex_tracker_edit_comment',
     category: ToolCategory.COMMENTS,
-    tags: ['comment', 'edit', 'update', 'write'],
+    tags: ['comment', 'edit', 'update', 'write', 'batch'],
     isHelper: false,
     nameTokens: ['fr', 'yandex', 'tracker', 'edit', 'comment'],
-    descriptionTokens: ['comments', 'write'],
-    descriptionShort: '[Comments/Write] Редактировать комментарий',
+    descriptionTokens: ['comments', 'write', 'batch'],
+    descriptionShort: '[Comments/Write] Редактировать комментарии (batch)',
   },
   {
     name: 'fr_yandex_tracker_delete_comment',

@@ -17,11 +17,11 @@ import { MCP_TOOL_PREFIX } from '#constants';
  */
 export const EDIT_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('edit_comment', MCP_TOOL_PREFIX),
-  description: '[Comments/Write] Редактировать комментарий',
+  description: '[Comments/Write] Редактировать комментарии (batch)',
   category: ToolCategory.COMMENTS,
   subcategory: 'write',
   priority: ToolPriority.HIGH,
-  tags: ['comment', 'edit', 'update', 'write'],
+  tags: ['comment', 'edit', 'update', 'write', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: true,
 } as const;

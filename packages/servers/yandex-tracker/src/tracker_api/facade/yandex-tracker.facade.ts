@@ -487,6 +487,17 @@ export class YandexTrackerFacade {
   }
 
   /**
+   * Редактирует несколько комментариев параллельно
+   * @param comments - массив комментариев для редактирования с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async editCommentsMany(
+    comments: Array<{ issueId: string; commentId: string; text: string }>
+  ): Promise<BatchResult<string, CommentWithUnknownFields>> {
+    return this.commentService.editCommentsMany(comments);
+  }
+
+  /**
    * Удаляет комментарий
    * @param issueId - идентификатор или ключ задачи
    * @param commentId - идентификатор комментария

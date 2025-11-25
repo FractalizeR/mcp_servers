@@ -1,13 +1,18 @@
 /**
- * MCP Tool для редактирования комментария
+ * MCP Tool для редактирования комментариев
  *
  * API Tool (прямой доступ к API):
- * - 1 tool = 1 API вызов (edit comment)
+ * - Batch-режим: редактирование комментариев из нескольких задач
  * - Минимальная бизнес-логика
  * - Валидация через Zod
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import {
+  BaseTool,
+  ResponseFieldFilter,
+  BatchResultProcessor,
+  ResultLogger,
+} from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -16,11 +21,13 @@ import { EditCommentParamsSchema } from '#tools/api/comments/edit/edit-comment.s
 import { EDIT_COMMENT_TOOL_METADATA } from './edit-comment.metadata.js';
 
 /**
- * Инструмент для редактирования комментария
+ * Инструмент для редактирования комментариев (batch-режим)
  *
  * Ответственность (SRP):
- * - Координация процесса редактирования комментария
+ * - Координация процесса редактирования комментариев из нескольких задач
  * - Делегирование валидации в BaseTool
+ * - Делегирование обработки результатов в BatchResultProcessor
+ * - Делегирование логирования в ResultLogger
  * - Форматирование итогового результата
  */
 export class EditCommentTool extends BaseTool<YandexTrackerFacade> {
@@ -42,40 +49,65 @@ export class EditCommentTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, commentId, text, fields } = validation.data;
+    const { comments, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      this.logger.info('Редактирование комментария', {
-        issueId,
-        commentId,
-        textLength: text.length,
-      });
+      ResultLogger.logOperationStart(
+        this.logger,
+        'Редактирование комментариев',
+        comments.length,
+        fields
+      );
 
-      // 3. API v3: редактирование комментария
-      const comment: CommentWithUnknownFields = await this.facade.editComment(issueId, commentId, {
-        text,
-      });
+      // 3. API v3: редактирование комментариев через batch-метод
+      const results = await this.facade.editCommentsMany(comments);
 
-      // 4. Фильтрация полей ответа
-      const filtered = ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fields);
+      // 4. Обработка результатов через BatchResultProcessor
+      const processedResults = BatchResultProcessor.process(
+        results,
+        (comment: CommentWithUnknownFields): Partial<CommentWithUnknownFields> =>
+          ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fields)
+      );
 
-      // 5. Логирование результата
-      this.logger.info('Комментарий успешно обновлён', {
-        issueId,
-        commentId,
-        version: comment.version,
-      });
+      // 5. Логирование результатов
+      ResultLogger.logBatchResults(
+        this.logger,
+        'Комментарии отредактированы',
+        {
+          totalRequested: comments.length,
+          successCount: processedResults.successful.length,
+          failedCount: processedResults.failed.length,
+          fieldsCount: fields.length,
+        },
+        processedResults
+      );
 
       return this.formatSuccess({
-        commentId: filtered.id,
-        comment: filtered,
-        issueId,
+        total: comments.length,
+        successful: processedResults.successful.map((item) => {
+          // Разбираем ключ "issueId:commentId"
+          const [issueId, commentId] = String(item.key).split(':');
+          return {
+            issueId,
+            commentId,
+            comment: item.data,
+          };
+        }),
+        failed: processedResults.failed.map((item) => {
+          // Разбираем ключ "issueId:commentId"
+          const [issueId, commentId] = String(item.key).split(':');
+          return {
+            issueId,
+            commentId,
+            error: item.error,
+          };
+        }),
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(
-        `Ошибка при редактировании комментария ${commentId} задачи ${issueId}`,
+        `Ошибка при редактировании комментариев (${comments.length} комментариев)`,
         error
       );
     }
