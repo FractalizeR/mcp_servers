@@ -16,8 +16,8 @@ export interface AddRowsDto {
   /** Данные строк (обязательно) */
   rows: Array<{
     row: unknown[];
-    pinned?: boolean;
-    color?: BGColor;
+    pinned?: boolean | undefined;
+    color?: BGColor | undefined;
   }>;
 }
 

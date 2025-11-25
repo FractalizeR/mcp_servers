@@ -10,7 +10,12 @@ import type { QueryParams } from '../../types.js';
 
 export class MockHttpClient implements IHttpClient {
   private responses: Map<string, unknown> = new Map();
-  private requestHistory: Array<{ method: string; path: string; data?: unknown; params?: QueryParams }> = [];
+  private requestHistory: Array<{
+    method: string;
+    path: string;
+    data?: unknown;
+    params?: QueryParams;
+  }> = [];
 
   /**
    * Установить мок-ответ для конкретного пути
@@ -26,7 +31,12 @@ export class MockHttpClient implements IHttpClient {
   /**
    * Получить историю запросов
    */
-  getRequestHistory(): Array<{ method: string; path: string; data?: unknown; params?: QueryParams }> {
+  getRequestHistory(): Array<{
+    method: string;
+    path: string;
+    data?: unknown;
+    params?: QueryParams;
+  }> {
     return [...this.requestHistory];
   }
 
@@ -80,7 +90,7 @@ export class MockHttpClient implements IHttpClient {
     return Promise.resolve(response as T);
   }
 
-  delete<T = unknown>(path: string): Promise<T> {
+  delete<T = unknown>(path: string, _data?: unknown): Promise<T> {
     this.requestHistory.push({ method: 'DELETE', path });
     const key = `DELETE:${path}`;
     const response = this.responses.get(key);

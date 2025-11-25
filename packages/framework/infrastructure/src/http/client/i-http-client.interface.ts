@@ -35,9 +35,10 @@ export interface IHttpClient {
   /**
    * Выполняет DELETE запрос
    * @param path - путь к ресурсу
+   * @param data - опциональные данные для отправки в body
    * @returns данные ответа
    */
-  delete<T = unknown>(path: string): Promise<T>;
+  delete<T = unknown>(path: string, data?: unknown): Promise<T>;
 
   /**
    * Получить Axios instance (для специальных операций)

@@ -29,6 +29,7 @@ export enum ToolCategory {
   // Wiki API операции
   PAGES = 'pages',
   GRIDS = 'grids',
+  RESOURCES = 'resources',
 
   // Системные инструменты
   SYSTEM = 'system',

@@ -129,11 +129,12 @@ export class AxiosHttpClient implements IHttpClient {
   /**
    * Выполняет DELETE запрос с retry логикой
    * @param path - путь к ресурсу
+   * @param data - опциональные данные для body
    * @returns данные ответа
    */
-  async delete<T = unknown>(path: string): Promise<T> {
+  async delete<T = unknown>(path: string, data?: unknown): Promise<T> {
     return this.retryHandler.executeWithRetry(async () => {
-      const response = await this.client.delete<T>(path);
+      const response = await this.client.delete<T>(path, { data });
       return response.data;
     });
   }

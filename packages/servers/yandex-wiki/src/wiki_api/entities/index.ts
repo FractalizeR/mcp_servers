@@ -14,6 +14,7 @@ export type {
   TextFormat,
   BGColor,
   GridColumn,
+  InputGridColumn,
   GridRow,
   SortConfig,
   GridStructure,

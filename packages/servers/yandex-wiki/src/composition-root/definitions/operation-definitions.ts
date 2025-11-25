@@ -1,4 +1,5 @@
 import {
+  // Page Operations
   GetPageOperation,
   GetPageByIdOperation,
   CreatePageOperation,
@@ -6,12 +7,28 @@ import {
   DeletePageOperation,
   ClonePageOperation,
   AppendContentOperation,
+  // Grid Operations
+  CreateGridOperation,
+  GetGridOperation,
+  UpdateGridOperation,
+  DeleteGridOperation,
+  AddRowsOperation,
+  RemoveRowsOperation,
+  AddColumnsOperation,
+  RemoveColumnsOperation,
+  UpdateCellsOperation,
+  MoveRowsOperation,
+  MoveColumnsOperation,
+  CloneGridOperation,
+  // Resource Operations
+  GetResourcesOperation,
 } from '#wiki_api/api_operations/index.js';
 
 /**
  * Все Operation классы для автоматической регистрации в DI
  */
 export const OPERATION_CLASSES = [
+  // Page Operations
   GetPageOperation,
   GetPageByIdOperation,
   CreatePageOperation,
@@ -19,4 +36,19 @@ export const OPERATION_CLASSES = [
   DeletePageOperation,
   ClonePageOperation,
   AppendContentOperation,
+  // Grid Operations
+  CreateGridOperation,
+  GetGridOperation,
+  UpdateGridOperation,
+  DeleteGridOperation,
+  AddRowsOperation,
+  RemoveRowsOperation,
+  AddColumnsOperation,
+  RemoveColumnsOperation,
+  UpdateCellsOperation,
+  MoveRowsOperation,
+  MoveColumnsOperation,
+  CloneGridOperation,
+  // Resource Operations
+  GetResourcesOperation,
 ] as const;

@@ -1,4 +1,4 @@
-import type { GridColumn } from '#wiki_api/entities/index.js';
+import type { InputGridColumn } from '#wiki_api/entities/index.js';
 
 /**
  * DTO для добавления колонок
@@ -11,7 +11,7 @@ export interface AddColumnsDto {
   position?: number;
 
   /** Колонки (обязательно) */
-  columns: Omit<GridColumn, 'id'>[];
+  columns: InputGridColumn[];
 }
 
 /**

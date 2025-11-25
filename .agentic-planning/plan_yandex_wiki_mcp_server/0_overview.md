@@ -99,13 +99,13 @@ Grids   Resources
 | 7.1 | `7.1_tests_parallel.md` | parallel | [x] |
 | 8.1 | `8.1_documentation_sequential.md` | sequential | [x] |
 
-### Фаза 2: Grids & Resources (Дополнительная) - НЕ НАЧАТА
+### Фаза 2: Grids & Resources (Дополнительная) - ЗАВЕРШЕНА
 
 | Этап | Файл | Тип | Статус |
 |------|------|-----|--------|
-| 9.1 | `9.1_grid_operations_parallel.md` | parallel | [ ] |
-| 9.2 | `9.2_grid_tools_parallel.md` | parallel | [ ] |
-| 10.1 | `10.1_resources_parallel.md` | parallel | [ ] |
+| 9.1 | `9.1_grid_operations_parallel.md` | parallel | [x] |
+| 9.2 | `9.2_grid_tools_parallel.md` | parallel | [x] |
+| 10.1 | `10.1_resources_parallel.md` | parallel | [x] |
 
 ## Зависимости от framework
 

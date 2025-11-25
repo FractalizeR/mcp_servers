@@ -36,7 +36,7 @@ export type BGColor =
   | 'ocean';
 
 /**
- * Колонка таблицы
+ * Колонка таблицы (response)
  */
 export interface GridColumn {
   readonly id?: string;
@@ -52,6 +52,24 @@ export interface GridColumn {
   readonly multiple?: boolean;
   readonly select_options?: string[];
   readonly description?: string;
+}
+
+/**
+ * Колонка таблицы для ввода (request) - поддерживает undefined для zod schemas
+ */
+export interface InputGridColumn {
+  readonly title: string;
+  readonly slug: string;
+  readonly type: ColumnType;
+  readonly required: boolean;
+  readonly color?: BGColor | undefined;
+  readonly width?: number | undefined;
+  readonly width_units?: '%' | 'px' | undefined;
+  readonly pinned?: 'left' | 'right' | undefined;
+  readonly format?: TextFormat | undefined;
+  readonly multiple?: boolean | undefined;
+  readonly select_options?: string[] | undefined;
+  readonly description?: string | undefined;
 }
 
 /**
