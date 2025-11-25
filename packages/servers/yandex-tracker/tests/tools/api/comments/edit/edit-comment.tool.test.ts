@@ -1,12 +1,11 @@
 /**
- * Unit тесты для EditCommentTool
+ * Unit тесты для EditCommentTool (batch-режим)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { EditCommentTool } from '#tools/api/comments/edit/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@mcp-framework/core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createEditedCommentFixture } from '#helpers/comment.fixture.js';
@@ -16,15 +15,9 @@ describe('EditCommentTool', () => {
   let mockLogger: Logger;
   let tool: EditCommentTool;
 
-  const mockEditedComment: CommentWithUnknownFields = createEditedCommentFixture({
-    id: '12345',
-    text: 'Updated comment text',
-    version: 2,
-  });
-
   beforeEach(() => {
     mockTrackerFacade = {
-      editComment: vi.fn(),
+      editCommentsMany: vi.fn(),
     } as unknown as YandexTrackerFacade;
 
     mockLogger = {
@@ -52,28 +45,23 @@ describe('EditCommentTool', () => {
     it('должен иметь корректное описание', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.description).toContain('Редактировать комментарий');
+      expect(definition.description).toContain('Редактировать комментарии');
+      expect(definition.description).toContain('batch');
     });
 
-    it('должен иметь корректную схему с обязательными полями', () => {
+    it('должен иметь корректную схему с массивом comments', () => {
       const definition = tool.getDefinition();
 
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId', 'commentId', 'text', 'fields']);
-      expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
-      expect(definition.inputSchema.properties?.['commentId']).toBeDefined();
-      expect(definition.inputSchema.properties?.['text']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['comments', 'fields']);
+      expect(definition.inputSchema.properties?.['comments']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
   describe('Validation', () => {
-    it('должен требовать параметр issueId', async () => {
-      const result = await tool.execute({
-        commentId: '12345',
-        text: 'Updated',
-        fields: ['id', 'text'],
-      });
+    it('должен требовать массив comments', async () => {
+      const result = await tool.execute({ fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -84,12 +72,8 @@ describe('EditCommentTool', () => {
       expect(parsed.message).toContain('валидации');
     });
 
-    it('должен требовать параметр commentId', async () => {
-      const result = await tool.execute({
-        issueId: 'TEST-123',
-        text: 'Updated',
-        fields: ['id', 'text'],
-      });
+    it('должен отклонить пустой массив comments', async () => {
+      const result = await tool.execute({ comments: [], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -97,58 +81,11 @@ describe('EditCommentTool', () => {
         message: string;
       };
       expect(parsed.success).toBe(false);
-      expect(parsed.message).toContain('валидации');
-    });
-
-    it('должен требовать параметр text', async () => {
-      const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
-        fields: ['id', 'text'],
-      });
-
-      expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        success: boolean;
-        message: string;
-      };
-      expect(parsed.success).toBe(false);
-      expect(parsed.message).toContain('валидации');
-    });
-
-    it('должен требовать параметр fields', async () => {
-      const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
-        text: 'Updated',
-      });
-
-      expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        success: boolean;
-        message: string;
-      };
-      expect(parsed.success).toBe(false);
-      expect(parsed.message).toContain('валидации');
-    });
-
-    it('должен отклонить пустой issueId', async () => {
-      const result = await tool.execute({
-        issueId: '',
-        commentId: '12345',
-        text: 'Updated',
-        fields: ['id', 'text'],
-      });
-
-      expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
     });
 
     it('должен отклонить пустой commentId', async () => {
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '',
-        text: 'Updated',
+        comments: [{ issueId: 'TEST-123', commentId: '', text: 'Updated' }],
         fields: ['id', 'text'],
       });
 
@@ -158,9 +95,7 @@ describe('EditCommentTool', () => {
 
     it('должен отклонить пустой text', async () => {
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
-        text: '',
+        comments: [{ issueId: 'TEST-123', commentId: '12345', text: '' }],
         fields: ['id', 'text'],
       });
 
@@ -169,12 +104,16 @@ describe('EditCommentTool', () => {
     });
 
     it('должен принять корректные параметры', async () => {
-      vi.mocked(mockTrackerFacade.editComment).mockResolvedValue(mockEditedComment);
+      vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123:12345',
+          value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
+        },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
-        text: 'Updated comment',
+        comments: [{ issueId: 'TEST-123', commentId: '12345', text: 'Updated comment' }],
         fields: ['id', 'text'],
       });
 
@@ -183,28 +122,44 @@ describe('EditCommentTool', () => {
   });
 
   describe('Operation calls', () => {
-    it('должен вызвать editComment с корректными параметрами', async () => {
-      vi.mocked(mockTrackerFacade.editComment).mockResolvedValue(mockEditedComment);
+    it('должен вызвать editCommentsMany с корректными параметрами', async () => {
+      vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123:12345',
+          value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
+        },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
-        text: 'Updated comment text',
+        comments: [{ issueId: 'TEST-123', commentId: '12345', text: 'Updated comment text' }],
         fields: ['id', 'text'],
       });
 
-      expect(mockTrackerFacade.editComment).toHaveBeenCalledWith('TEST-123', '12345', {
-        text: 'Updated comment text',
-      });
+      expect(mockTrackerFacade.editCommentsMany).toHaveBeenCalledWith([
+        { issueId: 'TEST-123', commentId: '12345', text: 'Updated comment text' },
+      ]);
     });
 
-    it('должен вернуть обновленный комментарий', async () => {
-      vi.mocked(mockTrackerFacade.editComment).mockResolvedValue(mockEditedComment);
+    it('должен вернуть успешный результат для batch операции', async () => {
+      vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123:12345',
+          value: createEditedCommentFixture({ id: '12345', text: 'Updated 1' }),
+        },
+        {
+          status: 'fulfilled',
+          key: 'TEST-456:67890',
+          value: createEditedCommentFixture({ id: '67890', text: 'Updated 2' }),
+        },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
-        text: 'Updated comment text',
+        comments: [
+          { issueId: 'TEST-123', commentId: '12345', text: 'Updated 1' },
+          { issueId: 'TEST-456', commentId: '67890', text: 'Updated 2' },
+        ],
         fields: ['id', 'text'],
       });
 
@@ -212,111 +167,150 @@ describe('EditCommentTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          commentId: string;
-          comment: CommentWithUnknownFields;
-          issueId: string;
-          fieldsReturned: string[];
+          total: number;
+          successful: Array<{ issueId: string; commentId: string; comment: unknown }>;
+          failed: Array<{ issueId: string; commentId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.commentId).toBe('12345');
-      expect(parsed.data.issueId).toBe('TEST-123');
-      expect(parsed.data.fieldsReturned).toEqual(['id', 'text']);
-      expect(parsed.data.comment).toMatchObject({
-        id: '12345',
-        text: 'Updated comment text',
-      });
+      expect(parsed.data.total).toBe(2);
+      expect(parsed.data.successful).toHaveLength(2);
+      expect(parsed.data.failed).toHaveLength(0);
     });
   });
 
   describe('Logging', () => {
     it('должен логировать начало редактирования', async () => {
-      vi.mocked(mockTrackerFacade.editComment).mockResolvedValue(mockEditedComment);
+      vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123:12345',
+          value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
+        },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
-        text: 'Updated comment text',
+        comments: [{ issueId: 'TEST-123', commentId: '12345', text: 'Updated comment text' }],
         fields: ['id', 'text'],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Редактирование комментария',
-        expect.objectContaining({
-          issueId: 'TEST-123',
-          commentId: '12345',
-          textLength: 20,
-        })
+        expect.stringContaining('Редактирование комментариев'),
+        expect.any(Object)
       );
     });
 
-    it('должен логировать успешное обновление', async () => {
-      vi.mocked(mockTrackerFacade.editComment).mockResolvedValue(mockEditedComment);
+    it('должен логировать результаты', async () => {
+      vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123:12345',
+          value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
+        },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
-        text: 'Updated comment text',
+        comments: [{ issueId: 'TEST-123', commentId: '12345', text: 'Updated comment text' }],
         fields: ['id', 'text'],
       });
 
+      expect(mockLogger.info).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Комментарий успешно обновлён',
-        expect.objectContaining({
-          issueId: 'TEST-123',
-          commentId: '12345',
-          version: 2,
-        })
+        expect.stringContaining('Редактирование комментариев'),
+        expect.any(Object)
       );
     });
   });
 
   describe('Error handling', () => {
-    it('должен обработать ошибки от operation', async () => {
-      const error = new Error('API Error');
-      vi.mocked(mockTrackerFacade.editComment).mockRejectedValue(error);
+    it('должен обработать частичные ошибки в batch', async () => {
+      vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123:12345',
+          value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
+        },
+        { status: 'rejected', key: 'TEST-456:67890', reason: new Error('Comment not found') },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
-        text: 'Updated comment',
+        comments: [
+          { issueId: 'TEST-123', commentId: '12345', text: 'Updated 1' },
+          { issueId: 'TEST-456', commentId: '67890', text: 'Updated 2' },
+        ],
+        fields: ['id', 'text'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          total: number;
+          successful: Array<{ issueId: string; commentId: string; comment: unknown }>;
+          failed: Array<{ issueId: string; commentId: string; error: string }>;
+        };
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(parsed.data.failed[0].issueId).toBe('TEST-456');
+      expect(parsed.data.failed[0].commentId).toBe('67890');
+      expect(parsed.data.failed[0].error).toContain('Comment not found');
+    });
+
+    it('должен обработать полную ошибку batch', async () => {
+      const error = new Error('API Error');
+      vi.mocked(mockTrackerFacade.editCommentsMany).mockRejectedValue(error);
+
+      const result = await tool.execute({
+        comments: [{ issueId: 'TEST-123', commentId: '12345', text: 'Updated' }],
         fields: ['id', 'text'],
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при редактировании комментария');
-      expect(result.content[0]?.text).toContain('12345');
-      expect(result.content[0]?.text).toContain('TEST-123');
+      expect(result.content[0]?.text).toContain('Ошибка при редактировании комментариев');
     });
 
     it('должен обработать ошибку несуществующего комментария (404)', async () => {
-      const notFoundError = new Error('Comment not found');
-      vi.mocked(mockTrackerFacade.editComment).mockRejectedValue(notFoundError);
+      vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
+        { status: 'rejected', key: 'TEST-123:NONEXISTENT', reason: new Error('Comment not found') },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: 'NONEXISTENT',
-        text: 'Updated comment',
+        comments: [{ issueId: 'TEST-123', commentId: 'NONEXISTENT', text: 'Updated' }],
         fields: ['id', 'text'],
       });
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при редактировании комментария');
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          failed: Array<{ issueId: string; commentId: string; error: string }>;
+        };
+      };
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(parsed.data.failed[0].error).toContain('Comment not found');
     });
 
     it('должен обработать ошибку доступа (403)', async () => {
-      const forbiddenError = new Error('Access denied');
-      vi.mocked(mockTrackerFacade.editComment).mockRejectedValue(forbiddenError);
+      vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
+        { status: 'rejected', key: 'PRIVATE-123:12345', reason: new Error('Access denied') },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'PRIVATE-123',
-        commentId: '12345',
-        text: 'Updated comment',
+        comments: [{ issueId: 'PRIVATE-123', commentId: '12345', text: 'Updated' }],
         fields: ['id', 'text'],
       });
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при редактировании комментария');
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          failed: Array<{ issueId: string; commentId: string; error: string }>;
+        };
+      };
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(parsed.data.failed[0].error).toContain('Access denied');
     });
   });
 });

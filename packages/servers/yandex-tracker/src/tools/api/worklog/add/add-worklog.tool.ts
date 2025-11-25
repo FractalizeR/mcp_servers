@@ -1,14 +1,19 @@
 /**
- * MCP Tool для добавления записи времени к задаче
+ * MCP Tool для добавления записей времени к задачам
  *
  * API Tool (прямой доступ к API):
- * - 1 tool = 1 API вызов (add worklog)
+ * - Batch-режим: добавление записей времени к нескольким задачам
  * - Минимальная бизнес-логика
  * - Валидация через Zod
  * - Автоматическая конвертация duration в ISO 8601
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import {
+  BaseTool,
+  ResponseFieldFilter,
+  BatchResultProcessor,
+  ResultLogger,
+} from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -17,11 +22,13 @@ import { AddWorklogParamsSchema } from '#tools/api/worklog/add/add-worklog.schem
 import { ADD_WORKLOG_TOOL_METADATA } from './add-worklog.metadata.js';
 
 /**
- * Инструмент для добавления записи времени к задаче
+ * Инструмент для добавления записей времени к задачам (batch-режим)
  *
  * Ответственность (SRP):
- * - Координация процесса добавления записи времени
+ * - Координация процесса добавления записей времени к нескольким задачам
  * - Делегирование валидации в BaseTool
+ * - Делегирование обработки результатов в BatchResultProcessor
+ * - Делегирование логирования в ResultLogger
  * - Форматирование итогового результата
  */
 export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
@@ -44,41 +51,60 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, start, duration, comment, fields } = validation.data;
+    const { worklogs, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      this.logger.info('Добавление записи времени к задаче', {
-        issueId,
-        start,
-        duration,
-        hasComment: !!comment,
-      });
+      ResultLogger.logOperationStart(
+        this.logger,
+        'Добавление записей времени',
+        worklogs.length,
+        fields
+      );
 
-      // 3. API v2: добавление записи времени
-      // DurationUtil автоматически конвертирует human-readable формат в ISO 8601
-      const worklog = await this.facade.addWorklog(issueId, {
-        start,
-        duration,
-        comment,
-      });
+      // 3. API v2: добавление записей времени через batch-метод
+      const results = await this.facade.addWorklogsMany(worklogs);
 
-      // 4. Фильтрация полей ответа
-      const filteredWorklog = ResponseFieldFilter.filter<WorklogWithUnknownFields>(worklog, fields);
+      // 4. Обработка результатов через BatchResultProcessor
+      const processedResults = BatchResultProcessor.process(
+        results,
+        (worklog: WorklogWithUnknownFields): Partial<WorklogWithUnknownFields> =>
+          ResponseFieldFilter.filter<WorklogWithUnknownFields>(worklog, fields)
+      );
 
-      // 5. Логирование результата
-      this.logger.info('Запись времени успешно добавлена', {
-        issueId,
-        worklogId: worklog.id,
-        duration: worklog.duration,
-      });
+      // 5. Логирование результатов
+      ResultLogger.logBatchResults(
+        this.logger,
+        'Записи времени добавлены',
+        {
+          totalRequested: worklogs.length,
+          successCount: processedResults.successful.length,
+          failedCount: processedResults.failed.length,
+          fieldsCount: fields.length,
+        },
+        processedResults
+      );
 
       return this.formatSuccess({
-        data: filteredWorklog,
+        total: worklogs.length,
+        successful: processedResults.successful.length,
+        failed: processedResults.failed.length,
+        worklogs: processedResults.successful.map((item) => ({
+          issueId: item.key,
+          worklogId: item.data.id,
+          worklog: item.data,
+        })),
+        errors: processedResults.failed.map((item) => ({
+          issueId: item.key,
+          error: item.error,
+        })),
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при добавлении записи времени к задаче ${issueId}`, error);
+      return this.formatError(
+        `Ошибка при добавлении записей времени (${worklogs.length} задач)`,
+        error
+      );
     }
   }
 }

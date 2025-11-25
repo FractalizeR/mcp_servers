@@ -487,6 +487,17 @@ export class YandexTrackerFacade {
   }
 
   /**
+   * Редактирует несколько комментариев параллельно
+   * @param comments - массив комментариев для редактирования с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async editCommentsMany(
+    comments: Array<{ issueId: string; commentId: string; text: string }>
+  ): Promise<BatchResult<string, CommentWithUnknownFields>> {
+    return this.commentService.editCommentsMany(comments);
+  }
+
+  /**
    * Удаляет комментарий
    * @param issueId - идентификатор или ключ задачи
    * @param commentId - идентификатор комментария
@@ -494,6 +505,17 @@ export class YandexTrackerFacade {
    */
   async deleteComment(issueId: string, commentId: string): Promise<void> {
     return this.commentService.deleteComment(issueId, commentId);
+  }
+
+  /**
+   * Удаляет комментарии из нескольких задач параллельно
+   * @param comments - массив комментариев для удаления с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async deleteCommentsMany(
+    comments: Array<{ issueId: string; commentId: string }>
+  ): Promise<BatchResult<string, void>> {
+    return this.commentService.deleteCommentsMany(comments);
   }
 
   // === Checklist Methods ===
@@ -508,6 +530,17 @@ export class YandexTrackerFacade {
   }
 
   /**
+   * Получает чеклисты для нескольких задач параллельно
+   * @param issueIds - массив ключей или ID задач
+   * @returns результаты в формате BatchResult
+   */
+  async getChecklistMany(
+    issueIds: string[]
+  ): Promise<BatchResult<string, ChecklistItemWithUnknownFields[]>> {
+    return this.checklistService.getChecklistMany(issueIds);
+  }
+
+  /**
    * Добавляет элемент в чеклист задачи
    * @param issueId - идентификатор или ключ задачи
    * @param input - данные элемента
@@ -518,6 +551,23 @@ export class YandexTrackerFacade {
     input: AddChecklistItemInput
   ): Promise<ChecklistItemWithUnknownFields> {
     return this.checklistService.addChecklistItem(issueId, input);
+  }
+
+  /**
+   * Добавляет элементы в чеклисты нескольких задач параллельно
+   * @param items - массив элементов с индивидуальными параметрами
+   * @returns результаты batch-операции
+   */
+  async addChecklistItemMany(
+    items: Array<{
+      issueId: string;
+      text: string;
+      checked?: boolean | undefined;
+      assignee?: string | undefined;
+      deadline?: string | undefined;
+    }>
+  ): Promise<BatchResult<string, ChecklistItemWithUnknownFields>> {
+    return this.checklistService.addChecklistItemMany(items);
   }
 
   /**
@@ -578,6 +628,22 @@ export class YandexTrackerFacade {
   }
 
   /**
+   * Добавляет записи времени к нескольким задачам параллельно
+   * @param worklogs - массив записей времени с индивидуальными параметрами
+   * @returns результаты в формате BatchResult
+   */
+  async addWorklogsMany(
+    worklogs: Array<{
+      issueId: string;
+      start: string;
+      duration: string;
+      comment?: string | undefined;
+    }>
+  ): Promise<BatchResult<string, WorklogWithUnknownFields>> {
+    return this.worklogService.addWorklogsMany(worklogs);
+  }
+
+  /**
    * Обновляет запись времени
    * @param issueId - идентификатор или ключ задачи
    * @param worklogId - идентификатор записи времени
@@ -611,6 +677,17 @@ export class YandexTrackerFacade {
    */
   async getAttachments(issueId: string): Promise<AttachmentWithUnknownFields[]> {
     return this.issueAttachmentService.getAttachments(issueId);
+  }
+
+  /**
+   * Получает списки прикрепленных файлов для нескольких задач параллельно
+   * @param issueIds - массив ключей или ID задач
+   * @returns результаты в формате BatchResult
+   */
+  async getAttachmentsMany(
+    issueIds: string[]
+  ): Promise<BatchResult<string, AttachmentWithUnknownFields[]>> {
+    return this.issueAttachmentService.getAttachmentsMany(issueIds);
   }
 
   /**

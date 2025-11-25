@@ -7,6 +7,7 @@ import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-ht
 import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
 import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { ServerConfig } from '#config';
 import { GetAttachmentsOperation } from '#tracker_api/api_operations/attachment/get-attachments.operation.js';
 import {
   createAttachmentFixture,
@@ -18,6 +19,7 @@ describe('GetAttachmentsOperation', () => {
   let mockHttpClient: IHttpClient;
   let mockCacheManager: CacheManager;
   let mockLogger: Logger;
+  let mockConfig: ServerConfig;
 
   beforeEach(() => {
     mockHttpClient = {
@@ -44,7 +46,17 @@ describe('GetAttachmentsOperation', () => {
       debug: vi.fn(),
     } as unknown as Logger;
 
-    operation = new GetAttachmentsOperation(mockHttpClient, mockCacheManager, mockLogger);
+    mockConfig = {
+      maxBatchSize: 100,
+      maxConcurrentRequests: 5,
+    } as ServerConfig;
+
+    operation = new GetAttachmentsOperation(
+      mockHttpClient,
+      mockCacheManager,
+      mockLogger,
+      mockConfig
+    );
   });
 
   describe('execute', () => {
@@ -155,6 +167,78 @@ describe('GetAttachmentsOperation', () => {
       // Act & Assert
       await expect(operation.execute(issueId)).rejects.toThrow('Issue not found');
       expect(mockHttpClient.get).toHaveBeenCalledWith(`/v2/issues/${issueId}/attachments`);
+    });
+  });
+
+  describe('executeMany', () => {
+    it('должна получить файлы нескольких задач параллельно', async () => {
+      const issueIds = ['TEST-1', 'TEST-2'];
+      const attachments1 = createAttachmentListFixture(2);
+      const attachments2 = createAttachmentListFixture(3);
+
+      vi.mocked(mockHttpClient.get)
+        .mockResolvedValueOnce(attachments1)
+        .mockResolvedValueOnce(attachments2);
+
+      const result = await operation.executeMany(issueIds);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].status).toBe('fulfilled');
+      expect(result[0].key).toBe('TEST-1');
+      expect(result[1].status).toBe('fulfilled');
+      expect(result[1].key).toBe('TEST-2');
+    });
+
+    it('должна обработать частичные ошибки при получении файлов', async () => {
+      const issueIds = ['TEST-1', 'TEST-2'];
+      const attachments1 = createAttachmentListFixture(2);
+
+      vi.mocked(mockHttpClient.get)
+        .mockResolvedValueOnce(attachments1)
+        .mockRejectedValueOnce(new Error('Issue not found'));
+
+      const result = await operation.executeMany(issueIds);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].status).toBe('fulfilled');
+      expect(result[0].key).toBe('TEST-1');
+      expect(result[1].status).toBe('rejected');
+      expect(result[1].key).toBe('TEST-2');
+      if (result[1].status === 'rejected') {
+        expect(result[1].reason.message).toBe('Issue not found');
+      }
+    });
+
+    it('должна вернуть пустой результат для пустого массива issueIds', async () => {
+      const result = await operation.executeMany([]);
+
+      expect(result).toEqual([]);
+      expect(mockHttpClient.get).not.toHaveBeenCalled();
+    });
+
+    it('должна логировать batch операцию', async () => {
+      const issueIds = ['TEST-1', 'TEST-2'];
+      const attachments = createAttachmentListFixture(2);
+
+      vi.mocked(mockHttpClient.get).mockResolvedValue(attachments);
+
+      await operation.executeMany(issueIds);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Получение файлов для 2 задач параллельно: TEST-1, TEST-2'
+      );
+    });
+
+    it('должна вызвать корректные endpoints для каждой задачи', async () => {
+      const issueIds = ['TEST-1', 'TEST-2'];
+      const attachments = createAttachmentListFixture(2);
+
+      vi.mocked(mockHttpClient.get).mockResolvedValue(attachments);
+
+      await operation.executeMany(issueIds);
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/issues/TEST-1/attachments');
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/issues/TEST-2/attachments');
     });
   });
 });

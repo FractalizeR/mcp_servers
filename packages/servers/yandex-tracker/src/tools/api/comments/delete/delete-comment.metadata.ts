@@ -17,11 +17,11 @@ import { MCP_TOOL_PREFIX } from '#constants';
  */
 export const DELETE_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_comment', MCP_TOOL_PREFIX),
-  description: '[Comments/Write] Удалить комментарий',
+  description: '[Comments/Write] Удалить комментарии (batch)',
   category: ToolCategory.COMMENTS,
   subcategory: 'write',
   priority: ToolPriority.HIGH,
-  tags: ['comment', 'delete', 'remove', 'write'],
+  tags: ['comment', 'delete', 'remove', 'write', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: true,
 } as const;

@@ -25,6 +25,7 @@ import { UploadAttachmentOperation } from '#tracker_api/api_operations/attachmen
 import { DownloadAttachmentOperation } from '#tracker_api/api_operations/attachment/download-attachment.operation.js';
 import { DeleteAttachmentOperation } from '#tracker_api/api_operations/attachment/delete-attachment.operation.js';
 import { GetThumbnailOperation } from '#tracker_api/api_operations/attachment/get-thumbnail.operation.js';
+import type { BatchResult } from '@mcp-framework/infrastructure';
 import type {
   UploadAttachmentInput,
   DownloadAttachmentInput,
@@ -54,6 +55,17 @@ export class IssueAttachmentService {
    */
   async getAttachments(issueId: string): Promise<AttachmentWithUnknownFields[]> {
     return this.getAttachmentsOp.execute(issueId);
+  }
+
+  /**
+   * Получает списки прикрепленных файлов для нескольких задач параллельно
+   * @param issueIds - массив ключей или ID задач
+   * @returns результаты batch-операции
+   */
+  async getAttachmentsMany(
+    issueIds: string[]
+  ): Promise<BatchResult<string, AttachmentWithUnknownFields[]>> {
+    return this.getAttachmentsOp.executeMany(issueIds);
   }
 
   /**

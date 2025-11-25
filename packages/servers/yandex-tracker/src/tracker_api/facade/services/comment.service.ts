@@ -102,6 +102,17 @@ export class CommentService {
   }
 
   /**
+   * Редактирует несколько комментариев параллельно
+   * @param comments - массив комментариев для редактирования с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async editCommentsMany(
+    comments: Array<{ issueId: string; commentId: string; text: string }>
+  ): Promise<BatchResult<string, CommentWithUnknownFields>> {
+    return this.editCommentOp.executeMany(comments);
+  }
+
+  /**
    * Удаляет комментарий
    * @param issueId - идентификатор или ключ задачи
    * @param commentId - идентификатор комментария
@@ -109,5 +120,16 @@ export class CommentService {
    */
   async deleteComment(issueId: string, commentId: string): Promise<void> {
     return this.deleteCommentOp.execute(issueId, commentId);
+  }
+
+  /**
+   * Удаляет комментарии из нескольких задач параллельно
+   * @param comments - массив комментариев для удаления с индивидуальными параметрами
+   * @returns массив результатов в формате BatchResult
+   */
+  async deleteCommentsMany(
+    comments: Array<{ issueId: string; commentId: string }>
+  ): Promise<BatchResult<string, void>> {
+    return this.deleteCommentOp.executeMany(comments);
   }
 }

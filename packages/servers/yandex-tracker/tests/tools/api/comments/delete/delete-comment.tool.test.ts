@@ -1,5 +1,5 @@
 /**
- * Unit тесты для DeleteCommentTool
+ * Unit тесты для DeleteCommentTool (batch-режим)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -16,7 +16,7 @@ describe('DeleteCommentTool', () => {
 
   beforeEach(() => {
     mockTrackerFacade = {
-      deleteComment: vi.fn(),
+      deleteCommentsMany: vi.fn(),
     } as unknown as YandexTrackerFacade;
 
     mockLogger = {
@@ -44,22 +44,22 @@ describe('DeleteCommentTool', () => {
     it('должен иметь корректное описание', () => {
       const definition = tool.getDefinition();
 
-      expect(definition.description).toContain('Удалить комментарий');
+      expect(definition.description).toContain('Удалить комментарии');
+      expect(definition.description).toContain('batch');
     });
 
-    it('должен иметь корректную схему с обязательными полями', () => {
+    it('должен иметь корректную схему с массивом comments', () => {
       const definition = tool.getDefinition();
 
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueId', 'commentId']);
-      expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
-      expect(definition.inputSchema.properties?.['commentId']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['comments']);
+      expect(definition.inputSchema.properties?.['comments']).toBeDefined();
     });
   });
 
   describe('Validation', () => {
-    it('должен требовать параметр issueId', async () => {
-      const result = await tool.execute({ commentId: '12345' });
+    it('должен требовать массив comments', async () => {
+      const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -70,8 +70,8 @@ describe('DeleteCommentTool', () => {
       expect(parsed.message).toContain('валидации');
     });
 
-    it('должен требовать параметр commentId', async () => {
-      const result = await tool.execute({ issueId: 'TEST-123' });
+    it('должен отклонить пустой массив comments', async () => {
+      const result = await tool.execute({ comments: [] });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -79,23 +79,11 @@ describe('DeleteCommentTool', () => {
         message: string;
       };
       expect(parsed.success).toBe(false);
-      expect(parsed.message).toContain('валидации');
-    });
-
-    it('должен отклонить пустой issueId', async () => {
-      const result = await tool.execute({
-        issueId: '',
-        commentId: '12345',
-      });
-
-      expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
     });
 
     it('должен отклонить пустой commentId', async () => {
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '',
+        comments: [{ issueId: 'TEST-123', commentId: '' }],
       });
 
       expect(result.isError).toBe(true);
@@ -103,11 +91,12 @@ describe('DeleteCommentTool', () => {
     });
 
     it('должен принять корректные параметры', async () => {
-      vi.mocked(mockTrackerFacade.deleteComment).mockResolvedValue(undefined);
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
+        comments: [{ issueId: 'TEST-123', commentId: '12345' }],
       });
 
       expect(result.isError).toBeUndefined();
@@ -115,133 +104,189 @@ describe('DeleteCommentTool', () => {
   });
 
   describe('Operation calls', () => {
-    it('должен вызвать deleteComment с корректными параметрами', async () => {
-      vi.mocked(mockTrackerFacade.deleteComment).mockResolvedValue(undefined);
+    it('должен вызвать deleteCommentsMany с корректными параметрами', async () => {
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
+        comments: [{ issueId: 'TEST-123', commentId: '12345' }],
       });
 
-      expect(mockTrackerFacade.deleteComment).toHaveBeenCalledWith('TEST-123', '12345');
+      expect(mockTrackerFacade.deleteCommentsMany).toHaveBeenCalledWith([
+        { issueId: 'TEST-123', commentId: '12345' },
+      ]);
     });
 
-    it('должен вернуть успешный результат', async () => {
-      vi.mocked(mockTrackerFacade.deleteComment).mockResolvedValue(undefined);
+    it('должен вернуть успешный результат для batch операции', async () => {
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+        { status: 'fulfilled', key: 'TEST-456:67890', value: undefined },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
+        comments: [
+          { issueId: 'TEST-123', commentId: '12345' },
+          { issueId: 'TEST-456', commentId: '67890' },
+        ],
       });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          success: boolean;
-          commentId: string;
-          issueId: string;
-          message: string;
+          total: number;
+          successful: Array<{ issueId: string; commentId: string; success: boolean }>;
+          failed: Array<{ issueId: string; commentId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.success).toBe(true);
-      expect(parsed.data.commentId).toBe('12345');
-      expect(parsed.data.issueId).toBe('TEST-123');
-      expect(parsed.data.message).toContain('Comment 12345 deleted');
-      expect(parsed.data.message).toContain('TEST-123');
+      expect(parsed.data.total).toBe(2);
+      expect(parsed.data.successful).toHaveLength(2);
+      expect(parsed.data.failed).toHaveLength(0);
     });
   });
 
   describe('Logging', () => {
     it('должен логировать начало удаления', async () => {
-      vi.mocked(mockTrackerFacade.deleteComment).mockResolvedValue(undefined);
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
+        comments: [{ issueId: 'TEST-123', commentId: '12345' }],
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Удаление комментария',
-        expect.objectContaining({
-          issueId: 'TEST-123',
-          commentId: '12345',
-        })
+        expect.stringContaining('Удаление комментариев'),
+        expect.any(Object)
       );
     });
 
-    it('должен логировать успешное удаление', async () => {
-      vi.mocked(mockTrackerFacade.deleteComment).mockResolvedValue(undefined);
+    it('должен логировать результаты', async () => {
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+      ]);
 
       await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
+        comments: [{ issueId: 'TEST-123', commentId: '12345' }],
       });
 
+      // ResultLogger.logBatchResults вызывает info с сообщением о результатах
+      expect(mockLogger.info).toHaveBeenCalled();
+      // Первый вызов - logOperationStart с "Удаление комментариев: N"
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Комментарий успешно удалён',
-        expect.objectContaining({
-          issueId: 'TEST-123',
-          commentId: '12345',
-        })
+        expect.stringContaining('Удаление комментариев'),
+        expect.any(Object)
       );
     });
   });
 
   describe('Error handling', () => {
-    it('должен обработать ошибки от operation', async () => {
-      const error = new Error('API Error');
-      vi.mocked(mockTrackerFacade.deleteComment).mockRejectedValue(error);
+    it('должен обработать частичные ошибки в batch', async () => {
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+        { status: 'rejected', key: 'TEST-456:67890', reason: new Error('Comment not found') },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
+        comments: [
+          { issueId: 'TEST-123', commentId: '12345' },
+          { issueId: 'TEST-456', commentId: '67890' },
+        ],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          total: number;
+          successful: Array<{ issueId: string; commentId: string; success: boolean }>;
+          failed: Array<{ issueId: string; commentId: string; error: string }>;
+        };
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(parsed.data.failed[0].issueId).toBe('TEST-456');
+      expect(parsed.data.failed[0].commentId).toBe('67890');
+      expect(parsed.data.failed[0].error).toContain('Comment not found');
+    });
+
+    it('должен обработать полную ошибку batch', async () => {
+      const error = new Error('API Error');
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockRejectedValue(error);
+
+      const result = await tool.execute({
+        comments: [{ issueId: 'TEST-123', commentId: '12345' }],
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при удалении комментария');
-      expect(result.content[0]?.text).toContain('12345');
-      expect(result.content[0]?.text).toContain('TEST-123');
+      expect(result.content[0]?.text).toContain('Ошибка при удалении комментариев');
     });
 
     it('должен обработать ошибку несуществующего комментария (404)', async () => {
-      const notFoundError = new Error('Comment not found');
-      vi.mocked(mockTrackerFacade.deleteComment).mockRejectedValue(notFoundError);
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
+        { status: 'rejected', key: 'TEST-123:NONEXISTENT', reason: new Error('Comment not found') },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: 'NONEXISTENT',
+        comments: [{ issueId: 'TEST-123', commentId: 'NONEXISTENT' }],
       });
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при удалении комментария');
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          failed: Array<{ issueId: string; commentId: string; error: string }>;
+        };
+      };
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(parsed.data.failed[0].error).toContain('Comment not found');
     });
 
     it('должен обработать ошибку доступа (403)', async () => {
-      const forbiddenError = new Error('Access denied');
-      vi.mocked(mockTrackerFacade.deleteComment).mockRejectedValue(forbiddenError);
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
+        { status: 'rejected', key: 'PRIVATE-123:12345', reason: new Error('Access denied') },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'PRIVATE-123',
-        commentId: '12345',
+        comments: [{ issueId: 'PRIVATE-123', commentId: '12345' }],
       });
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при удалении комментария');
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          failed: Array<{ issueId: string; commentId: string; error: string }>;
+        };
+      };
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(parsed.data.failed[0].error).toContain('Access denied');
     });
 
     it('должен обработать ошибку попытки удалить чужой комментарий', async () => {
-      const forbiddenError = new Error('Cannot delete comment of another user');
-      vi.mocked(mockTrackerFacade.deleteComment).mockRejectedValue(forbiddenError);
+      vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
+        {
+          status: 'rejected',
+          key: 'TEST-123:12345',
+          reason: new Error('Cannot delete comment of another user'),
+        },
+      ]);
 
       const result = await tool.execute({
-        issueId: 'TEST-123',
-        commentId: '12345',
+        comments: [{ issueId: 'TEST-123', commentId: '12345' }],
       });
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при удалении комментария');
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          failed: Array<{ issueId: string; commentId: string; error: string }>;
+        };
+      };
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(parsed.data.failed[0].error).toContain('Cannot delete comment of another user');
     });
   });
 });

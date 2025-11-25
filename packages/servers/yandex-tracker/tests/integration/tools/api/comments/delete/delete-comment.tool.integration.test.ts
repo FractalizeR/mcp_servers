@@ -18,7 +18,7 @@ describe('delete-comment integration tests', () => {
     mockServer.cleanup();
   });
 
-  it('должен удалить комментарий', async () => {
+  it('должен удалить комментарий (batch)', async () => {
     // Arrange
     const issueKey = 'TEST-100';
     const commentId = 'comment-123';
@@ -26,14 +26,14 @@ describe('delete-comment integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_delete_comment', {
-      issueId: issueKey,
-      commentId,
+      comments: [{ issueId: issueKey, commentId }],
     });
 
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    expect(response.data.success).toBe(true);
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].success).toBe(true);
     mockServer.assertAllRequestsDone();
   });
 
@@ -45,31 +45,39 @@ describe('delete-comment integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_delete_comment', {
-      issueId: issueKey,
-      commentId,
-    });
-
-    // Assert
-    expect(result.isError).toBe(true);
-    mockServer.assertAllRequestsDone();
-  });
-
-  it('должен удалить комментарий с валидным ID', async () => {
-    // Arrange
-    const issueKey = 'TEST-102';
-    const commentId = 'valid-comment-id-456';
-    mockServer.mockDeleteCommentSuccess(issueKey, commentId);
-
-    // Act
-    const result = await client.callTool('fr_yandex_tracker_delete_comment', {
-      issueId: issueKey,
-      commentId,
+      comments: [{ issueId: issueKey, commentId }],
     });
 
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(result.content[0]!.text);
-    expect(response.data.success).toBe(true);
+    expect(response.data.failed).toHaveLength(1);
+    mockServer.assertAllRequestsDone();
+  });
+
+  it('должен удалить несколько комментариев', async () => {
+    // Arrange
+    const issueKey1 = 'TEST-102';
+    const commentId1 = 'valid-comment-id-456';
+    const issueKey2 = 'TEST-103';
+    const commentId2 = 'valid-comment-id-789';
+    mockServer.mockDeleteCommentSuccess(issueKey1, commentId1);
+    mockServer.mockDeleteCommentSuccess(issueKey2, commentId2);
+
+    // Act
+    const result = await client.callTool('fr_yandex_tracker_delete_comment', {
+      comments: [
+        { issueId: issueKey1, commentId: commentId1 },
+        { issueId: issueKey2, commentId: commentId2 },
+      ],
+    });
+
+    // Assert
+    expect(result.isError).toBeUndefined();
+    const response = JSON.parse(result.content[0]!.text);
+    expect(response.data.total).toBe(2);
+    expect(response.data.successful).toHaveLength(2);
+    expect(response.data.failed).toHaveLength(0);
     mockServer.assertAllRequestsDone();
   });
 });

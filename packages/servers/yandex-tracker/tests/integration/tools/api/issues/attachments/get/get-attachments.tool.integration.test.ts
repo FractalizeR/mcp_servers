@@ -1,5 +1,5 @@
 /**
- * Интеграционные тесты для get-attachments tool
+ * Интеграционные тесты для get-attachments tool (batch-режим)
  *
  * Тестирование end-to-end flow:
  * MCP Client → ToolRegistry → GetAttachmentsTool → GetAttachmentsOperation → HttpClient → API (mock)
@@ -15,7 +15,7 @@ import {
   createImageAttachmentFixture,
 } from '#helpers/attachment.fixture.js';
 
-describe('get-attachments integration tests', () => {
+describe('get-attachments integration tests (batch)', () => {
   let client: TestMCPClient;
   let mockServer: MockServer;
 
@@ -35,7 +35,7 @@ describe('get-attachments integration tests', () => {
   });
 
   describe('Happy Path', () => {
-    it('должен успешно получить список файлов задачи', async () => {
+    it('должен успешно получить список файлов одной задачи', async () => {
       // Arrange
       const issueId = 'QUEUE-1';
       const attachments = createAttachmentListFixture(3);
@@ -43,7 +43,7 @@ describe('get-attachments integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
-        issueId,
+        issueIds: [issueId],
         fields: ['id', 'name', 'size', 'mimetype', 'content', 'createdBy', 'createdAt'],
       });
 
@@ -54,19 +54,43 @@ describe('get-attachments integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response).toMatchObject({
-        issueId,
-        attachmentsCount: 3,
+      expect(response.total).toBe(1);
+      expect(response.successful).toHaveLength(1);
+      expect(response.failed).toHaveLength(0);
+      expect(response.successful[0].issueId).toBe(issueId);
+      expect(response.successful[0].attachmentsCount).toBe(3);
+      expect(response.successful[0].attachments).toHaveLength(3);
+      expect(response.successful[0].attachments[0]).toHaveProperty('id');
+      expect(response.successful[0].attachments[0]).toHaveProperty('name');
+
+      mockServer.assertAllRequestsDone();
+    });
+
+    it('должен успешно получить файлы нескольких задач (batch)', async () => {
+      // Arrange
+      const issueIds = ['QUEUE-1', 'QUEUE-2'];
+      const attachments1 = createAttachmentListFixture(2);
+      const attachments2 = createAttachmentListFixture(3);
+      mockServer.mockGetAttachmentsSuccess(issueIds[0], attachments1);
+      mockServer.mockGetAttachmentsSuccess(issueIds[1], attachments2);
+
+      // Act
+      const result = await client.callTool('fr_yandex_tracker_get_attachments', {
+        issueIds,
+        fields: ['id', 'name', 'size', 'mimetype'],
       });
 
-      expect(response.attachments).toHaveLength(3);
-      expect(response.attachments[0]).toHaveProperty('id');
-      expect(response.attachments[0]).toHaveProperty('name');
-      expect(response.attachments[0]).toHaveProperty('mimetype');
-      expect(response.attachments[0]).toHaveProperty('size');
-      expect(response.attachments[0]).toHaveProperty('content');
-      expect(response.attachments[0]).toHaveProperty('createdBy');
-      expect(response.attachments[0]).toHaveProperty('createdAt');
+      // Assert
+      expect(result.isError).toBeUndefined();
+
+      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const response = responseWrapper.data;
+
+      expect(response.total).toBe(2);
+      expect(response.successful).toHaveLength(2);
+      expect(response.failed).toHaveLength(0);
+      expect(response.successful[0].attachmentsCount).toBe(2);
+      expect(response.successful[1].attachmentsCount).toBe(3);
 
       mockServer.assertAllRequestsDone();
     });
@@ -78,7 +102,7 @@ describe('get-attachments integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
-        issueId,
+        issueIds: [issueId],
         fields: ['id', 'name', 'size', 'mimetype', 'content', 'createdBy', 'createdAt'],
       });
 
@@ -88,11 +112,10 @@ describe('get-attachments integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response).toMatchObject({
-        issueId,
-        attachmentsCount: 0,
-        attachments: [],
-      });
+      expect(response.total).toBe(1);
+      expect(response.successful).toHaveLength(1);
+      expect(response.successful[0].attachmentsCount).toBe(0);
+      expect(response.successful[0].attachments).toHaveLength(0);
 
       mockServer.assertAllRequestsDone();
     });
@@ -107,7 +130,7 @@ describe('get-attachments integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
-        issueId,
+        issueIds: [issueId],
         fields: ['id', 'name', 'size', 'thumbnail'],
       });
 
@@ -117,46 +140,82 @@ describe('get-attachments integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.attachments[0]).toHaveProperty('thumbnail');
-      expect(response.attachments[0].thumbnail).toContain('thumbnails');
+      expect(response.successful[0].attachments[0]).toHaveProperty('thumbnail');
+      expect(response.successful[0].attachments[0].thumbnail).toContain('thumbnails');
 
       mockServer.assertAllRequestsDone();
     });
   });
 
   describe('Error Handling', () => {
-    it('должен обработать ошибку 404 (задача не найдена)', async () => {
+    it('должен обработать частичные ошибки (одна задача не найдена)', async () => {
+      // Arrange
+      const issueIds = ['QUEUE-1', 'NONEXISTENT-1'];
+      const attachments = createAttachmentListFixture(2);
+      mockServer.mockGetAttachmentsSuccess(issueIds[0], attachments);
+      mockServer.mockGetAttachments404(issueIds[1]);
+
+      // Act
+      const result = await client.callTool('fr_yandex_tracker_get_attachments', {
+        issueIds,
+        fields: ['id', 'name', 'size'],
+      });
+
+      // Assert
+      expect(result.isError).toBeUndefined();
+
+      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const response = responseWrapper.data;
+
+      expect(response.total).toBe(2);
+      expect(response.successful).toHaveLength(1);
+      expect(response.failed).toHaveLength(1);
+      expect(response.failed[0].issueId).toBe('NONEXISTENT-1');
+      expect(response.failed[0].error).toBeDefined();
+
+      mockServer.assertAllRequestsDone();
+    });
+
+    it('должен обработать ошибку 404 для единственной задачи', async () => {
       // Arrange
       const issueId = 'NONEXISTENT-1';
       mockServer.mockGetAttachments404(issueId);
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
-        issueId,
-        fields: ['id', 'name', 'size', 'mimetype', 'content', 'createdBy', 'createdAt'],
+        issueIds: [issueId],
+        fields: ['id', 'name', 'size'],
       });
 
-      // Assert
-      expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка');
+      // Assert - partial failure is not an error at tool level
+      expect(result.isError).toBeUndefined();
+
+      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const response = responseWrapper.data;
+
+      expect(response.total).toBe(1);
+      expect(response.successful).toHaveLength(0);
+      expect(response.failed).toHaveLength(1);
+      expect(response.failed[0].issueId).toBe(issueId);
 
       mockServer.assertAllRequestsDone();
     });
   });
 
   describe('Validation', () => {
-    it('должен вернуть ошибку при пустом issueId', async () => {
+    it('должен вернуть ошибку при пустом массиве issueIds', async () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
-        issueId: '',
+        issueIds: [],
+        fields: ['id', 'name'],
       });
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(result.content[0]!.text).toContain('валидации');
     });
 
-    it('должен вернуть ошибку при отсутствии issueId', async () => {
+    it('должен вернуть ошибку при отсутствии issueIds', async () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
         fields: ['id', 'name'],
@@ -164,18 +223,30 @@ describe('get-attachments integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(result.content[0]!.text).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии fields', async () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
-        issueId: 'QUEUE-1',
+        issueIds: ['QUEUE-1'],
       });
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(result.content[0]!.text).toContain('валидации');
+    });
+
+    it('должен вернуть ошибку при пустом issueId в массиве', async () => {
+      // Act
+      const result = await client.callTool('fr_yandex_tracker_get_attachments', {
+        issueIds: [''],
+        fields: ['id', 'name'],
+      });
+
+      // Assert
+      expect(result.isError).toBe(true);
+      expect(result.content[0]!.text).toContain('валидации');
     });
   });
 });

@@ -17,11 +17,11 @@ import { MCP_TOOL_PREFIX } from '#constants';
  */
 export const ADD_WORKLOG_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('add_worklog', MCP_TOOL_PREFIX),
-  description: '[Worklog/Create] Добавить запись времени к задаче',
+  description: '[Worklog/Create] Добавить записи времени к задачам (batch)',
   category: ToolCategory.ISSUES,
   subcategory: 'worklog',
   priority: ToolPriority.HIGH,
-  tags: ['worklog', 'add', 'create', 'time', 'log'],
+  tags: ['worklog', 'add', 'create', 'time', 'log', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
 } as const;

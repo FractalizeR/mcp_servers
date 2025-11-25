@@ -17,10 +17,10 @@ import { MCP_TOOL_PREFIX } from '#constants';
  */
 export const GET_ATTACHMENTS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_attachments', MCP_TOOL_PREFIX),
-  description: '[Issues/Attachments] Получить список файлов задачи',
+  description: '[Issues/Attachments] Получить список файлов задач (batch)',
   category: ToolCategory.ISSUES,
   subcategory: 'attachments',
   priority: ToolPriority.HIGH,
-  tags: ['attachments', 'read', 'files', 'documents'],
+  tags: ['attachments', 'read', 'files', 'documents', 'batch'],
   isHelper: false,
 } as const;
