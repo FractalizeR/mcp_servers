@@ -271,7 +271,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
     expect(commentsData.data.comments).toHaveLength(1);
     expect(commentsData.data.comments[0].count).toBe(3);
 
-    // Получить чеклист
+    // Получить чеклист (batch API)
     mockServer.mockGetChecklistSuccess(issueKey, [
       { id: 'checklist-1', text: 'Checklist item 1', checked: false },
       { id: 'checklist-2', text: 'Checklist item 2', checked: false },
@@ -279,12 +279,12 @@ describe('Full Issue Lifecycle (Integration)', () => {
     ]);
 
     const checklistResult = await client.callTool(buildToolName('get_checklist', MCP_TOOL_PREFIX), {
-      issueId: issueKey,
+      issueIds: [issueKey],
       fields: ['id', 'text', 'checked'],
     });
     expect(checklistResult.isError).toBeFalsy();
     const checklistData = JSON.parse(checklistResult.content[0]!.text);
-    expect(checklistData.data.checklist).toHaveLength(3);
+    expect(checklistData.data.successful[0].checklist).toHaveLength(3);
 
     mockServer.assertAllRequestsDone();
   });

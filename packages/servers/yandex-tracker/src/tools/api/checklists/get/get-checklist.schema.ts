@@ -1,18 +1,25 @@
 /**
- * Zod схема для валидации параметров GetChecklistTool
+ * Zod схема для валидации параметров GetChecklistTool (batch-режим)
  */
 
 import { z } from 'zod';
 import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
 
 /**
- * Схема параметров для получения чеклиста
+ * Схема параметров для получения чеклистов задач (batch-режим)
+ *
+ * Паттерн: GET операции с массивом идентификаторов
+ * - Массив issueIds для получения чеклистов нескольких задач
+ * - Общие параметры (fields) применяются ко всем результатам
  */
 export const GetChecklistParamsSchema = z.object({
   /**
-   * Идентификатор или ключ задачи (обязательно)
+   * Массив ключей или ID задач для получения чеклистов
    */
-  issueId: IssueKeySchema.describe('Issue ID or key (e.g., TEST-123)'),
+  issueIds: z
+    .array(IssueKeySchema)
+    .min(1, 'Массив issueIds должен содержать минимум 1 элемент')
+    .describe('Array of issue IDs or keys (e.g., ["TEST-123", "TEST-456"])'),
 
   /**
    * Массив полей для возврата (обязательный)

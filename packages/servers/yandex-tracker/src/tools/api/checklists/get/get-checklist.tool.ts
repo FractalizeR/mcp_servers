@@ -1,13 +1,18 @@
 /**
- * MCP Tool для получения чеклиста задачи
+ * MCP Tool для получения чеклистов задач из Яндекс.Трекера
  *
  * API Tool (прямой доступ к API):
- * - 1 tool = 1 API вызов (get checklist)
+ * - Batch-режим: получение чеклистов из нескольких задач
  * - Минимальная бизнес-логика
  * - Валидация через Zod
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import {
+  BaseTool,
+  ResponseFieldFilter,
+  BatchResultProcessor,
+  ResultLogger,
+} from '@mcp-framework/core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -16,11 +21,13 @@ import { GetChecklistParamsSchema } from '#tools/api/checklists/get/get-checklis
 import { GET_CHECKLIST_TOOL_METADATA } from './get-checklist.metadata.js';
 
 /**
- * Инструмент для получения чеклиста задачи
+ * Инструмент для получения чеклистов задач (batch-режим)
  *
  * Ответственность (SRP):
- * - Координация процесса получения чеклиста
+ * - Координация процесса получения чеклистов из нескольких задач
  * - Делегирование валидации в BaseTool
+ * - Делегирование обработки результатов в BatchResultProcessor
+ * - Делегирование логирования в ResultLogger
  * - Форматирование итогового результата
  */
 export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
@@ -43,35 +50,60 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueId, fields } = validation.data;
+    const { issueIds, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      this.logger.info('Получение чеклиста задачи', { issueId, fieldsCount: fields.length });
-
-      // 3. API v2: получение чеклиста
-      const checklist: ChecklistItemWithUnknownFields[] = await this.facade.getChecklist(issueId);
-
-      // 4. Фильтрация полей для каждого элемента массива
-      const filtered = checklist.map((item) =>
-        ResponseFieldFilter.filter<ChecklistItemWithUnknownFields>(item, fields)
+      ResultLogger.logOperationStart(
+        this.logger,
+        'Получение чеклистов задач',
+        issueIds.length,
+        fields
       );
 
-      // 5. Логирование результата
-      this.logger.info('Чеклист успешно получен', {
-        issueId,
-        itemsCount: filtered.length,
-        fieldsReturned: fields.length,
-      });
+      // 3. API v2: получение чеклистов для нескольких задач через batch-метод
+      const results = await this.facade.getChecklistMany(issueIds);
+
+      // 4. Обработка результатов через BatchResultProcessor
+      const processedResults = BatchResultProcessor.process(
+        results,
+        (checklist: ChecklistItemWithUnknownFields[]): Partial<ChecklistItemWithUnknownFields>[] =>
+          checklist.map((item) =>
+            ResponseFieldFilter.filter<ChecklistItemWithUnknownFields>(item, fields)
+          )
+      );
+
+      // 5. Логирование результатов
+      ResultLogger.logBatchResults(
+        this.logger,
+        'Чеклисты задач получены',
+        {
+          totalRequested: issueIds.length,
+          successCount: processedResults.successful.length,
+          failedCount: processedResults.failed.length,
+          fieldsCount: fields.length,
+        },
+        processedResults
+      );
 
       return this.formatSuccess({
-        checklist: filtered,
-        issueId,
-        itemsCount: filtered.length,
+        total: issueIds.length,
+        successful: processedResults.successful.map((item) => ({
+          issueId: item.key,
+          itemsCount: Array.isArray(item.data) ? item.data.length : 0,
+          checklist: item.data,
+        })),
+        failed: processedResults.failed.map((item) => ({
+          issueId: item.key,
+          error: item.error,
+        })),
         fieldsReturned: fields,
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при получении чеклиста задачи ${issueId}`, error);
+      return this.formatError(
+        `Ошибка при получении чеклистов задач (${issueIds.length} задач)`,
+        error
+      );
     }
   }
 }

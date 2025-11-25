@@ -17,11 +17,11 @@ import { MCP_TOOL_PREFIX } from '#constants';
  */
 export const GET_CHECKLIST_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_checklist', MCP_TOOL_PREFIX),
-  description: '[Checklist/Read] Получить чеклист задачи',
+  description: '[Checklist/Read] Получить чеклисты задач (batch)',
   category: ToolCategory.CHECKLISTS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,
-  tags: ['checklist', 'get', 'read'],
+  tags: ['checklist', 'get', 'read', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
 } as const;

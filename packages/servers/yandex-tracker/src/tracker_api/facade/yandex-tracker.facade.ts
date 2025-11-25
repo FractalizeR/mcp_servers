@@ -530,6 +530,17 @@ export class YandexTrackerFacade {
   }
 
   /**
+   * Получает чеклисты для нескольких задач параллельно
+   * @param issueIds - массив ключей или ID задач
+   * @returns результаты в формате BatchResult
+   */
+  async getChecklistMany(
+    issueIds: string[]
+  ): Promise<BatchResult<string, ChecklistItemWithUnknownFields[]>> {
+    return this.checklistService.getChecklistMany(issueIds);
+  }
+
+  /**
    * Добавляет элемент в чеклист задачи
    * @param issueId - идентификатор или ключ задачи
    * @param input - данные элемента

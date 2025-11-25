@@ -22,6 +22,7 @@ import { GetChecklistOperation } from '#tracker_api/api_operations/checklist/get
 import { AddChecklistItemOperation } from '#tracker_api/api_operations/checklist/add-checklist-item.operation.js';
 import { UpdateChecklistItemOperation } from '#tracker_api/api_operations/checklist/update-checklist-item.operation.js';
 import { DeleteChecklistItemOperation } from '#tracker_api/api_operations/checklist/delete-checklist-item.operation.js';
+import type { BatchResult } from '@mcp-framework/infrastructure';
 import type { AddChecklistItemInput, UpdateChecklistItemInput } from '#tracker_api/dto/index.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
 
@@ -45,6 +46,17 @@ export class ChecklistService {
    */
   async getChecklist(issueId: string): Promise<ChecklistItemWithUnknownFields[]> {
     return this.getChecklistOp.execute(issueId);
+  }
+
+  /**
+   * Получает чеклисты для нескольких задач параллельно
+   * @param issueIds - массив ключей или ID задач
+   * @returns результаты batch-операции
+   */
+  async getChecklistMany(
+    issueIds: string[]
+  ): Promise<BatchResult<string, ChecklistItemWithUnknownFields[]>> {
+    return this.getChecklistOp.executeMany(issueIds);
   }
 
   /**

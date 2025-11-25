@@ -289,11 +289,11 @@ export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
   {
     name: 'fr_yandex_tracker_get_checklist',
     category: ToolCategory.CHECKLISTS,
-    tags: ['checklist', 'get', 'read'],
+    tags: ['checklist', 'get', 'read', 'batch'],
     isHelper: false,
     nameTokens: ['fr', 'yandex', 'tracker', 'get', 'checklist'],
-    descriptionTokens: ['checklist', 'read'],
-    descriptionShort: '[Checklist/Read] Получить чеклист задачи',
+    descriptionTokens: ['checklist', 'read', 'batch'],
+    descriptionShort: '[Checklist/Read] Получить чеклисты задач (batch)',
   },
   {
     name: 'fr_yandex_tracker_add_checklist_item',
