@@ -250,7 +250,10 @@ describe('AxiosHttpClient', () => {
         const result = await httpClient.delete('/v3/issues/TEST-1');
 
         // Assert
-        expect(mockAxiosInstance.delete).toHaveBeenCalledWith('/v3/issues/TEST-1');
+        // delete передаёт { data } как второй аргумент для поддержки body в DELETE запросах
+        expect(mockAxiosInstance.delete).toHaveBeenCalledWith('/v3/issues/TEST-1', {
+          data: undefined,
+        });
         expect(result).toEqual(mockResponse.data);
       });
     });
