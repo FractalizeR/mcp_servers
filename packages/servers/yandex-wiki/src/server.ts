@@ -336,7 +336,7 @@ async function main(): Promise<void> {
     // - eager: только ping (search_tools избыточен, т.к. Claude видит все инструменты)
     // - lazy: ping + search_tools (search_tools нужен для discovery)
     const essentialTools =
-      config.toolDiscoveryMode === 'eager' ? ['ywping'] : YANDEX_WIKI_ESSENTIAL_TOOLS;
+      config.toolDiscoveryMode === 'eager' ? ['yw_ping'] : YANDEX_WIKI_ESSENTIAL_TOOLS;
 
     const configWithEssentialTools: ServerConfig = {
       ...config,

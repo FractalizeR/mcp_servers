@@ -21,7 +21,7 @@ describe('MCP Server Lifecycle (Smoke)', () => {
     logLevel: 'error', // Минимум логов для smoke теста
     prettyLogs: false,
     toolDiscoveryMode: 'lazy',
-    essentialTools: ['ywping'], // Имя без подчеркивания!
+    essentialTools: ['yw_ping'], // С подчеркиванием (автонормализация)
   };
 
   it('должен создать MCP server instance', () => {
@@ -105,7 +105,7 @@ describe('MCP Server Lifecycle (Smoke)', () => {
       logLevel: 'error',
       prettyLogs: false,
       toolDiscoveryMode: 'lazy',
-      essentialTools: ['ywping'], // Имя без подчеркивания!
+      essentialTools: ['yw_ping'], // С подчеркиванием (автонормализация)
     };
 
     // Act & Assert
@@ -117,7 +117,7 @@ describe('MCP Server Lifecycle (Smoke)', () => {
     const lazyConfig = {
       ...fakeConfig,
       toolDiscoveryMode: 'lazy' as const,
-      essentialTools: ['ywping'], // Имя без подчеркивания!
+      essentialTools: ['yw_ping'], // С подчеркиванием (автонормализация)
     };
     const eagerConfig = { ...fakeConfig, toolDiscoveryMode: 'eager' as const };
 

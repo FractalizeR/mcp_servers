@@ -16,7 +16,7 @@ describe('buildToolName', () => {
     });
   });
 
-  describe('с префиксом', () => {
+  describe('с префиксом (с разделителем)', () => {
     it('должен добавлять префикс к имени', () => {
       expect(buildToolName('ping', 'my_app_')).toBe('my_app_ping');
     });
@@ -28,9 +28,23 @@ describe('buildToolName', () => {
     it('должен работать с пустым префиксом', () => {
       expect(buildToolName('ping', '')).toBe('ping');
     });
+  });
 
-    it('должен работать с префиксом без разделителя', () => {
-      expect(buildToolName('ping', 'app')).toBe('appping');
+  describe('автонормализация префикса (без разделителя)', () => {
+    it('должен автоматически добавлять разделитель к префиксу', () => {
+      expect(buildToolName('ping', 'app')).toBe('app_ping');
+    });
+
+    it('должен нормализовать короткий префикс (yw)', () => {
+      expect(buildToolName('ping', 'yw')).toBe('yw_ping');
+    });
+
+    it('должен нормализовать префикс с именем в snake_case', () => {
+      expect(buildToolName('get_page', 'yw')).toBe('yw_get_page');
+    });
+
+    it('должен нормализовать длинный префикс', () => {
+      expect(buildToolName('ping', 'fr_yandex_tracker')).toBe('fr_yandex_tracker_ping');
     });
   });
 
@@ -39,8 +53,12 @@ describe('buildToolName', () => {
       expect(buildToolName('')).toBe('');
     });
 
-    it('должен работать с пустым именем и префиксом', () => {
+    it('должен работать с пустым именем и префиксом с разделителем', () => {
       expect(buildToolName('', 'prefix_')).toBe('prefix_');
+    });
+
+    it('должен работать с пустым именем и префиксом без разделителя', () => {
+      expect(buildToolName('', 'prefix')).toBe('prefix_');
     });
   });
 });

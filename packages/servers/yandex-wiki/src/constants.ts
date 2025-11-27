@@ -35,7 +35,10 @@ export const DEFAULT_LOG_LEVEL = 'info';
 
 /**
  * Essential tools для Yandex Wiki MCP сервера
- * - ping: проверка работоспособности сервера
- * - search_tools: поиск инструментов (только в lazy режиме)
+ * - yw_ping: проверка работоспособности сервера
+ * - yw_search_tools: поиск инструментов (только в lazy режиме)
+ *
+ * Имена формируются через buildToolName(name, MCP_TOOL_PREFIX) с автонормализацией:
+ * buildToolName('ping', 'yw') => 'yw_ping'
  */
-export const YANDEX_WIKI_ESSENTIAL_TOOLS = ['ywping', 'yw_search_tools'] as const;
+export const YANDEX_WIKI_ESSENTIAL_TOOLS = ['yw_ping', 'yw_search_tools'] as const;
