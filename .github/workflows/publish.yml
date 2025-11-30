@@ -28,13 +28,13 @@ jobs:
             ${{ runner.os }}-turbo-
 
       - name: 🔨 Build
-        run: turbo run build
+        run: npm run build
 
       - name: 🧪 Test
-        run: turbo run test
+        run: npm run test
 
       - name: 🚀 Smoke tests
-        run: turbo run test:smoke
+        run: npm run test:smoke
 
       - name: 📤 Publish
         run: npm publish --workspaces

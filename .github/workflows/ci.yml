@@ -32,25 +32,25 @@ jobs:
             ${{ runner.os }}-turbo-
 
       - name: 🔨 Build all packages
-        run: turbo run build
+        run: npm run build
 
       - name: 🧪 Run all tests
-        run: turbo run test
+        run: npm run test
 
       - name: 🚀 Run smoke tests
-        run: turbo run test:smoke
+        run: npm run test:smoke
 
       - name: 🔍 Lint check
-        run: turbo run lint
+        run: npm run lint
         continue-on-error: true
 
       - name: 📝 Type check
-        run: turbo run typecheck
+        run: npm run typecheck
 
       - name: 🏗️ Validate architecture
-        run: turbo run depcruise
+        run: npm run depcruise
 
       - name: 📊 Code quality checks
-        run: turbo run cpd knip
+        run: npm run cpd && npm run knip
         continue-on-error: true
 
