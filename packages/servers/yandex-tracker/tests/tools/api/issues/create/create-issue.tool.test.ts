@@ -100,14 +100,14 @@ describe('CreateIssueTool', () => {
       const result = await tool.execute({ queue: '', summary: 'Test' });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Queue');
+      expect(result.content[0]?.text).toContain('queue');
     });
 
     it('должен отклонить пустой summary', async () => {
       const result = await tool.execute({ queue: 'TESTQUEUE', summary: '' });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Summary');
+      expect(result.content[0]?.text).toContain('summary');
     });
   });
 

@@ -334,7 +334,7 @@ describe('search-tools integration tests', () => {
 
       const content = result.content[0]!;
       if (content.type === 'text') {
-        expect(content.text).toContain('Invalid enum value');
+        expect(content.text).toContain('недопустимое значение');
       }
     });
 
@@ -350,7 +350,7 @@ describe('search-tools integration tests', () => {
 
       const content = result.content[0]!;
       if (content.type === 'text') {
-        expect(content.text).toContain('Invalid enum value');
+        expect(content.text).toContain('недопустимое значение');
       }
     });
 
@@ -366,7 +366,7 @@ describe('search-tools integration tests', () => {
 
       const content = result.content[0]!;
       if (content.type === 'text') {
-        expect(content.text).toContain('Number must be greater than 0');
+        expect(content.text).toContain('значение должно быть >');
       }
     });
 
@@ -382,7 +382,7 @@ describe('search-tools integration tests', () => {
 
       const content = result.content[0]!;
       if (content.type === 'text') {
-        expect(content.text).toContain('Expected integer, received float');
+        expect(content.text).toContain('ожидается целое число');
       }
     });
 

@@ -16,6 +16,7 @@
 import type { Logger, ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
 import type { ToolDefinition } from '@mcp-framework/core';
 import type { ToolMetadata } from '@mcp-framework/core';
+import { formatZodErrorsToString } from '@mcp-framework/core';
 import type { ToolSearchEngine } from '../engine/tool-search-engine.js';
 import { SearchToolsDefinition } from './search-tools.definition.js';
 import { SearchToolsParamsSchema } from './search-tools.schema.js';
@@ -72,9 +73,7 @@ export class SearchToolsTool {
     const validationResult = SearchToolsParamsSchema.safeParse(params);
 
     if (!validationResult.success) {
-      const errorMessage = validationResult.error.issues
-        .map((e: { message: string }) => e.message)
-        .join('; ');
+      const errorMessage = formatZodErrorsToString(validationResult.error.issues);
       return this.formatError('Ошибка валидации параметров поиска', new Error(errorMessage));
     }
 

@@ -90,7 +90,7 @@ describe('EditCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Comment ID');
+      expect(result.content[0]?.text).toContain('commentId');
     });
 
     it('должен отклонить пустой text', async () => {

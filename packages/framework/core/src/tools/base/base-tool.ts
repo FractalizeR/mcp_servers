@@ -18,6 +18,7 @@ import type { ToolMetadata, StaticToolMetadata } from './tool-metadata.js';
 import type { ZodError, ZodSchema } from 'zod';
 import type { z } from 'zod';
 import { generateDefinitionFromSchema } from '../../definition/index.js';
+import { formatZodErrorsToString } from '../../utils/zod-error-formatter.js';
 import { ApiErrorClass } from '@mcp-framework/infrastructure';
 import type { ApiErrorDetails } from '@mcp-framework/infrastructure';
 
@@ -263,9 +264,12 @@ export abstract class BaseTool<TFacade = unknown> {
 
   /**
    * Форматирование ошибки валидации Zod
+   *
+   * Использует централизованный форматтер для стабильных сообщений,
+   * независимых от версии Zod.
    */
   private formatValidationError(zodError: ZodError): ToolResult {
-    const errorMessage = zodError.issues.map((e: { message: string }) => e.message).join('; ');
+    const errorMessage = formatZodErrorsToString(zodError.issues);
     return this.formatError('Ошибка валидации параметров', new Error(errorMessage));
   }
 }

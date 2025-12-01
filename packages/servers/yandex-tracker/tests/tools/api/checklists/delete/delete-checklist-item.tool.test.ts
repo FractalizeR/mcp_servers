@@ -87,7 +87,7 @@ describe('DeleteChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('ID элемента');
+      expect(result.content[0]?.text).toContain('itemId');
     });
 
     it('должен принять корректные параметры', async () => {
