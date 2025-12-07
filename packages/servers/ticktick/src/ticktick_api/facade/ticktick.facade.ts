@@ -151,6 +151,36 @@ export class TickTickFacade {
   }
 
   /**
+   * Batch result for create operations
+   */
+  /**
+   * Create multiple tasks
+   *
+   * Tasks are created sequentially to respect API rate limits.
+   * Returns results with success/failure for each task.
+   */
+  async batchCreateTasks(
+    dtos: CreateTaskDto[]
+  ): Promise<{ successful: TaskWithUnknownFields[]; failed: { index: number; error: string }[] }> {
+    const successful: TaskWithUnknownFields[] = [];
+    const failed: { index: number; error: string }[] = [];
+
+    for (const [index, dto] of dtos.entries()) {
+      try {
+        const task = await this.createTaskOp.execute(dto);
+        successful.push(task);
+      } catch (error) {
+        failed.push({
+          index,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return { successful, failed };
+  }
+
+  /**
    * Update existing task
    */
   async updateTask(

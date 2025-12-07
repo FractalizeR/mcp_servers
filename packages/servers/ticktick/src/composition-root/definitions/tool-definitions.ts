@@ -15,6 +15,18 @@
 // === Helper Tools (critical) ===
 import { PingTool } from '#tools/helpers/ping/index.js';
 
+// === Task Tools ===
+import { GetTaskTool } from '#tools/tasks/get-task/index.js';
+import { GetTasksTool } from '#tools/tasks/get-tasks/index.js';
+import { GetAllTasksTool } from '#tools/tasks/get-all-tasks/index.js';
+import { SearchTasksTool } from '#tools/tasks/search-tasks/index.js';
+import { GetTasksByPriorityTool } from '#tools/tasks/get-tasks-by-priority/index.js';
+import { CreateTaskTool } from '#tools/tasks/create-task/index.js';
+import { BatchCreateTasksTool } from '#tools/tasks/batch-create-tasks/index.js';
+import { UpdateTaskTool } from '#tools/tasks/update-task/index.js';
+import { CompleteTaskTool } from '#tools/tasks/complete-task/index.js';
+import { DeleteTaskTool } from '#tools/tasks/delete-task/index.js';
+
 // === Date Query Tools ===
 import { GetTasksDueTodayTool } from '#tools/api/date-queries/get-tasks-due-today/index.js';
 import { GetTasksDueTomorrowTool } from '#tools/api/date-queries/get-tasks-due-tomorrow/index.js';
@@ -31,17 +43,30 @@ import { GetNextTasksTool } from '#tools/helpers/gtd/get-next-tasks/index.js';
  *
  * Organization:
  * 1. Helpers (critical) - ping
- * 2. Date queries - tasks by date
- * 3. GTD helpers - engaged, next
+ * 2. Task tools - CRUD operations
+ * 3. Date queries - tasks by date
+ * 4. GTD helpers - engaged, next
  *
- * TODO: Add project and task tools from stages 4.1 and 4.2:
+ * TODO: Add project tools from stage 4.1:
  * - Project tools (6): GetProjects, GetProject, GetProjectTasks, CreateProject, UpdateProject, DeleteProject
- * - Task tools (10): GetTask, GetTasks, GetAllTasks, SearchTasks, CreateTask, BatchCreateTasks,
- *                    UpdateTask, CompleteTask, DeleteTask, GetTasksByPriority
  */
 export const TOOL_CLASSES = [
   // Helpers (critical)
   PingTool,
+
+  // Task Read operations
+  GetTaskTool,
+  GetTasksTool,
+  GetAllTasksTool,
+  SearchTasksTool,
+  GetTasksByPriorityTool,
+
+  // Task Write operations
+  CreateTaskTool,
+  BatchCreateTasksTool,
+  UpdateTaskTool,
+  CompleteTaskTool,
+  DeleteTaskTool,
 
   // Date queries
   GetTasksDueTodayTool,

@@ -17,6 +17,7 @@ import type { ToolDefinition } from './base.types.js';
 export enum ToolCategory {
   // API операции
   ISSUES = 'issues',
+  TASKS = 'tasks',
   QUEUES = 'queues',
   USERS = 'users',
   PROJECTS = 'projects',
@@ -25,9 +26,6 @@ export enum ToolCategory {
   COMMENTS = 'comments',
   CHECKLISTS = 'checklists',
   COMPONENTS = 'components',
-
-  // TickTick API операции
-  TASKS = 'tasks',
 
   // Wiki API операции
   PAGES = 'pages',
