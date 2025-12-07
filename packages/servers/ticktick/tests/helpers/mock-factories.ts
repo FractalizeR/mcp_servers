@@ -51,3 +51,44 @@ export function createMockCacheManager(): CacheManager {
     has: vi.fn().mockResolvedValue(false),
   } as unknown as CacheManager;
 }
+
+/**
+ * Create partial mock for TickTickFacade
+ * Use for unit testing tools
+ */
+export function createMockFacade() {
+  return {
+    // Projects
+    getProjects: vi.fn(),
+    getProject: vi.fn(),
+    getProjectData: vi.fn(),
+    createProject: vi.fn(),
+    updateProject: vi.fn(),
+    deleteProject: vi.fn(),
+    // Tasks
+    getTask: vi.fn(),
+    getTasks: vi.fn(),
+    createTask: vi.fn(),
+    updateTask: vi.fn(),
+    deleteTask: vi.fn(),
+    completeTask: vi.fn(),
+    batchCreateTasks: vi.fn(),
+    // Convenience methods
+    getAllTasks: vi.fn(),
+    searchTasks: vi.fn(),
+    getTasksByPriority: vi.fn(),
+    getTasksDueInRange: vi.fn(),
+    getOverdueTasks: vi.fn(),
+    getTasksDueToday: vi.fn(),
+    getTasksDueTomorrow: vi.fn(),
+    getTasksDueInDays: vi.fn(),
+    getTasksDueThisWeek: vi.fn(),
+  };
+}
+
+/**
+ * Helper for creating typed partial mock
+ */
+export function createPartialMock<T>(partial: Partial<T>): T {
+  return partial as T;
+}
