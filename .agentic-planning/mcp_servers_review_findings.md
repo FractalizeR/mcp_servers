@@ -10,17 +10,17 @@
 | Критерий | Yandex Tracker | Yandex Wiki | TickTick |
 |----------|----------------|-------------|----------|
 | **Версия** | 4.0.0 | 0.1.0 | 0.1.0 |
-| **Кол-во тестов** | 149 файлов | 7 файлов | 3 файла |
+| **Кол-во тестов** | 149 файлов | 8 файлов | 4 файла |
 | **Smoke тесты** | 5 тестов | 1 тест | 2 теста |
 | **DI validation.ts** | Есть | Есть | Есть |
 | **Facade Services** | Есть (14 сервисов) | Есть (3 сервиса) | НЕТ |
-| **ResponseFieldFilter** | Частичное | НЕТ | Есть |
+| **ResponseFieldFilter** | Частичное | Есть (базовое) | Есть |
 | **Batch операции** | Есть | Есть (конфиг) | Есть |
 | **eslint.config.js** | Есть | Есть | Есть |
-| **cpd скрипт** | Есть | НЕТ | Есть |
-| **depcruise скрипт** | Есть | НЕТ | Есть |
-| **validate:docs** | Есть | НЕТ | НЕТ |
-| **CLI папка** | src/cli/ | src/cli/ | cli.ts (файл) |
+| **cpd скрипт** | Есть | Есть | Есть |
+| **depcruise скрипт** | Есть | Есть | Есть |
+| **validate:docs** | Есть | Есть | Есть |
+| **CLI папка** | src/cli/ | src/cli/ | src/cli/ |
 | **build:bundle** | tsup | tsup | tsup |
 | **ServerConfig** | Плоская структура | Плоская структура | Вложенная структура |
 
@@ -85,7 +85,7 @@
 ### Структура
 - [x] 26 directories, 37 files в src/
 - [x] Аналогичная структура к Yandex Tracker
-- [ ] НЕТ README.md в cli/ и других модулях
+- [x] README.md в cli/ и других модулях ✅ ДОБАВЛЕНО
 - [ ] НЕТ generated-index.ts
 - [x] server.ts - отдельный файл сервера
 
@@ -108,24 +108,24 @@
 
 ### Использование фреймворка
 - [x] @mcp-framework/core: BaseTool, ToolRegistry
-- [ ] НЕ использует ResponseFieldFilter!
+- [x] ResponseFieldFilter - базовая инфраструктура добавлена ✅
 - [x] @mcp-framework/infrastructure: Logger, HttpClient, CacheManager
 - [x] @mcp-framework/search: ToolSearchEngine
 
 ### Многопоточность / параллелизм
-- [ ] НЕТ maxBatchSize, maxConcurrentRequests в конфигурации!
+- [x] maxBatchSize, maxConcurrentRequests в конфигурации ✅ ДОБАВЛЕНО
 - [ ] НЕТ batch операций вообще!
 - [ ] Нет Promise.all для параллельных запросов
 
 ### Фильтрация выходных данных
-- [ ] НЕ использует ResponseFieldFilter!
-- [ ] Нет фильтрации полей в tools
+- [x] ResponseFieldFilter - базовая инфраструктура (filter-fields.ts, schemas) ✅ ДОБАВЛЕНО
+- [x] fields параметр в ResponseFieldsSchema
 
 ### Прочее
 - [ ] CLAUDE.md ~114 строк (базовый, намного меньше эталона)
-- [ ] НЕТ eslint.config.js
-- [ ] НЕТ cpd, depcruise скриптов
-- [ ] НЕТ validate:docs скрипта
+- [x] eslint.config.js ✅ ДОБАВЛЕНО
+- [x] cpd, depcruise скрипты ✅ ДОБАВЛЕНО
+- [x] validate:docs скрипт ✅ ДОБАВЛЕНО
 - [x] build:bundle через tsup
 - [x] smoke-test-server.ts скрипт
 
@@ -135,7 +135,7 @@
 
 ### Структура
 - [x] 34 directories, 41 files в src/
-- [ ] НЕТ cli/ папки (только cli.ts файл в корне src/)
+- [x] src/cli/ структура с types.ts, prompts.ts, bin/mcp-connect.ts ✅ ДОБАВЛЕНО
 - [ ] НЕТ facade/services/ (facade напрямую вызывает операции)
 - [x] ticktick_api/auth/ - OAuth авторизация
 - [x] ticktick_api/http/ - AuthenticatedHttpClient
@@ -149,17 +149,18 @@
 - [x] batchCreateTasks - batch создание задач (последовательное, не параллельное)
 
 ### DI (Dependency Injection)
-- [ ] НЕТ validation.ts файла!
+- [x] validation.ts с validateDIRegistrations() ✅ ДОБАВЛЕНО
 - [ ] НЕТ bindFacadeServices() (нет сервисов)
 - [ ] ОТЛИЧАЕТСЯ: OPERATION_DEFINITIONS вместо OPERATION_CLASSES
 - [x] bindOAuthLayer() - дополнительный слой для OAuth
 - [x] reflect-metadata импортируется напрямую в container.ts
 
 ### Тесты
-- [ ] КРИТИЧНО: Только 3 тестовых файла (50x меньше чем у эталона!)
-- [ ] Только smoke/ и unit/auth
+- [ ] КРИТИЧНО: 4 тестовых файла (vs 149 у эталона)
+- [x] smoke/, unit/auth, unit/ticktick_api/api_operations/tasks
 - [x] 2 smoke теста: di-container, mcp-server-lifecycle
-- [ ] НЕТ integration/, workflows/, tools/, helpers/ тестов
+- [x] helpers/ с mock factories ✅ ДОБАВЛЕНО
+- [ ] НЕТ integration/, workflows/, tools/ тестов
 
 ### Использование фреймворка
 - [x] @mcp-framework/core: BaseTool, ToolRegistry, ResponseFieldFilter, BatchResultProcessor
@@ -180,10 +181,10 @@
 
 ### Прочее
 - [ ] CLAUDE.md ~200 строк (средний)
-- [ ] НЕТ eslint.config.js
+- [x] eslint.config.js ✅ ДОБАВЛЕНО
 - [x] cpd, depcruise скрипты есть
-- [ ] НЕТ validate:docs скрипта
-- [ ] НЕТ build:bundle (нет tsup)
+- [x] validate:docs скрипт ✅ ДОБАВЛЕНО
+- [x] build:bundle через tsup ✅ ДОБАВЛЕНО
 - [ ] ОТЛИЧАЕТСЯ: test:smoke через vitest (не через scripts/)
 - [ ] ОТЛИЧАЕТСЯ: Вложенная структура ServerConfig (oauth, api, batch, retry, cache, tools, logging)
 
@@ -226,13 +227,12 @@
    - Инъекция через TYPES.* вместо классов
    - Рекомендация: добавить Services слой для консистентности
 
-7. **Отсутствие CLI папки в TickTick**
-   - cli.ts в корне src/ вместо src/cli/
-   - Требуется: переместить в src/cli/ структуру
+7. **~~Отсутствие CLI папки в TickTick~~** ✅ ИСПРАВЛЕНО
+   - ~~cli.ts в корне src/ вместо src/cli/~~
+   - Создана полная src/cli/ структура с types.ts, prompts.ts, bin/
 
-8. **Отсутствие build:bundle в TickTick**
-   - Нет единого бандла для продакшена
-   - Требуется: добавить tsup конфигурацию
+8. **~~Отсутствие build:bundle в TickTick~~** ✅ ИСПРАВЛЕНО
+   - Добавлена tsup конфигурация и build:bundle скрипт
 
 ### P3 - Низкий приоритет
 
@@ -240,9 +240,8 @@
    - Вложенная структура vs плоская
    - Рекомендация: унифицировать с остальными серверами
 
-10. **Отсутствие README.md в модулях Wiki**
-    - Нет документации в cli/ и других модулях
-    - Требуется: добавить по образцу yandex-tracker
+10. **~~Отсутствие README.md в модулях Wiki~~** ✅ ИСПРАВЛЕНО
+    - Добавлены README.md: cli/, tools/, composition-root/, wiki_api/facade/, api_operations/, dto/, entities/
 
 11. **Разный подход к smoke тестам**
     - Yandex Tracker/Wiki: через scripts/smoke-test-server.ts
@@ -282,20 +281,20 @@
 
 ### Фаза 3: Средний приоритет (P2)
 
-6. **Рефакторинг архитектуры TickTick** ⏳ ТРЕБУЕТСЯ
+6. **Рефакторинг архитектуры TickTick** ⏳ ОТЛОЖЕНО (значительный рефакторинг)
    - [ ] Добавить Services слой между Facade и Operations
    - [ ] Изменить инъекцию на class-based
 
-7. **Структурные изменения TickTick** ⏳ ЧАСТИЧНО ВЫПОЛНЕНО
-   - [ ] Переместить cli.ts в src/cli/
+7. **Структурные изменения TickTick** ✅ ВЫПОЛНЕНО
+   - [x] Создана src/cli/ структура (types.ts, prompts.ts, bin/mcp-connect.ts)
    - [x] Добавить tsup конфигурацию и build:bundle
 
 ### Фаза 4: Низкий приоритет (P3)
 
-8. **Унификация конфигурации и документации** ⏳ ТРЕБУЕТСЯ
-   - [ ] Унифицировать ServerConfig структуру
-   - [ ] Добавить README.md в модули Wiki
-   - [ ] Унифицировать подход к smoke тестам
+8. **Унификация конфигурации и документации** ✅ ЧАСТИЧНО ВЫПОЛНЕНО
+   - [ ] Унифицировать ServerConfig структуру (отложено)
+   - [x] Добавить README.md в модули Wiki
+   - [ ] Унифицировать подход к smoke тестам (отложено)
 
 ---
 
@@ -307,18 +306,33 @@
 | eslint.config.js (TickTick) | ✅ |
 | validation.ts (TickTick) | ✅ |
 | ResponseFieldFilter (Wiki) | ✅ (базовая инфраструктура) |
-| Тестовое покрытие | ⏳ |
 | Batch конфигурация (Wiki) | ✅ |
-| Services слой (TickTick) | ⏳ (P2) |
-| CLI структура (TickTick) | ⏳ (P2) |
+| CLI структура (TickTick) | ✅ |
 | build:bundle (TickTick) | ✅ |
+| cpd/depcruise скрипты (Wiki) | ✅ |
+| validate:docs (Wiki, TickTick) | ✅ |
+| README.md в модулях (Wiki) | ✅ |
+| Unit тесты для operations | ✅ (базовые) |
+| Services слой (TickTick) | ⏳ ОТЛОЖЕНО (P2) |
+| ServerConfig унификация | ⏳ ОТЛОЖЕНО (P3) |
+| Полное тестовое покрытие | ⏳ ОТЛОЖЕНО (требует отдельной задачи) |
 
 ---
 
 ## Выводы
 
-**Yandex Tracker** является эталоном с наиболее полной реализацией. Остальные серверы нуждаются в существенной доработке для достижения того же уровня качества.
+**Yandex Tracker** является эталоном с наиболее полной реализацией.
 
-**Yandex Wiki** находится на ранней стадии (0.1.0) и требует основных улучшений в тестировании, фильтрации и batch операциях.
+**Yandex Wiki** (0.1.0) — после ревью значительно улучшен:
+- ✅ eslint, cpd, depcruise, validate:docs
+- ✅ ResponseFieldFilter инфраструктура
+- ✅ Batch конфигурация
+- ✅ README.md во всех модулях
+- ⏳ Требуется: batch операции, полное тестовое покрытие
 
-**TickTick** имеет некоторые уникальные особенности (OAuth, filter-fields утилита), но архитектурно отклоняется от эталона и требует значительной унификации.
+**TickTick** (0.1.0) — после ревью унифицирован:
+- ✅ eslint, validation.ts, CLI структура, build:bundle
+- ✅ Базовые unit тесты и helpers
+- ⏳ Требуется: Services слой (P2), полное тестовое покрытие
+
+**Дата завершения ревью:** 2025-12-07
