@@ -128,22 +128,22 @@ npm run build
 
 ---
 
-## Batch Operations
+## Групповые операции (Batch)
 
-All read and write operations support batch mode for improved performance when working with multiple issues.
+Все операции чтения и записи поддерживают групповой режим для повышения производительности при работе с несколькими задачами.
 
-### Batch GET Operations
+### Групповые GET операции
 
-Get data from multiple issues with shared parameters (perPage, expand, etc.) in a single tool call:
+Получение данных из нескольких задач с общими параметрами (perPage, expand и т.д.) за один вызов инструмента:
 
-- `get_comments` — Get comments from multiple issues
-- `get_issue_links` — Get links from multiple issues
-- `get_issue_changelog` — Get changelog from multiple issues
-- `get_worklogs` — Get worklogs from multiple issues
-- `get_checklist` — Get checklists from multiple issues
-- `get_attachments` — Get attachments from multiple issues
+- `get_comments` — Получить комментарии из нескольких задач
+- `get_issue_links` — Получить связи из нескольких задач
+- `get_issue_changelog` — Получить историю изменений из нескольких задач
+- `get_worklogs` — Получить записи времени из нескольких задач
+- `get_checklist` — Получить чек-листы из нескольких задач
+- `get_attachments` — Получить вложения из нескольких задач
 
-**Example:**
+**Пример:**
 ```json
 {
   "issueIds": ["PROJ-1", "PROJ-2", "PROJ-3"],
@@ -151,7 +151,7 @@ Get data from multiple issues with shared parameters (perPage, expand, etc.) in 
 }
 ```
 
-**Response format (unified):**
+**Формат ответа (унифицированный):**
 ```json
 {
   "total": 3,
@@ -160,40 +160,40 @@ Get data from multiple issues with shared parameters (perPage, expand, etc.) in 
     { "issueId": "PROJ-2", "comments": [...], "count": 3 }
   ],
   "failed": [
-    { "issueId": "PROJ-3", "error": "Issue not found" }
+    { "issueId": "PROJ-3", "error": "Задача не найдена" }
   ]
 }
 ```
 
-### Batch POST/DELETE Operations
+### Групповые POST/DELETE операции
 
-Modify multiple issues with individual parameters for each:
+Модификация нескольких задач с индивидуальными параметрами для каждой:
 
-- `add_comment` — Add comments to multiple issues (each with own text)
-- `create_link` — Create multiple links
-- `delete_link` — Delete multiple links
-- `add_worklog` — Add worklogs to multiple issues
-- `delete_comment` — Delete comments from multiple issues
-- `add_checklist_item` — Add checklist items to multiple issues
-- `delete_attachment` — Delete attachments from multiple issues
-- `edit_comment` — Edit comments in multiple issues
+- `add_comment` — Добавить комментарии к нескольким задачам (каждый со своим текстом)
+- `create_link` — Создать несколько связей
+- `delete_link` — Удалить несколько связей
+- `add_worklog` — Добавить записи времени к нескольким задачам
+- `delete_comment` — Удалить комментарии из нескольких задач
+- `add_checklist_item` — Добавить пункты чек-листа к нескольким задачам
+- `delete_attachment` — Удалить вложения из нескольких задач
+- `edit_comment` — Редактировать комментарии в нескольких задачах
 
-**Example (individual parameters per issue):**
+**Пример (индивидуальные параметры для каждой задачи):**
 ```json
 {
   "comments": [
-    { "issueId": "PROJ-1", "text": "Comment for task 1" },
-    { "issueId": "PROJ-2", "text": "Comment for task 2", "attachmentIds": ["att1"] }
+    { "issueId": "PROJ-1", "text": "Комментарий для задачи 1" },
+    { "issueId": "PROJ-2", "text": "Комментарий для задачи 2", "attachmentIds": ["att1"] }
   ],
   "fields": ["id", "text", "createdAt"]
 }
 ```
 
-**Why batch operations?**
-- Execute N operations in a single MCP tool call
-- Automatic parallelization (respects rate limits)
-- Partial error handling (some may succeed, others fail)
-- Consistent unified response format
+**Преимущества групповых операций:**
+- Выполнение N операций за один вызов MCP инструмента
+- Автоматическая параллелизация (с учетом rate limits)
+- Частичная обработка ошибок (некоторые могут успешно выполниться, другие — нет)
+- Единообразный формат ответа
 
 ---
 
@@ -502,9 +502,9 @@ npm run mcp:status
 ### Архитектура
 
 Этот пакет построен на **MCP Framework** — переиспользуемых компонентах:
-- **[@mcp-framework/infrastructure](../../framework/infrastructure/README.md)** — HTTP, cache, logging
-- **[@mcp-framework/core](../../framework/core/README.md)** — BaseTool, registry, utilities
-- **[@mcp-framework/search](../../framework/search/README.md)** — Tool search engine
+- **[@mcp-framework/infrastructure](../../framework/infrastructure/README.md)** — HTTP, кэш, логирование
+- **[@mcp-framework/core](../../framework/core/README.md)** — BaseTool, реестр, утилиты
+- **[@mcp-framework/search](../../framework/search/README.md)** — Поисковый движок
 
 ### Структура пакета
 
@@ -514,19 +514,19 @@ src/
 ├── common/              # Общие схемы и type guards
 ├── composition-root/    # DI контейнер (InversifyJS)
 ├── config/              # Конфигурация сервера
-├── tools/               # MCP tools
-│   ├── api/            # API tools (issues, comments, queues, etc.)
-│   └── helpers/        # Helper tools (ping, issue-url, demo)
-├── tracker_api/         # Yandex Tracker API слой
+├── tools/               # MCP инструменты
+│   ├── api/            # API инструменты (issues, comments, queues и т.д.)
+│   └── helpers/        # Вспомогательные инструменты (ping, issue-url, demo)
+├── tracker_api/         # Слой Yandex Tracker API
 │   ├── api_operations/ # API операции
 │   ├── dto/            # Data Transfer Objects
 │   ├── entities/       # Domain entities
 │   ├── facade/         # Facade для упрощения доступа к API
-│   └── utils/          # Утилиты (pagination, duration, file operations)
-└── index.ts            # Entry point
+│   └── utils/          # Утилиты (пагинация, duration, файловые операции)
+└── index.ts            # Точка входа
 ```
 
-**Details:** [CLAUDE.md](./CLAUDE.md)
+**Подробности:** [CLAUDE.md](./CLAUDE.md)
 
 ### Команды для разработки
 
@@ -541,7 +541,7 @@ npm run build:mcpb         # Создать .mcpb архив для публик
 npm run test               # Все unit тесты
 npm run test:smoke         # Дымовой тест (запуск сервера)
 npm run test:coverage      # Тесты с покрытием кода
-npm run test:watch         # Watch mode
+npm run test:watch         # Watch режим
 npm run test:quiet         # Для ИИ агентов (минимум вывода)
 
 # Валидация
@@ -550,7 +550,7 @@ npm run validate           # Полная проверка (lint + typecheck + t
 npm run validate:quiet     # Для ИИ агентов (минимум вывода)
 npm run lint               # ESLint проверка
 npm run lint:quiet         # Только ошибки
-npm run typecheck          # TypeScript type checking
+npm run typecheck          # TypeScript проверка типов
 npm run cpd                # Проверка дублирования кода (<=5%)
 npm run validate:tools     # Проверка регистрации tools/operations
 npm run validate:docs      # Проверка лимитов размеров документации
@@ -595,8 +595,8 @@ npm run mcp:status         # Статус подключения
 - **TypeScript** (strict mode, без `any`)
 - **InversifyJS v7** (Dependency Injection)
 - **Zod** (валидация параметров)
-- **Axios** (HTTP client, через @mcp-framework/infrastructure)
-- **Pino** (structured logging с ротацией)
+- **Axios** (HTTP клиент, через @mcp-framework/infrastructure)
+- **Pino** (структурированное логирование с ротацией)
 - **Vitest** (тесты, покрытие >=80%)
 - **MCP SDK** (Model Context Protocol)
 
@@ -607,7 +607,7 @@ npm run mcp:status         # Статус подключения
 ### Для разработчиков
 
 - **[CLAUDE.md](./CLAUDE.md)** — правила для ИИ агентов и разработчиков
-- **[src/tools/README.md](src/tools/README.md)** — добавление MCP tools
+- **[src/tools/README.md](src/tools/README.md)** — добавление MCP инструментов
 - **[src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md)** — API операции
 - **[src/tracker_api/entities/README.md](src/tracker_api/entities/README.md)** — domain entities
 - **[src/tracker_api/dto/README.md](src/tracker_api/dto/README.md)** — Data Transfer Objects
@@ -645,7 +645,7 @@ MIT License — свободное использование, модифика�
 - **GitHub:** https://github.com/FractalizeR/mcp_server_yandex_tracker
 - **Releases:** https://github.com/FractalizeR/mcp_server_yandex_tracker/releases
 - **Issues:** https://github.com/FractalizeR/mcp_server_yandex_tracker/issues
-- **MCP Framework packages:**
+- **MCP Framework пакеты:**
   - [Infrastructure](../../framework/infrastructure/README.md)
   - [Core](../../framework/core/README.md)
   - [Search](../../framework/search/README.md)
@@ -671,7 +671,7 @@ MIT License — свободное использование, модифика�
 
 <div align="center">
 
-**Made with love for the MCP community**
+**Сделано с любовью для MCP сообщества**
 
 [Наверх](#яндекстрекер-для-claude-desktop)
 
