@@ -31,6 +31,22 @@ npm install mcp-server-yandex-wiki
 | `LOG_LEVEL` | `info` | Уровень логирования |
 | `REQUEST_TIMEOUT` | `30000` | Таймаут запросов (мс) |
 | `YANDEX_WIKI_RETRY_ATTEMPTS` | `3` | Количество retry попыток |
+| `DISABLED_TOOL_GROUPS` | - | Отключение групп инструментов |
+
+### Фильтрация инструментов
+
+Используйте `DISABLED_TOOL_GROUPS` для отключения категорий или подкатегорий инструментов:
+
+```bash
+# Отключить целые категории
+DISABLED_TOOL_GROUPS="grids"
+
+# Отключить подкатегории
+DISABLED_TOOL_GROUPS="pages:delete,grids:update"
+
+# Смешанный формат
+DISABLED_TOOL_GROUPS="grids,pages:delete"
+```
 
 ## Использование
 

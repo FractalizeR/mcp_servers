@@ -119,8 +119,8 @@ function setupServer(
     const definitions = toolRegistry.getDefinitionsByMode(
       config.toolDiscoveryMode,
       config.essentialTools,
-      undefined, // categoryFilter не используется в Yandex Wiki
-      undefined // disabledFilter не используется в Yandex Wiki
+      undefined, // categoryFilter (позитивный фильтр) не используется в Yandex Wiki
+      config.disabledToolGroups // негативный фильтр - отключение групп инструментов
     );
 
     // Подсчёт метрик
@@ -136,6 +136,19 @@ function setupServer(
         estimatedTokens: metrics.estimatedTokens,
       }
     );
+
+    // Логирование отключенных групп инструментов (если применялась)
+    if (config.disabledToolGroups) {
+      logger.info('✂️  Применён фильтр отключенных групп инструментов', {
+        disabledCategories: Array.from(config.disabledToolGroups.categories),
+        disabledCategoriesWithSubcategories: Array.from(
+          config.disabledToolGroups.categoriesWithSubcategories.entries()
+        ).map(([cat, subcats]) => ({
+          category: cat,
+          subcategories: Array.from(subcats),
+        })),
+      });
+    }
 
     // Debug level: детальная разбивка
     logger.debug('📊 Распределение инструментов', {
