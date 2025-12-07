@@ -1,0 +1,8 @@
+/**
+ * Composition Root exports
+ *
+ * Entry point for Dependency Injection configuration.
+ */
+
+export { TYPES } from './types.js';
+export { createContainer } from './container.js';
