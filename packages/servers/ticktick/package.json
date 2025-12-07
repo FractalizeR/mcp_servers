@@ -27,7 +27,7 @@
   },
   "main": "./dist/index.js",
   "bin": {
-    "mcp-server-ticktick": "./dist/index.js"
+    "mcp-server-ticktick": "./dist/cli.js"
   },
   "files": [
     "dist",
@@ -49,7 +49,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:quiet": "vitest run --reporter=dot --silent",
-    "test:smoke": "echo 'Smoke tests not implemented yet'",
+    "test:smoke": "vitest run tests/smoke",
     "test:verbose": "vitest run --reporter=verbose",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
