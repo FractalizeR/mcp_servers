@@ -3,6 +3,27 @@
  */
 
 /**
+ * Распарсенная структура фильтра категорий инструментов
+ *
+ * Используется для фильтрации tools в tools/list endpoint.
+ *
+ * Примеры использования:
+ * - includeAll=true: все категории
+ * - categories=['pages', 'grids']: только pages и grids (все подкатегории)
+ * - categoriesWithSubcategories={'pages': ['read', 'write']}: только pages/read и pages/write
+ */
+export interface ParsedCategoryFilter {
+  /** Категории без подкатегорий (все подкатегории включены) */
+  categories: Set<string>;
+
+  /** Категории с конкретными подкатегориями */
+  categoriesWithSubcategories: Map<string, Set<string>>;
+
+  /** Включить все категории (пустой фильтр) */
+  includeAll: boolean;
+}
+
+/**
  * Конфигурация сервера из переменных окружения
  */
 export interface ServerConfig {
@@ -54,6 +75,25 @@ export interface ServerConfig {
    * @default 10000
    */
   retryMaxDelay: number;
+  /**
+   * Отключенные группы инструментов (негативный фильтр)
+   *
+   * Позволяет отключить определенные категории/подкатегории инструментов.
+   *
+   * Формат переменной окружения DISABLED_TOOL_GROUPS:
+   * - Пустая строка или undefined: все инструменты включены (по умолчанию)
+   * - "grids,pages:write": отключить целую категорию grids и подкатегорию write в pages
+   * - "pages:delete,grids:update": отключить подкатегории delete и update
+   *
+   * Graceful degradation:
+   * - Неизвестные категории: warning в лог, пропускаются
+   * - Неверный формат: warning, игнорируется
+   *
+   * Работает в обоих режимах (lazy и eager).
+   *
+   * @default undefined (все инструменты включены)
+   */
+  disabledToolGroups?: ParsedCategoryFilter;
 }
 
 /**
