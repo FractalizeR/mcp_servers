@@ -26,6 +26,9 @@ export enum ToolCategory {
   CHECKLISTS = 'checklists',
   COMPONENTS = 'components',
 
+  // TickTick API операции
+  TASKS = 'tasks',
+
   // Wiki API операции
   PAGES = 'pages',
   GRIDS = 'grids',
