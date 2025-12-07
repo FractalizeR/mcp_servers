@@ -1,7 +1,7 @@
 /**
  * Base class for all TickTick API operations
  *
- * Responsibility (SRP):
+ * Responsibilities (SRP):
  * - Provide common dependencies (http, cache, logger)
  * - Helper methods for caching
  * - NO business logic (delegated to subclasses)
@@ -20,7 +20,7 @@ export abstract class BaseOperation {
   ) {}
 
   /**
-   * Execute with caching
+   * Execute operation with caching
    *
    * @param cacheKey - cache key
    * @param fn - function to execute (if cache is empty)
@@ -49,6 +49,7 @@ export abstract class BaseOperation {
    * Execute DELETE request
    *
    * Wrapper over httpClient.delete with logging.
+   * Used for deleting resources (projects, tasks, etc).
    *
    * @param endpoint - resource path (relative to baseURL)
    * @returns DELETE request result

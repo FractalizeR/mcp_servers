@@ -1,8 +1,9 @@
 /**
- * TickTick API operations
+ * TickTick API Operations
+ *
+ * All API operations for TickTick.
  */
 
-export { BaseOperation } from './base-operation.js';
-
-// Task operations
+export * from './base-operation.js';
+export * from './projects/index.js';
 export * from './tasks/index.js';
