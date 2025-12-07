@@ -1,97 +1,107 @@
-# MCP Framework & Yandex Tracker Server
+# MCP Framework и Yandex Tracker Server
 
 [![CI](https://github.com/FractalizeR/mcp_server_yandex_tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/FractalizeR/mcp_server_yandex_tracker/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Monorepo containing MCP Framework packages and Yandex Tracker integration**
+**Monorepo с MCP Framework пакетами и интеграцией Yandex Tracker**
 
-This repository provides:
-- 🏗️ **MCP Framework** — reusable packages for building MCP tools (auto-generated definitions from schema)
-- 🚀 **Yandex Tracker Server** — complete MCP server for Yandex.Tracker API
-
----
-
-## 📦 Packages
-
-### Framework Packages (Published to npm)
-
-| Package | Version | Description |
-|---------|---------|-------------|
-| [@mcp-framework/infrastructure](packages/framework/infrastructure) | 0.1.0 | HTTP client, cache, logging, async utilities |
-| [@mcp-framework/cli](packages/framework/cli) | 0.1.0 | Generic CLI для MCP подключений |
-| [@mcp-framework/core](packages/framework/core) | 0.1.0 | Base classes, type system, tool registry, schema→definition generator |
-| [@mcp-framework/search](packages/framework/search) | 0.1.0 | Advanced tool search engine with compile-time indexing |
-
-### Application Package
-
-| Package | Version | Description |
-|---------|---------|-------------|
-| [mcp-server-yandex-tracker](packages/servers/yandex-tracker) | 0.1.0 | MCP server for Yandex.Tracker API integration (v2/v3) |
+Этот репозиторий содержит:
+- **Yandex Tracker Server** — полноценный MCP сервер для Yandex.Tracker API
+- **MCP Framework** — переиспользуемые пакеты для создания MCP инструментов (автогенерация definitions из schema)
 
 ---
 
-## 🏗️ Architecture
+## Быстрый старт (Пользователи)
+
+### Способ 1: MCPB Bundle (Рекомендуется)
+
+Скачай готовый `.mcpb` бандл со страницы [GitHub Releases](https://github.com/FractalizeR/mcp_server_yandex_tracker/releases) и установи его напрямую в MCP клиент.
+
+### Способ 2: CLI установка
+
+```bash
+# Клонируй репозиторий
+git clone https://github.com/FractalizeR/mcp_server_yandex_tracker.git
+cd mcp_server_yandex_tracker
+npm install && npm run build
+
+# Подключи к MCP клиенту интерактивно
+cd packages/servers/yandex-tracker
+npm run mcp:connect
+```
+
+CLI поддерживает: **Claude Desktop**, **Claude Code**, **Codex**, **Gemini**, **Qwen**
+
+### Способ 3: npm глобальная установка
+
+```bash
+npm install -g mcp-server-yandex-tracker
+```
+
+Затем настрой Claude Desktop вручную — см. [Yandex Tracker README](packages/servers/yandex-tracker/README.md#установка).
+
+---
+
+## Пакеты
+
+### Пакет приложения
+
+| Пакет | Версия | Описание |
+|-------|--------|----------|
+| [mcp-server-yandex-tracker](packages/servers/yandex-tracker) | 4.0.0 | MCP сервер для интеграции с Yandex.Tracker API (v2/v3) |
+
+### Framework пакеты (публикуются в npm)
+
+| Пакет | Версия | Описание |
+|-------|--------|----------|
+| [@mcp-framework/infrastructure](packages/framework/infrastructure) | 0.2.0 | HTTP клиент, кэш, логирование, async утилиты |
+| [@mcp-framework/cli](packages/framework/cli) | 0.2.0 | Универсальный CLI для MCP подключений |
+| [@mcp-framework/core](packages/framework/core) | 0.1.0 | Базовые классы, система типов, реестр инструментов, генератор schema→definition |
+| [@mcp-framework/search](packages/framework/search) | 0.1.0 | Продвинутый поисковый движок с compile-time индексацией |
+
+---
+
+## Архитектура
 
 ```
 packages/
 ├── framework/
 │   ├── infrastructure/     → @mcp-framework/infrastructure
-│   │   └── HTTP, cache, logging, async utilities
+│   │   └── HTTP, кэш, логирование, async утилиты
 │   ├── cli/               → @mcp-framework/cli
-│   │   └── Generic CLI для MCP подключений
+│   │   └── Универсальный CLI для MCP подключений
 │   ├── core/              → @mcp-framework/core
-│   │   └── BaseTool, registry, type system
+│   │   └── BaseTool, реестр, система типов
 │   └── search/            → @mcp-framework/search
-│       └── Tool Search Engine (compile-time indexing)
+│       └── Поисковый движок (compile-time индексация)
 └── servers/
     └── yandex-tracker/    → mcp-server-yandex-tracker
-        └── Yandex API, tools, operations, DI
+        └── Yandex API, инструменты, операции, DI
 ```
 
-**Dependency Graph:**
+**Граф зависимостей:**
 ```
-infrastructure (0 dependencies)
+infrastructure (0 зависимостей)
     ↓
-cli (depends on infrastructure)
+cli (зависит от infrastructure)
     ↓
-core (depends on infrastructure)
+core (зависит от infrastructure)
     ↓
-search (depends on core)
+search (зависит от core)
     ↓
-yandex-tracker (depends on all framework packages)
+yandex-tracker (зависит от всех framework пакетов)
 ```
 
-**Details:** [ARCHITECTURE.md](./ARCHITECTURE.md)
+**Подробности:** [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ---
 
-## 🚀 Quick Start
+## Разработка
 
-### For Users (Yandex Tracker Server)
+### Для контрибьюторов
 
-**Install and run:**
 ```bash
-npm install -g mcp-server-yandex-tracker
-```
-
-**Connect to Claude Desktop:**
-Follow instructions in [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
-
-### For Framework Users
-
-**Install packages you need:**
-```bash
-npm install @mcp-framework/infrastructure
-npm install @mcp-framework/core
-npm install @mcp-framework/search
-```
-
-**Usage examples:** See README.md in each package.
-
-### For Contributors
-
-**Clone and setup:**
-```bash
+# Клонируй и настрой
 git clone https://github.com/FractalizeR/mcp_server_yandex_tracker.git
 cd mcp_server_yandex_tracker
 npm install
@@ -99,93 +109,100 @@ npm run build
 npm run test
 ```
 
-**Read contributing guide:** [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
+**Читай руководство:** [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
----
-
-## 🛠️ Development
-
-### Workspace Commands
+### Для пользователей Framework
 
 ```bash
-# Install all dependencies
+npm install @mcp-framework/infrastructure
+npm install @mcp-framework/core
+npm install @mcp-framework/search
+```
+
+**Примеры использования:** см. README.md в каждом пакете.
+
+### Команды Workspace
+
+```bash
+# Установить все зависимости
 npm install
 
-# Build all packages (topological order)
+# Собрать все пакеты (топологический порядок)
 npm run build
 
-# Test all packages
+# Протестировать все пакеты
 npm run test
 
-# Validate entire monorepo
+# Валидация всего monorepo
 npm run validate
 
-# Clean all packages
+# Очистить все пакеты
 npm run clean
 ```
 
-### Working with Individual Packages
+### Работа с отдельными пакетами
 
 ```bash
-# Build one package
+# Собрать один пакет
 npm run build --workspace=@mcp-framework/core
 
-# Test one package
+# Протестировать один пакет
 npm run test --workspace=mcp-server-yandex-tracker
 
-# All package commands
+# Все команды пакета
 cd packages/servers/yandex-tracker
 npm run <script>
 ```
 
-### Dependency Management
+### Управление зависимостями
 
 ```bash
-# Add dependency to specific package
+# Добавить зависимость в конкретный пакет
 npm install axios --workspace=@mcp-framework/infrastructure
 
-# Add framework package to yandex-tracker
+# Добавить framework пакет в yandex-tracker
 cd packages/servers/yandex-tracker
 npm install @mcp-framework/core
 ```
 
 ---
 
-## 📖 Documentation
+## Документация
 
 ### Monorepo
 
-- **[CLAUDE.md](CLAUDE.md)** — AI agent guidelines for monorepo
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** — Architecture overview
-- **[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)** — Contribution guidelines
+- **[CLAUDE.md](CLAUDE.md)** — руководство для ИИ агентов
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — обзор архитектуры
+- **[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)** — руководство для контрибьюторов
 
-### Packages
+### Пакеты
 
 - **Infrastructure:** [packages/framework/infrastructure/README.md](packages/framework/infrastructure/README.md)
+- **CLI:** [packages/framework/cli/README.md](packages/framework/cli/README.md)
 - **Core:** [packages/framework/core/README.md](packages/framework/core/README.md)
 - **Search:** [packages/framework/search/README.md](packages/framework/search/README.md)
 - **Yandex Tracker:** [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
 
 ---
 
-## 🧪 Testing
+## Тестирование
 
-**Run all tests:**
+**Запустить все тесты:**
 ```bash
 npm run test
 ```
 
-**With coverage:**
+**С покрытием:**
 ```bash
 npm run test:coverage
 ```
 
-**Package-specific:**
+**Для конкретного пакета:**
 ```bash
 npm run test --workspace=@mcp-framework/core
 ```
 
-**Watch mode:**
+**Watch режим:**
 ```bash
 cd packages/servers/yandex-tracker
 npm run test:watch
@@ -193,116 +210,117 @@ npm run test:watch
 
 ---
 
-## 🔍 Code Quality
+## Качество кода
 
-**Linting:**
+**Линтинг:**
 ```bash
-npm run lint              # Check all packages
-npm run lint:fix          # Fix auto-fixable issues
+npm run lint              # Проверить все пакеты
+npm run lint:fix          # Исправить автоматически
 ```
 
-**Type checking:**
+**Проверка типов:**
 ```bash
-npm run typecheck         # Check all packages
+npm run typecheck         # Проверить все пакеты
 ```
 
-**Architecture validation:**
+**Валидация архитектуры:**
 ```bash
-npm run depcruise         # Validate dependency graph
-npm run depcruise:graph   # Generate visual graph
+npm run depcruise         # Валидация графа зависимостей
+npm run depcruise:graph   # Сгенерировать визуальный граф
 ```
 
-**Security audits:**
+**Аудит безопасности:**
 ```bash
-npm run audit:socket      # Supply-chain analysis
-npm run audit:secrets     # Scan for leaked secrets
-npm run audit:lockfile    # Verify package-lock.json
+npm run audit:socket      # Анализ supply-chain
+npm run audit:secrets     # Сканирование секретов
+npm run audit:lockfile    # Проверка package-lock.json
 ```
 
-**Dead code detection:**
+**Поиск мертвого кода:**
 ```bash
-npm run knip              # Find unused files/exports/dependencies
+npm run knip              # Найти неиспользуемые файлы/экспорты/зависимости
 ```
 
 ---
 
-## 📦 Publishing
+## Публикация
 
-**Framework packages** (`@mcp-framework/*`) are published to npm registry.
-**Application package** (`mcp-server-yandex-tracker`) is published to npm registry.
+**Framework пакеты** (`@mcp-framework/*`) публикуются в npm registry.
+**Пакет приложения** (`mcp-server-yandex-tracker`) публикуется в npm registry.
 
-**Version management:**
-- Using [Changesets](https://github.com/changesets/changesets)
-- Automated via GitHub Actions on merge to main
+**Управление версиями:**
+- Используется [Changesets](https://github.com/changesets/changesets)
+- Автоматизировано через GitHub Actions при merge в main
 
-**Manual publish (if needed):**
+**Ручная публикация (при необходимости):**
 ```bash
-# Create changeset
+# Создать changeset
 npx changeset add
 
-# Version bump
+# Обновить версии
 npx changeset version
 
-# Publish (from main branch)
+# Опубликовать (из main ветки)
 npm run publish:all
 ```
 
 ---
 
-## 🤝 Contributing
+## Вклад в проект
 
-We welcome contributions! Please read:
+Мы приветствуем вклад в проект! Пожалуйста, прочитай:
 
-1. **[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)** — Contribution process
-2. **[CLAUDE.md](CLAUDE.md)** — Code conventions and architecture rules
-3. **[ARCHITECTURE.md](ARCHITECTURE.md)** — Understanding the codebase
+1. **[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)** — процесс контрибьюции
+2. **[CLAUDE.md](CLAUDE.md)** — соглашения о коде и правила архитектуры
+3. **[ARCHITECTURE.md](ARCHITECTURE.md)** — понимание кодовой базы
 
-**Quick checklist:**
-- ✅ Fork and create a feature branch
-- ✅ Follow code conventions (see CLAUDE.md)
-- ✅ Add tests (coverage ≥80%)
-- ✅ Run `npm run validate` before commit
-- ✅ Write clear commit messages
-- ✅ Open a Pull Request
-
----
-
-## 📄 License
-
-MIT License — free to use, modify, and distribute.
-
-See [LICENSE](LICENSE) for details.
+**Быстрый чек-лист:**
+- Форкни и создай feature ветку
+- Следуй соглашениям о коде (см. CLAUDE.md)
+- Добавь тесты (покрытие ≥80%)
+- Запусти `npm run validate` перед коммитом
+- Напиши понятные сообщения коммитов
+- Открой Pull Request
 
 ---
 
-## 🔗 Links
+## Лицензия
+
+MIT License — свободное использование, модификация и распространение.
+
+См. [LICENSE](LICENSE) для подробностей.
+
+---
+
+## Ссылки
 
 - **GitHub:** https://github.com/FractalizeR/mcp_server_yandex_tracker
+- **Releases:** https://github.com/FractalizeR/mcp_server_yandex_tracker/releases
 - **Issues:** https://github.com/FractalizeR/mcp_server_yandex_tracker/issues
-- **MCP Specification:** https://github.com/anthropics/mcp
+- **MCP спецификация:** https://github.com/anthropics/mcp
 - **Yandex.Tracker API:** https://cloud.yandex.ru/docs/tracker/about-api
 
 ---
 
-## 💬 Support
+## Поддержка
 
-**Found a bug or have a question?**
-1. Check [issues](https://github.com/FractalizeR/mcp_server_yandex_tracker/issues)
-2. Read package documentation (README.md in each package)
-3. Create a new issue with details
+**Нашел баг или есть вопрос?**
+1. Проверь [issues](https://github.com/FractalizeR/mcp_server_yandex_tracker/issues)
+2. Прочитай документацию пакетов (README.md в каждом пакете)
+3. Создай новый issue с подробностями
 
-**Want to help?**
-- ⭐ Star the repository
-- 🐛 Report bugs
-- 💡 Suggest features
-- 🔧 Submit Pull Requests
+**Хочешь помочь?**
+- Поставь звезду на GitHub
+- Сообщи о баге
+- Предложи новую фичу
+- Сделай Pull Request
 
 ---
 
 <div align="center">
 
-**Built with ❤️ for the MCP community**
+**Сделано с любовью для MCP сообщества**
 
-[⬆ Back to top](#mcp-framework--yandex-tracker-server)
+[Наверх](#mcp-framework-и-yandex-tracker-server)
 
 </div>
