@@ -15,6 +15,14 @@
 // === Helper Tools (critical) ===
 import { PingTool } from '#tools/helpers/ping/index.js';
 
+// === Project Tools ===
+import { GetProjectsTool } from '#tools/api/projects/get-projects/index.js';
+import { GetProjectTool } from '#tools/api/projects/get-project/index.js';
+import { GetProjectTasksTool } from '#tools/api/projects/get-project-tasks/index.js';
+import { CreateProjectTool } from '#tools/api/projects/create-project/index.js';
+import { UpdateProjectTool } from '#tools/api/projects/update-project/index.js';
+import { DeleteProjectTool } from '#tools/api/projects/delete-project/index.js';
+
 // === Task Tools ===
 import { GetTaskTool } from '#tools/tasks/get-task/index.js';
 import { GetTasksTool } from '#tools/tasks/get-tasks/index.js';
@@ -43,16 +51,24 @@ import { GetNextTasksTool } from '#tools/helpers/gtd/get-next-tasks/index.js';
  *
  * Organization:
  * 1. Helpers (critical) - ping
- * 2. Task tools - CRUD operations
- * 3. Date queries - tasks by date
- * 4. GTD helpers - engaged, next
- *
- * TODO: Add project tools from stage 4.1:
- * - Project tools (6): GetProjects, GetProject, GetProjectTasks, CreateProject, UpdateProject, DeleteProject
+ * 2. Project tools - CRUD operations
+ * 3. Task tools - CRUD operations
+ * 4. Date queries - tasks by date
+ * 5. GTD helpers - engaged, next
  */
 export const TOOL_CLASSES = [
   // Helpers (critical)
   PingTool,
+
+  // Project Read operations
+  GetProjectsTool,
+  GetProjectTool,
+  GetProjectTasksTool,
+
+  // Project Write operations
+  CreateProjectTool,
+  UpdateProjectTool,
+  DeleteProjectTool,
 
   // Task Read operations
   GetTaskTool,
