@@ -37,7 +37,8 @@
         "YANDEX_ORG_ID": "${user_config.org_id}",
         "YANDEX_WIKI_API_BASE": "https://api.wiki.yandex.net",
         "LOG_LEVEL": "${user_config.log_level}",
-        "REQUEST_TIMEOUT": "${user_config.request_timeout}"
+        "REQUEST_TIMEOUT": "${user_config.request_timeout}",
+        "DISABLED_TOOL_GROUPS": "${user_config.disabled_tool_groups}"
       }
     }
   },
@@ -72,6 +73,14 @@
       "default": 30000,
       "min": 5000,
       "max": 120000,
+      "sensitive": false
+    },
+    "disabled_tool_groups": {
+      "type": "string",
+      "title": "Disabled Tool Groups",
+      "description": "Отключенные группы инструментов (через запятую). Формат: 'category' или 'category:subcategory'. Пример: 'grids,pages:delete'",
+      "required": false,
+      "default": "grids",
       "sensitive": false
     }
   },
