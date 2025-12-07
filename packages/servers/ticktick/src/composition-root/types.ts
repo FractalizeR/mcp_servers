@@ -2,10 +2,6 @@
  * Dependency Injection tokens for TickTick MCP Server
  *
  * InversifyJS uses symbols as unique identifiers for binding dependencies.
- *
- * NOTE:
- * - Symbols for Tools and Operations will be auto-generated in future stages
- * - This file contains base infrastructure tokens
  */
 
 /**
@@ -26,7 +22,23 @@ export const TYPES = {
   // === Cache Layer ===
   CacheManager: Symbol.for('CacheManager'),
 
-  // === TickTick Facade (will be added in stage 3) ===
+  // === Project Operations ===
+  GetProjectsOperation: Symbol.for('GetProjectsOperation'),
+  GetProjectOperation: Symbol.for('GetProjectOperation'),
+  GetProjectDataOperation: Symbol.for('GetProjectDataOperation'),
+  CreateProjectOperation: Symbol.for('CreateProjectOperation'),
+  UpdateProjectOperation: Symbol.for('UpdateProjectOperation'),
+  DeleteProjectOperation: Symbol.for('DeleteProjectOperation'),
+
+  // === Task Operations ===
+  GetTaskOperation: Symbol.for('GetTaskOperation'),
+  GetTasksOperation: Symbol.for('GetTasksOperation'),
+  CreateTaskOperation: Symbol.for('CreateTaskOperation'),
+  UpdateTaskOperation: Symbol.for('UpdateTaskOperation'),
+  DeleteTaskOperation: Symbol.for('DeleteTaskOperation'),
+  CompleteTaskOperation: Symbol.for('CompleteTaskOperation'),
+
+  // === TickTick Facade ===
   TickTickFacade: Symbol.for('TickTickFacade'),
 
   // === Tool Registry (will be added in stage 5) ===

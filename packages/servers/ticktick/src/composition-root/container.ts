@@ -14,8 +14,10 @@ import {
 } from '@mcp-framework/infrastructure';
 import type { IHttpClient, RetryStrategy, CacheManager } from '@mcp-framework/infrastructure';
 import { TYPES } from './types.js';
+import { OPERATION_DEFINITIONS } from './definitions/operation-definitions.js';
 import { TickTickOAuthClient } from '#ticktick_api/auth/oauth-client.js';
 import { AuthenticatedHttpClient } from '#ticktick_api/http/authenticated-http-client.js';
+import { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
 
 /**
  * Bind infrastructure dependencies (config, logger)
@@ -100,6 +102,38 @@ function bindCacheLayer(container: Container): void {
 }
 
 /**
+ * Bind all API operations
+ *
+ * Uses OPERATION_DEFINITIONS for automatic registration.
+ * Operations receive dependencies via dynamic value resolution.
+ */
+function bindOperations(container: Container): void {
+  for (const definition of OPERATION_DEFINITIONS) {
+    container.bind(definition.symbol).toDynamicValue(() => {
+      const httpClient = container.get<IHttpClient>(TYPES.HttpClient);
+      const cacheManager = container.get<CacheManager>(TYPES.CacheManager);
+      const logger = container.get<Logger>(TYPES.Logger);
+
+      if (definition.needsConfig) {
+        const config = container.get<ServerConfig>(TYPES.ServerConfig);
+        return new definition.operationClass(httpClient, cacheManager, logger, config);
+      }
+
+      return new definition.operationClass(httpClient, cacheManager, logger);
+    });
+  }
+}
+
+/**
+ * Bind TickTickFacade
+ *
+ * Facade depends on all operations, so must be bound after them.
+ */
+function bindFacade(container: Container): void {
+  container.bind<TickTickFacade>(TYPES.TickTickFacade).to(TickTickFacade);
+}
+
+/**
  * Create and configure DI container
  *
  * NOTE: Function will become async in stage 5 (bindSearchToolsTool requires await)
@@ -124,10 +158,17 @@ export function createContainer(config: ServerConfig): Container {
   // 4. Cache layer
   bindCacheLayer(container);
 
+  // 5. API operations (depend on HTTP and Cache)
+  bindOperations(container);
+
+  // 6. Facade (depends on all operations)
+  bindFacade(container);
+
   // Log initialization
   const logger = container.get<Logger>(TYPES.Logger);
   logger.info('DI container initialized successfully', {
     registeredSymbols: Object.keys(TYPES).length,
+    operationsCount: OPERATION_DEFINITIONS.length,
   });
 
   return container;
