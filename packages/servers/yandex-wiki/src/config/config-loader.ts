@@ -9,6 +9,8 @@ import {
   DEFAULT_API_BASE,
   DEFAULT_LOG_LEVEL,
   DEFAULT_REQUEST_TIMEOUT,
+  DEFAULT_MAX_BATCH_SIZE,
+  DEFAULT_MAX_CONCURRENT_REQUESTS,
   DEFAULT_LOGS_DIR,
   DEFAULT_LOG_MAX_SIZE,
   DEFAULT_LOG_MAX_FILES,
@@ -171,6 +173,34 @@ function validateRetryDelay(
 }
 
 /**
+ * Валидация batch size
+ */
+function validateBatchSize(value: string | undefined, defaultValue: number): number {
+  if (!value) {
+    return defaultValue;
+  }
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < 1 || parsed > 100) {
+    return defaultValue;
+  }
+  return parsed;
+}
+
+/**
+ * Валидация concurrent requests
+ */
+function validateConcurrentRequests(value: string | undefined, defaultValue: number): number {
+  if (!value) {
+    return defaultValue;
+  }
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < 1 || parsed > 50) {
+    return defaultValue;
+  }
+  return parsed;
+}
+
+/**
  * Валидация ID организации
  * @throws {Error} если ID не указаны или указаны оба одновременно
  */
@@ -229,6 +259,16 @@ export function loadConfig(): ServerConfig {
     DEFAULT_REQUEST_TIMEOUT
   );
 
+  const maxBatchSize = validateBatchSize(
+    process.env[ENV_VAR_NAMES.MAX_BATCH_SIZE],
+    DEFAULT_MAX_BATCH_SIZE
+  );
+
+  const maxConcurrentRequests = validateConcurrentRequests(
+    process.env[ENV_VAR_NAMES.MAX_CONCURRENT_REQUESTS],
+    DEFAULT_MAX_CONCURRENT_REQUESTS
+  );
+
   const logsDirRaw = process.env[ENV_VAR_NAMES.LOGS_DIR]?.trim() || DEFAULT_LOGS_DIR;
   const logsDir = resolve(PROJECT_ROOT, logsDirRaw);
   const prettyLogs = process.env[ENV_VAR_NAMES.PRETTY_LOGS] === 'true';
@@ -276,6 +316,8 @@ export function loadConfig(): ServerConfig {
     apiBase: DEFAULT_API_BASE,
     logLevel,
     requestTimeout,
+    maxBatchSize,
+    maxConcurrentRequests,
     logsDir,
     prettyLogs,
     logMaxSize,

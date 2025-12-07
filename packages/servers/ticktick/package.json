@@ -35,7 +35,8 @@
     "CLAUDE.md"
   ],
   "scripts": {
-    "build": "tsc -b && tsc-alias",
+    "build": "tsc -b && tsc-alias && npm run build:bundle",
+    "build:bundle": "tsup",
     "clean": "rimraf dist",
     "cpd": "jscpd src || true",
     "cpd:quiet": "jscpd src --silent || true",
@@ -73,6 +74,7 @@
     "@types/node": "^24.10.1",
     "axios-mock-adapter": "^2.1.0",
     "tsc-alias": "^1.8.16",
+    "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
