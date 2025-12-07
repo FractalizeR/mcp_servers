@@ -13,8 +13,17 @@ import {
   InMemoryCacheManager,
 } from '@mcp-framework/infrastructure';
 import type { IHttpClient, RetryStrategy, CacheManager } from '@mcp-framework/infrastructure';
+import { ToolRegistry } from '@mcp-framework/core';
+import { ToolSearchEngine } from '@mcp-framework/search';
+import { WeightedCombinedStrategy } from '@mcp-framework/search';
+import { NameSearchStrategy } from '@mcp-framework/search';
+import { DescriptionSearchStrategy } from '@mcp-framework/search';
+import { CategorySearchStrategy } from '@mcp-framework/search';
+import { FuzzySearchStrategy } from '@mcp-framework/search';
+import type { ISearchStrategy, StrategyType } from '@mcp-framework/search';
 import { TYPES } from './types.js';
 import { OPERATION_DEFINITIONS } from './definitions/operation-definitions.js';
+import { TOOL_CLASSES } from './definitions/tool-definitions.js';
 import { TickTickOAuthClient } from '#ticktick_api/auth/oauth-client.js';
 import { AuthenticatedHttpClient } from '#ticktick_api/http/authenticated-http-client.js';
 import { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
@@ -134,14 +143,104 @@ function bindFacade(container: Container): void {
 }
 
 /**
- * Create and configure DI container
+ * Bind all MCP tools
  *
- * NOTE: Function will become async in stage 5 (bindSearchToolsTool requires await)
+ * Uses TOOL_CLASSES for automatic registration.
+ * SearchToolsTool is handled separately as it requires ToolSearchEngine.
+ */
+function bindTools(container: Container): void {
+  for (const ToolClass of TOOL_CLASSES) {
+    if (typeof ToolClass !== 'function') {
+      throw new Error(
+        '[DI Validation Error] Tool must be a constructor function. ' +
+          `Received: ${typeof ToolClass}`
+      );
+    }
+
+    const className = ToolClass.name;
+    if (!className) {
+      throw new Error(
+        '[DI Validation Error] Tool class must have a name. ' +
+          'Ensure the class is properly defined and not minified.'
+      );
+    }
+
+    const symbol = Symbol.for(className);
+
+    // Skip SearchToolsTool (registered separately)
+    if (className === 'SearchToolsTool') {
+      continue;
+    }
+
+    container.bind(symbol).toDynamicValue(() => {
+      const facade = container.get<TickTickFacade>(TYPES.TickTickFacade);
+      const loggerInstance = container.get<Logger>(TYPES.Logger);
+      return new (ToolClass as new (facade: TickTickFacade, logger: Logger) => unknown)(
+        facade,
+        loggerInstance
+      );
+    });
+  }
+}
+
+/**
+ * Bind ToolRegistry
+ *
+ * ToolRegistry automatically extracts all tools from container.
+ * SearchToolsTool is added separately via registerToolFromContainer().
+ */
+function bindToolRegistry(container: Container): void {
+  container.bind<ToolRegistry>(TYPES.ToolRegistry).toDynamicValue(() => {
+    const loggerInstance = container.get<Logger>(TYPES.Logger);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+    return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any);
+  });
+}
+
+/**
+ * Bind ToolSearchEngine
+ *
+ * ToolSearchEngine requires ToolRegistry for dynamic index generation.
+ */
+function bindSearchEngine(container: Container): void {
+  container.bind<ToolSearchEngine>(TYPES.ToolSearchEngine).toDynamicValue(() => {
+    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+
+    const strategies = new Map<StrategyType, ISearchStrategy>([
+      ['name', new NameSearchStrategy()],
+      ['description', new DescriptionSearchStrategy()],
+      ['category', new CategorySearchStrategy()],
+      ['fuzzy', new FuzzySearchStrategy(3)],
+    ]);
+
+    const combinedStrategy = new WeightedCombinedStrategy(strategies);
+
+    return new ToolSearchEngine(null, toolRegistry, combinedStrategy);
+  });
+}
+
+/**
+ * Bind SearchToolsTool
+ *
+ * Separate function for correct typing as constructor differs from BaseTool.
+ */
+async function bindSearchToolsTool(container: Container): Promise<void> {
+  const { SearchToolsTool } = await import('@mcp-framework/search');
+
+  container.bind(Symbol.for('SearchToolsTool')).toDynamicValue(() => {
+    const searchEngine = container.get<ToolSearchEngine>(TYPES.ToolSearchEngine);
+    const loggerInstance = container.get<Logger>(TYPES.Logger);
+    return new SearchToolsTool(searchEngine, loggerInstance);
+  });
+}
+
+/**
+ * Create and configure DI container
  *
  * @param config - Server configuration
  * @returns Configured DI container
  */
-export function createContainer(config: ServerConfig): Container {
+export async function createContainer(config: ServerConfig): Promise<Container> {
   const container = new Container({
     defaultScope: 'Singleton',
   });
@@ -164,11 +263,31 @@ export function createContainer(config: ServerConfig): Container {
   // 6. Facade (depends on all operations)
   bindFacade(container);
 
+  // 7. MCP Tools (depend on Facade)
+  bindTools(container);
+
+  // 8. ToolRegistry (uses tool classes)
+  bindToolRegistry(container);
+
+  // 9-11. SearchEngine and SearchToolsTool only in lazy mode
+  if (config.tools.discoveryMode === 'lazy') {
+    // 9. SearchEngine (requires ToolRegistry)
+    bindSearchEngine(container);
+
+    // 10. SearchToolsTool (requires SearchEngine)
+    await bindSearchToolsTool(container);
+
+    // 11. Register SearchToolsTool in ToolRegistry
+    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+    toolRegistry.registerToolFromContainer('SearchToolsTool');
+  }
+
   // Log initialization
   const logger = container.get<Logger>(TYPES.Logger);
   logger.info('DI container initialized successfully', {
     registeredSymbols: Object.keys(TYPES).length,
     operationsCount: OPERATION_DEFINITIONS.length,
+    toolsCount: TOOL_CLASSES.length,
   });
 
   return container;
