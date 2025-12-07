@@ -1,0 +1,147 @@
+# GitLab CI/CD для публикации NPM пакетов
+# Публикация происходит только при пуше тега v* и если NPM_TOKEN настроен
+
+stages:
+  - validate
+  - publish
+
+variables:
+  NODE_VERSION: "22"
+
+# Общий шаблон для Node.js jobs
+.node_template: &node_template
+  image: node:${NODE_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .turbo/
+
+# =============================================================================
+# ВАЛИДАЦИЯ (запускается на всех ветках и тегах)
+# =============================================================================
+
+validate:
+  <<: *node_template
+  stage: validate
+  script:
+    - npm ci
+    - npm run build
+    - npm run lint:quiet
+    - npm run typecheck
+    - npm run test:quiet
+    - npm run test:smoke
+  rules:
+    # Запускать на merge requests
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    # Запускать на тегах
+    - if: $CI_COMMIT_TAG =~ /^v.*/
+    # Запускать на default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# =============================================================================
+# ПУБЛИКАЦИЯ В NPM (только при пуше тега v*)
+# =============================================================================
+
+# Проверка версии перед публикацией
+verify-version:
+  <<: *node_template
+  stage: publish
+  script:
+    - |
+      # Извлекаем версию из тега (убираем 'v' в начале)
+      TAG_VERSION="${CI_COMMIT_TAG#v}"
+      echo "📋 Tag version: $TAG_VERSION"
+
+      # Проверяем версию в yandex-tracker
+      PKG_VERSION=$(node -p "require('./packages/servers/yandex-tracker/package.json').version")
+      echo "📦 Package version: $PKG_VERSION"
+
+      if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+        echo "❌ Error: Tag version ($TAG_VERSION) doesn't match package.json version ($PKG_VERSION)"
+        exit 1
+      fi
+      echo "✅ Version verified: $PKG_VERSION"
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v.*/
+
+# Публикация yandex-tracker в NPM
+publish-yandex-tracker:
+  <<: *node_template
+  stage: publish
+  needs:
+    - validate
+    - verify-version
+  script:
+    - npm ci
+    - npm run build
+
+    # Настройка .npmrc для аутентификации
+    - |
+      if [ -z "$NPM_TOKEN" ]; then
+        echo "⚠️  NPM_TOKEN не настроен - пропускаем публикацию"
+        echo "Для настройки: Settings → CI/CD → Variables → Add NPM_TOKEN"
+        exit 0
+      fi
+
+    - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ~/.npmrc
+
+    # Публикация пакета
+    - cd packages/servers/yandex-tracker
+    - npm publish --access public
+    - echo "✅ @mcp-server/yandex-tracker опубликован успешно!"
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v.*/
+  environment:
+    name: npm-registry
+    url: https://www.npmjs.com/package/@mcp-server/yandex-tracker
+
+# Публикация framework пакетов (опционально, раскомментируй при необходимости)
+# publish-framework:
+#   <<: *node_template
+#   stage: publish
+#   needs:
+#     - validate
+#     - verify-version
+#   script:
+#     - npm ci
+#     - npm run build
+#
+#     - |
+#       if [ -z "$NPM_TOKEN" ]; then
+#         echo "⚠️  NPM_TOKEN не настроен - пропускаем публикацию"
+#         exit 0
+#       fi
+#
+#     - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ~/.npmrc
+#
+#     # Публикация framework пакетов в правильном порядке
+#     - cd packages/framework/infrastructure && npm publish --access public
+#     - cd ../cli && npm publish --access public
+#     - cd ../core && npm publish --access public
+#     - cd ../search && npm publish --access public
+#     - echo "✅ Framework пакеты опубликованы!"
+#   rules:
+#     - if: $CI_COMMIT_TAG =~ /^v.*/
+
+# =============================================================================
+# СОЗДАНИЕ РЕЛИЗА (опционально)
+# =============================================================================
+
+# Сборка MCPB бандла для релиза
+build-mcpb:
+  <<: *node_template
+  stage: publish
+  needs:
+    - validate
+    - verify-version
+  script:
+    - npm ci
+    - npm run build:mcpb
+  artifacts:
+    paths:
+      - "*.mcpb"
+      - packages/servers/yandex-tracker/dist/yandex-tracker.bundle.cjs
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v.*/
