@@ -12,16 +12,16 @@
 | **Версия** | 4.0.0 | 0.1.0 | 0.1.0 |
 | **Кол-во тестов** | 149 файлов | 7 файлов | 3 файла |
 | **Smoke тесты** | 5 тестов | 1 тест | 2 теста |
-| **DI validation.ts** | Есть | Есть | НЕТ |
+| **DI validation.ts** | Есть | Есть | Есть |
 | **Facade Services** | Есть (14 сервисов) | Есть (3 сервиса) | НЕТ |
 | **ResponseFieldFilter** | Частичное | НЕТ | Есть |
-| **Batch операции** | Есть | НЕТ | Есть |
-| **eslint.config.js** | Есть | НЕТ | НЕТ |
+| **Batch операции** | Есть | Есть (конфиг) | Есть |
+| **eslint.config.js** | Есть | Есть | Есть |
 | **cpd скрипт** | Есть | НЕТ | Есть |
 | **depcruise скрипт** | Есть | НЕТ | Есть |
 | **validate:docs** | Есть | НЕТ | НЕТ |
 | **CLI папка** | src/cli/ | src/cli/ | cli.ts (файл) |
-| **build:bundle** | tsup | tsup | НЕТ |
+| **build:bundle** | tsup | tsup | tsup |
 | **ServerConfig** | Плоская структура | Плоская структура | Вложенная структура |
 
 ---
@@ -276,9 +276,9 @@
    - [x] Создать validateDIRegistrations()
    - [x] Добавить вызов в createContainer()
 
-5. **Добавить batch операции в Yandex Wiki** ⏳ ТРЕБУЕТСЯ
-   - [ ] Добавить maxBatchSize, maxConcurrentRequests в config
-   - [ ] Реализовать batch операции для pages и grids
+5. **Добавить batch конфигурацию в Yandex Wiki** ✅ ЧАСТИЧНО ВЫПОЛНЕНО
+   - [x] Добавить maxBatchSize, maxConcurrentRequests в config
+   - [ ] Реализовать batch операции для pages и grids (требует отдельной задачи)
 
 ### Фаза 3: Средний приоритет (P2)
 
@@ -286,9 +286,9 @@
    - [ ] Добавить Services слой между Facade и Operations
    - [ ] Изменить инъекцию на class-based
 
-7. **Структурные изменения TickTick** ⏳ ТРЕБУЕТСЯ
+7. **Структурные изменения TickTick** ⏳ ЧАСТИЧНО ВЫПОЛНЕНО
    - [ ] Переместить cli.ts в src/cli/
-   - [ ] Добавить tsup конфигурацию и build:bundle
+   - [x] Добавить tsup конфигурацию и build:bundle
 
 ### Фаза 4: Низкий приоритет (P3)
 
@@ -308,10 +308,10 @@
 | validation.ts (TickTick) | ✅ |
 | ResponseFieldFilter (Wiki) | ✅ (базовая инфраструктура) |
 | Тестовое покрытие | ⏳ |
-| Batch операции (Wiki) | ⏳ |
-| Services слой (TickTick) | ⏳ |
-| CLI структура (TickTick) | ⏳ |
-| build:bundle (TickTick) | ⏳ |
+| Batch конфигурация (Wiki) | ✅ |
+| Services слой (TickTick) | ⏳ (P2) |
+| CLI структура (TickTick) | ⏳ (P2) |
+| build:bundle (TickTick) | ✅ |
 
 ---
 
