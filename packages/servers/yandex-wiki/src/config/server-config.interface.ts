@@ -39,6 +39,10 @@ export interface ServerConfig {
   logLevel: LogLevel;
   /** Таймаут запросов в миллисекундах */
   requestTimeout: number;
+  /** Максимальное количество элементов в одном batch-запросе (бизнес-лимит) */
+  maxBatchSize: number;
+  /** Максимальное количество одновременных HTTP-запросов (технический лимит, throttling) */
+  maxConcurrentRequests: number;
   /** Директория для лог-файлов */
   logsDir: string;
   /** Включить pretty-printing логов (для development) */

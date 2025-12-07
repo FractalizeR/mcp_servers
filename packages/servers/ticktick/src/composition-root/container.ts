@@ -27,6 +27,7 @@ import type { ISearchStrategy, StrategyType } from '@mcp-framework/search';
 import { TYPES } from './types.js';
 import { OPERATION_DEFINITIONS } from './definitions/operation-definitions.js';
 import { TOOL_CLASSES } from './definitions/tool-definitions.js';
+import { validateDIRegistrations } from './validation.js';
 import { TickTickOAuthClient } from '#ticktick_api/auth/oauth-client.js';
 import { AuthenticatedHttpClient } from '#ticktick_api/http/authenticated-http-client.js';
 import { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
@@ -244,6 +245,9 @@ async function bindSearchToolsTool(container: Container): Promise<void> {
  * @returns Configured DI container
  */
 export async function createContainer(config: ServerConfig): Promise<Container> {
+  // Validate uniqueness of class names before creating container
+  validateDIRegistrations();
+
   const container = new Container({
     defaultScope: 'Singleton',
   });

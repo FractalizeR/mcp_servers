@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { PageSlugSchema, WikiFieldsSchema } from '#common/schemas/index.js';
+import {
+  PageSlugSchema,
+  WikiFieldsSchema,
+  OptionalResponseFieldsSchema,
+} from '#common/schemas/index.js';
 
 export const GetPageParamsSchema = z.object({
   slug: PageSlugSchema,
@@ -9,6 +13,7 @@ export const GetPageParamsSchema = z.object({
     .optional()
     .describe('Вернуть ошибку при редиректе (default: false)'),
   revision_id: z.number().int().optional().describe('ID конкретной ревизии страницы'),
+  responseFields: OptionalResponseFieldsSchema,
 });
 
 export type GetPageParams = z.infer<typeof GetPageParamsSchema>;

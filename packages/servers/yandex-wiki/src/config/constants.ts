@@ -8,6 +8,8 @@
 export const DEFAULT_API_BASE = 'https://api.wiki.yandex.net' as const;
 export const DEFAULT_LOG_LEVEL = 'info' as const;
 export const DEFAULT_REQUEST_TIMEOUT = 30000 as const;
+export const DEFAULT_MAX_BATCH_SIZE = 50 as const;
+export const DEFAULT_MAX_CONCURRENT_REQUESTS = 10 as const;
 export const DEFAULT_LOGS_DIR = './logs' as const;
 export const DEFAULT_LOG_MAX_SIZE = 51200 as const; // 50KB
 export const DEFAULT_LOG_MAX_FILES = 20 as const;
@@ -26,6 +28,8 @@ export const ENV_VAR_NAMES = {
   YANDEX_CLOUD_ORG_ID: 'YANDEX_CLOUD_ORG_ID',
   LOG_LEVEL: 'LOG_LEVEL',
   REQUEST_TIMEOUT: 'REQUEST_TIMEOUT',
+  MAX_BATCH_SIZE: 'MAX_BATCH_SIZE',
+  MAX_CONCURRENT_REQUESTS: 'MAX_CONCURRENT_REQUESTS',
   LOGS_DIR: 'LOGS_DIR',
   PRETTY_LOGS: 'PRETTY_LOGS',
   LOG_MAX_SIZE: 'LOG_MAX_SIZE',

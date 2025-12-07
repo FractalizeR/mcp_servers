@@ -27,7 +27,8 @@
   },
   "main": "./dist/index.js",
   "bin": {
-    "mcp-server-ticktick": "./dist/cli.js"
+    "mcp-connect": "./dist/cli/bin/mcp-connect.js",
+    "mcp-server-ticktick": "./dist/ticktick.bundle.js"
   },
   "files": [
     "dist",
@@ -35,7 +36,8 @@
     "CLAUDE.md"
   ],
   "scripts": {
-    "build": "tsc -b && tsc-alias",
+    "build": "tsc -b && tsc-alias && npm run build:bundle",
+    "build:bundle": "tsup",
     "clean": "rimraf dist",
     "cpd": "jscpd src || true",
     "cpd:quiet": "jscpd src --silent || true",
@@ -53,7 +55,8 @@
     "test:verbose": "vitest run --reporter=verbose",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
-    "validate": "npm run lint && npm run typecheck && npm run test && npm run cpd",
+    "validate": "npm run lint && npm run typecheck && npm run test && npm run cpd && npm run validate:docs",
+    "validate:docs": "tsx ../../../scripts/validate-docs-size.ts",
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet && npm run cpd:quiet"
   },
   "dependencies": {
@@ -65,14 +68,18 @@
     "axios": "^1.13.2",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
+    "inquirer": "^13.0.1",
     "inversify": "^7.10.4",
+    "ora": "^9.0.0",
     "pino": "^10.1.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/inquirer": "^9.0.9",
     "@types/node": "^24.10.1",
     "axios-mock-adapter": "^2.1.0",
     "tsc-alias": "^1.8.16",
+    "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
