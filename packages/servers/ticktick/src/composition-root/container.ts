@@ -5,6 +5,9 @@
  * Uses Symbol-based tokens for type-safe binding.
  */
 
+// IMPORTANT: Must be imported before any inversify code/decorators
+import 'reflect-metadata';
+
 import { Container } from 'inversify';
 import type { ServerConfig } from '#config';
 import {

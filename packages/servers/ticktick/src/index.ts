@@ -360,8 +360,5 @@ async function main(): Promise<void> {
   }
 }
 
-// Start server
-main().catch((error) => {
-  console.error('Unhandled error:', error);
-  process.exit(1);
-});
+// Export main for CLI entry point (cli.ts)
+export { main };
