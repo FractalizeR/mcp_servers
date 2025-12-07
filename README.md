@@ -6,27 +6,58 @@
 **Monorepo containing MCP Framework packages and Yandex Tracker integration**
 
 This repository provides:
-- 🏗️ **MCP Framework** — reusable packages for building MCP tools (auto-generated definitions from schema)
 - 🚀 **Yandex Tracker Server** — complete MCP server for Yandex.Tracker API
+- 🏗️ **MCP Framework** — reusable packages for building MCP tools (auto-generated definitions from schema)
+
+---
+
+## 🚀 Quick Start (Users)
+
+### Option 1: MCPB Bundle (Recommended)
+
+Download the pre-built `.mcpb` bundle from [GitHub Releases](https://github.com/FractalizeR/mcp_server_yandex_tracker/releases) and install it directly in your MCP client.
+
+### Option 2: CLI Installation
+
+```bash
+# Clone repository
+git clone https://github.com/FractalizeR/mcp_server_yandex_tracker.git
+cd mcp_server_yandex_tracker
+npm install && npm run build
+
+# Connect to your MCP client interactively
+cd packages/servers/yandex-tracker
+npm run mcp:connect
+```
+
+The CLI supports: **Claude Desktop**, **Claude Code**, **Codex**, **Gemini**, **Qwen**
+
+### Option 3: npm Global Install
+
+```bash
+npm install -g mcp-server-yandex-tracker
+```
+
+Then configure Claude Desktop manually — see [Yandex Tracker README](packages/servers/yandex-tracker/README.md#-установка).
 
 ---
 
 ## 📦 Packages
 
-### Framework Packages (Published to npm)
-
-| Package | Version | Description |
-|---------|---------|-------------|
-| [@mcp-framework/infrastructure](packages/framework/infrastructure) | 0.1.0 | HTTP client, cache, logging, async utilities |
-| [@mcp-framework/cli](packages/framework/cli) | 0.1.0 | Generic CLI для MCP подключений |
-| [@mcp-framework/core](packages/framework/core) | 0.1.0 | Base classes, type system, tool registry, schema→definition generator |
-| [@mcp-framework/search](packages/framework/search) | 0.1.0 | Advanced tool search engine with compile-time indexing |
-
 ### Application Package
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| [mcp-server-yandex-tracker](packages/servers/yandex-tracker) | 0.1.0 | MCP server for Yandex.Tracker API integration (v2/v3) |
+| [mcp-server-yandex-tracker](packages/servers/yandex-tracker) | 4.0.0 | MCP server for Yandex.Tracker API integration (v2/v3) |
+
+### Framework Packages (Published to npm)
+
+| Package | Version | Description |
+|---------|---------|-------------|
+| [@mcp-framework/infrastructure](packages/framework/infrastructure) | 0.2.0 | HTTP client, cache, logging, async utilities |
+| [@mcp-framework/cli](packages/framework/cli) | 0.2.0 | Generic CLI для MCP подключений |
+| [@mcp-framework/core](packages/framework/core) | 0.1.0 | Base classes, type system, tool registry, schema→definition generator |
+| [@mcp-framework/search](packages/framework/search) | 0.1.0 | Advanced tool search engine with compile-time indexing |
 
 ---
 
@@ -65,33 +96,12 @@ yandex-tracker (depends on all framework packages)
 
 ---
 
-## 🚀 Quick Start
-
-### For Users (Yandex Tracker Server)
-
-**Install and run:**
-```bash
-npm install -g mcp-server-yandex-tracker
-```
-
-**Connect to Claude Desktop:**
-Follow instructions in [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
-
-### For Framework Users
-
-**Install packages you need:**
-```bash
-npm install @mcp-framework/infrastructure
-npm install @mcp-framework/core
-npm install @mcp-framework/search
-```
-
-**Usage examples:** See README.md in each package.
+## 🛠️ Development
 
 ### For Contributors
 
-**Clone and setup:**
 ```bash
+# Clone and setup
 git clone https://github.com/FractalizeR/mcp_server_yandex_tracker.git
 cd mcp_server_yandex_tracker
 npm install
@@ -101,9 +111,15 @@ npm run test
 
 **Read contributing guide:** [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
----
+### For Framework Users
 
-## 🛠️ Development
+```bash
+npm install @mcp-framework/infrastructure
+npm install @mcp-framework/core
+npm install @mcp-framework/search
+```
+
+**Usage examples:** See README.md in each package.
 
 ### Workspace Commands
 
@@ -162,6 +178,7 @@ npm install @mcp-framework/core
 ### Packages
 
 - **Infrastructure:** [packages/framework/infrastructure/README.md](packages/framework/infrastructure/README.md)
+- **CLI:** [packages/framework/cli/README.md](packages/framework/cli/README.md)
 - **Core:** [packages/framework/core/README.md](packages/framework/core/README.md)
 - **Search:** [packages/framework/search/README.md](packages/framework/search/README.md)
 - **Yandex Tracker:** [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
@@ -278,6 +295,7 @@ See [LICENSE](LICENSE) for details.
 ## 🔗 Links
 
 - **GitHub:** https://github.com/FractalizeR/mcp_server_yandex_tracker
+- **Releases:** https://github.com/FractalizeR/mcp_server_yandex_tracker/releases
 - **Issues:** https://github.com/FractalizeR/mcp_server_yandex_tracker/issues
 - **MCP Specification:** https://github.com/anthropics/mcp
 - **Yandex.Tracker API:** https://cloud.yandex.ru/docs/tracker/about-api
