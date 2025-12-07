@@ -255,47 +255,63 @@
 
 ### Фаза 1: Критические исправления (P0)
 
-1. **Добавить eslint.config.js в Yandex Wiki и TickTick**
-   - Скопировать из yandex-tracker
-   - Адаптировать под специфику сервера
-   - Запустить lint:fix
+1. **Добавить eslint.config.js в Yandex Wiki и TickTick** ✅ ВЫПОЛНЕНО
+   - [x] Скопировать из yandex-tracker
+   - [x] Адаптировать под специфику сервера
+   - [x] Запустить lint:fix
 
-2. **Увеличить тестовое покрытие**
-   - Yandex Wiki: добавить тесты для всех operations, tools, facade
-   - TickTick: добавить тесты для всех operations, tools, facade
-   - Добавить integration и workflow тесты
+2. **Увеличить тестовое покрытие** ⏳ ТРЕБУЕТСЯ
+   - [ ] Yandex Wiki: добавить тесты для всех operations, tools, facade
+   - [ ] TickTick: добавить тесты для всех operations, tools, facade
+   - [ ] Добавить integration и workflow тесты
 
 ### Фаза 2: Высокий приоритет (P1)
 
-3. **Добавить ResponseFieldFilter в Yandex Wiki**
-   - Создать filter-fields.ts утилиту (как в TickTick)
-   - Добавить FieldsSchema в общие схемы
-   - Применить во всех read tools
+3. **Добавить ResponseFieldFilter в Yandex Wiki** ✅ ВЫПОЛНЕНО
+   - [x] Создать filter-fields.ts утилиту (как в TickTick)
+   - [x] Добавить ResponseFieldsSchema в общие схемы
+   - [x] Применить в GetPageTool (пример для остальных tools)
 
-4. **Добавить validation.ts в TickTick**
-   - Создать validateDIRegistrations()
-   - Добавить вызов в createContainer()
+4. **Добавить validation.ts в TickTick** ✅ ВЫПОЛНЕНО
+   - [x] Создать validateDIRegistrations()
+   - [x] Добавить вызов в createContainer()
 
-5. **Добавить batch операции в Yandex Wiki**
-   - Добавить maxBatchSize, maxConcurrentRequests в config
-   - Реализовать batch операции для pages и grids
+5. **Добавить batch операции в Yandex Wiki** ⏳ ТРЕБУЕТСЯ
+   - [ ] Добавить maxBatchSize, maxConcurrentRequests в config
+   - [ ] Реализовать batch операции для pages и grids
 
 ### Фаза 3: Средний приоритет (P2)
 
-6. **Рефакторинг архитектуры TickTick**
-   - Добавить Services слой между Facade и Operations
-   - Изменить инъекцию на class-based
+6. **Рефакторинг архитектуры TickTick** ⏳ ТРЕБУЕТСЯ
+   - [ ] Добавить Services слой между Facade и Operations
+   - [ ] Изменить инъекцию на class-based
 
-7. **Структурные изменения TickTick**
-   - Переместить cli.ts в src/cli/
-   - Добавить tsup конфигурацию и build:bundle
+7. **Структурные изменения TickTick** ⏳ ТРЕБУЕТСЯ
+   - [ ] Переместить cli.ts в src/cli/
+   - [ ] Добавить tsup конфигурацию и build:bundle
 
 ### Фаза 4: Низкий приоритет (P3)
 
-8. **Унификация конфигурации и документации**
-   - Унифицировать ServerConfig структуру
-   - Добавить README.md в модули Wiki
-   - Унифицировать подход к smoke тестам
+8. **Унификация конфигурации и документации** ⏳ ТРЕБУЕТСЯ
+   - [ ] Унифицировать ServerConfig структуру
+   - [ ] Добавить README.md в модули Wiki
+   - [ ] Унифицировать подход к smoke тестам
+
+---
+
+## Прогресс выполнения
+
+| Задача | Статус |
+|--------|--------|
+| eslint.config.js (Wiki) | ✅ |
+| eslint.config.js (TickTick) | ✅ |
+| validation.ts (TickTick) | ✅ |
+| ResponseFieldFilter (Wiki) | ✅ (базовая инфраструктура) |
+| Тестовое покрытие | ⏳ |
+| Batch операции (Wiki) | ⏳ |
+| Services слой (TickTick) | ⏳ |
+| CLI структура (TickTick) | ⏳ |
+| build:bundle (TickTick) | ⏳ |
 
 ---
 
