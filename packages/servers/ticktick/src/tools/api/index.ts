@@ -6,3 +6,6 @@
 
 // Project tools
 export * from './projects/index.js';
+
+// Date query tools
+export * from './date-queries/index.js';
