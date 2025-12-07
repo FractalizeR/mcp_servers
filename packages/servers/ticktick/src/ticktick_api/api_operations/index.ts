@@ -6,3 +6,4 @@
 
 export * from './base-operation.js';
 export * from './projects/index.js';
+export * from './tasks/index.js';

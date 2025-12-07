@@ -7,7 +7,7 @@
  * - NO business logic (delegated to subclasses)
  *
  * Pattern: Template Method
- * Defines common structure, specific operations implement details.
+ * Defines common structure, concrete operations implement details.
  */
 
 import type { IHttpClient, CacheManager, Logger } from '@mcp-framework/infrastructure';

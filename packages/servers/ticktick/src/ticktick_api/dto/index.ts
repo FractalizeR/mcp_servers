@@ -5,3 +5,4 @@
  */
 
 export * from './project.dto.js';
+export * from './task.dto.js';
