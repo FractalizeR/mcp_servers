@@ -52,7 +52,7 @@
     "test:verbose": "vitest run --reporter=verbose",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
-    "validate": "npm run lint && npm run typecheck && npm run test && npm run cpd",
+    "validate": "npm run lint && npm run typecheck && npm run test && npm run cpd && npm run depcruise && npm run validate:docs",
     "validate:docs": "tsx ../../../scripts/validate-docs-size.ts",
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet && npm run cpd:quiet"
   },

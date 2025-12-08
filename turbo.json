@@ -64,24 +64,24 @@
     },
     "cpd": {
       "cache": true,
-      "inputs": ["packages/**/src/**/*.ts", ".jscpd.json", "package.json"],
+      "inputs": ["src/**/*.ts", "../../../.jscpd.json"],
       "outputs": []
     },
     "cpd:quiet": {
       "cache": true,
-      "inputs": ["packages/**/src/**/*.ts", ".jscpd.json", "package.json"],
+      "inputs": ["src/**/*.ts", "../../../.jscpd.json"],
       "outputs": []
     },
     "cpd:report": {
       "cache": true,
-      "inputs": ["packages/**/src/**/*.ts", ".jscpd.json", "package.json"],
+      "inputs": ["src/**/*.ts", "../../../.jscpd.json"],
       "outputs": ["jscpd-report/**"]
     },
     "depcruise": {
       "cache": true,
       "inputs": [
-        "packages/**/*.ts",
-        ".dependency-cruiser.cjs",
+        "src/**/*.ts",
+        "../../../.dependency-cruiser.cjs",
         "tsconfig*.json"
       ],
       "outputs": []
