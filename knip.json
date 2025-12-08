@@ -20,6 +20,18 @@
     "packages/servers/yandex-tracker": {
       "entry": ["src/index.ts", "src/cli/bin/*.ts"],
       "project": ["src/**/*.ts"]
+    },
+    "packages/framework/cli": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/servers/yandex-wiki": {
+      "entry": ["src/index.ts", "src/cli/bin/*.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/servers/ticktick": {
+      "entry": ["src/index.ts", "src/cli/bin/*.ts"],
+      "project": ["src/**/*.ts"]
     }
   },
   "ignore": [
