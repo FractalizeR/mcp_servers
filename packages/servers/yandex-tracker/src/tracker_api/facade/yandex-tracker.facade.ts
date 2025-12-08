@@ -7,30 +7,25 @@
  * - НЕТ ручной инициализации (извлекается из DI контейнера)
  *
  * Архитектура:
- * - Facade делегирует вызовы 14 доменным сервисам
- * - Каждый сервис инжектится через DI (type-safe)
+ * - Facade делегирует вызовы 4 сервисным контейнерам
+ * - Каждый контейнер группирует связанные сервисы по доменам:
+ *   - CoreServicesContainer: UserService, FieldService
+ *   - IssueServicesContainer: IssueService, IssueLinkService, IssueAttachmentService,
+ *                             CommentService, ChecklistService, WorklogService
+ *   - QueueServicesContainer: QueueService, ComponentService
+ *   - ProjectAgileServicesContainer: ProjectService, BoardService, SprintService, BulkChangeService
  * - Нет зависимости от Container (прямая инъекция)
  *
- * Паттерн: Facade Pattern + Dependency Injection
+ * Паттерн: Facade Pattern + Parameter Object + Dependency Injection
  */
 
 import { injectable, inject } from 'inversify';
 import {
-  UserService,
-  IssueLinkService,
-  ComponentService,
-  FieldService,
-  CommentService,
-  ChecklistService,
-  WorklogService,
-  SprintService,
-  ProjectService,
-  BoardService,
-  QueueService,
-  IssueAttachmentService,
-  BulkChangeService,
-  IssueService,
-} from './services/index.js';
+  CoreServicesContainer,
+  IssueServicesContainer,
+  QueueServicesContainer,
+  ProjectAgileServicesContainer,
+} from './services/containers/index.js';
 
 // Types
 import type { PingResult } from '#tracker_api/api_operations/user/ping.operation.js';
@@ -109,21 +104,11 @@ import type { BatchResult } from '@mcp-framework/infrastructure';
 @injectable()
 export class YandexTrackerFacade {
   constructor(
-    @inject(UserService) private readonly userService: UserService,
-    @inject(IssueService) private readonly issueService: IssueService,
-    @inject(IssueLinkService) private readonly issueLinkService: IssueLinkService,
-    @inject(IssueAttachmentService)
-    private readonly issueAttachmentService: IssueAttachmentService,
-    @inject(QueueService) private readonly queueService: QueueService,
-    @inject(ComponentService) private readonly componentService: ComponentService,
-    @inject(FieldService) private readonly fieldService: FieldService,
-    @inject(CommentService) private readonly commentService: CommentService,
-    @inject(ChecklistService) private readonly checklistService: ChecklistService,
-    @inject(WorklogService) private readonly worklogService: WorklogService,
-    @inject(BulkChangeService) private readonly bulkChangeService: BulkChangeService,
-    @inject(ProjectService) private readonly projectService: ProjectService,
-    @inject(BoardService) private readonly boardService: BoardService,
-    @inject(SprintService) private readonly sprintService: SprintService
+    @inject(CoreServicesContainer) private readonly core: CoreServicesContainer,
+    @inject(IssueServicesContainer) private readonly issues: IssueServicesContainer,
+    @inject(QueueServicesContainer) private readonly queues: QueueServicesContainer,
+    @inject(ProjectAgileServicesContainer)
+    private readonly projectAgile: ProjectAgileServicesContainer
   ) {}
 
   // === User Methods ===
@@ -133,7 +118,7 @@ export class YandexTrackerFacade {
    * @returns результат проверки
    */
   async ping(): Promise<PingResult> {
-    return this.userService.ping();
+    return this.core.user.ping();
   }
 
   // === Issue Methods - Batch ===
@@ -144,7 +129,7 @@ export class YandexTrackerFacade {
    * @returns массив результатов (fulfilled | rejected)
    */
   async getIssues(issueKeys: string[]): Promise<BatchIssueResult[]> {
-    return this.issueService.getIssues(issueKeys);
+    return this.issues.issue.getIssues(issueKeys);
   }
 
   // === Issue Methods - Search ===
@@ -155,7 +140,7 @@ export class YandexTrackerFacade {
    * @returns массив найденных задач
    */
   async findIssues(params: FindIssuesInputDto): Promise<FindIssuesResult> {
-    return this.issueService.findIssues(params);
+    return this.issues.issue.findIssues(params);
   }
 
   // === Issue Methods - Create/Update ===
@@ -166,7 +151,7 @@ export class YandexTrackerFacade {
    * @returns созданная задача
    */
   async createIssue(issueData: CreateIssueDto): Promise<IssueWithUnknownFields> {
-    return this.issueService.createIssue(issueData);
+    return this.issues.issue.createIssue(issueData);
   }
 
   /**
@@ -176,7 +161,7 @@ export class YandexTrackerFacade {
    * @returns обновлённая задача
    */
   async updateIssue(issueKey: string, updateData: UpdateIssueDto): Promise<IssueWithUnknownFields> {
-    return this.issueService.updateIssue(issueKey, updateData);
+    return this.issues.issue.updateIssue(issueKey, updateData);
   }
 
   // === Issue Methods - Changelog ===
@@ -187,7 +172,7 @@ export class YandexTrackerFacade {
    * @returns массив результатов (fulfilled | rejected)
    */
   async getIssueChangelog(issueKeys: string[]): Promise<BatchChangelogResult[]> {
-    return this.issueService.getIssueChangelog(issueKeys);
+    return this.issues.issue.getIssueChangelog(issueKeys);
   }
 
   // === Issue Methods - Transitions ===
@@ -198,7 +183,7 @@ export class YandexTrackerFacade {
    * @returns массив доступных переходов
    */
   async getIssueTransitions(issueKey: string): Promise<TransitionWithUnknownFields[]> {
-    return this.issueService.getIssueTransitions(issueKey);
+    return this.issues.issue.getIssueTransitions(issueKey);
   }
 
   /**
@@ -213,7 +198,7 @@ export class YandexTrackerFacade {
     transitionId: string,
     transitionData?: ExecuteTransitionDto
   ): Promise<IssueWithUnknownFields> {
-    return this.issueService.transitionIssue(issueKey, transitionId, transitionData);
+    return this.issues.issue.transitionIssue(issueKey, transitionId, transitionData);
   }
 
   // === Queue Methods ===
@@ -224,7 +209,7 @@ export class YandexTrackerFacade {
    * @returns массив очередей
    */
   async getQueues(params?: GetQueuesDto): Promise<QueuesListOutput> {
-    return this.queueService.getQueues(params);
+    return this.queues.queue.getQueues(params);
   }
 
   /**
@@ -233,7 +218,7 @@ export class YandexTrackerFacade {
    * @returns очередь с полными данными
    */
   async getQueue(params: GetQueueDto): Promise<QueueOutput> {
-    return this.queueService.getQueue(params);
+    return this.queues.queue.getQueue(params);
   }
 
   /**
@@ -242,7 +227,7 @@ export class YandexTrackerFacade {
    * @returns созданная очередь
    */
   async createQueue(queueData: CreateQueueDto): Promise<QueueOutput> {
-    return this.queueService.createQueue(queueData);
+    return this.queues.queue.createQueue(queueData);
   }
 
   /**
@@ -251,7 +236,7 @@ export class YandexTrackerFacade {
    * @returns обновлённая очередь
    */
   async updateQueue(params: UpdateQueueParams): Promise<QueueOutput> {
-    return this.queueService.updateQueue(params);
+    return this.queues.queue.updateQueue(params);
   }
 
   /**
@@ -260,7 +245,7 @@ export class YandexTrackerFacade {
    * @returns массив полей очереди
    */
   async getQueueFields(params: GetQueueFieldsDto): Promise<QueueFieldsOutput> {
-    return this.queueService.getQueueFields(params);
+    return this.queues.queue.getQueueFields(params);
   }
 
   /**
@@ -269,7 +254,7 @@ export class YandexTrackerFacade {
    * @returns массив прав доступа
    */
   async manageQueueAccess(params: ManageQueueAccessParams): Promise<QueuePermissionsOutput> {
-    return this.queueService.manageQueueAccess(params);
+    return this.queues.queue.manageQueueAccess(params);
   }
 
   // === Project Methods ===
@@ -280,7 +265,7 @@ export class YandexTrackerFacade {
    * @returns список проектов
    */
   async getProjects(params?: GetProjectsDto): Promise<ProjectsListOutput> {
-    return this.projectService.getProjects(params);
+    return this.projectAgile.project.getProjects(params);
   }
 
   /**
@@ -289,7 +274,7 @@ export class YandexTrackerFacade {
    * @returns проект
    */
   async getProject(params: GetProjectParams): Promise<ProjectOutput> {
-    return this.projectService.getProject(params);
+    return this.projectAgile.project.getProject(params);
   }
 
   /**
@@ -298,7 +283,7 @@ export class YandexTrackerFacade {
    * @returns созданный проект
    */
   async createProject(data: CreateProjectDto): Promise<ProjectOutput> {
-    return this.projectService.createProject(data);
+    return this.projectAgile.project.createProject(data);
   }
 
   /**
@@ -307,7 +292,7 @@ export class YandexTrackerFacade {
    * @returns обновлённый проект
    */
   async updateProject(params: UpdateProjectParams): Promise<ProjectOutput> {
-    return this.projectService.updateProject(params);
+    return this.projectAgile.project.updateProject(params);
   }
 
   /**
@@ -316,7 +301,7 @@ export class YandexTrackerFacade {
    * @returns void
    */
   async deleteProject(params: DeleteProjectParams): Promise<void> {
-    return this.projectService.deleteProject(params);
+    return this.projectAgile.project.deleteProject(params);
   }
 
   // === Component Methods ===
@@ -327,7 +312,7 @@ export class YandexTrackerFacade {
    * @returns массив компонентов очереди
    */
   async getComponents(params: { queueId: string }): Promise<ComponentsListOutput> {
-    return this.componentService.getComponents(params);
+    return this.queues.component.getComponents(params);
   }
 
   /**
@@ -343,7 +328,7 @@ export class YandexTrackerFacade {
     lead?: string | undefined;
     assignAuto?: boolean | undefined;
   }): Promise<ComponentOutput> {
-    return this.componentService.createComponent(params);
+    return this.queues.component.createComponent(params);
   }
 
   /**
@@ -359,7 +344,7 @@ export class YandexTrackerFacade {
     lead?: string | undefined;
     assignAuto?: boolean | undefined;
   }): Promise<ComponentOutput> {
-    return this.componentService.updateComponent(params);
+    return this.queues.component.updateComponent(params);
   }
 
   /**
@@ -367,7 +352,7 @@ export class YandexTrackerFacade {
    * @param componentId - ID компонента
    */
   async deleteComponent(params: { componentId: string }): Promise<void> {
-    return this.componentService.deleteComponent(params);
+    return this.queues.component.deleteComponent(params);
   }
 
   // === Issue Methods - Links ===
@@ -378,7 +363,7 @@ export class YandexTrackerFacade {
    * @returns массив результатов (fulfilled | rejected)
    */
   async getIssueLinks(issueIds: string[]): Promise<BatchIssueLinksResult[]> {
-    return this.issueLinkService.getIssueLinks(issueIds);
+    return this.issues.link.getIssueLinks(issueIds);
   }
 
   /**
@@ -388,7 +373,7 @@ export class YandexTrackerFacade {
    * @returns созданная связь
    */
   async createLink(issueId: string, linkData: CreateLinkDto): Promise<LinkWithUnknownFields> {
-    return this.issueLinkService.createLink(issueId, linkData);
+    return this.issues.link.createLink(issueId, linkData);
   }
 
   /**
@@ -399,7 +384,7 @@ export class YandexTrackerFacade {
   async createLinksMany(
     links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }>
   ): Promise<BatchResult<string, LinkWithUnknownFields>> {
-    return this.issueLinkService.createLinksMany(links);
+    return this.issues.link.createLinksMany(links);
   }
 
   /**
@@ -408,7 +393,7 @@ export class YandexTrackerFacade {
    * @param linkId - ID связи для удаления
    */
   async deleteLink(issueId: string, linkId: string): Promise<void> {
-    return this.issueLinkService.deleteLink(issueId, linkId);
+    return this.issues.link.deleteLink(issueId, linkId);
   }
 
   /**
@@ -419,7 +404,7 @@ export class YandexTrackerFacade {
   async deleteLinksMany(
     links: Array<{ issueId: string; linkId: string }>
   ): Promise<BatchResult<string, void>> {
-    return this.issueLinkService.deleteLinksMany(links);
+    return this.issues.link.deleteLinksMany(links);
   }
 
   // === Comment Methods ===
@@ -431,7 +416,7 @@ export class YandexTrackerFacade {
    * @returns созданный комментарий
    */
   async addComment(issueId: string, input: AddCommentInput): Promise<CommentWithUnknownFields> {
-    return this.commentService.addComment(issueId, input);
+    return this.issues.comment.addComment(issueId, input);
   }
 
   /**
@@ -442,7 +427,7 @@ export class YandexTrackerFacade {
   async addCommentsMany(
     comments: Array<{ issueId: string; text: string; attachmentIds?: string[] | undefined }>
   ): Promise<BatchResult<string, CommentWithUnknownFields>> {
-    return this.commentService.addCommentsMany(comments);
+    return this.issues.comment.addCommentsMany(comments);
   }
 
   /**
@@ -455,7 +440,7 @@ export class YandexTrackerFacade {
     issueId: string,
     input?: GetCommentsInput
   ): Promise<CommentWithUnknownFields[]> {
-    return this.commentService.getComments(issueId, input);
+    return this.issues.comment.getComments(issueId, input);
   }
 
   /**
@@ -468,7 +453,7 @@ export class YandexTrackerFacade {
     issueIds: string[],
     input?: GetCommentsInput
   ): Promise<BatchResult<string, CommentWithUnknownFields[]>> {
-    return this.commentService.getCommentsMany(issueIds, input);
+    return this.issues.comment.getCommentsMany(issueIds, input);
   }
 
   /**
@@ -483,7 +468,7 @@ export class YandexTrackerFacade {
     commentId: string,
     input: EditCommentInput
   ): Promise<CommentWithUnknownFields> {
-    return this.commentService.editComment(issueId, commentId, input);
+    return this.issues.comment.editComment(issueId, commentId, input);
   }
 
   /**
@@ -494,7 +479,7 @@ export class YandexTrackerFacade {
   async editCommentsMany(
     comments: Array<{ issueId: string; commentId: string; text: string }>
   ): Promise<BatchResult<string, CommentWithUnknownFields>> {
-    return this.commentService.editCommentsMany(comments);
+    return this.issues.comment.editCommentsMany(comments);
   }
 
   /**
@@ -504,7 +489,7 @@ export class YandexTrackerFacade {
    * @returns void
    */
   async deleteComment(issueId: string, commentId: string): Promise<void> {
-    return this.commentService.deleteComment(issueId, commentId);
+    return this.issues.comment.deleteComment(issueId, commentId);
   }
 
   /**
@@ -515,7 +500,7 @@ export class YandexTrackerFacade {
   async deleteCommentsMany(
     comments: Array<{ issueId: string; commentId: string }>
   ): Promise<BatchResult<string, void>> {
-    return this.commentService.deleteCommentsMany(comments);
+    return this.issues.comment.deleteCommentsMany(comments);
   }
 
   // === Checklist Methods ===
@@ -526,7 +511,7 @@ export class YandexTrackerFacade {
    * @returns массив элементов чеклиста
    */
   async getChecklist(issueId: string): Promise<ChecklistItemWithUnknownFields[]> {
-    return this.checklistService.getChecklist(issueId);
+    return this.issues.checklist.getChecklist(issueId);
   }
 
   /**
@@ -537,7 +522,7 @@ export class YandexTrackerFacade {
   async getChecklistMany(
     issueIds: string[]
   ): Promise<BatchResult<string, ChecklistItemWithUnknownFields[]>> {
-    return this.checklistService.getChecklistMany(issueIds);
+    return this.issues.checklist.getChecklistMany(issueIds);
   }
 
   /**
@@ -550,7 +535,7 @@ export class YandexTrackerFacade {
     issueId: string,
     input: AddChecklistItemInput
   ): Promise<ChecklistItemWithUnknownFields> {
-    return this.checklistService.addChecklistItem(issueId, input);
+    return this.issues.checklist.addChecklistItem(issueId, input);
   }
 
   /**
@@ -567,7 +552,7 @@ export class YandexTrackerFacade {
       deadline?: string | undefined;
     }>
   ): Promise<BatchResult<string, ChecklistItemWithUnknownFields>> {
-    return this.checklistService.addChecklistItemMany(items);
+    return this.issues.checklist.addChecklistItemMany(items);
   }
 
   /**
@@ -582,7 +567,7 @@ export class YandexTrackerFacade {
     checklistItemId: string,
     input: UpdateChecklistItemInput
   ): Promise<ChecklistItemWithUnknownFields> {
-    return this.checklistService.updateChecklistItem(issueId, checklistItemId, input);
+    return this.issues.checklist.updateChecklistItem(issueId, checklistItemId, input);
   }
 
   /**
@@ -600,7 +585,7 @@ export class YandexTrackerFacade {
       deadline?: string | undefined;
     }>
   ): Promise<BatchResult<string, ChecklistItemWithUnknownFields>> {
-    return this.checklistService.updateChecklistItemMany(items);
+    return this.issues.checklist.updateChecklistItemMany(items);
   }
 
   /**
@@ -610,7 +595,7 @@ export class YandexTrackerFacade {
    * @returns void
    */
   async deleteChecklistItem(issueId: string, checklistItemId: string): Promise<void> {
-    return this.checklistService.deleteChecklistItem(issueId, checklistItemId);
+    return this.issues.checklist.deleteChecklistItem(issueId, checklistItemId);
   }
 
   /**
@@ -621,7 +606,7 @@ export class YandexTrackerFacade {
   async deleteChecklistItemMany(
     items: Array<{ issueId: string; itemId: string }>
   ): Promise<BatchResult<string, void>> {
-    return this.checklistService.deleteChecklistItemMany(items);
+    return this.issues.checklist.deleteChecklistItemMany(items);
   }
 
   // === Worklog Methods ===
@@ -632,7 +617,7 @@ export class YandexTrackerFacade {
    * @returns массив записей времени
    */
   async getWorklogs(issueId: string): Promise<WorklogWithUnknownFields[]> {
-    return this.worklogService.getWorklogs(issueId);
+    return this.issues.worklog.getWorklogs(issueId);
   }
 
   /**
@@ -643,7 +628,7 @@ export class YandexTrackerFacade {
   async getWorklogsMany(
     issueIds: string[]
   ): Promise<BatchResult<string, WorklogWithUnknownFields[]>> {
-    return this.worklogService.getWorklogsMany(issueIds);
+    return this.issues.worklog.getWorklogsMany(issueIds);
   }
 
   /**
@@ -653,7 +638,7 @@ export class YandexTrackerFacade {
    * @returns созданная запись времени
    */
   async addWorklog(issueId: string, input: AddWorklogInput): Promise<WorklogWithUnknownFields> {
-    return this.worklogService.addWorklog(issueId, input);
+    return this.issues.worklog.addWorklog(issueId, input);
   }
 
   /**
@@ -669,7 +654,7 @@ export class YandexTrackerFacade {
       comment?: string | undefined;
     }>
   ): Promise<BatchResult<string, WorklogWithUnknownFields>> {
-    return this.worklogService.addWorklogsMany(worklogs);
+    return this.issues.worklog.addWorklogsMany(worklogs);
   }
 
   /**
@@ -684,7 +669,7 @@ export class YandexTrackerFacade {
     worklogId: string,
     input: UpdateWorklogInput
   ): Promise<WorklogWithUnknownFields> {
-    return this.worklogService.updateWorklog(issueId, worklogId, input);
+    return this.issues.worklog.updateWorklog(issueId, worklogId, input);
   }
 
   /**
@@ -694,7 +679,7 @@ export class YandexTrackerFacade {
    * @returns void
    */
   async deleteWorklog(issueId: string, worklogId: string): Promise<void> {
-    return this.worklogService.deleteWorklog(issueId, worklogId);
+    return this.issues.worklog.deleteWorklog(issueId, worklogId);
   }
 
   // === Issue Methods - Attachments ===
@@ -705,7 +690,7 @@ export class YandexTrackerFacade {
    * @returns массив прикрепленных файлов
    */
   async getAttachments(issueId: string): Promise<AttachmentWithUnknownFields[]> {
-    return this.issueAttachmentService.getAttachments(issueId);
+    return this.issues.attachment.getAttachments(issueId);
   }
 
   /**
@@ -716,7 +701,7 @@ export class YandexTrackerFacade {
   async getAttachmentsMany(
     issueIds: string[]
   ): Promise<BatchResult<string, AttachmentWithUnknownFields[]>> {
-    return this.issueAttachmentService.getAttachmentsMany(issueIds);
+    return this.issues.attachment.getAttachmentsMany(issueIds);
   }
 
   /**
@@ -729,7 +714,7 @@ export class YandexTrackerFacade {
     issueId: string,
     input: UploadAttachmentInput
   ): Promise<AttachmentWithUnknownFields> {
-    return this.issueAttachmentService.uploadAttachment(issueId, input);
+    return this.issues.attachment.uploadAttachment(issueId, input);
   }
 
   /**
@@ -746,7 +731,7 @@ export class YandexTrackerFacade {
     filename: string,
     input?: DownloadAttachmentInput
   ): Promise<DownloadAttachmentOutput> {
-    return this.issueAttachmentService.downloadAttachment(issueId, attachmentId, filename, input);
+    return this.issues.attachment.downloadAttachment(issueId, attachmentId, filename, input);
   }
 
   /**
@@ -755,7 +740,7 @@ export class YandexTrackerFacade {
    * @param attachmentId - ID прикрепленного файла
    */
   async deleteAttachment(issueId: string, attachmentId: string): Promise<void> {
-    return this.issueAttachmentService.deleteAttachment(issueId, attachmentId);
+    return this.issues.attachment.deleteAttachment(issueId, attachmentId);
   }
 
   /**
@@ -770,7 +755,7 @@ export class YandexTrackerFacade {
     attachmentId: string,
     input?: DownloadAttachmentInput
   ): Promise<DownloadAttachmentOutput> {
-    return this.issueAttachmentService.getThumbnail(issueId, attachmentId, input);
+    return this.issues.attachment.getThumbnail(issueId, attachmentId, input);
   }
 
   // === Bulk Change Methods ===
@@ -801,7 +786,7 @@ export class YandexTrackerFacade {
   async bulkUpdateIssues(
     params: BulkUpdateIssuesInputDto
   ): Promise<BulkChangeOperationWithUnknownFields> {
-    return this.bulkChangeService.bulkUpdateIssues(params);
+    return this.projectAgile.bulkChange.bulkUpdateIssues(params);
   }
 
   /**
@@ -833,7 +818,7 @@ export class YandexTrackerFacade {
   async bulkTransitionIssues(
     params: BulkTransitionIssuesInputDto
   ): Promise<BulkChangeOperationWithUnknownFields> {
-    return this.bulkChangeService.bulkTransitionIssues(params);
+    return this.projectAgile.bulkChange.bulkTransitionIssues(params);
   }
 
   /**
@@ -865,7 +850,7 @@ export class YandexTrackerFacade {
   async bulkMoveIssues(
     params: BulkMoveIssuesInputDto
   ): Promise<BulkChangeOperationWithUnknownFields> {
-    return this.bulkChangeService.bulkMoveIssues(params);
+    return this.projectAgile.bulkChange.bulkMoveIssues(params);
   }
 
   /**
@@ -896,7 +881,7 @@ export class YandexTrackerFacade {
    * ```
    */
   async getBulkChangeStatus(operationId: string): Promise<BulkChangeOperationWithUnknownFields> {
-    return this.bulkChangeService.getBulkChangeStatus(operationId);
+    return this.projectAgile.bulkChange.getBulkChangeStatus(operationId);
   }
 
   // === Field Methods ===
@@ -906,7 +891,7 @@ export class YandexTrackerFacade {
    * @returns массив всех полей (системных и кастомных)
    */
   async getFields(): Promise<FieldsListOutput> {
-    return this.fieldService.getFields();
+    return this.core.field.getFields();
   }
 
   /**
@@ -915,7 +900,7 @@ export class YandexTrackerFacade {
    * @returns данные поля
    */
   async getField(fieldId: string): Promise<FieldOutput> {
-    return this.fieldService.getField(fieldId);
+    return this.core.field.getField(fieldId);
   }
 
   /**
@@ -924,7 +909,7 @@ export class YandexTrackerFacade {
    * @returns созданное поле
    */
   async createField(input: CreateFieldDto): Promise<FieldOutput> {
-    return this.fieldService.createField(input);
+    return this.core.field.createField(input);
   }
 
   /**
@@ -934,7 +919,7 @@ export class YandexTrackerFacade {
    * @returns обновленное поле
    */
   async updateField(fieldId: string, input: UpdateFieldDto): Promise<FieldOutput> {
-    return this.fieldService.updateField(fieldId, input);
+    return this.core.field.updateField(fieldId, input);
   }
 
   /**
@@ -942,7 +927,7 @@ export class YandexTrackerFacade {
    * @param fieldId - идентификатор поля
    */
   async deleteField(fieldId: string): Promise<void> {
-    return this.fieldService.deleteField(fieldId);
+    return this.core.field.deleteField(fieldId);
   }
 
   // === Board Methods ===
@@ -953,7 +938,7 @@ export class YandexTrackerFacade {
    * @returns массив досок
    */
   async getBoards(params?: GetBoardsDto): Promise<BoardsListOutput> {
-    return this.boardService.getBoards(params);
+    return this.projectAgile.board.getBoards(params);
   }
 
   /**
@@ -963,7 +948,7 @@ export class YandexTrackerFacade {
    * @returns данные доски
    */
   async getBoard(boardId: string, params?: Omit<GetBoardDto, 'boardId'>): Promise<BoardOutput> {
-    return this.boardService.getBoard(boardId, params);
+    return this.projectAgile.board.getBoard(boardId, params);
   }
 
   /**
@@ -972,7 +957,7 @@ export class YandexTrackerFacade {
    * @returns созданная доска
    */
   async createBoard(input: CreateBoardDto): Promise<BoardOutput> {
-    return this.boardService.createBoard(input);
+    return this.projectAgile.board.createBoard(input);
   }
 
   /**
@@ -982,7 +967,7 @@ export class YandexTrackerFacade {
    * @returns обновленная доска
    */
   async updateBoard(boardId: string, input: Omit<UpdateBoardDto, 'boardId'>): Promise<BoardOutput> {
-    return this.boardService.updateBoard(boardId, input);
+    return this.projectAgile.board.updateBoard(boardId, input);
   }
 
   /**
@@ -990,7 +975,7 @@ export class YandexTrackerFacade {
    * @param boardId - идентификатор доски
    */
   async deleteBoard(boardId: string): Promise<void> {
-    return this.boardService.deleteBoard(boardId);
+    return this.projectAgile.board.deleteBoard(boardId);
   }
 
   // === Sprint Methods ===
@@ -1001,7 +986,7 @@ export class YandexTrackerFacade {
    * @returns массив спринтов
    */
   async getSprints(boardId: string): Promise<SprintsListOutput> {
-    return this.sprintService.getSprints(boardId);
+    return this.projectAgile.sprint.getSprints(boardId);
   }
 
   /**
@@ -1010,7 +995,7 @@ export class YandexTrackerFacade {
    * @returns данные спринта
    */
   async getSprint(sprintId: string): Promise<SprintOutput> {
-    return this.sprintService.getSprint(sprintId);
+    return this.projectAgile.sprint.getSprint(sprintId);
   }
 
   /**
@@ -1019,7 +1004,7 @@ export class YandexTrackerFacade {
    * @returns созданный спринт
    */
   async createSprint(input: CreateSprintDto): Promise<SprintOutput> {
-    return this.sprintService.createSprint(input);
+    return this.projectAgile.sprint.createSprint(input);
   }
 
   /**
@@ -1032,6 +1017,6 @@ export class YandexTrackerFacade {
     sprintId: string,
     input: Omit<UpdateSprintDto, 'sprintId'>
   ): Promise<SprintOutput> {
-    return this.sprintService.updateSprint(sprintId, input);
+    return this.projectAgile.sprint.updateSprint(sprintId, input);
   }
 }

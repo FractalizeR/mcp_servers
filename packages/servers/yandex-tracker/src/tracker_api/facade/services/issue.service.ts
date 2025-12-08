@@ -8,23 +8,15 @@
  * - Получение и выполнение переходов статусов
  *
  * Архитектура:
- * - Прямая инъекция операций через декораторы (@injectable + @inject)
+ * - Инъекция операций через IssueOperationsContainer (Parameter Object pattern)
  * - Нет зависимостей от других сервисов
  * - Делегирование вызовов операциям
  *
  * ВАЖНО: Использует декораторы InversifyJS для DI.
- * В отличие от Operations/Tools (ручная регистрация), новые сервисы
- * используют декораторы для более чистого и type-safe кода.
  */
 
 import { injectable, inject } from 'inversify';
-import { GetIssuesOperation } from '#tracker_api/api_operations/issue/get-issues.operation.js';
-import { FindIssuesOperation } from '#tracker_api/api_operations/issue/find/find-issues.operation.js';
-import { CreateIssueOperation } from '#tracker_api/api_operations/issue/create/create-issue.operation.js';
-import { UpdateIssueOperation } from '#tracker_api/api_operations/issue/update/update-issue.operation.js';
-import { GetIssueChangelogOperation } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
-import { GetIssueTransitionsOperation } from '#tracker_api/api_operations/issue/transitions/get-issue-transitions.operation.js';
-import { TransitionIssueOperation } from '#tracker_api/api_operations/issue/transitions/transition-issue.operation.js';
+import { IssueOperationsContainer } from './containers/index.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
 import type { BatchChangelogResult } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
@@ -41,17 +33,7 @@ import type {
 
 @injectable()
 export class IssueService {
-  constructor(
-    @inject(GetIssuesOperation) private readonly getIssuesOp: GetIssuesOperation,
-    @inject(FindIssuesOperation) private readonly findIssuesOp: FindIssuesOperation,
-    @inject(CreateIssueOperation) private readonly createIssueOp: CreateIssueOperation,
-    @inject(UpdateIssueOperation) private readonly updateIssueOp: UpdateIssueOperation,
-    @inject(GetIssueChangelogOperation)
-    private readonly getIssueChangelogOp: GetIssueChangelogOperation,
-    @inject(GetIssueTransitionsOperation)
-    private readonly getIssueTransitionsOp: GetIssueTransitionsOperation,
-    @inject(TransitionIssueOperation) private readonly transitionIssueOp: TransitionIssueOperation
-  ) {}
+  constructor(@inject(IssueOperationsContainer) private readonly ops: IssueOperationsContainer) {}
 
   /**
    * Получает несколько задач параллельно
@@ -59,7 +41,7 @@ export class IssueService {
    * @returns массив результатов (fulfilled | rejected)
    */
   async getIssues(issueKeys: string[]): Promise<BatchIssueResult[]> {
-    return this.getIssuesOp.execute(issueKeys);
+    return this.ops.getIssues.execute(issueKeys);
   }
 
   /**
@@ -68,7 +50,7 @@ export class IssueService {
    * @returns массив найденных задач
    */
   async findIssues(params: FindIssuesInputDto): Promise<FindIssuesResult> {
-    return this.findIssuesOp.execute(params);
+    return this.ops.findIssues.execute(params);
   }
 
   /**
@@ -77,7 +59,7 @@ export class IssueService {
    * @returns созданная задача
    */
   async createIssue(issueData: CreateIssueDto): Promise<IssueWithUnknownFields> {
-    return this.createIssueOp.execute(issueData);
+    return this.ops.createIssue.execute(issueData);
   }
 
   /**
@@ -87,7 +69,7 @@ export class IssueService {
    * @returns обновлённая задача
    */
   async updateIssue(issueKey: string, updateData: UpdateIssueDto): Promise<IssueWithUnknownFields> {
-    return this.updateIssueOp.execute(issueKey, updateData);
+    return this.ops.updateIssue.execute(issueKey, updateData);
   }
 
   /**
@@ -96,7 +78,7 @@ export class IssueService {
    * @returns массив результатов (fulfilled | rejected)
    */
   async getIssueChangelog(issueKeys: string[]): Promise<BatchChangelogResult[]> {
-    return this.getIssueChangelogOp.execute(issueKeys);
+    return this.ops.getIssueChangelog.execute(issueKeys);
   }
 
   /**
@@ -105,7 +87,7 @@ export class IssueService {
    * @returns массив доступных переходов
    */
   async getIssueTransitions(issueKey: string): Promise<TransitionWithUnknownFields[]> {
-    return this.getIssueTransitionsOp.execute(issueKey);
+    return this.ops.getIssueTransitions.execute(issueKey);
   }
 
   /**
@@ -120,6 +102,6 @@ export class IssueService {
     transitionId: string,
     transitionData?: ExecuteTransitionDto
   ): Promise<IssueWithUnknownFields> {
-    return this.transitionIssueOp.execute(issueKey, transitionId, transitionData);
+    return this.ops.transitionIssue.execute(issueKey, transitionId, transitionData);
   }
 }

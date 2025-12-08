@@ -39,8 +39,23 @@ import {
   BulkChangeService,
   IssueService,
 } from '#tracker_api/facade/services/index.js';
+import {
+  IssueOperationsContainer,
+  QueueOperationsContainer,
+  CoreServicesContainer,
+  IssueServicesContainer,
+  QueueServicesContainer,
+  ProjectAgileServicesContainer,
+} from '#tracker_api/facade/services/containers/index.js';
 
 export function bindFacadeServices(container: Container): void {
+  // Operations Containers (должны быть зарегистрированы перед сервисами)
+  container.bind(IssueOperationsContainer).toSelf();
+  container.bind(QueueOperationsContainer).toSelf();
+
+  // Services Containers (должны быть зарегистрированы после сервисов, перед фасадом)
+  // Регистрируются позже (после сервисов) - см. ниже
+
   // User Service
   container.bind(UserService).toSelf();
 
@@ -82,4 +97,10 @@ export function bindFacadeServices(container: Container): void {
 
   // Issue Service
   container.bind(IssueService).toSelf();
+
+  // Services Containers (для YandexTrackerFacade - группируют сервисы)
+  container.bind(CoreServicesContainer).toSelf();
+  container.bind(IssueServicesContainer).toSelf();
+  container.bind(QueueServicesContainer).toSelf();
+  container.bind(ProjectAgileServicesContainer).toSelf();
 }

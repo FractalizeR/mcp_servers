@@ -31,6 +31,10 @@ import { validateDIRegistrations } from './validation.js';
 import { TickTickOAuthClient } from '#ticktick_api/auth/oauth-client.js';
 import { AuthenticatedHttpClient } from '#ticktick_api/http/authenticated-http-client.js';
 import { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
+import {
+  ProjectOperationsContainer,
+  TaskOperationsContainer,
+} from '#ticktick_api/facade/containers/index.js';
 
 /**
  * Bind infrastructure dependencies (config, logger)
@@ -138,9 +142,24 @@ function bindOperations(container: Container): void {
 }
 
 /**
+ * Bind Operations Containers
+ *
+ * Containers group operations by domain for facade.
+ * Must be bound after operations but before facade.
+ */
+function bindContainers(container: Container): void {
+  container
+    .bind<ProjectOperationsContainer>(TYPES.ProjectOperationsContainer)
+    .to(ProjectOperationsContainer);
+  container
+    .bind<TaskOperationsContainer>(TYPES.TaskOperationsContainer)
+    .to(TaskOperationsContainer);
+}
+
+/**
  * Bind TickTickFacade
  *
- * Facade depends on all operations, so must be bound after them.
+ * Facade depends on containers, so must be bound after them.
  */
 function bindFacade(container: Container): void {
   container.bind<TickTickFacade>(TYPES.TickTickFacade).to(TickTickFacade);
@@ -267,24 +286,27 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
   // 5. API operations (depend on HTTP and Cache)
   bindOperations(container);
 
-  // 6. Facade (depends on all operations)
+  // 6. Operations Containers (group operations by domain)
+  bindContainers(container);
+
+  // 7. Facade (depends on containers)
   bindFacade(container);
 
-  // 7. MCP Tools (depend on Facade)
+  // 8. MCP Tools (depend on Facade)
   bindTools(container);
 
-  // 8. ToolRegistry (uses tool classes)
+  // 9. ToolRegistry (uses tool classes)
   bindToolRegistry(container);
 
-  // 9-11. SearchEngine and SearchToolsTool only in lazy mode
+  // 10-12. SearchEngine and SearchToolsTool only in lazy mode
   if (config.tools.discoveryMode === 'lazy') {
-    // 9. SearchEngine (requires ToolRegistry)
+    // 10. SearchEngine (requires ToolRegistry)
     bindSearchEngine(container);
 
-    // 10. SearchToolsTool (requires SearchEngine)
+    // 11. SearchToolsTool (requires SearchEngine)
     await bindSearchToolsTool(container);
 
-    // 11. Register SearchToolsTool in ToolRegistry
+    // 12. Register SearchToolsTool in ToolRegistry
     const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
     toolRegistry.registerToolFromContainer('SearchToolsTool');
   }

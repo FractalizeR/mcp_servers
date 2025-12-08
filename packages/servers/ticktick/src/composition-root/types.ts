@@ -38,6 +38,10 @@ export const TYPES = {
   DeleteTaskOperation: Symbol.for('DeleteTaskOperation'),
   CompleteTaskOperation: Symbol.for('CompleteTaskOperation'),
 
+  // === Operations Containers ===
+  ProjectOperationsContainer: Symbol.for('ProjectOperationsContainer'),
+  TaskOperationsContainer: Symbol.for('TaskOperationsContainer'),
+
   // === TickTick Facade ===
   TickTickFacade: Symbol.for('TickTickFacade'),
 
