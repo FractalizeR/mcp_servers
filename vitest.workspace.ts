@@ -11,9 +11,12 @@ import { defineWorkspace } from 'vitest/config';
 export default defineWorkspace([
   // Framework packages
   'packages/framework/infrastructure',
+  'packages/framework/cli',
   'packages/framework/core',
   'packages/framework/search',
 
   // Server packages
   'packages/servers/yandex-tracker',
+  'packages/servers/yandex-wiki',
+  'packages/servers/ticktick',
 ]);
