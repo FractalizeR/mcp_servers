@@ -9,6 +9,7 @@
 **ОБЯЗАТЕЛЬНО прочитай перед работой:**
 - **[CLAUDE.md](./CLAUDE.md)** — правила monorepo, чек-листы, критические требования
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** — архитектура, концепции, паттерны, поток данных
+- **[MCP_SERVER_CHECKLIST.md](./MCP_SERVER_CHECKLIST.md)** — чеклист разработки нового MCP сервера
 - **[packages/servers/yandex-tracker/CLAUDE.md](./packages/servers/yandex-tracker/CLAUDE.md)** — правила Yandex Tracker пакета
 
 ---
