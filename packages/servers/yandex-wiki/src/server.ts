@@ -24,62 +24,20 @@ import { dirname, join } from 'node:path';
 import { loadConfig } from '#config';
 import type { ServerConfig } from '#config';
 import type { Logger } from '@mcp-framework/infrastructure';
-import type { ToolRegistry, ToolDefinition } from '@mcp-framework/core';
-import {
-  MCP_SERVER_NAME,
-  MCP_SERVER_DISPLAY_NAME,
-  YANDEX_WIKI_ESSENTIAL_TOOLS,
-} from './constants.js';
+import type { ToolRegistry } from '@mcp-framework/core';
+import { MCP_SERVER_NAME, YANDEX_WIKI_ESSENTIAL_TOOLS } from './constants.js';
 
 // DI Container (Composition Root)
 import { createContainer, TYPES } from '#composition-root/index.js';
 
-/**
- * Метрики инструментов для анализа размера tools/list response
- */
-interface ToolsMetrics {
-  totalTools: number;
-  descriptionLength: number;
-  estimatedTokens: number;
-  byCategory: Record<string, number>;
-  byPriority: Record<string, number>;
-  bySubcategory: Record<string, number>;
-}
-
-/**
- * Подсчёт метрик инструментов
- */
-function calculateToolsMetrics(definitions: ToolDefinition[]): ToolsMetrics {
-  const descriptionLength = definitions.reduce((sum, def) => sum + def.description.length, 0);
-
-  const byCategory: Record<string, number> = {};
-  const byPriority: Record<string, number> = {};
-  const bySubcategory: Record<string, number> = {};
-
-  for (const def of definitions) {
-    // By category
-    const category = def.category || 'unknown';
-    byCategory[category] = (byCategory[category] || 0) + 1;
-
-    // By priority
-    const priority = def.priority || 'normal';
-    byPriority[priority] = (byPriority[priority] || 0) + 1;
-
-    // By subcategory
-    if (def.subcategory) {
-      bySubcategory[def.subcategory] = (bySubcategory[def.subcategory] || 0) + 1;
-    }
-  }
-
-  return {
-    totalTools: definitions.length,
-    descriptionLength,
-    estimatedTokens: Math.ceil(descriptionLength / 4),
-    byCategory,
-    byPriority,
-    bySubcategory,
-  };
-}
+// Handler helpers (вынесены для уменьшения размера setupServer)
+import {
+  calculateToolsMetrics,
+  normalizeToolName,
+  logToolsMetrics,
+  logToolsWarnings,
+  createErrorResponse,
+} from './server/handlers.js';
 
 /**
  * Настройка обработчиков запросов MCP сервера
@@ -123,74 +81,9 @@ function setupServer(
       config.disabledToolGroups // негативный фильтр - отключение групп инструментов
     );
 
-    // Подсчёт метрик
     const metrics = calculateToolsMetrics(definitions);
-
-    // Info level: базовая информация
-    logger.info(
-      `✅ Возвращаем ${metrics.totalTools} инструментов (режим: ${config.toolDiscoveryMode})`,
-      {
-        totalTools: metrics.totalTools,
-        mode: config.toolDiscoveryMode,
-        descriptionLength: metrics.descriptionLength,
-        estimatedTokens: metrics.estimatedTokens,
-      }
-    );
-
-    // Логирование отключенных групп инструментов (если применялась)
-    if (config.disabledToolGroups) {
-      logger.info('✂️  Применён фильтр отключенных групп инструментов', {
-        disabledCategories: Array.from(config.disabledToolGroups.categories),
-        disabledCategoriesWithSubcategories: Array.from(
-          config.disabledToolGroups.categoriesWithSubcategories.entries()
-        ).map(([cat, subcats]) => ({
-          category: cat,
-          subcategories: Array.from(subcats),
-        })),
-      });
-    }
-
-    // Debug level: детальная разбивка
-    logger.debug('📊 Распределение инструментов', {
-      byCategory: metrics.byCategory,
-      byPriority: metrics.byPriority,
-      bySubcategory: metrics.bySubcategory,
-    });
-
-    // Debug level: порядок инструментов (для отладки сортировки)
-    logger.debug('🔢 Порядок инструментов:', {
-      order: definitions.map((d) => ({
-        name: d.name,
-        category: d.category,
-        priority: d.priority || 'normal',
-      })),
-    });
-
-    // Предупреждение для lazy режима
-    if (config.toolDiscoveryMode === 'lazy') {
-      logger.warn(`⚠️  ВНИМАНИЕ: Используется lazy режим discovery!`, {
-        message: 'Lazy режим может не работать с некоторыми MCP клиентами',
-        essentialTools: config.essentialTools,
-        recommendation: 'Используйте TOOL_DISCOVERY_MODE=eager для совместимости',
-      });
-    }
-
-    // Рекомендация переключиться на lazy mode при большом количестве инструментов
-    if (config.toolDiscoveryMode === 'eager' && metrics.totalTools > 30) {
-      logger.warn('⚠️  Рекомендация: много инструментов в eager mode', {
-        totalTools: metrics.totalTools,
-        estimatedTokens: metrics.estimatedTokens,
-        recommendation: 'Рассмотрите TOOL_DISCOVERY_MODE=lazy для экономии контекста',
-      });
-    }
-
-    // Предупреждение о больших descriptions
-    if (metrics.estimatedTokens > 200) {
-      logger.warn('⚠️  Descriptions занимают много токенов', {
-        estimatedTokens: metrics.estimatedTokens,
-        recommendation: 'Сократите descriptions для экономии контекста LLM',
-      });
-    }
+    logToolsMetrics(logger, config, definitions, metrics);
+    logToolsWarnings(logger, config, metrics);
 
     return {
       tools: definitions.map((def) => ({
@@ -204,46 +97,16 @@ function setupServer(
   // Обработчик вызова инструмента
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const originalName = request.params.name;
-    let name = originalName;
     const { arguments: args } = request.params;
 
     logger.info(`🔧 Запрос инструмента: ${originalName}`);
 
     // Нормализация имени: удаление префикса сервера (добавляется MCP клиентами)
-    // Примеры префиксов:
-    // - "yandex-wiki:tool_name" (технический идентификатор)
-    // - "FractalizeR's Yandex Wiki MCP:tool_name" (отображаемое имя в UI)
-    const serverPrefixes = [
-      `${MCP_SERVER_NAME}:`, // Технический идентификатор
-      `${MCP_SERVER_DISPLAY_NAME}:`, // Отображаемое имя
-    ];
-
-    let removedPrefix: string | null = null;
-
-    for (const prefix of serverPrefixes) {
-      if (name.startsWith(prefix)) {
-        removedPrefix = prefix;
-        name = name.slice(prefix.length);
-        logger.debug(`✂️  Убран префикс сервера`, {
-          original: originalName,
-          normalized: name,
-          prefix: removedPrefix,
-        });
-        break;
-      }
-    }
-
-    if (!removedPrefix) {
-      logger.debug(`ℹ️  Префикс не обнаружен (прямой вызов)`, {
-        toolName: name,
-      });
-    }
+    const { name, removedPrefix } = normalizeToolName(originalName, logger);
 
     try {
-      // ToolRegistry сам логирует параметры и результаты
       const result = await toolRegistry.execute(name, args as Record<string, unknown>);
 
-      // Логируем результат выполнения
       if (result.isError) {
         logger.error(`❌ Инструмент ${name} вернул ошибку`, {
           originalName,
@@ -261,7 +124,6 @@ function setupServer(
 
       return result;
     } catch (error) {
-      // Перехват необработанных исключений (на случай если что-то пойдёт не так)
       logger.error(`💥 Необработанное исключение при выполнении инструмента ${name}:`, {
         originalName,
         normalizedName: name,
@@ -270,26 +132,7 @@ function setupServer(
         stack: error instanceof Error ? error.stack : undefined,
       });
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(
-              {
-                success: false,
-                message: `Необработанная ошибка при выполнении инструмента: ${
-                  error instanceof Error ? error.message : 'Неизвестная ошибка'
-                }`,
-                tool: name,
-                originalName,
-              },
-              null,
-              2
-            ),
-          },
-        ],
-        isError: true,
-      };
+      return createErrorResponse(error, name, originalName);
     }
   });
 

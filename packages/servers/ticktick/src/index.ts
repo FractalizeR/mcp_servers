@@ -24,56 +24,21 @@ import { dirname, join } from 'node:path';
 import { loadConfig } from '#config';
 import type { ServerConfig } from '#config';
 import type { Logger } from '@mcp-framework/infrastructure';
-import type { ToolRegistry, ToolDefinition } from '@mcp-framework/core';
-import { MCP_SERVER_NAME, MCP_SERVER_DISPLAY_NAME, TICKTICK_ESSENTIAL_TOOLS } from './constants.js';
+import type { ToolRegistry } from '@mcp-framework/core';
+import { MCP_SERVER_NAME, TICKTICK_ESSENTIAL_TOOLS } from './constants.js';
 
 // DI Container (Composition Root)
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
 
-/**
- * Tool metrics for analyzing tools/list response size
- */
-interface ToolsMetrics {
-  totalTools: number;
-  descriptionLength: number;
-  estimatedTokens: number;
-  byCategory: Record<string, number>;
-  byPriority: Record<string, number>;
-  bySubcategory: Record<string, number>;
-}
-
-/**
- * Calculate tool metrics
- */
-function calculateToolsMetrics(definitions: ToolDefinition[]): ToolsMetrics {
-  const descriptionLength = definitions.reduce((sum, def) => sum + def.description.length, 0);
-
-  const byCategory: Record<string, number> = {};
-  const byPriority: Record<string, number> = {};
-  const bySubcategory: Record<string, number> = {};
-
-  for (const def of definitions) {
-    const category = def.category || 'unknown';
-    byCategory[category] = (byCategory[category] || 0) + 1;
-
-    const priority = def.priority || 'normal';
-    byPriority[priority] = (byPriority[priority] || 0) + 1;
-
-    if (def.subcategory) {
-      bySubcategory[def.subcategory] = (bySubcategory[def.subcategory] || 0) + 1;
-    }
-  }
-
-  return {
-    totalTools: definitions.length,
-    descriptionLength,
-    estimatedTokens: Math.ceil(descriptionLength / 4),
-    byCategory,
-    byPriority,
-    bySubcategory,
-  };
-}
+// Handler helpers (extracted to reduce setupServer size)
+import {
+  calculateToolsMetrics,
+  normalizeToolName,
+  logToolsMetrics,
+  logToolsWarnings,
+  createErrorResponse,
+} from './server/handlers.js';
 
 /**
  * Setup MCP server request handlers
@@ -118,41 +83,8 @@ function setupServer(
     );
 
     const metrics = calculateToolsMetrics(definitions);
-
-    logger.info(`✅ Returning ${metrics.totalTools} tools (mode: ${config.tools.discoveryMode})`, {
-      totalTools: metrics.totalTools,
-      mode: config.tools.discoveryMode,
-      descriptionLength: metrics.descriptionLength,
-      estimatedTokens: metrics.estimatedTokens,
-    });
-
-    if (config.tools.enabledCategories && !config.tools.enabledCategories.includeAll) {
-      logger.info('✂️  Category filter applied', {
-        categories: Array.from(config.tools.enabledCategories.categories),
-      });
-    }
-
-    logger.debug('📊 Tool distribution', {
-      byCategory: metrics.byCategory,
-      byPriority: metrics.byPriority,
-      bySubcategory: metrics.bySubcategory,
-    });
-
-    if (config.tools.discoveryMode === 'lazy') {
-      logger.warn(`⚠️  WARNING: Using lazy discovery mode!`, {
-        message: 'Lazy mode may not work with some MCP clients',
-        essentialTools: config.tools.essentialTools,
-        recommendation: 'Use TOOL_DISCOVERY_MODE=eager for compatibility',
-      });
-    }
-
-    if (config.tools.discoveryMode === 'eager' && metrics.totalTools > 30) {
-      logger.warn('⚠️  Recommendation: many tools in eager mode', {
-        totalTools: metrics.totalTools,
-        estimatedTokens: metrics.estimatedTokens,
-        recommendation: 'Consider TOOL_DISCOVERY_MODE=lazy to save context',
-      });
-    }
+    logToolsMetrics(logger, config, definitions, metrics);
+    logToolsWarnings(logger, config, metrics);
 
     return {
       tools: definitions.map((def) => ({
@@ -166,28 +98,12 @@ function setupServer(
   // Call tool handler
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const originalName = request.params.name;
-    let name = originalName;
     const { arguments: args } = request.params;
 
     logger.info(`🔧 Tool request: ${originalName}`);
 
     // Name normalization: remove server prefix (added by MCP clients)
-    const serverPrefixes = [`${MCP_SERVER_NAME}:`, `${MCP_SERVER_DISPLAY_NAME}:`];
-
-    let removedPrefix: string | null = null;
-
-    for (const prefix of serverPrefixes) {
-      if (name.startsWith(prefix)) {
-        removedPrefix = prefix;
-        name = name.slice(prefix.length);
-        logger.debug(`✂️  Removed server prefix`, {
-          original: originalName,
-          normalized: name,
-          prefix: removedPrefix,
-        });
-        break;
-      }
-    }
+    const { name, removedPrefix } = normalizeToolName(originalName, logger);
 
     try {
       const result = await toolRegistry.execute(name, args as Record<string, unknown>);
@@ -213,26 +129,7 @@ function setupServer(
         stack: error instanceof Error ? error.stack : undefined,
       });
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(
-              {
-                success: false,
-                message: `Unhandled error executing tool: ${
-                  error instanceof Error ? error.message : 'Unknown error'
-                }`,
-                tool: name,
-                originalName,
-              },
-              null,
-              2
-            ),
-          },
-        ],
-        isError: true,
-      };
+      return createErrorResponse(error, name, originalName);
     }
   });
 

@@ -1,7 +1,0 @@
-
-# Legacy CLI (сохранен для rollback, не проверяется линтером)
-src/cli-legacy/**
-tests/cli-legacy/**
-
-# Benchmarks (не требуют строгого линтинга, используются для измерений)
-benchmarks/**
