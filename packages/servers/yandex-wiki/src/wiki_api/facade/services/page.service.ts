@@ -1,13 +1,5 @@
 import { injectable, inject } from 'inversify';
-import {
-  GetPageOperation,
-  GetPageByIdOperation,
-  CreatePageOperation,
-  UpdatePageOperation,
-  DeletePageOperation,
-  ClonePageOperation,
-  AppendContentOperation,
-} from '#wiki_api/api_operations/index.js';
+import { PageOperationsContainer } from './containers/page-operations.container.js';
 import type {
   GetPageParams,
   GetPageByIdParams,
@@ -21,41 +13,33 @@ import type { ClonePageDto } from '#wiki_api/dto/index.js';
 
 @injectable()
 export class PageService {
-  constructor(
-    @inject(GetPageOperation) private readonly getPageOp: GetPageOperation,
-    @inject(GetPageByIdOperation) private readonly getPageByIdOp: GetPageByIdOperation,
-    @inject(CreatePageOperation) private readonly createPageOp: CreatePageOperation,
-    @inject(UpdatePageOperation) private readonly updatePageOp: UpdatePageOperation,
-    @inject(DeletePageOperation) private readonly deletePageOp: DeletePageOperation,
-    @inject(ClonePageOperation) private readonly clonePageOp: ClonePageOperation,
-    @inject(AppendContentOperation) private readonly appendContentOp: AppendContentOperation
-  ) {}
+  constructor(@inject(PageOperationsContainer) private readonly ops: PageOperationsContainer) {}
 
   async getPage(params: GetPageParams): Promise<PageWithUnknownFields> {
-    return this.getPageOp.execute(params);
+    return this.ops.getPage.execute(params);
   }
 
   async getPageById(params: GetPageByIdParams): Promise<PageWithUnknownFields> {
-    return this.getPageByIdOp.execute(params);
+    return this.ops.getPageById.execute(params);
   }
 
   async createPage(params: CreatePageParams): Promise<PageWithUnknownFields> {
-    return this.createPageOp.execute(params);
+    return this.ops.createPage.execute(params);
   }
 
   async updatePage(params: UpdatePageParams): Promise<PageWithUnknownFields> {
-    return this.updatePageOp.execute(params);
+    return this.ops.updatePage.execute(params);
   }
 
   async deletePage(idx: number): Promise<DeletePageResult> {
-    return this.deletePageOp.execute(idx);
+    return this.ops.deletePage.execute(idx);
   }
 
   async clonePage(idx: number, data: ClonePageDto): Promise<AsyncOperation> {
-    return this.clonePageOp.execute(idx, data);
+    return this.ops.clonePage.execute(idx, data);
   }
 
   async appendContent(params: AppendContentParams): Promise<PageWithUnknownFields> {
-    return this.appendContentOp.execute(params);
+    return this.ops.appendContent.execute(params);
   }
 }

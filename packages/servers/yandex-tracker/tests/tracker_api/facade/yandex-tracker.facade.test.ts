@@ -1,21 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type {
-  UserService,
-  IssueService,
-  IssueLinkService,
-  IssueAttachmentService,
-  QueueService,
-  ComponentService,
-  FieldService,
-  CommentService,
-  ChecklistService,
-  WorklogService,
-  BulkChangeService,
-  ProjectService,
-  BoardService,
-  SprintService,
-} from '#tracker_api/facade/services/index.js';
+  CoreServicesContainer,
+  IssueServicesContainer,
+  QueueServicesContainer,
+  ProjectAgileServicesContainer,
+} from '#tracker_api/facade/services/containers/index.js';
 import type { PingResult } from '#tracker_api/api_operations/user/ping.operation.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
@@ -51,146 +41,124 @@ import type {
 describe('YandexTrackerFacade', () => {
   let facade: YandexTrackerFacade;
 
-  // Mock Services
-  let mockUserService: UserService;
-  let mockIssueService: IssueService;
-  let mockIssueLinkService: IssueLinkService;
-  let mockIssueAttachmentService: IssueAttachmentService;
-  let mockQueueService: QueueService;
-  let mockComponentService: ComponentService;
-  let mockFieldService: FieldService;
-  let mockCommentService: CommentService;
-  let mockChecklistService: ChecklistService;
-  let mockWorklogService: WorklogService;
-  let mockBulkChangeService: BulkChangeService;
-  let mockProjectService: ProjectService;
-  let mockBoardService: BoardService;
-  let mockSprintService: SprintService;
+  // Mock Containers
+  let mockCoreContainer: CoreServicesContainer;
+  let mockIssuesContainer: IssueServicesContainer;
+  let mockQueuesContainer: QueueServicesContainer;
+  let mockProjectAgileContainer: ProjectAgileServicesContainer;
 
   beforeEach(() => {
-    // Create mock services
-    mockUserService = {
-      ping: vi.fn(),
-    } as unknown as UserService;
+    // Create mock containers with services
+    mockCoreContainer = {
+      user: {
+        ping: vi.fn(),
+      },
+      field: {
+        getFields: vi.fn(),
+        getField: vi.fn(),
+        createField: vi.fn(),
+        updateField: vi.fn(),
+        deleteField: vi.fn(),
+      },
+    } as unknown as CoreServicesContainer;
 
-    mockIssueService = {
-      getIssues: vi.fn(),
-      findIssues: vi.fn(),
-      createIssue: vi.fn(),
-      updateIssue: vi.fn(),
-      getIssueChangelog: vi.fn(),
-      getIssueTransitions: vi.fn(),
-      transitionIssue: vi.fn(),
-    } as unknown as IssueService;
+    mockIssuesContainer = {
+      issue: {
+        getIssues: vi.fn(),
+        findIssues: vi.fn(),
+        createIssue: vi.fn(),
+        updateIssue: vi.fn(),
+        getIssueChangelog: vi.fn(),
+        getIssueTransitions: vi.fn(),
+        transitionIssue: vi.fn(),
+      },
+      link: {
+        getIssueLinks: vi.fn(),
+        createLink: vi.fn(),
+        deleteLink: vi.fn(),
+      },
+      attachment: {
+        getAttachments: vi.fn(),
+        uploadAttachment: vi.fn(),
+        downloadAttachment: vi.fn(),
+        deleteAttachment: vi.fn(),
+        getThumbnail: vi.fn(),
+      },
+      comment: {
+        addComment: vi.fn(),
+        getComments: vi.fn(),
+        editComment: vi.fn(),
+        deleteComment: vi.fn(),
+      },
+      checklist: {
+        getChecklist: vi.fn(),
+        getChecklistMany: vi.fn(),
+        addChecklistItem: vi.fn(),
+        addChecklistItemMany: vi.fn(),
+        updateChecklistItem: vi.fn(),
+        deleteChecklistItem: vi.fn(),
+        deleteChecklistItemMany: vi.fn(),
+      },
+      worklog: {
+        getWorklogs: vi.fn(),
+        addWorklog: vi.fn(),
+        updateWorklog: vi.fn(),
+        deleteWorklog: vi.fn(),
+      },
+    } as unknown as IssueServicesContainer;
 
-    mockIssueLinkService = {
-      getIssueLinks: vi.fn(),
-      createLink: vi.fn(),
-      deleteLink: vi.fn(),
-    } as unknown as IssueLinkService;
+    mockQueuesContainer = {
+      queue: {
+        getQueues: vi.fn(),
+        getQueue: vi.fn(),
+        createQueue: vi.fn(),
+        updateQueue: vi.fn(),
+        getQueueFields: vi.fn(),
+        manageQueueAccess: vi.fn(),
+      },
+      component: {
+        getComponents: vi.fn(),
+        createComponent: vi.fn(),
+        updateComponent: vi.fn(),
+        deleteComponent: vi.fn(),
+      },
+    } as unknown as QueueServicesContainer;
 
-    mockIssueAttachmentService = {
-      getAttachments: vi.fn(),
-      uploadAttachment: vi.fn(),
-      downloadAttachment: vi.fn(),
-      deleteAttachment: vi.fn(),
-      getThumbnail: vi.fn(),
-    } as unknown as IssueAttachmentService;
+    mockProjectAgileContainer = {
+      project: {
+        getProjects: vi.fn(),
+        getProject: vi.fn(),
+        createProject: vi.fn(),
+        updateProject: vi.fn(),
+        deleteProject: vi.fn(),
+      },
+      board: {
+        getBoards: vi.fn(),
+        getBoard: vi.fn(),
+        createBoard: vi.fn(),
+        updateBoard: vi.fn(),
+        deleteBoard: vi.fn(),
+      },
+      sprint: {
+        getSprints: vi.fn(),
+        getSprint: vi.fn(),
+        createSprint: vi.fn(),
+        updateSprint: vi.fn(),
+      },
+      bulkChange: {
+        bulkUpdateIssues: vi.fn(),
+        bulkTransitionIssues: vi.fn(),
+        bulkMoveIssues: vi.fn(),
+        getBulkChangeStatus: vi.fn(),
+      },
+    } as unknown as ProjectAgileServicesContainer;
 
-    mockQueueService = {
-      getQueues: vi.fn(),
-      getQueue: vi.fn(),
-      createQueue: vi.fn(),
-      updateQueue: vi.fn(),
-      getQueueFields: vi.fn(),
-      manageQueueAccess: vi.fn(),
-    } as unknown as QueueService;
-
-    mockComponentService = {
-      getComponents: vi.fn(),
-      createComponent: vi.fn(),
-      updateComponent: vi.fn(),
-      deleteComponent: vi.fn(),
-    } as unknown as ComponentService;
-
-    mockFieldService = {
-      getFields: vi.fn(),
-      getField: vi.fn(),
-      createField: vi.fn(),
-      updateField: vi.fn(),
-      deleteField: vi.fn(),
-    } as unknown as FieldService;
-
-    mockCommentService = {
-      addComment: vi.fn(),
-      getComments: vi.fn(),
-      editComment: vi.fn(),
-      deleteComment: vi.fn(),
-    } as unknown as CommentService;
-
-    mockChecklistService = {
-      getChecklist: vi.fn(),
-      getChecklistMany: vi.fn(),
-      addChecklistItem: vi.fn(),
-      addChecklistItemMany: vi.fn(),
-      updateChecklistItem: vi.fn(),
-      deleteChecklistItem: vi.fn(),
-      deleteChecklistItemMany: vi.fn(),
-    } as unknown as ChecklistService;
-
-    mockWorklogService = {
-      getWorklogs: vi.fn(),
-      addWorklog: vi.fn(),
-      updateWorklog: vi.fn(),
-      deleteWorklog: vi.fn(),
-    } as unknown as WorklogService;
-
-    mockBulkChangeService = {
-      bulkUpdateIssues: vi.fn(),
-      bulkTransitionIssues: vi.fn(),
-      bulkMoveIssues: vi.fn(),
-      getBulkChangeStatus: vi.fn(),
-    } as unknown as BulkChangeService;
-
-    mockProjectService = {
-      getProjects: vi.fn(),
-      getProject: vi.fn(),
-      createProject: vi.fn(),
-      updateProject: vi.fn(),
-      deleteProject: vi.fn(),
-    } as unknown as ProjectService;
-
-    mockBoardService = {
-      getBoards: vi.fn(),
-      getBoard: vi.fn(),
-      createBoard: vi.fn(),
-      updateBoard: vi.fn(),
-      deleteBoard: vi.fn(),
-    } as unknown as BoardService;
-
-    mockSprintService = {
-      getSprints: vi.fn(),
-      getSprint: vi.fn(),
-      createSprint: vi.fn(),
-      updateSprint: vi.fn(),
-    } as unknown as SprintService;
-
-    // Create facade with mocked services
+    // Create facade with mocked containers
     facade = new YandexTrackerFacade(
-      mockUserService,
-      mockIssueService,
-      mockIssueLinkService,
-      mockIssueAttachmentService,
-      mockQueueService,
-      mockComponentService,
-      mockFieldService,
-      mockCommentService,
-      mockChecklistService,
-      mockWorklogService,
-      mockBulkChangeService,
-      mockProjectService,
-      mockBoardService,
-      mockSprintService
+      mockCoreContainer,
+      mockIssuesContainer,
+      mockQueuesContainer,
+      mockProjectAgileContainer
     );
   });
 
@@ -206,7 +174,7 @@ describe('YandexTrackerFacade', () => {
         message: `Успешно подключено к API Яндекс.Трекера. Текущий пользователь: Test User (testuser)`,
       };
 
-      vi.mocked(mockUserService.ping).mockResolvedValue(pingResult);
+      vi.mocked(mockCoreContainer.user.ping).mockResolvedValue(pingResult);
 
       // Act
       const result: PingResult = await facade.ping();
@@ -214,7 +182,7 @@ describe('YandexTrackerFacade', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.message).toContain('Test User');
-      expect(mockUserService.ping).toHaveBeenCalledOnce();
+      expect(mockCoreContainer.user.ping).toHaveBeenCalledOnce();
     });
 
     it('должна делегировать обработку ошибок UserService.ping', async () => {
@@ -224,7 +192,7 @@ describe('YandexTrackerFacade', () => {
         message: 'Ошибка подключения к API Яндекс.Трекера',
       };
 
-      vi.mocked(mockUserService.ping).mockResolvedValue(pingResult);
+      vi.mocked(mockCoreContainer.user.ping).mockResolvedValue(pingResult);
 
       // Act
       const result: PingResult = await facade.ping();
@@ -232,7 +200,7 @@ describe('YandexTrackerFacade', () => {
       // Assert
       expect(result.success).toBe(false);
       expect(result.message).toContain('Ошибка подключения');
-      expect(mockUserService.ping).toHaveBeenCalledOnce();
+      expect(mockCoreContainer.user.ping).toHaveBeenCalledOnce();
     });
   });
 
@@ -297,7 +265,7 @@ describe('YandexTrackerFacade', () => {
         },
       ];
 
-      vi.mocked(mockIssueService.getIssues).mockResolvedValue(batchResults);
+      vi.mocked(mockIssuesContainer.issue.getIssues).mockResolvedValue(batchResults);
 
       // Act
       const results: BatchIssueResult[] = await facade.getIssues(issueKeys);
@@ -314,7 +282,7 @@ describe('YandexTrackerFacade', () => {
         expect(results[1]!.value.key).toBe('TEST-2');
       }
 
-      expect(mockIssueService.getIssues).toHaveBeenCalledWith(issueKeys);
+      expect(mockIssuesContainer.issue.getIssues).toHaveBeenCalledWith(issueKeys);
     });
 
     it('должна обработать частичные ошибки при получении задач', async () => {
@@ -363,7 +331,7 @@ describe('YandexTrackerFacade', () => {
         { status: 'rejected', reason: apiError, key: 'INVALID', index: 1 },
       ];
 
-      vi.mocked(mockIssueService.getIssues).mockResolvedValue(batchResults);
+      vi.mocked(mockIssuesContainer.issue.getIssues).mockResolvedValue(batchResults);
 
       // Act
       const results: BatchIssueResult[] = await facade.getIssues(issueKeys);
@@ -381,7 +349,7 @@ describe('YandexTrackerFacade', () => {
         expect(results[1]!.reason.message).toBe('Not Found');
       }
 
-      expect(mockIssueService.getIssues).toHaveBeenCalledWith(issueKeys);
+      expect(mockIssuesContainer.issue.getIssues).toHaveBeenCalledWith(issueKeys);
     });
   });
 
@@ -401,18 +369,18 @@ describe('YandexTrackerFacade', () => {
         },
       ];
 
-      vi.mocked(mockIssueService.findIssues).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.issue.findIssues).mockResolvedValue(mockResult);
 
       const result = await facade.findIssues(params);
 
-      expect(mockIssueService.findIssues).toHaveBeenCalledWith(params);
+      expect(mockIssuesContainer.issue.findIssues).toHaveBeenCalledWith(params);
       expect(result).toEqual(mockResult);
     });
 
     it('должна обрабатывать ошибки от IssueService.findIssues', async () => {
       const params: FindIssuesInputDto = { query: 'invalid' };
       const error = new Error('Find failed');
-      vi.mocked(mockIssueService.findIssues).mockRejectedValue(error);
+      vi.mocked(mockIssuesContainer.issue.findIssues).mockRejectedValue(error);
 
       await expect(facade.findIssues(params)).rejects.toThrow('Find failed');
     });
@@ -432,18 +400,18 @@ describe('YandexTrackerFacade', () => {
         updatedAt: '2024-01-01',
       };
 
-      vi.mocked(mockIssueService.createIssue).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.issue.createIssue).mockResolvedValue(mockResult);
 
       const result = await facade.createIssue(issueData);
 
-      expect(mockIssueService.createIssue).toHaveBeenCalledWith(issueData);
+      expect(mockIssuesContainer.issue.createIssue).toHaveBeenCalledWith(issueData);
       expect(result).toEqual(mockResult);
     });
 
     it('должна обрабатывать ошибки от IssueService.createIssue', async () => {
       const issueData: CreateIssueDto = { queue: 'TEST', summary: '' };
       const error = new Error('Create failed');
-      vi.mocked(mockIssueService.createIssue).mockRejectedValue(error);
+      vi.mocked(mockIssuesContainer.issue.createIssue).mockRejectedValue(error);
 
       await expect(facade.createIssue(issueData)).rejects.toThrow('Create failed');
     });
@@ -464,11 +432,11 @@ describe('YandexTrackerFacade', () => {
         updatedAt: '2024-01-02',
       };
 
-      vi.mocked(mockIssueService.updateIssue).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.issue.updateIssue).mockResolvedValue(mockResult);
 
       const result = await facade.updateIssue(issueKey, updateData);
 
-      expect(mockIssueService.updateIssue).toHaveBeenCalledWith(issueKey, updateData);
+      expect(mockIssuesContainer.issue.updateIssue).toHaveBeenCalledWith(issueKey, updateData);
       expect(result).toEqual(mockResult);
     });
 
@@ -476,7 +444,7 @@ describe('YandexTrackerFacade', () => {
       const issueKey = 'TEST-123';
       const updateData: UpdateIssueDto = { summary: '' };
       const error = new Error('Update failed');
-      vi.mocked(mockIssueService.updateIssue).mockRejectedValue(error);
+      vi.mocked(mockIssuesContainer.issue.updateIssue).mockRejectedValue(error);
 
       await expect(facade.updateIssue(issueKey, updateData)).rejects.toThrow('Update failed');
     });
@@ -497,18 +465,18 @@ describe('YandexTrackerFacade', () => {
         },
       ];
 
-      vi.mocked(mockIssueService.getIssueChangelog).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.issue.getIssueChangelog).mockResolvedValue(mockResult);
 
       const result = await facade.getIssueChangelog(issueKey);
 
-      expect(mockIssueService.getIssueChangelog).toHaveBeenCalledWith(issueKey);
+      expect(mockIssuesContainer.issue.getIssueChangelog).toHaveBeenCalledWith(issueKey);
       expect(result).toEqual(mockResult);
     });
 
     it('должна обрабатывать ошибки от IssueService.getIssueChangelog', async () => {
       const issueKey = 'TEST-123';
       const error = new Error('Changelog failed');
-      vi.mocked(mockIssueService.getIssueChangelog).mockRejectedValue(error);
+      vi.mocked(mockIssuesContainer.issue.getIssueChangelog).mockRejectedValue(error);
 
       await expect(facade.getIssueChangelog(issueKey)).rejects.toThrow('Changelog failed');
     });
@@ -525,18 +493,18 @@ describe('YandexTrackerFacade', () => {
         },
       ];
 
-      vi.mocked(mockIssueService.getIssueTransitions).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.issue.getIssueTransitions).mockResolvedValue(mockResult);
 
       const result = await facade.getIssueTransitions(issueKey);
 
-      expect(mockIssueService.getIssueTransitions).toHaveBeenCalledWith(issueKey);
+      expect(mockIssuesContainer.issue.getIssueTransitions).toHaveBeenCalledWith(issueKey);
       expect(result).toEqual(mockResult);
     });
 
     it('должна обрабатывать ошибки от IssueService.getIssueTransitions', async () => {
       const issueKey = 'TEST-123';
       const error = new Error('Transitions failed');
-      vi.mocked(mockIssueService.getIssueTransitions).mockRejectedValue(error);
+      vi.mocked(mockIssuesContainer.issue.getIssueTransitions).mockRejectedValue(error);
 
       await expect(facade.getIssueTransitions(issueKey)).rejects.toThrow('Transitions failed');
     });
@@ -558,11 +526,11 @@ describe('YandexTrackerFacade', () => {
         updatedAt: '2024-01-02',
       };
 
-      vi.mocked(mockIssueService.transitionIssue).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.issue.transitionIssue).mockResolvedValue(mockResult);
 
       const result = await facade.transitionIssue(issueKey, transitionId, transitionData);
 
-      expect(mockIssueService.transitionIssue).toHaveBeenCalledWith(
+      expect(mockIssuesContainer.issue.transitionIssue).toHaveBeenCalledWith(
         issueKey,
         transitionId,
         transitionData
@@ -574,7 +542,7 @@ describe('YandexTrackerFacade', () => {
       const issueKey = 'TEST-123';
       const transitionId = 'trans1';
       const error = new Error('Transition failed');
-      vi.mocked(mockIssueService.transitionIssue).mockRejectedValue(error);
+      vi.mocked(mockIssuesContainer.issue.transitionIssue).mockRejectedValue(error);
 
       await expect(facade.transitionIssue(issueKey, transitionId)).rejects.toThrow(
         'Transition failed'
@@ -583,23 +551,13 @@ describe('YandexTrackerFacade', () => {
   });
 
   describe('constructor', () => {
-    it('должна правильно инициализировать фасад с сервисами', () => {
+    it('должна правильно инициализировать фасад с контейнерами', () => {
       // Act - создание нового экземпляра
       const newFacade = new YandexTrackerFacade(
-        mockUserService,
-        mockIssueService,
-        mockIssueLinkService,
-        mockIssueAttachmentService,
-        mockQueueService,
-        mockComponentService,
-        mockFieldService,
-        mockCommentService,
-        mockChecklistService,
-        mockWorklogService,
-        mockBulkChangeService,
-        mockProjectService,
-        mockBoardService,
-        mockSprintService
+        mockCoreContainer,
+        mockIssuesContainer,
+        mockQueuesContainer,
+        mockProjectAgileContainer
       );
 
       // Assert - проверяем, что можем вызвать методы
@@ -625,11 +583,11 @@ describe('YandexTrackerFacade', () => {
           },
         ];
 
-        vi.mocked(mockWorklogService.getWorklogs).mockResolvedValue(mockResult);
+        vi.mocked(mockIssuesContainer.worklog.getWorklogs).mockResolvedValue(mockResult);
 
         const result = await facade.getWorklogs(issueId);
 
-        expect(mockWorklogService.getWorklogs).toHaveBeenCalledWith(issueId);
+        expect(mockIssuesContainer.worklog.getWorklogs).toHaveBeenCalledWith(issueId);
         expect(result).toEqual(mockResult);
       });
     });
@@ -647,11 +605,11 @@ describe('YandexTrackerFacade', () => {
           duration: 'PT1H',
         };
 
-        vi.mocked(mockWorklogService.addWorklog).mockResolvedValue(mockResult);
+        vi.mocked(mockIssuesContainer.worklog.addWorklog).mockResolvedValue(mockResult);
 
         const result = await facade.addWorklog(issueId, input);
 
-        expect(mockWorklogService.addWorklog).toHaveBeenCalledWith(issueId, input);
+        expect(mockIssuesContainer.worklog.addWorklog).toHaveBeenCalledWith(issueId, input);
         expect(result).toEqual(mockResult);
       });
     });
@@ -670,11 +628,15 @@ describe('YandexTrackerFacade', () => {
           duration: 'PT2H',
         };
 
-        vi.mocked(mockWorklogService.updateWorklog).mockResolvedValue(mockResult);
+        vi.mocked(mockIssuesContainer.worklog.updateWorklog).mockResolvedValue(mockResult);
 
         const result = await facade.updateWorklog(issueId, worklogId, input);
 
-        expect(mockWorklogService.updateWorklog).toHaveBeenCalledWith(issueId, worklogId, input);
+        expect(mockIssuesContainer.worklog.updateWorklog).toHaveBeenCalledWith(
+          issueId,
+          worklogId,
+          input
+        );
         expect(result).toEqual(mockResult);
       });
     });
@@ -684,11 +646,11 @@ describe('YandexTrackerFacade', () => {
         const issueId = 'TEST-1';
         const worklogId = '123';
 
-        vi.mocked(mockWorklogService.deleteWorklog).mockResolvedValue(undefined);
+        vi.mocked(mockIssuesContainer.worklog.deleteWorklog).mockResolvedValue(undefined);
 
         await facade.deleteWorklog(issueId, worklogId);
 
-        expect(mockWorklogService.deleteWorklog).toHaveBeenCalledWith(issueId, worklogId);
+        expect(mockIssuesContainer.worklog.deleteWorklog).toHaveBeenCalledWith(issueId, worklogId);
       });
     });
   });
@@ -705,11 +667,11 @@ describe('YandexTrackerFacade', () => {
           },
         ];
 
-        vi.mocked(mockFieldService.getFields).mockResolvedValue(mockResult);
+        vi.mocked(mockCoreContainer.field.getFields).mockResolvedValue(mockResult);
 
         const result = await facade.getFields();
 
-        expect(mockFieldService.getFields).toHaveBeenCalled();
+        expect(mockCoreContainer.field.getFields).toHaveBeenCalled();
         expect(result).toEqual(mockResult);
       });
     });
@@ -724,11 +686,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Custom Field',
         };
 
-        vi.mocked(mockFieldService.getField).mockResolvedValue(mockResult);
+        vi.mocked(mockCoreContainer.field.getField).mockResolvedValue(mockResult);
 
         const result = await facade.getField(fieldId);
 
-        expect(mockFieldService.getField).toHaveBeenCalledWith(fieldId);
+        expect(mockCoreContainer.field.getField).toHaveBeenCalledWith(fieldId);
         expect(result).toEqual(mockResult);
       });
     });
@@ -743,11 +705,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Custom Field',
         };
 
-        vi.mocked(mockFieldService.createField).mockResolvedValue(mockResult);
+        vi.mocked(mockCoreContainer.field.createField).mockResolvedValue(mockResult);
 
         const result = await facade.createField(input);
 
-        expect(mockFieldService.createField).toHaveBeenCalledWith(input);
+        expect(mockCoreContainer.field.createField).toHaveBeenCalledWith(input);
         expect(result).toEqual(mockResult);
       });
     });
@@ -763,11 +725,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Updated Field',
         };
 
-        vi.mocked(mockFieldService.updateField).mockResolvedValue(mockResult);
+        vi.mocked(mockCoreContainer.field.updateField).mockResolvedValue(mockResult);
 
         const result = await facade.updateField(fieldId, input);
 
-        expect(mockFieldService.updateField).toHaveBeenCalledWith(fieldId, input);
+        expect(mockCoreContainer.field.updateField).toHaveBeenCalledWith(fieldId, input);
         expect(result).toEqual(mockResult);
       });
     });
@@ -776,11 +738,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов FieldService.deleteField', async () => {
         const fieldId = 'customField123';
 
-        vi.mocked(mockFieldService.deleteField).mockResolvedValue(undefined);
+        vi.mocked(mockCoreContainer.field.deleteField).mockResolvedValue(undefined);
 
         await facade.deleteField(fieldId);
 
-        expect(mockFieldService.deleteField).toHaveBeenCalledWith(fieldId);
+        expect(mockCoreContainer.field.deleteField).toHaveBeenCalledWith(fieldId);
       });
     });
   });
@@ -796,11 +758,11 @@ describe('YandexTrackerFacade', () => {
           },
         ];
 
-        vi.mocked(mockBoardService.getBoards).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.board.getBoards).mockResolvedValue(mockResult);
 
         const result = await facade.getBoards();
 
-        expect(mockBoardService.getBoards).toHaveBeenCalledWith(undefined);
+        expect(mockProjectAgileContainer.board.getBoards).toHaveBeenCalledWith(undefined);
         expect(result).toEqual(mockResult);
       });
 
@@ -814,11 +776,11 @@ describe('YandexTrackerFacade', () => {
           },
         ];
 
-        vi.mocked(mockBoardService.getBoards).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.board.getBoards).mockResolvedValue(mockResult);
 
         const result = await facade.getBoards(params);
 
-        expect(mockBoardService.getBoards).toHaveBeenCalledWith(params);
+        expect(mockProjectAgileContainer.board.getBoards).toHaveBeenCalledWith(params);
         expect(result).toEqual(mockResult);
       });
     });
@@ -832,11 +794,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Sprint Board',
         };
 
-        vi.mocked(mockBoardService.getBoard).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.board.getBoard).mockResolvedValue(mockResult);
 
         const result = await facade.getBoard(boardId);
 
-        expect(mockBoardService.getBoard).toHaveBeenCalledWith(boardId, undefined);
+        expect(mockProjectAgileContainer.board.getBoard).toHaveBeenCalledWith(boardId, undefined);
         expect(result).toEqual(mockResult);
       });
 
@@ -849,11 +811,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Sprint Board',
         };
 
-        vi.mocked(mockBoardService.getBoard).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.board.getBoard).mockResolvedValue(mockResult);
 
         const result = await facade.getBoard(boardId, params);
 
-        expect(mockBoardService.getBoard).toHaveBeenCalledWith(boardId, params);
+        expect(mockProjectAgileContainer.board.getBoard).toHaveBeenCalledWith(boardId, params);
         expect(result).toEqual(mockResult);
       });
     });
@@ -867,11 +829,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Sprint Board',
         };
 
-        vi.mocked(mockBoardService.createBoard).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.board.createBoard).mockResolvedValue(mockResult);
 
         const result = await facade.createBoard(input);
 
-        expect(mockBoardService.createBoard).toHaveBeenCalledWith(input);
+        expect(mockProjectAgileContainer.board.createBoard).toHaveBeenCalledWith(input);
         expect(result).toEqual(mockResult);
       });
     });
@@ -886,11 +848,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Updated Board',
         };
 
-        vi.mocked(mockBoardService.updateBoard).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.board.updateBoard).mockResolvedValue(mockResult);
 
         const result = await facade.updateBoard(boardId, input);
 
-        expect(mockBoardService.updateBoard).toHaveBeenCalledWith(boardId, input);
+        expect(mockProjectAgileContainer.board.updateBoard).toHaveBeenCalledWith(boardId, input);
         expect(result).toEqual(mockResult);
       });
     });
@@ -899,11 +861,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.deleteBoard', async () => {
         const boardId = '1';
 
-        vi.mocked(mockBoardService.deleteBoard).mockResolvedValue(undefined);
+        vi.mocked(mockProjectAgileContainer.board.deleteBoard).mockResolvedValue(undefined);
 
         await facade.deleteBoard(boardId);
 
-        expect(mockBoardService.deleteBoard).toHaveBeenCalledWith(boardId);
+        expect(mockProjectAgileContainer.board.deleteBoard).toHaveBeenCalledWith(boardId);
       });
     });
   });
@@ -920,11 +882,11 @@ describe('YandexTrackerFacade', () => {
           },
         ];
 
-        vi.mocked(mockSprintService.getSprints).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.sprint.getSprints).mockResolvedValue(mockResult);
 
         const result = await facade.getSprints(boardId);
 
-        expect(mockSprintService.getSprints).toHaveBeenCalledWith(boardId);
+        expect(mockProjectAgileContainer.sprint.getSprints).toHaveBeenCalledWith(boardId);
         expect(result).toEqual(mockResult);
       });
     });
@@ -938,11 +900,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Sprint 1',
         };
 
-        vi.mocked(mockSprintService.getSprint).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.sprint.getSprint).mockResolvedValue(mockResult);
 
         const result = await facade.getSprint(sprintId);
 
-        expect(mockSprintService.getSprint).toHaveBeenCalledWith(sprintId);
+        expect(mockProjectAgileContainer.sprint.getSprint).toHaveBeenCalledWith(sprintId);
         expect(result).toEqual(mockResult);
       });
     });
@@ -961,11 +923,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Sprint 1',
         };
 
-        vi.mocked(mockSprintService.createSprint).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.sprint.createSprint).mockResolvedValue(mockResult);
 
         const result = await facade.createSprint(input);
 
-        expect(mockSprintService.createSprint).toHaveBeenCalledWith(input);
+        expect(mockProjectAgileContainer.sprint.createSprint).toHaveBeenCalledWith(input);
         expect(result).toEqual(mockResult);
       });
     });
@@ -980,11 +942,11 @@ describe('YandexTrackerFacade', () => {
           name: 'Sprint 1 Updated',
         };
 
-        vi.mocked(mockSprintService.updateSprint).mockResolvedValue(mockResult);
+        vi.mocked(mockProjectAgileContainer.sprint.updateSprint).mockResolvedValue(mockResult);
 
         const result = await facade.updateSprint(sprintId, input);
 
-        expect(mockSprintService.updateSprint).toHaveBeenCalledWith(sprintId, input);
+        expect(mockProjectAgileContainer.sprint.updateSprint).toHaveBeenCalledWith(sprintId, input);
         expect(result).toEqual(mockResult);
       });
     });

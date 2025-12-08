@@ -2,19 +2,13 @@
  * Unit tests for IssueService
  *
  * Проверяет:
- * - Конструктор с 7 параметрами (операциями)
- * - Делегирование вызовов соответствующим операциям
+ * - Конструктор с 1 параметром (IssueOperationsContainer)
+ * - Делегирование вызовов соответствующим операциям через контейнер
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { IssueService } from '#tracker_api/facade/services/issue.service.js';
-import type { GetIssuesOperation } from '#tracker_api/api_operations/issue/get-issues.operation.js';
-import type { FindIssuesOperation } from '#tracker_api/api_operations/issue/find/find-issues.operation.js';
-import type { CreateIssueOperation } from '#tracker_api/api_operations/issue/create/create-issue.operation.js';
-import type { UpdateIssueOperation } from '#tracker_api/api_operations/issue/update/update-issue.operation.js';
-import type { GetIssueChangelogOperation } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
-import type { GetIssueTransitionsOperation } from '#tracker_api/api_operations/issue/transitions/get-issue-transitions.operation.js';
-import type { TransitionIssueOperation } from '#tracker_api/api_operations/issue/transitions/transition-issue.operation.js';
+import type { IssueOperationsContainer } from '#tracker_api/facade/services/containers/index.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
 import type { BatchChangelogResult } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
@@ -49,36 +43,25 @@ function createTransitionFixture(overrides = {}): TransitionWithUnknownFields {
 
 describe('IssueService', () => {
   let service: IssueService;
-  let mockGetIssuesOp: GetIssuesOperation;
-  let mockFindIssuesOp: FindIssuesOperation;
-  let mockCreateIssueOp: CreateIssueOperation;
-  let mockUpdateIssueOp: UpdateIssueOperation;
-  let mockGetIssueChangelogOp: GetIssueChangelogOperation;
-  let mockGetIssueTransitionsOp: GetIssueTransitionsOperation;
-  let mockTransitionIssueOp: TransitionIssueOperation;
+  let mockOpsContainer: IssueOperationsContainer;
 
   beforeEach(() => {
-    mockGetIssuesOp = { execute: vi.fn() } as unknown as GetIssuesOperation;
-    mockFindIssuesOp = { execute: vi.fn() } as unknown as FindIssuesOperation;
-    mockCreateIssueOp = { execute: vi.fn() } as unknown as CreateIssueOperation;
-    mockUpdateIssueOp = { execute: vi.fn() } as unknown as UpdateIssueOperation;
-    mockGetIssueChangelogOp = { execute: vi.fn() } as unknown as GetIssueChangelogOperation;
-    mockGetIssueTransitionsOp = { execute: vi.fn() } as unknown as GetIssueTransitionsOperation;
-    mockTransitionIssueOp = { execute: vi.fn() } as unknown as TransitionIssueOperation;
+    // Create mock operations container with all operations
+    mockOpsContainer = {
+      getIssues: { execute: vi.fn() },
+      findIssues: { execute: vi.fn() },
+      createIssue: { execute: vi.fn() },
+      updateIssue: { execute: vi.fn() },
+      getIssueChangelog: { execute: vi.fn() },
+      getIssueTransitions: { execute: vi.fn() },
+      transitionIssue: { execute: vi.fn() },
+    } as unknown as IssueOperationsContainer;
 
-    service = new IssueService(
-      mockGetIssuesOp,
-      mockFindIssuesOp,
-      mockCreateIssueOp,
-      mockUpdateIssueOp,
-      mockGetIssueChangelogOp,
-      mockGetIssueTransitionsOp,
-      mockTransitionIssueOp
-    );
+    service = new IssueService(mockOpsContainer);
   });
 
   describe('constructor', () => {
-    it('должен создать сервис с 7 операциями', () => {
+    it('должен создать сервис с 1 параметром (IssueOperationsContainer)', () => {
       expect(service).toBeDefined();
       expect(service.getIssues).toBeDefined();
       expect(service.findIssues).toBeDefined();
@@ -91,7 +74,7 @@ describe('IssueService', () => {
   });
 
   describe('getIssues', () => {
-    it('должен делегировать вызов GetIssuesOperation', async () => {
+    it('должен делегировать вызов ops.getIssues.execute', async () => {
       const issueKeys = ['TEST-1', 'TEST-2'];
       const mockResult: BatchIssueResult[] = [
         { status: 'fulfilled', value: createIssueFixture(), key: 'TEST-1', index: 0 },
@@ -103,42 +86,42 @@ describe('IssueService', () => {
         },
       ];
 
-      vi.mocked(mockGetIssuesOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.getIssues.execute).mockResolvedValue(mockResult);
 
       const result = await service.getIssues(issueKeys);
 
-      expect(mockGetIssuesOp.execute).toHaveBeenCalledWith(issueKeys);
+      expect(mockOpsContainer.getIssues.execute).toHaveBeenCalledWith(issueKeys);
       expect(result).toBe(mockResult);
     });
 
     it('должен обрабатывать пустой массив', async () => {
       const mockResult: BatchIssueResult[] = [];
-      vi.mocked(mockGetIssuesOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.getIssues.execute).mockResolvedValue(mockResult);
 
       const result = await service.getIssues([]);
 
-      expect(mockGetIssuesOp.execute).toHaveBeenCalledWith([]);
+      expect(mockOpsContainer.getIssues.execute).toHaveBeenCalledWith([]);
       expect(result).toEqual([]);
     });
 
     it('должен пробрасывать ошибки от операции', async () => {
       const error = new Error('API Error');
-      vi.mocked(mockGetIssuesOp.execute).mockRejectedValue(error);
+      vi.mocked(mockOpsContainer.getIssues.execute).mockRejectedValue(error);
 
       await expect(service.getIssues(['TEST-1'])).rejects.toThrow('API Error');
     });
   });
 
   describe('findIssues', () => {
-    it('должен делегировать вызов FindIssuesOperation', async () => {
+    it('должен делегировать вызов ops.findIssues.execute', async () => {
       const params = { query: 'status: open', perPage: 50 };
       const mockResult: FindIssuesResult = [createIssueFixture()];
 
-      vi.mocked(mockFindIssuesOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.findIssues.execute).mockResolvedValue(mockResult);
 
       const result = await service.findIssues(params);
 
-      expect(mockFindIssuesOp.execute).toHaveBeenCalledWith(params);
+      expect(mockOpsContainer.findIssues.execute).toHaveBeenCalledWith(params);
       expect(result).toBe(mockResult);
     });
 
@@ -146,25 +129,25 @@ describe('IssueService', () => {
       const params = { filter: { status: 'open' } };
       const mockResult: FindIssuesResult = [];
 
-      vi.mocked(mockFindIssuesOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.findIssues.execute).mockResolvedValue(mockResult);
 
       const result = await service.findIssues(params);
 
-      expect(mockFindIssuesOp.execute).toHaveBeenCalledWith(params);
+      expect(mockOpsContainer.findIssues.execute).toHaveBeenCalledWith(params);
       expect(result).toEqual([]);
     });
   });
 
   describe('createIssue', () => {
-    it('должен делегировать вызов CreateIssueOperation', async () => {
+    it('должен делегировать вызов ops.createIssue.execute', async () => {
       const issueData = { queue: 'TEST', summary: 'New Issue' };
       const mockResult = createIssueFixture({ summary: 'New Issue' });
 
-      vi.mocked(mockCreateIssueOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.createIssue.execute).mockResolvedValue(mockResult);
 
       const result = await service.createIssue(issueData);
 
-      expect(mockCreateIssueOp.execute).toHaveBeenCalledWith(issueData);
+      expect(mockOpsContainer.createIssue.execute).toHaveBeenCalledWith(issueData);
       expect(result).toBe(mockResult);
     });
 
@@ -177,31 +160,31 @@ describe('IssueService', () => {
       };
       const mockResult = createIssueFixture();
 
-      vi.mocked(mockCreateIssueOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.createIssue.execute).mockResolvedValue(mockResult);
 
       await service.createIssue(issueData);
 
-      expect(mockCreateIssueOp.execute).toHaveBeenCalledWith(issueData);
+      expect(mockOpsContainer.createIssue.execute).toHaveBeenCalledWith(issueData);
     });
   });
 
   describe('updateIssue', () => {
-    it('должен делегировать вызов UpdateIssueOperation', async () => {
+    it('должен делегировать вызов ops.updateIssue.execute', async () => {
       const issueKey = 'TEST-1';
       const updateData = { summary: 'Updated Summary' };
       const mockResult = createIssueFixture({ summary: 'Updated Summary' });
 
-      vi.mocked(mockUpdateIssueOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.updateIssue.execute).mockResolvedValue(mockResult);
 
       const result = await service.updateIssue(issueKey, updateData);
 
-      expect(mockUpdateIssueOp.execute).toHaveBeenCalledWith(issueKey, updateData);
+      expect(mockOpsContainer.updateIssue.execute).toHaveBeenCalledWith(issueKey, updateData);
       expect(result).toBe(mockResult);
     });
   });
 
   describe('getIssueChangelog', () => {
-    it('должен делегировать вызов GetIssueChangelogOperation', async () => {
+    it('должен делегировать вызов ops.getIssueChangelog.execute', async () => {
       const issueKeys = ['TEST-1'];
       const mockResult: BatchChangelogResult[] = [
         {
@@ -222,30 +205,30 @@ describe('IssueService', () => {
         },
       ];
 
-      vi.mocked(mockGetIssueChangelogOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.getIssueChangelog.execute).mockResolvedValue(mockResult);
 
       const result = await service.getIssueChangelog(issueKeys);
 
-      expect(mockGetIssueChangelogOp.execute).toHaveBeenCalledWith(issueKeys);
+      expect(mockOpsContainer.getIssueChangelog.execute).toHaveBeenCalledWith(issueKeys);
       expect(result).toBe(mockResult);
     });
   });
 
   describe('getIssueTransitions', () => {
-    it('должен делегировать вызов GetIssueTransitionsOperation', async () => {
+    it('должен делегировать вызов ops.getIssueTransitions.execute', async () => {
       const issueKey = 'TEST-1';
       const mockResult: TransitionWithUnknownFields[] = [createTransitionFixture()];
 
-      vi.mocked(mockGetIssueTransitionsOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.getIssueTransitions.execute).mockResolvedValue(mockResult);
 
       const result = await service.getIssueTransitions(issueKey);
 
-      expect(mockGetIssueTransitionsOp.execute).toHaveBeenCalledWith(issueKey);
+      expect(mockOpsContainer.getIssueTransitions.execute).toHaveBeenCalledWith(issueKey);
       expect(result).toBe(mockResult);
     });
 
     it('должен возвращать пустой массив если переходов нет', async () => {
-      vi.mocked(mockGetIssueTransitionsOp.execute).mockResolvedValue([]);
+      vi.mocked(mockOpsContainer.getIssueTransitions.execute).mockResolvedValue([]);
 
       const result = await service.getIssueTransitions('TEST-1');
 
@@ -254,32 +237,36 @@ describe('IssueService', () => {
   });
 
   describe('transitionIssue', () => {
-    it('должен делегировать вызов TransitionIssueOperation без данных', async () => {
+    it('должен делегировать вызов ops.transitionIssue.execute без данных', async () => {
       const issueKey = 'TEST-1';
       const transitionId = 'trans1';
       const mockResult = createIssueFixture({
         status: { id: '2', key: 'inProgress', display: 'In Progress' },
       });
 
-      vi.mocked(mockTransitionIssueOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.transitionIssue.execute).mockResolvedValue(mockResult);
 
       const result = await service.transitionIssue(issueKey, transitionId);
 
-      expect(mockTransitionIssueOp.execute).toHaveBeenCalledWith(issueKey, transitionId, undefined);
+      expect(mockOpsContainer.transitionIssue.execute).toHaveBeenCalledWith(
+        issueKey,
+        transitionId,
+        undefined
+      );
       expect(result).toBe(mockResult);
     });
 
-    it('должен делегировать вызов TransitionIssueOperation с данными', async () => {
+    it('должен делегировать вызов ops.transitionIssue.execute с данными', async () => {
       const issueKey = 'TEST-1';
       const transitionId = 'trans1';
       const transitionData = { comment: 'Moving to progress', resolution: 'fixed' };
       const mockResult = createIssueFixture();
 
-      vi.mocked(mockTransitionIssueOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.transitionIssue.execute).mockResolvedValue(mockResult);
 
       const result = await service.transitionIssue(issueKey, transitionId, transitionData);
 
-      expect(mockTransitionIssueOp.execute).toHaveBeenCalledWith(
+      expect(mockOpsContainer.transitionIssue.execute).toHaveBeenCalledWith(
         issueKey,
         transitionId,
         transitionData

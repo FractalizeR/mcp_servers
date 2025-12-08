@@ -1,39 +1,26 @@
 /**
  * TickTickFacade — unified interface for all TickTick API operations
  *
- * Pattern: Facade
+ * Pattern: Facade + Parameter Object
  * - Simplifies access to complex API operations subsystem
  * - Single entry point for all TickTick interactions
  * - Provides convenience methods (getAllTasks, searchTasks, etc.)
+ * - Uses Operations Containers to reduce constructor parameters (12 → 2)
  *
  * All operations are injected via DI and delegated.
  */
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '#composition-root/types.js';
+import type { ProjectOperationsContainer } from './containers/project-operations.container.js';
+import type { TaskOperationsContainer } from './containers/task-operations.container.js';
 
-// Project operations
-import type { GetProjectsOperation } from '#ticktick_api/api_operations/projects/get-projects.operation.js';
-import type { GetProjectOperation } from '#ticktick_api/api_operations/projects/get-project.operation.js';
+// Types from operations
+import type { ProjectData } from '#ticktick_api/api_operations/projects/get-project-data.operation.js';
 import type {
-  GetProjectDataOperation,
-  ProjectData,
-} from '#ticktick_api/api_operations/projects/get-project-data.operation.js';
-import type { CreateProjectOperation } from '#ticktick_api/api_operations/projects/create-project.operation.js';
-import type { UpdateProjectOperation } from '#ticktick_api/api_operations/projects/update-project.operation.js';
-import type { DeleteProjectOperation } from '#ticktick_api/api_operations/projects/delete-project.operation.js';
-
-// Task operations
-import type { GetTaskOperation } from '#ticktick_api/api_operations/tasks/get-task.operation.js';
-import type {
-  GetTasksOperation,
   TaskRef,
   BatchTaskResult,
 } from '#ticktick_api/api_operations/tasks/get-tasks.operation.js';
-import type { CreateTaskOperation } from '#ticktick_api/api_operations/tasks/create-task.operation.js';
-import type { UpdateTaskOperation } from '#ticktick_api/api_operations/tasks/update-task.operation.js';
-import type { DeleteTaskOperation } from '#ticktick_api/api_operations/tasks/delete-task.operation.js';
-import type { CompleteTaskOperation } from '#ticktick_api/api_operations/tasks/complete-task.operation.js';
 
 // Entities and DTOs
 import type { ProjectWithUnknownFields } from '#ticktick_api/entities/project.entity.js';
@@ -44,43 +31,11 @@ import type { CreateTaskDto, UpdateTaskDto } from '#ticktick_api/dto/task.dto.js
 @injectable()
 export class TickTickFacade {
   constructor(
-    // Project operations
-    @inject(TYPES.GetProjectsOperation)
-    private readonly getProjectsOp: GetProjectsOperation,
+    @inject(TYPES.ProjectOperationsContainer)
+    private readonly projectOps: ProjectOperationsContainer,
 
-    @inject(TYPES.GetProjectOperation)
-    private readonly getProjectOp: GetProjectOperation,
-
-    @inject(TYPES.GetProjectDataOperation)
-    private readonly getProjectDataOp: GetProjectDataOperation,
-
-    @inject(TYPES.CreateProjectOperation)
-    private readonly createProjectOp: CreateProjectOperation,
-
-    @inject(TYPES.UpdateProjectOperation)
-    private readonly updateProjectOp: UpdateProjectOperation,
-
-    @inject(TYPES.DeleteProjectOperation)
-    private readonly deleteProjectOp: DeleteProjectOperation,
-
-    // Task operations
-    @inject(TYPES.GetTaskOperation)
-    private readonly getTaskOp: GetTaskOperation,
-
-    @inject(TYPES.GetTasksOperation)
-    private readonly getTasksOp: GetTasksOperation,
-
-    @inject(TYPES.CreateTaskOperation)
-    private readonly createTaskOp: CreateTaskOperation,
-
-    @inject(TYPES.UpdateTaskOperation)
-    private readonly updateTaskOp: UpdateTaskOperation,
-
-    @inject(TYPES.DeleteTaskOperation)
-    private readonly deleteTaskOp: DeleteTaskOperation,
-
-    @inject(TYPES.CompleteTaskOperation)
-    private readonly completeTaskOp: CompleteTaskOperation
+    @inject(TYPES.TaskOperationsContainer)
+    private readonly taskOps: TaskOperationsContainer
   ) {}
 
   // ========== Projects ==========
@@ -89,42 +44,42 @@ export class TickTickFacade {
    * Get all projects
    */
   async getProjects(): Promise<ProjectWithUnknownFields[]> {
-    return this.getProjectsOp.execute();
+    return this.projectOps.getProjects.execute();
   }
 
   /**
    * Get project by ID
    */
   async getProject(projectId: string): Promise<ProjectWithUnknownFields> {
-    return this.getProjectOp.execute(projectId);
+    return this.projectOps.getProject.execute(projectId);
   }
 
   /**
    * Get project with all its tasks
    */
   async getProjectData(projectId: string): Promise<ProjectData> {
-    return this.getProjectDataOp.execute(projectId);
+    return this.projectOps.getProjectData.execute(projectId);
   }
 
   /**
    * Create new project
    */
   async createProject(dto: CreateProjectDto): Promise<ProjectWithUnknownFields> {
-    return this.createProjectOp.execute(dto);
+    return this.projectOps.createProject.execute(dto);
   }
 
   /**
    * Update existing project
    */
   async updateProject(projectId: string, dto: UpdateProjectDto): Promise<ProjectWithUnknownFields> {
-    return this.updateProjectOp.execute(projectId, dto);
+    return this.projectOps.updateProject.execute(projectId, dto);
   }
 
   /**
    * Delete project
    */
   async deleteProject(projectId: string): Promise<void> {
-    return this.deleteProjectOp.execute(projectId);
+    return this.projectOps.deleteProject.execute(projectId);
   }
 
   // ========== Tasks ==========
@@ -133,21 +88,21 @@ export class TickTickFacade {
    * Get single task by project and task IDs
    */
   async getTask(projectId: string, taskId: string): Promise<TaskWithUnknownFields> {
-    return this.getTaskOp.execute(projectId, taskId);
+    return this.taskOps.getTask.execute(projectId, taskId);
   }
 
   /**
    * Get multiple tasks in batch (parallel execution)
    */
   async getTasks(refs: TaskRef[]): Promise<BatchTaskResult> {
-    return this.getTasksOp.execute(refs);
+    return this.taskOps.getTasks.execute(refs);
   }
 
   /**
    * Create new task
    */
   async createTask(dto: CreateTaskDto): Promise<TaskWithUnknownFields> {
-    return this.createTaskOp.execute(dto);
+    return this.taskOps.createTask.execute(dto);
   }
 
   /**
@@ -167,7 +122,7 @@ export class TickTickFacade {
 
     for (const [index, dto] of dtos.entries()) {
       try {
-        const task = await this.createTaskOp.execute(dto);
+        const task = await this.taskOps.createTask.execute(dto);
         successful.push(task);
       } catch (error) {
         failed.push({
@@ -188,21 +143,21 @@ export class TickTickFacade {
     taskId: string,
     dto: UpdateTaskDto
   ): Promise<TaskWithUnknownFields> {
-    return this.updateTaskOp.execute(projectId, taskId, dto);
+    return this.taskOps.updateTask.execute(projectId, taskId, dto);
   }
 
   /**
    * Delete task
    */
   async deleteTask(projectId: string, taskId: string): Promise<void> {
-    return this.deleteTaskOp.execute(projectId, taskId);
+    return this.taskOps.deleteTask.execute(projectId, taskId);
   }
 
   /**
    * Complete task (mark as done)
    */
   async completeTask(projectId: string, taskId: string): Promise<void> {
-    return this.completeTaskOp.execute(projectId, taskId);
+    return this.taskOps.completeTask.execute(projectId, taskId);
   }
 
   // ========== Convenience Methods ==========

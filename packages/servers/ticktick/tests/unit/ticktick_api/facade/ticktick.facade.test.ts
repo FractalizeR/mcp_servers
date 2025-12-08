@@ -1,18 +1,8 @@
 // tests/unit/ticktick_api/facade/ticktick.facade.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TickTickFacade } from '../../../../src/ticktick_api/facade/ticktick.facade.js';
-import type { GetProjectsOperation } from '../../../../src/ticktick_api/api_operations/projects/get-projects.operation.js';
-import type { GetProjectOperation } from '../../../../src/ticktick_api/api_operations/projects/get-project.operation.js';
-import type { GetProjectDataOperation } from '../../../../src/ticktick_api/api_operations/projects/get-project-data.operation.js';
-import type { CreateProjectOperation } from '../../../../src/ticktick_api/api_operations/projects/create-project.operation.js';
-import type { UpdateProjectOperation } from '../../../../src/ticktick_api/api_operations/projects/update-project.operation.js';
-import type { DeleteProjectOperation } from '../../../../src/ticktick_api/api_operations/projects/delete-project.operation.js';
-import type { GetTaskOperation } from '../../../../src/ticktick_api/api_operations/tasks/get-task.operation.js';
-import type { GetTasksOperation } from '../../../../src/ticktick_api/api_operations/tasks/get-tasks.operation.js';
-import type { CreateTaskOperation } from '../../../../src/ticktick_api/api_operations/tasks/create-task.operation.js';
-import type { UpdateTaskOperation } from '../../../../src/ticktick_api/api_operations/tasks/update-task.operation.js';
-import type { DeleteTaskOperation } from '../../../../src/ticktick_api/api_operations/tasks/delete-task.operation.js';
-import type { CompleteTaskOperation } from '../../../../src/ticktick_api/api_operations/tasks/complete-task.operation.js';
+import type { ProjectOperationsContainer } from '../../../../src/ticktick_api/facade/containers/project-operations.container.js';
+import type { TaskOperationsContainer } from '../../../../src/ticktick_api/facade/containers/task-operations.container.js';
 
 // Fixtures
 function createProjectFixture(overrides = {}) {
@@ -38,47 +28,29 @@ function createTaskFixture(overrides = {}) {
 
 describe('TickTickFacade', () => {
   let facade: TickTickFacade;
-  let mockGetProjectsOp: GetProjectsOperation;
-  let mockGetProjectOp: GetProjectOperation;
-  let mockGetProjectDataOp: GetProjectDataOperation;
-  let mockCreateProjectOp: CreateProjectOperation;
-  let mockUpdateProjectOp: UpdateProjectOperation;
-  let mockDeleteProjectOp: DeleteProjectOperation;
-  let mockGetTaskOp: GetTaskOperation;
-  let mockGetTasksOp: GetTasksOperation;
-  let mockCreateTaskOp: CreateTaskOperation;
-  let mockUpdateTaskOp: UpdateTaskOperation;
-  let mockDeleteTaskOp: DeleteTaskOperation;
-  let mockCompleteTaskOp: CompleteTaskOperation;
+  let mockProjectOps: ProjectOperationsContainer;
+  let mockTaskOps: TaskOperationsContainer;
 
   beforeEach(() => {
-    mockGetProjectsOp = { execute: vi.fn() } as unknown as GetProjectsOperation;
-    mockGetProjectOp = { execute: vi.fn() } as unknown as GetProjectOperation;
-    mockGetProjectDataOp = { execute: vi.fn() } as unknown as GetProjectDataOperation;
-    mockCreateProjectOp = { execute: vi.fn() } as unknown as CreateProjectOperation;
-    mockUpdateProjectOp = { execute: vi.fn() } as unknown as UpdateProjectOperation;
-    mockDeleteProjectOp = { execute: vi.fn() } as unknown as DeleteProjectOperation;
-    mockGetTaskOp = { execute: vi.fn() } as unknown as GetTaskOperation;
-    mockGetTasksOp = { execute: vi.fn() } as unknown as GetTasksOperation;
-    mockCreateTaskOp = { execute: vi.fn() } as unknown as CreateTaskOperation;
-    mockUpdateTaskOp = { execute: vi.fn() } as unknown as UpdateTaskOperation;
-    mockDeleteTaskOp = { execute: vi.fn() } as unknown as DeleteTaskOperation;
-    mockCompleteTaskOp = { execute: vi.fn() } as unknown as CompleteTaskOperation;
+    mockProjectOps = {
+      getProjects: { execute: vi.fn() },
+      getProject: { execute: vi.fn() },
+      getProjectData: { execute: vi.fn() },
+      createProject: { execute: vi.fn() },
+      updateProject: { execute: vi.fn() },
+      deleteProject: { execute: vi.fn() },
+    } as unknown as ProjectOperationsContainer;
 
-    facade = new TickTickFacade(
-      mockGetProjectsOp,
-      mockGetProjectOp,
-      mockGetProjectDataOp,
-      mockCreateProjectOp,
-      mockUpdateProjectOp,
-      mockDeleteProjectOp,
-      mockGetTaskOp,
-      mockGetTasksOp,
-      mockCreateTaskOp,
-      mockUpdateTaskOp,
-      mockDeleteTaskOp,
-      mockCompleteTaskOp
-    );
+    mockTaskOps = {
+      getTask: { execute: vi.fn() },
+      getTasks: { execute: vi.fn() },
+      createTask: { execute: vi.fn() },
+      updateTask: { execute: vi.fn() },
+      deleteTask: { execute: vi.fn() },
+      completeTask: { execute: vi.fn() },
+    } as unknown as TaskOperationsContainer;
+
+    facade = new TickTickFacade(mockProjectOps, mockTaskOps);
   });
 
   // ========== Projects ==========
@@ -86,11 +58,11 @@ describe('TickTickFacade', () => {
   describe('getProjects', () => {
     it('should delegate to GetProjectsOperation', async () => {
       const projects = [createProjectFixture()];
-      vi.mocked(mockGetProjectsOp.execute).mockResolvedValue(projects);
+      vi.mocked(mockProjectOps.getProjects.execute).mockResolvedValue(projects);
 
       const result = await facade.getProjects();
 
-      expect(mockGetProjectsOp.execute).toHaveBeenCalled();
+      expect(mockProjectOps.getProjects.execute).toHaveBeenCalled();
       expect(result).toBe(projects);
     });
   });
@@ -98,11 +70,11 @@ describe('TickTickFacade', () => {
   describe('getProject', () => {
     it('should delegate to GetProjectOperation', async () => {
       const project = createProjectFixture();
-      vi.mocked(mockGetProjectOp.execute).mockResolvedValue(project);
+      vi.mocked(mockProjectOps.getProject.execute).mockResolvedValue(project);
 
       const result = await facade.getProject('project-123');
 
-      expect(mockGetProjectOp.execute).toHaveBeenCalledWith('project-123');
+      expect(mockProjectOps.getProject.execute).toHaveBeenCalledWith('project-123');
       expect(result).toBe(project);
     });
   });
@@ -110,11 +82,11 @@ describe('TickTickFacade', () => {
   describe('getProjectData', () => {
     it('should delegate to GetProjectDataOperation', async () => {
       const projectData = { project: createProjectFixture(), tasks: [] };
-      vi.mocked(mockGetProjectDataOp.execute).mockResolvedValue(projectData);
+      vi.mocked(mockProjectOps.getProjectData.execute).mockResolvedValue(projectData);
 
       const result = await facade.getProjectData('project-123');
 
-      expect(mockGetProjectDataOp.execute).toHaveBeenCalledWith('project-123');
+      expect(mockProjectOps.getProjectData.execute).toHaveBeenCalledWith('project-123');
       expect(result).toBe(projectData);
     });
   });
@@ -122,12 +94,12 @@ describe('TickTickFacade', () => {
   describe('createProject', () => {
     it('should delegate to CreateProjectOperation', async () => {
       const project = createProjectFixture();
-      vi.mocked(mockCreateProjectOp.execute).mockResolvedValue(project);
+      vi.mocked(mockProjectOps.createProject.execute).mockResolvedValue(project);
 
       const dto = { name: 'New Project' };
       const result = await facade.createProject(dto);
 
-      expect(mockCreateProjectOp.execute).toHaveBeenCalledWith(dto);
+      expect(mockProjectOps.createProject.execute).toHaveBeenCalledWith(dto);
       expect(result).toBe(project);
     });
   });
@@ -135,23 +107,23 @@ describe('TickTickFacade', () => {
   describe('updateProject', () => {
     it('should delegate to UpdateProjectOperation', async () => {
       const project = createProjectFixture();
-      vi.mocked(mockUpdateProjectOp.execute).mockResolvedValue(project);
+      vi.mocked(mockProjectOps.updateProject.execute).mockResolvedValue(project);
 
       const dto = { name: 'Updated Project' };
       const result = await facade.updateProject('project-123', dto);
 
-      expect(mockUpdateProjectOp.execute).toHaveBeenCalledWith('project-123', dto);
+      expect(mockProjectOps.updateProject.execute).toHaveBeenCalledWith('project-123', dto);
       expect(result).toBe(project);
     });
   });
 
   describe('deleteProject', () => {
     it('should delegate to DeleteProjectOperation', async () => {
-      vi.mocked(mockDeleteProjectOp.execute).mockResolvedValue(undefined);
+      vi.mocked(mockProjectOps.deleteProject.execute).mockResolvedValue(undefined);
 
       await facade.deleteProject('project-123');
 
-      expect(mockDeleteProjectOp.execute).toHaveBeenCalledWith('project-123');
+      expect(mockProjectOps.deleteProject.execute).toHaveBeenCalledWith('project-123');
     });
   });
 
@@ -160,11 +132,11 @@ describe('TickTickFacade', () => {
   describe('getTask', () => {
     it('should delegate to GetTaskOperation', async () => {
       const task = createTaskFixture();
-      vi.mocked(mockGetTaskOp.execute).mockResolvedValue(task);
+      vi.mocked(mockTaskOps.getTask.execute).mockResolvedValue(task);
 
       const result = await facade.getTask('project-123', 'task-123');
 
-      expect(mockGetTaskOp.execute).toHaveBeenCalledWith('project-123', 'task-123');
+      expect(mockTaskOps.getTask.execute).toHaveBeenCalledWith('project-123', 'task-123');
       expect(result).toBe(task);
     });
   });
@@ -175,12 +147,12 @@ describe('TickTickFacade', () => {
         successful: [createTaskFixture()],
         failed: [],
       };
-      vi.mocked(mockGetTasksOp.execute).mockResolvedValue(batchResult);
+      vi.mocked(mockTaskOps.getTasks.execute).mockResolvedValue(batchResult);
 
       const refs = [{ projectId: 'project-123', taskId: 'task-123' }];
       const result = await facade.getTasks(refs);
 
-      expect(mockGetTasksOp.execute).toHaveBeenCalledWith(refs);
+      expect(mockTaskOps.getTasks.execute).toHaveBeenCalledWith(refs);
       expect(result).toBe(batchResult);
     });
   });
@@ -188,12 +160,12 @@ describe('TickTickFacade', () => {
   describe('createTask', () => {
     it('should delegate to CreateTaskOperation', async () => {
       const task = createTaskFixture();
-      vi.mocked(mockCreateTaskOp.execute).mockResolvedValue(task);
+      vi.mocked(mockTaskOps.createTask.execute).mockResolvedValue(task);
 
       const dto = { title: 'New Task', projectId: 'project-123' };
       const result = await facade.createTask(dto);
 
-      expect(mockCreateTaskOp.execute).toHaveBeenCalledWith(dto);
+      expect(mockTaskOps.createTask.execute).toHaveBeenCalledWith(dto);
       expect(result).toBe(task);
     });
   });
@@ -202,7 +174,9 @@ describe('TickTickFacade', () => {
     it('should create tasks sequentially and return results', async () => {
       const task1 = createTaskFixture({ id: 'task-1' });
       const task2 = createTaskFixture({ id: 'task-2' });
-      vi.mocked(mockCreateTaskOp.execute).mockResolvedValueOnce(task1).mockResolvedValueOnce(task2);
+      vi.mocked(mockTaskOps.createTask.execute)
+        .mockResolvedValueOnce(task1)
+        .mockResolvedValueOnce(task2);
 
       const dtos = [
         { title: 'Task 1', projectId: 'project-123' },
@@ -216,7 +190,7 @@ describe('TickTickFacade', () => {
 
     it('should handle failures in batch creation', async () => {
       const task1 = createTaskFixture({ id: 'task-1' });
-      vi.mocked(mockCreateTaskOp.execute)
+      vi.mocked(mockTaskOps.createTask.execute)
         .mockResolvedValueOnce(task1)
         .mockRejectedValueOnce(new Error('API Error'));
 
@@ -236,33 +210,33 @@ describe('TickTickFacade', () => {
   describe('updateTask', () => {
     it('should delegate to UpdateTaskOperation', async () => {
       const task = createTaskFixture();
-      vi.mocked(mockUpdateTaskOp.execute).mockResolvedValue(task);
+      vi.mocked(mockTaskOps.updateTask.execute).mockResolvedValue(task);
 
       const dto = { title: 'Updated Task' };
       const result = await facade.updateTask('project-123', 'task-123', dto);
 
-      expect(mockUpdateTaskOp.execute).toHaveBeenCalledWith('project-123', 'task-123', dto);
+      expect(mockTaskOps.updateTask.execute).toHaveBeenCalledWith('project-123', 'task-123', dto);
       expect(result).toBe(task);
     });
   });
 
   describe('deleteTask', () => {
     it('should delegate to DeleteTaskOperation', async () => {
-      vi.mocked(mockDeleteTaskOp.execute).mockResolvedValue(undefined);
+      vi.mocked(mockTaskOps.deleteTask.execute).mockResolvedValue(undefined);
 
       await facade.deleteTask('project-123', 'task-123');
 
-      expect(mockDeleteTaskOp.execute).toHaveBeenCalledWith('project-123', 'task-123');
+      expect(mockTaskOps.deleteTask.execute).toHaveBeenCalledWith('project-123', 'task-123');
     });
   });
 
   describe('completeTask', () => {
     it('should delegate to CompleteTaskOperation', async () => {
-      vi.mocked(mockCompleteTaskOp.execute).mockResolvedValue(undefined);
+      vi.mocked(mockTaskOps.completeTask.execute).mockResolvedValue(undefined);
 
       await facade.completeTask('project-123', 'task-123');
 
-      expect(mockCompleteTaskOp.execute).toHaveBeenCalledWith('project-123', 'task-123');
+      expect(mockTaskOps.completeTask.execute).toHaveBeenCalledWith('project-123', 'task-123');
     });
   });
 
@@ -275,8 +249,8 @@ describe('TickTickFacade', () => {
       const task1 = createTaskFixture({ id: 'task-1', projectId: 'project-1' });
       const task2 = createTaskFixture({ id: 'task-2', projectId: 'project-2' });
 
-      vi.mocked(mockGetProjectsOp.execute).mockResolvedValue([project1, project2]);
-      vi.mocked(mockGetProjectDataOp.execute)
+      vi.mocked(mockProjectOps.getProjects.execute).mockResolvedValue([project1, project2]);
+      vi.mocked(mockProjectOps.getProjectData.execute)
         .mockResolvedValueOnce({ project: project1, tasks: [task1] })
         .mockResolvedValueOnce({ project: project2, tasks: [task2] });
 
@@ -294,8 +268,8 @@ describe('TickTickFacade', () => {
       const task2 = createTaskFixture({ id: 'task-2', title: 'Regular task' });
       const project = createProjectFixture();
 
-      vi.mocked(mockGetProjectsOp.execute).mockResolvedValue([project]);
-      vi.mocked(mockGetProjectDataOp.execute).mockResolvedValue({
+      vi.mocked(mockProjectOps.getProjects.execute).mockResolvedValue([project]);
+      vi.mocked(mockProjectOps.getProjectData.execute).mockResolvedValue({
         project,
         tasks: [task1, task2],
       });
@@ -313,8 +287,8 @@ describe('TickTickFacade', () => {
       const task2 = createTaskFixture({ id: 'task-2', priority: 0 }); // none
       const project = createProjectFixture();
 
-      vi.mocked(mockGetProjectsOp.execute).mockResolvedValue([project]);
-      vi.mocked(mockGetProjectDataOp.execute).mockResolvedValue({
+      vi.mocked(mockProjectOps.getProjects.execute).mockResolvedValue([project]);
+      vi.mocked(mockProjectOps.getProjectData.execute).mockResolvedValue({
         project,
         tasks: [task1, task2],
       });
@@ -343,8 +317,8 @@ describe('TickTickFacade', () => {
       });
       const project = createProjectFixture();
 
-      vi.mocked(mockGetProjectsOp.execute).mockResolvedValue([project]);
-      vi.mocked(mockGetProjectDataOp.execute).mockResolvedValue({
+      vi.mocked(mockProjectOps.getProjects.execute).mockResolvedValue([project]);
+      vi.mocked(mockProjectOps.getProjectData.execute).mockResolvedValue({
         project,
         tasks: [task1, task2],
       });

@@ -2,18 +2,13 @@
  * Unit tests for QueueService
  *
  * Проверяет:
- * - Конструктор с 6 параметрами (операциями)
- * - Делегирование вызовов соответствующим операциям
+ * - Конструктор с 1 параметром (QueueOperationsContainer)
+ * - Делегирование вызовов соответствующим операциям через контейнер
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueueService } from '#tracker_api/facade/services/queue.service.js';
-import type { GetQueuesOperation } from '#tracker_api/api_operations/queue/get-queues.operation.js';
-import type { GetQueueOperation } from '#tracker_api/api_operations/queue/get-queue.operation.js';
-import type { CreateQueueOperation } from '#tracker_api/api_operations/queue/create-queue.operation.js';
-import type { UpdateQueueOperation } from '#tracker_api/api_operations/queue/update-queue.operation.js';
-import type { GetQueueFieldsOperation } from '#tracker_api/api_operations/queue/get-queue-fields.operation.js';
-import type { ManageQueueAccessOperation } from '#tracker_api/api_operations/queue/manage-queue-access.operation.js';
+import type { QueueOperationsContainer } from '#tracker_api/facade/services/containers/index.js';
 import type {
   GetQueuesDto,
   GetQueueDto,
@@ -53,33 +48,24 @@ function createQueueFieldFixture(overrides = {}) {
 
 describe('QueueService', () => {
   let service: QueueService;
-  let mockGetQueuesOp: GetQueuesOperation;
-  let mockGetQueueOp: GetQueueOperation;
-  let mockCreateQueueOp: CreateQueueOperation;
-  let mockUpdateQueueOp: UpdateQueueOperation;
-  let mockGetQueueFieldsOp: GetQueueFieldsOperation;
-  let mockManageQueueAccessOp: ManageQueueAccessOperation;
+  let mockOpsContainer: QueueOperationsContainer;
 
   beforeEach(() => {
-    mockGetQueuesOp = { execute: vi.fn() } as unknown as GetQueuesOperation;
-    mockGetQueueOp = { execute: vi.fn() } as unknown as GetQueueOperation;
-    mockCreateQueueOp = { execute: vi.fn() } as unknown as CreateQueueOperation;
-    mockUpdateQueueOp = { execute: vi.fn() } as unknown as UpdateQueueOperation;
-    mockGetQueueFieldsOp = { execute: vi.fn() } as unknown as GetQueueFieldsOperation;
-    mockManageQueueAccessOp = { execute: vi.fn() } as unknown as ManageQueueAccessOperation;
+    // Create mock operations container with all operations
+    mockOpsContainer = {
+      getQueues: { execute: vi.fn() },
+      getQueue: { execute: vi.fn() },
+      createQueue: { execute: vi.fn() },
+      updateQueue: { execute: vi.fn() },
+      getQueueFields: { execute: vi.fn() },
+      manageQueueAccess: { execute: vi.fn() },
+    } as unknown as QueueOperationsContainer;
 
-    service = new QueueService(
-      mockGetQueuesOp,
-      mockGetQueueOp,
-      mockCreateQueueOp,
-      mockUpdateQueueOp,
-      mockGetQueueFieldsOp,
-      mockManageQueueAccessOp
-    );
+    service = new QueueService(mockOpsContainer);
   });
 
   describe('constructor', () => {
-    it('должен создать сервис с 6 операциями', () => {
+    it('должен создать сервис с 1 параметром (QueueOperationsContainer)', () => {
       expect(service).toBeDefined();
       expect(service.getQueues).toBeDefined();
       expect(service.getQueue).toBeDefined();
@@ -91,31 +77,31 @@ describe('QueueService', () => {
   });
 
   describe('getQueues', () => {
-    it('должен делегировать вызов GetQueuesOperation без параметров', async () => {
+    it('должен делегировать вызов ops.getQueues.execute без параметров', async () => {
       const mockResult: QueuesListOutput = [createQueueFixture()];
 
-      vi.mocked(mockGetQueuesOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);
 
       const result = await service.getQueues();
 
-      expect(mockGetQueuesOp.execute).toHaveBeenCalledWith(undefined);
+      expect(mockOpsContainer.getQueues.execute).toHaveBeenCalledWith(undefined);
       expect(result).toBe(mockResult);
     });
 
-    it('должен делегировать вызов GetQueuesOperation с параметрами', async () => {
+    it('должен делегировать вызов ops.getQueues.execute с параметрами', async () => {
       const params: GetQueuesDto = { perPage: 50, page: 2 };
       const mockResult: QueuesListOutput = [createQueueFixture()];
 
-      vi.mocked(mockGetQueuesOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);
 
       const result = await service.getQueues(params);
 
-      expect(mockGetQueuesOp.execute).toHaveBeenCalledWith(params);
+      expect(mockOpsContainer.getQueues.execute).toHaveBeenCalledWith(params);
       expect(result).toBe(mockResult);
     });
 
     it('должен возвращать пустой массив если очередей нет', async () => {
-      vi.mocked(mockGetQueuesOp.execute).mockResolvedValue([]);
+      vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue([]);
 
       const result = await service.getQueues();
 
@@ -124,15 +110,15 @@ describe('QueueService', () => {
   });
 
   describe('getQueue', () => {
-    it('должен делегировать вызов GetQueueOperation', async () => {
+    it('должен делегировать вызов ops.getQueue.execute', async () => {
       const params: GetQueueDto = { queueId: 'TEST' };
       const mockResult: QueueOutput = createQueueFixture();
 
-      vi.mocked(mockGetQueueOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.getQueue.execute).mockResolvedValue(mockResult);
 
       const result = await service.getQueue(params);
 
-      expect(mockGetQueueOp.execute).toHaveBeenCalledWith(params);
+      expect(mockOpsContainer.getQueue.execute).toHaveBeenCalledWith(params);
       expect(result).toBe(mockResult);
     });
 
@@ -140,24 +126,24 @@ describe('QueueService', () => {
       const params: GetQueueDto = { queueId: 'TEST', expand: 'projects' };
       const mockResult: QueueOutput = createQueueFixture();
 
-      vi.mocked(mockGetQueueOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.getQueue.execute).mockResolvedValue(mockResult);
 
       await service.getQueue(params);
 
-      expect(mockGetQueueOp.execute).toHaveBeenCalledWith(params);
+      expect(mockOpsContainer.getQueue.execute).toHaveBeenCalledWith(params);
     });
 
     it('должен пробрасывать ошибки от операции', async () => {
       const params: GetQueueDto = { queueId: 'INVALID' };
       const error = new Error('Queue not found');
-      vi.mocked(mockGetQueueOp.execute).mockRejectedValue(error);
+      vi.mocked(mockOpsContainer.getQueue.execute).mockRejectedValue(error);
 
       await expect(service.getQueue(params)).rejects.toThrow('Queue not found');
     });
   });
 
   describe('createQueue', () => {
-    it('должен делегировать вызов CreateQueueOperation', async () => {
+    it('должен делегировать вызов ops.createQueue.execute', async () => {
       const queueData: CreateQueueDto = {
         key: 'NEW',
         name: 'New Queue',
@@ -168,48 +154,48 @@ describe('QueueService', () => {
       };
       const mockResult: QueueOutput = createQueueFixture({ key: 'NEW', name: 'New Queue' });
 
-      vi.mocked(mockCreateQueueOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.createQueue.execute).mockResolvedValue(mockResult);
 
       const result = await service.createQueue(queueData);
 
-      expect(mockCreateQueueOp.execute).toHaveBeenCalledWith(queueData);
+      expect(mockOpsContainer.createQueue.execute).toHaveBeenCalledWith(queueData);
       expect(result).toBe(mockResult);
     });
   });
 
   describe('updateQueue', () => {
-    it('должен делегировать вызов UpdateQueueOperation', async () => {
+    it('должен делегировать вызов ops.updateQueue.execute', async () => {
       const params: UpdateQueueParams = {
         queueId: 'TEST',
         updates: { name: 'Updated Queue' },
       };
       const mockResult: QueueOutput = createQueueFixture({ name: 'Updated Queue' });
 
-      vi.mocked(mockUpdateQueueOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.updateQueue.execute).mockResolvedValue(mockResult);
 
       const result = await service.updateQueue(params);
 
-      expect(mockUpdateQueueOp.execute).toHaveBeenCalledWith(params);
+      expect(mockOpsContainer.updateQueue.execute).toHaveBeenCalledWith(params);
       expect(result).toBe(mockResult);
     });
   });
 
   describe('getQueueFields', () => {
-    it('должен делегировать вызов GetQueueFieldsOperation', async () => {
+    it('должен делегировать вызов ops.getQueueFields.execute', async () => {
       const params: GetQueueFieldsDto = { queueId: 'TEST' };
       const mockResult: QueueFieldsOutput = [createQueueFieldFixture()];
 
-      vi.mocked(mockGetQueueFieldsOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.getQueueFields.execute).mockResolvedValue(mockResult);
 
       const result = await service.getQueueFields(params);
 
-      expect(mockGetQueueFieldsOp.execute).toHaveBeenCalledWith(params);
+      expect(mockOpsContainer.getQueueFields.execute).toHaveBeenCalledWith(params);
       expect(result).toBe(mockResult);
     });
 
     it('должен возвращать пустой массив если полей нет', async () => {
       const params: GetQueueFieldsDto = { queueId: 'TEST' };
-      vi.mocked(mockGetQueueFieldsOp.execute).mockResolvedValue([]);
+      vi.mocked(mockOpsContainer.getQueueFields.execute).mockResolvedValue([]);
 
       const result = await service.getQueueFields(params);
 
@@ -218,7 +204,7 @@ describe('QueueService', () => {
   });
 
   describe('manageQueueAccess', () => {
-    it('должен делегировать вызов ManageQueueAccessOperation', async () => {
+    it('должен делегировать вызов ops.manageQueueAccess.execute', async () => {
       const params: ManageQueueAccessParams = {
         queueId: 'TEST',
         accessData: {
@@ -234,11 +220,11 @@ describe('QueueService', () => {
         },
       ];
 
-      vi.mocked(mockManageQueueAccessOp.execute).mockResolvedValue(mockResult);
+      vi.mocked(mockOpsContainer.manageQueueAccess.execute).mockResolvedValue(mockResult);
 
       const result = await service.manageQueueAccess(params);
 
-      expect(mockManageQueueAccessOp.execute).toHaveBeenCalledWith(params);
+      expect(mockOpsContainer.manageQueueAccess.execute).toHaveBeenCalledWith(params);
       expect(result).toBe(mockResult);
     });
   });

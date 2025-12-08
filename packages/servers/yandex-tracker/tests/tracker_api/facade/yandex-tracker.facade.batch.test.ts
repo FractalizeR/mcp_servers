@@ -13,173 +13,141 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type {
-  UserService,
-  IssueService,
-  IssueLinkService,
-  IssueAttachmentService,
-  QueueService,
-  ComponentService,
-  FieldService,
-  CommentService,
-  ChecklistService,
-  WorklogService,
-  BulkChangeService,
-  ProjectService,
-  BoardService,
-  SprintService,
-} from '#tracker_api/facade/services/index.js';
+  CoreServicesContainer,
+  IssueServicesContainer,
+  QueueServicesContainer,
+  ProjectAgileServicesContainer,
+} from '#tracker_api/facade/services/containers/index.js';
 import type { BatchResult } from '@mcp-framework/infrastructure';
 
 describe('YandexTrackerFacade - Batch Methods', () => {
   let facade: YandexTrackerFacade;
 
-  // Mock Services
-  let mockUserService: UserService;
-  let mockIssueService: IssueService;
-  let mockIssueLinkService: IssueLinkService;
-  let mockIssueAttachmentService: IssueAttachmentService;
-  let mockQueueService: QueueService;
-  let mockComponentService: ComponentService;
-  let mockFieldService: FieldService;
-  let mockCommentService: CommentService;
-  let mockChecklistService: ChecklistService;
-  let mockWorklogService: WorklogService;
-  let mockBulkChangeService: BulkChangeService;
-  let mockProjectService: ProjectService;
-  let mockBoardService: BoardService;
-  let mockSprintService: SprintService;
+  // Mock Containers
+  let mockCoreContainer: CoreServicesContainer;
+  let mockIssuesContainer: IssueServicesContainer;
+  let mockQueuesContainer: QueueServicesContainer;
+  let mockProjectAgileContainer: ProjectAgileServicesContainer;
 
   beforeEach(() => {
-    // Create mock services with all required methods
-    mockUserService = { ping: vi.fn() } as unknown as UserService;
+    // Create mock containers with services
+    mockCoreContainer = {
+      user: { ping: vi.fn() },
+      field: {
+        getFields: vi.fn(),
+        getField: vi.fn(),
+        createField: vi.fn(),
+        updateField: vi.fn(),
+        deleteField: vi.fn(),
+      },
+    } as unknown as CoreServicesContainer;
 
-    mockIssueService = {
-      getIssues: vi.fn(),
-      findIssues: vi.fn(),
-      createIssue: vi.fn(),
-      updateIssue: vi.fn(),
-      getIssueChangelog: vi.fn(),
-      getIssueTransitions: vi.fn(),
-      transitionIssue: vi.fn(),
-    } as unknown as IssueService;
+    mockIssuesContainer = {
+      issue: {
+        getIssues: vi.fn(),
+        findIssues: vi.fn(),
+        createIssue: vi.fn(),
+        updateIssue: vi.fn(),
+        getIssueChangelog: vi.fn(),
+        getIssueTransitions: vi.fn(),
+        transitionIssue: vi.fn(),
+      },
+      link: {
+        getIssueLinks: vi.fn(),
+        createLink: vi.fn(),
+        createLinksMany: vi.fn(),
+        deleteLink: vi.fn(),
+        deleteLinksMany: vi.fn(),
+      },
+      attachment: {
+        getAttachments: vi.fn(),
+        getAttachmentsMany: vi.fn(),
+        uploadAttachment: vi.fn(),
+        downloadAttachment: vi.fn(),
+        deleteAttachment: vi.fn(),
+        getThumbnail: vi.fn(),
+      },
+      comment: {
+        addComment: vi.fn(),
+        addCommentsMany: vi.fn(),
+        getComments: vi.fn(),
+        getCommentsMany: vi.fn(),
+        editComment: vi.fn(),
+        editCommentsMany: vi.fn(),
+        deleteComment: vi.fn(),
+        deleteCommentsMany: vi.fn(),
+      },
+      checklist: {
+        getChecklist: vi.fn(),
+        getChecklistMany: vi.fn(),
+        addChecklistItem: vi.fn(),
+        addChecklistItemMany: vi.fn(),
+        updateChecklistItem: vi.fn(),
+        updateChecklistItemMany: vi.fn(),
+        deleteChecklistItem: vi.fn(),
+        deleteChecklistItemMany: vi.fn(),
+      },
+      worklog: {
+        getWorklogs: vi.fn(),
+        getWorklogsMany: vi.fn(),
+        addWorklog: vi.fn(),
+        addWorklogsMany: vi.fn(),
+        updateWorklog: vi.fn(),
+        deleteWorklog: vi.fn(),
+      },
+    } as unknown as IssueServicesContainer;
 
-    mockIssueLinkService = {
-      getIssueLinks: vi.fn(),
-      createLink: vi.fn(),
-      createLinksMany: vi.fn(),
-      deleteLink: vi.fn(),
-      deleteLinksMany: vi.fn(),
-    } as unknown as IssueLinkService;
+    mockQueuesContainer = {
+      queue: {
+        getQueues: vi.fn(),
+        getQueue: vi.fn(),
+        createQueue: vi.fn(),
+        updateQueue: vi.fn(),
+        getQueueFields: vi.fn(),
+        manageQueueAccess: vi.fn(),
+      },
+      component: {
+        getComponents: vi.fn(),
+        createComponent: vi.fn(),
+        updateComponent: vi.fn(),
+        deleteComponent: vi.fn(),
+      },
+    } as unknown as QueueServicesContainer;
 
-    mockIssueAttachmentService = {
-      getAttachments: vi.fn(),
-      getAttachmentsMany: vi.fn(),
-      uploadAttachment: vi.fn(),
-      downloadAttachment: vi.fn(),
-      deleteAttachment: vi.fn(),
-      getThumbnail: vi.fn(),
-    } as unknown as IssueAttachmentService;
-
-    mockQueueService = {
-      getQueues: vi.fn(),
-      getQueue: vi.fn(),
-      createQueue: vi.fn(),
-      updateQueue: vi.fn(),
-      getQueueFields: vi.fn(),
-      manageQueueAccess: vi.fn(),
-    } as unknown as QueueService;
-
-    mockComponentService = {
-      getComponents: vi.fn(),
-      createComponent: vi.fn(),
-      updateComponent: vi.fn(),
-      deleteComponent: vi.fn(),
-    } as unknown as ComponentService;
-
-    mockFieldService = {
-      getFields: vi.fn(),
-      getField: vi.fn(),
-      createField: vi.fn(),
-      updateField: vi.fn(),
-      deleteField: vi.fn(),
-    } as unknown as FieldService;
-
-    mockCommentService = {
-      addComment: vi.fn(),
-      addCommentsMany: vi.fn(),
-      getComments: vi.fn(),
-      getCommentsMany: vi.fn(),
-      editComment: vi.fn(),
-      editCommentsMany: vi.fn(),
-      deleteComment: vi.fn(),
-      deleteCommentsMany: vi.fn(),
-    } as unknown as CommentService;
-
-    mockChecklistService = {
-      getChecklist: vi.fn(),
-      getChecklistMany: vi.fn(),
-      addChecklistItem: vi.fn(),
-      addChecklistItemMany: vi.fn(),
-      updateChecklistItem: vi.fn(),
-      updateChecklistItemMany: vi.fn(),
-      deleteChecklistItem: vi.fn(),
-      deleteChecklistItemMany: vi.fn(),
-    } as unknown as ChecklistService;
-
-    mockWorklogService = {
-      getWorklogs: vi.fn(),
-      getWorklogsMany: vi.fn(),
-      addWorklog: vi.fn(),
-      addWorklogsMany: vi.fn(),
-      updateWorklog: vi.fn(),
-      deleteWorklog: vi.fn(),
-    } as unknown as WorklogService;
-
-    mockBulkChangeService = {
-      bulkUpdateIssues: vi.fn(),
-      bulkTransitionIssues: vi.fn(),
-      bulkMoveIssues: vi.fn(),
-      getBulkChangeStatus: vi.fn(),
-    } as unknown as BulkChangeService;
-
-    mockProjectService = {
-      getProjects: vi.fn(),
-      getProject: vi.fn(),
-      createProject: vi.fn(),
-      updateProject: vi.fn(),
-      deleteProject: vi.fn(),
-    } as unknown as ProjectService;
-
-    mockBoardService = {
-      getBoards: vi.fn(),
-      getBoard: vi.fn(),
-      createBoard: vi.fn(),
-      updateBoard: vi.fn(),
-      deleteBoard: vi.fn(),
-    } as unknown as BoardService;
-
-    mockSprintService = {
-      getSprints: vi.fn(),
-      getSprint: vi.fn(),
-      createSprint: vi.fn(),
-      updateSprint: vi.fn(),
-    } as unknown as SprintService;
+    mockProjectAgileContainer = {
+      project: {
+        getProjects: vi.fn(),
+        getProject: vi.fn(),
+        createProject: vi.fn(),
+        updateProject: vi.fn(),
+        deleteProject: vi.fn(),
+      },
+      board: {
+        getBoards: vi.fn(),
+        getBoard: vi.fn(),
+        createBoard: vi.fn(),
+        updateBoard: vi.fn(),
+        deleteBoard: vi.fn(),
+      },
+      sprint: {
+        getSprints: vi.fn(),
+        getSprint: vi.fn(),
+        createSprint: vi.fn(),
+        updateSprint: vi.fn(),
+      },
+      bulkChange: {
+        bulkUpdateIssues: vi.fn(),
+        bulkTransitionIssues: vi.fn(),
+        bulkMoveIssues: vi.fn(),
+        getBulkChangeStatus: vi.fn(),
+      },
+    } as unknown as ProjectAgileServicesContainer;
 
     facade = new YandexTrackerFacade(
-      mockUserService,
-      mockIssueService,
-      mockIssueLinkService,
-      mockIssueAttachmentService,
-      mockQueueService,
-      mockComponentService,
-      mockFieldService,
-      mockCommentService,
-      mockChecklistService,
-      mockWorklogService,
-      mockBulkChangeService,
-      mockProjectService,
-      mockBoardService,
-      mockSprintService
+      mockCoreContainer,
+      mockIssuesContainer,
+      mockQueuesContainer,
+      mockProjectAgileContainer
     );
   });
 
@@ -200,11 +168,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockIssueLinkService.createLinksMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.link.createLinksMany).mockResolvedValue(mockResult);
 
       const result = await facade.createLinksMany(links);
 
-      expect(mockIssueLinkService.createLinksMany).toHaveBeenCalledWith(links);
+      expect(mockIssuesContainer.link.createLinksMany).toHaveBeenCalledWith(links);
       expect(result).toBe(mockResult);
     });
   });
@@ -220,11 +188,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockIssueLinkService.deleteLinksMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.link.deleteLinksMany).mockResolvedValue(mockResult);
 
       const result = await facade.deleteLinksMany(links);
 
-      expect(mockIssueLinkService.deleteLinksMany).toHaveBeenCalledWith(links);
+      expect(mockIssuesContainer.link.deleteLinksMany).toHaveBeenCalledWith(links);
       expect(result).toBe(mockResult);
     });
   });
@@ -242,11 +210,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockCommentService.addCommentsMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.comment.addCommentsMany).mockResolvedValue(mockResult);
 
       const result = await facade.addCommentsMany(comments);
 
-      expect(mockCommentService.addCommentsMany).toHaveBeenCalledWith(comments);
+      expect(mockIssuesContainer.comment.addCommentsMany).toHaveBeenCalledWith(comments);
       expect(result).toBe(mockResult);
     });
   });
@@ -259,11 +227,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockCommentService.getCommentsMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.comment.getCommentsMany).mockResolvedValue(mockResult);
 
       const result = await facade.getCommentsMany(issueIds);
 
-      expect(mockCommentService.getCommentsMany).toHaveBeenCalledWith(issueIds, undefined);
+      expect(mockIssuesContainer.comment.getCommentsMany).toHaveBeenCalledWith(issueIds, undefined);
       expect(result).toBe(mockResult);
     });
 
@@ -275,11 +243,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockCommentService.getCommentsMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.comment.getCommentsMany).mockResolvedValue(mockResult);
 
       await facade.getCommentsMany(issueIds, input);
 
-      expect(mockCommentService.getCommentsMany).toHaveBeenCalledWith(issueIds, input);
+      expect(mockIssuesContainer.comment.getCommentsMany).toHaveBeenCalledWith(issueIds, input);
     });
   });
 
@@ -294,11 +262,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockCommentService.editCommentsMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.comment.editCommentsMany).mockResolvedValue(mockResult);
 
       const result = await facade.editCommentsMany(comments);
 
-      expect(mockCommentService.editCommentsMany).toHaveBeenCalledWith(comments);
+      expect(mockIssuesContainer.comment.editCommentsMany).toHaveBeenCalledWith(comments);
       expect(result).toBe(mockResult);
     });
   });
@@ -314,11 +282,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockCommentService.deleteCommentsMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.comment.deleteCommentsMany).mockResolvedValue(mockResult);
 
       const result = await facade.deleteCommentsMany(comments);
 
-      expect(mockCommentService.deleteCommentsMany).toHaveBeenCalledWith(comments);
+      expect(mockIssuesContainer.comment.deleteCommentsMany).toHaveBeenCalledWith(comments);
       expect(result).toBe(mockResult);
     });
   });
@@ -333,11 +301,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockChecklistService.getChecklistMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.checklist.getChecklistMany).mockResolvedValue(mockResult);
 
       const result = await facade.getChecklistMany(issueIds);
 
-      expect(mockChecklistService.getChecklistMany).toHaveBeenCalledWith(issueIds);
+      expect(mockIssuesContainer.checklist.getChecklistMany).toHaveBeenCalledWith(issueIds);
       expect(result).toBe(mockResult);
     });
   });
@@ -353,11 +321,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockChecklistService.addChecklistItemMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.checklist.addChecklistItemMany).mockResolvedValue(mockResult);
 
       const result = await facade.addChecklistItemMany(items);
 
-      expect(mockChecklistService.addChecklistItemMany).toHaveBeenCalledWith(items);
+      expect(mockIssuesContainer.checklist.addChecklistItemMany).toHaveBeenCalledWith(items);
       expect(result).toBe(mockResult);
     });
   });
@@ -373,11 +341,13 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockChecklistService.updateChecklistItemMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.checklist.updateChecklistItemMany).mockResolvedValue(
+        mockResult
+      );
 
       const result = await facade.updateChecklistItemMany(items);
 
-      expect(mockChecklistService.updateChecklistItemMany).toHaveBeenCalledWith(items);
+      expect(mockIssuesContainer.checklist.updateChecklistItemMany).toHaveBeenCalledWith(items);
       expect(result).toBe(mockResult);
     });
   });
@@ -393,11 +363,13 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockChecklistService.deleteChecklistItemMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.checklist.deleteChecklistItemMany).mockResolvedValue(
+        mockResult
+      );
 
       const result = await facade.deleteChecklistItemMany(items);
 
-      expect(mockChecklistService.deleteChecklistItemMany).toHaveBeenCalledWith(items);
+      expect(mockIssuesContainer.checklist.deleteChecklistItemMany).toHaveBeenCalledWith(items);
       expect(result).toBe(mockResult);
     });
   });
@@ -412,11 +384,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockWorklogService.getWorklogsMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.worklog.getWorklogsMany).mockResolvedValue(mockResult);
 
       const result = await facade.getWorklogsMany(issueIds);
 
-      expect(mockWorklogService.getWorklogsMany).toHaveBeenCalledWith(issueIds);
+      expect(mockIssuesContainer.worklog.getWorklogsMany).toHaveBeenCalledWith(issueIds);
       expect(result).toBe(mockResult);
     });
   });
@@ -432,11 +404,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockWorklogService.addWorklogsMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.worklog.addWorklogsMany).mockResolvedValue(mockResult);
 
       const result = await facade.addWorklogsMany(worklogs);
 
-      expect(mockWorklogService.addWorklogsMany).toHaveBeenCalledWith(worklogs);
+      expect(mockIssuesContainer.worklog.addWorklogsMany).toHaveBeenCalledWith(worklogs);
       expect(result).toBe(mockResult);
     });
   });
@@ -451,11 +423,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         failed: [],
       };
 
-      vi.mocked(mockIssueAttachmentService.getAttachmentsMany).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.attachment.getAttachmentsMany).mockResolvedValue(mockResult);
 
       const result = await facade.getAttachmentsMany(issueIds);
 
-      expect(mockIssueAttachmentService.getAttachmentsMany).toHaveBeenCalledWith(issueIds);
+      expect(mockIssuesContainer.attachment.getAttachmentsMany).toHaveBeenCalledWith(issueIds);
       expect(result).toBe(mockResult);
     });
   });
@@ -474,11 +446,13 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         status: 'RUNNING',
       };
 
-      vi.mocked(mockBulkChangeService.bulkUpdateIssues).mockResolvedValue(mockResult);
+      vi.mocked(mockProjectAgileContainer.bulkChange.bulkUpdateIssues).mockResolvedValue(
+        mockResult
+      );
 
       const result = await facade.bulkUpdateIssues(params);
 
-      expect(mockBulkChangeService.bulkUpdateIssues).toHaveBeenCalledWith(params);
+      expect(mockProjectAgileContainer.bulkChange.bulkUpdateIssues).toHaveBeenCalledWith(params);
       expect(result).toBe(mockResult);
     });
   });
@@ -496,11 +470,15 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         status: 'RUNNING',
       };
 
-      vi.mocked(mockBulkChangeService.bulkTransitionIssues).mockResolvedValue(mockResult);
+      vi.mocked(mockProjectAgileContainer.bulkChange.bulkTransitionIssues).mockResolvedValue(
+        mockResult
+      );
 
       const result = await facade.bulkTransitionIssues(params);
 
-      expect(mockBulkChangeService.bulkTransitionIssues).toHaveBeenCalledWith(params);
+      expect(mockProjectAgileContainer.bulkChange.bulkTransitionIssues).toHaveBeenCalledWith(
+        params
+      );
       expect(result).toBe(mockResult);
     });
   });
@@ -518,11 +496,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         status: 'RUNNING',
       };
 
-      vi.mocked(mockBulkChangeService.bulkMoveIssues).mockResolvedValue(mockResult);
+      vi.mocked(mockProjectAgileContainer.bulkChange.bulkMoveIssues).mockResolvedValue(mockResult);
 
       const result = await facade.bulkMoveIssues(params);
 
-      expect(mockBulkChangeService.bulkMoveIssues).toHaveBeenCalledWith(params);
+      expect(mockProjectAgileContainer.bulkChange.bulkMoveIssues).toHaveBeenCalledWith(params);
       expect(result).toBe(mockResult);
     });
   });
@@ -538,11 +516,15 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         totalIssues: 10,
       };
 
-      vi.mocked(mockBulkChangeService.getBulkChangeStatus).mockResolvedValue(mockResult);
+      vi.mocked(mockProjectAgileContainer.bulkChange.getBulkChangeStatus).mockResolvedValue(
+        mockResult
+      );
 
       const result = await facade.getBulkChangeStatus(operationId);
 
-      expect(mockBulkChangeService.getBulkChangeStatus).toHaveBeenCalledWith(operationId);
+      expect(mockProjectAgileContainer.bulkChange.getBulkChangeStatus).toHaveBeenCalledWith(
+        operationId
+      );
       expect(result).toBe(mockResult);
     });
 
@@ -556,7 +538,9 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         totalIssues: 10,
       };
 
-      vi.mocked(mockBulkChangeService.getBulkChangeStatus).mockResolvedValue(mockResult);
+      vi.mocked(mockProjectAgileContainer.bulkChange.getBulkChangeStatus).mockResolvedValue(
+        mockResult
+      );
 
       const result = await facade.getBulkChangeStatus(operationId);
 
@@ -571,11 +555,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
       const issueId = 'TEST-1';
       const mockResult = [{ id: 'att1', name: 'file.txt', mimetype: 'text/plain' }];
 
-      vi.mocked(mockIssueAttachmentService.getAttachments).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.attachment.getAttachments).mockResolvedValue(mockResult);
 
       const result = await facade.getAttachments(issueId);
 
-      expect(mockIssueAttachmentService.getAttachments).toHaveBeenCalledWith(issueId);
+      expect(mockIssuesContainer.attachment.getAttachments).toHaveBeenCalledWith(issueId);
       expect(result).toBe(mockResult);
     });
   });
@@ -586,11 +570,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
       const input = { filename: 'test.txt', file: Buffer.from('test'), mimetype: 'text/plain' };
       const mockResult = { id: 'att1', name: 'test.txt', mimetype: 'text/plain' };
 
-      vi.mocked(mockIssueAttachmentService.uploadAttachment).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.attachment.uploadAttachment).mockResolvedValue(mockResult);
 
       const result = await facade.uploadAttachment(issueId, input);
 
-      expect(mockIssueAttachmentService.uploadAttachment).toHaveBeenCalledWith(issueId, input);
+      expect(mockIssuesContainer.attachment.uploadAttachment).toHaveBeenCalledWith(issueId, input);
       expect(result).toBe(mockResult);
     });
   });
@@ -599,11 +583,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
     it('должна делегировать вызов IssueAttachmentService.downloadAttachment', async () => {
       const mockResult = { content: Buffer.from('test'), filename: 'test.txt' };
 
-      vi.mocked(mockIssueAttachmentService.downloadAttachment).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.attachment.downloadAttachment).mockResolvedValue(mockResult);
 
       const result = await facade.downloadAttachment('TEST-1', 'att1', 'test.txt');
 
-      expect(mockIssueAttachmentService.downloadAttachment).toHaveBeenCalledWith(
+      expect(mockIssuesContainer.attachment.downloadAttachment).toHaveBeenCalledWith(
         'TEST-1',
         'att1',
         'test.txt',
@@ -615,11 +599,14 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
   describe('deleteAttachment', () => {
     it('должна делегировать вызов IssueAttachmentService.deleteAttachment', async () => {
-      vi.mocked(mockIssueAttachmentService.deleteAttachment).mockResolvedValue(undefined);
+      vi.mocked(mockIssuesContainer.attachment.deleteAttachment).mockResolvedValue(undefined);
 
       await facade.deleteAttachment('TEST-1', 'att1');
 
-      expect(mockIssueAttachmentService.deleteAttachment).toHaveBeenCalledWith('TEST-1', 'att1');
+      expect(mockIssuesContainer.attachment.deleteAttachment).toHaveBeenCalledWith(
+        'TEST-1',
+        'att1'
+      );
     });
   });
 
@@ -627,11 +614,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
     it('должна делегировать вызов IssueAttachmentService.getThumbnail', async () => {
       const mockResult = { content: Buffer.from('thumbnail'), filename: 'thumb.jpg' };
 
-      vi.mocked(mockIssueAttachmentService.getThumbnail).mockResolvedValue(mockResult);
+      vi.mocked(mockIssuesContainer.attachment.getThumbnail).mockResolvedValue(mockResult);
 
       const result = await facade.getThumbnail('TEST-1', 'att1');
 
-      expect(mockIssueAttachmentService.getThumbnail).toHaveBeenCalledWith(
+      expect(mockIssuesContainer.attachment.getThumbnail).toHaveBeenCalledWith(
         'TEST-1',
         'att1',
         undefined
