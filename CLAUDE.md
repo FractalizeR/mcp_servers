@@ -396,6 +396,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## 🔗 ДОПОЛНИТЕЛЬНО
 
+- **Чеклист разработки MCP сервера:** [MCP_SERVER_CHECKLIST.md](./MCP_SERVER_CHECKLIST.md)
 - **Архитектура monorepo:** [ARCHITECTURE.md](./ARCHITECTURE.md)
 - **Framework packages:**
   - [Infrastructure API](packages/framework/infrastructure/README.md)
