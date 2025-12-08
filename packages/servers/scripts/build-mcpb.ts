@@ -9,6 +9,7 @@
  * - README.md (документация)
  *
  * Использует официальный @anthropic-ai/mcpb пакет для сборки.
+ * Файлы для исключения настраиваются в .mcpbignore (корень monorepo).
  *
  * Использование:
  *   tsx ../scripts/build-mcpb.ts          # из директории пакета
@@ -102,80 +103,26 @@ async function buildMcpb(options: BuildOptions): Promise<void> {
   const defaultOutputPath = path.join(monorepoRoot, `${manifest.name}-${manifest.version}.mcpb`);
   const finalOutputPath = outputPath || defaultOutputPath;
 
-  // Создаем временную директорию для сборки
-  const tempBuildDir = path.join(monorepoRoot, '.mcpb-build');
-  await fs.mkdir(tempBuildDir, { recursive: true });
+  // Упаковываем в .mcpb архив напрямую из packageRoot
+  // packExtension использует .mcpbignore для исключения лишних файлов (src/, tests/, node_modules/ и т.д.)
+  log('🔨 Создание .mcpb архива...');
 
-  try {
-    log('📦 Подготовка файлов для архива...');
+  const packResult = await packExtension({
+    extensionPath: packageRoot,
+    outputPath: finalOutputPath,
+    silent,
+  });
 
-    // Копируем manifest.json
-    await fs.copyFile(manifestPath, path.join(tempBuildDir, 'manifest.json'));
-
-    // Копируем dist/
-    await copyDirectory(distPath, path.join(tempBuildDir, 'dist'));
-
-    // Копируем package.json (опционально)
-    const packageJsonPath = path.join(packageRoot, 'package.json');
-    try {
-      await fs.copyFile(packageJsonPath, path.join(tempBuildDir, 'package.json'));
-      log('✅ package.json скопирован');
-    } catch {
-      log('⚠️  package.json не найден (необязательно)');
-    }
-
-    // Копируем README.md из пакета (опционально)
-    const readmePath = path.join(packageRoot, 'README.md');
-    try {
-      await fs.copyFile(readmePath, path.join(tempBuildDir, 'README.md'));
-      log('✅ README.md скопирован');
-    } catch {
-      log('⚠️  README.md не найден (необязательно)');
-    }
-
-    // Упаковываем в .mcpb архив
-    log('🔨 Создание .mcpb архива...');
-
-    const packResult = await packExtension({
-      extensionPath: tempBuildDir,
-      outputPath: finalOutputPath,
-      silent,
-    });
-
-    if (!packResult) {
-      throw new Error('Ошибка при создании MCPB архива');
-    }
-
-    log(`✅ MCPB архив успешно создан: ${finalOutputPath}`);
-
-    // Показываем информацию о файле
-    const stats = await fs.stat(finalOutputPath);
-    const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
-    log(`📊 Размер архива: ${sizeInMB} MB`);
-  } finally {
-    // Удаляем временную директорию
-    await fs.rm(tempBuildDir, { recursive: true, force: true });
+  if (!packResult) {
+    throw new Error('Ошибка при создании MCPB архива');
   }
-}
 
-/**
- * Рекурсивно копирует директорию
- */
-async function copyDirectory(src: string, dest: string): Promise<void> {
-  await fs.mkdir(dest, { recursive: true });
+  log(`✅ MCPB архив успешно создан: ${finalOutputPath}`);
 
-  const entries = await fs.readdir(src, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-
-    if (entry.isDirectory()) {
-      await copyDirectory(srcPath, destPath);
-    } else {
-      await fs.copyFile(srcPath, destPath);
-    }
-  }
+  // Показываем информацию о файле
+  const stats = await fs.stat(finalOutputPath);
+  const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
+  log(`📊 Размер архива: ${sizeInMB} MB`);
 }
 
 /**
