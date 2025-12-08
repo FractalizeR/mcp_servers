@@ -315,6 +315,112 @@ function validateOrgIds(
 }
 
 /**
+ * Build API configuration
+ */
+function buildApiConfig(): Pick<
+  ServerConfig,
+  'apiBase' | 'requestTimeout' | 'maxBatchSize' | 'maxConcurrentRequests'
+> {
+  return {
+    apiBase: (
+      process.env[ENV_VAR_NAMES.YANDEX_TRACKER_API_BASE]?.trim() || DEFAULT_API_BASE
+    ).trim(),
+    requestTimeout: validateTimeout(
+      process.env[ENV_VAR_NAMES.REQUEST_TIMEOUT],
+      DEFAULT_REQUEST_TIMEOUT
+    ),
+    maxBatchSize: validateMaxBatchSize(
+      process.env[ENV_VAR_NAMES.MAX_BATCH_SIZE],
+      DEFAULT_MAX_BATCH_SIZE
+    ),
+    maxConcurrentRequests: validateMaxConcurrentRequests(
+      process.env[ENV_VAR_NAMES.MAX_CONCURRENT_REQUESTS],
+      DEFAULT_MAX_CONCURRENT_REQUESTS
+    ),
+  };
+}
+
+/**
+ * Build logging configuration
+ */
+function buildLoggingConfig(): Pick<
+  ServerConfig,
+  'logLevel' | 'logsDir' | 'prettyLogs' | 'logMaxSize' | 'logMaxFiles'
+> {
+  const logsDirRaw = process.env[ENV_VAR_NAMES.LOGS_DIR]?.trim() || DEFAULT_LOGS_DIR;
+
+  return {
+    logLevel: validateLogLevel(process.env[ENV_VAR_NAMES.LOG_LEVEL]?.trim() || DEFAULT_LOG_LEVEL),
+    logsDir: resolve(PROJECT_ROOT, logsDirRaw),
+    prettyLogs: process.env[ENV_VAR_NAMES.PRETTY_LOGS] === 'true',
+    logMaxSize: parseInt(
+      process.env[ENV_VAR_NAMES.LOG_MAX_SIZE] || String(DEFAULT_LOG_MAX_SIZE),
+      10
+    ),
+    logMaxFiles: parseInt(
+      process.env[ENV_VAR_NAMES.LOG_MAX_FILES] || String(DEFAULT_LOG_MAX_FILES),
+      10
+    ),
+  };
+}
+
+/**
+ * Build tools configuration
+ */
+function buildToolsConfig(): Pick<
+  ServerConfig,
+  'toolDiscoveryMode' | 'essentialTools' | 'enabledToolCategories' | 'disabledToolGroups'
+> {
+  const enabledToolCategoriesRaw = process.env[ENV_VAR_NAMES.ENABLED_TOOL_CATEGORIES];
+  const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
+
+  const config: Pick<
+    ServerConfig,
+    'toolDiscoveryMode' | 'essentialTools' | 'enabledToolCategories' | 'disabledToolGroups'
+  > = {
+    toolDiscoveryMode: validateToolDiscoveryMode(process.env[ENV_VAR_NAMES.TOOL_DISCOVERY_MODE]),
+    essentialTools: parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]),
+  };
+
+  if (enabledToolCategoriesRaw !== undefined) {
+    config.enabledToolCategories = parseEnabledToolCategories(enabledToolCategoriesRaw);
+  }
+  const disabledToolGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
+  if (disabledToolGroups) {
+    config.disabledToolGroups = disabledToolGroups;
+  }
+
+  return config;
+}
+
+/**
+ * Build retry configuration
+ */
+function buildRetryConfig(): Pick<
+  ServerConfig,
+  'retryAttempts' | 'retryMinDelay' | 'retryMaxDelay'
+> {
+  return {
+    retryAttempts: validateRetryAttempts(
+      process.env[ENV_VAR_NAMES.RETRY_ATTEMPTS],
+      DEFAULT_RETRY_ATTEMPTS
+    ),
+    retryMinDelay: validateRetryDelay(
+      process.env[ENV_VAR_NAMES.RETRY_MIN_DELAY],
+      DEFAULT_RETRY_MIN_DELAY,
+      100,
+      5000
+    ),
+    retryMaxDelay: validateRetryDelay(
+      process.env[ENV_VAR_NAMES.RETRY_MAX_DELAY],
+      DEFAULT_RETRY_MAX_DELAY,
+      1000,
+      60000
+    ),
+  };
+}
+
+/**
  * Загрузка конфигурации из переменных окружения
  * @throws {Error} если обязательные переменные не установлены
  */
@@ -334,99 +440,12 @@ export function loadConfig(): ServerConfig {
     process.env[ENV_VAR_NAMES.YANDEX_CLOUD_ORG_ID]
   );
 
-  // Используем || для дефолтных значений, так как пустая строка должна быть заменена
-
-  const apiBase = process.env[ENV_VAR_NAMES.YANDEX_TRACKER_API_BASE]?.trim() || DEFAULT_API_BASE;
-
-  const logLevel = validateLogLevel(
-    process.env[ENV_VAR_NAMES.LOG_LEVEL]?.trim() || DEFAULT_LOG_LEVEL
-  );
-  const requestTimeout = validateTimeout(
-    process.env[ENV_VAR_NAMES.REQUEST_TIMEOUT],
-    DEFAULT_REQUEST_TIMEOUT
-  );
-  const maxBatchSize = validateMaxBatchSize(
-    process.env[ENV_VAR_NAMES.MAX_BATCH_SIZE],
-    DEFAULT_MAX_BATCH_SIZE
-  );
-  const maxConcurrentRequests = validateMaxConcurrentRequests(
-    process.env[ENV_VAR_NAMES.MAX_CONCURRENT_REQUESTS],
-    DEFAULT_MAX_CONCURRENT_REQUESTS
-  );
-
-  const logsDirRaw = process.env[ENV_VAR_NAMES.LOGS_DIR]?.trim() || DEFAULT_LOGS_DIR;
-  // Если путь относительный - резолвим относительно PROJECT_ROOT
-  const logsDir = resolve(PROJECT_ROOT, logsDirRaw);
-  const prettyLogs = process.env[ENV_VAR_NAMES.PRETTY_LOGS] === 'true';
-
-  // Ротация логов (по умолчанию: 50KB, 20 файлов = максимум ~1MB на диске)
-  const logMaxSize = parseInt(
-    process.env[ENV_VAR_NAMES.LOG_MAX_SIZE] || String(DEFAULT_LOG_MAX_SIZE),
-    10
-  );
-  const logMaxFiles = parseInt(
-    process.env[ENV_VAR_NAMES.LOG_MAX_FILES] || String(DEFAULT_LOG_MAX_FILES),
-    10
-  );
-
-  // Tool Discovery Mode (lazy по умолчанию для масштабируемости)
-  const toolDiscoveryMode = validateToolDiscoveryMode(
-    process.env[ENV_VAR_NAMES.TOOL_DISCOVERY_MODE]
-  );
-  const essentialTools = parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]);
-
-  // Парсинг фильтра категорий (опционально, только для eager режима)
-  const enabledToolCategoriesRaw = process.env[ENV_VAR_NAMES.ENABLED_TOOL_CATEGORIES];
-  const enabledToolCategories =
-    enabledToolCategoriesRaw !== undefined
-      ? parseEnabledToolCategories(enabledToolCategoriesRaw)
-      : undefined;
-
-  // Парсинг отключенных групп инструментов (негативный фильтр)
-  const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
-  const disabledToolGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
-
-  // Retry configuration
-  const retryAttempts = validateRetryAttempts(
-    process.env[ENV_VAR_NAMES.RETRY_ATTEMPTS],
-    DEFAULT_RETRY_ATTEMPTS
-  );
-
-  const retryMinDelay = validateRetryDelay(
-    process.env[ENV_VAR_NAMES.RETRY_MIN_DELAY],
-    DEFAULT_RETRY_MIN_DELAY,
-    100,
-    5000
-  );
-
-  const retryMaxDelay = validateRetryDelay(
-    process.env[ENV_VAR_NAMES.RETRY_MAX_DELAY],
-    DEFAULT_RETRY_MAX_DELAY,
-    1000,
-    60000
-  );
-
   return {
     token: token.trim(),
     ...validatedOrgIds,
-    apiBase: apiBase.trim(),
-    logLevel,
-    requestTimeout,
-    maxBatchSize,
-    maxConcurrentRequests,
-    logsDir,
-    prettyLogs,
-    logMaxSize,
-    logMaxFiles,
-    toolDiscoveryMode,
-    essentialTools,
-    // Условно добавляем enabledToolCategories только если оно определено
-    ...(enabledToolCategories && { enabledToolCategories }),
-    // Условно добавляем disabledToolGroups только если оно определено
-    ...(disabledToolGroups && { disabledToolGroups }),
-    // Retry configuration
-    retryAttempts,
-    retryMinDelay,
-    retryMaxDelay,
+    ...buildApiConfig(),
+    ...buildLoggingConfig(),
+    ...buildToolsConfig(),
+    ...buildRetryConfig(),
   };
 }

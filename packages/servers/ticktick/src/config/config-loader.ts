@@ -295,16 +295,15 @@ function validateCacheTtl(value: string | undefined, defaultValue: number): numb
 }
 
 /**
- * Load configuration from environment variables
- * @throws {Error} if required variables are not set
+ * Build OAuth configuration
  */
-export function loadConfig(): ServerConfig {
+function buildOAuthConfig(): ServerConfig['oauth'] {
   const clientId = process.env[ENV_VAR_NAMES.TICKTICK_CLIENT_ID];
   const clientSecret = process.env[ENV_VAR_NAMES.TICKTICK_CLIENT_SECRET];
   const accessToken = process.env[ENV_VAR_NAMES.TICKTICK_ACCESS_TOKEN];
   const refreshToken = process.env[ENV_VAR_NAMES.TICKTICK_REFRESH_TOKEN];
 
-  // For now, we require either access token OR client credentials
+  // Validate credentials
   if (!accessToken && (!clientId || !clientSecret)) {
     throw new Error(
       `Either ${ENV_VAR_NAMES.TICKTICK_ACCESS_TOKEN} or both ` +
@@ -313,127 +312,113 @@ export function loadConfig(): ServerConfig {
     );
   }
 
-  const apiBaseUrl =
-    process.env[ENV_VAR_NAMES.TICKTICK_API_BASE_URL]?.trim() || DEFAULT_API_BASE_URL;
-
-  const logLevel = validateLogLevel(
-    process.env[ENV_VAR_NAMES.LOG_LEVEL]?.trim() || DEFAULT_LOG_LEVEL
-  );
-  const requestTimeout = validateTimeout(
-    process.env[ENV_VAR_NAMES.REQUEST_TIMEOUT],
-    DEFAULT_REQUEST_TIMEOUT
-  );
-  const maxBatchSize = validateMaxBatchSize(
-    process.env[ENV_VAR_NAMES.MAX_BATCH_SIZE],
-    DEFAULT_MAX_BATCH_SIZE
-  );
-  const maxConcurrentRequests = validateMaxConcurrentRequests(
-    process.env[ENV_VAR_NAMES.MAX_CONCURRENT_REQUESTS],
-    DEFAULT_MAX_CONCURRENT_REQUESTS
-  );
-
-  const logsDirRaw = process.env[ENV_VAR_NAMES.LOGS_DIR]?.trim() || DEFAULT_LOGS_DIR;
-  const logsDir = resolve(PROJECT_ROOT, logsDirRaw);
-  const prettyLogs = process.env[ENV_VAR_NAMES.PRETTY_LOGS] === 'true';
-
-  const logMaxSize = parseInt(
-    process.env[ENV_VAR_NAMES.LOG_MAX_SIZE] || String(DEFAULT_LOG_MAX_SIZE),
-    10
-  );
-  const logMaxFiles = parseInt(
-    process.env[ENV_VAR_NAMES.LOG_MAX_FILES] || String(DEFAULT_LOG_MAX_FILES),
-    10
-  );
-
-  // Tool Discovery Mode
-  const toolDiscoveryMode = validateToolDiscoveryMode(
-    process.env[ENV_VAR_NAMES.TOOL_DISCOVERY_MODE]
-  );
-  const essentialTools = parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]);
-
-  // Parse category filter (optional, only for eager mode)
-  const enabledToolCategoriesRaw = process.env[ENV_VAR_NAMES.ENABLED_TOOL_CATEGORIES];
-  const enabledToolCategories =
-    enabledToolCategoriesRaw !== undefined
-      ? parseEnabledToolCategories(enabledToolCategoriesRaw)
-      : undefined;
-
-  // Parse disabled tool groups (negative filter)
-  const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
-  const disabledToolGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
-
-  // Retry configuration
-  const retryAttempts = validateRetryAttempts(
-    process.env[ENV_VAR_NAMES.RETRY_ATTEMPTS],
-    DEFAULT_RETRY_ATTEMPTS
-  );
-
-  const retryMinDelay = validateRetryDelay(
-    process.env[ENV_VAR_NAMES.RETRY_MIN_DELAY],
-    DEFAULT_RETRY_MIN_DELAY,
-    100,
-    5000
-  );
-
-  const retryMaxDelay = validateRetryDelay(
-    process.env[ENV_VAR_NAMES.RETRY_MAX_DELAY],
-    DEFAULT_RETRY_MAX_DELAY,
-    1000,
-    60000
-  );
-
-  // Cache configuration
-  const cacheTtlMs = validateCacheTtl(
-    process.env[ENV_VAR_NAMES.CACHE_TTL_MS],
-    DEFAULT_CACHE_TTL_MS
-  );
-
-  const oauthConfig: ServerConfig['oauth'] = {
+  const config: ServerConfig['oauth'] = {
     clientId: clientId?.trim() ?? '',
     clientSecret: clientSecret?.trim() ?? '',
     redirectUri:
       process.env[ENV_VAR_NAMES.TICKTICK_REDIRECT_URI]?.trim() || 'http://localhost:3000/callback',
   };
 
-  const trimmedAccessToken = accessToken?.trim();
-  const trimmedRefreshToken = refreshToken?.trim();
-  if (trimmedAccessToken) {
-    oauthConfig.accessToken = trimmedAccessToken;
-  }
-  if (trimmedRefreshToken) {
-    oauthConfig.refreshToken = trimmedRefreshToken;
-  }
+  if (accessToken?.trim()) config.accessToken = accessToken.trim();
+  if (refreshToken?.trim()) config.refreshToken = refreshToken.trim();
+
+  return config;
+}
+
+/**
+ * Build logging configuration
+ */
+function buildLoggingConfig(): ServerConfig['logging'] {
+  const logsDirRaw = process.env[ENV_VAR_NAMES.LOGS_DIR]?.trim() || DEFAULT_LOGS_DIR;
 
   return {
-    oauth: oauthConfig,
+    level: validateLogLevel(process.env[ENV_VAR_NAMES.LOG_LEVEL]?.trim() || DEFAULT_LOG_LEVEL),
+    dir: resolve(PROJECT_ROOT, logsDirRaw),
+    prettyLogs: process.env[ENV_VAR_NAMES.PRETTY_LOGS] === 'true',
+    maxSize: parseInt(process.env[ENV_VAR_NAMES.LOG_MAX_SIZE] || String(DEFAULT_LOG_MAX_SIZE), 10),
+    maxFiles: parseInt(
+      process.env[ENV_VAR_NAMES.LOG_MAX_FILES] || String(DEFAULT_LOG_MAX_FILES),
+      10
+    ),
+  };
+}
+
+/**
+ * Build tools configuration
+ */
+function buildToolsConfig(): ServerConfig['tools'] {
+  const enabledToolCategoriesRaw = process.env[ENV_VAR_NAMES.ENABLED_TOOL_CATEGORIES];
+  const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
+
+  const config: ServerConfig['tools'] = {
+    discoveryMode: validateToolDiscoveryMode(process.env[ENV_VAR_NAMES.TOOL_DISCOVERY_MODE]),
+    essentialTools: parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]),
+  };
+
+  if (enabledToolCategoriesRaw !== undefined) {
+    config.enabledCategories = parseEnabledToolCategories(enabledToolCategoriesRaw);
+  }
+  const disabledGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
+  if (disabledGroups) {
+    config.disabledGroups = disabledGroups;
+  }
+
+  return config;
+}
+
+/**
+ * Build retry configuration
+ */
+function buildRetryConfig(): ServerConfig['retry'] {
+  return {
+    attempts: validateRetryAttempts(
+      process.env[ENV_VAR_NAMES.RETRY_ATTEMPTS],
+      DEFAULT_RETRY_ATTEMPTS
+    ),
+    minDelay: validateRetryDelay(
+      process.env[ENV_VAR_NAMES.RETRY_MIN_DELAY],
+      DEFAULT_RETRY_MIN_DELAY,
+      100,
+      5000
+    ),
+    maxDelay: validateRetryDelay(
+      process.env[ENV_VAR_NAMES.RETRY_MAX_DELAY],
+      DEFAULT_RETRY_MAX_DELAY,
+      1000,
+      60000
+    ),
+  };
+}
+
+/**
+ * Load configuration from environment variables
+ * @throws {Error} if required variables are not set
+ */
+export function loadConfig(): ServerConfig {
+  return {
+    oauth: buildOAuthConfig(),
     api: {
-      baseUrl: apiBaseUrl,
+      baseUrl: process.env[ENV_VAR_NAMES.TICKTICK_API_BASE_URL]?.trim() || DEFAULT_API_BASE_URL,
     },
     batch: {
-      maxBatchSize,
-      maxConcurrentRequests,
+      maxBatchSize: validateMaxBatchSize(
+        process.env[ENV_VAR_NAMES.MAX_BATCH_SIZE],
+        DEFAULT_MAX_BATCH_SIZE
+      ),
+      maxConcurrentRequests: validateMaxConcurrentRequests(
+        process.env[ENV_VAR_NAMES.MAX_CONCURRENT_REQUESTS],
+        DEFAULT_MAX_CONCURRENT_REQUESTS
+      ),
     },
-    retry: {
-      attempts: retryAttempts,
-      minDelay: retryMinDelay,
-      maxDelay: retryMaxDelay,
-    },
+    retry: buildRetryConfig(),
     cache: {
-      ttlMs: cacheTtlMs,
+      ttlMs: validateCacheTtl(process.env[ENV_VAR_NAMES.CACHE_TTL_MS], DEFAULT_CACHE_TTL_MS),
     },
-    tools: {
-      discoveryMode: toolDiscoveryMode,
-      essentialTools,
-      ...(enabledToolCategories && { enabledCategories: enabledToolCategories }),
-      ...(disabledToolGroups && { disabledGroups: disabledToolGroups }),
-    },
-    logging: {
-      level: logLevel,
-      dir: logsDir,
-      prettyLogs,
-      maxSize: logMaxSize,
-      maxFiles: logMaxFiles,
-    },
-    requestTimeout,
+    tools: buildToolsConfig(),
+    logging: buildLoggingConfig(),
+    requestTimeout: validateTimeout(
+      process.env[ENV_VAR_NAMES.REQUEST_TIMEOUT],
+      DEFAULT_REQUEST_TIMEOUT
+    ),
   };
 }
