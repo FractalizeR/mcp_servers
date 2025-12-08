@@ -1,7 +1,0 @@
-version: '2'
-
-services:
-  tox:
-    build: .
-    volumes:
-      - ".:/src:ro"

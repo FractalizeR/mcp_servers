@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/dist/mcpb-manifest-v0.3.schema.json",
+  "manifest_version": "0.3",
+  "name": "fractalizer_mcp_ticktick",
+  "version": "0.1.0",
+  "display_name": "FractalizeR's TickTick MCP",
+  "description": "FractalizeR's TickTick MCP server for task management integration",
+  "long_description": "FractalizeR's TickTick MCP\n\nАвтор: Раструсный Владислав.\n\nMCP сервер для интеграции с TickTick — популярным приложением для управления задачами и to-do листами.\n\nОсновные возможности:\n- Управление задачами: создание, редактирование, удаление, завершение\n- Работа с проектами (списками задач)\n- Фильтрация по датам: просроченные задачи, задачи на сегодня/завтра\n- Поддержка приоритетов, тегов, сроков выполнения\n- GTD-методология: входящие, следующие действия, ожидание\n\nИдеален для автоматизации личной продуктивности через AI-ассистентов.",
+  "author": {
+    "name": "Fractalizer",
+    "email": "fractalizer@example.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/FractalizeR/mcp_server_yandex_tracker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FractalizeR/mcp_server_yandex_tracker"
+  },
+  "keywords": [
+    "ticktick",
+    "todo",
+    "task-management",
+    "gtd",
+    "productivity",
+    "mcp"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/ticktick.bundle.cjs",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/ticktick.bundle.cjs"
+      ],
+      "env": {
+        "TICKTICK_CLIENT_ID": "${user_config.client_id}",
+        "TICKTICK_CLIENT_SECRET": "${user_config.client_secret}",
+        "TICKTICK_ACCESS_TOKEN": "${user_config.access_token}",
+        "TICKTICK_REFRESH_TOKEN": "${user_config.refresh_token}",
+        "LOG_LEVEL": "${user_config.log_level}"
+      }
+    }
+  },
+  "user_config": {
+    "client_id": {
+      "type": "string",
+      "title": "Client ID",
+      "description": "OAuth Client ID для TickTick API. Получить можно в Developer Console TickTick.",
+      "required": true,
+      "sensitive": true
+    },
+    "client_secret": {
+      "type": "string",
+      "title": "Client Secret",
+      "description": "OAuth Client Secret для TickTick API.",
+      "required": true,
+      "sensitive": true
+    },
+    "access_token": {
+      "type": "string",
+      "title": "Access Token",
+      "description": "OAuth Access Token. Получается после авторизации.",
+      "required": false,
+      "sensitive": true
+    },
+    "refresh_token": {
+      "type": "string",
+      "title": "Refresh Token",
+      "description": "OAuth Refresh Token для обновления access token.",
+      "required": false,
+      "sensitive": true
+    },
+    "log_level": {
+      "type": "string",
+      "title": "Log Level",
+      "description": "Уровень логирования: debug, info, warn, error",
+      "required": false,
+      "default": "info",
+      "sensitive": false
+    }
+  },
+  "tools_generated": true,
+  "prompts_generated": false,
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": [
+      "darwin",
+      "linux",
+      "win32"
+    ],
+    "runtimes": {
+      "node": ">=22.0.0"
+    }
+  }
+}
