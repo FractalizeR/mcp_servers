@@ -40,10 +40,15 @@ main().catch((error) => {
   },
   "scripts": {
     "test:smoke": "vitest run tests/smoke",
-    "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke"
+    "test:smoke:server": "tsx scripts/smoke-test-server.ts",
+    "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke && npm run test:smoke:server"
   }
 }
 ```
+
+**Два типа smoke тестов (обязательно оба):**
+- `test:smoke` — vitest тесты для проверки DI, lifecycle, definition generation
+- `test:smoke:server` — запуск реального процесса + JSON-RPC проверка
 
 ---
 
