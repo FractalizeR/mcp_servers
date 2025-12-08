@@ -29,13 +29,19 @@ coverage/
 # Конфигурационные файлы разработки
 tsconfig*.json
 vitest.config.ts
+eslint.config.js
 eslint.config.mjs
 .eslintrc*
+.eslintignore
 .prettierrc*
 .editorconfig
 .dependency-cruiser.js
 .jscpd.json
 commitlint.config.js
+.npmignore
+
+# Шаблоны (финальные файлы уже сгенерированы)
+manifest.template.json
 
 # Логи и временные файлы
 *.log
@@ -58,5 +64,6 @@ azure-pipelines.yml
 # Другие MCPB архивы
 *.mcpb
 
-# Скрипты разработки
+# Скрипты и бенчмарки разработки
 scripts/
+benchmarks/
