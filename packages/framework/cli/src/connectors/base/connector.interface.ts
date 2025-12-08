@@ -3,7 +3,11 @@
  * @packageDocumentation
  */
 
-import type { BaseMCPServerConfig, MCPClientInfo, ConnectionStatus } from '../../types.js';
+import type {
+  BaseMCPServerConfig,
+  MCPClientInfo,
+  ConnectionStatus,
+} from '../../types/base.types.js';
 
 /**
  * Базовый интерфейс для всех MCP коннекторов

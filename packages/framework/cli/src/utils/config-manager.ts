@@ -4,7 +4,7 @@
  */
 
 import * as path from 'path';
-import type { BaseMCPServerConfig, ConfigManagerOptions } from '../types.js';
+import type { BaseMCPServerConfig, ConfigManagerOptions } from '../types/base.types.js';
 import { FileManager } from './file-manager.js';
 
 /**
