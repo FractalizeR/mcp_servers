@@ -36,7 +36,6 @@
         "TICKTICK_CLIENT_ID": "${user_config.client_id}",
         "TICKTICK_CLIENT_SECRET": "${user_config.client_secret}",
         "TICKTICK_ACCESS_TOKEN": "${user_config.access_token}",
-        "TICKTICK_REFRESH_TOKEN": "${user_config.refresh_token}",
         "LOG_LEVEL": "${user_config.log_level}"
       }
     }
@@ -60,13 +59,6 @@
       "type": "string",
       "title": "Access Token",
       "description": "OAuth Access Token. Получается после авторизации.",
-      "required": false,
-      "sensitive": true
-    },
-    "refresh_token": {
-      "type": "string",
-      "title": "Refresh Token",
-      "description": "OAuth Refresh Token для обновления access token.",
       "required": false,
       "sensitive": true
     },

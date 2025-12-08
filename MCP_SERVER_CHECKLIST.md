@@ -17,7 +17,21 @@
 - [ ] `tests/` — тесты (зеркально `src/`)
 - [ ] `tests/smoke/` — smoke тесты
 
-### 1.2 Конфигурация package.json
+### 1.2 Entry Point (src/index.ts) — КРИТИЧНО!
+```typescript
+// В конце файла ОБЯЗАТЕЛЬНО должен быть вызов main():
+export { main };
+
+// Запуск сервера
+main().catch((error) => {
+  console.error('Unhandled error:', error);
+  process.exit(1);
+});
+```
+
+**⚠️ ТИПИЧНАЯ ОШИБКА:** Экспорт `main` без вызова → сервер не запускается!
+
+### 1.3 Конфигурация package.json
 ```json
 {
   "bin": {

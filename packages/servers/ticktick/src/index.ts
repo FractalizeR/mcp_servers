@@ -362,3 +362,9 @@ async function main(): Promise<void> {
 
 // Export main for CLI entry point (cli.ts)
 export { main };
+
+// Запуск сервера
+main().catch((error) => {
+  console.error('Unhandled error:', error);
+  process.exit(1);
+});
