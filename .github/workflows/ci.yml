@@ -42,7 +42,6 @@ jobs:
 
       - name: 🔍 Lint check
         run: npm run lint
-        continue-on-error: true
 
       - name: 📝 Type check
         run: npm run typecheck
@@ -52,5 +51,4 @@ jobs:
 
       - name: 📊 Code quality checks
         run: npm run cpd && npm run knip
-        continue-on-error: true
 

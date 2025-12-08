@@ -38,12 +38,31 @@ jobs:
       - name: Verify version matches tag
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          PKG_VERSION=$(node -p "require('./packages/servers/yandex-tracker/package.json').version")
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "❌ Error: Tag version ($TAG_VERSION) doesn't match package.json version ($PKG_VERSION)"
-            exit 1
-          fi
-          echo "✅ Version verified: $PKG_VERSION"
+          echo "Tag version: $TAG_VERSION"
+
+          # Проверяем framework пакеты (должны быть синхронизированы)
+          echo "📦 Checking framework packages..."
+          for pkg in packages/framework/*/package.json; do
+            PKG_VERSION=$(node -p "require('./$pkg').version")
+            PKG_NAME=$(node -p "require('./$pkg').name")
+            if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+              echo "❌ $PKG_NAME version ($PKG_VERSION) != tag ($TAG_VERSION)"
+              exit 1
+            fi
+            echo "✅ $PKG_NAME: $PKG_VERSION"
+          done
+
+          # Проверяем server пакеты
+          echo "📦 Checking server packages..."
+          for pkg in packages/servers/*/package.json; do
+            PKG_VERSION=$(node -p "require('./$pkg').version")
+            PKG_NAME=$(node -p "require('./$pkg').name")
+            if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+              echo "❌ $PKG_NAME version ($PKG_VERSION) != tag ($TAG_VERSION)"
+              exit 1
+            fi
+            echo "✅ $PKG_NAME: $PKG_VERSION"
+          done
 
   publish-npm:
     name: Publish to NPM Registry
@@ -68,14 +87,10 @@ jobs:
       - name: Build package
         run: npm run build
 
-      - name: Publish to NPM
-        run: |
-          cd packages/servers/yandex-tracker
-          npm publish --access public
+      - name: Publish all packages to NPM
+        run: npm publish --workspaces --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        # Если NPM_TOKEN еще не настроен, этот шаг будет пропущен
-        continue-on-error: true
 
   build-mcpb:
     name: Build and Release MCPB Bundle
