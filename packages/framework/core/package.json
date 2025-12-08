@@ -37,10 +37,10 @@
   "scripts": {
     "build": "tsc -b && tsc-alias",
     "clean": "rimraf dist",
-    "cpd": "jscpd src || true",
-    "cpd:quiet": "jscpd src --silent || true",
+    "cpd": "jscpd src",
+    "cpd:quiet": "jscpd src --silent",
     "cpd:report": "jscpd src --reporters html,console",
-    "depcruise": "depcruise src -c ../../../.dependency-cruiser.cjs || true",
+    "depcruise": "depcruise src -c ../../../.dependency-cruiser.cjs",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
     "lint": "eslint src --ext .ts",
