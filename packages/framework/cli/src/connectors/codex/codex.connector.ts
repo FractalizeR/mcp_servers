@@ -1,5 +1,7 @@
 /**
  * Коннектор для Codex
+ *
+ * @deprecated Используйте `createConnector('codex', serverName, entryPoint)` из connector-factory.ts
  */
 
 import * as os from 'node:os';
@@ -11,6 +13,7 @@ import type { BaseMCPServerConfig, MCPClientInfo } from '../../types.js';
  * Коннектор для Codex CLI от OpenAI
  * Codex использует TOML конфигурацию в ~/.codex/config.toml
  *
+ * @deprecated Используйте `createConnector('codex', serverName, entryPoint)` из connector-factory.ts
  * @template TConfig - Тип конфигурации MCP сервера
  */
 export class CodexConnector<

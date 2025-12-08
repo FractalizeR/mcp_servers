@@ -52,7 +52,7 @@
     "cpd": "jscpd src || true",
     "cpd:quiet": "jscpd src --silent || true",
     "cpd:report": "jscpd src --reporters html,console",
-    "depcruise": "depcruise src --validate ../../../.dependency-cruiser.cjs || true",
+    "depcruise": "depcruise src -c ../../../.dependency-cruiser.cjs || true",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
     "lint": "eslint src --ext .ts",

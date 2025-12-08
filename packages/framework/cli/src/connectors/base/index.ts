@@ -6,3 +6,4 @@
 export * from './connector.interface.js';
 export * from './base-connector.js';
 export * from './file-based-connector.js';
+export * from './configurable-connector.js';

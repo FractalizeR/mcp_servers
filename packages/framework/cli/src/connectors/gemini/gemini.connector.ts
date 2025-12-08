@@ -1,5 +1,7 @@
 /**
  * Коннектор для Gemini CLI
+ *
+ * @deprecated Используйте `createConnector('gemini', serverName, entryPoint)` из connector-factory.ts
  */
 
 import * as os from 'node:os';
@@ -11,6 +13,7 @@ import type { BaseMCPServerConfig, MCPClientInfo } from '../../types.js';
  * Коннектор для Gemini CLI
  * Gemini CLI хранит конфигурацию в ~/.gemini/settings.json
  *
+ * @deprecated Используйте `createConnector('gemini', serverName, entryPoint)` из connector-factory.ts
  * @template TConfig - Тип конфигурации MCP сервера
  */
 export class GeminiConnector<

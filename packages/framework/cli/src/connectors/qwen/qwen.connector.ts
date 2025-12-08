@@ -1,5 +1,7 @@
 /**
  * Коннектор для Qwen Code
+ *
+ * @deprecated Используйте `createConnector('qwen', serverName, entryPoint)` из connector-factory.ts
  */
 
 import * as os from 'node:os';
@@ -11,6 +13,7 @@ import type { BaseMCPServerConfig, MCPClientInfo } from '../../types.js';
  * Коннектор для Qwen Code
  * Qwen Code хранит конфигурацию в ~/.qwen/settings.json
  *
+ * @deprecated Используйте `createConnector('qwen', serverName, entryPoint)` из connector-factory.ts
  * @template TConfig - Тип конфигурации MCP сервера
  */
 export class QwenConnector<

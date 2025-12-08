@@ -21,12 +21,7 @@ export default mergeConfig(
       name: 'ticktick',
       // Performance monitoring: warn about tests slower than 300ms
       slowTestThreshold: 300,
-      exclude: [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/.{git,cache,output,temp}/**',
-        'tests/smoke/**', // Smoke tests require special handling (run via root vitest)
-      ],
+      exclude: ['**/node_modules/**', '**/dist/**', '**/.{git,cache,output,temp}/**'],
       // Setup file to load reflect-metadata before any tests
       setupFiles: ['./tests/setup.ts'],
     },
