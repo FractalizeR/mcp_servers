@@ -1,15 +1,19 @@
 #!/usr/bin/env tsx
 /**
- * Скрипт для синхронизации версии и установки build hash в manifest.json
+ * Универсальный скрипт для синхронизации версии и установки build hash в manifest.json
  *
  * Автоматически вызывается при каждой сборке бандла:
- * 1. Копирует актуальную версию из manifest.template.json в manifest.json
+ * 1. Если есть manifest.template.json — копирует его в manifest.json
  * 2. Синхронизирует версию из package.json в manifest.json
  * 3. Устанавливает build hash для избежания кеширования
  *
  * Build hash хранится в manifest.json в секции _meta.build.hash
  * Формат версии: {version}+{gitHash}
  * Пример: 2.0.0+a1b2c3d
+ *
+ * Использование:
+ *   tsx ../scripts/increment-build.ts          # из директории пакета
+ *   tsx scripts/increment-build.ts <path>      # с указанием пути к пакету
  */
 
 import { execSync } from 'node:child_process';
@@ -18,6 +22,7 @@ import * as path from 'node:path';
 
 interface ManifestMeta {
   build?: {
+    number?: number;
     hash?: string;
     generated_by?: string;
     last_updated?: string;
@@ -35,27 +40,21 @@ interface Manifest {
  */
 function getGitHash(): string {
   try {
-    // Получаем короткий hash (7 символов) текущего коммита
     return execSync('git rev-parse --short=7 HEAD', {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
     }).trim();
   } catch {
     console.warn('⚠️  Не удалось получить git hash, используем fallback');
-    // Fallback: используем timestamp если git недоступен
     return Date.now().toString(36);
   }
 }
 
 /**
- * Читает версию из package.json yandex-tracker пакета
+ * Читает версию из package.json
  */
-async function getPackageVersion(): Promise<string> {
-  const projectRoot = path.resolve(process.cwd());
-  const isInWorkspace = projectRoot.includes('packages/servers/yandex-tracker');
-  const packageJsonPath = isInWorkspace
-    ? path.join(projectRoot, 'package.json')
-    : path.join(projectRoot, 'packages/servers/yandex-tracker/package.json');
+async function getPackageVersion(packageRoot: string): Promise<string> {
+  const packageJsonPath = path.join(packageRoot, 'package.json');
 
   try {
     const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
@@ -68,32 +67,45 @@ async function getPackageVersion(): Promise<string> {
 }
 
 /**
+ * Проверяет существование файла
+ */
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Устанавливает build hash в manifest.json
  */
-async function setBuildHash(): Promise<void> {
-  // Определяем корень пакета (packages/servers/yandex-tracker)
-  const projectRoot = path.resolve(process.cwd());
-  const isInWorkspace = projectRoot.includes('packages/servers/yandex-tracker');
-  const packageRoot = isInWorkspace
-    ? projectRoot
-    : path.join(projectRoot, 'packages/servers/yandex-tracker');
-
+async function setBuildHash(packageRoot: string): Promise<void> {
   const manifestPath = path.join(packageRoot, 'manifest.json');
   const manifestTemplatePath = path.join(packageRoot, 'manifest.template.json');
 
   console.log('🔢 Установка build hash и версии...');
 
   try {
-    // ВСЕГДА копируем актуальную версию из template
-    console.log('📋 Обновление manifest.json из template...');
-    await fs.copyFile(manifestTemplatePath, manifestPath);
+    // Если есть template — копируем его
+    if (await fileExists(manifestTemplatePath)) {
+      console.log('📋 Обновление manifest.json из template...');
+      await fs.copyFile(manifestTemplatePath, manifestPath);
+    }
+
+    // Проверяем существование manifest.json
+    if (!(await fileExists(manifestPath))) {
+      console.warn('⚠️  manifest.json не найден, пропускаем increment-build');
+      return;
+    }
 
     // Читаем manifest.json
     const manifestContent = await fs.readFile(manifestPath, 'utf-8');
     const manifest: Manifest = JSON.parse(manifestContent);
 
     // Получаем версию из package.json
-    const packageVersion = await getPackageVersion();
+    const packageVersion = await getPackageVersion(packageRoot);
 
     // Получаем git hash текущего коммита
     const gitHash = getGitHash();
@@ -112,6 +124,12 @@ async function setBuildHash(): Promise<void> {
     }
     if (!manifest._meta.build) {
       manifest._meta.build = {};
+    }
+
+    // Инкрементируем build number если есть
+    if (manifest._meta.build.number !== undefined) {
+      manifest._meta.build.number += 1;
+      console.log(`🔢 Build number: ${manifest._meta.build.number}`);
     }
 
     manifest._meta.build.hash = gitHash;
@@ -134,7 +152,10 @@ async function setBuildHash(): Promise<void> {
  * CLI точка входа
  */
 async function main(): Promise<void> {
-  await setBuildHash();
+  // Поддержка аргумента командной строки для пути к пакету
+  const packageRoot = process.argv[2] ? path.resolve(process.argv[2]) : path.resolve(process.cwd());
+
+  await setBuildHash(packageRoot);
 }
 
 // Запускаем если скрипт вызван напрямую

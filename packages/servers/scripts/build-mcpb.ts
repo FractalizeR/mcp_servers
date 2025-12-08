@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Скрипт для сборки MCPB архива (MCP Bundle)
+ * Универсальный скрипт для сборки MCPB архива (MCP Bundle)
  *
  * Создает .mcpb файл - zip-архив, содержащий:
  * - manifest.json (валидированный согласно схеме MCP)
@@ -9,6 +9,10 @@
  * - README.md (документация)
  *
  * Использует официальный @anthropic-ai/mcpb пакет для сборки.
+ *
+ * Использование:
+ *   tsx ../scripts/build-mcpb.ts          # из директории пакета
+ *   tsx scripts/build-mcpb.ts <path>      # с указанием пути к пакету
  */
 
 import { packExtension } from '@anthropic-ai/mcpb/cli';
@@ -17,8 +21,8 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
 interface BuildOptions {
-  /** Путь к корню проекта (где находится manifest.json) */
-  projectRoot: string;
+  /** Путь к корню пакета (где находится manifest.json) */
+  packageRoot: string;
   /** Путь для выходного .mcpb файла */
   outputPath?: string;
   /** Тихий режим (без вывода в консоль) */
@@ -26,10 +30,30 @@ interface BuildOptions {
 }
 
 /**
+ * Определяет корень monorepo относительно пакета
+ */
+function findMonorepoRoot(packageRoot: string): string {
+  // Ищем корень по наличию turbo.json или package.json с workspaces
+  let current = packageRoot;
+  while (current !== '/') {
+    const turboPath = path.join(current, 'turbo.json');
+    try {
+      // Синхронная проверка для простоты
+      require('node:fs').accessSync(turboPath);
+      return current;
+    } catch {
+      current = path.dirname(current);
+    }
+  }
+  // Fallback: предполагаем стандартную структуру packages/servers/xxx
+  return path.resolve(packageRoot, '../../..');
+}
+
+/**
  * Основная функция сборки MCPB архива
  */
 async function buildMcpb(options: BuildOptions): Promise<void> {
-  const { projectRoot, outputPath, silent = false } = options;
+  const { packageRoot, outputPath, silent = false } = options;
 
   const log = (message: string) => {
     if (!silent) {
@@ -39,14 +63,7 @@ async function buildMcpb(options: BuildOptions): Promise<void> {
 
   log('🚀 Начало сборки MCPB архива...');
 
-  // Определяем корень пакета и монорепо
-  // Если запускается из workspace, cwd будет packages/servers/yandex-wiki
-  // Если запускается из корня, cwd будет корень
-  const isInWorkspace = projectRoot.includes('packages/servers/yandex-wiki');
-  const packageRoot = isInWorkspace
-    ? projectRoot
-    : path.join(projectRoot, 'packages/servers/yandex-wiki');
-  const monorepoRoot = isInWorkspace ? path.resolve(projectRoot, '../../..') : projectRoot;
+  const monorepoRoot = findMonorepoRoot(packageRoot);
 
   // Проверяем существование необходимых файлов
   const manifestPath = path.join(packageRoot, 'manifest.json');
@@ -107,7 +124,7 @@ async function buildMcpb(options: BuildOptions): Promise<void> {
       log('⚠️  package.json не найден (необязательно)');
     }
 
-    // Копируем README.md (опционально)
+    // Копируем README.md из пакета (опционально)
     const readmePath = path.join(packageRoot, 'README.md');
     try {
       await fs.copyFile(readmePath, path.join(tempBuildDir, 'README.md'));
@@ -165,11 +182,12 @@ async function copyDirectory(src: string, dest: string): Promise<void> {
  * CLI точка входа
  */
 async function main() {
-  const projectRoot = path.resolve(process.cwd());
+  // Поддержка аргумента командной строки для пути к пакету
+  const packageRoot = process.argv[2] ? path.resolve(process.argv[2]) : path.resolve(process.cwd());
 
   try {
     await buildMcpb({
-      projectRoot,
+      packageRoot,
       silent: false,
     });
 

@@ -14,7 +14,7 @@
     "audit:secrets": "gitleaks detect --no-git --verbose --config .gitleaks.toml",
     "audit:socket": "npx --yes @socketsecurity/cli@latest audit --severity high || echo '⚠️  Socket.dev audit skipped (not logged in). Run: socket login'",
     "build": "turbo run build",
-    "build:mcpb": "turbo run build:mcpb",
+    "build:mcpb": "turbo run build:mcpb --filter='./packages/servers/*'",
     "check": "turbo run lint typecheck && npm run format:check",
     "clean": "rimraf packages/framework/*/dist packages/servers/*/dist",
     "clean:all": "npm run clean && rimraf node_modules packages/framework/*/node_modules packages/servers/*/node_modules",
@@ -63,6 +63,9 @@
     "validate:quiet": "turbo run build lint:quiet typecheck test:quiet cpd:quiet depcruise validate:docs",
     "validate:security": "turbo run knip && npm run audit:socket && npm run audit:lockfile && npm run audit:secrets",
     "vitest:ui": "vitest --ui --coverage"
+  },
+  "overrides": {
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@anthropic-ai/mcpb": "^2.0.1",
