@@ -92,72 +92,73 @@ module.exports = {
     },
 
     // ================================================
-    // 2. YANDEX-TRACKER INTERNAL ARCHITECTURE
+    // 2. MCP SERVERS INTERNAL ARCHITECTURE
+    // (applies to all servers: yandex-tracker, yandex-wiki, ticktick)
     // ================================================
 
     {
-      name: 'tracker-api-no-mcp',
+      name: 'server-api-no-mcp',
       severity: 'error',
-      comment: 'tracker_api — низкоуровневый слой, не должен знать о MCP layer',
+      comment: 'API слой серверов (tracker_api, wiki_api, ticktick_api) не должен знать о MCP/tools layer',
       from: {
-        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/',
+        path: '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/',
       },
       to: {
-        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/mcp/',
+        path: '^packages/servers/[^/]+/src/(mcp|tools)/',
       },
     },
 
     {
-      name: 'mcp-uses-facade-only',
+      name: 'server-tools-use-facade-only',
       severity: 'error',
-      comment: 'MCP tools должны использовать YandexTrackerFacade, не Operations напрямую',
+      comment: 'MCP tools должны использовать Facade, не Operations напрямую',
       from: {
-        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/mcp/',
+        path: '^packages/servers/[^/]+/src/(mcp|tools)/',
       },
       to: {
-        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/',
+        path: '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/',
         pathNot: [
           // Разрешены:
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/facade/',     // Facade (основной интерфейс)
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/entities/',   // Entity типы
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/dto/',        // DTO типы
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/facade/',     // Facade (основной интерфейс)
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/entities/',   // Entity типы
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/dto/',        // DTO типы
         ],
       },
     },
 
     {
-      name: 'operations-isolation',
+      name: 'server-operations-isolation',
       severity: 'warn', // warn чтобы не блокировать development
       comment: 'Operations импортируются только через Facade или Composition Root',
       from: {
-        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/',
+        path: '^packages/servers/[^/]+/src/',
         pathNot: [
           // Исключения (разрешено импортировать operations):
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/facade/',                           // Facade координирует operations
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/composition-root/container\\.ts$',              // DI контейнер регистрирует все зависимости
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/composition-root/definitions/operation-definitions\\.ts$', // Автоматическая регистрация операций
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/api_operations/',                       // Operations могут импортировать друг друга
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/facade/',                           // Facade координирует operations
+          '^packages/servers/[^/]+/src/composition-root/container\\.ts$',                                       // DI контейнер регистрирует все зависимости
+          '^packages/servers/[^/]+/src/composition-root/definitions/operation-definitions\\.ts$',              // Автоматическая регистрация операций
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/api_operations/',                   // Operations могут импортировать друг друга
         ],
       },
       to: {
-        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/tracker_api/api_operations/',
+        path: '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/api_operations/',
       },
     },
 
     {
-      name: 'composition-root-top-level',
+      name: 'server-composition-root-top-level',
       severity: 'error',
       comment: 'Composition Root — высший слой, ничто не должно импортировать его (кроме entry point и файлов внутри composition-root)',
       from: {
-        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/',
+        path: '^packages/servers/[^/]+/src/',
         pathNot: [
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/index\\.ts$',                     // Entry point может импортировать
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/composition-root/',               // Файлы внутри composition-root могут импортировать друг друга
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/mcp/tool-registry\\.ts$',         // ToolRegistry импортирует definitions для автоматической регистрации
+          '^packages/servers/[^/]+/src/index\\.ts$',                     // Entry point может импортировать
+          '^packages/servers/[^/]+/src/composition-root/',               // Файлы внутри composition-root могут импортировать друг друга
+          '^packages/servers/[^/]+/src/(mcp|tools)/tool-registry\\.ts$', // ToolRegistry импортирует definitions для автоматической регистрации
         ],
       },
       to: {
-        path: '^packages/(yandex-tracker|servers/yandex-tracker)/src/composition-root/',
+        path: '^packages/servers/[^/]+/src/composition-root/',
       },
     },
 
@@ -174,14 +175,14 @@ module.exports = {
           '^node_modules',
           // Исключения: намеренный паттерн Definition↔Tool (circular by design)
           // BaseDefinition → ToolMetadata → BaseDefinition (framework pattern)
-          '^packages/core/src/tools/base/base-definition\\.ts$',
-          '^packages/core/src/tools/base/tool-metadata\\.ts$',
+          '^packages/framework/core/src/tools/base/base-definition\\.ts$',
+          '^packages/framework/core/src/tools/base/tool-metadata\\.ts$',
           // SearchToolsDefinition ↔ SearchToolsTool (pairing pattern)
-          '^packages/search/src/tools/search-tools\\.definition\\.ts$',
-          '^packages/search/src/tools/search-tools\\.tool\\.ts$',
-          // DemoDefinition ↔ DemoTool (pairing pattern)
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tools/helpers/demo/demo\\.definition\\.ts$',
-          '^packages/(yandex-tracker|servers/yandex-tracker)/src/tools/helpers/demo/demo\\.tool\\.ts$',
+          '^packages/framework/search/src/tools/search-tools\\.definition\\.ts$',
+          '^packages/framework/search/src/tools/search-tools\\.tool\\.ts$',
+          // Server tools Definition ↔ Tool pairing patterns (all servers)
+          '^packages/servers/[^/]+/src/tools/.*/[^/]+\\.definition\\.ts$',
+          '^packages/servers/[^/]+/src/tools/.*/[^/]+\\.tool\\.ts$',
         ],
       },
       to: {
