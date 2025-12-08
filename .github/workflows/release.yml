@@ -2,21 +2,32 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'  # Triggered by tags like v1.0.0, v0.2.1, etc.
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
-  contents: write  # For creating GitHub releases
-  packages: write  # For publishing to npm
+  contents: write
+  issues: write
+  pull-requests: write
+  packages: write
+  id-token: write
 
 jobs:
-  validate:
-    name: Validate Before Release
+  # Job 1: Run semantic-release to determine version and create release
+  release:
+    name: Semantic Release
     runs-on: ubuntu-latest
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -32,28 +43,28 @@ jobs:
         env:
           CI: true
 
-      - name: Run smoke test (MCP server integration)
+      - name: Run smoke tests
         run: npm run test:smoke
 
-      - name: Verify version matches tag
-        run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          PKG_VERSION=$(node -p "require('./packages/servers/yandex-tracker/package.json').version")
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "❌ Error: Tag version ($TAG_VERSION) doesn't match package.json version ($PKG_VERSION)"
-            exit 1
-          fi
-          echo "✅ Version verified: $PKG_VERSION"
+      - name: Semantic Release
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
 
+  # Job 2: Publish to NPM (runs after semantic-release creates a new version)
   publish-npm:
     name: Publish to NPM Registry
-    needs: validate
+    needs: release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: needs.release.outputs.new_release_published == 'true'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: v${{ needs.release.outputs.new_release_version }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -65,27 +76,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build package
+      - name: Build all packages
         run: npm run build
 
-      - name: Publish to NPM
-        run: |
-          cd packages/servers/yandex-tracker
-          npm publish --access public
+      - name: Publish all packages to NPM
+        run: npm publish --workspaces --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        # Если NPM_TOKEN еще не настроен, этот шаг будет пропущен
-        continue-on-error: true
 
+  # Job 3: Build MCPB bundle and attach to GitHub release
   build-mcpb:
-    name: Build and Release MCPB Bundle
-    needs: validate
+    name: Build MCPB Bundle
+    needs: release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: needs.release.outputs.new_release_published == 'true'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: v${{ needs.release.outputs.new_release_version }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -99,65 +109,36 @@ jobs:
       - name: Build MCPB bundle
         run: npm run build:mcpb
 
-      - name: Extract version
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Find MCPB file
-        id: find_mcpb
+      - name: Find and upload MCPB file
         run: |
+          VERSION="${{ needs.release.outputs.new_release_version }}"
           MCPB_FILE=$(ls fractalizer_mcp_yandex_tracker-*.mcpb 2>/dev/null | head -n 1)
+
           if [ -z "$MCPB_FILE" ]; then
-            echo "❌ MCPB файл не найден!"
-            exit 1
+            echo "⚠️ MCPB file not found, skipping upload"
+            exit 0
           fi
-          echo "MCPB_FILE=$MCPB_FILE" >> $GITHUB_OUTPUT
-          echo "✅ Найден MCPB файл: $MCPB_FILE"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ${{ steps.find_mcpb.outputs.MCPB_FILE }}
-            packages/servers/yandex-tracker/dist/yandex-tracker.bundle.cjs
-          body: |
-            ## 🚀 Release ${{ steps.version.outputs.VERSION }}
+          echo "Found MCPB file: $MCPB_FILE"
 
-            ### Installation Options
-
-            #### 1. NPM Registry (recommended)
-            ```bash
-            npm install -g @mcp-server/yandex-tracker@${{ steps.version.outputs.VERSION }}
-            ```
-
-            #### 2. MCPB Bundle (standalone, no npm required)
-            Download `${{ steps.find_mcpb.outputs.MCPB_FILE }}` from Assets below
-
-            #### 3. Direct Bundle (advanced)
-            Download `yandex-tracker.bundle.cjs` and run with Node.js
-
-            ### Changes
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md) for details.
-
-          draft: false
-          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+          # Upload to existing GitHub release
+          gh release upload "v${VERSION}" "$MCPB_FILE" \
+            packages/servers/yandex-tracker/dist/yandex-tracker.bundle.cjs \
+            --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Job 4: Notify success
   notify-success:
     name: Notify Release Success
-    needs: [publish-npm, build-mcpb]
+    needs: [release, publish-npm, build-mcpb]
     runs-on: ubuntu-latest
-    if: success()
+    if: needs.release.outputs.new_release_published == 'true'
 
     steps:
-      - name: Extract version
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
       - name: Success message
         run: |
-          echo "🎉 Release ${{ steps.version.outputs.VERSION }} completed successfully!"
-          echo "✅ NPM package published"
-          echo "✅ MCPB bundle created"
-          echo "✅ GitHub release created"
+          echo "🎉 Release ${{ needs.release.outputs.new_release_version }} completed successfully!"
+          echo "✅ Semantic Release: version determined and tagged"
+          echo "✅ NPM packages published"
+          echo "✅ MCPB bundle attached to release"

@@ -72,14 +72,7 @@
     "@mcp-framework/core": "^0.1.0",
     "@mcp-framework/infrastructure": "^0.2.0"
   },
-  "devDependencies": {
-    "@types/node": "^24.10.1",
-    "tsc-alias": "^1.8.16",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.8"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

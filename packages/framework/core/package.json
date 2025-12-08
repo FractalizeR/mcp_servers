@@ -64,13 +64,7 @@
     "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "inversify": "^7.10.4",
-    "rimraf": "^6.1.2",
-    "tsc-alias": "^1.8.16",
-    "typescript": "^5.9.3",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.8"
+    "inversify": "^7.10.4"
   },
   "peerDependencies": {
     "inversify": "^7.x"
