@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/dist/mcpb-manifest-v0.3.schema.json",
   "manifest_version": "0.3",
   "name": "fractalizer_mcp_yandex_wiki",
-  "version": "0.1.4+local",
+  "version": "0.2.0+local",
   "display_name": "FractalizeR's Yandex Wiki MCP",
   "description": "FractalizeR's Yandex Wiki MCP server for API integration",
   "long_description": "FractalizeR's Yandex Wiki MCP\n\nАвтор: Раструсный Владислав.\n\nПрофессиональный MCP сервер для полной интеграции с API Yandex Wiki. 21 инструмент для управления страницами, динамическими таблицами и ресурсами корпоративной вики.\n\nОсновные возможности:\n- Pages API (7 инструментов): создание, чтение, редактирование, удаление, клонирование страниц, добавление контента\n- Grids API (12 инструментов): работа с динамическими таблицами — строки, колонки, ячейки, клонирование\n- Resources API (1 инструмент): получение ресурсов страницы (вложения, таблицы, SharePoint)\n\nИдеален для автоматизации документации и интеграции Yandex Wiki в AI-powered рабочие процессы.",
