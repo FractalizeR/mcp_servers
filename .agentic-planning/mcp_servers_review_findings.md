@@ -1,7 +1,21 @@
 # Ревью MCP серверов - Список находок
 
-**Дата:** 2025-12-07
-**Эталон:** yandex-tracker (наиболее зрелый сервер, версия 4.0.0)
+**Дата:** 2025-12-09 (обновлено)
+**Эталон:** yandex-tracker (наиболее зрелый сервер, версия 0.1.0)
+
+---
+
+## ⚠️ КРИТИЧЕСКИЕ МЕТРИКИ ПОКРЫТИЯ
+
+| Сервер | Lines | Functions | Branches | Statements | Статус |
+|--------|-------|-----------|----------|------------|--------|
+| yandex-tracker | 85.97% | 83.53% | 83.37% | 86.29% | ❌ НЕ ДОСТИГАЕТ порогов! |
+| yandex-wiki | 51.09% | 56.2% | 16.6% | 51.44% | ❌ КРИТИЧНО |
+| ticktick | 37.15% | 43.5% | 9.4% | 35.91% | ❌ КРИТИЧНО |
+
+**Требуемые пороги:** Lines 90%, Functions 90%, Branches 85%, Statements 90%
+
+**Главный вывод:** Даже эталонный сервер yandex-tracker не достигает заявленных порогов покрытия!
 
 ---
 
@@ -9,8 +23,8 @@
 
 | Критерий | Yandex Tracker | Yandex Wiki | TickTick |
 |----------|----------------|-------------|----------|
-| **Версия** | 4.0.0 | 0.1.0 | 0.1.0 |
-| **Кол-во тестов** | 149 файлов | 11 файлов | 6 файлов |
+| **Версия** | 0.1.0 | 0.1.0 | 0.1.0 |
+| **Кол-во тестов** | 152 файла | 11 файлов | 6 файлов |
 | **Smoke тесты** | 5 тестов | 1 тест | 2 теста |
 | **DI validation.ts** | Есть | Есть | Есть |
 | **Facade Services** | Есть (14 сервисов) | Есть (3 сервиса) | НЕТ |
@@ -23,6 +37,31 @@
 | **CLI папка** | src/cli/ | src/cli/ | src/cli/ |
 | **build:bundle** | tsup | tsup | tsup |
 | **ServerConfig** | Плоская структура | Плоская структура | Вложенная структура |
+
+---
+
+## Детальный анализ Smoke тестов
+
+| Smoke тест | yandex-tracker | yandex-wiki | ticktick |
+|------------|----------------|-------------|----------|
+| mcp-server-lifecycle.smoke.test.ts | ✅ | ✅ | ✅ |
+| di-container.smoke.test.ts | ✅ | ❌ | ✅ |
+| definition-generation.smoke.test.ts | ✅ | ❌ | ❌ |
+| e2e-tool-execution.smoke.test.ts | ✅ | ❌ | ❌ |
+| tool-search.smoke.test.ts | ✅ | ❌ | ❌ |
+| smoke-test-server.ts (script) | ✅ | ✅ | ✅ |
+
+**Вывод:** yandex-wiki и ticktick отсутствуют 3-4 критических smoke теста.
+
+---
+
+## Отсутствующие скрипты/утилиты
+
+| Файл | yandex-tracker | yandex-wiki | ticktick | Назначение |
+|------|----------------|-------------|----------|------------|
+| scripts/generate-tool-index.ts | ✅ | ❌ | ❌ | Автогенерация индекса tools |
+| scripts/validate-tool-registration.ts | ✅ | ❌ | ❌ | Проверка регистрации tools |
+| tests/helpers/schema-definition-matcher.ts | ✅ | ❌ | ❌ | Валидация схем в тестах |
 
 ---
 
@@ -48,11 +87,12 @@
 - [x] Логирование зарегистрированных символов
 
 ### Тесты
-- [x] 149 тестовых файлов
+- [x] 152 тестовых файла (обновлено)
 - [x] Папки: composition-root/, helpers/, integration/, mcp/, smoke/, tools/, tracker_api/, unit/, workflows/
 - [x] 5 smoke тестов: definition-generation, di-container, e2e-tool-execution, mcp-server-lifecycle, tool-search
 - [x] Mock factories и fixtures
 - [x] tests/README.md документация
+- [ ] ❌ **Покрытие НЕ достигает порогов!** (85.97% lines vs 90% required)
 
 ### Использование фреймворка
 - [x] @mcp-framework/core: BaseTool, ToolRegistry, ResponseFieldFilter
@@ -101,10 +141,12 @@
 - [x] Логирование зарегистрированных символов
 
 ### Тесты
-- [ ] КРИТИЧНО: Только 7 тестовых файлов (21x меньше чем у эталона!)
+- [ ] КРИТИЧНО: Только 11 тестовых файлов (14x меньше чем у эталона!)
+- [ ] Покрытие: 51.09% lines (vs 90% required) - КРИТИЧНО!
 - [ ] Только: helpers/, smoke/ (1 файл), unit/
 - [ ] Только 1 smoke тест (mcp-server-lifecycle)
 - [ ] НЕТ integration/, workflows/, mcp/, tools/ тестов
+- [ ] НЕТ di-container, definition-generation, e2e-tool-execution, tool-search smoke тестов
 
 ### Использование фреймворка
 - [x] @mcp-framework/core: BaseTool, ToolRegistry
@@ -156,11 +198,13 @@
 - [x] reflect-metadata импортируется напрямую в container.ts
 
 ### Тесты
-- [ ] КРИТИЧНО: 4 тестовых файла (vs 149 у эталона)
+- [ ] КРИТИЧНО: 6 тестовых файлов (vs 152 у эталона)
+- [ ] Покрытие: 37.15% lines (vs 90% required) - КРИТИЧНО!
 - [x] smoke/, unit/auth, unit/ticktick_api/api_operations/tasks
 - [x] 2 smoke теста: di-container, mcp-server-lifecycle
 - [x] helpers/ с mock factories ✅ ДОБАВЛЕНО
 - [ ] НЕТ integration/, workflows/, tools/ тестов
+- [ ] НЕТ definition-generation, e2e-tool-execution, tool-search smoke тестов
 
 ### Использование фреймворка
 - [x] @mcp-framework/core: BaseTool, ToolRegistry, ResponseFieldFilter, BatchResultProcessor
@@ -194,56 +238,57 @@
 
 ### P0 - Критические (блокирующие)
 
-1. **Тестовое покрытие Yandex Wiki и TickTick**
-   - Yandex Wiki: 7 тестов vs 149 у эталона (21x разница)
-   - TickTick: 3 теста vs 149 у эталона (50x разница)
-   - Требуется: добавить unit, integration, workflow тесты
+1. **Тестовое покрытие ВО ВСЕХ СЕРВЕРАХ** ❌
+   - Yandex Tracker: 85.97% lines (vs 90% required) - НЕ ДОСТИГАЕТ!
+   - Yandex Wiki: 51.09% lines (vs 90% required) - КРИТИЧНО!
+   - TickTick: 37.15% lines (vs 90% required) - КРИТИЧНО!
+   - **Требуется:** Либо снизить пороги, либо добавить тесты
 
-2. **Отсутствие eslint.config.js в Wiki и TickTick**
-   - Нет линтинга = нет качества кода
-   - Требуется: скопировать и адаптировать из yandex-tracker
+2. **Отсутствие обязательных smoke тестов (Wiki, TickTick)**
+   - di-container.smoke.test.ts (нет в Wiki)
+   - definition-generation.smoke.test.ts (нет в Wiki, TickTick)
+   - e2e-tool-execution.smoke.test.ts (нет в Wiki, TickTick)
+   - tool-search.smoke.test.ts (нет в Wiki, TickTick)
+   - **Требуется:** Скопировать и адаптировать из yandex-tracker
+
+3. **~~Отсутствие eslint.config.js в Wiki и TickTick~~** ✅ ВЫПОЛНЕНО
 
 ### P1 - Высокий приоритет
 
-3. **Отсутствие ResponseFieldFilter в Yandex Wiki**
-   - Выходные данные API не фильтруются
-   - Большой контекст при вызовах tools
-   - Требуется: добавить fields схему и фильтрацию
+4. **Отсутствие служебных скриптов (Wiki, TickTick)**
+   - generate-tool-index.ts - автогенерация индекса tools
+   - validate-tool-registration.ts - проверка регистрации
+   - schema-definition-matcher.ts - валидация схем в тестах
 
-4. **Отсутствие validation.ts в TickTick**
-   - Нет валидации уникальности имён классов DI
-   - Потенциальные runtime ошибки
-   - Требуется: добавить validateDIRegistrations()
+5. **~~Отсутствие ResponseFieldFilter в Yandex Wiki~~** ✅ ВЫПОЛНЕНО
 
-5. **Отсутствие batch операций в Yandex Wiki**
+6. **~~Отсутствие validation.ts в TickTick~~** ✅ ВЫПОЛНЕНО
+
+7. **Отсутствие batch операций в Yandex Wiki**
    - Нет maxBatchSize, maxConcurrentRequests
    - Нет параллельных запросов
    - Требуется: добавить batch конфигурацию и операции
 
 ### P2 - Средний приоритет
 
-6. **Архитектурное расхождение TickTick**
+8. **Архитектурное расхождение TickTick**
    - Facade напрямую вызывает операции (без Services)
    - Инъекция через TYPES.* вместо классов
    - Рекомендация: добавить Services слой для консистентности
 
-7. **~~Отсутствие CLI папки в TickTick~~** ✅ ИСПРАВЛЕНО
-   - ~~cli.ts в корне src/ вместо src/cli/~~
-   - Создана полная src/cli/ структура с types.ts, prompts.ts, bin/
+9. **~~Отсутствие CLI папки в TickTick~~** ✅ ИСПРАВЛЕНО
 
-8. **~~Отсутствие build:bundle в TickTick~~** ✅ ИСПРАВЛЕНО
-   - Добавлена tsup конфигурация и build:bundle скрипт
+10. **~~Отсутствие build:bundle в TickTick~~** ✅ ИСПРАВЛЕНО
 
 ### P3 - Низкий приоритет
 
-9. **Разная структура ServerConfig в TickTick**
-   - Вложенная структура vs плоская
-   - Рекомендация: унифицировать с остальными серверами
+11. **Разная структура ServerConfig в TickTick**
+    - Вложенная структура vs плоская
+    - Рекомендация: унифицировать с остальными серверами
 
-10. **~~Отсутствие README.md в модулях Wiki~~** ✅ ИСПРАВЛЕНО
-    - Добавлены README.md: cli/, tools/, composition-root/, wiki_api/facade/, api_operations/, dto/, entities/
+12. **~~Отсутствие README.md в модулях Wiki~~** ✅ ИСПРАВЛЕНО
 
-11. **Разный подход к smoke тестам**
+13. **Разный подход к smoke тестам**
     - Yandex Tracker/Wiki: через scripts/smoke-test-server.ts
     - TickTick: через vitest в tests/smoke/
     - Рекомендация: унифицировать подход
@@ -254,47 +299,47 @@
 
 ### Фаза 1: Критические исправления (P0)
 
-1. **Добавить eslint.config.js в Yandex Wiki и TickTick** ✅ ВЫПОЛНЕНО
-   - [x] Скопировать из yandex-tracker
-   - [x] Адаптировать под специфику сервера
-   - [x] Запустить lint:fix
+1. **Исправить тестовое покрытие** ⏳ ТРЕБУЕТСЯ
+   - [ ] Yandex Tracker: добавить тесты для facade/services (project, attachment, worklog)
+   - [ ] Yandex Wiki: добавить unit тесты для всех tools и operations
+   - [ ] TickTick: добавить unit тесты для всех tools и operations
+   - [ ] Альтернатива: снизить пороги до реалистичных значений
 
-2. **Увеличить тестовое покрытие** ⏳ ТРЕБУЕТСЯ
-   - [ ] Yandex Wiki: добавить тесты для всех operations, tools, facade
-   - [ ] TickTick: добавить тесты для всех operations, tools, facade
-   - [ ] Добавить integration и workflow тесты
+2. **Добавить smoke тесты** ⏳ ТРЕБУЕТСЯ
+   - [ ] Wiki: добавить di-container, definition-generation, e2e-tool-execution, tool-search
+   - [ ] TickTick: добавить definition-generation, e2e-tool-execution, tool-search
+
+3. **~~Добавить eslint.config.js в Yandex Wiki и TickTick~~** ✅ ВЫПОЛНЕНО
 
 ### Фаза 2: Высокий приоритет (P1)
 
-3. **Добавить ResponseFieldFilter в Yandex Wiki** ✅ ВЫПОЛНЕНО
-   - [x] Создать filter-fields.ts утилиту (как в TickTick)
-   - [x] Добавить ResponseFieldsSchema в общие схемы
-   - [x] Применить в GetPageTool (пример для остальных tools)
+4. **Добавить служебные скрипты** ⏳ ТРЕБУЕТСЯ
+   - [ ] Wiki: generate-tool-index.ts, validate-tool-registration.ts
+   - [ ] TickTick: generate-tool-index.ts, validate-tool-registration.ts
+   - [ ] Оба: schema-definition-matcher.ts в tests/helpers/
 
-4. **Добавить validation.ts в TickTick** ✅ ВЫПОЛНЕНО
-   - [x] Создать validateDIRegistrations()
-   - [x] Добавить вызов в createContainer()
+5. **~~Добавить ResponseFieldFilter в Yandex Wiki~~** ✅ ВЫПОЛНЕНО
 
-5. **Добавить batch конфигурацию в Yandex Wiki** ✅ ЧАСТИЧНО ВЫПОЛНЕНО
+6. **~~Добавить validation.ts в TickTick~~** ✅ ВЫПОЛНЕНО
+
+7. **Добавить batch конфигурацию в Yandex Wiki** ✅ ЧАСТИЧНО ВЫПОЛНЕНО
    - [x] Добавить maxBatchSize, maxConcurrentRequests в config
    - [ ] Реализовать batch операции для pages и grids (требует отдельной задачи)
 
 ### Фаза 3: Средний приоритет (P2)
 
-6. **Рефакторинг архитектуры TickTick** ⏳ ОТЛОЖЕНО (значительный рефакторинг)
+8. **Рефакторинг архитектуры TickTick** ⏳ ОТЛОЖЕНО (значительный рефакторинг)
    - [ ] Добавить Services слой между Facade и Operations
    - [ ] Изменить инъекцию на class-based
 
-7. **Структурные изменения TickTick** ✅ ВЫПОЛНЕНО
-   - [x] Создана src/cli/ структура (types.ts, prompts.ts, bin/mcp-connect.ts)
-   - [x] Добавить tsup конфигурацию и build:bundle
+9. **~~Структурные изменения TickTick~~** ✅ ВЫПОЛНЕНО
 
 ### Фаза 4: Низкий приоритет (P3)
 
-8. **Унификация конфигурации и документации** ✅ ЧАСТИЧНО ВЫПОЛНЕНО
-   - [ ] Унифицировать ServerConfig структуру (отложено)
-   - [x] Добавить README.md в модули Wiki
-   - [ ] Унифицировать подход к smoke тестам (отложено)
+10. **Унификация конфигурации и документации** ✅ ЧАСТИЧНО ВЫПОЛНЕНО
+    - [ ] Унифицировать ServerConfig структуру (отложено)
+    - [x] Добавить README.md в модули Wiki
+    - [ ] Унифицировать подход к smoke тестам (отложено)
 
 ---
 
@@ -313,26 +358,35 @@
 | validate:docs (Wiki, TickTick) | ✅ |
 | README.md в модулях (Wiki) | ✅ |
 | Unit тесты для operations | ✅ (базовые) |
+| **Достижение порогов покрытия** | ❌ ВО ВСЕХ СЕРВЕРАХ |
+| **Полный набор smoke тестов** | ❌ (Wiki, TickTick) |
+| **Служебные скрипты** | ❌ (Wiki, TickTick) |
 | Services слой (TickTick) | ⏳ ОТЛОЖЕНО (P2) |
 | ServerConfig унификация | ⏳ ОТЛОЖЕНО (P3) |
-| Полное тестовое покрытие | ⏳ ОТЛОЖЕНО (требует отдельной задачи) |
 
 ---
 
 ## Выводы
 
-**Yandex Tracker** является эталоном с наиболее полной реализацией.
+**Yandex Tracker** является эталоном, но требует улучшения:
+- ❌ Тестовое покрытие не достигает порогов (85.97% vs 90%)
+- ✅ Полная структура, smoke тесты, служебные скрипты
 
 **Yandex Wiki** (0.1.0) — после ревью значительно улучшен:
 - ✅ eslint, cpd, depcruise, validate:docs
 - ✅ ResponseFieldFilter инфраструктура
 - ✅ Batch конфигурация
 - ✅ README.md во всех модулях
-- ⏳ Требуется: batch операции, полное тестовое покрытие
+- ❌ Критически низкое покрытие (51.09%)
+- ❌ Отсутствуют 4 smoke теста
+- ❌ Отсутствуют служебные скрипты
 
 **TickTick** (0.1.0) — после ревью унифицирован:
 - ✅ eslint, validation.ts, CLI структура, build:bundle
 - ✅ Базовые unit тесты и helpers
-- ⏳ Требуется: Services слой (P2), полное тестовое покрытие
+- ❌ Критически низкое покрытие (37.15%)
+- ❌ Отсутствуют 3 smoke теста
+- ❌ Отсутствуют служебные скрипты
+- ⏳ Требуется: Services слой (P2)
 
-**Дата завершения ревью:** 2025-12-07
+**Дата обновления ревью:** 2025-12-09

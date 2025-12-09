@@ -16,6 +16,8 @@
 - [ ] `src/common/schemas/` — переиспользуемые Zod схемы
 - [ ] `tests/` — тесты (зеркально `src/`)
 - [ ] `tests/smoke/` — smoke тесты
+- [ ] `tests/helpers/` — test utilities и fixtures
+- [ ] `scripts/` — служебные скрипты
 
 ### 1.2 Entry Point (src/index.ts) — КРИТИЧНО!
 ```typescript
@@ -35,13 +37,18 @@ main().catch((error) => {
 ```json
 {
   "bin": {
-    "mcp-server-{name}": "./dist/index.js",
+    "mcp-server-{name}": "./dist/{name}.bundle.cjs",
     "mcp-connect": "./dist/cli/bin/mcp-connect.js"
   },
   "scripts": {
+    "prebuild": "npm run generate:index",
+    "build": "tsc -b && tsc-alias && npm run build:bundle",
+    "build:bundle": "tsx ../scripts/increment-build.ts && tsup",
+    "generate:index": "tsx scripts/generate-tool-index.ts",
     "test:smoke": "vitest run tests/smoke",
     "test:smoke:server": "tsx scripts/smoke-test-server.ts",
-    "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke && npm run test:smoke:server"
+    "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke && npm run test:smoke:server && npm run cpd && npm run depcruise && npm run validate:docs",
+    "validate:tools": "tsx scripts/validate-tool-registration.ts"
   }
 }
 ```
@@ -177,13 +184,14 @@ export const TOOL_SYMBOLS = TOOL_CLASSES.reduce((acc, ToolClass) => {
 
 ## 6. Smoke тесты (КРИТИЧНО!)
 
-### 6.1 Минимальный набор (ОБЯЗАТЕЛЬНО)
+### 6.1 Обязательный набор (ВСЕ 5 тестов!)
 - [ ] `mcp-server-lifecycle.smoke.test.ts` — сервер создаётся без ошибок
 - [ ] `di-container.smoke.test.ts` — DI контейнер инициализируется
-
-### 6.2 Рекомендуемые smoke тесты
-- [ ] `e2e-tool-execution.smoke.test.ts` — tool выполняется end-to-end
 - [ ] `definition-generation.smoke.test.ts` — все tools генерируют валидный definition
+- [ ] `e2e-tool-execution.smoke.test.ts` — tool выполняется end-to-end с mock
+- [ ] `tool-search.smoke.test.ts` — поиск инструментов работает
+
+### 6.2 Обязательный скрипт
 - [ ] `scripts/smoke-test-server.ts` — запуск реального процесса + JSON-RPC
 
 ### 6.3 Что проверять в smoke тестах
@@ -207,6 +215,12 @@ export const TOOL_SYMBOLS = TOOL_CLASSES.reduce((acc, ToolClass) => {
 - [ ] required поля существуют в properties
 - [ ] Tool names соответствуют `^[a-z0-9_-]+$`
 
+**E2E Tool Execution:**
+- [ ] ping tool зарегистрирован и выполняется
+- [ ] Mock HttpClient работает
+- [ ] Tool metadata корректно возвращается
+- [ ] Обработка ошибок HTTP клиента
+
 **Server Startup (script):**
 - [ ] Запуск процесса с fake credentials
 - [ ] JSON-RPC запрос `tools/list`
@@ -218,28 +232,100 @@ export const TOOL_SYMBOLS = TOOL_CLASSES.reduce((acc, ToolClass) => {
 ```json
 {
   "scripts": {
-    "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke"
+    "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke && npm run test:smoke:server"
   }
 }
 ```
 
 ---
 
-## 7. CLI (mcp-connect)
+## 7. Служебные скрипты (ОБЯЗАТЕЛЬНО!)
 
-### 7.1 Структура CLI
+### 7.1 Минимальный набор скриптов
+- [ ] `scripts/smoke-test-server.ts` — JSON-RPC smoke тест
+- [ ] `scripts/generate-tool-index.ts` — автогенерация `generated-index.ts`
+- [ ] `scripts/validate-tool-registration.ts` — проверка регистрации tools
+
+### 7.2 Тестовые хелперы
+- [ ] `tests/helpers/mock-factories.ts` — фабрики моков
+- [ ] `tests/helpers/schema-definition-matcher.ts` — валидация схем
+
+### 7.3 generate-tool-index.ts
+Автоматически сканирует `src/tools/` и генерирует:
+```typescript
+// generated-index.ts
+export { GetIssueTool } from './api/issues/get/get-issue.tool.js';
+export { CreateIssueTool } from './api/issues/create/create-issue.tool.js';
+// ... все tools автоматически
+```
+
+### 7.4 validate-tool-registration.ts
+Проверяет что все tools:
+- Добавлены в `TOOL_CLASSES`
+- Имеют корректный `METADATA`
+- Имеют метод `getParamsSchema()`
+
+---
+
+## 8. Архитектура Facade → Services → Operations
+
+### 8.1 Рекомендуемая архитектура (как в yandex-tracker)
+```
+Facade (entry point)
+   ↓
+Services (доменная логика, batch операции)
+   ↓
+Operations (HTTP вызовы API)
+```
+
+### 8.2 Facade Services (рекомендуется)
+```typescript
+// facade/services/issue.service.ts
+@injectable()
+export class IssueService {
+  constructor(
+    @inject(GetIssueOperation) private getIssue: GetIssueOperation,
+    @inject(CreateIssueOperation) private createIssue: CreateIssueOperation,
+  ) {}
+
+  async getBatch(issueIds: string[]): Promise<BatchResult[]> {
+    return Promise.all(issueIds.map(id => this.getIssue.execute(id)));
+  }
+}
+```
+
+### 8.3 Facade делегирует сервисам
+```typescript
+// facade/my-api.facade.ts
+@injectable()
+export class MyApiFacade {
+  constructor(
+    @inject(IssueService) private issueService: IssueService,
+    @inject(CommentService) private commentService: CommentService,
+  ) {}
+
+  get issues() { return this.issueService; }
+  get comments() { return this.commentService; }
+}
+```
+
+---
+
+## 9. CLI (mcp-connect)
+
+### 9.1 Структура CLI
 - [ ] `src/cli/bin/mcp-connect.ts` — entry point
 - [ ] `src/cli/types.ts` — тип конфигурации сервера
 - [ ] `src/cli/prompts.ts` — настройка промптов
 
-### 7.2 Поддерживаемые клиенты
+### 9.2 Поддерживаемые клиенты
 - Claude Desktop (JSON config)
 - Claude Code (CLI команды)
 - Codex (TOML config)
 - Gemini (JSON config)
 - Qwen (JSON config)
 
-### 7.3 Безопасность секретов
+### 9.3 Безопасность секретов
 ```typescript
 const configManager = new ConfigManager({
   projectName: 'my-mcp-server',
@@ -249,36 +335,56 @@ const configManager = new ConfigManager({
 
 ---
 
-## 8. Тестирование
+## 10. Тестирование
 
-### 8.1 Структура тестов
+### 10.1 Структура тестов
 ```
 tests/
-├── smoke/              # Smoke тесты (ОБЯЗАТЕЛЬНО!)
+├── smoke/              # Smoke тесты (ОБЯЗАТЕЛЬНО 5 файлов!)
 ├── tools/              # Unit тесты tools
 ├── integration/        # Integration тесты с mock API
 ├── composition-root/   # DI тесты
-└── helpers/            # Test utilities
+├── helpers/            # Test utilities и fixtures
+├── workflows/          # E2E workflow тесты (рекомендуется)
+└── mcp/                # MCP-специфичные тесты
 ```
 
-### 8.2 Минимальное покрытие
+### 10.2 Целевое покрытие
+Пороги настроены в `vitest.config.ts`:
 - Lines: 90%
 - Functions: 90%
 - Branches: 85%
+- Statements: 90%
+
+**⚠️ ВАЖНО:** Достижение этих порогов обязательно для релиза!
+
+### 10.3 Обязательные тестовые хелперы
+```typescript
+// tests/helpers/schema-definition-matcher.ts
+export function validateGeneratedDefinition(inputSchema: object): void {
+  // Проверяет структуру JSON Schema
+}
+
+// tests/helpers/mock-factories.ts
+export function createMockFacade(): MockedFacade { ... }
+export function createMockLogger(): MockedLogger { ... }
+```
 
 ---
 
-## 9. Валидация перед релизом
+## 11. Валидация перед релизом
 
-### 9.1 Команда validate
+### 11.1 Команда validate
 ```bash
-npm run validate  # lint + typecheck + test + test:smoke
+npm run validate  # lint + typecheck + test + test:smoke + cpd + depcruise + validate:docs
 ```
 
-### 9.2 Чеклист перед коммитом
+### 11.2 Чеклист перед коммитом
 - [ ] `npm run build` — успешная сборка
 - [ ] `npm run validate` — все проверки пройдены
-- [ ] `npm run test:smoke` — smoke тесты проходят
+- [ ] `npm run test:smoke` — все 5 smoke тестов проходят
+- [ ] `npm run test:smoke:server` — JSON-RPC тест проходит
+- [ ] `npm run test:coverage` — покрытие достигает порогов
 - [ ] Новые tools добавлены в `tool-definitions.ts`
 - [ ] Новые tools имеют `category` в METADATA
 - [ ] Read tools используют `FieldsSchema`
@@ -286,37 +392,46 @@ npm run validate  # lint + typecheck + test + test:smoke
 
 ---
 
-## 10. Типичные ошибки
+## 12. Типичные ошибки
 
-### 10.1 MCP сервер не запускается
-- [ ] Проверь `test:smoke` в `validate` скрипте
+### 12.1 MCP сервер не запускается
+- [ ] Проверь вызов `main()` в `index.ts`
+- [ ] Проверь `test:smoke:server` в `validate` скрипте
 - [ ] Добавь `smoke-test-server.ts` скрипт
 - [ ] Проверь что DI контейнер резолвит все зависимости
 
-### 10.2 Контекст ИИ переполняется
+### 12.2 Контекст ИИ переполняется
 - [ ] Добавь `FieldsSchema` в read tools
 - [ ] Используй `ResponseFieldFilter.filter()`
 - [ ] Возвращай `fieldsReturned` в ответе
 
-### 10.3 Инструменты нельзя отключить
+### 12.3 Инструменты нельзя отключить
 - [ ] Добавь `category` в каждый tool METADATA
 - [ ] Реализуй парсинг `DISABLED_TOOL_GROUPS` в config-loader
 - [ ] Используй `getDefinitionsByMode()` с фильтрами
 
-### 10.4 Tool не появляется в списке
+### 12.4 Tool не появляется в списке
 - [ ] Добавь класс в `tool-definitions.ts`
 - [ ] Проверь что class имеет static `METADATA`
 - [ ] Проверь что `getParamsSchema()` возвращает schema
+- [ ] Запусти `npm run validate:tools` для диагностики
+
+### 12.5 Покрытие не достигает порогов
+- [ ] Добавь unit тесты для всех tools
+- [ ] Добавь unit тесты для всех operations
+- [ ] Добавь integration тесты с mock API
+- [ ] Проверь покрытие facade/services
 
 ---
 
-## 11. Reference файлы
+## 13. Reference файлы
 
 **Yandex Tracker (эталон):**
 - [composition-root/container.ts](packages/servers/yandex-tracker/src/composition-root/container.ts)
 - [tools/api/issues/get/](packages/servers/yandex-tracker/src/tools/api/issues/get/) — пример tool
-- [tests/smoke/](packages/servers/yandex-tracker/tests/smoke/) — smoke тесты
-- [scripts/smoke-test-server.ts](packages/servers/yandex-tracker/scripts/smoke-test-server.ts)
+- [tests/smoke/](packages/servers/yandex-tracker/tests/smoke/) — все 5 smoke тестов
+- [tests/helpers/](packages/servers/yandex-tracker/tests/helpers/) — mock factories и fixtures
+- [scripts/](packages/servers/yandex-tracker/scripts/) — все служебные скрипты
 
 **Framework:**
 - [core/src/tools/base/base-tool.ts](packages/framework/core/src/tools/base/base-tool.ts)
