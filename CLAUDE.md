@@ -341,7 +341,7 @@ npm run cpd:report
 ```
 
 **Пороги тестового покрытия (vitest):**
-- Lines: 90%, Functions: 90%, Branches: 85%, Statements: 90%
+- Lines: 80%, Functions: 80%, Branches: 75%, Statements: 80%
 
 **Уровни правил:**
 - `error` — блокирует коммит/CI

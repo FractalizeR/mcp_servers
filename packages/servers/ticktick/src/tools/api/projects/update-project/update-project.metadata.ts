@@ -17,5 +17,5 @@ export const UPDATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['project', 'update', 'edit'],
   isHelper: false,
-  requiresExplicitUserConsent: false,
+  requiresExplicitUserConsent: true,
 } as const;

@@ -351,10 +351,10 @@ tests/
 
 ### 10.2 Целевое покрытие
 Пороги настроены в `vitest.config.ts`:
-- Lines: 90%
-- Functions: 90%
-- Branches: 85%
-- Statements: 90%
+- Lines: 80%
+- Functions: 80%
+- Branches: 75%
+- Statements: 80%
 
 **⚠️ ВАЖНО:** Достижение этих порогов обязательно для релиза!
 

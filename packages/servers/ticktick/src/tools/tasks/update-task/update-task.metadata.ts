@@ -17,4 +17,5 @@ export const UPDATE_TASK_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['task', 'update', 'edit', 'modify'],
   isHelper: false,
+  requiresExplicitUserConsent: true,
 } as const;

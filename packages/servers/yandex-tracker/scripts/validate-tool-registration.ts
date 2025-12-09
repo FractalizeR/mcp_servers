@@ -8,8 +8,8 @@
 
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { TOOL_CLASSES } from '../dist/composition-root/definitions/tool-definitions.js';
-import { OPERATION_CLASSES } from '../dist/composition-root/definitions/operation-definitions.js';
+import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
+import { OPERATION_CLASSES } from '../src/composition-root/definitions/operation-definitions.js';
 
 /**
  * Рекурсивный поиск файлов по паттерну

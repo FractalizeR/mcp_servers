@@ -17,4 +17,5 @@ export const BATCH_CREATE_TASKS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['tasks', 'batch', 'create', 'bulk'],
   isHelper: false,
+  requiresExplicitUserConsent: true,
 } as const;

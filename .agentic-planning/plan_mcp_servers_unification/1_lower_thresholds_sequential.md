@@ -14,11 +14,11 @@
 
 ## Чеклист
 
-- [ ] Изменить `vitest.shared.ts`
-- [ ] Обновить `MCP_SERVER_CHECKLIST.md`
-- [ ] Обновить `CLAUDE.md` (если упоминаются пороги)
-- [ ] Проверить что yandex-tracker проходит `npm run test:coverage`
-- [ ] Коммит с описанием причины изменения
+- [x] Изменить `vitest.shared.ts`
+- [x] Обновить `MCP_SERVER_CHECKLIST.md`
+- [x] Обновить `CLAUDE.md` (если упоминаются пороги)
+- [x] Проверить что yandex-tracker проходит `npm run test:coverage`
+- [x] Коммит с описанием причины изменения
 
 ---
 

@@ -12,3 +12,14 @@ export {
   createAsyncOperationFixture,
   createDeleteResultFixture,
 } from './page.fixture.js';
+
+export { createGridFixture, createDeleteGridResultFixture } from './grid.fixture.js';
+
+export { createResourcesResponseFixture } from './resource.fixture.js';
+
+export {
+  expectDefinitionMatchesSchema,
+  validateGeneratedDefinition,
+  expectDefinitionFullyValid,
+  getValidationResult,
+} from './schema-definition-matcher.js';
