@@ -27,32 +27,33 @@
 
 ## Быстрый старт (Пользователи)
 
-### Способ 1: MCPB Bundle (Рекомендуется)
+### Способ 1: MCPB Bundle (Рекомендуется для Claude Desktop)
 
-Скачай готовый `.mcpb` бандл по ссылкам выше и установи его напрямую в MCP клиент.
+Скачай готовый `.mcpb` бандл по ссылкам выше и установи его напрямую в Claude Desktop.
 
-### Способ 2: CLI установка
+> ⚠️ MCPB формат пока поддерживается только Claude Desktop
 
-```bash
-# Клонируй репозиторий
-git clone https://github.com/FractalizeR/mcp_server_yandex_tracker.git
-cd mcp_server_yandex_tracker
-npm install && npm run build
-
-# Подключи к MCP клиенту интерактивно
-cd packages/servers/yandex-tracker
-npm run mcp:connect
-```
-
-CLI поддерживает: **Claude Desktop**, **Claude Code**, **Codex**, **Gemini**, **Qwen**
-
-### Способ 3: npm глобальная установка
+### Способ 2: npm установка
 
 ```bash
-npm install -g mcp-server-yandex-tracker
+# Установи нужный сервер глобально
+npm install -g mcp-server-yandex-tracker  # Yandex Tracker
+npm install -g mcp-server-yandex-wiki     # Yandex Wiki
+npm install -g mcp-server-ticktick        # TickTick
+
+# Запусти интерактивную настройку
+mcp-server-yandex-tracker connect
+mcp-server-yandex-wiki connect
+mcp-server-ticktick connect
 ```
 
-Затем настрой Claude Desktop вручную — см. [Yandex Tracker README](packages/servers/yandex-tracker/README.md#установка).
+CLI проведёт через настройку и автоматически добавит сервер в конфигурацию выбранного клиента.
+
+**Поддерживаемые клиенты:** Claude Desktop, Claude Code, Codex, Gemini, Qwen
+
+**Ручная настройка** — см. README соответствующего пакета в разделе [Пакеты](#пакеты).
+
+> 💡 **Нет Node.js?** Установи через [fnm](https://github.com/Schniz/fnm#installation) (рекомендуется) или [nodejs.org](https://nodejs.org/)
 
 ---
 
