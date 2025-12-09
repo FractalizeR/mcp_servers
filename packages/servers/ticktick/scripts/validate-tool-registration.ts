@@ -1,7 +1,7 @@
 /**
- * Валидация регистрации Tools и Operations
+ * Валидация регистрации Tools
  *
- * Проверяет, что все Tool и Operation классы зарегистрированы в definitions/
+ * Проверяет, что все Tool классы зарегистрированы в definitions/
  *
  * Запуск: npm run validate:tools
  */
@@ -9,7 +9,6 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
-import { OPERATION_CLASSES } from '../src/composition-root/definitions/operation-definitions.js';
 
 /**
  * Рекурсивный поиск файлов по паттерну
@@ -46,7 +45,7 @@ async function findFiles(
 
 /**
  * Извлечение имени класса из пути к файлу
- * Пример: 'src/mcp/tools/ping.tool.ts' → 'PingTool'
+ * Пример: 'src/tools/tasks/get-task.tool.ts' → 'GetTaskTool'
  */
 function extractClassName(filePath: string, suffix: string): string | null {
   const match = filePath.match(new RegExp(`([A-Z][a-z0-9-]+)\\.${suffix}\\.ts$`, 'i'));
@@ -66,7 +65,12 @@ function extractClassName(filePath: string, suffix: string): string | null {
  * Проверка регистрации Tools
  */
 async function validateTools(): Promise<string[]> {
-  const toolFiles = await findFiles('../src/tools', /\.tool\.ts$/, [/base-tool\.ts$/, /\/base\//]);
+  // Исключаем shared/ директорию - это утилиты, а не tools
+  const toolFiles = await findFiles('../src/tools', /\.tool\.ts$/, [
+    /base-tool\.ts$/,
+    /\/base\//,
+    /\/shared\//,
+  ]);
 
   const registeredTools = TOOL_CLASSES.map((ToolClass) => ToolClass.name);
   const unregisteredTools: string[] = [];
@@ -85,8 +89,8 @@ async function validateTools(): Promise<string[]> {
  * Валидация флага requiresExplicitUserConsent
  *
  * Проверяет корректность использования флага безопасности:
- * - Опасные операции (update, create, delete, transition, execute) должны иметь флаг
- * - Read-only операции (get, find, search, list) НЕ должны иметь флаг
+ * - Опасные операции (update, create, delete, complete, batch) должны иметь флаг
+ * - Read-only операции (get, search) НЕ должны иметь флаг
  */
 interface SafetyValidationResult {
   errors: string[];
@@ -98,8 +102,8 @@ async function validateSafetyFlags(): Promise<SafetyValidationResult> {
   const warnings: string[] = [];
 
   // Паттерны опасных операций в именах tools (без read-only вариантов)
-  const dangerousPatterns = ['update', 'create', 'delete', 'transition_issue', 'execute'];
-  const readOnlyPatterns = ['get', 'find', 'search', 'list'];
+  const dangerousPatterns = ['update', 'create', 'delete', 'complete', 'batch'];
+  const readOnlyPatterns = ['get', 'search'];
 
   for (const ToolClass of TOOL_CLASSES) {
     const metadata = ToolClass.METADATA;
@@ -113,7 +117,6 @@ async function validateSafetyFlags(): Promise<SafetyValidationResult> {
     const nameLower = name.toLowerCase();
 
     // Проверка 1: Опасные операции должны иметь флаг
-    // Исключаем read-only операции типа "get_issue_transitions"
     const isDangerous = dangerousPatterns.some((pattern) => nameLower.includes(pattern));
     const isReadOnly = readOnlyPatterns.some((pattern) => nameLower.startsWith(pattern));
 
@@ -141,36 +144,13 @@ async function validateSafetyFlags(): Promise<SafetyValidationResult> {
 }
 
 /**
- * Проверка регистрации Operations
- */
-async function validateOperations(): Promise<string[]> {
-  const operationFiles = await findFiles('../src/tracker_api/api_operations', /\.operation\.ts$/, [
-    /base-operation\.ts$/,
-    /\/base\//,
-  ]);
-
-  const registeredOperations = OPERATION_CLASSES.map((OpClass) => OpClass.name);
-  const unregisteredOperations: string[] = [];
-
-  for (const filePath of operationFiles) {
-    const className = extractClassName(filePath, 'operation');
-    if (className && !registeredOperations.includes(className)) {
-      unregisteredOperations.push(`${className} (${filePath})`);
-    }
-  }
-
-  return unregisteredOperations;
-}
-
-/**
  * Основная функция валидации
  */
 async function main(): Promise<void> {
-  console.log('🔍 Проверка регистрации Tools и Operations...\n');
+  console.log('🔍 Проверка регистрации Tools...\n');
 
-  const [unregisteredTools, unregisteredOperations, safetyValidation] = await Promise.all([
+  const [unregisteredTools, safetyValidation] = await Promise.all([
     validateTools(),
-    validateOperations(),
     validateSafetyFlags(),
   ]);
 
@@ -182,17 +162,7 @@ async function main(): Promise<void> {
     console.error('❌ Незарегистрированные Tools:');
     unregisteredTools.forEach((tool) => console.error(`   - ${tool}`));
     console.error(
-      '\n💡 Добавь их в packages/servers/yandex-tracker/src/composition-root/definitions/tool-definitions.ts\n'
-    );
-  }
-
-  // Проверка регистрации Operations
-  if (unregisteredOperations.length > 0) {
-    hasErrors = true;
-    console.error('❌ Незарегистрированные Operations:');
-    unregisteredOperations.forEach((op) => console.error(`   - ${op}`));
-    console.error(
-      '\n💡 Добавь их в packages/servers/yandex-tracker/src/composition-root/definitions/operation-definitions.ts\n'
+      '\n💡 Добавь их в packages/servers/ticktick/src/composition-root/definitions/tool-definitions.ts\n'
     );
   }
 
@@ -216,7 +186,6 @@ async function main(): Promise<void> {
 
   console.log('✅ Все проверки пройдены');
   console.log(`   Tools: ${TOOL_CLASSES.length}`);
-  console.log(`   Operations: ${OPERATION_CLASSES.length}`);
   console.log(
     `   Tools с requiresExplicitUserConsent: ${TOOL_CLASSES.filter((t) => t.METADATA?.requiresExplicitUserConsent).length}`
   );
