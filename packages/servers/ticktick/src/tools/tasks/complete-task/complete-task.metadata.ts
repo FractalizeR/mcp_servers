@@ -17,4 +17,5 @@ export const COMPLETE_TASK_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['task', 'complete', 'done', 'finish'],
   isHelper: false,
+  requiresExplicitUserConsent: true,
 } as const;

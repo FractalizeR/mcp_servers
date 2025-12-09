@@ -17,4 +17,5 @@ export const DELETE_TASK_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['task', 'delete', 'remove'],
   isHelper: false,
+  requiresExplicitUserConsent: true,
 } as const;

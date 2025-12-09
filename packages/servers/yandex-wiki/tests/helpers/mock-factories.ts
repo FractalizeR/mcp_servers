@@ -64,6 +64,19 @@ export function createMockFacade(): Partial<YandexWikiFacade> {
     deletePage: vi.fn(),
     clonePage: vi.fn(),
     appendContent: vi.fn(),
+    getResources: vi.fn(),
+    getGrid: vi.fn(),
+    createGrid: vi.fn(),
+    updateGrid: vi.fn(),
+    deleteGrid: vi.fn(),
+    addRows: vi.fn(),
+    removeRows: vi.fn(),
+    addColumns: vi.fn(),
+    removeColumns: vi.fn(),
+    updateCells: vi.fn(),
+    moveRows: vi.fn(),
+    moveColumns: vi.fn(),
+    cloneGrid: vi.fn(),
   };
 }
 
