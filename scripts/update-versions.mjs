@@ -36,13 +36,13 @@ const packageDirs = [
 
 // Имена внутренних пакетов для обновления зависимостей
 const internalPackages = [
-  '@mcp-framework/infrastructure',
-  '@mcp-framework/cli',
-  '@mcp-framework/core',
-  '@mcp-framework/search',
-  '@mcp-server/yandex-tracker',
-  '@mcp-server/yandex-wiki',
-  '@mcp-server/ticktick',
+  '@fractalizer/mcp-infrastructure',
+  '@fractalizer/mcp-cli',
+  '@fractalizer/mcp-core',
+  '@fractalizer/mcp-search',
+  '@fractalizer/mcp-server-yandex-tracker',
+  '@fractalizer/mcp-server-yandex-wiki',
+  '@fractalizer/mcp-server-ticktick',
 ];
 
 let updatedCount = 0;

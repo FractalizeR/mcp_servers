@@ -69,8 +69,8 @@
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet && npm run cpd:quiet"
   },
   "dependencies": {
-    "@fractalizer/mcp-core": "^0.1.0",
-    "@fractalizer/mcp-infrastructure": "^0.1.1"
+    "@fractalizer/mcp-core": "^0.1.4",
+    "@fractalizer/mcp-infrastructure": "^0.1.4"
   },
   "publishConfig": {
     "access": "public"
