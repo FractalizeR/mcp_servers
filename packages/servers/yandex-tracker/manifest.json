@@ -1,0 +1,110 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/dist/mcpb-manifest-v0.3.schema.json",
+  "manifest_version": "0.3",
+  "name": "fractalizer_mcp_yandex_tracker",
+  "version": "0.1.4+b6689a3",
+  "display_name": "FractalizeR's Yandex Tracker MCP",
+  "description": "FractalizeR's Yandex Tracker MCP server for API v3 integration",
+  "long_description": "FractalizeR's Yandex Tracker MCP\n\nАвтор: Раструсный Владислав.\n\nПрофессиональный MCP сервер для полной интеграции с API Яндекс.Трекера v3. 49 инструментов для управления всеми аспектами проектной работы: задачи, проекты, доски, комментарии, вложения, чек-листы, компоненты, учёт времени и многое другое.\n\nКЛЮЧЕВОЕ ПРЕИМУЩЕСТВО: Максимальная экономия контекста ИИ-модели! Гибкая система отключения неиспользуемых групп инструментов позволяет адаптировать сервер под ваши задачи — от минимального набора для простых операций до полного функционала для комплексного управления проектами.\nОсновные возможности:\n- 49 специализированных инструментов для работы с Яндекс.Трекером\n- Интеллектуальная экономия контекста через систему категорий и подкатегорий\n- Полная поддержка API v3: CRUD операции, фильтрация, массовые изменения\n- Работа с задачами: создание, поиск, редактирование, переходы по workflow\n- Управление проектами, досками, очередями и их настройками\n- Комментарии, вложения, связи между задачами, учёт времени\n- Управление командами, пользователями и правами доступа\n- Настраиваемые чек-листы и компоненты\n\nИдеален для автоматизации рутинных операций и интеграции Яндекс.Трекера в AI-powered рабочие процессы.",
+  "author": {
+    "name": "Fractalizer",
+    "email": "fractalizer@example.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/FractalizeR/mcp_server_yandex_tracker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FractalizeR/mcp_server_yandex_tracker"
+  },
+  "keywords": [
+    "yandex",
+    "tracker",
+    "task-management",
+    "project-management",
+    "api",
+    "mcp"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/yandex-tracker.bundle.cjs",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/yandex-tracker.bundle.cjs"
+      ],
+      "env": {
+        "YANDEX_TRACKER_TOKEN": "${user_config.oauth_token}",
+        "YANDEX_ORG_ID": "${user_config.org_id}",
+        "YANDEX_TRACKER_API_BASE": "https://api.tracker.yandex.net",
+        "LOG_LEVEL": "${user_config.log_level}",
+        "REQUEST_TIMEOUT": "${user_config.request_timeout}",
+        "DISABLED_TOOL_GROUPS": "${user_config.disabled_tool_groups}"
+      }
+    }
+  },
+  "user_config": {
+    "oauth_token": {
+      "type": "string",
+      "title": "OAuth Token",
+      "description": "OAuth токен для доступа к API Яндекс.Трекера. Получить можно в настройках OAuth приложения Яндекса.",
+      "required": true,
+      "sensitive": true
+    },
+    "org_id": {
+      "type": "string",
+      "title": "Organization ID",
+      "description": "ID организации в Яндекс.Трекере. Можно найти в настройках организации.",
+      "required": true,
+      "sensitive": false
+    },
+    "log_level": {
+      "type": "string",
+      "title": "Log Level",
+      "description": "Уровень логирования: debug, info, warn, error",
+      "required": false,
+      "default": "info",
+      "sensitive": false
+    },
+    "request_timeout": {
+      "type": "number",
+      "title": "Request Timeout",
+      "description": "Таймаут запросов к API (в миллисекундах)",
+      "required": false,
+      "default": 30000,
+      "min": 5000,
+      "max": 120000,
+      "sensitive": false
+    },
+    "disabled_tool_groups": {
+      "type": "string",
+      "title": "Disabled Tool Groups",
+      "description": "Список групп инструментов для отключения (через запятую) для экономии контекста модели. По умолчанию отключены редко используемые инструменты: работа с вложениями, учёт времени, связи задач, массовые операции, компоненты, чек-листы и демо. Формат: 'category' или 'category:subcategory'. Примеры: 'components,checklists' отключит целые категории; 'issues:worklog,issues:attachments' отключит подкатегории; 'components,issues:worklog' - смешанный формат. Основные группы: issues (read/write/workflow/worklog/attachments/links/bulk), queues, projects, comments, checklists, components, helpers (demo/url). Оставьте пустым для включения всех инструментов.",
+      "required": false,
+      "default": "issues:worklog,issues:attachments,issues:links,issues:bulk,projects,components,checklists,helpers:demo",
+      "sensitive": false
+    }
+  },
+  "tools_generated": true,
+  "prompts_generated": false,
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": [
+      "darwin",
+      "linux",
+      "win32"
+    ],
+    "runtimes": {
+      "node": ">=22.0.0"
+    }
+  },
+  "privacy_policies": [
+    "https://yandex.ru/legal/confidential/"
+  ],
+  "_meta": {
+    "build": {
+      "hash": "b6689a3",
+      "generated_by": "mcpb-build",
+      "last_updated": "2025-12-09"
+    }
+  }
+}

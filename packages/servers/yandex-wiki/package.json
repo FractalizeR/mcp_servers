@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-server-yandex-wiki",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "MCP Server for Yandex Wiki API integration",
   "keywords": [
     "mcp",

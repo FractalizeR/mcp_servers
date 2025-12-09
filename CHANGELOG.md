@@ -1,3 +1,9 @@
+## [0.1.4](https://github.com/FractalizeR/mcp_servers/compare/v0.1.3...v0.1.4) (2025-12-09)
+
+### Bug Fixes
+
+* **ci:** обновлять manifest.json при релизе для корректной версии MCPB ([b6689a3](https://github.com/FractalizeR/mcp_servers/commit/b6689a3a03d1f71f31b7b55d2abbdbc5100ac5e8))
+
 ## [0.1.3](https://github.com/FractalizeR/mcp_servers/compare/v0.1.2...v0.1.3) (2025-12-09)
 
 ### Bug Fixes

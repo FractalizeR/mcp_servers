@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-infrastructure",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "Reusable infrastructure layer: HTTP, cache, logging, async utilities",
   "keywords": [
     "mcp",
