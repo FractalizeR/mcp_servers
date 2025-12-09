@@ -65,7 +65,7 @@
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet && npm run cpd:quiet"
   },
   "dependencies": {
-    "@fractalizer/mcp-infrastructure": "^0.2.0",
+    "@fractalizer/mcp-infrastructure": "^0.1.1",
     "@iarna/toml": "^2.2.5",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",

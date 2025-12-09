@@ -77,9 +77,9 @@
     "validate:tools": "tsx scripts/validate-tool-registration.ts"
   },
   "dependencies": {
-    "@fractalizer/mcp-cli": "^0.2.0",
+    "@fractalizer/mcp-cli": "^0.1.1",
     "@fractalizer/mcp-core": "^0.1.0",
-    "@fractalizer/mcp-infrastructure": "^0.2.0",
+    "@fractalizer/mcp-infrastructure": "^0.1.1",
     "@fractalizer/mcp-search": "^0.1.0",
     "@iarna/toml": "^2.2.5",
     "@modelcontextprotocol/sdk": "^1.23.0",
