@@ -12,3 +12,10 @@ export {
   createAsyncOperationFixture,
   createDeleteResultFixture,
 } from './page.fixture.js';
+
+export {
+  expectDefinitionMatchesSchema,
+  validateGeneratedDefinition,
+  expectDefinitionFullyValid,
+  getValidationResult,
+} from './schema-definition-matcher.js';
