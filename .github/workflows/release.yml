@@ -149,6 +149,9 @@ jobs:
           sleep 30
           npm ci
 
+      - name: Build all packages first
+        run: npm run build
+
       - name: Build all MCPB bundles
         run: |
           echo "📦 Building MCPB bundles for all servers..."
