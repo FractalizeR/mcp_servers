@@ -17,4 +17,5 @@ export const GET_TASKS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['tasks', 'get', 'read', 'batch', 'bulk'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

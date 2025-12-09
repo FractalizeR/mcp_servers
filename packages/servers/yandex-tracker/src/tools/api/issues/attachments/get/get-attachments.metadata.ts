@@ -23,4 +23,5 @@ export const GET_ATTACHMENTS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['attachments', 'read', 'files', 'documents', 'batch'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

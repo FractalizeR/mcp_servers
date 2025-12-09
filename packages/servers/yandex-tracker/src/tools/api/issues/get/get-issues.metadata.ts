@@ -23,4 +23,5 @@ export const GET_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['read', 'get', 'fetch', 'issue'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

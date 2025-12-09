@@ -23,4 +23,5 @@ export const GET_ISSUE_CHANGELOG_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['history', 'changelog', 'audit', 'read', 'batch'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

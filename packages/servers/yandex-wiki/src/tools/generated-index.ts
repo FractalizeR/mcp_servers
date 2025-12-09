@@ -19,11 +19,11 @@ export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
   {
     name: 'yw_ping',
     category: ToolCategory.SYSTEM,
-    tags: ['system', 'ping', 'health', 'check'],
-    isHelper: true,
+    tags: ['ping', 'health', 'status', 'system'],
+    isHelper: false,
     nameTokens: ['yw', 'ping'],
-    descriptionTokens: ['system', 'yandex', 'wiki', 'api'],
-    descriptionShort: '[System] Проверка подключения к Yandex Wiki API',
+    descriptionTokens: ['system', 'health', 'yandex', 'wiki', 'api'],
+    descriptionShort: '[System/Health] Проверка подключения к Yandex Wiki API',
   },
   {
     name: 'yw_get_page',

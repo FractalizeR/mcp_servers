@@ -17,4 +17,5 @@ export const GET_TASKS_BY_PRIORITY_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['tasks', 'priority', 'filter'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

@@ -17,4 +17,5 @@ export const GET_ALL_TASKS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['tasks', 'all', 'list', 'read'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

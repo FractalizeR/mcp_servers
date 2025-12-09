@@ -18,12 +18,12 @@ import type { StaticToolIndex } from '@mcp-framework/search';
 export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
   {
     name: 'fr_ticktick_ping',
-    category: ToolCategory.HELPERS,
-    tags: ['ping', 'health', 'status', 'test'],
-    isHelper: true,
+    category: ToolCategory.SYSTEM,
+    tags: ['ping', 'health', 'status', 'system'],
+    isHelper: false,
     nameTokens: ['fr', 'ticktick', 'ping'],
-    descriptionTokens: ['helpers', 'ticktick', 'api'],
-    descriptionShort: '[Helpers] Проверить подключение к TickTick API',
+    descriptionTokens: ['system', 'health', 'ticktick', 'api'],
+    descriptionShort: '[System/Health] Проверка подключения к TickTick API',
   },
   {
     name: 'fr_ticktick_get_projects',

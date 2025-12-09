@@ -12,8 +12,8 @@
  * as it requires ToolSearchEngine instead of Facade.
  */
 
-// === Helper Tools (critical) ===
-import { PingTool } from '#tools/helpers/ping/index.js';
+// === System Tools (critical) ===
+import { PingTool } from '#tools/ping.tool.js';
 
 // === Project Tools ===
 import { GetProjectsTool } from '#tools/api/projects/get-projects/index.js';
@@ -50,14 +50,14 @@ import { GetNextTasksTool } from '#tools/helpers/gtd/get-next-tasks/index.js';
  * All tool classes for automatic DI registration
  *
  * Organization:
- * 1. Helpers (critical) - ping
+ * 1. System (critical) - ping
  * 2. Project tools - CRUD operations
  * 3. Task tools - CRUD operations
  * 4. Date queries - tasks by date
  * 5. GTD helpers - engaged, next
  */
 export const TOOL_CLASSES = [
-  // Helpers (critical)
+  // System (critical)
   PingTool,
 
   // Project Read operations

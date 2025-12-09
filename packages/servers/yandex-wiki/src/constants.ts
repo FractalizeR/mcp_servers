@@ -1,7 +1,8 @@
 /**
  * Префикс для всех MCP tools Yandex Wiki
+ * @example "yw_get_page"
  */
-export const MCP_TOOL_PREFIX = 'yw';
+export const MCP_TOOL_PREFIX = 'yw_' as const;
 
 /**
  * Base URL API Yandex Wiki (hardcoded)
@@ -35,10 +36,10 @@ export const DEFAULT_LOG_LEVEL = 'info';
 
 /**
  * Essential tools для Yandex Wiki MCP сервера
- * - yw_ping: проверка работоспособности сервера
- * - yw_search_tools: поиск инструментов (только в lazy режиме)
+ * - yw_ping: проверка работоспособности сервера (с префиксом)
+ * - search_tools: поиск инструментов из @mcp-framework/search (БЕЗ префикса — это framework tool)
  *
  * Имена формируются через buildToolName(name, MCP_TOOL_PREFIX) с автонормализацией:
  * buildToolName('ping', 'yw') => 'yw_ping'
  */
-export const YANDEX_WIKI_ESSENTIAL_TOOLS = ['yw_ping', 'yw_search_tools'] as const;
+export const YANDEX_WIKI_ESSENTIAL_TOOLS = ['yw_ping', 'search_tools'] as const;

@@ -1,7 +1,7 @@
 // tests/unit/tools/helpers/ping.tool.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PingTool } from '#tools/helpers/ping/ping.tool.js';
-import { PING_TOOL_METADATA } from '#tools/helpers/ping/ping.metadata.js';
+import { PingTool } from '#tools/ping.tool.js';
+import { PING_TOOL_METADATA } from '#tools/ping.metadata.js';
 import { createMockFacade, createMockLogger, createPageFixture } from '#helpers/index.js';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 

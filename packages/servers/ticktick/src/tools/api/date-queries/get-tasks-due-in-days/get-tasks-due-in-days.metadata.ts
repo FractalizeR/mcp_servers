@@ -14,4 +14,5 @@ export const GET_TASKS_DUE_IN_DAYS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['tasks', 'due', 'days', 'upcoming'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

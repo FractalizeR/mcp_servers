@@ -17,5 +17,5 @@ export const CREATE_TASK_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['task', 'create', 'new', 'add'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
 } as const;

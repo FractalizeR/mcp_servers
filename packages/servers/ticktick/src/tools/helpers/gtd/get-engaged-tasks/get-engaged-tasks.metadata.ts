@@ -14,4 +14,5 @@ export const GET_ENGAGED_TASKS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['gtd', 'engaged', 'urgent', 'important'],
   isHelper: true,
+  requiresExplicitUserConsent: false,
 } as const;

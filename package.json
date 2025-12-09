@@ -63,7 +63,7 @@
     "validate": "turbo run build lint typecheck test test:smoke cpd depcruise validate:docs && npm run knip:root",
     "validate:docs": "turbo run validate:docs",
     "validate:docs:root": "tsx scripts/validate-docs-size.ts",
-    "validate:quiet": "turbo run build lint:quiet typecheck test:quiet cpd:quiet depcruise validate:docs",
+    "validate:quiet": "turbo run build lint:quiet typecheck test:quiet cpd:quiet depcruise validate:docs --output-logs=errors-only",
     "validate:security": "turbo run knip && npm run audit:socket && npm run audit:lockfile && npm run audit:secrets",
     "vitest:ui": "vitest --ui --coverage"
   },

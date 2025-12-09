@@ -19,4 +19,5 @@ export const DELETE_ATTACHMENT_TOOL_METADATA = {
   priority: ToolPriority.NORMAL,
   tags: ['attachments', 'write', 'delete', 'files'],
   isHelper: false,
+  requiresExplicitUserConsent: true,
 } as const;

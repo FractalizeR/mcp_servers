@@ -8,7 +8,7 @@ describe('Yandex Wiki Package Setup', () => {
   it('should export MCP constants', async () => {
     const { MCP_TOOL_PREFIX, YANDEX_WIKI_API_BASE } = await import('#constants');
 
-    expect(MCP_TOOL_PREFIX).toBe('yw');
+    expect(MCP_TOOL_PREFIX).toBe('yw_');
     expect(YANDEX_WIKI_API_BASE).toBe('https://api.wiki.yandex.net');
   });
 

@@ -23,4 +23,5 @@ export const GET_ISSUE_TRANSITIONS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['transitions', 'statuses', 'workflow', 'read'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

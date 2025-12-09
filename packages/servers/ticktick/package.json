@@ -28,7 +28,7 @@
   "main": "./dist/index.js",
   "bin": {
     "mcp-connect": "./dist/cli/bin/mcp-connect.js",
-    "mcp-server-ticktick": "./dist/ticktick.bundle.js"
+    "mcp-server-ticktick": "./dist/ticktick.bundle.cjs"
   },
   "files": [
     "dist",

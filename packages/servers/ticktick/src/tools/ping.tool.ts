@@ -1,8 +1,8 @@
 /**
- * PingTool - Check TickTick API connectivity
+ * PingTool - Проверка подключения к TickTick API
  *
- * Simple health check that verifies API connection is working.
- * Returns latency, status, and basic project count.
+ * Простая проверка работоспособности API.
+ * Возвращает latency, статус и количество проектов.
  */
 
 import { BaseTool } from '@mcp-framework/core';

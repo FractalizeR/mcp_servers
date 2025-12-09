@@ -14,4 +14,5 @@ export const GET_NEXT_TASKS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['gtd', 'next', 'upcoming'],
   isHelper: true,
+  requiresExplicitUserConsent: false,
 } as const;

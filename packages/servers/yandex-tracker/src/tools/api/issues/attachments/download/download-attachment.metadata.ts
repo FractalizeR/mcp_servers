@@ -23,4 +23,5 @@ export const DOWNLOAD_ATTACHMENT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['attachments', 'read', 'download', 'files'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

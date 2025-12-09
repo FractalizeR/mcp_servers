@@ -23,5 +23,5 @@ export const CREATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['project', 'create', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
 } as const;

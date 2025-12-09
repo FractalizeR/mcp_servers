@@ -13,5 +13,10 @@ export * from './api/index.js';
 // Task tools
 export * from './tasks/index.js';
 
-// Helper tools
+// Helper tools (GTD)
 export * from './helpers/index.js';
+
+// System tools (ping)
+export { PingTool } from './ping.tool.js';
+export { PING_TOOL_METADATA } from './ping.metadata.js';
+export { PingParamsSchema, type PingParams } from './ping.schema.js';

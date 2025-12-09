@@ -1,4 +1,4 @@
-import { PingTool } from '#tools/helpers/ping/index.js';
+import { PingTool } from '#tools/ping.tool.js';
 
 // Pages
 import { GetPageTool } from '#tools/api/pages/get/index.js';
@@ -32,7 +32,7 @@ import { GetResourcesTool } from '#tools/api/resources/get/index.js';
  * Для добавления нового tool - просто добавь класс в массив
  */
 export const TOOL_CLASSES = [
-  // Helpers
+  // System
   PingTool,
 
   // Pages

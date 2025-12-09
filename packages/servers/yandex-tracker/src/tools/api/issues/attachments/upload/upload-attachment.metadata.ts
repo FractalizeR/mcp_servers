@@ -23,4 +23,5 @@ export const UPLOAD_ATTACHMENT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['attachments', 'write', 'upload', 'files'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

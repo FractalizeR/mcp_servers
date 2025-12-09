@@ -23,4 +23,5 @@ export const CREATE_LINK_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['links', 'write', 'create', 'relationships', 'subtasks', 'batch'],
   isHelper: false,
+  requiresExplicitUserConsent: true,
 } as const;

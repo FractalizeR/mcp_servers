@@ -23,4 +23,5 @@ export const DEMO_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.LOW,
   tags: ['demo', 'example', 'test'],
   isHelper: true,
+  requiresExplicitUserConsent: false,
 } as const;

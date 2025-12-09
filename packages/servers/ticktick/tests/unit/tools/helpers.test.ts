@@ -7,8 +7,8 @@ import { createMockFacade, createMockLogger } from '#helpers/index.js';
 import type { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/task.entity.js';
 
-// Import helper tools
-import { PingTool } from '#tools/helpers/ping/ping.tool.js';
+// Import tools
+import { PingTool } from '#tools/ping.tool.js';
 import { GetEngagedTasksTool } from '#tools/helpers/gtd/get-engaged-tasks/get-engaged-tasks.tool.js';
 import { GetNextTasksTool } from '#tools/helpers/gtd/get-next-tasks/get-next-tasks.tool.js';
 

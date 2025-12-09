@@ -10,5 +10,5 @@ export const CLONE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['write', 'clone', 'copy', 'page', 'wiki'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
 } as const;

@@ -55,6 +55,10 @@ describe('Tool Categorization', () => {
       expect(FindIssuesTool.METADATA.priority).toBe('critical');
       expect(UpdateIssueTool.METADATA.priority).toBe('critical');
     });
+
+    it('System health check tools должны иметь priority: critical', () => {
+      expect(PingTool.METADATA.priority).toBe('critical');
+    });
   });
 
   describe('High priority operations', () => {
@@ -69,9 +73,8 @@ describe('Tool Categorization', () => {
   });
 
   describe('Normal priority operations', () => {
-    it('System tools должны иметь priority: normal', () => {
-      expect(PingTool.METADATA.priority).toBe('normal');
-    });
+    // Note: PingTool теперь имеет priority: critical (консистентно для всех серверов)
+    // System tools критичны для health checks, поэтому priority: critical
 
     it('Helper tools должны иметь priority: normal или low', () => {
       const issueUrlPriority = IssueUrlTool.METADATA.priority || 'normal';

@@ -10,5 +10,5 @@ export const CLONE_GRID_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['write', 'clone', 'copy', 'grid', 'table'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
 } as const;

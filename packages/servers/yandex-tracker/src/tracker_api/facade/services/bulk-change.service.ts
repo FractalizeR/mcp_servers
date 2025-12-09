@@ -21,9 +21,9 @@
  */
 
 import { injectable, inject } from 'inversify';
-import { BulkUpdateIssuesOperation } from '#tracker_api/api_operations/bulk-change/bulk-update.operation.js';
-import { BulkTransitionIssuesOperation } from '#tracker_api/api_operations/bulk-change/bulk-transition.operation.js';
-import { BulkMoveIssuesOperation } from '#tracker_api/api_operations/bulk-change/bulk-move.operation.js';
+import { BulkUpdateIssuesOperation } from '#tracker_api/api_operations/bulk-change/bulk-update-issues.operation.js';
+import { BulkTransitionIssuesOperation } from '#tracker_api/api_operations/bulk-change/bulk-transition-issues.operation.js';
+import { BulkMoveIssuesOperation } from '#tracker_api/api_operations/bulk-change/bulk-move-issues.operation.js';
 import { GetBulkChangeStatusOperation } from '#tracker_api/api_operations/bulk-change/get-bulk-change-status.operation.js';
 import type {
   BulkUpdateIssuesInputDto,

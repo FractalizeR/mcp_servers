@@ -10,5 +10,5 @@ export const CREATE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['write', 'create', 'page', 'wiki'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
 } as const;

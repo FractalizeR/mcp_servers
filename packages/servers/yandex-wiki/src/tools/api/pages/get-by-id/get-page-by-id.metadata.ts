@@ -10,4 +10,5 @@ export const GET_PAGE_BY_ID_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['read', 'get', 'page', 'wiki', 'id'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

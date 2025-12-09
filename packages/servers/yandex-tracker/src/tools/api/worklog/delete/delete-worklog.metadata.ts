@@ -23,5 +23,5 @@ export const DELETE_WORKLOG_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['worklog', 'delete', 'remove', 'time'],
   isHelper: false,
-  requiresExplicitUserConsent: false,
+  requiresExplicitUserConsent: true,
 } as const;

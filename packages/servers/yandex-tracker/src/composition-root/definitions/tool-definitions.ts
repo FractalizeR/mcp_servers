@@ -54,6 +54,18 @@ import {
   UpdateProjectTool,
   DeleteProjectTool,
 } from '#tools/api/projects/index.js';
+import {
+  GetWorklogsTool,
+  AddWorklogTool,
+  UpdateWorklogTool,
+  DeleteWorklogTool,
+} from '#tools/api/worklog/index.js';
+import {
+  BulkUpdateIssuesTool,
+  BulkTransitionIssuesTool,
+  BulkMoveIssuesTool,
+  GetBulkChangeStatusTool,
+} from '#tools/api/bulk-change/index.js';
 import { IssueUrlTool } from '#tools/helpers/issue-url/index.js';
 import { DemoTool } from '#tools/helpers/demo/index.js';
 
@@ -113,6 +125,14 @@ export const TOOL_CLASSES = [
   CreateProjectTool,
   UpdateProjectTool,
   DeleteProjectTool,
+  GetWorklogsTool,
+  AddWorklogTool,
+  UpdateWorklogTool,
+  DeleteWorklogTool,
+  BulkUpdateIssuesTool,
+  BulkTransitionIssuesTool,
+  BulkMoveIssuesTool,
+  GetBulkChangeStatusTool,
   IssueUrlTool,
   DemoTool,
 ] as const;

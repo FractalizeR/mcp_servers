@@ -20,7 +20,8 @@ export const PING_TOOL_METADATA: StaticToolMetadata = {
   description: '[System/Health] Проверка доступности сервера',
   category: ToolCategory.SYSTEM,
   subcategory: 'health',
-  priority: ToolPriority.NORMAL,
-  tags: ['ping', 'health', 'status'],
+  priority: ToolPriority.CRITICAL,
+  tags: ['ping', 'health', 'status', 'system'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

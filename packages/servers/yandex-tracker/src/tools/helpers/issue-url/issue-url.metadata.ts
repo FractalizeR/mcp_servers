@@ -23,4 +23,5 @@ export const ISSUE_URL_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['url', 'link', 'helper'],
   isHelper: true,
+  requiresExplicitUserConsent: false,
 } as const;

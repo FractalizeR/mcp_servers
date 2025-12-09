@@ -23,4 +23,5 @@ export const GET_ISSUE_LINKS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['links', 'read', 'relationships', 'subtasks', 'batch'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

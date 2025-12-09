@@ -17,4 +17,5 @@ export const SEARCH_TASKS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['tasks', 'search', 'find', 'query'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;

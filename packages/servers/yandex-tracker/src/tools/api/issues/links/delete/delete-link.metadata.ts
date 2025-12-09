@@ -23,4 +23,5 @@ export const DELETE_LINK_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['links', 'write', 'delete', 'remove', 'relationships'],
   isHelper: false,
+  requiresExplicitUserConsent: true,
 } as const;

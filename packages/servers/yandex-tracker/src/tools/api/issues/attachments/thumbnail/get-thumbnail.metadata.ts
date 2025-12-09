@@ -23,4 +23,5 @@ export const GET_THUMBNAIL_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['attachments', 'read', 'thumbnail', 'images', 'preview'],
   isHelper: false,
+  requiresExplicitUserConsent: false,
 } as const;
