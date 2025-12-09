@@ -1,4 +1,4 @@
-import type { ConfigPromptDefinition } from '@mcp-framework/cli';
+import type { ConfigPromptDefinition } from '@fractalizer/mcp-cli';
 import type { YandexWikiMCPConfig } from './types.js';
 import { DEFAULT_LOG_LEVEL } from '../constants.js';
 

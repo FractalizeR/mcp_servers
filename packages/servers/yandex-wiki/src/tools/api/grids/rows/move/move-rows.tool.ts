@@ -1,6 +1,6 @@
-import { BaseTool, ResultLogger } from '@mcp-framework/core';
+import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { MoveRowsParamsSchema } from './move-rows.schema.js';
 import { MOVE_ROWS_TOOL_METADATA } from './move-rows.metadata.js';
 

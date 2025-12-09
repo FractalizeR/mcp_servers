@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ResultLogger } from '../../src/utils/result-logger.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { ProcessedBatchResult } from '../../src/utils/batch-result-processor.js';
 
 describe('ResultLogger', () => {

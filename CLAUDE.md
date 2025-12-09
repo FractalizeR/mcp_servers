@@ -91,13 +91,13 @@ npm run validate:docs
 ```
 packages/
 ├── framework/
-│   ├── infrastructure/     → @mcp-framework/infrastructure
+│   ├── infrastructure/     → @fractalizer/mcp-infrastructure
 │   │   └── HTTP, cache, logging, async utilities
-│   ├── cli/               → @mcp-framework/cli
+│   ├── cli/               → @fractalizer/mcp-cli
 │   │   └── Generic CLI для MCP подключений
-│   ├── core/              → @mcp-framework/core
+│   ├── core/              → @fractalizer/mcp-core
 │   │   └── BaseTool, registry, type system
-│   └── search/            → @mcp-framework/search
+│   └── search/            → @fractalizer/mcp-search
 │       └── Tool Search Engine (compile-time indexing)
 └── servers/
     └── yandex-tracker/    → mcp-server-yandex-tracker
@@ -141,9 +141,9 @@ yandex-tracker (зависит от всех framework пакетов)
 
 **✅ Используй npm package names:**
 ```typescript
-import { BaseTool } from '@mcp-framework/core';
-import { HttpClient } from '@mcp-framework/infrastructure';
-import { ToolSearchEngine } from '@mcp-framework/search';
+import { BaseTool } from '@fractalizer/mcp-core';
+import { HttpClient } from '@fractalizer/mcp-infrastructure';
+import { ToolSearchEngine } from '@fractalizer/mcp-search';
 ```
 
 **❌ НЕ используй:**
@@ -270,7 +270,7 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 **Конфигурация:** `turbo.json`, кэш в `.turbo/`
 
 **Полезные команды:**
-- `turbo run build --filter=@mcp-server/yandex-tracker` — только пакет и зависимости
+- `turbo run build --filter=@fractalizer/mcp-server-yandex-tracker` — только пакет и зависимости
 - `turbo run build --graph` — показать граф
 - `turbo run build --force` — без кэша
 
@@ -302,8 +302,8 @@ npm run clean
 **Работа с отдельным пакетом:**
 ```bash
 # Через Turborepo (рекомендуется)
-turbo run build --filter=@mcp-framework/core
-turbo run test --filter=@mcp-server/yandex-tracker
+turbo run build --filter=@fractalizer/mcp-core
+turbo run test --filter=@fractalizer/mcp-server-yandex-tracker
 
 # Из директории пакета (работает как раньше)
 cd packages/servers/yandex-tracker

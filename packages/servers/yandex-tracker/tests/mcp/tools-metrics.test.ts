@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { ToolDefinition } from '@mcp-framework/infrastructure/types.js';
+import type { ToolDefinition } from '@fractalizer/mcp-infrastructure/types.js';
 
 /**
  * Интерфейс метрик инструментов

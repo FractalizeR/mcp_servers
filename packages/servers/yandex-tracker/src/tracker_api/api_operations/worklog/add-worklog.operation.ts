@@ -11,11 +11,11 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { ParallelExecutor } from '@mcp-framework/infrastructure';
+import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
 import { DurationUtil } from '#tracker_api/utils/duration.util.js';
 import type { AddWorklogInput } from '#tracker_api/dto/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 
 export class AddWorklogOperation extends BaseOperation {

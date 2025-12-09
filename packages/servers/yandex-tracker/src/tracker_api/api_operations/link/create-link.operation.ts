@@ -22,7 +22,7 @@ import {
   EntityType,
   ParallelExecutor,
   type BatchResult,
-} from '@mcp-framework/infrastructure';
+} from '@fractalizer/mcp-infrastructure';
 import type { LinkWithUnknownFields, LinkRelationship } from '#tracker_api/entities/index.js';
 import type { CreateLinkDto } from '#tracker_api/dto/index.js';
 import type { ServerConfig } from '#config';

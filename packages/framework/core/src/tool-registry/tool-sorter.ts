@@ -7,7 +7,7 @@
  * - Логирование распределения по приоритетам
  */
 
-import type { Logger } from '@mcp-framework/infrastructure';
+import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { BaseTool } from '../tools/base/index.js';
 import { ToolPriority } from '../tools/base/tool-metadata.js';
 import { PRIORITY_ORDER } from './types.js';
@@ -31,9 +31,9 @@ export class ToolSorter {
       // Получаем priority из METADATA
       const aClass = a.constructor as typeof BaseTool;
       const bClass = b.constructor as typeof BaseTool;
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+       
       const aPriority = aClass.METADATA?.priority ?? ToolPriority.NORMAL;
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+       
       const bPriority = bClass.METADATA?.priority ?? ToolPriority.NORMAL;
 
       const aPrio = PRIORITY_ORDER[aPriority] ?? 2; // default: normal
@@ -80,7 +80,7 @@ export class ToolSorter {
   private countByPriority(tools: BaseTool[], priority: string): number {
     return tools.filter((t) => {
       const tClass = t.constructor as typeof BaseTool;
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+       
       const toolPriority = tClass.METADATA?.priority ?? ToolPriority.NORMAL;
       return String(toolPriority) === priority;
     }).length;

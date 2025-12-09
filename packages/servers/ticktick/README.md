@@ -43,7 +43,7 @@ TICKTICK_REFRESH_TOKEN=your_refresh_token
   "mcpServers": {
     "ticktick": {
       "command": "npx",
-      "args": ["@mcp-server/ticktick"],
+      "args": ["@fractalizer/mcp-server-ticktick"],
       "env": {
         "TICKTICK_ACCESS_TOKEN": "your_token"
       }
@@ -165,13 +165,13 @@ TICKTICK_API_BASE_URL=https://api.dida365.com/open/v1
 npm install
 
 # Сборка
-npm run build --workspace=@mcp-server/ticktick
+npm run build --workspace=@fractalizer/mcp-server-ticktick
 
 # Тесты
-npm run test --workspace=@mcp-server/ticktick
+npm run test --workspace=@fractalizer/mcp-server-ticktick
 
 # Валидация
-npm run validate:quiet --workspace=@mcp-server/ticktick
+npm run validate:quiet --workspace=@fractalizer/mcp-server-ticktick
 ```
 
 ---

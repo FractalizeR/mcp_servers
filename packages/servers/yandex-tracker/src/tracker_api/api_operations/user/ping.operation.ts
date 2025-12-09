@@ -8,9 +8,9 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
+import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 import type { User } from '#tracker_api/entities/user.entity.js';
-import type { ApiError } from '@mcp-framework/infrastructure';
+import type { ApiError } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 
 /**

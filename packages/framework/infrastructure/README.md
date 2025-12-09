@@ -1,8 +1,8 @@
-# @mcp-framework/infrastructure
+# @fractalizer/mcp-infrastructure
 
 **Reusable infrastructure layer: HTTP, cache, logging, async utilities**
 
-[![npm version](https://img.shields.io/npm/v/@mcp-framework/infrastructure.svg)](https://www.npmjs.com/package/@mcp-framework/infrastructure)
+[![npm version](https://img.shields.io/npm/v/@fractalizer/mcp-infrastructure.svg)](https://www.npmjs.com/package/@fractalizer/mcp-infrastructure)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -20,7 +20,7 @@
 ## 📦 Installation
 
 ```bash
-npm install @mcp-framework/infrastructure
+npm install @fractalizer/mcp-infrastructure
 ```
 
 **Dependencies:** 0 framework dependencies (only external libs: axios, pino, rotating-file-stream)
@@ -154,11 +154,11 @@ function createLogger(config: LoggerConfig): Logger
 **Migration:**
 ```typescript
 // Before (v1.x):
-import { ServerConfig, loadConfig } from '@mcp-framework/infrastructure';
+import { ServerConfig, loadConfig } from '@fractalizer/mcp-infrastructure';
 
 // After (v2.0.0):
 // For Yandex Tracker server:
-import { ServerConfig, loadConfig } from '@mcp-server/yandex-tracker/config';
+import { ServerConfig, loadConfig } from '@fractalizer/mcp-server-yandex-tracker/config';
 
 // For custom servers:
 // Implement your own config loader based on your domain requirements

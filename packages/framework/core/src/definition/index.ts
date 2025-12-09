@@ -8,7 +8,7 @@
  * - Валидация соответствия schema ↔ definition
  * - Адаптер для конвертации Zod → JSON Schema
  *
- * @module @mcp-framework/core/definition
+ * @module @fractalizer/mcp-core/definition
  */
 
 // Основной генератор

@@ -5,8 +5,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DeleteProjectTool } from '#tools/api/projects/delete-project.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import { buildToolName } from '@mcp-framework/core';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 
 describe('DeleteProjectTool', () => {

@@ -71,8 +71,8 @@ src/
 ## Зависимости от framework
 
 ```typescript
-import { BaseTool, ResultLogger } from '@mcp-framework/core';
-import { IHttpClient, Logger, CacheManager } from '@mcp-framework/infrastructure';
+import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
+import { IHttpClient, Logger, CacheManager } from '@fractalizer/mcp-infrastructure';
 ```
 
 ## Валидация

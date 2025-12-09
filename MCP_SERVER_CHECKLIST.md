@@ -183,7 +183,7 @@ return this.formatSuccess({
 
 ### 5.1 Обязательные категории
 - [ ] Каждый tool ОБЯЗАН иметь `category` в METADATA
-- [ ] Используй `ToolCategory` enum из `@mcp-framework/core`
+- [ ] Используй `ToolCategory` enum из `@fractalizer/mcp-core`
 
 ### 5.2 Поддержка DISABLED_TOOL_GROUPS
 В `config-loader.ts`:

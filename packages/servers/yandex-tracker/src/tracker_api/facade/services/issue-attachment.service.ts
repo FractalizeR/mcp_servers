@@ -25,7 +25,7 @@ import { UploadAttachmentOperation } from '#tracker_api/api_operations/attachmen
 import { DownloadAttachmentOperation } from '#tracker_api/api_operations/attachment/download-attachment.operation.js';
 import { DeleteAttachmentOperation } from '#tracker_api/api_operations/attachment/delete-attachment.operation.js';
 import { GetThumbnailOperation } from '#tracker_api/api_operations/attachment/get-thumbnail.operation.js';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type {
   UploadAttachmentInput,
   DownloadAttachmentInput,

@@ -7,11 +7,11 @@ import type { Container } from 'inversify';
 import type { ServerConfig } from '#config';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
-import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
-import type { ToolRegistry } from '@mcp-framework/core/tool-registry.js';
+import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
 import {
   UserService,
   IssueLinkService,

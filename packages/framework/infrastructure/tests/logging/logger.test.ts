@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { LoggerConfig } from '@mcp-framework/infrastructure/logging/index.js';
+import { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import type { LoggerConfig } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 

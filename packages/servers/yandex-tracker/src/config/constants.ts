@@ -1,7 +1,7 @@
 /**
  * Configuration constants for Yandex Tracker server
  *
- * Moved from @mcp-framework/infrastructure to maintain clean separation:
+ * Moved from @fractalizer/mcp-infrastructure to maintain clean separation:
  * Infrastructure layer should not contain domain-specific code
  */
 

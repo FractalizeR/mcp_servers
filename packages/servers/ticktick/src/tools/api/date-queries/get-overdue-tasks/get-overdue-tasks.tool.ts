@@ -5,9 +5,9 @@
  * Results are sorted by due date (oldest first).
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { GetOverdueTasksParamsSchema } from './get-overdue-tasks.schema.js';
 import { GET_OVERDUE_TASKS_TOOL_METADATA } from './get-overdue-tasks.metadata.js';
 import { filterFieldsArray } from '#tools/shared/index.js';

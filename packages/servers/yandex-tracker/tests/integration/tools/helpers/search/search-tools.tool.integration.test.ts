@@ -11,7 +11,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createTestClient } from '#integration/helpers/mcp-client.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
-import { buildToolName } from '@mcp-framework/core';
+import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 
 // SearchToolsTool - framework tool, регистрируется БЕЗ префикса

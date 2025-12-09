@@ -5,9 +5,9 @@
  * Возвращает latency, статус и количество проектов.
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { PingParamsSchema } from './ping.schema.js';
 import { PING_TOOL_METADATA } from './ping.metadata.js';
 

@@ -13,7 +13,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { TOOL_CLASSES } from '#composition-root/definitions/tool-definitions.js';
 import type { YandexWikiFacade } from '#wiki_api/facade/yandex-wiki.facade.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { validateGeneratedDefinition } from '#helpers/schema-definition-matcher.js';
 
 describe('Definition Generation - Smoke Tests', () => {

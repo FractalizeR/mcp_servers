@@ -2,9 +2,9 @@
  * MCP Tool для обновления очереди в Яндекс.Трекере
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { UpdateQueueParamsSchema } from './update-queue.schema.js';
 
 import type { UpdateQueueDto } from '#tracker_api/dto/index.js';

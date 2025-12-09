@@ -54,10 +54,10 @@ npm install -g mcp-server-yandex-tracker
 
 | Пакет | Версия | Описание |
 |-------|--------|----------|
-| [@mcp-framework/infrastructure](packages/framework/infrastructure) | 0.2.0 | HTTP клиент, кэш, логирование, async утилиты |
-| [@mcp-framework/cli](packages/framework/cli) | 0.2.0 | Универсальный CLI для MCP подключений |
-| [@mcp-framework/core](packages/framework/core) | 0.1.0 | Базовые классы, система типов, реестр инструментов, генератор schema→definition |
-| [@mcp-framework/search](packages/framework/search) | 0.1.0 | Продвинутый поисковый движок с compile-time индексацией |
+| [@fractalizer/mcp-infrastructure](packages/framework/infrastructure) | 0.2.0 | HTTP клиент, кэш, логирование, async утилиты |
+| [@fractalizer/mcp-cli](packages/framework/cli) | 0.2.0 | Универсальный CLI для MCP подключений |
+| [@fractalizer/mcp-core](packages/framework/core) | 0.1.0 | Базовые классы, система типов, реестр инструментов, генератор schema→definition |
+| [@fractalizer/mcp-search](packages/framework/search) | 0.1.0 | Продвинутый поисковый движок с compile-time индексацией |
 
 ---
 
@@ -66,13 +66,13 @@ npm install -g mcp-server-yandex-tracker
 ```
 packages/
 ├── framework/
-│   ├── infrastructure/     → @mcp-framework/infrastructure
+│   ├── infrastructure/     → @fractalizer/mcp-infrastructure
 │   │   └── HTTP, кэш, логирование, async утилиты
-│   ├── cli/               → @mcp-framework/cli
+│   ├── cli/               → @fractalizer/mcp-cli
 │   │   └── Универсальный CLI для MCP подключений
-│   ├── core/              → @mcp-framework/core
+│   ├── core/              → @fractalizer/mcp-core
 │   │   └── BaseTool, реестр, система типов
-│   └── search/            → @mcp-framework/search
+│   └── search/            → @fractalizer/mcp-search
 │       └── Поисковый движок (compile-time индексация)
 └── servers/
     └── yandex-tracker/    → mcp-server-yandex-tracker
@@ -114,9 +114,9 @@ npm run test
 ### Для пользователей Framework
 
 ```bash
-npm install @mcp-framework/infrastructure
-npm install @mcp-framework/core
-npm install @mcp-framework/search
+npm install @fractalizer/mcp-infrastructure
+npm install @fractalizer/mcp-core
+npm install @fractalizer/mcp-search
 ```
 
 **Примеры использования:** см. README.md в каждом пакете.
@@ -144,7 +144,7 @@ npm run clean
 
 ```bash
 # Собрать один пакет
-npm run build --workspace=@mcp-framework/core
+npm run build --workspace=@fractalizer/mcp-core
 
 # Протестировать один пакет
 npm run test --workspace=mcp-server-yandex-tracker
@@ -158,11 +158,11 @@ npm run <script>
 
 ```bash
 # Добавить зависимость в конкретный пакет
-npm install axios --workspace=@mcp-framework/infrastructure
+npm install axios --workspace=@fractalizer/mcp-infrastructure
 
 # Добавить framework пакет в yandex-tracker
 cd packages/servers/yandex-tracker
-npm install @mcp-framework/core
+npm install @fractalizer/mcp-core
 ```
 
 ---
@@ -199,7 +199,7 @@ npm run test:coverage
 
 **Для конкретного пакета:**
 ```bash
-npm run test --workspace=@mcp-framework/core
+npm run test --workspace=@fractalizer/mcp-core
 ```
 
 **Watch режим:**

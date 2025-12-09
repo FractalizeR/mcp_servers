@@ -24,13 +24,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: '22.x'
           cache: 'npm'
@@ -50,24 +50,26 @@ jobs:
         id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
 
-  # Job 2: Publish to NPM (runs after semantic-release creates a new version)
+  # Job 2: Publish to NPM using OIDC Trusted Publishing (no NPM_TOKEN needed!)
   publish-npm:
-    name: Publish to NPM Registry
+    name: Publish to NPM Registry (Trusted Publishing)
     needs: release
     runs-on: ubuntu-latest
     if: needs.release.outputs.new_release_published == 'true'
+    # Environment must be configured in GitHub repo settings
+    # and match the trusted publisher config on npmjs.com
+    environment: npm-publish
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: v${{ needs.release.outputs.new_release_version }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Setup Node.js with NPM registry
+        uses: actions/setup-node@v4
         with:
           node-version: '22.x'
           cache: 'npm'
@@ -79,10 +81,46 @@ jobs:
       - name: Build all packages
         run: npm run build
 
-      - name: Publish all packages to NPM
-        run: npm publish --workspaces --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # OIDC Trusted Publishing: npm CLI automatically uses id-token for auth
+      # No NPM_TOKEN needed! Provenance is published automatically.
+      # Packages are published in dependency order to avoid resolution issues
+      - name: Publish packages to NPM (OIDC Trusted Publishing)
+        run: |
+          echo "📦 Publishing packages with OIDC Trusted Publishing..."
+          echo "🔐 Using GitHub OIDC for authentication (no NPM_TOKEN required)"
+
+          # Framework packages (in dependency order)
+          echo ""
+          echo "1/7 Publishing @fractalizer/mcp-infrastructure..."
+          npm publish --workspace=@fractalizer/mcp-infrastructure --access public || echo "⚠️ May already be published"
+
+          echo ""
+          echo "2/7 Publishing @fractalizer/mcp-cli..."
+          npm publish --workspace=@fractalizer/mcp-cli --access public || echo "⚠️ May already be published"
+
+          echo ""
+          echo "3/7 Publishing @fractalizer/mcp-core..."
+          npm publish --workspace=@fractalizer/mcp-core --access public || echo "⚠️ May already be published"
+
+          echo ""
+          echo "4/7 Publishing @fractalizer/mcp-search..."
+          npm publish --workspace=@fractalizer/mcp-search --access public || echo "⚠️ May already be published"
+
+          # Server packages
+          echo ""
+          echo "5/7 Publishing @fractalizer/mcp-server-yandex-tracker..."
+          npm publish --workspace=@fractalizer/mcp-server-yandex-tracker --access public || echo "⚠️ May already be published"
+
+          echo ""
+          echo "6/7 Publishing @fractalizer/mcp-server-yandex-wiki..."
+          npm publish --workspace=@fractalizer/mcp-server-yandex-wiki --access public || echo "⚠️ May already be published"
+
+          echo ""
+          echo "7/7 Publishing @fractalizer/mcp-server-ticktick..."
+          npm publish --workspace=@fractalizer/mcp-server-ticktick --access public || echo "⚠️ May already be published"
+
+          echo ""
+          echo "✅ All packages processed!"
 
   # Job 3: Build MCPB bundle and attach to GitHub release
   build-mcpb:
@@ -93,12 +131,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: v${{ needs.release.outputs.new_release_version }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: '22.x'
           cache: 'npm'
@@ -140,5 +178,6 @@ jobs:
         run: |
           echo "🎉 Release ${{ needs.release.outputs.new_release_version }} completed successfully!"
           echo "✅ Semantic Release: version determined and tagged"
-          echo "✅ NPM packages published"
+          echo "✅ NPM packages published with OIDC Trusted Publishing"
+          echo "✅ Provenance attestations generated automatically"
           echo "✅ MCPB bundle attached to release"

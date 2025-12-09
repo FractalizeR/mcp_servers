@@ -7,9 +7,9 @@
  * - Операция необратима
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { DeleteAttachmentParamsSchema } from './delete-attachment.schema.js';
 import { DELETE_ATTACHMENT_TOOL_METADATA } from './delete-attachment.metadata.js';
 

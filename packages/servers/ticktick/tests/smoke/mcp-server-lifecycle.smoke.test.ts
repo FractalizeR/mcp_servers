@@ -12,7 +12,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { createContainer } from '../../src/composition-root/container.js';
 import { TYPES } from '../../src/composition-root/types.js';
 import type { ServerConfig } from '../../src/config/server-config.interface.js';
-import type { ToolRegistry } from '@mcp-framework/core';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
 
 describe('MCP Server Lifecycle (Smoke)', () => {
   const fakeConfig: ServerConfig = {

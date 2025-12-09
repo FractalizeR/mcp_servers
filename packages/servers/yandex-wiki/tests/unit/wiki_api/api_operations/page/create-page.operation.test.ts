@@ -7,7 +7,7 @@ import {
   createMockLogger,
   createPageFixture,
 } from '#helpers/index.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure';
 
 describe('CreatePageOperation', () => {
   let operation: CreatePageOperation;

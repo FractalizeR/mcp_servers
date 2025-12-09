@@ -10,16 +10,16 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ToolSearchEngine } from '@mcp-framework/search/tool-search-engine.js';
-import { WeightedCombinedStrategy } from '@mcp-framework/search/strategies/weighted-combined.strategy.js';
-import { NameSearchStrategy } from '@mcp-framework/search/strategies/name-search.strategy.js';
-import { DescriptionSearchStrategy } from '@mcp-framework/search/strategies/description-search.strategy.js';
-import { CategorySearchStrategy } from '@mcp-framework/search/strategies/category-search.strategy.js';
-import { FuzzySearchStrategy } from '@mcp-framework/search/strategies/fuzzy-search.strategy.js';
-import { ToolCategory } from '@mcp-framework/core/tools/base/tool-metadata.js';
-import type { StaticToolIndex, StrategyType } from '@mcp-framework/search/types.js';
-import type { ToolRegistry } from '@mcp-framework/core/tool-registry.js';
-import type { BaseTool } from '@mcp-framework/core/tools/base/base-tool.js';
+import { ToolSearchEngine } from '@fractalizer/mcp-search/tool-search-engine.js';
+import { WeightedCombinedStrategy } from '@fractalizer/mcp-search/strategies/weighted-combined.strategy.js';
+import { NameSearchStrategy } from '@fractalizer/mcp-search/strategies/name-search.strategy.js';
+import { DescriptionSearchStrategy } from '@fractalizer/mcp-search/strategies/description-search.strategy.js';
+import { CategorySearchStrategy } from '@fractalizer/mcp-search/strategies/category-search.strategy.js';
+import { FuzzySearchStrategy } from '@fractalizer/mcp-search/strategies/fuzzy-search.strategy.js';
+import { ToolCategory } from '@fractalizer/mcp-core/tools/base/tool-metadata.js';
+import type { StaticToolIndex, StrategyType } from '@fractalizer/mcp-search/types.js';
+import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
+import type { BaseTool } from '@fractalizer/mcp-core/tools/base/base-tool.js';
 
 describe('ToolSearchEngine (Integration)', () => {
   // Mock ToolRegistry

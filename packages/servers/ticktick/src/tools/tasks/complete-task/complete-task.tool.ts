@@ -2,9 +2,9 @@
  * MCP Tool for completing a task in TickTick
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { CompleteTaskParamsSchema } from './complete-task.schema.js';
 import { COMPLETE_TASK_TOOL_METADATA } from './complete-task.metadata.js';
 

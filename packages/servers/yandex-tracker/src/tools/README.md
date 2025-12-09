@@ -290,7 +290,7 @@ export const GetIssuesParamsSchema = z.object({
 
 **КРИТИЧНО:** Используй `.describe()` для каждого поля - это генерирует MCP definition. НЕ используй `.optional()` для `fields`!
 
-**Переиспользуй схемы** из `@mcp-framework/core`: `IssueKeySchema`, `FieldsSchema`, `ExpandSchema`
+**Переиспользуй схемы** из `@fractalizer/mcp-core`: `IssueKeySchema`, `FieldsSchema`, `ExpandSchema`
 
 ---
 
@@ -354,7 +354,7 @@ npm run validate:tools  # Проверит регистрацию всех *.too
 **Назначение:** Фильтрация полей ответа (экономия 80-90% токенов)
 
 ```typescript
-import { ResponseFieldFilter } from '@mcp-framework/core';
+import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 
 // БЕЗ фильтрации: 10KB данных
 const fullIssue = { key, summary, description, ..., assignee: {...}, followers: [...] };
@@ -373,7 +373,7 @@ const filtered = ResponseFieldFilter.filter(fullIssue, ['key', 'summary', 'assig
 **Назначение:** Обработка `BatchResult<TKey, TValue>` → разделение на successful/failed
 
 ```typescript
-import { BatchResultProcessor } from '@mcp-framework/core';
+import { BatchResultProcessor } from '@fractalizer/mcp-core';
 
 const results: BatchResult<string, Issue> = await facade.getIssues(keys);
 
@@ -396,7 +396,7 @@ const processed = BatchResultProcessor.process(
 **Назначение:** Structured JSON логирование результатов
 
 ```typescript
-import { ResultLogger } from '@mcp-framework/core';
+import { ResultLogger } from '@fractalizer/mcp-core';
 
 ResultLogger.logBatchSuccess(logger, 'operation_name', {
   totalRequested: 10,
@@ -428,7 +428,7 @@ ResultLogger.logBatchSuccess(logger, 'operation_name', {
 
 ## 🔗 См. также
 
-- **Общие утилиты:** [@mcp-framework/core](../../../../../framework/core/src/tools/common/README.md)
+- **Общие утилиты:** [@fractalizer/mcp-core](../../../../../framework/core/src/tools/common/README.md)
 - **API Operations:** [../tracker_api/api_operations/README.md](../tracker_api/api_operations/README.md)
 - **Dependency Injection:** [../composition-root/README.md](../composition-root/README.md)
 - **Yandex Tracker CLAUDE.md:** [../../CLAUDE.md](../../CLAUDE.md)

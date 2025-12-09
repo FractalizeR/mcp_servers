@@ -6,7 +6,7 @@
  * - Non-empty array = filter to specified fields
  */
 
-import { ResponseFieldFilter } from '@mcp-framework/core';
+import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 
 /**
  * Filter object/array to specified fields

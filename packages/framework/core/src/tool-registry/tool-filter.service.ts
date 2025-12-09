@@ -8,7 +8,7 @@
  * - Логирование фильтрации
  */
 
-import type { Logger } from '@mcp-framework/infrastructure';
+import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { BaseTool } from '../tools/base/index.js';
 import type { ParsedCategoryFilter } from './types.js';
 
@@ -39,7 +39,7 @@ export class ToolFilterService {
       const toolClass = tool.constructor as typeof BaseTool;
       const metadata = toolClass.METADATA;
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+       
       if (!metadata?.category) {
         // Инструменты без категории всегда включены (backwards compatibility)
         return true;
@@ -89,7 +89,7 @@ export class ToolFilterService {
       const toolClass = tool.constructor as typeof BaseTool;
       const metadata = toolClass.METADATA;
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+       
       if (!metadata?.category) {
         // Инструменты без категории всегда включены
         return true;
@@ -137,7 +137,7 @@ export class ToolFilterService {
    * @param tools - Массив tools
    * @param filter - Фильтр категорий
    */
-  // eslint-disable-next-line max-lines-per-function, complexity, sonarjs/cognitive-complexity, max-statements
+  // eslint-disable-next-line max-lines-per-function, complexity, sonarjs/cognitive-complexity
   private validateCategories(tools: BaseTool[], filter: ParsedCategoryFilter): void {
     // Собираем известные категории и подкатегории
     const knownCategories = new Set<string>();
@@ -147,7 +147,7 @@ export class ToolFilterService {
       const toolClass = tool.constructor as typeof BaseTool;
       const metadata = toolClass.METADATA;
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain
+       
       if (metadata && metadata.category) {
         knownCategories.add(metadata.category);
 

@@ -11,8 +11,8 @@ import {
   validateSchemaDefinitionMatch,
   formatValidationResult,
   type ValidationResult,
-} from '@mcp-framework/core/definition/definition-validator.js';
-import type { ToolInputSchema } from '@mcp-framework/core/definition/zod-json-schema-adapter.js';
+} from '@fractalizer/mcp-core/definition/definition-validator.js';
+import type { ToolInputSchema } from '@fractalizer/mcp-core/definition/zod-json-schema-adapter.js';
 
 /**
  * Проверить, что definition соответствует schema

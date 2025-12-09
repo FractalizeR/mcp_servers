@@ -1,5 +1,5 @@
 /**
- * @mcp-framework/cli
+ * @fractalizer/mcp-cli
  * Generic CLI framework for MCP server connection management
  *
  * @packageDocumentation

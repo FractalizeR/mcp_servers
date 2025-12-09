@@ -3,10 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AxiosHttpClient } from '@mcp-framework/infrastructure/http/client/axios-http-client.js';
-import type { HttpConfig } from '@mcp-framework/infrastructure/http/client/http-config.interface.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { RetryStrategy } from '@mcp-framework/infrastructure/http/retry/retry-strategy.interface.js';
+import { AxiosHttpClient } from '@fractalizer/mcp-infrastructure/http/client/axios-http-client.js';
+import type { HttpConfig } from '@fractalizer/mcp-infrastructure/http/client/http-config.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import type { RetryStrategy } from '@fractalizer/mcp-infrastructure/http/retry/retry-strategy.interface.js';
 import axios from 'axios';
 
 // Mock axios

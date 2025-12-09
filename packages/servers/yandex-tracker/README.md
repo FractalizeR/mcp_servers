@@ -478,7 +478,7 @@ ENABLED_TOOL_CATEGORIES=""
 
 ### CLI для подключения к MCP клиентам
 
-Этот пакет использует **@mcp-framework/cli** — универсальный CLI framework для управления MCP подключениями.
+Этот пакет использует **@fractalizer/mcp-cli** — универсальный CLI framework для управления MCP подключениями.
 
 **Быстрый старт:**
 ```bash
@@ -502,9 +502,9 @@ npm run mcp:status
 ### Архитектура
 
 Этот пакет построен на **MCP Framework** — переиспользуемых компонентах:
-- **[@mcp-framework/infrastructure](../../framework/infrastructure/README.md)** — HTTP, кэш, логирование
-- **[@mcp-framework/core](../../framework/core/README.md)** — BaseTool, реестр, утилиты
-- **[@mcp-framework/search](../../framework/search/README.md)** — Поисковый движок
+- **[@fractalizer/mcp-infrastructure](../../framework/infrastructure/README.md)** — HTTP, кэш, логирование
+- **[@fractalizer/mcp-core](../../framework/core/README.md)** — BaseTool, реестр, утилиты
+- **[@fractalizer/mcp-search](../../framework/search/README.md)** — Поисковый движок
 
 ### Структура пакета
 
@@ -595,7 +595,7 @@ npm run mcp:status         # Статус подключения
 - **TypeScript** (strict mode, без `any`)
 - **InversifyJS v7** (Dependency Injection)
 - **Zod** (валидация параметров)
-- **Axios** (HTTP клиент, через @mcp-framework/infrastructure)
+- **Axios** (HTTP клиент, через @fractalizer/mcp-infrastructure)
 - **Pino** (структурированное логирование с ротацией)
 - **Vitest** (тесты, покрытие >=80%)
 - **MCP SDK** (Model Context Protocol)

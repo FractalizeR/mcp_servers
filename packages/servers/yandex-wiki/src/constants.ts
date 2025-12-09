@@ -37,7 +37,7 @@ export const DEFAULT_LOG_LEVEL = 'info';
 /**
  * Essential tools для Yandex Wiki MCP сервера
  * - yw_ping: проверка работоспособности сервера (с префиксом)
- * - search_tools: поиск инструментов из @mcp-framework/search (БЕЗ префикса — это framework tool)
+ * - search_tools: поиск инструментов из @fractalizer/mcp-search (БЕЗ префикса — это framework tool)
  *
  * Имена формируются через buildToolName(name, MCP_TOOL_PREFIX) с автонормализацией:
  * buildToolName('ping', 'yw') => 'yw_ping'

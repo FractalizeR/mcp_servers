@@ -2,8 +2,8 @@
  * Metadata for GetTaskTool
  */
 
-import { buildToolName, ToolCategory, ToolPriority } from '@mcp-framework/core';
-import type { StaticToolMetadata } from '@mcp-framework/core';
+import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 
 /**

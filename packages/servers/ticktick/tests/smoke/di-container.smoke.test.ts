@@ -11,9 +11,9 @@ import { describe, it, expect } from 'vitest';
 import { createContainer } from '../../src/composition-root/container.js';
 import { TYPES } from '../../src/composition-root/types.js';
 import type { ServerConfig } from '../../src/config/server-config.interface.js';
-import type { Logger, IHttpClient, CacheManager } from '@mcp-framework/infrastructure';
+import type { Logger, IHttpClient, CacheManager } from '@fractalizer/mcp-infrastructure';
 import type { TickTickFacade } from '../../src/ticktick_api/facade/ticktick.facade.js';
-import type { ToolRegistry } from '@mcp-framework/core';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
 
 describe('DI Container (Smoke)', () => {
   const fakeConfig: ServerConfig = {

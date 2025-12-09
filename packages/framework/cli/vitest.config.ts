@@ -14,8 +14,8 @@ export default mergeConfig(
     resolve: {
       alias: {
         // Поддержка subpath imports
-        '@mcp-framework/cli': path.resolve(__dirname, './src'),
-        '@mcp-framework/cli/*': path.resolve(__dirname, './src/*'),
+        '@fractalizer/mcp-cli': path.resolve(__dirname, './src'),
+        '@fractalizer/mcp-cli/*': path.resolve(__dirname, './src/*'),
         '#cli': path.resolve(__dirname, './src'),
         '#cli/*': path.resolve(__dirname, './src/*'),
         '#types': path.resolve(__dirname, './src/types.ts'),

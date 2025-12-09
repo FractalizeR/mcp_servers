@@ -13,10 +13,10 @@
  * - Логирование операций
  */
 
-import type { Logger, ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import type { ToolDefinition } from '@mcp-framework/core';
-import type { ToolMetadata } from '@mcp-framework/core';
-import { formatZodErrorsToString } from '@mcp-framework/core';
+import type { Logger, ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
+import type { ToolMetadata } from '@fractalizer/mcp-core';
+import { formatZodErrorsToString } from '@fractalizer/mcp-core';
 import type { ToolSearchEngine } from '../engine/tool-search-engine.js';
 import { SearchToolsDefinition } from './search-tools.definition.js';
 import { SearchToolsParamsSchema } from './search-tools.schema.js';

@@ -2,9 +2,9 @@
  * MCP Tool для получения списка проектов в Яндекс.Трекере
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { GetProjectsParamsSchema } from './get-projects.schema.js';
 import type { ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
 

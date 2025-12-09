@@ -2,8 +2,8 @@
  * MCP Tool for creating a new TickTick project
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
 import type { ProjectWithUnknownFields } from '#ticktick_api/entities/project.entity.js';
 import type { CreateProjectDto } from '#ticktick_api/dto/project.dto.js';

@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PingTool } from '#tools/ping.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { ToolCallParams } from '@mcp-framework/infrastructure/types.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import type { ToolCallParams } from '@fractalizer/mcp-infrastructure/types.js';
 import type { PingResult } from '#tracker_api/api_operations/user/ping.operation.js';
-import { buildToolName } from '@mcp-framework/core';
+import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 
 describe('PingTool', () => {

@@ -15,7 +15,7 @@
  */
 
 import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
-import { Logger } from '@mcp-framework/infrastructure';
+import { Logger } from '@fractalizer/mcp-infrastructure';
 
 interface FullDescriptionsMetrics {
   totalTools: number;

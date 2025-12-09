@@ -5,9 +5,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CreateLinkTool } from '#tools/api/issues/links/create/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { BatchResult } from '@mcp-framework/infrastructure';
-import { buildToolName } from '@mcp-framework/core';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
+import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createLinkFixture, createSubtaskLinkFixture } from '#helpers/link.fixture.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';

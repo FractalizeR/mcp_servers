@@ -12,7 +12,7 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
+import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 import { FileUploadUtil } from '#tracker_api/utils/index.js';
 import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { UploadAttachmentInput } from '#tracker_api/dto/index.js';

@@ -11,16 +11,16 @@
  * - В противном случае используется ручной buildDefinition() (legacy)
  */
 
-import type { Logger } from '@mcp-framework/infrastructure';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { Logger } from '@fractalizer/mcp-infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { ToolDefinition } from './base-definition.js';
 import type { ToolMetadata, StaticToolMetadata } from './tool-metadata.js';
 import type { ZodError, ZodSchema } from 'zod';
 import type { z } from 'zod';
 import { generateDefinitionFromSchema } from '../../definition/index.js';
 import { formatZodErrorsToString } from '../../utils/zod-error-formatter.js';
-import { ApiErrorClass } from '@mcp-framework/infrastructure';
-import type { ApiErrorDetails } from '@mcp-framework/infrastructure';
+import { ApiErrorClass } from '@fractalizer/mcp-infrastructure';
+import type { ApiErrorDetails } from '@fractalizer/mcp-infrastructure';
 
 /**
  * Абстрактный базовый класс для всех инструментов

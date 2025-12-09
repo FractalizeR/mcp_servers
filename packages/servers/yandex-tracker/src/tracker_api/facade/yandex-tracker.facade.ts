@@ -99,7 +99,7 @@ import type {
   UpdateProjectParams,
   DeleteProjectParams,
 } from '#tracker_api/api_operations/index.js';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
 @injectable()
 export class YandexTrackerFacade {

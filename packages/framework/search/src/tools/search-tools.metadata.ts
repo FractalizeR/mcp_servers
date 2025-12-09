@@ -5,8 +5,8 @@
  * Оба файла импортируют только метаданные, не импортируя друг друга
  */
 
-import { ToolCategory, buildToolName } from '@mcp-framework/core';
-import type { StaticToolMetadata } from '@mcp-framework/core';
+import { ToolCategory, buildToolName } from '@fractalizer/mcp-core';
+import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 
 /**
  * Статические метаданные для compile-time индексации

@@ -5,9 +5,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
-import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 
 /**
  * Конкретная реализация BaseOperation для тестирования

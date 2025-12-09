@@ -1,6 +1,6 @@
 {
-  "name": "@mcp-server/yandex-wiki",
-  "version": "0.1.0",
+  "name": "@fractalizer/mcp-server-yandex-wiki",
+  "version": "0.1.1",
   "description": "MCP Server for Yandex Wiki API integration",
   "keywords": [
     "mcp",
@@ -25,8 +25,8 @@
   },
   "main": "./dist/index.js",
   "bin": {
-    "mcp-server-yandex-wiki": "./dist/yandex-wiki.bundle.cjs",
-    "mcp-wiki-connect": "./dist/cli/bin/mcp-connect.js"
+    "mcp-server-yandex-wiki": "dist/yandex-wiki.bundle.cjs",
+    "mcp-wiki-connect": "dist/cli/bin/mcp-connect.js"
   },
   "files": [
     "dist",
@@ -68,10 +68,10 @@
     "validate:tools": "tsx scripts/validate-tool-registration.ts"
   },
   "dependencies": {
-    "@mcp-framework/cli": "^0.2.0",
-    "@mcp-framework/core": "^0.1.0",
-    "@mcp-framework/infrastructure": "^0.2.0",
-    "@mcp-framework/search": "^0.1.0",
+    "@fractalizer/mcp-cli": "^0.2.0",
+    "@fractalizer/mcp-core": "^0.1.0",
+    "@fractalizer/mcp-infrastructure": "^0.2.0",
+    "@fractalizer/mcp-search": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.23.0",
     "axios": "^1.13.2",
     "chalk": "^5.6.2",

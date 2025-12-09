@@ -3,7 +3,7 @@
 /**
  * CLI для TickTick MCP Server
  *
- * Использует @mcp-framework/cli для управления подключениями
+ * Использует @fractalizer/mcp-cli для управления подключениями
  */
 
 import { program } from 'commander';
@@ -21,7 +21,7 @@ import {
   CodexConnector,
   GeminiConnector,
   QwenConnector,
-} from '@mcp-framework/cli';
+} from '@fractalizer/mcp-cli';
 import { ticktickConfigPrompts } from '../prompts.js';
 import type { TickTickMCPConfig } from '../types.js';
 import { PROJECT_BASE_NAME, SERVER_ENTRY_POINT } from '../../constants.js';

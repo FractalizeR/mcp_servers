@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PingOperation } from '#tracker_api/api_operations/user/ping.operation.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
-import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { User } from '#tracker_api/entities/user.entity.js';
-import type { ApiError } from '@mcp-framework/infrastructure/types.js';
-import { HttpStatusCode } from '@mcp-framework/infrastructure/types.js';
+import type { ApiError } from '@fractalizer/mcp-infrastructure/types.js';
+import { HttpStatusCode } from '@fractalizer/mcp-infrastructure/types.js';
 import type { ServerConfig } from '#config';
 
 describe('PingOperation', () => {

@@ -49,8 +49,8 @@
 
 | Package | Size | Threshold | Status |
 |---------|------|-----------|--------|
-| @mcp-framework/cli | 248 KB | ≤200 KB | ⚠️  WARN (+24%) |
-| @mcp-server/yandex-tracker | 6595 KB | Monitoring | ✅ OK |
+| @fractalizer/mcp-cli | 248 KB | ≤200 KB | ⚠️  WARN (+24%) |
+| @fractalizer/mcp-server-yandex-tracker | 6595 KB | Monitoring | ✅ OK |
 
 ### Analysis
 
@@ -139,7 +139,7 @@ The framework-based CLI implementation is production-ready. The minor bundle siz
 
 ```bash
 # All benchmarks
-npm run benchmark:all --workspace=@mcp-server/yandex-tracker
+npm run benchmark:all --workspace=@fractalizer/mcp-server-yandex-tracker
 
 # Individual benchmarks
 npm run benchmark          # CLI performance

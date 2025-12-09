@@ -12,7 +12,7 @@
  * - Всегда актуальные имена инструментов
  */
 
-import type { ToolRegistry } from '@mcp-framework/core';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
 import type { StaticToolIndex } from '../types.js';
 
 /**

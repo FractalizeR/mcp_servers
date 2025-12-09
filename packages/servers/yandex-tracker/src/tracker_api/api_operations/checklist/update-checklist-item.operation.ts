@@ -10,10 +10,10 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { ParallelExecutor } from '@mcp-framework/infrastructure';
+import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
 import type { UpdateChecklistItemInput } from '#tracker_api/dto/index.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 
 export class UpdateChecklistItemOperation extends BaseOperation {

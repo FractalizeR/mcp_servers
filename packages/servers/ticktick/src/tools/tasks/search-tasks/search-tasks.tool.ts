@@ -4,9 +4,9 @@
  * Case-insensitive search in title and content.
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import { SearchTasksParamsSchema } from './search-tasks.schema.js';
 import { SEARCH_TASKS_TOOL_METADATA } from './search-tasks.metadata.js';

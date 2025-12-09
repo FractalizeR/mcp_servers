@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BaseOperation } from '#wiki_api/api_operations/base-operation.js';
 import { createMockHttpClient, createMockCacheManager, createMockLogger } from '#helpers/index.js';
-import type { IHttpClient, CacheManager, Logger } from '@mcp-framework/infrastructure';
+import type { IHttpClient, CacheManager, Logger } from '@fractalizer/mcp-infrastructure';
 
 // Конкретная имплементация для тестирования абстрактного класса
 class TestOperation extends BaseOperation {

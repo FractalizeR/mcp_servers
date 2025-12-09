@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema } from '@mcp-framework/core';
+import { FieldsSchema } from '@fractalizer/mcp-core';
 
 /**
  * Parameters schema for getting all tasks of a project

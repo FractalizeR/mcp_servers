@@ -25,7 +25,7 @@ import { CreateLinkOperation } from '#tracker_api/api_operations/link/create-lin
 import { DeleteLinkOperation } from '#tracker_api/api_operations/link/delete-link.operation.js';
 import type { LinkWithUnknownFields, LinkRelationship } from '#tracker_api/entities/link.entity.js';
 import type { CreateLinkDto } from '#tracker_api/dto/link/create-link.dto.js';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
 @injectable()
 export class IssueLinkService {

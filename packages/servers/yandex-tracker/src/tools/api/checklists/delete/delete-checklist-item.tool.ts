@@ -7,9 +7,9 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ResultLogger } from '@mcp-framework/core';
+import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { DeleteChecklistItemParamsSchema } from '#tools/api/checklists/delete/delete-checklist-item.schema.js';
 
 import { DELETE_CHECKLIST_ITEM_TOOL_METADATA } from './delete-checklist-item.metadata.js';

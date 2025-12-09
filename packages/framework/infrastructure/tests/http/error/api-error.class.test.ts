@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ApiErrorClass } from '@mcp-framework/infrastructure/http/error/api-error.class.js';
-import { HttpStatusCode } from '@mcp-framework/infrastructure/types.js';
+import { ApiErrorClass } from '@fractalizer/mcp-infrastructure/http/error/api-error.class.js';
+import { HttpStatusCode } from '@fractalizer/mcp-infrastructure/types.js';
 
 describe('ApiErrorClass', () => {
   describe('Конструктор', () => {

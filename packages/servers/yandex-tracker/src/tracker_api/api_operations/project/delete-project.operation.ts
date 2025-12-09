@@ -10,7 +10,7 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
+import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 
 export interface DeleteProjectParams {
   /** ID или ключ проекта */

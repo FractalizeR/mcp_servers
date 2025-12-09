@@ -34,7 +34,7 @@ export const ValidationErrorCode = {
   UNKNOWN: 'UNKNOWN',
 } as const;
 
-// eslint-disable-next-line no-redeclare
+ 
 export type ValidationErrorCode = (typeof ValidationErrorCode)[keyof typeof ValidationErrorCode];
 
 /**

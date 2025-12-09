@@ -1,6 +1,6 @@
 // tests/e2e/helpers/workflow-client.ts
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
-import { buildToolName } from '@mcp-framework/core';
+import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 
 /**

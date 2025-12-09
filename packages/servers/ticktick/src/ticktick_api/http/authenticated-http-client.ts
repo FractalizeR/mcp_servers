@@ -7,9 +7,9 @@
 
 import axios from 'axios';
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import type { IHttpClient, QueryParams, RetryStrategy } from '@mcp-framework/infrastructure';
-import { RetryHandler, ErrorMapper } from '@mcp-framework/infrastructure';
-import type { Logger } from '@mcp-framework/infrastructure';
+import type { IHttpClient, QueryParams, RetryStrategy } from '@fractalizer/mcp-infrastructure';
+import { RetryHandler, ErrorMapper } from '@fractalizer/mcp-infrastructure';
+import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { TickTickOAuthClient } from '../auth/oauth-client.js';
 
 /**

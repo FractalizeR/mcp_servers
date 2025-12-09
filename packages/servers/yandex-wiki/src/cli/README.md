@@ -2,7 +2,7 @@
 
 CLI для управления подключениями Yandex Wiki MCP Server к AI клиентам.
 
-Построен на базе `@mcp-framework/cli`.
+Построен на базе `@fractalizer/mcp-cli`.
 
 ---
 

@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DeleteTaskOperation } from '#ticktick_api/api_operations/tasks/delete-task.operation.js';
 import { createMockHttpClient, createMockCacheManager, createMockLogger } from '#helpers/index.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure';
 
 describe('DeleteTaskOperation', () => {
   let operation: DeleteTaskOperation;

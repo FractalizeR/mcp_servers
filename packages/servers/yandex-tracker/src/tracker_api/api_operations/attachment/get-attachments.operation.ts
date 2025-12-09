@@ -9,10 +9,10 @@
  * API: GET /v2/issues/{issueId}/attachments
  */
 
-import { ParallelExecutor } from '@mcp-framework/infrastructure';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
+import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ServerConfig } from '#config';
 

@@ -9,8 +9,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { LoggerConfig } from '@mcp-framework/infrastructure/logging/index.js';
+import { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import type { LoggerConfig } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { mkdtemp, readdir, readFile, stat, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

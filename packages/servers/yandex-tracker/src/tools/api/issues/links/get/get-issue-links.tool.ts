@@ -12,9 +12,9 @@ import {
   ResponseFieldFilter,
   BatchResultProcessor,
   ResultLogger,
-} from '@mcp-framework/core';
+} from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetIssueLinksParamsSchema } from './get-issue-links.schema.js';
 

@@ -1,6 +1,6 @@
-import { BaseTool, ResultLogger } from '@mcp-framework/core';
+import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { DeleteGridParamsSchema } from './delete-grid.schema.js';
 import { DELETE_GRID_TOOL_METADATA } from './delete-grid.metadata.js';
 

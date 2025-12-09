@@ -10,9 +10,9 @@
  */
 
 import { createContainer, TYPES } from '../src/composition-root/index.js';
-import type { Logger } from '@mcp-framework/infrastructure';
-import type { ToolRegistry } from '@mcp-framework/core';
-import { loadConfig } from '@mcp-framework/infrastructure';
+import type { Logger } from '@fractalizer/mcp-infrastructure';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
+import { loadConfig } from '@fractalizer/mcp-infrastructure';
 
 async function testToolNotFound(): Promise<void> {
   console.log('\n=== Тест: вызов несуществующего инструмента ===\n');

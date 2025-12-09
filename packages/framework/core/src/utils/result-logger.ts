@@ -7,7 +7,7 @@
  * - Единообразного формата логов во всех tools
  */
 
-import type { Logger } from '@mcp-framework/infrastructure';
+import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { ProcessedBatchResult } from './batch-result-processor.js';
 
 /**

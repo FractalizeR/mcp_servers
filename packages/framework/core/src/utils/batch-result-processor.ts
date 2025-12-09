@@ -16,8 +16,8 @@ import type {
   FulfilledResult,
   RejectedResult,
   ApiErrorDetails,
-} from '@mcp-framework/infrastructure';
-import { ApiErrorClass } from '@mcp-framework/infrastructure';
+} from '@fractalizer/mcp-infrastructure';
+import { ApiErrorClass } from '@fractalizer/mcp-infrastructure';
 
 /**
  * Обработанный результат batch-операции

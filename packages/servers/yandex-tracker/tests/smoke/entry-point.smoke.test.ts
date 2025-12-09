@@ -94,7 +94,7 @@ describe('Entry Point Exports (Smoke)', () => {
   it('должен работать с createContainer без реального API', async () => {
     const { createContainer, TYPES } = await import('../../src/index.js');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { ToolRegistry } = (await import('@mcp-framework/core')) as any;
+    const { ToolRegistry } = (await import('@fractalizer/mcp-core')) as any;
 
     const fakeConfig = {
       token: 'test-token',

@@ -1,4 +1,4 @@
-import type { BaseMCPServerConfig } from '@mcp-framework/cli';
+import type { BaseMCPServerConfig } from '@fractalizer/mcp-cli';
 
 /**
  * Конфигурация MCP сервера Yandex Tracker

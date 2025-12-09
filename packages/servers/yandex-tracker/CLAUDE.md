@@ -18,12 +18,12 @@
 - **TypeScript** (strict mode, NO `any`/`unknown`/`null`/`undefined` где можно избежать)
 - **InversifyJS v7** (DI, Symbol-based tokens, `defaultScope: 'Singleton'`)
 - **Zod** (валидация параметров, type inference)
-- **Axios** (HTTP client, через @mcp-framework/infrastructure)
+- **Axios** (HTTP client, через @fractalizer/mcp-infrastructure)
 - **Pino** + **rotating-file-stream** (production logging с автоматической ротацией)
 - **Vitest** (тесты, покрытие ≥80%)
 - **dependency-cruiser** (валидация архитектурных правил)
 - **MCP SDK** (Model Context Protocol)
-- **Tool Search System** (из @mcp-framework/search)
+- **Tool Search System** (из @fractalizer/mcp-search)
 - **API:** Яндекс.Трекер v2/v3 (используются обе официально поддерживаемые версии)
 
 ---
@@ -34,9 +34,9 @@
 
 **✅ Используй npm package names для framework:**
 ```typescript
-import { BaseTool } from '@mcp-framework/core';
-import { HttpClient } from '@mcp-framework/infrastructure';
-import { ToolSearchEngine } from '@mcp-framework/search';
+import { BaseTool } from '@fractalizer/mcp-core';
+import { HttpClient } from '@fractalizer/mcp-infrastructure';
+import { ToolSearchEngine } from '@fractalizer/mcp-search';
 ```
 
 **✅ Внутренние импорты (внутри yandex-tracker):**
@@ -276,7 +276,7 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
 ### 5. Статические метаданные для Tool Search
 
 - ✅ ОБЯЗАТЕЛЬНО добавляй `static readonly METADATA: StaticToolMetadata` во все tools
-- ✅ Используется для compile-time индексирования (@mcp-framework/search)
+- ✅ Используется для compile-time индексирования (@fractalizer/mcp-search)
 - ✅ Позволяет SearchToolsTool находить tools без загрузки всего кода
 - ⚠️ При добавлении нового tool — запусти `npm run build` (автоматически обновит индекс)
 
@@ -392,7 +392,7 @@ ESSENTIAL_TOOLS=ping,search_tools
 
 ### CLI для подключения к MCP клиентам
 
-- ✅ Использует `@mcp-framework/cli` для универсального управления подключениями
+- ✅ Использует `@fractalizer/mcp-cli` для универсального управления подключениями
 - ✅ YT-специфичная конфигурация в `src/cli/types.ts` и `src/cli/prompts.ts`
 - ✅ Feature flags для миграции (USE_FRAMEWORK_CLI, DEBUG_CLI_MIGRATION)
 - 📖 Детали архитектуры: [packages/framework/cli/README.md](../../framework/cli/README.md)

@@ -2,9 +2,9 @@
  * MCP Tool for getting tasks by priority in TickTick
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import { GetTasksByPriorityParamsSchema } from './get-tasks-by-priority.schema.js';
 import { GET_TASKS_BY_PRIORITY_TOOL_METADATA } from './get-tasks-by-priority.metadata.js';

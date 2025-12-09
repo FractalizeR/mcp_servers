@@ -28,7 +28,7 @@ import type {
   GetCommentsInput,
 } from '#tracker_api/dto/index.js';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
 @injectable()
 export class CommentService {

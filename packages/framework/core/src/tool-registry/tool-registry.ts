@@ -14,7 +14,7 @@
  */
 
 import type { Container } from 'inversify';
-import type { Logger, ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { Logger, ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { BaseTool, ToolDefinition } from '../tools/base/index.js';
 import type { ToolConstructor, ParsedCategoryFilter } from './types.js';
 import { ToolFilterService } from './tool-filter.service.js';
@@ -244,7 +244,7 @@ export class ToolRegistry {
     const tool = this.tools?.get(name);
 
     if (!tool) {
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+       
       const allTools = Array.from(this.tools?.keys() || []);
 
       // Fuzzy поиск похожих имен

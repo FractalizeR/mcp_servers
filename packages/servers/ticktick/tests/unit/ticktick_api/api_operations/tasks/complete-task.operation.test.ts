@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CompleteTaskOperation } from '#ticktick_api/api_operations/tasks/complete-task.operation.js';
 import { createMockHttpClient, createMockCacheManager, createMockLogger } from '#helpers/index.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure';
 
 describe('CompleteTaskOperation', () => {
   let operation: CompleteTaskOperation;

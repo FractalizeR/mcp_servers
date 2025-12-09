@@ -24,7 +24,7 @@ import { UpdateWorklogOperation } from '#tracker_api/api_operations/worklog/upda
 import { DeleteWorklogOperation } from '#tracker_api/api_operations/worklog/delete-worklog.operation.js';
 import type { AddWorklogInput, UpdateWorklogInput } from '#tracker_api/dto/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
 @injectable()
 export class WorklogService {

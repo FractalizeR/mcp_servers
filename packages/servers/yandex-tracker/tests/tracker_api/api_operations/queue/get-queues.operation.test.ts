@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
-import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { QueueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetQueuesOperation } from '#tracker_api/api_operations/queue/get-queues.operation.js';
 import { createQueueFixture, createQueueListFixture } from '#helpers/queue.fixture.js';

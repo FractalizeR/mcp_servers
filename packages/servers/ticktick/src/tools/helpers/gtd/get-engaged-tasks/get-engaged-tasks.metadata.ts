@@ -2,8 +2,8 @@
  * Metadata for GetEngagedTasksTool
  */
 
-import { buildToolName, ToolCategory, ToolPriority } from '@mcp-framework/core';
-import type { StaticToolMetadata } from '@mcp-framework/core';
+import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 
 export const GET_ENGAGED_TASKS_TOOL_METADATA: StaticToolMetadata = {

@@ -13,9 +13,9 @@ export default mergeConfig(
     },
     resolve: {
       alias: {
-        // Поддержка subpath imports (например @mcp-framework/infrastructure/config.js)
-        '@mcp-framework/infrastructure': path.resolve(__dirname, './src'),
-        '@mcp-framework/infrastructure/*': path.resolve(__dirname, './src/*'),
+        // Поддержка subpath imports (например @fractalizer/mcp-infrastructure/config.js)
+        '@fractalizer/mcp-infrastructure': path.resolve(__dirname, './src'),
+        '@fractalizer/mcp-infrastructure/*': path.resolve(__dirname, './src/*'),
       },
     },
   })

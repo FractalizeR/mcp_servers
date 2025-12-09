@@ -1,4 +1,4 @@
-# @mcp-framework/cli
+# @fractalizer/mcp-cli
 
 **Generic CLI фреймворк для управления подключениями MCP серверов к различным клиентам.**
 
@@ -19,7 +19,7 @@
 ## 📦 Установка
 
 ```bash
-npm install @mcp-framework/cli
+npm install @fractalizer/mcp-cli
 ```
 
 ---
@@ -29,12 +29,12 @@ npm install @mcp-framework/cli
 ### Минимальный пример
 
 ```typescript
-import { connectCommand, ConnectorRegistry, ConfigManager } from '@mcp-framework/cli';
-import type { BaseMCPServerConfig, ConfigPromptDefinition } from '@mcp-framework/cli';
+import { connectCommand, ConnectorRegistry, ConfigManager } from '@fractalizer/mcp-cli';
+import type { BaseMCPServerConfig, ConfigPromptDefinition } from '@fractalizer/mcp-cli';
 import {
   ClaudeDesktopConnector,
   ClaudeCodeConnector,
-} from '@mcp-framework/cli/connectors';
+} from '@fractalizer/mcp-cli/connectors';
 
 // 1. Определяем конфигурацию вашего MCP сервера
 interface MyServerConfig extends BaseMCPServerConfig {
@@ -122,7 +122,7 @@ interface YandexTrackerConfig extends BaseMCPServerConfig {
 **Использование:**
 
 ```typescript
-import { ClaudeDesktopConnector } from '@mcp-framework/cli/connectors';
+import { ClaudeDesktopConnector } from '@fractalizer/mcp-cli/connectors';
 
 const connector = new ClaudeDesktopConnector(
   'my-server',      // Имя сервера в конфиге клиента
@@ -236,7 +236,7 @@ const config = await prompter.promptServerConfig(savedConfig);
 Подключает MCP сервер к выбранному клиенту.
 
 ```typescript
-import { connectCommand } from '@mcp-framework/cli/commands';
+import { connectCommand } from '@fractalizer/mcp-cli/commands';
 
 await connectCommand({
   registry,
@@ -257,7 +257,7 @@ await connectCommand({
 Отключает MCP сервер от клиента.
 
 ```typescript
-import { disconnectCommand } from '@mcp-framework/cli/commands';
+import { disconnectCommand } from '@fractalizer/mcp-cli/commands';
 
 await disconnectCommand({
   registry,
@@ -272,7 +272,7 @@ await disconnectCommand({
 Показывает статус подключений для всех клиентов.
 
 ```typescript
-import { statusCommand } from '@mcp-framework/cli/commands';
+import { statusCommand } from '@fractalizer/mcp-cli/commands';
 
 await statusCommand({ registry });
 ```
@@ -282,7 +282,7 @@ await statusCommand({ registry });
 Показывает список всех доступных MCP клиентов.
 
 ```typescript
-import { listCommand } from '@mcp-framework/cli/commands';
+import { listCommand } from '@fractalizer/mcp-cli/commands';
 
 await listCommand({ registry });
 ```
@@ -292,7 +292,7 @@ await listCommand({ registry });
 Валидирует текущую конфигурацию для выбранного клиента.
 
 ```typescript
-import { validateCommand } from '@mcp-framework/cli/commands';
+import { validateCommand } from '@fractalizer/mcp-cli/commands';
 
 await validateCommand({
   registry,
@@ -313,7 +313,7 @@ await validateCommand({
 Выполнение shell команд:
 
 ```typescript
-import { CommandExecutor } from '@mcp-framework/cli/utils';
+import { CommandExecutor } from '@fractalizer/mcp-cli/utils';
 
 const result = await CommandExecutor.execute('ls -la');
 if (result.success) {
@@ -326,7 +326,7 @@ if (result.success) {
 Работа с файлами:
 
 ```typescript
-import { FileManager } from '@mcp-framework/cli/utils';
+import { FileManager } from '@fractalizer/mcp-cli/utils';
 
 // Чтение JSON
 const data = await FileManager.readJSON('/path/to/config.json');
@@ -346,7 +346,7 @@ await FileManager.ensureDir('/path/to/dir');
 CLI логирование:
 
 ```typescript
-import { Logger } from '@mcp-framework/cli/utils';
+import { Logger } from '@fractalizer/mcp-cli/utils';
 
 Logger.info('Информация');
 Logger.success('Успех!');
@@ -365,8 +365,8 @@ spinner.succeed('Готово!');
 Если нужно добавить новый MCP клиент:
 
 ```typescript
-import { BaseConnector } from '@mcp-framework/cli/connectors';
-import type { MCPClientInfo, ConnectionStatus } from '@mcp-framework/cli';
+import { BaseConnector } from '@fractalizer/mcp-cli/connectors';
+import type { MCPClientInfo, ConnectionStatus } from '@fractalizer/mcp-cli';
 
 class MyCustomConnector<TConfig extends BaseMCPServerConfig> extends BaseConnector<TConfig> {
   constructor(
@@ -429,7 +429,7 @@ registry.register(connector);
 ## 🔗 См. также
 
 - **[Полный API Reference](./API.md)** — детальная документация всех типов и методов
-- **[@mcp-framework/infrastructure](../infrastructure/README.md)** — инфраструктурные утилиты
+- **[@fractalizer/mcp-infrastructure](../infrastructure/README.md)** — инфраструктурные утилиты
 
 ---
 

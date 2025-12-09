@@ -96,7 +96,7 @@ export class ApiErrorClass extends Error {
     this.retryAfter = retryAfter;
 
     // Сохраняем правильный stack trace (для Node.js)
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+     
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, ApiErrorClass);
     }

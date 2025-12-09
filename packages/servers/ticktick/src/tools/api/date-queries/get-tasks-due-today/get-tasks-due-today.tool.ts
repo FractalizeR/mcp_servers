@@ -4,9 +4,9 @@
  * Retrieves all tasks with due date set to today.
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { GetTasksDueTodayParamsSchema } from './get-tasks-due-today.schema.js';
 import { GET_TASKS_DUE_TODAY_TOOL_METADATA } from './get-tasks-due-today.metadata.js';
 import { filterFieldsArray } from '#tools/shared/index.js';

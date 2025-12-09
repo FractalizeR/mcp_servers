@@ -5,7 +5,7 @@
  * Оба файла импортируют только метаданные, не импортируя друг друга
  */
 
-import { ToolCategory, ToolPriority, buildToolName } from '@mcp-framework/core';
+import { ToolCategory, ToolPriority, buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 
 /**

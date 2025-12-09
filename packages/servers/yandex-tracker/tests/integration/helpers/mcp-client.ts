@@ -4,8 +4,8 @@
  */
 
 import type { Container } from 'inversify';
-import type { ToolRegistry } from '@mcp-framework/core/tool-registry.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
+import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { AxiosInstance } from 'axios';
 import type { ServerConfig } from '#config';
 import { TYPES } from '#composition-root/types.js';

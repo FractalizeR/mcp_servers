@@ -5,8 +5,8 @@ import {
   createMockHttpClient,
   createMockFacade,
 } from './helpers/mock-factories.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 
 /**

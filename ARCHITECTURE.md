@@ -25,15 +25,15 @@
 ```
 packages/
 ├── framework/
-│   ├── infrastructure/     → @mcp-framework/infrastructure
+│   ├── infrastructure/     → @fractalizer/mcp-infrastructure
 │   │   ├── http/, cache/, async/, logging/
 │   │   └── 0 dependencies
-│   ├── cli/               → @mcp-framework/cli
+│   ├── cli/               → @fractalizer/mcp-cli
 │   │   └── depends on: infrastructure
-│   ├── core/              → @mcp-framework/core
+│   ├── core/              → @fractalizer/mcp-core
 │   │   ├── tools/base/, utils/, tool-registry
 │   │   └── depends on: infrastructure
-│   └── search/            → @mcp-framework/search
+│   └── search/            → @fractalizer/mcp-search
 │       ├── engine/, strategies/, tools/
 │       └── depends on: core
 └── servers/
@@ -81,7 +81,7 @@ npm run depcruise  # Validates dependency graph
 
 ## 📦 Package Details
 
-### @mcp-framework/infrastructure
+### @fractalizer/mcp-infrastructure
 
 **Purpose:** Reusable infrastructure layer (domain-agnostic)
 
@@ -96,7 +96,7 @@ npm run depcruise  # Validates dependency graph
 
 **Details:** [packages/framework/infrastructure/README.md](packages/framework/infrastructure/README.md)
 
-### @mcp-framework/core
+### @fractalizer/mcp-core
 
 **Purpose:** Core framework for building MCP tools
 
@@ -110,7 +110,7 @@ npm run depcruise  # Validates dependency graph
 
 **Details:** [packages/framework/core/README.md](packages/framework/core/README.md)
 
-### @mcp-framework/search
+### @fractalizer/mcp-search
 
 **Purpose:** Advanced tool discovery with compile-time indexing
 
@@ -210,8 +210,8 @@ handlers/
 
 **1. Междупакетные (npm package names):**
 ```typescript
-import { BaseTool } from '@mcp-framework/core';
-import { HttpClient } from '@mcp-framework/infrastructure';
+import { BaseTool } from '@fractalizer/mcp-core';
+import { HttpClient } from '@fractalizer/mcp-infrastructure';
 ```
 
 **2. Внутрипакетные короткие (≤2 уровня - относительные пути):**
@@ -357,7 +357,7 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
 }
 ```
 
-**Generator (`@mcp-framework/core`):**
+**Generator (`@fractalizer/mcp-core`):**
 - Uses Zod v4 native `toJSONSchema()` API
 - Converts JSON Schema to MCP Definition format
 - Extracts descriptions from `.describe()` calls
@@ -550,7 +550,7 @@ npm run depcruise:graph     # Generate dependency graph
 ```bash
 npm run test                    # All packages
 npm run test:coverage           # With coverage
-npm run test --workspace=@mcp-framework/core  # Single package
+npm run test --workspace=@fractalizer/mcp-core  # Single package
 ```
 
 **Details:** [packages/servers/yandex-tracker/tests/README.md](packages/servers/yandex-tracker/tests/README.md)

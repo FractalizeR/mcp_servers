@@ -2,8 +2,8 @@
  * MCP Tool for getting all tasks of a TickTick project
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/task.entity.js';
 import { GET_PROJECT_TASKS_TOOL_METADATA } from './get-project-tasks.metadata.js';

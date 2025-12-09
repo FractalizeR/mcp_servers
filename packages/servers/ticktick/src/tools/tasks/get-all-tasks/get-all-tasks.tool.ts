@@ -4,9 +4,9 @@
  * Fetches tasks from all projects with optional status filtering.
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import { TaskStatusValues } from '#common/schemas/index.js';
 import { GetAllTasksParamsSchema } from './get-all-tasks.schema.js';

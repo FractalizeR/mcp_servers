@@ -4,9 +4,9 @@
  * ВАЖНО: Удаление проектов - критическая операция! Необратима!
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { DeleteProjectParamsSchema } from './delete-project.schema.js';
 
 import { DELETE_PROJECT_TOOL_METADATA } from './delete-project.metadata.js';

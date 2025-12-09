@@ -7,8 +7,8 @@
  * Regenerate: npm run generate:index
  */
 
-import { ToolCategory } from '@mcp-framework/core';
-import type { StaticToolIndex } from '@mcp-framework/search';
+import { ToolCategory } from '@fractalizer/mcp-core';
+import type { StaticToolIndex } from '@fractalizer/mcp-search';
 
 /**
  * Статический индекс всех tools

@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from 'vitest';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ErrorMapper, ApiErrorClass } from '@mcp-framework/infrastructure';
+import { ErrorMapper, ApiErrorClass } from '@fractalizer/mcp-infrastructure';
 
 /**
  * Вспомогательная функция для создания мок AxiosError

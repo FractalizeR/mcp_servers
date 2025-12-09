@@ -36,7 +36,7 @@ export enum HttpStatusCode {
 /**
  * Уровни логирования
  *
- * Используется Logger из @mcp-framework/infrastructure/logging
+ * Используется Logger из @fractalizer/mcp-infrastructure/logging
  */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
 

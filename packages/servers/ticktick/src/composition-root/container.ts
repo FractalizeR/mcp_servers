@@ -14,16 +14,16 @@ import {
   Logger,
   ExponentialBackoffStrategy,
   InMemoryCacheManager,
-} from '@mcp-framework/infrastructure';
-import type { IHttpClient, RetryStrategy, CacheManager } from '@mcp-framework/infrastructure';
-import { ToolRegistry } from '@mcp-framework/core';
-import { ToolSearchEngine } from '@mcp-framework/search';
-import { WeightedCombinedStrategy } from '@mcp-framework/search';
-import { NameSearchStrategy } from '@mcp-framework/search';
-import { DescriptionSearchStrategy } from '@mcp-framework/search';
-import { CategorySearchStrategy } from '@mcp-framework/search';
-import { FuzzySearchStrategy } from '@mcp-framework/search';
-import type { ISearchStrategy, StrategyType } from '@mcp-framework/search';
+} from '@fractalizer/mcp-infrastructure';
+import type { IHttpClient, RetryStrategy, CacheManager } from '@fractalizer/mcp-infrastructure';
+import { ToolRegistry } from '@fractalizer/mcp-core';
+import { ToolSearchEngine } from '@fractalizer/mcp-search';
+import { WeightedCombinedStrategy } from '@fractalizer/mcp-search';
+import { NameSearchStrategy } from '@fractalizer/mcp-search';
+import { DescriptionSearchStrategy } from '@fractalizer/mcp-search';
+import { CategorySearchStrategy } from '@fractalizer/mcp-search';
+import { FuzzySearchStrategy } from '@fractalizer/mcp-search';
+import type { ISearchStrategy, StrategyType } from '@fractalizer/mcp-search';
 import { TYPES } from './types.js';
 import { OPERATION_DEFINITIONS } from './definitions/operation-definitions.js';
 import { TOOL_CLASSES } from './definitions/tool-definitions.js';
@@ -215,7 +215,7 @@ function bindTools(container: Container): void {
 function bindToolRegistry(container: Container): void {
   container.bind<ToolRegistry>(TYPES.ToolRegistry).toDynamicValue(() => {
     const loggerInstance = container.get<Logger>(TYPES.Logger);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any);
   });
 }
@@ -248,7 +248,7 @@ function bindSearchEngine(container: Container): void {
  * Separate function for correct typing as constructor differs from BaseTool.
  */
 async function bindSearchToolsTool(container: Container): Promise<void> {
-  const { SearchToolsTool } = await import('@mcp-framework/search');
+  const { SearchToolsTool } = await import('@fractalizer/mcp-search');
 
   container.bind(Symbol.for('SearchToolsTool')).toDynamicValue(() => {
     const searchEngine = container.get<ToolSearchEngine>(TYPES.ToolSearchEngine);

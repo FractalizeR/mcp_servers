@@ -9,7 +9,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ToolRegistry, type ToolConstructor } from '../src/tool-registry/index.js';
 import { BaseTool } from '../src/tools/base/base-tool.js';
 import type { Container } from 'inversify';
-import type { Logger, ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { Logger, ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { ToolDefinition } from '../src/tools/base/index.js';
 
 // Mock tool для тестирования

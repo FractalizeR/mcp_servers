@@ -7,7 +7,7 @@
  * - Типы для параметров поиска
  */
 
-import type { ToolCategory } from '@mcp-framework/core';
+import type { ToolCategory } from '@fractalizer/mcp-core';
 
 /**
  * Статический индекс tool для compile-time генерации

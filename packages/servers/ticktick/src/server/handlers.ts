@@ -3,8 +3,8 @@
  * Extracted from index.ts to reduce setupServer size
  */
 
-import type { Logger } from '@mcp-framework/infrastructure';
-import type { ToolDefinition } from '@mcp-framework/core';
+import type { Logger } from '@fractalizer/mcp-infrastructure';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { ServerConfig } from '#config';
 import { MCP_SERVER_NAME, MCP_SERVER_DISPLAY_NAME } from '../constants.js';
 

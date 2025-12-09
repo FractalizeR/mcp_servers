@@ -2,9 +2,9 @@
  * MCP Tool for batch creating tasks in TickTick
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import type { CreateTaskDto } from '#ticktick_api/dto/index.js';
 import { BatchCreateTasksParamsSchema } from './batch-create-tasks.schema.js';

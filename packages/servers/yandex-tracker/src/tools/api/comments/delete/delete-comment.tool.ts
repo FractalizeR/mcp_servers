@@ -7,9 +7,9 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, ResultLogger } from '@mcp-framework/core';
+import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { DeleteCommentParamsSchema } from '#tools/api/comments/delete/delete-comment.schema.js';
 
 import { DELETE_COMMENT_TOOL_METADATA } from './delete-comment.metadata.js';

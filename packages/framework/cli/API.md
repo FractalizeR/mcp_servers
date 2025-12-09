@@ -1,6 +1,6 @@
-# @mcp-framework/cli API Reference
+# @fractalizer/mcp-cli API Reference
 
-Полная документация API для `@mcp-framework/cli`.
+Полная документация API для `@fractalizer/mcp-cli`.
 
 ---
 
@@ -405,11 +405,11 @@ export * from './commands/index.js';
 ### Subpath экспорты
 
 ```typescript
-import { ... } from '@mcp-framework/cli';           // Все
-import { ... } from '@mcp-framework/cli/connectors'; // Только коннекторы
-import { ... } from '@mcp-framework/cli/commands';   // Только команды
-import { ... } from '@mcp-framework/cli/utils';      // Только утилиты
-import { ... } from '@mcp-framework/cli/types';      // Только типы
+import { ... } from '@fractalizer/mcp-cli';           // Все
+import { ... } from '@fractalizer/mcp-cli/connectors'; // Только коннекторы
+import { ... } from '@fractalizer/mcp-cli/commands';   // Только команды
+import { ... } from '@fractalizer/mcp-cli/utils';      // Только утилиты
+import { ... } from '@fractalizer/mcp-cli/types';      // Только типы
 ```
 
 ---

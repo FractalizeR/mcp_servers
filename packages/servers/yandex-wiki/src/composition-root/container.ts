@@ -4,33 +4,33 @@
 
 import { Container } from 'inversify';
 import type { ServerConfig } from '#config';
-import { Logger } from '@mcp-framework/infrastructure';
+import { Logger } from '@fractalizer/mcp-infrastructure';
 import { TYPES, TOOL_SYMBOLS, OPERATION_SYMBOLS } from '#composition-root/types.js';
 import { validateDIRegistrations } from '#composition-root/validation.js';
 
 // HTTP Layer
-import type { IHttpClient, RetryStrategy } from '@mcp-framework/infrastructure';
-import { AxiosHttpClient, ExponentialBackoffStrategy } from '@mcp-framework/infrastructure';
+import type { IHttpClient, RetryStrategy } from '@fractalizer/mcp-infrastructure';
+import { AxiosHttpClient, ExponentialBackoffStrategy } from '@fractalizer/mcp-infrastructure';
 
 // Cache Layer
-import type { CacheManager } from '@mcp-framework/infrastructure';
-import { InMemoryCacheManager } from '@mcp-framework/infrastructure';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure';
+import { InMemoryCacheManager } from '@fractalizer/mcp-infrastructure';
 
 // Yandex Wiki Facade
 import { YandexWikiFacade } from '#wiki_api/facade/yandex-wiki.facade.js';
 
 // Tool Registry
-import { ToolRegistry } from '@mcp-framework/core';
+import { ToolRegistry } from '@fractalizer/mcp-core';
 
 // Search Engine
-import { ToolSearchEngine } from '@mcp-framework/search';
-import { WeightedCombinedStrategy } from '@mcp-framework/search';
-import { NameSearchStrategy } from '@mcp-framework/search';
-import { DescriptionSearchStrategy } from '@mcp-framework/search';
-import { CategorySearchStrategy } from '@mcp-framework/search';
-import { FuzzySearchStrategy } from '@mcp-framework/search';
-import type { ISearchStrategy } from '@mcp-framework/search';
-import type { StrategyType } from '@mcp-framework/search';
+import { ToolSearchEngine } from '@fractalizer/mcp-search';
+import { WeightedCombinedStrategy } from '@fractalizer/mcp-search';
+import { NameSearchStrategy } from '@fractalizer/mcp-search';
+import { DescriptionSearchStrategy } from '@fractalizer/mcp-search';
+import { CategorySearchStrategy } from '@fractalizer/mcp-search';
+import { FuzzySearchStrategy } from '@fractalizer/mcp-search';
+import type { ISearchStrategy } from '@fractalizer/mcp-search';
+import type { StrategyType } from '@fractalizer/mcp-search';
 
 // Автоматически импортируемые определения
 import { TOOL_CLASSES, OPERATION_CLASSES, bindFacadeServices } from './definitions/index.js';
@@ -128,7 +128,7 @@ function bindOperations(container: Container): void {
       const httpClient = container.get<IHttpClient>(TYPES.HttpClient);
       const cacheManager = container.get<CacheManager>(TYPES.CacheManager);
       const loggerInstance = container.get<Logger>(TYPES.Logger);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return new (OperationClass as any)(httpClient, cacheManager, loggerInstance);
     };
 
@@ -202,7 +202,7 @@ function bindTools(container: Container): void {
  * Регистрация SearchToolsTool
  */
 async function bindSearchToolsTool(container: Container): Promise<void> {
-  const { SearchToolsTool } = await import('@mcp-framework/search');
+  const { SearchToolsTool } = await import('@fractalizer/mcp-search');
 
   container.bind(Symbol.for('SearchToolsTool')).toDynamicValue(() => {
     const searchEngine = container.get<ToolSearchEngine>(TYPES.ToolSearchEngine);
@@ -217,7 +217,7 @@ async function bindSearchToolsTool(container: Container): Promise<void> {
 function bindToolRegistry(container: Container): void {
   container.bind<ToolRegistry>(TYPES.ToolRegistry).toDynamicValue(() => {
     const loggerInstance = container.get<Logger>(TYPES.Logger);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any);
   });
 }

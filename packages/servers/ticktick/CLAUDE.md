@@ -1,6 +1,6 @@
 # CLAUDE.md — TickTick MCP Server
 
-Инструкции для ИИ агентов при работе с пакетом `@mcp-server/ticktick`.
+Инструкции для ИИ агентов при работе с пакетом `@fractalizer/mcp-server-ticktick`.
 
 ---
 
@@ -32,8 +32,8 @@ ticktick (этот пакет)
 
 **Между пакетами:**
 ```typescript
-import { BaseTool } from '@mcp-framework/core';
-import { HttpClient } from '@mcp-framework/infrastructure';
+import { BaseTool } from '@fractalizer/mcp-core';
+import { HttpClient } from '@fractalizer/mcp-infrastructure';
 ```
 
 **Внутри пакета (subpath imports):**
@@ -97,7 +97,7 @@ src/tools/{category}/{action}/
 ```typescript
 // get-something.schema.ts
 import { z } from 'zod';
-import { FieldsSchema } from '@mcp-framework/core';
+import { FieldsSchema } from '@fractalizer/mcp-core';
 
 export const GetSomethingParamsSchema = z.object({
   id: z.string().min(1).describe('ID ресурса'),
@@ -111,7 +111,7 @@ export type GetSomethingParams = z.infer<typeof GetSomethingParamsSchema>;
 
 ```typescript
 // get-something.metadata.ts
-import type { ToolMetadata } from '@mcp-framework/core';
+import type { ToolMetadata } from '@fractalizer/mcp-core';
 
 export const GET_SOMETHING_TOOL_METADATA: ToolMetadata = {
   name: 'get_something',
@@ -127,7 +127,7 @@ export const GET_SOMETHING_TOOL_METADATA: ToolMetadata = {
 
 ```typescript
 // get-something.tool.ts
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import { GetSomethingParamsSchema } from './get-something.schema.js';
 import { GET_SOMETHING_TOOL_METADATA } from './get-something.metadata.js';
@@ -177,7 +177,7 @@ export const TOOL_CLASSES = [
 ### 6. Валидация
 
 ```bash
-npm run validate:quiet --workspace=@mcp-server/ticktick
+npm run validate:quiet --workspace=@fractalizer/mcp-server-ticktick
 ```
 
 ---
@@ -212,13 +212,13 @@ fields: FieldsSchema.describe('Поля для возврата')
 
 ```bash
 # Unit тесты
-npm run test --workspace=@mcp-server/ticktick
+npm run test --workspace=@fractalizer/mcp-server-ticktick
 
 # С coverage
-npm run test:coverage --workspace=@mcp-server/ticktick
+npm run test:coverage --workspace=@fractalizer/mcp-server-ticktick
 
 # Quiet mode (для ИИ)
-npm run test:quiet --workspace=@mcp-server/ticktick
+npm run test:quiet --workspace=@fractalizer/mcp-server-ticktick
 ```
 
 ---

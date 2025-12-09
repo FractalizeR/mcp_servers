@@ -8,10 +8,10 @@
  * - Асинхронная операция на сервере
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { ResultLogger } from '@mcp-framework/core';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
+import { ResultLogger } from '@fractalizer/mcp-core';
 import { BulkMoveIssuesParamsSchema } from './bulk-move-issues.schema.js';
 
 import { BULK_MOVE_ISSUES_TOOL_METADATA } from './bulk-move-issues.metadata.js';

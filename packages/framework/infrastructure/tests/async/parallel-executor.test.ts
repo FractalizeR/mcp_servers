@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ParallelExecutor } from '@mcp-framework/infrastructure/async/parallel-executor.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { ApiError } from '@mcp-framework/infrastructure/types.js';
+import { ParallelExecutor } from '@fractalizer/mcp-infrastructure/async/parallel-executor.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import type { ApiError } from '@fractalizer/mcp-infrastructure/types.js';
 
 /**
  * Создаёт мок логгера для тестов

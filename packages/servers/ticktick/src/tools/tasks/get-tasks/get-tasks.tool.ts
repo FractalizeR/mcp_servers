@@ -4,9 +4,9 @@
  * Uses parallel execution for efficiency.
  */
 
-import { BaseTool, ResponseFieldFilter, BatchResultProcessor } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter, BatchResultProcessor } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import { GetTasksParamsSchema } from './get-tasks.schema.js';
 import { GET_TASKS_TOOL_METADATA } from './get-tasks.metadata.js';

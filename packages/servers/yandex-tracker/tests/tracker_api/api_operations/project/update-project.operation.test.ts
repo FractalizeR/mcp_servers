@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
-import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
 import { UpdateProjectOperation } from '#tracker_api/api_operations/project/update-project.operation.js';
 import { createProjectFixture } from '#helpers/project.fixture.js';
 import { createUpdateProjectDto } from '#helpers/project-dto.fixture.js';
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
+import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 
 describe('UpdateProjectOperation', () => {
   let operation: UpdateProjectOperation;

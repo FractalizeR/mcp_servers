@@ -8,9 +8,9 @@
  * Duplicates are removed.
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import { GetNextTasksParamsSchema } from './get-next-tasks.schema.js';
 import { GET_NEXT_TASKS_TOOL_METADATA } from './get-next-tasks.metadata.js';

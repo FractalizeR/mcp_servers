@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UpdateProjectOperation } from '#ticktick_api/api_operations/projects/update-project.operation.js';
 import { createMockHttpClient, createMockCacheManager, createMockLogger } from '#helpers/index.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure';
 import type { ProjectWithUnknownFields } from '#ticktick_api/entities/project.entity.js';
 import type { UpdateProjectDto } from '#ticktick_api/dto/project.dto.js';
 

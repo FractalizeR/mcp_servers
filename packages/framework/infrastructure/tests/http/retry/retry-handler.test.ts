@@ -4,10 +4,10 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mock } from 'vitest';
-import { RetryHandler } from '@mcp-framework/infrastructure/http/retry/retry-handler.js';
-import type { RetryStrategy } from '@mcp-framework/infrastructure/http/retry/retry-strategy.interface.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { ApiError } from '@mcp-framework/infrastructure/types.js';
+import { RetryHandler } from '@fractalizer/mcp-infrastructure/http/retry/retry-handler.js';
+import type { RetryStrategy } from '@fractalizer/mcp-infrastructure/http/retry/retry-strategy.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import type { ApiError } from '@fractalizer/mcp-infrastructure/types.js';
 
 /**
  * Создание мок стратегии

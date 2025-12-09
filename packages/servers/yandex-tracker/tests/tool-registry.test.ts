@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ToolRegistry, buildToolName } from '@mcp-framework/core';
+import { ToolRegistry, buildToolName } from '@fractalizer/mcp-core';
 import type { Container } from 'inversify';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
-import type { ToolCallParams } from '@mcp-framework/infrastructure/types.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import type { ToolCallParams } from '@fractalizer/mcp-infrastructure/types.js';
 import type { PingResult } from '#tracker_api/api_operations/user/ping.operation.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';

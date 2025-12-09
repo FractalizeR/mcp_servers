@@ -8,9 +8,9 @@
  * - Batch-режим: обработка нескольких задач одновременно
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { IssueUrlParamsSchema } from '#tools/helpers/issue-url/issue-url.schema.js';
 
 import { ISSUE_URL_TOOL_METADATA } from './issue-url.metadata.js';

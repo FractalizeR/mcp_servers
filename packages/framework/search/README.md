@@ -1,8 +1,8 @@
-# @mcp-framework/search
+# @fractalizer/mcp-search
 
 **Advanced Tool Search Engine with compile-time indexing and 5 search strategies**
 
-[![npm version](https://img.shields.io/npm/v/@mcp-framework/search.svg)](https://www.npmjs.com/package/@mcp-framework/search)
+[![npm version](https://img.shields.io/npm/v/@fractalizer/mcp-search.svg)](https://www.npmjs.com/package/@fractalizer/mcp-search)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -17,19 +17,19 @@
 - ✅ **LRU cache** — fast repeated searches
 - ✅ **MCP tool included** — `search_tools` for Claude to discover tools
 
-**Architecture rule:** Search depends ONLY on `@mcp-framework/core`
+**Architecture rule:** Search depends ONLY on `@fractalizer/mcp-core`
 
 ---
 
 ## 📦 Installation
 
 ```bash
-npm install @mcp-framework/search
+npm install @fractalizer/mcp-search
 ```
 
 **Dependencies:**
-- `@mcp-framework/core` (BaseTool, utilities)
-- `@mcp-framework/infrastructure` (via core)
+- `@fractalizer/mcp-core` (BaseTool, utilities)
+- `@fractalizer/mcp-infrastructure` (via core)
 - `lru-cache` (caching)
 
 ---
@@ -72,7 +72,7 @@ src/
 
 **Usage:**
 ```typescript
-import { ToolSearchEngine } from '@mcp-framework/search';
+import { ToolSearchEngine } from '@fractalizer/mcp-search';
 
 // Create engine with tool metadata
 const engine = new ToolSearchEngine(toolMetadataArray);
@@ -152,7 +152,7 @@ Combines all strategies with configurable weights.
 
 **Usage:**
 ```typescript
-import { WeightedCombinedStrategy, STRATEGY_WEIGHTS } from '@mcp-framework/search';
+import { WeightedCombinedStrategy, STRATEGY_WEIGHTS } from '@fractalizer/mcp-search';
 
 // Custom weights
 const customWeights = {
@@ -350,7 +350,7 @@ npm run test:watch
 ### Custom Search Strategy
 
 ```typescript
-import { SearchStrategy, ToolMetadata } from '@mcp-framework/search';
+import { SearchStrategy, ToolMetadata } from '@fractalizer/mcp-search';
 
 class CustomSearchStrategy implements SearchStrategy {
   search(query: string, tools: ToolMetadata[]) {
@@ -372,7 +372,7 @@ const results = engine.search('query', 'custom');
 ### Adjusting Weights
 
 ```typescript
-import { STRATEGY_WEIGHTS } from '@mcp-framework/search';
+import { STRATEGY_WEIGHTS } from '@fractalizer/mcp-search';
 
 const customWeights = {
   ...STRATEGY_WEIGHTS,

@@ -141,7 +141,7 @@ async execute(issueKeys: string[]): Promise<BatchResult<IssueWithUnknownFields>>
 **Для GET операций с высокой частотой запросов:**
 
 ```typescript
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
+import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 
 const cacheKey = EntityCacheKey.createKey(EntityType.Issue, issueKey);
 const issue = await this.withCache(cacheKey, async () => {

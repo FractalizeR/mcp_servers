@@ -7,33 +7,33 @@
 
 import { Container } from 'inversify';
 import type { ServerConfig } from '#config';
-import { Logger } from '@mcp-framework/infrastructure';
+import { Logger } from '@fractalizer/mcp-infrastructure';
 import { TYPES, TOOL_SYMBOLS, OPERATION_SYMBOLS } from '#composition-root/types.js';
 import { validateDIRegistrations } from '#composition-root/validation.js';
 
 // HTTP Layer
-import type { IHttpClient, RetryStrategy } from '@mcp-framework/infrastructure';
-import { AxiosHttpClient, ExponentialBackoffStrategy } from '@mcp-framework/infrastructure';
+import type { IHttpClient, RetryStrategy } from '@fractalizer/mcp-infrastructure';
+import { AxiosHttpClient, ExponentialBackoffStrategy } from '@fractalizer/mcp-infrastructure';
 
 // Cache Layer
-import type { CacheManager } from '@mcp-framework/infrastructure';
-import { InMemoryCacheManager } from '@mcp-framework/infrastructure';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure';
+import { InMemoryCacheManager } from '@fractalizer/mcp-infrastructure';
 
 // Yandex Tracker Facade
 import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 
 // Tool Registry
-import { ToolRegistry } from '@mcp-framework/core';
+import { ToolRegistry } from '@fractalizer/mcp-core';
 
 // Search Engine
-import { ToolSearchEngine } from '@mcp-framework/search';
-import { WeightedCombinedStrategy } from '@mcp-framework/search';
-import { NameSearchStrategy } from '@mcp-framework/search';
-import { DescriptionSearchStrategy } from '@mcp-framework/search';
-import { CategorySearchStrategy } from '@mcp-framework/search';
-import { FuzzySearchStrategy } from '@mcp-framework/search';
-import type { ISearchStrategy } from '@mcp-framework/search';
-import type { StrategyType } from '@mcp-framework/search';
+import { ToolSearchEngine } from '@fractalizer/mcp-search';
+import { WeightedCombinedStrategy } from '@fractalizer/mcp-search';
+import { NameSearchStrategy } from '@fractalizer/mcp-search';
+import { DescriptionSearchStrategy } from '@fractalizer/mcp-search';
+import { CategorySearchStrategy } from '@fractalizer/mcp-search';
+import { FuzzySearchStrategy } from '@fractalizer/mcp-search';
+import type { ISearchStrategy } from '@fractalizer/mcp-search';
+import type { StrategyType } from '@fractalizer/mcp-search';
 
 // Автоматически импортируемые определения
 import { TOOL_CLASSES, OPERATION_CLASSES, bindFacadeServices } from './definitions/index.js';
@@ -152,7 +152,7 @@ function bindOperations(container: Container): void {
       const cacheManager = container.get<CacheManager>(TYPES.CacheManager);
       const loggerInstance = container.get<Logger>(TYPES.Logger);
       const configInstance = container.get<ServerConfig>(TYPES.ServerConfig);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return new (OperationClass as any)(httpClient, cacheManager, loggerInstance, configInstance);
     };
 
@@ -271,7 +271,7 @@ function bindTools(container: Container): void {
  * т.к. конструктор отличается от BaseTool: (searchEngine, logger)
  */
 async function bindSearchToolsTool(container: Container): Promise<void> {
-  const { SearchToolsTool } = await import('@mcp-framework/search');
+  const { SearchToolsTool } = await import('@fractalizer/mcp-search');
 
   container.bind(Symbol.for('SearchToolsTool')).toDynamicValue(() => {
     const searchEngine = container.get<ToolSearchEngine>(TYPES.ToolSearchEngine);
@@ -292,7 +292,7 @@ function bindToolRegistry(container: Container): void {
     const loggerInstance = container.get<Logger>(TYPES.Logger);
     // Передаём контейнер, logger и только стандартные tool классы
     // SearchToolsTool будет добавлен позже через registerToolFromContainer
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any);
   });
 }

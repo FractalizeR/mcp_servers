@@ -3,9 +3,9 @@
  */
 
 import { vi } from 'vitest';
-import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
-import type { CacheManager } from '@mcp-framework/infrastructure';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure';
 
 /**
  * Create typed mock for Logger

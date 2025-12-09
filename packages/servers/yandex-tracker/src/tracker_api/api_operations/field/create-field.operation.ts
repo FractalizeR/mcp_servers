@@ -15,7 +15,7 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
+import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 import type { CreateFieldDto, FieldOutput } from '#tracker_api/dto/index.js';
 
 export class CreateFieldOperation extends BaseOperation {

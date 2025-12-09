@@ -12,20 +12,20 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SearchToolsTool } from '@mcp-framework/search';
-import { ToolSearchEngine } from '@mcp-framework/search/engine';
+import { SearchToolsTool } from '@fractalizer/mcp-search';
+import { ToolSearchEngine } from '@fractalizer/mcp-search/engine';
 import {
   WeightedCombinedStrategy,
   NameSearchStrategy,
   DescriptionSearchStrategy,
   CategorySearchStrategy,
   FuzzySearchStrategy,
-} from '@mcp-framework/search/strategies';
-import { ToolCategory, buildToolName } from '@mcp-framework/core';
-import type { StaticToolIndex, StrategyType } from '@mcp-framework/search/types.js';
-import type { ToolRegistry } from '@mcp-framework/core/tool-registry.js';
-import type { BaseTool } from '@mcp-framework/core/tools/base/base-tool.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/index.js';
+} from '@fractalizer/mcp-search/strategies';
+import { ToolCategory, buildToolName } from '@fractalizer/mcp-core';
+import type { StaticToolIndex, StrategyType } from '@fractalizer/mcp-search/types.js';
+import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
+import type { BaseTool } from '@fractalizer/mcp-core/tools/base/base-tool.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { MCP_TOOL_PREFIX } from '#constants';
 
 describe('SearchToolsTool (E2E)', () => {

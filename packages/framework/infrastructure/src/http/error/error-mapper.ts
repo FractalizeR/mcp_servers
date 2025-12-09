@@ -54,7 +54,7 @@ export class ErrorMapper {
     }
 
     // Специальная обработка rate limiting (429 ошибка)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+     
     if (error.response.status === HttpStatusCode.TOO_MANY_REQUESTS) {
       return this.mapRateLimitError(error);
     }

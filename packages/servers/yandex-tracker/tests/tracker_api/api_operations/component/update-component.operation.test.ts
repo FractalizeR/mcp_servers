@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
-import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ComponentOutput } from '#tracker_api/dto/index.js';
 import { UpdateComponentOperation } from '#tracker_api/api_operations/component/update-component.operation.js';
 import { createComponentFixture, createQueueRef } from '#helpers/component.fixture.js';
 import { createUpdateComponentDto } from '#helpers/component-dto.fixture.js';
-import { EntityCacheKey, EntityType } from '@mcp-framework/infrastructure';
+import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 
 describe('UpdateComponentOperation', () => {
   let operation: UpdateComponentOperation;

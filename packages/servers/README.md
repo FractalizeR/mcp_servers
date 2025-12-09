@@ -52,9 +52,9 @@ cd packages/servers/{server-name}
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mcp-framework/core": "*",
-    "@mcp-framework/infrastructure": "*",
-    "@mcp-framework/search": "*",
+    "@fractalizer/mcp-core": "*",
+    "@fractalizer/mcp-infrastructure": "*",
+    "@fractalizer/mcp-search": "*",
     "@modelcontextprotocol/sdk": "^1.22.0"
   },
   "devDependencies": {

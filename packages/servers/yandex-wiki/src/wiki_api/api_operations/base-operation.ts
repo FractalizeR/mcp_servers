@@ -7,7 +7,7 @@
  * - НЕТ бизнес-логики (делегируется наследникам)
  */
 
-import type { IHttpClient, CacheManager, Logger } from '@mcp-framework/infrastructure';
+import type { IHttpClient, CacheManager, Logger } from '@fractalizer/mcp-infrastructure';
 
 export abstract class BaseOperation {
   constructor(

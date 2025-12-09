@@ -4,9 +4,9 @@
  * ВАЖНО: Создание очередей - администраторская операция!
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { CreateQueueParamsSchema } from './create-queue.schema.js';
 
 import type { CreateQueueDto } from '#tracker_api/dto/index.js';

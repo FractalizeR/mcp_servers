@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { NoOpCache } from '@mcp-framework/infrastructure/cache/no-op-cache.js';
+import { NoOpCache } from '@fractalizer/mcp-infrastructure/cache/no-op-cache.js';
 
 describe('NoOpCache', () => {
   let cache: NoOpCache;

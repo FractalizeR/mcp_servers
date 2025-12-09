@@ -22,8 +22,8 @@ import { execSync } from 'child_process';
 
 // Импортируем tool classes (без инстанцирования)
 import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
-import type { StaticToolMetadata, ToolCategory } from '@mcp-framework/core';
-import type { StaticToolIndex } from '@mcp-framework/search';
+import type { StaticToolMetadata, ToolCategory } from '@fractalizer/mcp-core';
+import type { StaticToolIndex } from '@fractalizer/mcp-search';
 
 /**
  * Интерфейс для tool класса со статическими метаданными
@@ -143,8 +143,8 @@ function generateTypeScriptFile(index: StaticToolIndex[]): string {
  * Regenerate: npm run generate:index
  */
 
-import { ToolCategory } from '@mcp-framework/core';
-import type { StaticToolIndex } from '@mcp-framework/search';
+import { ToolCategory } from '@fractalizer/mcp-core';
+import type { StaticToolIndex } from '@fractalizer/mcp-search';
 
 /**
  * Статический индекс всех tools

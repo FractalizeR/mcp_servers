@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BatchResultProcessor } from '../../src/utils/batch-result-processor.js';
-import type { BatchResult } from '@mcp-framework/infrastructure/types.js';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure/types.js';
 
 describe('BatchResultProcessor', () => {
   describe('process', () => {

@@ -2,9 +2,9 @@
  * MCP Tool для получения обязательных полей очереди в Яндекс.Трекере
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { GetQueueFieldsParamsSchema } from './get-queue-fields.schema.js';
 
 import type { QueueFieldWithUnknownFields } from '#tracker_api/entities/index.js';

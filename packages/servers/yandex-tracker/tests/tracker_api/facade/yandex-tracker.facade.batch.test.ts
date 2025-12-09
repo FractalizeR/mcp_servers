@@ -18,7 +18,7 @@ import type {
   QueueServicesContainer,
   ProjectAgileServicesContainer,
 } from '#tracker_api/facade/services/containers/index.js';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
 describe('YandexTrackerFacade - Batch Methods', () => {
   let facade: YandexTrackerFacade;

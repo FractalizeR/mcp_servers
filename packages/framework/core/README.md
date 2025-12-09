@@ -1,8 +1,8 @@
-# @mcp-framework/core
+# @fractalizer/mcp-core
 
 **Core framework for building MCP tools: base classes, utilities, registry**
 
-[![npm version](https://img.shields.io/npm/v/@mcp-framework/core.svg)](https://www.npmjs.com/package/@mcp-framework/core)
+[![npm version](https://img.shields.io/npm/v/@fractalizer/mcp-core.svg)](https://www.npmjs.com/package/@fractalizer/mcp-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -13,7 +13,7 @@
 
 **Generic Design:** `BaseTool<TFacade>` is facade-agnostic — works with any API facade
 
-**Architecture rule:** Core depends ONLY on `@mcp-framework/infrastructure`
+**Architecture rule:** Core depends ONLY on `@fractalizer/mcp-infrastructure`
 
 ---
 
@@ -23,11 +23,11 @@
 
 | ✅ Входит в scope | ❌ НЕ входит в scope |
 |-------------------|---------------------|
-| `BaseTool` и связанные типы | HTTP клиенты → `@mcp-framework/infrastructure` |
-| `ToolRegistry` и фильтрация | CLI логика → `@mcp-framework/cli` |
-| Schema → Definition генерация | Поиск tools → `@mcp-framework/search` |
+| `BaseTool` и связанные типы | HTTP клиенты → `@fractalizer/mcp-infrastructure` |
+| `ToolRegistry` и фильтрация | CLI логика → `@fractalizer/mcp-cli` |
+| Schema → Definition генерация | Поиск tools → `@fractalizer/mcp-search` |
 | Утилиты для результатов tools | Бизнес-логика серверов → `packages/servers/*` |
-| Общие Zod-схемы для tools | Logging, caching → `@mcp-framework/infrastructure` |
+| Общие Zod-схемы для tools | Logging, caching → `@fractalizer/mcp-infrastructure` |
 
 **Правило:** Если функционал не связан напрямую с созданием/регистрацией/выполнением MCP tools — ему здесь не место
 
@@ -36,11 +36,11 @@
 ## 📦 Installation
 
 ```bash
-npm install @mcp-framework/core
+npm install @fractalizer/mcp-core
 ```
 
 **Dependencies:**
-- `@mcp-framework/infrastructure` (HTTP, logging, config)
+- `@fractalizer/mcp-infrastructure` (HTTP, logging, config)
 - `@modelcontextprotocol/sdk` (MCP protocol)
 - `zod` (validation)
 
@@ -177,7 +177,7 @@ class ToolRegistry {
 
 **Usage:**
 ```typescript
-import { ResponseFieldFilter } from '@mcp-framework/core';
+import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 
 const data = {
   id: '123',
@@ -201,7 +201,7 @@ const all = ResponseFieldFilter.filter(data);
 
 **Usage:**
 ```typescript
-import { BatchResultProcessor } from '@mcp-framework/core';
+import { BatchResultProcessor } from '@fractalizer/mcp-core';
 
 const results: BatchResult<string, Item> = [
   { status: 'fulfilled', value: { id: '1', name: 'Item 1' } },
@@ -226,7 +226,7 @@ const formatted = BatchResultProcessor.formatBatchResponse(
 
 **Usage:**
 ```typescript
-import { ResultLogger } from '@mcp-framework/core';
+import { ResultLogger } from '@fractalizer/mcp-core';
 
 // Log successful result
 ResultLogger.logSuccess(logger, 'get_item', result, { itemId: '123' });
@@ -352,7 +352,7 @@ export { ToolRegistry } from './tool-registry.js';
 export { buildToolName, SafetyWarningBuilder } from './tools/common/utils/index.js';
 
 // Types
-export type { BatchResult, FulfilledResult, RejectedResult } from '@mcp-framework/infrastructure';
+export type { BatchResult, FulfilledResult, RejectedResult } from '@fractalizer/mcp-infrastructure';
 ```
 
 ---

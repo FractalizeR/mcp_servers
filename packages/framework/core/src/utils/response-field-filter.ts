@@ -39,9 +39,9 @@ export class ResponseFieldFilter {
    * const filtered = ResponseFieldFilter.filter(changelog, ['updatedAt', 'fields.field.display', 'fields.to.key']);
    * // Result: { updatedAt: '2024-01-01', fields: [{ field: { display: 'Status' }, to: { key: 'closed' } }] }
    */
-  static filter<T>(data: T, fields: string[]): T {
+  static filter<T>(data: T, fields: string[] | undefined | null): T {
     // Валидация: fields должен содержать минимум 1 элемент
-    if (fields.length === 0) {
+    if (!fields || fields.length === 0) {
       throw new Error(FIELDS_REQUIRED_ERROR);
     }
 
@@ -282,8 +282,8 @@ export class ResponseFieldFilter {
    * @returns Нормализованный массив (никогда не пустой)
    * @throws Error если после нормализации массив пустой
    */
-  static normalizeFields(fields: string[]): string[] {
-    if (fields.length === 0) {
+  static normalizeFields(fields: string[] | undefined | null): string[] {
+    if (!fields || fields.length === 0) {
       throw new Error(FIELDS_REQUIRED_ERROR);
     }
 
@@ -306,8 +306,8 @@ export class ResponseFieldFilter {
    * @param fields - Массив полей для валидации (должен быть не пустым)
    * @returns Ошибка валидации или undefined
    */
-  static validateFields(fields: string[]): string | undefined {
-    if (fields.length === 0) {
+  static validateFields(fields: string[] | undefined | null): string | undefined {
+    if (!fields || fields.length === 0) {
       return FIELDS_REQUIRED_ERROR;
     }
 

@@ -4,9 +4,9 @@
  * Retrieves all tasks with due date within current week (Monday to Sunday).
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { GetTasksDueThisWeekParamsSchema } from './get-tasks-due-this-week.schema.js';
 import { GET_TASKS_DUE_THIS_WEEK_TOOL_METADATA } from './get-tasks-due-this-week.metadata.js';
 import { filterFieldsArray } from '#tools/shared/index.js';

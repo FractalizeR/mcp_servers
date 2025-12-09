@@ -28,15 +28,15 @@ export default mergeConfig(
     resolve: {
       alias: {
         // Framework packages (inter-package dependencies for vitest)
-        '@mcp-framework/search': path.resolve(__dirname, '../../framework/search/src'),
-        '@mcp-framework/search/*': path.resolve(__dirname, '../../framework/search/src/*'),
-        '@mcp-framework/core': path.resolve(__dirname, '../../framework/core/src'),
-        '@mcp-framework/core/*': path.resolve(__dirname, '../../framework/core/src/*'),
-        '@mcp-framework/infrastructure': path.resolve(
+        '@fractalizer/mcp-search': path.resolve(__dirname, '../../framework/search/src'),
+        '@fractalizer/mcp-search/*': path.resolve(__dirname, '../../framework/search/src/*'),
+        '@fractalizer/mcp-core': path.resolve(__dirname, '../../framework/core/src'),
+        '@fractalizer/mcp-core/*': path.resolve(__dirname, '../../framework/core/src/*'),
+        '@fractalizer/mcp-infrastructure': path.resolve(
           __dirname,
           '../../framework/infrastructure/src'
         ),
-        '@mcp-framework/infrastructure/*': path.resolve(
+        '@fractalizer/mcp-infrastructure/*': path.resolve(
           __dirname,
           '../../framework/infrastructure/src/*'
         ),

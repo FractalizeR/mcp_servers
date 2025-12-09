@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
-import type { CacheManager } from '@mcp-framework/infrastructure/cache/cache-manager.interface.js';
-import type { Logger } from '@mcp-framework/infrastructure/logging/logger.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
+import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
-import type { BatchResult } from '@mcp-framework/infrastructure/types.js';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure/types.js';
 import type { ServerConfig } from '#config';
-import type { ParallelExecutor } from '@mcp-framework/infrastructure/async/parallel-executor.js';
+import type { ParallelExecutor } from '@fractalizer/mcp-infrastructure/async/parallel-executor.js';
 import { GetIssueLinksOperation } from '#tracker_api/api_operations/link/get-issue-links.operation.js';
 import {
   createLinkListFixture,

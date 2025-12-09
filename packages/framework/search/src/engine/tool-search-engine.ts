@@ -18,7 +18,7 @@ import type {
   DetailLevel,
   ToolSearchResultItem,
 } from '../types.js';
-import type { ToolRegistry } from '@mcp-framework/core';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
 import { DEFAULT_TOOL_SEARCH_LIMIT, DEFAULT_TOOL_SEARCH_DETAIL_LEVEL } from '../constants.js';
 import { tokenize, getShortDescription } from '../utils/text-utils.js';
 
@@ -54,9 +54,7 @@ export class ToolSearchEngine {
     }
 
     // Иначе генерируем динамический индекс из ToolRegistry (lazy)
-    if (!this.lazyIndex) {
-      this.lazyIndex = this.buildIndexFromRegistry();
-    }
+    this.lazyIndex ??= this.buildIndexFromRegistry();
 
     return this.lazyIndex;
   }
@@ -74,15 +72,16 @@ export class ToolSearchEngine {
 
       // Skip tools without required fields
       // Runtime safety: mock objects in tests may not have all required fields
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+       
       if (!definition.name?.length || !definition.description?.length || !metadata.category?.length) {
         continue;
       }
+       
 
       index.push({
         name: definition.name,
         category: metadata.category,
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Runtime safety: mock objects may not have tags
+         
         tags: metadata.tags ? Array.from(metadata.tags) : [],
         isHelper: metadata.isHelper === true,
         nameTokens: tokenize(definition.name),

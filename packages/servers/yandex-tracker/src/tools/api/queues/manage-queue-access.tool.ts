@@ -2,9 +2,9 @@
  * MCP Tool для управления доступом к очереди в Яндекс.Трекере
  */
 
-import { BaseTool, ResponseFieldFilter } from '@mcp-framework/core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ManageQueueAccessParamsSchema } from './manage-queue-access.schema.js';
 
 import type { QueuePermissionWithUnknownFields } from '#tracker_api/entities/index.js';

@@ -14,12 +14,12 @@ export default mergeConfig(
     resolve: {
       alias: {
         // Поддержка subpath imports
-        '@mcp-framework/search': path.resolve(__dirname, './src'),
-        '@mcp-framework/search/*': path.resolve(__dirname, './src/*'),
-        '@mcp-framework/core': path.resolve(__dirname, '../core/src'),
-        '@mcp-framework/core/*': path.resolve(__dirname, '../core/src/*'),
-        '@mcp-framework/infrastructure': path.resolve(__dirname, '../infrastructure/src'),
-        '@mcp-framework/infrastructure/*': path.resolve(__dirname, '../infrastructure/src/*'),
+        '@fractalizer/mcp-search': path.resolve(__dirname, './src'),
+        '@fractalizer/mcp-search/*': path.resolve(__dirname, './src/*'),
+        '@fractalizer/mcp-core': path.resolve(__dirname, '../core/src'),
+        '@fractalizer/mcp-core/*': path.resolve(__dirname, '../core/src/*'),
+        '@fractalizer/mcp-infrastructure': path.resolve(__dirname, '../infrastructure/src'),
+        '@fractalizer/mcp-infrastructure/*': path.resolve(__dirname, '../infrastructure/src/*'),
       },
     },
   })

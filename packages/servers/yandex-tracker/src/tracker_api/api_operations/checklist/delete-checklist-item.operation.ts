@@ -10,8 +10,8 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { ParallelExecutor } from '@mcp-framework/infrastructure';
-import type { BatchResult } from '@mcp-framework/infrastructure';
+import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
+import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 
 export class DeleteChecklistItemOperation extends BaseOperation {

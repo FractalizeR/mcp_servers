@@ -9,8 +9,8 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
 import type { ServerConfig } from '#config';
-import type { ToolRegistry } from '@mcp-framework/core/tool-registry.js';
-import type { IHttpClient } from '@mcp-framework/infrastructure/http/client/i-http-client.interface.js';
+import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
+import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 
 describe('E2E Tool Execution (Smoke)', () => {
   const fakeConfig: ServerConfig = {

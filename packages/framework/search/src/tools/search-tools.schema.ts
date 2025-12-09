@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { ToolCategory } from '@mcp-framework/core';
+import { ToolCategory } from '@fractalizer/mcp-core';
 
 /**
  * Схема для детализации результатов

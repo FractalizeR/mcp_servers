@@ -7,8 +7,8 @@
  * - Получение информации о текущем пользователе
  */
 
-import { BaseTool } from '@mcp-framework/core';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import { PingParamsSchema } from './ping.schema.js';
 import { PING_TOOL_METADATA } from './ping.metadata.js';

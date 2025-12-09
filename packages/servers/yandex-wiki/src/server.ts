@@ -23,8 +23,8 @@ import { dirname, join } from 'node:path';
 
 import { loadConfig } from '#config';
 import type { ServerConfig } from '#config';
-import type { Logger } from '@mcp-framework/infrastructure';
-import type { ToolRegistry } from '@mcp-framework/core';
+import type { Logger } from '@fractalizer/mcp-infrastructure';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
 import { MCP_SERVER_NAME, YANDEX_WIKI_ESSENTIAL_TOOLS } from './constants.js';
 
 // DI Container (Composition Root)

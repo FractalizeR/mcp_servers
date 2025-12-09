@@ -7,10 +7,10 @@
  * - Валидация через Zod
  */
 
-import { BaseTool } from '@mcp-framework/core';
+import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
-import { ResponseFieldFilter, ResultLogger } from '@mcp-framework/core';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
+import { ResponseFieldFilter, ResultLogger } from '@fractalizer/mcp-core';
 import type { TransitionWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetIssueTransitionsParamsSchema } from '#tools/api/issues/transitions/get/get-issue-transitions.schema.js';
 

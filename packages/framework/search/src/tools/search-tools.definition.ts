@@ -7,9 +7,9 @@
  * - Примеры использования
  */
 
-import type { ToolDefinition, StaticToolMetadata } from '@mcp-framework/core';
-import { BaseToolDefinition } from '@mcp-framework/core';
-import { buildToolName } from '@mcp-framework/core';
+import type { ToolDefinition, StaticToolMetadata } from '@fractalizer/mcp-core';
+import { BaseToolDefinition } from '@fractalizer/mcp-core';
+import { buildToolName } from '@fractalizer/mcp-core';
 import { SEARCH_TOOLS_METADATA } from './search-tools.metadata.js';
 
 /**

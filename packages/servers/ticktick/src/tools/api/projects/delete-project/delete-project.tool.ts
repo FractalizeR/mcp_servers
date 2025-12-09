@@ -2,8 +2,8 @@
  * MCP Tool for deleting a TickTick project
  */
 
-import { BaseTool } from '@mcp-framework/core';
-import type { ToolCallParams, ToolResult } from '@mcp-framework/infrastructure';
+import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
 import { DELETE_PROJECT_TOOL_METADATA } from './delete-project.metadata.js';
 import { DeleteProjectParamsSchema } from './delete-project.schema.js';
