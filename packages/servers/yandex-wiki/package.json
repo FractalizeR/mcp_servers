@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-server-yandex-wiki",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MCP Server for Yandex Wiki API integration",
   "keywords": [
     "mcp",
@@ -68,10 +68,10 @@
     "validate:tools": "tsx scripts/validate-tool-registration.ts"
   },
   "dependencies": {
-    "@fractalizer/mcp-cli": "^0.2.0",
-    "@fractalizer/mcp-core": "^0.2.0",
-    "@fractalizer/mcp-infrastructure": "^0.2.0",
-    "@fractalizer/mcp-search": "^0.2.0",
+    "@fractalizer/mcp-cli": "^0.2.1",
+    "@fractalizer/mcp-core": "^0.2.1",
+    "@fractalizer/mcp-infrastructure": "^0.2.1",
+    "@fractalizer/mcp-search": "^0.2.1",
     "@modelcontextprotocol/sdk": "^1.23.0",
     "axios": "^1.13.2",
     "chalk": "^5.6.2",

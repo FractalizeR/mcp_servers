@@ -1,3 +1,9 @@
+## [0.2.1](https://github.com/FractalizeR/mcp_servers/compare/v0.2.0...v0.2.1) (2025-12-09)
+
+### Bug Fixes
+
+* **ci:** исправить сборку MCPB бандлов в workflow ([cdb4b81](https://github.com/FractalizeR/mcp_servers/commit/cdb4b8136b1de84580c6fffdcfb8f4b6700eb8cc))
+
 ## [0.2.0](https://github.com/FractalizeR/mcp_servers/compare/v0.1.4...v0.2.0) (2025-12-09)
 
 ### Features
