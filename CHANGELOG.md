@@ -1,3 +1,9 @@
+## [0.2.2](https://github.com/FractalizeR/mcp_servers/compare/v0.2.1...v0.2.2) (2025-12-09)
+
+### Bug Fixes
+
+* **ci:** добавить сборку всех пакетов перед MCPB ([51c52d9](https://github.com/FractalizeR/mcp_servers/commit/51c52d99dbca4cc89083a5396835b3ba5f16e163))
+
 ## [0.2.1](https://github.com/FractalizeR/mcp_servers/compare/v0.2.0...v0.2.1) (2025-12-09)
 
 ### Bug Fixes
