@@ -1,3 +1,9 @@
+## [0.2.0](https://github.com/FractalizeR/mcp_servers/compare/v0.1.4...v0.2.0) (2025-12-09)
+
+### Features
+
+* **ci:** собирать MCPB для всех серверов с фиксированными именами ([27bc4d0](https://github.com/FractalizeR/mcp_servers/commit/27bc4d0c4aef75ea7aae5cae8bc1c7f2dcd0efb4))
+
 ## [0.1.4](https://github.com/FractalizeR/mcp_servers/compare/v0.1.3...v0.1.4) (2025-12-09)
 
 ### Bug Fixes

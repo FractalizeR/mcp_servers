@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-search",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Advanced tool search engine with compile-time indexing and 5 search strategies",
   "keywords": [
     "mcp",
