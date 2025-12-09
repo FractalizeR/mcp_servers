@@ -48,9 +48,9 @@ jobs:
 
       - name: Semantic Release
         id: semantic
+        uses: cycjimmy/semantic-release-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
 
   # Job 2: Publish to NPM using OIDC Trusted Publishing (no NPM_TOKEN needed!)
   publish-npm:
