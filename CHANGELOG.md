@@ -1,3 +1,9 @@
+## [0.1.3](https://github.com/FractalizeR/mcp_servers/compare/v0.1.2...v0.1.3) (2025-12-09)
+
+### Bug Fixes
+
+* **ci:** использовать semantic-release-action для корректных outputs ([e74651c](https://github.com/FractalizeR/mcp_servers/commit/e74651c1acd1536019c9ffe131b7d0951e76333a))
+
 ## [0.1.2](https://github.com/FractalizeR/mcp_servers/compare/v0.1.1...v0.1.2) (2025-12-09)
 
 ### Bug Fixes
