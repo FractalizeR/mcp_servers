@@ -4,9 +4,12 @@
  * Ответственность (SRP):
  * - Фильтрация объектов по заданному списку полей
  * - Поддержка вложенных полей через dot-notation (например: "assignee.login")
- * - Обработка массивов объектов
+ * - Поддержка фильтрации внутри вложенных массивов (например: "fields.field.display")
+ * - Обработка массивов объектов на верхнем уровне
  * - Сохранение типобезопасности
  */
+const FIELDS_REQUIRED_ERROR = 'Параметр fields обязателен и должен содержать хотя бы один элемент';
+
 export class ResponseFieldFilter {
   /**
    * Фильтрует объект, оставляя только указанные поля
@@ -16,7 +19,7 @@ export class ResponseFieldFilter {
    * @returns Отфильтрованные данные с теми же типами
    *
    * @example
-   * // Получение конкретных вложенных полей
+   * // Получение конкретных вложенных полей из объекта
    * const data = { key: 'QUEUE-1', summary: 'Test', assignee: { login: 'user', email: 'user@example.com' } };
    * const filtered1 = ResponseFieldFilter.filter(data, ['key', 'assignee.login']);
    * // Result: { key: 'QUEUE-1', assignee: { login: 'user' } }
@@ -24,12 +27,22 @@ export class ResponseFieldFilter {
    * // Получение всего вложенного объекта
    * const filtered2 = ResponseFieldFilter.filter(data, ['key', 'assignee']);
    * // Result: { key: 'QUEUE-1', assignee: { login: 'user', email: 'user@example.com' } }
+   *
+   * @example
+   * // Фильтрация внутри вложенных массивов (например, changelog.fields)
+   * const changelog = {
+   *   updatedAt: '2024-01-01',
+   *   fields: [
+   *     { field: { id: 'status', display: 'Status' }, from: { key: 'open' }, to: { key: 'closed' } }
+   *   ]
+   * };
+   * const filtered = ResponseFieldFilter.filter(changelog, ['updatedAt', 'fields.field.display', 'fields.to.key']);
+   * // Result: { updatedAt: '2024-01-01', fields: [{ field: { display: 'Status' }, to: { key: 'closed' } }] }
    */
   static filter<T>(data: T, fields: string[]): T {
     // Валидация: fields должен содержать минимум 1 элемент
-
-    if (!fields || fields.length === 0) {
-      throw new Error('Параметр fields обязателен и должен содержать хотя бы один элемент');
+    if (fields.length === 0) {
+      throw new Error(FIELDS_REQUIRED_ERROR);
     }
 
     // Обработка массивов
@@ -71,6 +84,10 @@ export class ResponseFieldFilter {
   /**
    * Извлекает поле из исходного объекта и помещает в результирующий
    *
+   * Поддерживает:
+   * - Вложенные объекты: "assignee.login" → { assignee: { login: "..." } }
+   * - Массивы объектов: "fields.field.display" → { fields: [{ field: { display: "..." } }] }
+   *
    * @param source - Исходный объект
    * @param pathParts - Путь к полю (разбитый на части)
    * @param target - Результирующий объект
@@ -108,6 +125,23 @@ export class ResponseFieldFilter {
     const sourceValue: unknown = source[currentKey];
 
     if (typeof sourceValue === 'object' && sourceValue !== null) {
+      // Обработка массивов: применяем оставшийся путь к каждому элементу
+      if (Array.isArray(sourceValue)) {
+        const filteredArray = this.filterArrayElements(sourceValue, remainingPath);
+
+        // Если массив уже существует в target, мержим результаты
+        if (currentKey in target && Array.isArray(target[currentKey])) {
+          target[currentKey] = this.mergeArrayResults(
+            target[currentKey] as unknown[],
+            filteredArray
+          );
+        } else {
+          target[currentKey] = filteredArray;
+        }
+        return;
+      }
+
+      // Обработка объектов
       // Если целевой объект еще не существует, создаём его
       if (!(currentKey in target) || typeof target[currentKey] !== 'object') {
         target[currentKey] = {};
@@ -123,6 +157,125 @@ export class ResponseFieldFilter {
   }
 
   /**
+   * Фильтрует элементы массива, применяя оставшийся путь к каждому элементу
+   *
+   * @param array - Исходный массив
+   * @param remainingPath - Оставшийся путь (после имени массива)
+   * @returns Отфильтрованный массив
+   *
+   * @example
+   * // Вход: [{ field: { id: 'status', display: 'Status' }, from: {...}, to: {...} }]
+   * // remainingPath: ['field', 'display']
+   * // Выход: [{ field: { display: 'Status' } }]
+   */
+  private static filterArrayElements(array: unknown[], remainingPath: string[]): unknown[] {
+    return array.map((item) => {
+      // Примитивы возвращаем как есть
+      if (typeof item !== 'object' || item === null) {
+        return item;
+      }
+
+      // Для объектов применяем фильтрацию по оставшемуся пути
+      const result: Record<string, unknown> = {};
+      this.extractField(item as Record<string, unknown>, remainingPath, result);
+      return result;
+    });
+  }
+
+  /**
+   * Мержит два массива результатов фильтрации (поэлементно).
+   * Используется когда несколько полей запрашивают данные из одного массива.
+   *
+   * @param existing - Уже накопленные результаты
+   * @param newResults - Новые результаты для мержа
+   * @returns Объединённый массив
+   *
+   * @example
+   * // existing: [{ field: { display: 'Status' } }]
+   * // newResults: [{ from: { display: 'Open' } }]
+   * // result: [{ field: { display: 'Status' }, from: { display: 'Open' } }]
+   */
+  private static mergeArrayResults(existing: unknown[], newResults: unknown[]): unknown[] {
+    // Массивы должны иметь одинаковую длину (они из одного исходного массива)
+    const maxLength = Math.max(existing.length, newResults.length);
+    const result: unknown[] = [];
+
+    for (let i = 0; i < maxLength; i++) {
+      const existingItem = existing[i];
+      const newItem = newResults[i];
+
+      // Если один из элементов отсутствует, используем другой
+      if (existingItem === undefined) {
+        result.push(newItem);
+        continue;
+      }
+      if (newItem === undefined) {
+        result.push(existingItem);
+        continue;
+      }
+
+      // Если оба примитивы или null — используем существующий
+      if (
+        typeof existingItem !== 'object' ||
+        existingItem === null ||
+        typeof newItem !== 'object' ||
+        newItem === null
+      ) {
+        result.push(existingItem);
+        continue;
+      }
+
+      // Глубокий мерж двух объектов
+      result.push(this.deepMerge(existingItem, newItem));
+    }
+
+    return result;
+  }
+
+  /**
+   * Глубоко мержит два объекта
+   *
+   * @param target - Целевой объект
+   * @param source - Исходный объект для мержа
+   * @returns Новый объект с объединёнными полями
+   */
+  private static deepMerge(target: unknown, source: unknown): unknown {
+    if (
+      typeof target !== 'object' ||
+      target === null ||
+      typeof source !== 'object' ||
+      source === null
+    ) {
+      return target;
+    }
+
+    const result: Record<string, unknown> = { ...(target as Record<string, unknown>) };
+    const sourceObj = source as Record<string, unknown>;
+
+    for (const key of Object.keys(sourceObj)) {
+      if (key in result) {
+        // Если оба значения - объекты, мержим рекурсивно
+        if (
+          typeof result[key] === 'object' &&
+          result[key] !== null &&
+          typeof sourceObj[key] === 'object' &&
+          sourceObj[key] !== null &&
+          !Array.isArray(result[key]) &&
+          !Array.isArray(sourceObj[key])
+        ) {
+          result[key] = this.deepMerge(result[key], sourceObj[key]);
+        }
+        // Иначе оставляем существующее значение (не перезаписываем)
+      } else {
+        // Добавляем новое поле
+        result[key] = sourceObj[key];
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Нормализует список полей, удаляя дубликаты и сортируя
    *
    * @param fields - Исходный массив полей
@@ -130,8 +283,8 @@ export class ResponseFieldFilter {
    * @throws Error если после нормализации массив пустой
    */
   static normalizeFields(fields: string[]): string[] {
-    if (!fields || fields.length === 0) {
-      throw new Error('Параметр fields обязателен и должен содержать хотя бы один элемент');
+    if (fields.length === 0) {
+      throw new Error(FIELDS_REQUIRED_ERROR);
     }
 
     // Удаляем дубликаты, пустые строки и сортируем
@@ -154,8 +307,8 @@ export class ResponseFieldFilter {
    * @returns Ошибка валидации или undefined
    */
   static validateFields(fields: string[]): string | undefined {
-    if (!fields || fields.length === 0) {
-      return 'Параметр fields обязателен и должен содержать хотя бы один элемент';
+    if (fields.length === 0) {
+      return FIELDS_REQUIRED_ERROR;
     }
 
     for (const field of fields) {

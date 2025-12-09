@@ -295,6 +295,211 @@ describe('ResponseFieldFilter', () => {
       // null возвращаем как есть
       expect(result).toBeNull();
     });
+
+    describe('фильтрация внутри вложенных массивов', () => {
+      it('должен фильтровать поля внутри массива объектов (changelog use case)', () => {
+        const data = {
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          type: 'IssueUpdated',
+          fields: [
+            {
+              field: { id: 'status', display: 'Status' },
+              from: { key: 'open', display: 'Open' },
+              to: { key: 'closed', display: 'Closed' },
+            },
+            {
+              field: { id: 'assignee', display: 'Assignee' },
+              from: { login: 'user1', display: 'User 1' },
+              to: { login: 'user2', display: 'User 2' },
+            },
+          ],
+        };
+
+        const result = ResponseFieldFilter.filter(data, [
+          'updatedAt',
+          'fields.field.display',
+          'fields.from.display',
+          'fields.to.display',
+        ]);
+
+        expect(result).toEqual({
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          fields: [
+            {
+              field: { display: 'Status' },
+              from: { display: 'Open' },
+              to: { display: 'Closed' },
+            },
+            {
+              field: { display: 'Assignee' },
+              from: { display: 'User 1' },
+              to: { display: 'User 2' },
+            },
+          ],
+        });
+      });
+
+      it('должен возвращать весь массив при указании только имени поля-массива', () => {
+        const data = {
+          id: '123',
+          fields: [
+            { field: { id: 'status' }, from: 'open', to: 'closed' },
+            { field: { id: 'priority' }, from: 'low', to: 'high' },
+          ],
+        };
+
+        const result = ResponseFieldFilter.filter(data, ['id', 'fields']);
+
+        expect(result).toEqual({
+          id: '123',
+          fields: [
+            { field: { id: 'status' }, from: 'open', to: 'closed' },
+            { field: { id: 'priority' }, from: 'low', to: 'high' },
+          ],
+        });
+      });
+
+      it('должен обрабатывать пустой массив', () => {
+        const data = {
+          id: '123',
+          fields: [],
+        };
+
+        const result = ResponseFieldFilter.filter(data, ['id', 'fields.field.display']);
+
+        expect(result).toEqual({
+          id: '123',
+          fields: [],
+        });
+      });
+
+      it('должен обрабатывать массив с примитивами', () => {
+        const data = {
+          id: '123',
+          tags: ['tag1', 'tag2', 'tag3'],
+        };
+
+        // При попытке получить вложенное поле из примитивов, возвращаем примитивы как есть
+        const result = ResponseFieldFilter.filter(data, ['id', 'tags.name']);
+
+        expect(result).toEqual({
+          id: '123',
+          tags: ['tag1', 'tag2', 'tag3'],
+        });
+      });
+
+      it('должен обрабатывать вложенные массивы на нескольких уровнях', () => {
+        const data = {
+          id: '123',
+          changelog: [
+            {
+              type: 'update',
+              changes: [
+                { field: 'status', oldValue: 'open', newValue: 'closed' },
+                { field: 'priority', oldValue: 'low', newValue: 'high' },
+              ],
+            },
+          ],
+        };
+
+        const result = ResponseFieldFilter.filter(data, ['changelog.changes.field']);
+
+        expect(result).toEqual({
+          changelog: [
+            {
+              changes: [{ field: 'status' }, { field: 'priority' }],
+            },
+          ],
+        });
+      });
+
+      it('должен обрабатывать массив с null элементами', () => {
+        const data = {
+          id: '123',
+          items: [{ name: 'item1' }, null, { name: 'item2' }],
+        };
+
+        const result = ResponseFieldFilter.filter(data, ['id', 'items.name']);
+
+        expect(result).toEqual({
+          id: '123',
+          items: [{ name: 'item1' }, null, { name: 'item2' }],
+        });
+      });
+
+      it('должен обрабатывать несколько полей из одного массива', () => {
+        const data = {
+          fields: [{ field: { id: 'a', display: 'A' }, from: { x: 1 }, to: { y: 2 } }],
+        };
+
+        const result = ResponseFieldFilter.filter(data, [
+          'fields.field.id',
+          'fields.field.display',
+          'fields.to',
+        ]);
+
+        expect(result).toEqual({
+          fields: [
+            {
+              field: { id: 'a', display: 'A' },
+              to: { y: 2 },
+            },
+          ],
+        });
+      });
+
+      it('должен игнорировать несуществующие поля внутри элементов массива', () => {
+        const data = {
+          fields: [{ field: { id: 'status' } }],
+        };
+
+        const result = ResponseFieldFilter.filter(data, ['fields.nonexistent']);
+
+        expect(result).toEqual({
+          fields: [{}],
+        });
+      });
+
+      it('должен корректно обрабатывать реальный changelog с type и transport', () => {
+        // Реальный use case из Yandex Tracker API
+        const changelog = {
+          id: '1',
+          self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/changelog/1',
+          issue: { id: '123', key: 'TEST-1', display: 'Test issue' },
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          updatedBy: { login: 'user', display: 'User Name' },
+          type: 'IssueUpdated',
+          transport: 'web',
+          fields: [
+            {
+              field: { id: 'status', display: 'Status' },
+              from: { key: 'open', display: 'Open' },
+              to: { key: 'inProgress', display: 'In Progress' },
+            },
+          ],
+        };
+
+        const result = ResponseFieldFilter.filter(changelog, [
+          'updatedAt',
+          'type',
+          'fields.field.display',
+          'fields.from.display',
+          'fields.to.display',
+        ]);
+
+        expect(result).toEqual({
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          type: 'IssueUpdated',
+          fields: [
+            {
+              field: { display: 'Status' },
+              from: { display: 'Open' },
+              to: { display: 'In Progress' },
+            },
+          ],
+        });
+      });
+    });
   });
 
   describe('normalizeFields', () => {
