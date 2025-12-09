@@ -122,9 +122,9 @@ jobs:
           echo ""
           echo "✅ All packages processed!"
 
-  # Job 3: Build MCPB bundle and attach to GitHub release
+  # Job 3: Build MCPB bundles for all servers and attach to GitHub release
   build-mcpb:
-    name: Build MCPB Bundle
+    name: Build MCPB Bundles
     needs: release
     runs-on: ubuntu-latest
     if: needs.release.outputs.new_release_published == 'true'
@@ -144,25 +144,56 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build MCPB bundle
-        run: npm run build:mcpb
+      - name: Build all MCPB bundles
+        run: |
+          echo "📦 Building MCPB bundles for all servers..."
 
-      - name: Find and upload MCPB file
+          # Build each server's MCPB
+          npm run build:mcpb --workspace=@fractalizer/mcp-server-yandex-tracker || echo "⚠️ yandex-tracker MCPB failed"
+          npm run build:mcpb --workspace=@fractalizer/mcp-server-yandex-wiki || echo "⚠️ yandex-wiki MCPB failed"
+          npm run build:mcpb --workspace=@fractalizer/mcp-server-ticktick || echo "⚠️ ticktick MCPB failed"
+
+      - name: Rename and upload MCPB files
         run: |
           VERSION="${{ needs.release.outputs.new_release_version }}"
-          MCPB_FILE=$(ls fractalizer_mcp_yandex_tracker-*.mcpb 2>/dev/null | head -n 1)
+          UPLOAD_FILES=""
 
-          if [ -z "$MCPB_FILE" ]; then
-            echo "⚠️ MCPB file not found, skipping upload"
+          # Yandex Tracker
+          YT_FILE=$(ls fractalizer_mcp_yandex_tracker-*.mcpb 2>/dev/null | head -n 1)
+          if [ -n "$YT_FILE" ]; then
+            mv "$YT_FILE" "mcp-server-yandex-tracker.mcpb"
+            UPLOAD_FILES="$UPLOAD_FILES mcp-server-yandex-tracker.mcpb"
+            echo "✅ yandex-tracker MCPB ready"
+          fi
+
+          # Yandex Wiki
+          YW_FILE=$(ls fractalizer_mcp_yandex_wiki-*.mcpb 2>/dev/null | head -n 1)
+          if [ -n "$YW_FILE" ]; then
+            mv "$YW_FILE" "mcp-server-yandex-wiki.mcpb"
+            UPLOAD_FILES="$UPLOAD_FILES mcp-server-yandex-wiki.mcpb"
+            echo "✅ yandex-wiki MCPB ready"
+          fi
+
+          # TickTick
+          TT_FILE=$(ls fractalizer_mcp_ticktick-*.mcpb 2>/dev/null | head -n 1)
+          if [ -n "$TT_FILE" ]; then
+            mv "$TT_FILE" "mcp-server-ticktick.mcpb"
+            UPLOAD_FILES="$UPLOAD_FILES mcp-server-ticktick.mcpb"
+            echo "✅ ticktick MCPB ready"
+          fi
+
+          if [ -z "$UPLOAD_FILES" ]; then
+            echo "⚠️ No MCPB files found, skipping upload"
             exit 0
           fi
 
-          echo "Found MCPB file: $MCPB_FILE"
+          echo ""
+          echo "📤 Uploading to release v${VERSION}..."
 
-          # Upload to existing GitHub release
-          gh release upload "v${VERSION}" "$MCPB_FILE" \
-            packages/servers/yandex-tracker/dist/yandex-tracker.bundle.cjs \
-            --clobber
+          # Upload all MCPB files to GitHub release
+          gh release upload "v${VERSION}" $UPLOAD_FILES --clobber
+
+          echo "✅ All MCPB bundles uploaded!"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

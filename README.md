@@ -1,13 +1,27 @@
-# MCP Framework и Yandex Tracker Server
+# MCP Framework и MCP Серверы
 
-[![CI](https://github.com/FractalizeR/mcp_server_yandex_tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/FractalizeR/mcp_server_yandex_tracker/actions/workflows/ci.yml)
+[![CI](https://github.com/FractalizeR/mcp_servers/actions/workflows/ci.yml/badge.svg)](https://github.com/FractalizeR/mcp_servers/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Monorepo с MCP Framework пакетами и интеграцией Yandex Tracker**
+**Monorepo с MCP Framework пакетами и MCP серверами для различных сервисов**
 
 Этот репозиторий содержит:
-- **Yandex Tracker Server** — полноценный MCP сервер для Yandex.Tracker API
-- **MCP Framework** — переиспользуемые пакеты для создания MCP инструментов (автогенерация definitions из schema)
+- **MCP Серверы** — готовые серверы для Yandex Tracker, Yandex Wiki, TickTick
+- **MCP Framework** — переиспользуемые пакеты для создания MCP инструментов
+
+---
+
+## 📦 Скачать MCPB Bundles
+
+Готовые бандлы для установки в MCP клиенты (Claude Desktop и др.):
+
+| Сервер | Описание | Скачать |
+|--------|----------|---------|
+| **Yandex Tracker** | Интеграция с Yandex.Tracker API | [⬇️ mcp-server-yandex-tracker.mcpb](https://github.com/FractalizeR/mcp_servers/releases/latest/download/mcp-server-yandex-tracker.mcpb) |
+| **Yandex Wiki** | Интеграция с Yandex Wiki API | [⬇️ mcp-server-yandex-wiki.mcpb](https://github.com/FractalizeR/mcp_servers/releases/latest/download/mcp-server-yandex-wiki.mcpb) |
+| **TickTick** | Интеграция с TickTick API | [⬇️ mcp-server-ticktick.mcpb](https://github.com/FractalizeR/mcp_servers/releases/latest/download/mcp-server-ticktick.mcpb) |
+
+> 💡 Все бандлы также доступны на странице [GitHub Releases](https://github.com/FractalizeR/mcp_servers/releases/latest)
 
 ---
 
@@ -15,7 +29,7 @@
 
 ### Способ 1: MCPB Bundle (Рекомендуется)
 
-Скачай готовый `.mcpb` бандл со страницы [GitHub Releases](https://github.com/FractalizeR/mcp_server_yandex_tracker/releases) и установи его напрямую в MCP клиент.
+Скачай готовый `.mcpb` бандл по ссылкам выше и установи его напрямую в MCP клиент.
 
 ### Способ 2: CLI установка
 
@@ -44,20 +58,22 @@ npm install -g mcp-server-yandex-tracker
 
 ## Пакеты
 
-### Пакет приложения
+### MCP Серверы
 
-| Пакет | Версия | Описание |
-|-------|--------|----------|
-| [mcp-server-yandex-tracker](packages/servers/yandex-tracker) | 4.0.0 | MCP сервер для интеграции с Yandex.Tracker API (v2/v3) |
+| Пакет | Описание |
+|-------|----------|
+| [@fractalizer/mcp-server-yandex-tracker](packages/servers/yandex-tracker) | MCP сервер для Yandex.Tracker API (v2/v3) |
+| [@fractalizer/mcp-server-yandex-wiki](packages/servers/yandex-wiki) | MCP сервер для Yandex Wiki API |
+| [@fractalizer/mcp-server-ticktick](packages/servers/ticktick) | MCP сервер для TickTick API |
 
-### Framework пакеты (публикуются в npm)
+### Framework пакеты
 
-| Пакет | Версия | Описание |
-|-------|--------|----------|
-| [@fractalizer/mcp-infrastructure](packages/framework/infrastructure) | 0.2.0 | HTTP клиент, кэш, логирование, async утилиты |
-| [@fractalizer/mcp-cli](packages/framework/cli) | 0.2.0 | Универсальный CLI для MCP подключений |
-| [@fractalizer/mcp-core](packages/framework/core) | 0.1.0 | Базовые классы, система типов, реестр инструментов, генератор schema→definition |
-| [@fractalizer/mcp-search](packages/framework/search) | 0.1.0 | Продвинутый поисковый движок с compile-time индексацией |
+| Пакет | Описание |
+|-------|----------|
+| [@fractalizer/mcp-infrastructure](packages/framework/infrastructure) | HTTP клиент, кэш, логирование, async утилиты |
+| [@fractalizer/mcp-cli](packages/framework/cli) | Универсальный CLI для MCP подключений |
+| [@fractalizer/mcp-core](packages/framework/core) | Базовые классы, система типов, реестр инструментов |
+| [@fractalizer/mcp-search](packages/framework/search) | Поисковый движок с compile-time индексацией |
 
 ---
 
@@ -67,16 +83,13 @@ npm install -g mcp-server-yandex-tracker
 packages/
 ├── framework/
 │   ├── infrastructure/     → @fractalizer/mcp-infrastructure
-│   │   └── HTTP, кэш, логирование, async утилиты
 │   ├── cli/               → @fractalizer/mcp-cli
-│   │   └── Универсальный CLI для MCP подключений
 │   ├── core/              → @fractalizer/mcp-core
-│   │   └── BaseTool, реестр, система типов
 │   └── search/            → @fractalizer/mcp-search
-│       └── Поисковый движок (compile-time индексация)
 └── servers/
-    └── yandex-tracker/    → mcp-server-yandex-tracker
-        └── Yandex API, инструменты, операции, DI
+    ├── yandex-tracker/    → @fractalizer/mcp-server-yandex-tracker
+    ├── yandex-wiki/       → @fractalizer/mcp-server-yandex-wiki
+    └── ticktick/          → @fractalizer/mcp-server-ticktick
 ```
 
 **Граф зависимостей:**
