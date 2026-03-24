@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-core",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Core framework for building MCP tools: base classes, utilities, registry",
   "keywords": [
     "mcp",

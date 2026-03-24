@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-yandex-tracker",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "MCP Server for Yandex Tracker API integration. This is a convenience wrapper for @fractalizer/mcp-server-yandex-tracker.",
   "keywords": [
     "mcp",
