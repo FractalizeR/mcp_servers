@@ -1,3 +1,14 @@
+## [0.3.2](https://github.com/FractalizeR/mcp_servers/compare/v0.3.1...v0.3.2) (2026-03-24)
+
+### Bug Fixes
+
+* **ci:** добавить wrapper-пакеты в release pipeline ([ce1e24d](https://github.com/FractalizeR/mcp_servers/commit/ce1e24dcd27befe96b3a1f35b28819613ef746e4))
+* **ci:** исправить workspace resolution и release pipeline ([82d644f](https://github.com/FractalizeR/mcp_servers/commit/82d644f6fded00430d50dc6cd07a255dd38d76b1))
+* добавить server-пакеты в knip ignoreDependencies для wrappers ([68891b5](https://github.com/FractalizeR/mcp_servers/commit/68891b52e7344c88ad1cf789c7814ae6d773a2c5))
+* зафиксировать vite ^7 через overrides (vite 8 ломает # imports) ([0d8a2ad](https://github.com/FractalizeR/mcp_servers/commit/0d8a2ad7642b622fd7529808e2f21823e50433fc))
+* исключить duplicate exports из knip strict проверки ([20a8083](https://github.com/FractalizeR/mcp_servers/commit/20a808310621e39a4959c534836f5ef0f1a785d6))
+* синхронизация deps и manifest после ревью ([a6afac7](https://github.com/FractalizeR/mcp_servers/commit/a6afac75d1f9c760d5aa5436bba5b7e78ef8f838))
+
 ## [0.2.4](https://github.com/FractalizeR/mcp_servers/compare/v0.2.3...v0.2.4) (2026-03-24)
 
 ### Bug Fixes
