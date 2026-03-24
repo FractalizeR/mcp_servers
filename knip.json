@@ -7,31 +7,77 @@
     },
     "packages/framework/infrastructure": {
       "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["pino-pretty"]
     },
     "packages/framework/core": {
       "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": [
+        "@modelcontextprotocol/sdk",
+        "pino",
+        "zod-to-json-schema",
+        "inversify"
+      ]
     },
     "packages/framework/search": {
       "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
-    },
-    "packages/servers/yandex-tracker": {
-      "entry": ["src/index.ts", "src/cli/bin/*.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@fractalizer/mcp-infrastructure"]
     },
     "packages/framework/cli": {
       "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": [
+        "@fractalizer/mcp-infrastructure",
+        "commander"
+      ]
+    },
+    "packages/servers/yandex-tracker": {
+      "entry": ["src/index.ts", "src/cli/bin/*.ts"],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": [
+        "@fractalizer/mcp-search",
+        "@iarna/toml",
+        "axios",
+        "chalk",
+        "inquirer",
+        "mime-types",
+        "ora",
+        "pino"
+      ]
     },
     "packages/servers/yandex-wiki": {
       "entry": ["src/index.ts", "src/cli/bin/*.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": [
+        "@fractalizer/mcp-search",
+        "axios",
+        "chalk",
+        "inquirer",
+        "pino"
+      ]
     },
     "packages/servers/ticktick": {
       "entry": ["src/index.ts", "src/cli/bin/*.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": [
+        "@fractalizer/mcp-search",
+        "axios",
+        "chalk",
+        "inquirer",
+        "ora",
+        "pino"
+      ]
+    },
+    "packages/wrappers/mcp-server-yandex-tracker": {
+      "ignoreDependencies": ["@fractalizer/mcp-server-yandex-tracker"]
+    },
+    "packages/wrappers/mcp-server-yandex-wiki": {
+      "ignoreDependencies": ["@fractalizer/mcp-server-yandex-wiki"]
+    },
+    "packages/wrappers/mcp-server-ticktick": {
+      "ignoreDependencies": ["@fractalizer/mcp-server-ticktick"]
     }
   },
   "ignore": [
@@ -44,45 +90,7 @@
     "vitest.shared.ts"
   ],
   "ignoreDependencies": [
-    "@vitest/coverage-v8",
-    "@vitest/ui",
-    "vitest",
-    "tsx",
-    "@anthropic-ai/mcpb",
-    "tsup",
-    "esbuild",
-    "@fractalizer/mcp-infrastructure",
-    "@fractalizer/mcp-cli",
-    "@fractalizer/mcp-core",
-    "@fractalizer/mcp-search",
-    "@fractalizer/mcp-server-yandex-tracker",
-    "@fractalizer/mcp-server-yandex-wiki",
-    "@fractalizer/mcp-server-ticktick",
-    "reflect-metadata",
-    "commander",
-    "@modelcontextprotocol/sdk",
-    "pino",
-    "pino-pretty",
-    "zod-to-json-schema",
-    "inversify",
-    "axios",
-    "chalk",
-    "inquirer",
-    "ora",
-    "@iarna/toml",
-    "mime-types",
-    "semantic-release",
-    "semantic-release-monorepo",
-    "@semantic-release/changelog",
-    "@semantic-release/exec",
-    "@semantic-release/git",
-    "@semantic-release/github",
-    "@commitlint/cli",
-    "@commitlint/config-conventional",
-    "conventional-changelog-conventionalcommits",
-    "@changesets/cli",
-    "husky",
-    "lint-staged"
+    "reflect-metadata"
   ],
   "ignoreExportsUsedInFile": true,
   "includeEntryExports": false,

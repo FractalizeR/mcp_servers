@@ -367,7 +367,7 @@ ESSENTIAL_TOOLS=ping,search_tools
 - Автоматически в `npm run validate`
 
 **Code complexity:**
-- ESLint правила: `max-params` (≤4), `complexity` (≤10), `max-depth` (≤4)
+- ESLint правила: `max-params` (≤5), `complexity` (≤15), `max-depth` (≤5)
 - Режим `warn` — не блокирует build, но предупреждает
 
 **Build Number:**

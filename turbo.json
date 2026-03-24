@@ -64,26 +64,22 @@
     },
     "cpd": {
       "cache": true,
-      "inputs": ["src/**/*.ts", "../../../.jscpd.json"],
+      "inputs": ["src/**/*.ts"],
       "outputs": []
     },
     "cpd:quiet": {
       "cache": true,
-      "inputs": ["src/**/*.ts", "../../../.jscpd.json"],
+      "inputs": ["src/**/*.ts"],
       "outputs": []
     },
     "cpd:report": {
       "cache": true,
-      "inputs": ["src/**/*.ts", "../../../.jscpd.json"],
+      "inputs": ["src/**/*.ts"],
       "outputs": ["jscpd-report/**"]
     },
     "depcruise": {
       "cache": true,
-      "inputs": [
-        "src/**/*.ts",
-        "../../../.dependency-cruiser.cjs",
-        "tsconfig*.json"
-      ],
+      "inputs": ["src/**/*.ts", "tsconfig*.json"],
       "outputs": []
     },
     "validate:docs": {
@@ -102,6 +98,6 @@
       "outputs": ["knip-report.json"]
     }
   },
-  "globalDependencies": [".npmrc", "package-lock.json"],
+  "globalDependencies": [".npmrc", "package-lock.json", ".jscpd.json", ".dependency-cruiser.cjs", "eslint.shared.config.js"],
   "globalEnv": ["NODE_ENV"]
 }
