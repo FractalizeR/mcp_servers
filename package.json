@@ -69,6 +69,7 @@
     "vitest:ui": "vitest --ui --coverage"
   },
   "overrides": {
+    "vite": "^7",
     "zod": "^4.1.12"
   },
   "devDependencies": {
