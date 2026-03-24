@@ -1,3 +1,9 @@
+## [0.2.4](https://github.com/FractalizeR/mcp_servers/compare/v0.2.3...v0.2.4) (2026-03-24)
+
+### Bug Fixes
+
+* исправить bin в wrapper-пакетах ([9b1a659](https://github.com/FractalizeR/mcp_servers/commit/9b1a6595d7f865f4b88749abe0211081ead7af70))
+
 ## [0.2.2](https://github.com/FractalizeR/mcp_servers/compare/v0.2.1...v0.2.2) (2025-12-09)
 
 ### Bug Fixes
