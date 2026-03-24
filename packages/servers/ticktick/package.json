@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-server-ticktick",
-  "version": "0.2.4",
+  "version": "0.3.1",
   "description": "MCP Server for TickTick todo-list application",
   "keywords": [
     "mcp",
