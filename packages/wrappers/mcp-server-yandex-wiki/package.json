@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-yandex-wiki",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "MCP Server for Yandex Wiki API integration. This is a convenience wrapper for @fractalizer/mcp-server-yandex-wiki.",
   "keywords": [
     "mcp",
@@ -21,10 +21,10 @@
   "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
   "bin": {
-    "mcp-server-yandex-wiki": "./bin.js"
+    "mcp-server-yandex-wiki": "./bin.cjs"
   },
   "files": [
-    "bin.js",
+    "bin.cjs",
     "README.md"
   ],
   "dependencies": {

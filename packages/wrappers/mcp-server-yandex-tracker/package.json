@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-yandex-tracker",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "MCP Server for Yandex Tracker API integration. This is a convenience wrapper for @fractalizer/mcp-server-yandex-tracker.",
   "keywords": [
     "mcp",
@@ -15,16 +15,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/FractalizeR/mcp_servers.git",
+    "url": "git+https://github.com/FractalizeR/mcp_servers.git",
     "directory": "packages/wrappers/mcp-server-yandex-tracker"
   },
   "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
   "bin": {
-    "mcp-server-yandex-tracker": "./bin.js"
+    "mcp-server-yandex-tracker": "./bin.cjs"
   },
   "files": [
-    "bin.js",
+    "bin.cjs",
     "README.md"
   ],
   "dependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-ticktick",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "MCP Server for TickTick todo-list application. This is a convenience wrapper for @fractalizer/mcp-server-ticktick.",
   "keywords": [
     "mcp",
@@ -22,10 +22,10 @@
   "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
   "bin": {
-    "mcp-server-ticktick": "./bin.js"
+    "mcp-server-ticktick": "./bin.cjs"
   },
   "files": [
-    "bin.js",
+    "bin.cjs",
     "README.md"
   ],
   "dependencies": {
