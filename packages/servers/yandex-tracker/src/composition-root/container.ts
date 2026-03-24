@@ -161,7 +161,8 @@ function bindOperations(container: Container): void {
     container.bind(symbol).toDynamicValue(factory);
 
     // 2. Class-based (для новых сервисов с декораторами @inject)
-    container.bind(OperationClass).toDynamicValue(factory);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    container.bind(OperationClass as any).toDynamicValue(factory);
   }
 }
 

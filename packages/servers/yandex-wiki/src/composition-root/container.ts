@@ -133,7 +133,8 @@ function bindOperations(container: Container): void {
     };
 
     container.bind(symbol).toDynamicValue(factory);
-    container.bind(OperationClass).toDynamicValue(factory);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    container.bind(OperationClass as any).toDynamicValue(factory);
   }
 }
 

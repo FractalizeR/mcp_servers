@@ -39,7 +39,10 @@ export class FileUploadUtil {
     const mimeType = FileUploadUtil.getMimeType(filename);
 
     // Создаем Blob из Buffer
-    const blob = new Blob([file], { type: mimeType });
+    const blob = new Blob(
+      [new Uint8Array(file.buffer as ArrayBuffer, file.byteOffset, file.byteLength)],
+      { type: mimeType }
+    );
 
     // Добавляем файл в FormData
     formData.append(fieldName, blob, filename);
@@ -138,7 +141,7 @@ export class FileUploadUtil {
     }
 
     // Проверка на недопустимые символы (включая control characters 0x00-0x1F)
-    // eslint-disable-next-line sonarjs/no-control-regex
+     
     const invalidChars = /[<>:"|?*\x00-\x1F]/;
     if (invalidChars.test(filename)) {
       return false;
