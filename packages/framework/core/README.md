@@ -3,7 +3,7 @@
 **Core framework for building MCP tools: base classes, utilities, registry**
 
 [![npm version](https://img.shields.io/npm/v/@fractalizer/mcp-core.svg)](https://www.npmjs.com/package/@fractalizer/mcp-core)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: PolyForm Shield](https://img.shields.io/badge/License-PolyForm%20Shield-blue.svg)](https://polyformproject.org/licenses/shield/1.0.0/)
 
 ---
 
@@ -387,7 +387,7 @@ See [../../.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
 
 ## 📄 License
 
-MIT License
+PolyForm Shield License 1.0.0
 
 ---
 

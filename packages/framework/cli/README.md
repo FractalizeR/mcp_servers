@@ -435,4 +435,4 @@ registry.register(connector);
 
 ## 📝 Лицензия
 
-MIT
+PolyForm Shield License 1.0.0

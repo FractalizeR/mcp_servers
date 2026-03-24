@@ -17,6 +17,9 @@ dist/
 !*.config.js
 !eslint.config.js
 
+# Исключения для wrapper пакетов (публикуются на npm как есть)
+!packages/wrappers/**/bin.js
+
 # Скомпилированные скрипты (используем только TS-исходники)
 scripts/*.js
 scripts/*.js.map

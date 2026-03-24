@@ -9,7 +9,16 @@
     "logging",
     "cache"
   ],
-  "license": "MIT",
+  "homepage": "https://github.com/FractalizeR/mcp_servers/tree/main/packages/framework/infrastructure#readme",
+  "bugs": {
+    "url": "https://github.com/FractalizeR/mcp_servers/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FractalizeR/mcp_servers.git",
+    "directory": "packages/framework/infrastructure"
+  },
+  "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
   "type": "module",
   "exports": {
@@ -39,8 +48,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "README.md",
-    "CHANGELOG.md"
+    "README.md"
   ],
   "scripts": {
     "build": "tsc -b && tsc-alias",
@@ -70,6 +78,9 @@
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
     "rotating-file-stream": "^3.2.7"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "publishConfig": {
     "access": "public"

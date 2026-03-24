@@ -9,7 +9,16 @@
     "connector",
     "command-line"
   ],
-  "license": "MIT",
+  "homepage": "https://github.com/FractalizeR/mcp_servers/tree/main/packages/framework/cli#readme",
+  "bugs": {
+    "url": "https://github.com/FractalizeR/mcp_servers/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FractalizeR/mcp_servers.git",
+    "directory": "packages/framework/cli"
+  },
+  "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
   "type": "module",
   "exports": {
@@ -39,8 +48,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "README.md",
-    "CHANGELOG.md"
+    "README.md"
   ],
   "scripts": {
     "build": "tsc -b && tsc-alias",
@@ -74,6 +82,9 @@
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.9"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "publishConfig": {
     "access": "public"

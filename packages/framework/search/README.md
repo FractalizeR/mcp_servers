@@ -3,7 +3,7 @@
 **Advanced Tool Search Engine with compile-time indexing and 5 search strategies**
 
 [![npm version](https://img.shields.io/npm/v/@fractalizer/mcp-search.svg)](https://www.npmjs.com/package/@fractalizer/mcp-search)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: PolyForm Shield](https://img.shields.io/badge/License-PolyForm%20Shield-blue.svg)](https://polyformproject.org/licenses/shield/1.0.0/)
 
 ---
 
@@ -397,7 +397,7 @@ See [../../.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
 
 ## 📄 License
 
-MIT License
+PolyForm Shield License 1.0.0
 
 ---
 

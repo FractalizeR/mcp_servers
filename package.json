@@ -2,12 +2,13 @@
   "name": "mcp-framework-monorepo",
   "version": "0.2.2",
   "private": true,
-  "license": "MIT",
+  "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
   "type": "module",
   "workspaces": [
     "packages/framework/*",
-    "packages/servers/*"
+    "packages/servers/*",
+    "packages/wrappers/*"
   ],
   "scripts": {
     "audit:lockfile": "npm ci --dry-run",

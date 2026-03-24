@@ -3,7 +3,7 @@
 **Reusable infrastructure layer: HTTP, cache, logging, async utilities**
 
 [![npm version](https://img.shields.io/npm/v/@fractalizer/mcp-infrastructure.svg)](https://www.npmjs.com/package/@fractalizer/mcp-infrastructure)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: PolyForm Shield](https://img.shields.io/badge/License-PolyForm%20Shield-blue.svg)](https://polyformproject.org/licenses/shield/1.0.0/)
 
 ---
 
@@ -271,7 +271,7 @@ See [../../.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
 
 ## 📄 License
 
-MIT License
+PolyForm Shield License 1.0.0
 
 ---
 

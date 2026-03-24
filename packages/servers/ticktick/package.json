@@ -10,7 +10,16 @@
     "api",
     "claude"
   ],
-  "license": "MIT",
+  "homepage": "https://github.com/FractalizeR/mcp_servers/tree/main/packages/servers/ticktick#readme",
+  "bugs": {
+    "url": "https://github.com/FractalizeR/mcp_servers/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FractalizeR/mcp_servers.git",
+    "directory": "packages/servers/ticktick"
+  },
+  "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
   "type": "module",
   "imports": {
@@ -25,10 +34,18 @@
     "#integration/*": "./tests/integration/*",
     "#helpers/*": "./tests/helpers/*"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./dist/ticktick.bundle.cjs": "./dist/ticktick.bundle.cjs"
+  },
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
-    "mcp-connect": "dist/cli/bin/mcp-connect.js",
-    "mcp-server-ticktick": "dist/ticktick.bundle.cjs"
+    "mcp-server-ticktick": "dist/ticktick.bundle.cjs",
+    "mcp-ticktick-connect": "dist/cli/bin/mcp-connect.js"
   },
   "files": [
     "dist",
@@ -77,12 +94,16 @@
     "inversify": "^7.10.4",
     "ora": "^9.0.0",
     "pino": "^10.1.0",
+    "reflect-metadata": "^0.2.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.9",
     "axios-mock-adapter": "^2.1.0",
     "tsup": "^8.5.1"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "publishConfig": {
     "access": "public"

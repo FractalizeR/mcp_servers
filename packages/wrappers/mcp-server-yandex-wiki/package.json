@@ -1,0 +1,39 @@
+{
+  "name": "mcp-server-yandex-wiki",
+  "version": "0.2.2",
+  "description": "MCP Server for Yandex Wiki API integration. This is a convenience wrapper for @fractalizer/mcp-server-yandex-wiki.",
+  "keywords": [
+    "mcp",
+    "yandex-wiki",
+    "documentation",
+    "api",
+    "claude"
+  ],
+  "homepage": "https://github.com/FractalizeR/mcp_servers/tree/main/packages/servers/yandex-wiki#readme",
+  "bugs": {
+    "url": "https://github.com/FractalizeR/mcp_servers/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FractalizeR/mcp_servers.git",
+    "directory": "packages/wrappers/mcp-server-yandex-wiki"
+  },
+  "license": "PolyForm-Shield-1.0.0",
+  "author": "Fractalizer",
+  "bin": {
+    "mcp-server-yandex-wiki": "./bin.js"
+  },
+  "files": [
+    "bin.js",
+    "README.md"
+  ],
+  "dependencies": {
+    "@fractalizer/mcp-server-yandex-wiki": "^0.2.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -9,7 +9,16 @@
     "fuzzy-search",
     "ai"
   ],
-  "license": "MIT",
+  "homepage": "https://github.com/FractalizeR/mcp_servers/tree/main/packages/framework/search#readme",
+  "bugs": {
+    "url": "https://github.com/FractalizeR/mcp_servers/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FractalizeR/mcp_servers.git",
+    "directory": "packages/framework/search"
+  },
+  "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
   "type": "module",
   "exports": {
@@ -42,9 +51,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "scripts",
-    "README.md",
-    "CHANGELOG.md"
+    "README.md"
   ],
   "scripts": {
     "build": "tsc -b && tsc-alias",
@@ -71,6 +78,9 @@
   "dependencies": {
     "@fractalizer/mcp-core": "^0.2.2",
     "@fractalizer/mcp-infrastructure": "^0.2.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "publishConfig": {
     "access": "public"

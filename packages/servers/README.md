@@ -211,7 +211,7 @@ defineServerConfig('my-server', {
 
 ## Установка
 
-npm install @mcp-server/{server-name}
+npm install -g @fractalizer/mcp-server-{server-name}
 
 ## Использование
 
@@ -254,4 +254,4 @@ mcp-server-{server-name}
 ---
 
 **Автор:** MCP Framework Team
-**Лицензия:** MIT
+**Лицензия:** PolyForm Shield 1.0.0

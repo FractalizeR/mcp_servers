@@ -9,7 +9,16 @@
     "api",
     "claude"
   ],
-  "license": "MIT",
+  "homepage": "https://github.com/FractalizeR/mcp_servers/tree/main/packages/servers/yandex-wiki#readme",
+  "bugs": {
+    "url": "https://github.com/FractalizeR/mcp_servers/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FractalizeR/mcp_servers.git",
+    "directory": "packages/servers/yandex-wiki"
+  },
+  "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
   "type": "module",
   "imports": {
@@ -23,15 +32,23 @@
     "#common/*": "./src/common/*",
     "#helpers/*": "./tests/helpers/*"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./dist/yandex-wiki.bundle.cjs": "./dist/yandex-wiki.bundle.cjs"
+  },
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "mcp-server-yandex-wiki": "dist/yandex-wiki.bundle.cjs",
     "mcp-wiki-connect": "dist/cli/bin/mcp-connect.js"
   },
   "files": [
     "dist",
-    "scripts",
-    "README.md"
+    "README.md",
+    "CLAUDE.md"
   ],
   "scripts": {
     "prebuild": "npm run generate:index",
@@ -86,6 +103,9 @@
     "@types/inquirer": "^9.0.9",
     "axios-mock-adapter": "^2.1.0",
     "tsup": "^8.5.1"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "publishConfig": {
     "access": "public"

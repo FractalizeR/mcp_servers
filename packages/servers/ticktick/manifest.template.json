@@ -10,11 +10,11 @@
     "name": "Fractalizer",
     "email": "fractalizer@example.com"
   },
-  "license": "MIT",
-  "homepage": "https://github.com/FractalizeR/mcp_server_yandex_tracker",
+  "license": "PolyForm-Shield-1.0.0",
+  "homepage": "https://github.com/FractalizeR/mcp_servers",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FractalizeR/mcp_server_yandex_tracker"
+    "url": "https://github.com/FractalizeR/mcp_servers"
   },
   "keywords": [
     "ticktick",

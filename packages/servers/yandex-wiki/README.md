@@ -5,7 +5,7 @@ MCP сервер для работы с API Yandex Wiki.
 ## Установка
 
 ```bash
-npm install mcp-server-yandex-wiki
+npm install -g @fractalizer/mcp-server-yandex-wiki
 ```
 
 ## Конфигурация
@@ -59,7 +59,7 @@ DISABLED_TOOL_GROUPS="grids,pages:delete"
   "mcpServers": {
     "yandex-wiki": {
       "command": "npx",
-      "args": ["mcp-server-yandex-wiki"],
+      "args": ["-y", "@fractalizer/mcp-server-yandex-wiki"],
       "env": {
         "YANDEX_WIKI_TOKEN": "your-token",
         "YANDEX_ORG_ID": "your-org-id"
@@ -151,4 +151,4 @@ src/
 
 ## License
 
-MIT
+PolyForm Shield License 1.0.0
