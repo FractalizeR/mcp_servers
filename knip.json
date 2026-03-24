@@ -85,5 +85,6 @@
     "lint-staged"
   ],
   "ignoreExportsUsedInFile": true,
-  "includeEntryExports": false
+  "includeEntryExports": false,
+  "exclude": ["duplicates"]
 }
