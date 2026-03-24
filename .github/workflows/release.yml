@@ -91,33 +91,46 @@ jobs:
 
           # Framework packages (in dependency order)
           echo ""
-          echo "1/7 Publishing @fractalizer/mcp-infrastructure..."
+          echo "1/10 Publishing @fractalizer/mcp-infrastructure..."
           npm publish --workspace=@fractalizer/mcp-infrastructure --access public || echo "⚠️ May already be published"
 
           echo ""
-          echo "2/7 Publishing @fractalizer/mcp-cli..."
+          echo "2/10 Publishing @fractalizer/mcp-cli..."
           npm publish --workspace=@fractalizer/mcp-cli --access public || echo "⚠️ May already be published"
 
           echo ""
-          echo "3/7 Publishing @fractalizer/mcp-core..."
+          echo "3/10 Publishing @fractalizer/mcp-core..."
           npm publish --workspace=@fractalizer/mcp-core --access public || echo "⚠️ May already be published"
 
           echo ""
-          echo "4/7 Publishing @fractalizer/mcp-search..."
+          echo "4/10 Publishing @fractalizer/mcp-search..."
           npm publish --workspace=@fractalizer/mcp-search --access public || echo "⚠️ May already be published"
 
           # Server packages
           echo ""
-          echo "5/7 Publishing @fractalizer/mcp-server-yandex-tracker..."
+          echo "5/10 Publishing @fractalizer/mcp-server-yandex-tracker..."
           npm publish --workspace=@fractalizer/mcp-server-yandex-tracker --access public || echo "⚠️ May already be published"
 
           echo ""
-          echo "6/7 Publishing @fractalizer/mcp-server-yandex-wiki..."
+          echo "6/10 Publishing @fractalizer/mcp-server-yandex-wiki..."
           npm publish --workspace=@fractalizer/mcp-server-yandex-wiki --access public || echo "⚠️ May already be published"
 
           echo ""
-          echo "7/7 Publishing @fractalizer/mcp-server-ticktick..."
+          echo "7/10 Publishing @fractalizer/mcp-server-ticktick..."
           npm publish --workspace=@fractalizer/mcp-server-ticktick --access public || echo "⚠️ May already be published"
+
+          # Wrapper packages (unscoped, depend on scoped)
+          echo ""
+          echo "8/10 Publishing mcp-server-yandex-tracker..."
+          npm publish --workspace=mcp-server-yandex-tracker --access public || echo "⚠️ May already be published"
+
+          echo ""
+          echo "9/10 Publishing mcp-server-yandex-wiki..."
+          npm publish --workspace=mcp-server-yandex-wiki --access public || echo "⚠️ May already be published"
+
+          echo ""
+          echo "10/10 Publishing mcp-server-ticktick..."
+          npm publish --workspace=mcp-server-ticktick --access public || echo "⚠️ May already be published"
 
           echo ""
           echo "✅ All packages processed!"

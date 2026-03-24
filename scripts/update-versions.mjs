@@ -32,6 +32,9 @@ const packageDirs = [
   'packages/servers/yandex-tracker',
   'packages/servers/yandex-wiki',
   'packages/servers/ticktick',
+  'packages/wrappers/mcp-server-yandex-tracker',
+  'packages/wrappers/mcp-server-yandex-wiki',
+  'packages/wrappers/mcp-server-ticktick',
 ];
 
 // Имена внутренних пакетов для обновления зависимостей
