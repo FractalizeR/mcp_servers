@@ -1,3 +1,9 @@
+## [0.3.3](https://github.com/FractalizeR/mcp_servers/compare/v0.3.2...v0.3.3) (2026-03-24)
+
+### Refactoring
+
+* консолидация конфигурации инструментов качества кода ([cd5d148](https://github.com/FractalizeR/mcp_servers/commit/cd5d14892199c968955f7c65ac5f2c087b0d0159))
+
 ## [0.3.2](https://github.com/FractalizeR/mcp_servers/compare/v0.3.1...v0.3.2) (2026-03-24)
 
 ### Bug Fixes

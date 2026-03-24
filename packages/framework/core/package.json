@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-core",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Core framework for building MCP tools: base classes, utilities, registry",
   "keywords": [
     "mcp",
@@ -65,7 +65,7 @@
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet && npm run cpd:quiet"
   },
   "dependencies": {
-    "@fractalizer/mcp-infrastructure": "^0.3.2",
+    "@fractalizer/mcp-infrastructure": "^0.3.3",
     "@modelcontextprotocol/sdk": "^1.23.0",
     "pino": "^10.1.0",
     "zod": "^4.1.12",
