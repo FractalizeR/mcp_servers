@@ -43,7 +43,7 @@ TICKTICK_REFRESH_TOKEN=your_refresh_token
   "mcpServers": {
     "ticktick": {
       "command": "npx",
-      "args": ["@fractalizer/mcp-server-ticktick"],
+      "args": ["-y", "@fractalizer/mcp-server-ticktick"],
       "env": {
         "TICKTICK_ACCESS_TOKEN": "your_token"
       }

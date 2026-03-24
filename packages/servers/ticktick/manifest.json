@@ -2,13 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/dist/mcpb-manifest-v0.3.schema.json",
   "manifest_version": "0.3",
   "name": "fractalizer_mcp_ticktick",
-  "version": "0.2.4+9b1a659",
+  "version": "0.3.1+ce1e24d",
   "display_name": "FractalizeR's TickTick MCP",
   "description": "FractalizeR's TickTick MCP server for task management integration",
   "long_description": "FractalizeR's TickTick MCP\n\nАвтор: Раструсный Владислав.\n\nMCP сервер для интеграции с TickTick — популярным приложением для управления задачами и to-do листами.\n\nОсновные возможности:\n- Управление задачами: создание, редактирование, удаление, завершение\n- Работа с проектами (списками задач)\n- Фильтрация по датам: просроченные задачи, задачи на сегодня/завтра\n- Поддержка приоритетов, тегов, сроков выполнения\n- GTD-методология: входящие, следующие действия, ожидание\n\nИдеален для автоматизации личной продуктивности через AI-ассистентов.",
   "author": {
-    "name": "Fractalizer",
-    "email": "fractalizer@example.com"
+    "name": "Fractalizer"
   },
   "license": "PolyForm-Shield-1.0.0",
   "homepage": "https://github.com/FractalizeR/mcp_servers",
@@ -86,7 +85,7 @@
   },
   "_meta": {
     "build": {
-      "hash": "9b1a659",
+      "hash": "ce1e24d",
       "generated_by": "mcpb-build",
       "last_updated": "2026-03-24"
     }
