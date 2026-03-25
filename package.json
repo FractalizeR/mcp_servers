@@ -61,10 +61,10 @@
     "test:verbose": "turbo run test:verbose",
     "test:watch": "turbo run test:watch",
     "typecheck": "turbo run typecheck",
-    "validate": "turbo run build lint typecheck test test:smoke cpd depcruise validate:docs && npm run knip:root",
+    "validate": "./scripts/validate.sh",
     "validate:docs": "turbo run validate:docs",
     "validate:docs:root": "tsx scripts/validate-docs-size.ts",
-    "validate:quiet": "turbo run build lint:quiet typecheck test:quiet cpd:quiet depcruise validate:docs --output-logs=errors-only",
+    "validate:quiet": "./scripts/validate.sh --quiet",
     "validate:security": "turbo run knip && npm run audit:socket && npm run audit:lockfile && npm run audit:secrets",
     "vitest:ui": "vitest --ui --coverage"
   },

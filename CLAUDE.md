@@ -206,16 +206,16 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - `test:verbose` — `vitest run --reporter=verbose`
 - `test:watch` — `vitest watch`
 - `typecheck` — `tsc --noEmit`
-- `validate` — `npm run lint && npm run typecheck && npm run test`
-- `validate:quiet` — `npm run lint:quiet && npm run typecheck && npm run test:quiet`
+- `validate` — полная валидация (все шаги, полный вывод)
+- `validate:quiet` — те же шаги, минимальный вывод (для ИИ агентов)
 
 **Корневой package.json:**
 - Делегирует команды через `--workspaces --if-present`
 - `clean` — только артефакты, `clean:all` — включая node_modules
-- `validate` — lint + typecheck + test + test:smoke + cpd
-- `validate:quiet` — lint:quiet + typecheck + test:quiet + cpd:quiet
-
-**Примечание:** yandex-tracker добавляет `test:smoke` в свой `validate`
+- `validate` / `validate:quiet` — единый пайплайн через `scripts/validate.sh [--quiet]`
+  - Шаги: build, lint, typecheck, test, test:smoke, test:smoke:server, cpd, depcruise, validate:docs, validate:tools, knip:root
+  - Quiet mode: lint:quiet, test:quiet, cpd:quiet + `--output-logs=errors-only`
+  - **Добавить новый шаг:** только в `scripts/validate.sh` — оба режима обновятся автоматически
 
 **Режимы вывода (для экономии токенов ИИ):**
 - **Обычный** (`test`, `lint`) — для разработчиков, подробный вывод

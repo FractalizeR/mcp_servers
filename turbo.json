@@ -45,6 +45,10 @@
       "dependsOn": ["build"],
       "cache": false
     },
+    "test:smoke:server": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
     "lint": {
       "cache": true,
       "inputs": ["src/**/*.ts", "eslint.config.js", "package.json"]
@@ -86,6 +90,11 @@
       "cache": true,
       "inputs": ["**/*.md", "!node_modules/**", "scripts/validate-docs-size.ts"],
       "outputs": []
+    },
+    "validate:tools": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "inputs": ["src/**/*.ts", "scripts/validate-tool-registration.ts"]
     },
     "knip": {
       "cache": true,
