@@ -1,3 +1,9 @@
+## [0.3.4](https://github.com/FractalizeR/mcp_servers/compare/v0.3.3...v0.3.4) (2026-03-25)
+
+### Bug Fixes
+
+* унифицировать validate и validate:quiet через единый скрипт ([3ee31b1](https://github.com/FractalizeR/mcp_servers/commit/3ee31b1db41c42dd52baf473b2b7fa3a8fdbb913))
+
 ## [0.3.3](https://github.com/FractalizeR/mcp_servers/compare/v0.3.2...v0.3.3) (2026-03-24)
 
 ### Refactoring
