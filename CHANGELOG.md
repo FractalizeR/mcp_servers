@@ -1,3 +1,9 @@
+## [0.3.10](https://github.com/FractalizeR/mcp_servers/compare/v0.3.9...v0.3.10) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** обновить npm до 11.5.1+ для поддержки OIDC trusted publishing ([6b3d0c1](https://github.com/FractalizeR/mcp_servers/commit/6b3d0c1caff5fb28435dfa32fba3ceb093a86297))
+
 ## [0.3.9](https://github.com/FractalizeR/mcp_servers/compare/v0.3.8...v0.3.9) (2026-04-10)
 
 ### Bug Fixes

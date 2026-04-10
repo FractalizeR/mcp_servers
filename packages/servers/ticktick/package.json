@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-server-ticktick",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "MCP Server for TickTick todo-list application",
   "keywords": [
     "mcp",
@@ -82,10 +82,10 @@
     "validate:tools": "tsx scripts/validate-tool-registration.ts"
   },
   "dependencies": {
-    "@fractalizer/mcp-cli": "^0.3.9",
-    "@fractalizer/mcp-core": "^0.3.9",
-    "@fractalizer/mcp-infrastructure": "^0.3.9",
-    "@fractalizer/mcp-search": "^0.3.9",
+    "@fractalizer/mcp-cli": "^0.3.10",
+    "@fractalizer/mcp-core": "^0.3.10",
+    "@fractalizer/mcp-infrastructure": "^0.3.10",
+    "@fractalizer/mcp-search": "^0.3.10",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "axios": "^1.13.6",
     "chalk": "^5.6.2",
