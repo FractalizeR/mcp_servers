@@ -88,29 +88,26 @@ jobs:
       - name: Build all packages
         run: npm run build
 
-      - name: Debug OIDC token availability
-        # Temporary diagnostic: verifies that id-token: write actually wires up
-        # ACTIONS_ID_TOKEN_REQUEST_{URL,TOKEN} env vars. Without them npm CLI
-        # silently falls back to anonymous publish and gets HTTP 404.
+      - name: Strip placeholder _authToken from .npmrc (OIDC prerequisite)
+        # actions/setup-node@v4 writes a placeholder `_authToken=XXXXX-XXXXX-XXXXX-XXXXX`
+        # into the user .npmrc whenever `registry-url:` is set without a real token.
+        # npm CLI then uses that bogus string as Bearer auth for `npm publish` and
+        # never attempts OIDC trusted publishing — the request comes back as HTTP 404
+        # (security mask for unauthenticated writes). Stripping the `_authToken` line
+        # (but keeping the registry URL) lets npm fall back to OIDC via
+        # ACTIONS_ID_TOKEN_REQUEST_URL / ACTIONS_ID_TOKEN_REQUEST_TOKEN.
         run: |
-          echo "=== OIDC env vars ==="
-          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
-            echo "✅ ACTIONS_ID_TOKEN_REQUEST_URL is set (length: ${#ACTIONS_ID_TOKEN_REQUEST_URL})"
+          set -euo pipefail
+          NPMRC="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          if [ -f "$NPMRC" ]; then
+            echo "Before:"
+            sed 's/_authToken=.*/_authToken=<redacted>/' "$NPMRC"
+            sed -i '/_authToken=/d' "$NPMRC"
+            echo "After:"
+            cat "$NPMRC"
           else
-            echo "❌ ACTIONS_ID_TOKEN_REQUEST_URL is NOT set"
+            echo "No .npmrc at $NPMRC — nothing to strip"
           fi
-          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
-            echo "✅ ACTIONS_ID_TOKEN_REQUEST_TOKEN is set (length: ${#ACTIONS_ID_TOKEN_REQUEST_TOKEN})"
-          else
-            echo "❌ ACTIONS_ID_TOKEN_REQUEST_TOKEN is NOT set"
-          fi
-          echo ""
-          echo "=== npm version ==="
-          npm --version
-          echo ""
-          echo "=== npm config (relevant) ==="
-          npm config get registry
-          npm config get //registry.npmjs.org/:_authToken || echo "(no auth token, expected for OIDC)"
 
       # OIDC Trusted Publishing: npm CLI automatically uses id-token for auth.
       # No NPM_TOKEN needed! Provenance is published automatically.
