@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-yandex-wiki",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "MCP Server for Yandex Wiki API integration. This is a convenience wrapper for @fractalizer/mcp-server-yandex-wiki.",
   "keywords": [
     "mcp",
@@ -28,7 +28,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@fractalizer/mcp-server-yandex-wiki": "^0.3.11"
+    "@fractalizer/mcp-server-yandex-wiki": "^0.3.12"
   },
   "engines": {
     "node": ">=22.0.0"

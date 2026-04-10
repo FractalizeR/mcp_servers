@@ -1,3 +1,9 @@
+## [0.3.12](https://github.com/FractalizeR/mcp_servers/compare/v0.3.11...v0.3.12) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** починить sanity-check версии npm в publish-npm ([b0ecf8d](https://github.com/FractalizeR/mcp_servers/commit/b0ecf8d5798a2ac9b2d7fb0a77b05a6fdb7ddc44))
+
 ## [0.3.11](https://github.com/FractalizeR/mcp_servers/compare/v0.3.10...v0.3.11) (2026-04-10)
 
 ### Bug Fixes
