@@ -81,59 +81,87 @@ jobs:
       - name: Build all packages
         run: npm run build
 
-      # OIDC Trusted Publishing: npm CLI automatically uses id-token for auth
+      # OIDC Trusted Publishing: npm CLI automatically uses id-token for auth.
       # No NPM_TOKEN needed! Provenance is published automatically.
-      # Packages are published in dependency order to avoid resolution issues
+      #
+      # REQUIRES on npm side (per package):
+      #   Settings → Publishing access → Trusted Publisher
+      #   Publisher: GitHub Actions
+      #   Organization: FractalizeR
+      #   Repository: mcp_servers
+      #   Workflow filename: release.yml
+      #   Environment name: npm-publish
+      #
+      # If Trusted Publisher is missing, npm returns 404 (not 403) to the
+      # publish call — a security feature to avoid leaking package state.
       - name: Publish packages to NPM (OIDC Trusted Publishing)
+        env:
+          RELEASE_VERSION: ${{ needs.release.outputs.new_release_version }}
         run: |
-          echo "📦 Publishing packages with OIDC Trusted Publishing..."
-          echo "🔐 Using GitHub OIDC for authentication (no NPM_TOKEN required)"
+          set -euo pipefail
 
-          # Framework packages (in dependency order)
+          # Packages published in dependency order:
+          # framework (infrastructure → cli/core → search)
+          #   → scoped servers → unscoped wrappers
+          PACKAGES=(
+            "@fractalizer/mcp-infrastructure"
+            "@fractalizer/mcp-cli"
+            "@fractalizer/mcp-core"
+            "@fractalizer/mcp-search"
+            "@fractalizer/mcp-server-yandex-tracker"
+            "@fractalizer/mcp-server-yandex-wiki"
+            "@fractalizer/mcp-server-ticktick"
+            "mcp-server-yandex-tracker"
+            "mcp-server-yandex-wiki"
+            "mcp-server-ticktick"
+          )
+          TOTAL=${#PACKAGES[@]}
+
+          echo "📦 Publishing $TOTAL packages @ $RELEASE_VERSION"
+          echo "🔐 Using GitHub OIDC (no NPM_TOKEN)"
           echo ""
-          echo "1/10 Publishing @fractalizer/mcp-infrastructure..."
-          npm publish --workspace=@fractalizer/mcp-infrastructure --access public || echo "⚠️ May already be published"
+
+          # Phase 1: publish (idempotent — skip if already on registry)
+          for i in "${!PACKAGES[@]}"; do
+            PKG="${PACKAGES[$i]}"
+            NUM=$((i + 1))
+            printf "[%d/%d] %s@%s ... " "$NUM" "$TOTAL" "$PKG" "$RELEASE_VERSION"
+
+            if npm view "$PKG@$RELEASE_VERSION" version \
+                 --registry=https://registry.npmjs.org/ >/dev/null 2>&1; then
+              echo "already published, skipping"
+              continue
+            fi
+
+            echo "publishing..."
+            # No `||` masking: any failure aborts the job (set -e).
+            npm publish --workspace="$PKG" --access public
+            echo "    ✅ published"
+          done
+
+          # Phase 2: verify all versions are visible on registry with retry.
+          # npm publish may take a few seconds to propagate; downstream jobs
+          # (build-mcpb) need packages resolvable before they `npm ci`.
+          echo ""
+          echo "🔍 Verifying propagation on registry (timeout 60s per package)..."
+          for PKG in "${PACKAGES[@]}"; do
+            printf "  %s@%s ... " "$PKG" "$RELEASE_VERSION"
+            for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+              if npm view "$PKG@$RELEASE_VERSION" version \
+                   --registry=https://registry.npmjs.org/ >/dev/null 2>&1; then
+                echo "ok"
+                break
+              fi
+              if [ "$attempt" = "12" ]; then
+                echo "NOT VISIBLE after 12 attempts (60s)"
+                exit 1
+              fi
+              sleep 5
+            done
+          done
 
           echo ""
-          echo "2/10 Publishing @fractalizer/mcp-cli..."
-          npm publish --workspace=@fractalizer/mcp-cli --access public || echo "⚠️ May already be published"
-
-          echo ""
-          echo "3/10 Publishing @fractalizer/mcp-core..."
-          npm publish --workspace=@fractalizer/mcp-core --access public || echo "⚠️ May already be published"
-
-          echo ""
-          echo "4/10 Publishing @fractalizer/mcp-search..."
-          npm publish --workspace=@fractalizer/mcp-search --access public || echo "⚠️ May already be published"
-
-          # Server packages
-          echo ""
-          echo "5/10 Publishing @fractalizer/mcp-server-yandex-tracker..."
-          npm publish --workspace=@fractalizer/mcp-server-yandex-tracker --access public || echo "⚠️ May already be published"
-
-          echo ""
-          echo "6/10 Publishing @fractalizer/mcp-server-yandex-wiki..."
-          npm publish --workspace=@fractalizer/mcp-server-yandex-wiki --access public || echo "⚠️ May already be published"
-
-          echo ""
-          echo "7/10 Publishing @fractalizer/mcp-server-ticktick..."
-          npm publish --workspace=@fractalizer/mcp-server-ticktick --access public || echo "⚠️ May already be published"
-
-          # Wrapper packages (unscoped, depend on scoped)
-          echo ""
-          echo "8/10 Publishing mcp-server-yandex-tracker..."
-          npm publish --workspace=mcp-server-yandex-tracker --access public || echo "⚠️ May already be published"
-
-          echo ""
-          echo "9/10 Publishing mcp-server-yandex-wiki..."
-          npm publish --workspace=mcp-server-yandex-wiki --access public || echo "⚠️ May already be published"
-
-          echo ""
-          echo "10/10 Publishing mcp-server-ticktick..."
-          npm publish --workspace=mcp-server-ticktick --access public || echo "⚠️ May already be published"
-
-          echo ""
-          echo "✅ All packages processed!"
+          echo "✅ All $TOTAL packages published and verified @ $RELEASE_VERSION"
 
   # Job 3: Build MCPB bundles for all servers and attach to GitHub release
   # Note: Depends on publish-npm to ensure internal dependencies are available on npm registry
@@ -156,23 +184,21 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: |
-          # Wait a bit for npm registry to propagate newly published packages
-          echo "⏳ Waiting 30s for npm registry propagation..."
-          sleep 30
-          npm ci
+        # publish-npm verifies each package is visible on registry before
+        # completing, so no extra propagation wait is needed here.
+        run: npm ci
 
       - name: Build all packages first
         run: npm run build
 
       - name: Build all MCPB bundles
+        # No `||` masking: any MCPB build failure aborts the job.
         run: |
+          set -euo pipefail
           echo "📦 Building MCPB bundles for all servers..."
-
-          # Build each server's MCPB
-          npm run build:mcpb --workspace=@fractalizer/mcp-server-yandex-tracker || echo "⚠️ yandex-tracker MCPB failed"
-          npm run build:mcpb --workspace=@fractalizer/mcp-server-yandex-wiki || echo "⚠️ yandex-wiki MCPB failed"
-          npm run build:mcpb --workspace=@fractalizer/mcp-server-ticktick || echo "⚠️ ticktick MCPB failed"
+          npm run build:mcpb --workspace=@fractalizer/mcp-server-yandex-tracker
+          npm run build:mcpb --workspace=@fractalizer/mcp-server-yandex-wiki
+          npm run build:mcpb --workspace=@fractalizer/mcp-server-ticktick
 
       - name: Rename and upload MCPB files
         run: |
