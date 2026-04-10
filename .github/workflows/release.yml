@@ -109,116 +109,43 @@ jobs:
       - name: Build all packages
         run: npm run build
 
-      - name: Decode OIDC token claims (diagnostic)
-        # Fetches the same OIDC ID token that `npm publish` will request from
-        # the GitHub Actions runner, decodes the JWT payload, and prints
-        # the claims. Used to verify that claims (repository_owner, repository,
-        # workflow_ref, environment) exactly match npm's Trusted Publisher
-        # config — any mismatch (case, trailing space, wrong env) causes
-        # `/oidc/token/exchange/package/...` to return 404.
+      - name: Reset npm auth config (OIDC prerequisite)
+        # actions/setup-node@v4 writes a placeholder `_authToken=XXXXX-XXXXX-XXXXX-XXXXX`
+        # into the user .npmrc (expected to be overridden at publish time via
+        # NODE_AUTH_TOKEN env). npm CLI picks it up as a bearer token and never
+        # attempts OIDC — publishing silently 404s at /oidc/token/exchange. The
+        # safest fix is to wipe the user .npmrc entirely and recreate it with
+        # only the registry URL.
         run: |
           set -euo pipefail
-          TOKEN=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org" \
-            | jq -r '.value')
-          echo "Token fetched, length: ${#TOKEN}"
-          echo ""
-          echo "=== Claims (decoded JWT payload) ==="
-          # Middle segment of JWT is base64url-encoded JSON.
-          PAYLOAD_B64=$(printf '%s' "$TOKEN" | cut -d. -f2)
-          # Fix base64url → base64 padding
-          PADDED=$(printf '%s' "$PAYLOAD_B64" | tr '_-' '/+')
-          while [ $(( ${#PADDED} % 4 )) -ne 0 ]; do PADDED="${PADDED}="; done
-          printf '%s' "$PADDED" | base64 -d 2>/dev/null | jq .
-          echo ""
-          echo "=== Expected by npm Trusted Publisher config ==="
-          echo "  repository_owner: FractalizeR"
-          echo "  repository:       FractalizeR/mcp_servers"
-          echo "  workflow_ref:     FractalizeR/mcp_servers/.github/workflows/release.yml@refs/heads/main"
-          echo "  environment:      npm-publish"
-
-      - name: Reset all npm auth config (OIDC prerequisite)
-        # Any auth config — _auth, _authToken, in any .npmrc file or env var —
-        # blocks OIDC trusted publishing. npm CLI uses the first auth it finds
-        # and never attempts OIDC fallback. setup-node@v4 writes a placeholder
-        # _authToken into the user npmrc, but there may also be a global/system
-        # npmrc, or NPM_CONFIG_* env vars. Nuke everything and recreate a
-        # minimal userconfig with only the registry URL.
-        run: |
-          set -euo pipefail
-
-          echo "=== Before reset ==="
-          echo "npm config effective auth-related values:"
-          npm config list -l 2>&1 | grep -iE '_auth|authtoken|always-auth' || true
-          echo ""
-          echo "Sources found:"
-          for f in \
-              "${NPM_CONFIG_USERCONFIG:-}" \
-              "$HOME/.npmrc" \
-              "/etc/npmrc" \
-              "/usr/etc/npmrc" \
-              "/opt/hostedtoolcache/node/${RUNNER_TOOL_NAME:-node}/.npmrc"; do
-            [ -n "$f" ] && [ -f "$f" ] && { echo "--- $f ---"; sed 's/\(_auth[^=]*=\).*/\1<redacted>/' "$f"; }
-          done
-          echo ""
-          echo "NPM_CONFIG_* env vars:"
-          env | grep '^NPM_CONFIG' | sed 's/=.*/=<redacted>/' || echo "(none)"
-          echo ""
-
-          # Nuke all user-level .npmrc files
           NPMRC="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
           rm -f "$NPMRC" "$HOME/.npmrc"
-
-          # Recreate minimal userconfig with only the registry URL
           mkdir -p "$(dirname "$NPMRC")"
           printf 'registry=https://registry.npmjs.org/\n' > "$NPMRC"
-
-          echo "=== After reset ==="
-          echo ".npmrc at $NPMRC:"
-          cat "$NPMRC"
-          echo ""
-          echo "npm config effective auth-related values:"
-          npm config list -l 2>&1 | grep -iE '_auth|authtoken|always-auth' || echo "(none — OIDC fallback should now activate)"
 
       # OIDC Trusted Publishing: npm CLI automatically uses id-token for auth.
       # No NPM_TOKEN needed! Provenance is published automatically.
       #
       # REQUIRES on npm side (per package):
       #   Settings → Publishing access → Trusted Publisher
-      #   Publisher: GitHub Actions
-      #   Organization: FractalizeR
-      #   Repository: mcp_servers
-      #   Workflow filename: release.yml
-      #   Environment name: npm-publish
+      #   Publisher:             GitHub Actions
+      #   Organization or user:  FractalizeR    (case-sensitive!)
+      #   Repository:            mcp_servers
+      #   Workflow filename:     release.yml    (just the filename, no path)
+      #   Environment name:      npm-publish
       #
-      # If Trusted Publisher is missing, npm returns 404 (not 403) to the
-      # publish call — a security feature to avoid leaking package state.
+      # Common gotcha: Organization is case-sensitive. `fractalizer` lowercase
+      # silently 404s while OIDC claims carry `FractalizeR` from GitHub.
       - name: Publish packages to NPM (OIDC Trusted Publishing)
         env:
           RELEASE_VERSION: ${{ needs.release.outputs.new_release_version }}
           # Override setup-node's placeholder. setup-node@v4 exports
-          # NODE_AUTH_TOKEN=XXXXX-XXXXX-XXXXX-XXXXX as a literal placeholder
-          # when no real token is configured. If npm CLI picks this up from
-          # env (independently of .npmrc), it treats it as a valid bearer token
-          # and never attempts OIDC trusted publishing.
+          # NODE_AUTH_TOKEN=XXXXX-XXXXX-XXXXX-XXXXX as a literal placeholder.
+          # If npm CLI picks this up from env (independently of .npmrc), it
+          # treats it as a valid bearer token and never attempts OIDC.
           NODE_AUTH_TOKEN: ''
         run: |
           set -euo pipefail
-
-          # --- one-time diagnostics (first run with Node 24 + cleaned .npmrc) ---
-          echo "=== Diagnostics ==="
-          echo "npm version: $(npm --version)"
-          echo "NODE_AUTH_TOKEN length: ${#NODE_AUTH_TOKEN}"
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL length: ${#ACTIONS_ID_TOKEN_REQUEST_URL}"
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN length: ${#ACTIONS_ID_TOKEN_REQUEST_TOKEN}"
-          echo ""
-          echo ".npmrc contents:"
-          cat "${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}" 2>/dev/null || echo "(none)"
-          echo ""
-          echo "npm config list -l | grep -i auth:"
-          npm config list -l 2>&1 | grep -i auth || echo "(no auth-related config)"
-          echo "===================="
-          echo ""
 
           # Packages published in dependency order:
           # framework (infrastructure → cli/core → search)
@@ -255,9 +182,7 @@ jobs:
 
             echo "publishing..."
             # No `||` masking: any failure aborts the job (set -e).
-            # --loglevel=verbose: expose OIDC detection logic for diagnosis.
-            # Will be tuned down once OIDC is confirmed working.
-            npm publish --workspace="$PKG" --access public --loglevel=verbose
+            npm publish --workspace="$PKG" --access public
             echo "    ✅ published"
           done
 
