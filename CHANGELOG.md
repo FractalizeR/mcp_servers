@@ -1,3 +1,9 @@
+## [0.3.5](https://github.com/FractalizeR/mcp_servers/compare/v0.3.4...v0.3.5) (2026-04-10)
+
+### Bug Fixes
+
+* **cli:** заменить prompt type 'list' на 'select' для inquirer@13 ([4978c92](https://github.com/FractalizeR/mcp_servers/commit/4978c92d5b5fba55f25f3460a2d762fa04bfdf48))
+
 ## [0.3.4](https://github.com/FractalizeR/mcp_servers/compare/v0.3.3...v0.3.4) (2026-03-25)
 
 ### Bug Fixes
