@@ -146,8 +146,29 @@ jobs:
       - name: Publish packages to NPM (OIDC Trusted Publishing)
         env:
           RELEASE_VERSION: ${{ needs.release.outputs.new_release_version }}
+          # Override setup-node's placeholder. setup-node@v4 exports
+          # NODE_AUTH_TOKEN=XXXXX-XXXXX-XXXXX-XXXXX as a literal placeholder
+          # when no real token is configured. If npm CLI picks this up from
+          # env (independently of .npmrc), it treats it as a valid bearer token
+          # and never attempts OIDC trusted publishing.
+          NODE_AUTH_TOKEN: ''
         run: |
           set -euo pipefail
+
+          # --- one-time diagnostics (first run with Node 24 + cleaned .npmrc) ---
+          echo "=== Diagnostics ==="
+          echo "npm version: $(npm --version)"
+          echo "NODE_AUTH_TOKEN length: ${#NODE_AUTH_TOKEN}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL length: ${#ACTIONS_ID_TOKEN_REQUEST_URL}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN length: ${#ACTIONS_ID_TOKEN_REQUEST_TOKEN}"
+          echo ""
+          echo ".npmrc contents:"
+          cat "${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}" 2>/dev/null || echo "(none)"
+          echo ""
+          echo "npm config list -l | grep -i auth:"
+          npm config list -l 2>&1 | grep -i auth || echo "(no auth-related config)"
+          echo "===================="
+          echo ""
 
           # Packages published in dependency order:
           # framework (infrastructure → cli/core → search)
