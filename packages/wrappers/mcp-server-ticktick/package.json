@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-ticktick",
-  "version": "0.3.15",
+  "version": "0.3.16",
   "description": "MCP Server for TickTick todo-list application. This is a convenience wrapper for @fractalizer/mcp-server-ticktick.",
   "keywords": [
     "mcp",
@@ -29,7 +29,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@fractalizer/mcp-server-ticktick": "^0.3.15"
+    "@fractalizer/mcp-server-ticktick": "^0.3.16"
   },
   "engines": {
     "node": ">=22.0.0"

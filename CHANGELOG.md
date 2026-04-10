@@ -1,3 +1,9 @@
+## [0.3.16](https://github.com/FractalizeR/mcp_servers/compare/v0.3.15...v0.3.16) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** декодировать claims OIDC-токена перед публикацией ([c8fe6dd](https://github.com/FractalizeR/mcp_servers/commit/c8fe6dd0b2b6b4951c08aa6146f23cd9d287f9fb))
+
 ## [0.3.15](https://github.com/FractalizeR/mcp_servers/compare/v0.3.14...v0.3.15) (2026-04-10)
 
 ### Bug Fixes
