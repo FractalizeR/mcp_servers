@@ -1,3 +1,9 @@
+## [0.3.9](https://github.com/FractalizeR/mcp_servers/compare/v0.3.8...v0.3.9) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** вычистить placeholder _authToken из .npmrc перед OIDC publish ([8bf70ba](https://github.com/FractalizeR/mcp_servers/commit/8bf70baa48f94074cf14aae273774f770911a1a9))
+
 ## [0.3.8](https://github.com/FractalizeR/mcp_servers/compare/v0.3.7...v0.3.8) (2026-04-10)
 
 ### Bug Fixes
