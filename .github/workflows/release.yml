@@ -85,6 +85,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Upgrade npm to OIDC-capable version
+        # Node 22 ships with npm 10.x, which does NOT support OIDC trusted
+        # publishing — it fails with ENEEDAUTH even when ACTIONS_ID_TOKEN_REQUEST_*
+        # env vars are set. npm 11.5.1+ introduced OIDC support. Upgrade to
+        # latest here so `npm publish` can actually use trusted publishing.
+        run: |
+          npm install -g npm@latest
+          echo "npm version after upgrade: $(npm --version)"
+
       - name: Build all packages
         run: npm run build
 
