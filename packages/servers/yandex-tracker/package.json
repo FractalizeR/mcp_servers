@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-server-yandex-tracker",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "MCP Server for Yandex Tracker API integration",
   "keywords": [
     "mcp",
@@ -92,10 +92,10 @@
     "validate:tools": "tsx scripts/validate-tool-registration.ts"
   },
   "dependencies": {
-    "@fractalizer/mcp-cli": "^0.3.7",
-    "@fractalizer/mcp-core": "^0.3.7",
-    "@fractalizer/mcp-infrastructure": "^0.3.7",
-    "@fractalizer/mcp-search": "^0.3.7",
+    "@fractalizer/mcp-cli": "^0.3.8",
+    "@fractalizer/mcp-core": "^0.3.8",
+    "@fractalizer/mcp-infrastructure": "^0.3.8",
+    "@fractalizer/mcp-search": "^0.3.8",
     "@iarna/toml": "^2.2.5",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "axios": "^1.13.6",

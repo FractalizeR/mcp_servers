@@ -1,3 +1,9 @@
+## [0.3.8](https://github.com/FractalizeR/mcp_servers/compare/v0.3.7...v0.3.8) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** триггер релиза для прогона OIDC debug step ([7e469b2](https://github.com/FractalizeR/mcp_servers/commit/7e469b2ce85346d064748f342f8aadc21dfdd60c))
+
 ## [0.3.7](https://github.com/FractalizeR/mcp_servers/compare/v0.3.6...v0.3.7) (2026-04-10)
 
 ### Bug Fixes
