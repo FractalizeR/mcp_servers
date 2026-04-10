@@ -96,8 +96,11 @@ jobs:
         run: |
           NPM_VERSION=$(npm --version)
           echo "npm version: $NPM_VERSION"
-          # OIDC trusted publishing requires npm >= 11.5.1
-          if ! printf '%s\n11.5.1\n' "$NPM_VERSION" | sort -V -C; then
+          # OIDC trusted publishing requires npm >= 11.5.1. sort -V puts
+          # versions in ascending order; if the minimum of [NPM_VERSION, 11.5.1]
+          # is 11.5.1, then NPM_VERSION >= 11.5.1.
+          LOWEST=$(printf '%s\n%s\n' "$NPM_VERSION" "11.5.1" | sort -V | head -1)
+          if [ "$LOWEST" != "11.5.1" ]; then
             echo "❌ npm $NPM_VERSION is too old for OIDC (need ≥ 11.5.1)"
             exit 1
           fi
