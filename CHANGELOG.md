@@ -1,3 +1,9 @@
+## [0.3.6](https://github.com/FractalizeR/mcp_servers/compare/v0.3.5...v0.3.6) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** починить npm publish — идемпотентность, fail-fast, verify ([1c41863](https://github.com/FractalizeR/mcp_servers/commit/1c418635d04258368899b18c2602368286263dc6))
+
 ## [0.3.5](https://github.com/FractalizeR/mcp_servers/compare/v0.3.4...v0.3.5) (2026-04-10)
 
 ### Bug Fixes
