@@ -1,3 +1,9 @@
+## [0.3.15](https://github.com/FractalizeR/mcp_servers/compare/v0.3.14...v0.3.15) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** триггер релиза для прогона verbose publish diagnostic ([12ce28e](https://github.com/FractalizeR/mcp_servers/commit/12ce28e6cf9d0fa8b1942c35f824232f5bd09c2c))
+
 ## [0.3.14](https://github.com/FractalizeR/mcp_servers/compare/v0.3.13...v0.3.14) (2026-04-10)
 
 ### Bug Fixes
