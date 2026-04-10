@@ -88,6 +88,30 @@ jobs:
       - name: Build all packages
         run: npm run build
 
+      - name: Debug OIDC token availability
+        # Temporary diagnostic: verifies that id-token: write actually wires up
+        # ACTIONS_ID_TOKEN_REQUEST_{URL,TOKEN} env vars. Without them npm CLI
+        # silently falls back to anonymous publish and gets HTTP 404.
+        run: |
+          echo "=== OIDC env vars ==="
+          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "✅ ACTIONS_ID_TOKEN_REQUEST_URL is set (length: ${#ACTIONS_ID_TOKEN_REQUEST_URL})"
+          else
+            echo "❌ ACTIONS_ID_TOKEN_REQUEST_URL is NOT set"
+          fi
+          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
+            echo "✅ ACTIONS_ID_TOKEN_REQUEST_TOKEN is set (length: ${#ACTIONS_ID_TOKEN_REQUEST_TOKEN})"
+          else
+            echo "❌ ACTIONS_ID_TOKEN_REQUEST_TOKEN is NOT set"
+          fi
+          echo ""
+          echo "=== npm version ==="
+          npm --version
+          echo ""
+          echo "=== npm config (relevant) ==="
+          npm config get registry
+          npm config get //registry.npmjs.org/:_authToken || echo "(no auth token, expected for OIDC)"
+
       # OIDC Trusted Publishing: npm CLI automatically uses id-token for auth.
       # No NPM_TOKEN needed! Provenance is published automatically.
       #
