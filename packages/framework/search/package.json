@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-search",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "Advanced tool search engine with compile-time indexing and 5 search strategies",
   "keywords": [
     "mcp",
@@ -76,8 +76,8 @@
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet && npm run cpd:quiet && npm run depcruise && npm run validate:docs"
   },
   "dependencies": {
-    "@fractalizer/mcp-core": "^0.3.13",
-    "@fractalizer/mcp-infrastructure": "^0.3.13"
+    "@fractalizer/mcp-core": "^0.3.14",
+    "@fractalizer/mcp-infrastructure": "^0.3.14"
   },
   "engines": {
     "node": ">=22.0.0"

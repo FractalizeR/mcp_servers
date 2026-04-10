@@ -1,3 +1,9 @@
+## [0.3.14](https://github.com/FractalizeR/mcp_servers/compare/v0.3.13...v0.3.14) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** полный wipe npm auth config + трассировка источников ([837f82a](https://github.com/FractalizeR/mcp_servers/commit/837f82afdc7a13f07da23060866a56c841d712f0))
+
 ## [0.3.13](https://github.com/FractalizeR/mcp_servers/compare/v0.3.12...v0.3.13) (2026-04-10)
 
 ### Bug Fixes
