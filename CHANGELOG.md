@@ -1,3 +1,9 @@
+## [0.3.11](https://github.com/FractalizeR/mcp_servers/compare/v0.3.10...v0.3.11) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** публиковать через Node 24 (штатно несёт npm 11.x c OIDC) ([0a8abe7](https://github.com/FractalizeR/mcp_servers/commit/0a8abe7f321a5e56f7c4196235e269f0aa2deafc))
+
 ## [0.3.10](https://github.com/FractalizeR/mcp_servers/compare/v0.3.9...v0.3.10) (2026-04-10)
 
 ### Bug Fixes
