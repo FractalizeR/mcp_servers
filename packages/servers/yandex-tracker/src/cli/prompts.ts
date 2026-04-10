@@ -35,7 +35,7 @@ export const ytConfigPrompts: ConfigPromptDefinition<YandexTrackerMCPConfig>[] =
   },
   {
     name: 'logLevel',
-    type: 'list',
+    type: 'select',
     message: 'Уровень логирования:',
     choices: [
       { name: 'Debug', value: 'debug' },

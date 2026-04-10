@@ -3,8 +3,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import inquirer from 'inquirer';
 import { InteractivePrompter } from '../../../src/utils/interactive-prompter.js';
-import type { ConfigPromptDefinition, BaseMCPServerConfig } from '../../../src/types.js';
+import type {
+  ConfigPromptDefinition,
+  BaseMCPServerConfig,
+  PromptType,
+} from '../../../src/types.js';
 
 /**
  * Test configuration interface
@@ -60,7 +65,7 @@ describe('InteractivePrompter', () => {
         },
         {
           name: 'logLevel',
-          type: 'list',
+          type: 'select',
           message: 'Log Level:',
           choices: [
             { name: 'Debug', value: 'debug' },
@@ -107,7 +112,7 @@ describe('InteractivePrompter', () => {
       const prompts: ConfigPromptDefinition<TestConfig>[] = [
         {
           name: 'logLevel',
-          type: 'list',
+          type: 'select',
           message: 'Log Level:',
           default: 'info', // ✅ Valid - matches TestConfig['logLevel']
           choices: [
@@ -154,7 +159,7 @@ describe('InteractivePrompter', () => {
         { name: 'apiKey', type: 'input', message: 'Input:' },
         { name: 'apiKey', type: 'password', message: 'Password:' },
         { name: 'apiKey', type: 'confirm', message: 'Confirm:' },
-        { name: 'apiKey', type: 'list', message: 'List:', choices: [] },
+        { name: 'apiKey', type: 'select', message: 'List:', choices: [] },
         { name: 'apiKey', type: 'number', message: 'Number:' },
       ];
 
@@ -192,7 +197,7 @@ describe('InteractivePrompter', () => {
       const prompts: ConfigPromptDefinition<TestConfig>[] = [
         {
           name: 'logLevel',
-          type: 'list',
+          type: 'select',
           message: 'Log level:',
           choices: [
             { name: 'Debug', value: 'debug' },
@@ -221,7 +226,7 @@ describe('InteractivePrompter', () => {
         },
         {
           name: 'logLevel',
-          type: 'list',
+          type: 'select',
           message: 'Log Level:',
           default: (savedConfig) => savedConfig?.logLevel ?? 'info',
           choices: [
@@ -249,7 +254,7 @@ describe('InteractivePrompter', () => {
         { name: 'password', type: 'password', message: 'Password:' },
         {
           name: 'region',
-          type: 'list',
+          type: 'select',
           message: 'Region:',
           choices: [
             { name: 'US', value: 'us' },
@@ -275,6 +280,48 @@ describe('InteractivePrompter', () => {
       const prompter = new InteractivePrompter(prompts);
       expect(prompter).toBeDefined();
     });
+  });
+});
+
+/**
+ * Регрессия: inquirer@13 (через @inquirer/prompts) переименовал тип 'list' в 'select'.
+ * Если PromptType содержит значение, которого нет в inquirer.prompt.prompts,
+ * PromptsRunner тихо подменяет тип на 'input', ломая prompt. Этот блок проверяет,
+ * что все публичные значения PromptType реально поддерживаются inquirer.
+ */
+describe('PromptType ↔ inquirer compatibility', () => {
+  // Явное перечисление всех значений PromptType.
+  // Compile-time exhaustiveness check ниже гарантирует, что при добавлении
+  // нового типа в PromptType этот массив обязан быть обновлён.
+  const ALL_PROMPT_TYPES = [
+    'input',
+    'password',
+    'select',
+    'confirm',
+    'number',
+  ] as const satisfies readonly PromptType[];
+
+  // Exhaustiveness: если PromptType содержит что-то, чего нет в ALL_PROMPT_TYPES,
+  // TypeScript упадёт на этой строке.
+  type _Missing = Exclude<PromptType, (typeof ALL_PROMPT_TYPES)[number]>;
+  const _exhaustiveCheck: _Missing extends never ? true : false = true;
+  void _exhaustiveCheck;
+
+  it('все значения PromptType должны существовать в inquirer.prompt.prompts', () => {
+    // inquirer.prompt — это promptModule, у которого .prompts содержит карту билт-ин промптов
+    const promptModule = inquirer.prompt as unknown as {
+      prompts: Record<string, unknown>;
+    };
+    const availablePrompts = Object.keys(promptModule.prompts);
+
+    const missing = ALL_PROMPT_TYPES.filter((type) => !availablePrompts.includes(type));
+
+    expect(
+      missing,
+      `Следующие PromptType отсутствуют в inquirer: ${missing.join(', ')}. ` +
+        `Доступны: ${availablePrompts.join(', ')}. ` +
+        `PromptsRunner тихо подменит отсутствующий тип на 'input' — см. fix в 0.3.x.`
+    ).toEqual([]);
   });
 });
 

@@ -84,7 +84,7 @@ export type MCPClientConfig<TKey extends string = 'mcpServers'> = {
 /**
  * Типы промптов для сбора конфигурации
  */
-export type PromptType = 'input' | 'password' | 'list' | 'confirm' | 'number';
+export type PromptType = 'input' | 'password' | 'select' | 'confirm' | 'number';
 
 /**
  * Определение промпта для сбора конфигурации
@@ -109,7 +109,7 @@ export interface ConfigPromptDefinition<
   /** Функция валидации */
   validate?: (value: TConfig[K]) => string | true;
 
-  /** Варианты выбора (для type: 'list') */
+  /** Варианты выбора (для type: 'select') */
   choices?: Array<{ name: string; value: TConfig[K] }>;
 
   /** Условное отображение промпта */

@@ -34,7 +34,7 @@ export const ticktickConfigPrompts: ConfigPromptDefinition<TickTickMCPConfig>[] 
   },
   {
     name: 'logLevel',
-    type: 'list',
+    type: 'select',
     message: 'Уровень логирования:',
     choices: [
       { name: 'Debug', value: 'debug' },

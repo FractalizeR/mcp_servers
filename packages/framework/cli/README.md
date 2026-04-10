@@ -204,7 +204,7 @@ const prompts: ConfigPromptDefinition<MyServerConfig>[] = [
   },
   {
     name: 'logLevel',
-    type: 'list',
+    type: 'select',
     message: 'Уровень логирования:',
     choices: [
       { name: 'Debug', value: 'debug' },
@@ -223,7 +223,7 @@ const config = await prompter.promptServerConfig(savedConfig);
 **Типы промптов:**
 - `input` — текстовый ввод
 - `password` — скрытый ввод (для секретов)
-- `list` — выбор из списка
+- `select` — выбор из списка
 - `confirm` — да/нет
 - `number` — числовой ввод
 

@@ -120,7 +120,7 @@ export class InteractivePrompter<TConfig extends BaseMCPServerConfig> {
   static async promptClientSelection(clients: MCPClientInfo[]): Promise<string> {
     const { selectedClient } = await inquirer.prompt<{ selectedClient: string }>([
       {
-        type: 'list',
+        type: 'select',
         name: 'selectedClient',
         message: 'Выберите MCP клиент для подключения:',
         choices: clients.map((client) => ({
@@ -188,7 +188,7 @@ export class InteractivePrompter<TConfig extends BaseMCPServerConfig> {
   ): Promise<T> {
     const { selected } = await inquirer.prompt<{ selected: T }>([
       {
-        type: 'list',
+        type: 'select',
         name: 'selected',
         message,
         choices,
