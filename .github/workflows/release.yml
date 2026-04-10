@@ -109,6 +109,34 @@ jobs:
       - name: Build all packages
         run: npm run build
 
+      - name: Decode OIDC token claims (diagnostic)
+        # Fetches the same OIDC ID token that `npm publish` will request from
+        # the GitHub Actions runner, decodes the JWT payload, and prints
+        # the claims. Used to verify that claims (repository_owner, repository,
+        # workflow_ref, environment) exactly match npm's Trusted Publisher
+        # config — any mismatch (case, trailing space, wrong env) causes
+        # `/oidc/token/exchange/package/...` to return 404.
+        run: |
+          set -euo pipefail
+          TOKEN=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org" \
+            | jq -r '.value')
+          echo "Token fetched, length: ${#TOKEN}"
+          echo ""
+          echo "=== Claims (decoded JWT payload) ==="
+          # Middle segment of JWT is base64url-encoded JSON.
+          PAYLOAD_B64=$(printf '%s' "$TOKEN" | cut -d. -f2)
+          # Fix base64url → base64 padding
+          PADDED=$(printf '%s' "$PAYLOAD_B64" | tr '_-' '/+')
+          while [ $(( ${#PADDED} % 4 )) -ne 0 ]; do PADDED="${PADDED}="; done
+          printf '%s' "$PADDED" | base64 -d 2>/dev/null | jq .
+          echo ""
+          echo "=== Expected by npm Trusted Publisher config ==="
+          echo "  repository_owner: FractalizeR"
+          echo "  repository:       FractalizeR/mcp_servers"
+          echo "  workflow_ref:     FractalizeR/mcp_servers/.github/workflows/release.yml@refs/heads/main"
+          echo "  environment:      npm-publish"
+
       - name: Reset all npm auth config (OIDC prerequisite)
         # Any auth config — _auth, _authToken, in any .npmrc file or env var —
         # blocks OIDC trusted publishing. npm CLI uses the first auth it finds
