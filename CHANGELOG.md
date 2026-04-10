@@ -1,3 +1,9 @@
+## [0.3.7](https://github.com/FractalizeR/mcp_servers/compare/v0.3.6...v0.3.7) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** явно задать id-token: write на уровне publish-npm job ([1627f89](https://github.com/FractalizeR/mcp_servers/commit/1627f892f76bed18e06542acd1e30908a80e6c6f))
+
 ## [0.3.6](https://github.com/FractalizeR/mcp_servers/compare/v0.3.5...v0.3.6) (2026-04-10)
 
 ### Bug Fixes
