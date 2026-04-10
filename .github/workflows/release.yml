@@ -75,24 +75,33 @@ jobs:
         with:
           ref: v${{ needs.release.outputs.new_release_version }}
 
-      - name: Setup Node.js with NPM registry
+      - name: Setup Node.js 24 with NPM registry
+        # Node 24 ships with npm 11.x. Node 22 ships with npm 10.x which does
+        # NOT support OIDC trusted publishing — it fails with ENEEDAUTH even
+        # when ACTIONS_ID_TOKEN_REQUEST_* env vars are set (OIDC support was
+        # added in npm 11.5.1). Upgrading npm inside the runner via
+        # `npm install -g npm@latest` hits a self-update bootstrap bug
+        # (MODULE_NOT_FOUND promise-retry), so the clean solution is to use
+        # a Node version that already ships with npm 11.x.
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Upgrade npm to OIDC-capable version
-        # Node 22 ships with npm 10.x, which does NOT support OIDC trusted
-        # publishing — it fails with ENEEDAUTH even when ACTIONS_ID_TOKEN_REQUEST_*
-        # env vars are set. npm 11.5.1+ introduced OIDC support. Upgrade to
-        # latest here so `npm publish` can actually use trusted publishing.
+      - name: Verify npm version supports OIDC
         run: |
-          npm install -g npm@latest
-          echo "npm version after upgrade: $(npm --version)"
+          NPM_VERSION=$(npm --version)
+          echo "npm version: $NPM_VERSION"
+          # OIDC trusted publishing requires npm >= 11.5.1
+          if ! printf '%s\n11.5.1\n' "$NPM_VERSION" | sort -V -C; then
+            echo "❌ npm $NPM_VERSION is too old for OIDC (need ≥ 11.5.1)"
+            exit 1
+          fi
+          echo "✅ npm $NPM_VERSION supports OIDC trusted publishing"
 
       - name: Build all packages
         run: npm run build
