@@ -1,3 +1,9 @@
+## [0.3.17](https://github.com/FractalizeR/mcp_servers/compare/v0.3.16...v0.3.17) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** убрать диагностические шаги, финальная чистая версия publish-npm ([f19dacc](https://github.com/FractalizeR/mcp_servers/commit/f19dacc6f4d5e6c70e771a6563d94a503ddeb847))
+
 ## [0.3.16](https://github.com/FractalizeR/mcp_servers/compare/v0.3.15...v0.3.16) (2026-04-10)
 
 ### Bug Fixes
