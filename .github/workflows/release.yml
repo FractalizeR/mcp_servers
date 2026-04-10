@@ -227,7 +227,9 @@ jobs:
 
             echo "publishing..."
             # No `||` masking: any failure aborts the job (set -e).
-            npm publish --workspace="$PKG" --access public
+            # --loglevel=verbose: expose OIDC detection logic for diagnosis.
+            # Will be tuned down once OIDC is confirmed working.
+            npm publish --workspace="$PKG" --access public --loglevel=verbose
             echo "    ✅ published"
           done
 
