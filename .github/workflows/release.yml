@@ -58,6 +58,13 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     if: needs.release.outputs.new_release_published == 'true'
+    # id-token: write MUST be declared at job level — workflow-level permissions
+    # are not inherited for id-token when a job uses `environment:`. Without this
+    # explicit block, ACTIONS_ID_TOKEN_REQUEST_URL is not set, npm can't mint an
+    # OIDC token, and trusted publishing silently returns HTTP 404 from registry.
+    permissions:
+      contents: read
+      id-token: write
     # Environment must be configured in GitHub repo settings
     # and match the trusted publisher config on npmjs.com
     environment: npm-publish
