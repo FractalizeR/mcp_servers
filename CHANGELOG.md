@@ -1,3 +1,9 @@
+## [0.3.13](https://github.com/FractalizeR/mcp_servers/compare/v0.3.12...v0.3.13) (2026-04-10)
+
+### Bug Fixes
+
+* **ci:** явно обнулить NODE_AUTH_TOKEN + диагностика OIDC ([2c33fe3](https://github.com/FractalizeR/mcp_servers/commit/2c33fe30eae944892235d6f04ad673c387d4129c))
+
 ## [0.3.12](https://github.com/FractalizeR/mcp_servers/compare/v0.3.11...v0.3.12) (2026-04-10)
 
 ### Bug Fixes
