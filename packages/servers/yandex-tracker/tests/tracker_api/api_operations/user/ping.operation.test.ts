@@ -51,7 +51,7 @@ describe('PingOperation', () => {
       requestTimeout: 10000,
       maxBatchSize: 100,
       maxConcurrentRequests: 5,
-      logsDir: './logs',
+      logsDir: '/tmp/test-logs',
       prettyLogs: false,
       logMaxSize: 51200,
       logMaxFiles: 20,

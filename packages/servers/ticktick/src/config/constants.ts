@@ -6,6 +6,11 @@
  */
 
 /**
+ * Server identifier (for cache and log paths)
+ */
+export const SERVER_NAME = 'mcp-server-ticktick' as const;
+
+/**
  * Default configuration values
  */
 export const DEFAULT_API_BASE_URL = 'https://api.ticktick.com/open/v1' as const;
@@ -21,7 +26,7 @@ export const DEFAULT_LOG_LEVEL = 'info' as const;
 export const DEFAULT_REQUEST_TIMEOUT = 30000 as const;
 export const DEFAULT_MAX_BATCH_SIZE = 100 as const;
 export const DEFAULT_MAX_CONCURRENT_REQUESTS = 5 as const;
-export const DEFAULT_LOGS_DIR = './logs' as const;
+export const DEFAULT_LOGS_DIR = 'logs' as const;
 export const DEFAULT_LOG_MAX_SIZE = 51200 as const; // 50KB in bytes
 export const DEFAULT_LOG_MAX_FILES = 20 as const;
 export const DEFAULT_TOOL_DISCOVERY_MODE = 'eager' as const;

@@ -2,8 +2,9 @@
  * Configuration loader for Yandex Wiki server
  */
 
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
 import type { ServerConfig, LogLevel, ParsedCategoryFilter } from './server-config.interface.js';
 import {
   DEFAULT_API_BASE,
@@ -20,6 +21,7 @@ import {
   DEFAULT_RETRY_MIN_DELAY,
   DEFAULT_RETRY_MAX_DELAY,
   ENV_VAR_NAMES,
+  SERVER_NAME,
 } from './constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -201,6 +203,21 @@ function validateConcurrentRequests(value: string | undefined, defaultValue: num
 }
 
 /**
+ * Resolve logs directory path from env or default
+ */
+export function resolveLogsDir(
+  logsDirEnv: string | undefined,
+  projectRoot: string,
+  serverName: string,
+  logsSubdir: string
+): string {
+  const trimmed = logsDirEnv?.trim() || undefined;
+  const expanded = trimmed?.startsWith('~/') ? join(homedir(), trimmed.slice(2)) : trimmed;
+  const cacheBase = process.env['XDG_CACHE_HOME'] || join(homedir(), '.cache');
+  return expanded ? resolve(projectRoot, expanded) : join(cacheBase, serverName, logsSubdir);
+}
+
+/**
  * Валидация ID организации
  * @throws {Error} если ID не указаны или указаны оба одновременно
  */
@@ -269,8 +286,12 @@ export function loadConfig(): ServerConfig {
     DEFAULT_MAX_CONCURRENT_REQUESTS
   );
 
-  const logsDirRaw = process.env[ENV_VAR_NAMES.LOGS_DIR]?.trim() || DEFAULT_LOGS_DIR;
-  const logsDir = resolve(PROJECT_ROOT, logsDirRaw);
+  const logsDir = resolveLogsDir(
+    process.env[ENV_VAR_NAMES.LOGS_DIR],
+    PROJECT_ROOT,
+    SERVER_NAME,
+    DEFAULT_LOGS_DIR
+  );
   const prettyLogs = process.env[ENV_VAR_NAMES.PRETTY_LOGS] === 'true';
 
   const logMaxSize = parseInt(

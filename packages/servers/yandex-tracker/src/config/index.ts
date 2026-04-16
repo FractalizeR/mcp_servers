@@ -16,7 +16,7 @@
 export type { ServerConfig, LogLevel, ParsedCategoryFilter } from './server-config.interface.js';
 
 // Configuration loader
-export { loadConfig } from './config-loader.js';
+export { loadConfig, resolveLogsDir } from './config-loader.js';
 
 // Constants
 export * from './constants.js';

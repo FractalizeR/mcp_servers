@@ -2,8 +2,9 @@
  * Configuration loader and validators for TickTick MCP Server
  */
 
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
 import type { ServerConfig, LogLevel, ParsedCategoryFilter } from './server-config.interface.js';
 import {
   DEFAULT_API_BASE_URL,
@@ -21,6 +22,7 @@ import {
   DEFAULT_RETRY_MAX_DELAY,
   DEFAULT_CACHE_TTL_MS,
   ENV_VAR_NAMES,
+  SERVER_NAME,
 } from './constants.js';
 
 // Path to project root (dist/ or src/)
@@ -326,14 +328,34 @@ function buildOAuthConfig(): ServerConfig['oauth'] {
 }
 
 /**
+ * Resolve logs directory path from env or default
+ */
+export function resolveLogsDir(
+  logsDirEnv: string | undefined,
+  projectRoot: string,
+  serverName: string,
+  logsSubdir: string
+): string {
+  const trimmed = logsDirEnv?.trim() || undefined;
+  const expanded = trimmed?.startsWith('~/') ? join(homedir(), trimmed.slice(2)) : trimmed;
+  const cacheBase = process.env['XDG_CACHE_HOME'] || join(homedir(), '.cache');
+  return expanded ? resolve(projectRoot, expanded) : join(cacheBase, serverName, logsSubdir);
+}
+
+/**
  * Build logging configuration
  */
 function buildLoggingConfig(): ServerConfig['logging'] {
-  const logsDirRaw = process.env[ENV_VAR_NAMES.LOGS_DIR]?.trim() || DEFAULT_LOGS_DIR;
+  const logsDir = resolveLogsDir(
+    process.env[ENV_VAR_NAMES.LOGS_DIR],
+    PROJECT_ROOT,
+    SERVER_NAME,
+    DEFAULT_LOGS_DIR
+  );
 
   return {
     level: validateLogLevel(process.env[ENV_VAR_NAMES.LOG_LEVEL]?.trim() || DEFAULT_LOG_LEVEL),
-    dir: resolve(PROJECT_ROOT, logsDirRaw),
+    dir: logsDir,
     prettyLogs: process.env[ENV_VAR_NAMES.PRETTY_LOGS] === 'true',
     maxSize: parseInt(process.env[ENV_VAR_NAMES.LOG_MAX_SIZE] || String(DEFAULT_LOG_MAX_SIZE), 10),
     maxFiles: parseInt(
