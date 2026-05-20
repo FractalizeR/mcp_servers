@@ -1,75 +1,121 @@
+/**
+ * Тесты FileManager на реальных tmp-файлах.
+ *
+ * Не используем моки — операции читают/пишут tmpdir в реальной FS.
+ */
+
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { FileManager } from '../../../src/utils/file-manager.js';
-import * as path from 'node:path';
+import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
+import * as path from 'node:path';
+import { FileManager } from '../../../src/utils/file-manager.js';
 
 describe('FileManager', () => {
-  let testDir: string;
-  let testFile: string;
+  let tmpDir: string;
 
   beforeEach(async () => {
-    testDir = path.join(os.tmpdir(), `test-${Date.now()}`);
-    testFile = path.join(testDir, 'test.json');
-    await FileManager.ensureDir(testDir);
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'fm-test-'));
   });
 
   afterEach(async () => {
-    const fs = await import('node:fs/promises');
-    try {
-      await fs.rm(testDir, { recursive: true });
-    } catch {
-      // ignore
-    }
+    await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('should check if file exists', async () => {
-    expect(await FileManager.exists(testFile)).toBe(false);
+  describe('JSON', () => {
+    it('writeJSON + readJSON: roundtrip', async () => {
+      const p = path.join(tmpDir, 'cfg.json');
+      const data = { foo: 'bar', n: 42, list: [1, 2, 3] };
+      await FileManager.writeJSON(p, data);
+      const read = await FileManager.readJSON<typeof data>(p);
+      expect(read).toEqual(data);
+    });
+
+    it('readJSON бросает при битом JSON', async () => {
+      const p = path.join(tmpDir, 'bad.json');
+      await fs.writeFile(p, '{ not json', 'utf-8');
+      await expect(FileManager.readJSON(p)).rejects.toThrow();
+    });
+
+    it('readJSON бросает при отсутствии файла', async () => {
+      await expect(FileManager.readJSON('/nonexistent.json')).rejects.toThrow();
+    });
   });
 
-  it('should read and write JSON', async () => {
-    const data = { test: 'value' };
-    await FileManager.writeJSON(testFile, data);
+  describe('TOML', () => {
+    it('writeTOML + readTOML: roundtrip', async () => {
+      const p = path.join(tmpDir, 'cfg.toml');
+      const data = { mcp_servers: { foo: { command: 'node', args: ['/x.cjs'], env: {} } } };
+      await FileManager.writeTOML(p, data);
+      const read = await FileManager.readTOML<typeof data>(p);
+      expect(read).toEqual(data);
+    });
 
-    const loaded = await FileManager.readJSON<typeof data>(testFile);
-    expect(loaded).toEqual(data);
+    it('readTOML бросает при битом TOML', async () => {
+      const p = path.join(tmpDir, 'bad.toml');
+      await fs.writeFile(p, '[[[invalid', 'utf-8');
+      await expect(FileManager.readTOML(p)).rejects.toThrow();
+    });
   });
 
-  it('should get home directory', () => {
-    const home = FileManager.getHomeDir();
-    expect(home).toBeDefined();
-    expect(home.length).toBeGreaterThan(0);
+  describe('exists', () => {
+    it('true для существующего файла', async () => {
+      const p = path.join(tmpDir, 'a.txt');
+      await fs.writeFile(p, 'x', 'utf-8');
+      expect(await FileManager.exists(p)).toBe(true);
+    });
+
+    it('false для несуществующего файла', async () => {
+      expect(await FileManager.exists('/nonexistent/zzz')).toBe(false);
+    });
   });
 
-  it('should ensure directory exists', async () => {
-    const newDir = path.join(testDir, 'nested', 'deep', 'directory');
-    await FileManager.ensureDir(newDir);
-    expect(await FileManager.exists(newDir)).toBe(true);
+  describe('ensureDir', () => {
+    it('создаёт директорию рекурсивно', async () => {
+      const p = path.join(tmpDir, 'a/b/c');
+      await FileManager.ensureDir(p);
+      const stat = await fs.stat(p);
+      expect(stat.isDirectory()).toBe(true);
+    });
+
+    it('noop если директория уже существует', async () => {
+      const p = path.join(tmpDir, 'a');
+      await fs.mkdir(p);
+      await expect(FileManager.ensureDir(p)).resolves.toBeUndefined();
+    });
   });
 
-  it('should resolve path with tilde', () => {
-    const resolved = FileManager.resolvePath('~/config.json');
-    expect(resolved).toContain('config.json');
-    expect(resolved).not.toContain('~');
+  describe('setPermissions', () => {
+    it('устанавливает права доступа', async () => {
+      const p = path.join(tmpDir, 'file.txt');
+      await fs.writeFile(p, 'x', 'utf-8');
+      await FileManager.setPermissions(p, 0o600);
+      const stat = await fs.stat(p);
+      expect(stat.mode & 0o777).toBe(0o600);
+    });
   });
 
-  it('should resolve absolute path as-is', () => {
-    const absolutePath = '/tmp/test.json';
-    const resolved = FileManager.resolvePath(absolutePath);
-    expect(resolved).toBe(path.resolve(absolutePath));
+  describe('getHomeDir', () => {
+    it('возвращает HOME или USERPROFILE', () => {
+      const home = FileManager.getHomeDir();
+      expect(home).toBeTruthy();
+    });
   });
 
-  it('should read and write TOML', async () => {
-    const tomlFile = path.join(testDir, 'test.toml');
-    const data = { server: { port: 3000, host: 'localhost' } };
+  describe('resolvePath', () => {
+    it('разрешает ~/ относительно HOME', () => {
+      const oldHome = process.env['HOME'];
+      process.env['HOME'] = '/myhome';
+      try {
+        expect(FileManager.resolvePath('~/foo.txt')).toBe(path.join('/myhome', 'foo.txt'));
+      } finally {
+        if (oldHome === undefined) delete process.env['HOME'];
+        else process.env['HOME'] = oldHome;
+      }
+    });
 
-    await FileManager.writeTOML(tomlFile, data);
-    const loaded = await FileManager.readTOML<typeof data>(tomlFile);
-
-    expect(loaded).toEqual(data);
-  });
-
-  it('should set file permissions', async () => {
-    await FileManager.writeJSON(testFile, { test: 'data' });
-    await expect(FileManager.setPermissions(testFile, 0o644)).resolves.toBeUndefined();
+    it('обычный путь резолвится через path.resolve', () => {
+      const p = FileManager.resolvePath('./test.txt');
+      expect(path.isAbsolute(p)).toBe(true);
+    });
   });
 });

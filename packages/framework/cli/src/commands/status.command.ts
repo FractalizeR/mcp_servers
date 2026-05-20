@@ -1,14 +1,14 @@
 import type { MCPConnector } from '../connectors/base/connector.interface.js';
 import type { ConnectorRegistry } from '../connectors/registry.js';
-import type { BaseMCPServerConfig, ConnectionStatus } from '../types.js';
+import type { ConnectionStatus } from '../types.js';
 import { Logger } from '../utils/logger.js';
 
 /**
  * Опции для команды status
  */
-export interface StatusCommandOptions<TConfig extends BaseMCPServerConfig> {
+export interface StatusCommandOptions {
   /** Реестр MCP коннекторов */
-  registry: ConnectorRegistry<TConfig>;
+  registry: ConnectorRegistry;
 }
 
 /**
@@ -26,8 +26,8 @@ function displayConnectionDetails(status: ConnectionStatus): void {
 /**
  * Отобразить статус одного коннектора
  */
-async function displayConnectorStatus<TConfig extends BaseMCPServerConfig>(
-  connector: MCPConnector<TConfig>,
+async function displayConnectorStatus(
+  connector: MCPConnector,
   status: ConnectionStatus
 ): Promise<void> {
   const info = connector.getClientInfo();
@@ -41,32 +41,31 @@ async function displayConnectorStatus<TConfig extends BaseMCPServerConfig>(
   if (status.connected) {
     Logger.success(`${info.displayName}: ✅ Подключен`);
     displayConnectionDetails(status);
+    if (status.error) {
+      Logger.warn(`  └─ ${status.error}`);
+    }
+  } else if (status.error) {
+    Logger.error(`${info.displayName}: ❗ Ошибка`);
+    Logger.error(`  └─ ${status.error}`);
   } else {
     Logger.warn(`${info.displayName}: ⭕ Не подключен`);
   }
 }
 
 /**
- * Команда для отображения статуса всех MCP подключений
+ * Команда для отображения статуса всех MCP подключений.
  *
- * @param options - Опции команды
- *
- * @example
- * ```typescript
- * const registry = new ConnectorRegistry<YourConfig>();
- * // регистрация коннекторов...
- * await statusCommand({ registry });
- * ```
+ * Сбор статусов выполняется параллельно через {@link ConnectorRegistry.checkAllStatuses},
+ * рендеринг — последовательно в детерминированном порядке регистрации.
  */
-export async function statusCommand<TConfig extends BaseMCPServerConfig>(
-  options: StatusCommandOptions<TConfig>
-): Promise<void> {
+export async function statusCommand(options: StatusCommandOptions): Promise<void> {
   const { registry } = options;
 
   Logger.header('📊 Статус MCP подключений');
   Logger.newLine();
 
   const statuses = await registry.checkAllStatuses();
+  const connectors = registry.getAll();
 
   if (statuses.size === 0) {
     Logger.warn('Нет зарегистрированных MCP клиентов');
@@ -74,10 +73,10 @@ export async function statusCommand<TConfig extends BaseMCPServerConfig>(
     return;
   }
 
-  for (const [name, status] of statuses) {
-    const connector = registry.get(name);
-    if (!connector) continue;
-
+  for (const connector of connectors) {
+    const name = connector.getClientInfo().name;
+    const status = statuses.get(name);
+    if (!status) continue;
     await displayConnectorStatus(connector, status);
   }
 

@@ -1,158 +1,106 @@
 /**
- * Tests for core types
+ * Тесты типов (compile-time + минимальные runtime smoke).
+ *
+ * После Stage 1.1 убраны: BaseMCPServerConfig (более нет такого экспорта),
+ * safeFields из ConfigManagerOptions.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import type {
-  BaseMCPServerConfig,
   MCPClientInfo,
   ConnectionStatus,
-  MCPClientServerConfig,
-  MCPClientConfig,
+  ConfigManagerOptions,
+  ConfigPromptDefinition,
+  ServerLaunchSpec,
+  DoctorCheck,
+  DoctorReport,
+  IConnectorRegistry,
+  MCPConnector,
 } from '../../src/types.js';
 
-describe('Types', () => {
-  describe('BaseMCPServerConfig', () => {
-    it('should be valid with required fields', () => {
-      const config: BaseMCPServerConfig = {
-        projectPath: '/path/to/project',
-      };
-      expect(config).toBeDefined();
-      expect(config.projectPath).toBe('/path/to/project');
-    });
-
-    it('should be valid with all optional fields', () => {
-      const config: BaseMCPServerConfig = {
-        projectPath: '/path/to/project',
-        logLevel: 'info',
-        env: {
-          VAR1: 'value1',
-          VAR2: 'value2',
-        },
-      };
-      expect(config).toBeDefined();
-      expect(config.logLevel).toBe('info');
-      expect(config.env).toEqual({ VAR1: 'value1', VAR2: 'value2' });
-    });
+describe('types', () => {
+  it('MCPClientInfo принимает обязательные поля', () => {
+    const info: MCPClientInfo = {
+      name: 'gemini',
+      displayName: 'Gemini',
+      description: 'g',
+      configPath: '/x',
+      platforms: ['darwin'],
+    };
+    expect(info.name).toBe('gemini');
   });
 
-  describe('MCPClientInfo', () => {
-    it('should be valid with required fields', () => {
-      const info: MCPClientInfo = {
-        name: 'test',
-        displayName: 'Test Client',
-        description: 'Test',
-        configPath: '/test',
-        platforms: ['darwin'],
-      };
-      expect(info).toBeDefined();
-      expect(info.name).toBe('test');
-      expect(info.platforms).toContain('darwin');
-    });
-
-    it('should support multiple platforms', () => {
-      const info: MCPClientInfo = {
-        name: 'test',
-        displayName: 'Test Client',
-        description: 'Test',
-        configPath: '/test',
-        platforms: ['darwin', 'linux', 'win32'],
-      };
-      expect(info.platforms).toHaveLength(3);
-      expect(info.platforms).toEqual(['darwin', 'linux', 'win32']);
-    });
-
-    it('should support optional checkCommand', () => {
-      const info: MCPClientInfo = {
-        name: 'test',
-        displayName: 'Test Client',
-        description: 'Test',
-        checkCommand: 'test --version',
-        configPath: '/test',
-        platforms: ['darwin'],
-      };
-      expect(info.checkCommand).toBe('test --version');
-    });
+  it('ConnectionStatus.error опционально', () => {
+    const ok: ConnectionStatus = { connected: true };
+    const err: ConnectionStatus = { connected: false, error: 'oops' };
+    expect(ok.connected).toBe(true);
+    expect(err.error).toBe('oops');
   });
 
-  describe('ConnectionStatus', () => {
-    it('should be valid when disconnected', () => {
-      const status: ConnectionStatus = {
-        connected: false,
-      };
-      expect(status.connected).toBe(false);
-      expect(status.details).toBeUndefined();
-      expect(status.error).toBeUndefined();
-    });
-
-    it('should be valid when connected with details', () => {
-      const status: ConnectionStatus = {
-        connected: true,
-        details: {
-          configPath: '/path/to/config.json',
-          lastModified: new Date('2024-01-01'),
-          metadata: {
-            version: '1.0.0',
-          },
-        },
-      };
-      expect(status.connected).toBe(true);
-      expect(status.details?.configPath).toBe('/path/to/config.json');
-      expect(status.details?.metadata?.version).toBe('1.0.0');
-    });
-
-    it('should be valid with error', () => {
-      const status: ConnectionStatus = {
-        connected: false,
-        error: 'Client not installed',
-      };
-      expect(status.connected).toBe(false);
-      expect(status.error).toBe('Client not installed');
-    });
+  it('ServerLaunchSpec имеет command/args/env', () => {
+    const spec: ServerLaunchSpec = { command: 'node', args: ['/x'], env: { K: 'v' } };
+    expect(spec.command).toBe('node');
   });
 
-  describe('MCPClientServerConfig', () => {
-    it('should be valid', () => {
-      const config: MCPClientServerConfig = {
-        command: 'node',
-        args: ['server.js'],
-        env: {
-          NODE_ENV: 'production',
-        },
-      };
-      expect(config.command).toBe('node');
-      expect(config.args).toEqual(['server.js']);
-      expect(config.env.NODE_ENV).toBe('production');
-    });
+  it('MCPClientServerConfig больше НЕ экспортируется публично (internal)', () => {
+    // @ts-expect-error: тип удалён из публичного barrel — это часть контракта
+    const _bad: import('../../src/types.js').MCPClientServerConfig | undefined = undefined;
+    expect(_bad).toBeUndefined();
   });
 
-  describe('MCPClientConfig', () => {
-    it('should be valid with default key', () => {
-      const config: MCPClientConfig = {
-        mcpServers: {
-          'my-server': {
-            command: 'node',
-            args: ['server.js'],
-            env: {},
-          },
-        },
-      };
-      expect(config.mcpServers).toBeDefined();
-      expect(config.mcpServers?.['my-server']).toBeDefined();
-    });
+  it('ConfigManagerOptions имеет serialize/deserialize (нет safeFields)', () => {
+    interface C {
+      a: string;
+    }
+    const opts: ConfigManagerOptions<C> = {
+      projectName: 'p',
+      serialize: (c) => ({ a: c.a }),
+      deserialize: (d) => ({ a: d['a'] as string }),
+    };
+    expect(opts.projectName).toBe('p');
+    // Compile-time check: safeFields отсутствует в типе.
+    // @ts-expect-error: safeFields был удалён
+    const _bad: ConfigManagerOptions<C> = { projectName: 'p', safeFields: ['a'] };
+    expect(_bad.projectName).toBe('p');
+  });
 
-    it('should be valid with custom key', () => {
-      const config: MCPClientConfig<'mcp_servers'> = {
-        mcp_servers: {
-          'my-server': {
-            command: 'node',
-            args: ['server.js'],
-            env: {},
-          },
-        },
-      };
-      expect(config.mcp_servers).toBeDefined();
-      expect(config.mcp_servers?.['my-server']).toBeDefined();
-    });
+  it('ConfigPromptDefinition типизирован для name полей TDomainConfig', () => {
+    interface C {
+      orgId: string;
+    }
+    const p: ConfigPromptDefinition<C> = {
+      name: 'orgId',
+      type: 'input',
+      message: 'Org:',
+    };
+    expect(p.name).toBe('orgId');
+  });
+
+  it('DoctorCheck/DoctorReport базовая структура', () => {
+    const check: DoctorCheck = {
+      name: 'x',
+      description: 'd',
+      run: () => Promise.resolve({ status: 'ok', message: 'ok' }),
+    };
+    const report: DoctorReport = {
+      checks: [{ check, result: { status: 'ok', message: 'ok' } }],
+      summary: { ok: 1, warn: 0, fail: 0, skip: 0 },
+    };
+    expect(report.summary.ok).toBe(1);
+  });
+
+  it('IConnectorRegistry contract: register/get/getAll/findInstalled/checkAllStatuses', () => {
+    expectTypeOf<IConnectorRegistry>().toHaveProperty('register');
+    expectTypeOf<IConnectorRegistry>().toHaveProperty('get');
+    expectTypeOf<IConnectorRegistry>().toHaveProperty('findInstalled');
+    expectTypeOf<IConnectorRegistry>().toHaveProperty('checkAllStatuses');
+  });
+
+  it('MCPConnector contract: connect принимает ServerLaunchSpec, validateLaunchSpec возвращает string[]', () => {
+    expectTypeOf<MCPConnector['connect']>().parameter(0).toEqualTypeOf<ServerLaunchSpec>();
+    expectTypeOf<MCPConnector['validateLaunchSpec']>().returns.toEqualTypeOf<Promise<string[]>>();
+    expectTypeOf<MCPConnector['getLaunchSpec']>().returns.toEqualTypeOf<
+      Promise<ServerLaunchSpec | null>
+    >();
   });
 });

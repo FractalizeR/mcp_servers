@@ -1,32 +1,66 @@
-import { describe, it, expect } from 'vitest';
+/**
+ * Тесты Logger.
+ *
+ * Стэтик класс; проверяем что методы пишут в правильный stream и не бросают.
+ */
+
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Logger } from '../../../src/utils/logger.js';
 
 describe('Logger', () => {
-  it('should have all methods', () => {
-    expect(Logger.header).toBeDefined();
-    expect(Logger.info).toBeDefined();
-    expect(Logger.success).toBeDefined();
-    expect(Logger.error).toBeDefined();
-    expect(Logger.warn).toBeDefined();
-    expect(Logger.newLine).toBeDefined();
-    expect(Logger.spinner).toBeDefined();
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  // Полное тестирование сложно т.к. выводит в console
-  // Основное - проверка что методы существуют и не падают
-  it('should not throw on basic usage', () => {
-    expect(() => Logger.info('test')).not.toThrow();
-    expect(() => Logger.success('test')).not.toThrow();
-    expect(() => Logger.error('test')).not.toThrow();
-    expect(() => Logger.warn('test')).not.toThrow();
-    expect(() => Logger.newLine()).not.toThrow();
-    expect(() => Logger.header('test')).not.toThrow();
+  it('info пишет в console.log', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    Logger.info('hello');
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls[0]?.join(' ')).toContain('hello');
   });
 
-  it('should create spinner', () => {
-    const spinner = Logger.spinner('Loading...');
-    expect(spinner).toBeDefined();
-    expect(spinner.stop).toBeDefined();
-    spinner.stop();
+  it('success пишет в console.log', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    Logger.success('ok');
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0]?.join(' ')).toContain('ok');
+  });
+
+  it('warn пишет в console.log', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    Logger.warn('careful');
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0]?.join(' ')).toContain('careful');
+  });
+
+  it('error пишет в console.error', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    Logger.error('bad');
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0]?.join(' ')).toContain('bad');
+  });
+
+  it('newLine пишет пустую строку', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    Logger.newLine();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('header пишет заголовок (несколько строк)', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    Logger.header('Section');
+    expect(spy).toHaveBeenCalled();
+    // Найдём строку с текстом
+    const allCalls = spy.mock.calls.flat().join('\n');
+    expect(allCalls).toContain('Section');
+  });
+
+  it('spinner возвращает объект Ora с методами stop/succeed/fail', () => {
+    // ora пишет в stderr. Просто проверим что вернулся объект с нужными методами.
+    const sp = Logger.spinner('loading');
+    expect(typeof sp.stop).toBe('function');
+    expect(typeof sp.succeed).toBe('function');
+    expect(typeof sp.fail).toBe('function');
+    sp.stop();
   });
 });

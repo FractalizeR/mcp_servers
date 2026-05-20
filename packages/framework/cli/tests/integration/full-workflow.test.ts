@@ -1,299 +1,265 @@
 /**
- * Integration tests for full CLI workflow
+ * Integration: полный workflow connect → status → disconnect на реальных файлах.
+ *
+ * Покрытие:
+ *  - JSON-сценарий (Gemini): запись + чтение + удаление в `~/.gemini/settings.json`
+ *  - TOML-сценарий (Codex): отдельная проверка `serverKey: 'mcp_servers'` и формата
+ *  - ConfigManager: реальный roundtrip save → load
+ *
+ * Все пути перенаправляются в tmpdir через подмену HOME.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ConnectorRegistry } from '../../src/connectors/registry.js';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as fs from 'node:fs/promises';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import * as toml from '@iarna/toml';
+import {
+  ConfigurableConnector,
+  type ConnectorClientConfig,
+} from '../../src/connectors/base/configurable-connector.js';
 import { ConfigManager } from '../../src/utils/config-manager.js';
-import { connectCommand } from '../../src/commands/connect.command.js';
-import { statusCommand } from '../../src/commands/status.command.js';
-import { disconnectCommand } from '../../src/commands/disconnect.command.js';
-import { listCommand } from '../../src/commands/list.command.js';
-import { InteractivePrompter } from '../../src/utils/interactive-prompter.js';
-import { Logger } from '../../src/utils/logger.js';
-import type {
-  IConnector,
-  BaseMCPServerConfig,
-  ConnectionStatus,
-  MCPClientInfo,
-} from '../../src/types.js';
 
-// Mock зависимостей
-vi.mock('../../src/utils/logger.js');
+const SERVER = 'mcp-server-yandex-tracker';
 
-// Mock InteractivePrompter instance method
-const mockPromptServerConfig = vi.fn();
-/* eslint-disable @typescript-eslint/consistent-type-imports */
-vi.mock('../../src/utils/interactive-prompter.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../src/utils/interactive-prompter.js')>();
-  return {
-    ...actual,
-    InteractivePrompter: class MockInteractivePrompter {
-      static promptClientSelection = vi.fn();
-      static promptConfirmation = vi.fn();
-      static promptSelection = vi.fn();
+describe('Integration: full workflow (real tmp files)', () => {
+  let tmpHome: string;
+  let oldHome: string | undefined;
+  let oldUserProfile: string | undefined;
+  let serverScriptPath: string;
 
-      promptServerConfig = mockPromptServerConfig;
-    },
-  };
-});
-/* eslint-enable @typescript-eslint/consistent-type-imports */
+  beforeEach(async () => {
+    tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), 'cli-int-'));
+    oldHome = process.env['HOME'];
+    oldUserProfile = process.env['USERPROFILE'];
+    process.env['HOME'] = tmpHome;
+    process.env['USERPROFILE'] = tmpHome;
 
-interface TestConfig extends BaseMCPServerConfig {
-  projectPath: string;
-  token?: string;
-  orgId?: string;
-}
-
-describe('Full CLI Workflow Integration', () => {
-  let registry: ConnectorRegistry<TestConfig>;
-  let configManager: ConfigManager<TestConfig>;
-  let mockConnector: IConnector<TestConfig>;
-  let connectorStatus: ConnectionStatus;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-
-    // Mock Logger methods
-    vi.mocked(Logger.header).mockImplementation(() => {});
-    vi.mocked(Logger.newLine).mockImplementation(() => {});
-    vi.mocked(Logger.info).mockImplementation(() => {});
-    vi.mocked(Logger.success).mockImplementation(() => {});
-    vi.mocked(Logger.error).mockImplementation(() => {});
-    vi.mocked(Logger.warn).mockImplementation(() => {});
-    const mockSpinner = {
-      stop: vi.fn(),
-      succeed: vi.fn(),
-      fail: vi.fn(),
-    };
-    vi.mocked(Logger.spinner).mockReturnValue(mockSpinner as never);
-
-    // Initialize status as disconnected
-    connectorStatus = { connected: false };
-
-    // Create mock connector
-    mockConnector = {
-      getClientInfo: vi.fn().mockReturnValue({
-        name: 'test-client',
-        displayName: 'Test Client',
-        configPath: '/test/path',
-        description: 'Test Client Description',
-        platforms: ['darwin', 'linux', 'win32'],
-      } as MCPClientInfo),
-      isInstalled: vi.fn().mockResolvedValue(true),
-      connect: vi.fn().mockImplementation(async () => {
-        // Simulate successful connection
-        connectorStatus = {
-          connected: true,
-          details: {
-            configPath: '/test/path/config.json',
-          },
-        };
-      }),
-      disconnect: vi.fn().mockImplementation(async () => {
-        // Simulate successful disconnection
-        connectorStatus = { connected: false };
-      }),
-      getStatus: vi.fn().mockImplementation(async () => connectorStatus),
-      validateConfig: vi.fn().mockResolvedValue([]),
-    };
-
-    // Create registry and register connector
-    registry = new ConnectorRegistry<TestConfig>();
-    registry.register(mockConnector);
-
-    // Create config manager
-    configManager = new ConfigManager<TestConfig>({
-      projectName: 'test-server',
-      safeFields: ['orgId'],
-    });
+    // Создаём «бандл» сервера, чтобы getStatus возвращал connected:true
+    serverScriptPath = path.join(tmpHome, 'fake-bundle.cjs');
+    await fs.writeFile(serverScriptPath, 'console.log("ok");', 'utf-8');
   });
 
-  describe('Complete workflow', () => {
-    it('should execute list -> connect -> status -> disconnect -> status workflow', async () => {
-      // Mock user inputs
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-        token: 'test-token',
-        orgId: 'test-org',
-      } as TestConfig);
-      InteractivePrompter.promptConfirmation.mockResolvedValue(false);
+  afterEach(async () => {
+    if (oldHome === undefined) delete process.env['HOME'];
+    else process.env['HOME'] = oldHome;
+    if (oldUserProfile === undefined) delete process.env['USERPROFILE'];
+    else process.env['USERPROFILE'] = oldUserProfile;
+    await fs.rm(tmpHome, { recursive: true, force: true });
+  });
 
-      // 1. List available clients (should show test-client as installed but not connected)
-      await listCommand({ registry });
-      expect(Logger.header).toHaveBeenCalledWith('📋 Поддерживаемые MCP клиенты');
+  describe('JSON workflow (Gemini-like)', () => {
+    const config = (): ConnectorClientConfig => ({
+      name: 'gemini',
+      displayName: 'Gemini',
+      description: 'Gemini',
+      configPath: path.join(tmpHome, '.gemini/settings.json'),
+      platforms: ['darwin', 'linux', 'win32'],
+    });
 
-      // 2. Check status (should be disconnected)
-      await statusCommand({ registry });
-      expect(mockConnector.getStatus).toHaveBeenCalled();
+    it('connect → файл создаётся с правильной структурой mcpServers', async () => {
+      const c = new ConfigurableConnector(SERVER, config());
 
-      // 3. Connect to the client
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [
-          { name: 'token', type: 'password', message: 'Token:' },
-          { name: 'orgId', type: 'input', message: 'Org ID:' },
-        ],
-        cliOptions: { client: 'test-client' },
+      await c.connect({
+        command: 'node',
+        args: [serverScriptPath],
+        env: { TOKEN: 'sec', ORG: 'org-1' },
       });
 
-      expect(mockConnector.connect).toHaveBeenCalledWith(
-        expect.objectContaining({
-          projectPath: '/test/path',
-          token: 'test-token',
-          orgId: 'test-org',
-        })
+      const cfgPath = path.join(tmpHome, '.gemini/settings.json');
+      const raw = JSON.parse(await fs.readFile(cfgPath, 'utf-8')) as Record<string, unknown>;
+      expect(raw['mcpServers']).toBeTruthy();
+      const servers = raw['mcpServers'] as Record<string, Record<string, unknown>>;
+      expect(servers[SERVER]).toEqual({
+        command: 'node',
+        args: [serverScriptPath],
+        env: { TOKEN: 'sec', ORG: 'org-1' },
+      });
+    });
+
+    it('getStatus возвращает connected: true когда команда есть на диске', async () => {
+      const c = new ConfigurableConnector(SERVER, config());
+      await c.connect({
+        command: 'node',
+        args: [serverScriptPath],
+        env: {},
+      });
+
+      const status = await c.getStatus();
+      expect(status.connected).toBe(true);
+      expect(status.error).toBeUndefined();
+    });
+
+    it('getStatus возвращает connected: false если скрипт удалён', async () => {
+      const c = new ConfigurableConnector(SERVER, config());
+      await c.connect({ command: 'node', args: [serverScriptPath], env: {} });
+      await fs.unlink(serverScriptPath);
+
+      const status = await c.getStatus();
+      expect(status.connected).toBe(false);
+      expect(status.error).toContain('не найдена на диске');
+    });
+
+    it('connect мержит с существующим конфигом, не теряя другие сервера', async () => {
+      const cfgPath = path.join(tmpHome, '.gemini/settings.json');
+      await fs.mkdir(path.dirname(cfgPath), { recursive: true });
+      await fs.writeFile(
+        cfgPath,
+        JSON.stringify({
+          mcpServers: { 'other-server': { command: 'other', args: [], env: {} } },
+          someOtherSection: { foo: 'bar' },
+        }),
+        'utf-8'
       );
 
-      // 4. Check status again (should be connected)
-      await statusCommand({ registry });
-      const status = await mockConnector.getStatus();
-      expect(status.connected).toBe(true);
+      const c = new ConfigurableConnector(SERVER, config());
+      await c.connect({ command: 'node', args: [serverScriptPath], env: {} });
 
-      // 5. Disconnect from the client
-      await disconnectCommand({ registry, cliOptions: { client: 'test-client' } });
-      expect(mockConnector.disconnect).toHaveBeenCalled();
-
-      // 6. Check status final time (should be disconnected)
-      await statusCommand({ registry });
-      const finalStatus = await mockConnector.getStatus();
-      expect(finalStatus.connected).toBe(false);
+      const raw = JSON.parse(await fs.readFile(cfgPath, 'utf-8')) as Record<string, unknown>;
+      const servers = raw['mcpServers'] as Record<string, unknown>;
+      expect(servers).toHaveProperty('other-server');
+      expect(servers).toHaveProperty(SERVER);
+      expect(raw['someOtherSection']).toEqual({ foo: 'bar' });
     });
 
-    it('should handle multiple clients workflow', async () => {
-      // Create second mock connector
-      let connector2Status: ConnectionStatus = { connected: false };
-      const mockConnector2: IConnector<TestConfig> = {
-        getClientInfo: vi.fn().mockReturnValue({
-          name: 'test-client-2',
-          displayName: 'Test Client 2',
-          configPath: '/test/path2',
-          description: 'Test Client Description',
-          platforms: ['darwin', 'linux', 'win32'],
-        } as MCPClientInfo),
-        isInstalled: vi.fn().mockResolvedValue(true),
-        connect: vi.fn().mockImplementation(async () => {
-          connector2Status = { connected: true };
-        }),
-        disconnect: vi.fn().mockImplementation(async () => {
-          connector2Status = { connected: false };
-        }),
-        getStatus: vi.fn().mockImplementation(async () => connector2Status),
-        validateConfig: vi.fn().mockResolvedValue([]),
+    it('disconnect удаляет только нашу запись', async () => {
+      const cfgPath = path.join(tmpHome, '.gemini/settings.json');
+      const c = new ConfigurableConnector(SERVER, config());
+
+      await c.connect({ command: 'node', args: [serverScriptPath], env: {} });
+      // Добавим вручную ещё одну запись
+      const raw = JSON.parse(await fs.readFile(cfgPath, 'utf-8')) as Record<
+        string,
+        Record<string, unknown>
+      >;
+      raw['mcpServers']!['other-server'] = { command: 'x', args: [], env: {} };
+      await fs.writeFile(cfgPath, JSON.stringify(raw), 'utf-8');
+
+      await c.disconnect();
+
+      const after = JSON.parse(await fs.readFile(cfgPath, 'utf-8')) as Record<
+        string,
+        Record<string, unknown>
+      >;
+      expect(after['mcpServers']).toHaveProperty('other-server');
+      expect(after['mcpServers']).not.toHaveProperty(SERVER);
+    });
+
+    it('getLaunchSpec возвращает то, что было записано connect', async () => {
+      const c = new ConfigurableConnector(SERVER, config());
+      const spec = {
+        command: 'node',
+        args: [serverScriptPath],
+        env: { TOKEN: 'sec' },
       };
-
-      registry.register(mockConnector2);
-
-      // Mock user inputs
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-        token: 'test-token',
-      } as TestConfig);
-      InteractivePrompter.promptConfirmation.mockResolvedValue(false);
-
-      // Connect to first client
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
-      });
-
-      // Connect to second client
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client-2' },
-      });
-
-      // Both should be connected
-      expect((await mockConnector.getStatus()).connected).toBe(true);
-      expect((await mockConnector2.getStatus()).connected).toBe(true);
-
-      // Check status for all clients
-      await statusCommand({ registry });
-
-      // Disconnect from first client
-      await disconnectCommand({ registry, cliOptions: { client: 'test-client' } });
-
-      // First disconnected, second still connected
-      expect((await mockConnector.getStatus()).connected).toBe(false);
-      expect((await mockConnector2.getStatus()).connected).toBe(true);
-    });
-
-    it('should handle connection errors gracefully', async () => {
-      // Mock connection error
-      vi.mocked(mockConnector.connect).mockRejectedValue(new Error('Connection failed'));
-
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-        token: 'test-token',
-      } as TestConfig);
-
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
-      });
-
-      // Should still be disconnected
-      const status = await mockConnector.getStatus();
-      expect(status.connected).toBe(false);
-
-      // Should not have prompted to save config
-      expect(InteractivePrompter.promptConfirmation).not.toHaveBeenCalled();
-    });
-
-    it('should handle validation errors before connection', async () => {
-      // Mock validation error
-      vi.mocked(mockConnector.validateConfig).mockResolvedValue([
-        'Token is required',
-        'Invalid project path',
-      ]);
-
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-      } as TestConfig);
-
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
-      });
-
-      // Should not have attempted to connect
-      expect(mockConnector.connect).not.toHaveBeenCalled();
-
-      // Should display errors
-      expect(Logger.error).toHaveBeenCalledWith('Ошибки конфигурации:');
-      expect(Logger.error).toHaveBeenCalledWith('  - Token is required');
-      expect(Logger.error).toHaveBeenCalledWith('  - Invalid project path');
+      await c.connect(spec);
+      expect(await c.getLaunchSpec()).toEqual(spec);
     });
   });
 
-  describe('Registry operations during workflow', () => {
-    it('should list all registered connectors', async () => {
-      await listCommand({ registry });
-
-      const allConnectors = registry.getAll();
-      expect(allConnectors).toHaveLength(1);
-      expect(allConnectors[0]?.getClientInfo().name).toBe('test-client');
+  describe('TOML workflow (Codex-like) — отдельный сценарий', () => {
+    const config = (): ConnectorClientConfig => ({
+      name: 'codex',
+      displayName: 'Codex',
+      description: 'Codex',
+      configPath: path.join(tmpHome, '.codex/config.toml'),
+      platforms: ['darwin', 'linux', 'win32'],
+      serverKey: 'mcp_servers',
+      configFormat: 'toml',
     });
 
-    it('should find installed clients', async () => {
-      const installed = await registry.findInstalled();
-      expect(installed).toHaveLength(1);
-      expect(installed[0]?.getClientInfo().name).toBe('test-client');
+    it('connect → TOML файл с serverKey "mcp_servers"', async () => {
+      const c = new ConfigurableConnector(SERVER, config());
+      await c.connect({
+        command: 'node',
+        args: [serverScriptPath],
+        env: { TOKEN: 'sec' },
+      });
+
+      const cfgPath = path.join(tmpHome, '.codex/config.toml');
+      const content = await fs.readFile(cfgPath, 'utf-8');
+      const parsed = toml.parse(content) as Record<string, unknown>;
+
+      // Проверяем именно serverKey: 'mcp_servers' (не camelCase)
+      expect(parsed).toHaveProperty('mcp_servers');
+      expect(parsed).not.toHaveProperty('mcpServers');
+
+      const servers = parsed['mcp_servers'] as Record<string, Record<string, unknown>>;
+      expect(servers[SERVER]).toEqual({
+        command: 'node',
+        args: [serverScriptPath],
+        env: { TOKEN: 'sec' },
+      });
     });
 
-    it('should check status of all clients', async () => {
-      const statuses = await registry.checkAllStatuses();
-      expect(statuses.size).toBe(1);
-      expect(statuses.get('test-client')).toBeDefined();
+    it('TOML roundtrip: connect → getLaunchSpec возвращает корректный spec', async () => {
+      const c = new ConfigurableConnector(SERVER, config());
+      const spec = {
+        command: 'node',
+        args: [serverScriptPath],
+        env: { TOKEN: 'sec', ORG: 'org-1' },
+      };
+      await c.connect(spec);
+
+      const restored = await c.getLaunchSpec();
+      expect(restored).toEqual(spec);
+    });
+
+    it('TOML disconnect удаляет запись, файл остаётся валидным TOML', async () => {
+      const c = new ConfigurableConnector(SERVER, config());
+      await c.connect({ command: 'node', args: [serverScriptPath], env: {} });
+      await c.disconnect();
+
+      const cfgPath = path.join(tmpHome, '.codex/config.toml');
+      const content = await fs.readFile(cfgPath, 'utf-8');
+      // Парсится без ошибок
+      const parsed = toml.parse(content) as Record<string, unknown>;
+      expect(parsed['mcp_servers']).toEqual({});
+    });
+
+    it('TOML getStatus: подключён + команда на диске → connected: true', async () => {
+      const c = new ConfigurableConnector(SERVER, config());
+      await c.connect({ command: 'node', args: [serverScriptPath], env: {} });
+      const status = await c.getStatus();
+      expect(status.connected).toBe(true);
+    });
+  });
+
+  describe('ConfigManager roundtrip', () => {
+    interface YtConfig {
+      token: string;
+      orgId: string;
+    }
+    const identitySerialize = (cfg: YtConfig): Record<string, unknown> => ({ ...cfg });
+
+    it('save → load возвращает то же значение (identity serialize)', async () => {
+      const cm = new ConfigManager<YtConfig>({
+        projectName: 'fractalizer_test_int',
+        serialize: identitySerialize,
+      });
+      await cm.save({ token: 'sec', orgId: 'org-1' });
+      expect(await cm.load()).toEqual({ token: 'sec', orgId: 'org-1' });
+    });
+
+    it('save с serialize-хуком: load возвращает только разрешённые поля', async () => {
+      const cm = new ConfigManager<YtConfig>({
+        projectName: 'fractalizer_test_int_serialize',
+        serialize: (cfg) => ({ orgId: cfg.orgId }),
+      });
+      await cm.save({ token: 'TOP_SECRET', orgId: 'org-1' });
+      const loaded = await cm.load();
+      expect(loaded).toEqual({ orgId: 'org-1' });
+      expect(loaded).not.toHaveProperty('token');
+    });
+
+    it('права на файл = 0o600', async () => {
+      const cm = new ConfigManager<YtConfig>({
+        projectName: 'fractalizer_test_int_perm',
+        serialize: identitySerialize,
+      });
+      await cm.save({ token: 's', orgId: 'o' });
+      const stat = await fs.stat(cm.getConfigPath());
+      expect(stat.mode & 0o777).toBe(0o600);
     });
   });
 });

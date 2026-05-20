@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * CLI для Yandex Tracker MCP Server
+ * CLI для Yandex Tracker MCP Server.
  *
- * Использует @fractalizer/mcp-cli для управления подключениями
+ * Использует `@fractalizer/mcp-cli` (агностичный framework) и доменный адаптер
+ * `buildYtServerLaunch` для построения спецификации запуска сервера.
  */
 
 import { program } from 'commander';
@@ -15,55 +16,46 @@ import {
   statusCommand,
   listCommand,
   validateCommand,
-  // Импортируем коннекторы
-  ClaudeDesktopConnector,
+  doctorCommand,
+  createConnector,
   ClaudeCodeConnector,
-  CodexConnector,
-  GeminiConnector,
-  QwenConnector,
 } from '@fractalizer/mcp-cli';
 import { ytConfigPrompts } from '../prompts.js';
+import { buildYtServerLaunch } from '../build-launch.js';
+import { serializeYtConfig } from '../serialize-config.js';
+import { deserializeYtConfig } from '../deserialize-config.js';
+import { getYtDoctorChecks } from '../doctor-checks.js';
 import type { YandexTrackerMCPConfig } from '../types.js';
-import { PROJECT_BASE_NAME, SERVER_ENTRY_POINT } from '../../constants.js';
+import { PROJECT_BASE_NAME } from '../../constants.js';
 
-/**
- * Main entry point
- */
 function main(): void {
-  // Создать реестр и зарегистрировать коннекторы
-  const registry = new ConnectorRegistry<YandexTrackerMCPConfig>();
-  registry.register(
-    new ClaudeDesktopConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
-  registry.register(
-    new ClaudeCodeConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
-  registry.register(
-    new CodexConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
-  registry.register(
-    new GeminiConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
-  registry.register(
-    new QwenConnector<YandexTrackerMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
+  // Реестр коннекторов.
+  // Claude Code управляется командами `claude mcp ...`, остальные — записью
+  // в JSON/TOML-файл клиента; общий контракт — `MCPConnector`.
+  const registry = new ConnectorRegistry();
+  registry.register(createConnector('claude-desktop', PROJECT_BASE_NAME));
+  registry.register(new ClaudeCodeConnector(PROJECT_BASE_NAME));
+  registry.register(createConnector('gemini', PROJECT_BASE_NAME));
+  registry.register(createConnector('qwen', PROJECT_BASE_NAME));
+  registry.register(createConnector('codex', PROJECT_BASE_NAME));
 
-  // Создать менеджер конфигурации
+  // Менеджер сохранённой доменной конфигурации (без секретов).
   const configManager = new ConfigManager<YandexTrackerMCPConfig>({
     projectName: PROJECT_BASE_NAME,
-    safeFields: ['orgId', 'apiBase', 'requestTimeout', 'logLevel', 'projectPath'],
+    serialize: serializeYtConfig,
+    deserialize: deserializeYtConfig,
   });
 
-  // Команды
   program
     .command('connect')
     .description('Подключить MCP сервер к клиенту')
     .option('--client <name>', 'Название клиента')
     .action(async (opts: { client?: string }) => {
-      await connectCommand({
+      await connectCommand<YandexTrackerMCPConfig>({
         registry,
         configManager,
         configPrompts: ytConfigPrompts,
+        buildServerLaunch: buildYtServerLaunch,
         cliOptions: opts,
       });
     });
@@ -100,8 +92,18 @@ function main(): void {
       await validateCommand({ registry });
     });
 
+  program
+    .command('doctor')
+    .description('Диагностика MCP подключений (выявление сломанных конфигов)')
+    .action(async () => {
+      const report = await doctorCommand({
+        registry,
+        extraChecks: getYtDoctorChecks(),
+      });
+      process.exit(report.summary.fail > 0 ? 1 : 0);
+    });
+
   program.parse();
 }
 
-// Запуск
 main();

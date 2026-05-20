@@ -1,176 +1,168 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { ConfigManager } from '../../../src/utils/config-manager.js';
-import type { BaseMCPServerConfig } from '../../../src/types.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+/**
+ * Тесты ConfigManager.
+ *
+ * После Stage 1.1 убрали `safeFields` — единственный способ фильтрации это
+ * `serialize` хук. Все тесты `safeFields` удалены.
+ */
 
-interface TestConfig extends BaseMCPServerConfig {
-  token: string; // секрет
-  orgId: string; // безопасно
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import * as fs from 'node:fs/promises';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { ConfigManager } from '../../../src/utils/config-manager.js';
+
+interface YtConfig {
+  token: string;
+  orgId: string;
+  apiBase?: string;
 }
 
 describe('ConfigManager', () => {
-  let configManager: ConfigManager<TestConfig>;
-  let configPath: string;
+  let tmpHome: string;
+  const projectName = `test_${String(Date.now())}_${String(Math.random()).slice(2, 8)}`;
+  let oldHome: string | undefined;
+  let oldUserProfile: string | undefined;
 
-  beforeEach(() => {
-    configManager = new ConfigManager<TestConfig>({
-      projectName: 'test_mcp_cli',
-      safeFields: ['orgId', 'logLevel', 'projectPath'],
-    });
-    configPath = configManager.getConfigPath();
+  beforeEach(async () => {
+    tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), 'cm-test-'));
+    oldHome = process.env['HOME'];
+    oldUserProfile = process.env['USERPROFILE'];
+    process.env['HOME'] = tmpHome;
+    process.env['USERPROFILE'] = tmpHome;
   });
 
   afterEach(async () => {
-    // Cleanup
-    try {
-      await configManager.delete();
-      const configDir = path.dirname(configPath);
-      await fs.rmdir(configDir);
-    } catch {
-      // ignore
+    if (oldHome === undefined) {
+      delete process.env['HOME'];
+    } else {
+      process.env['HOME'] = oldHome;
     }
+    if (oldUserProfile === undefined) {
+      delete process.env['USERPROFILE'];
+    } else {
+      process.env['USERPROFILE'] = oldUserProfile;
+    }
+    await fs.rm(tmpHome, { recursive: true, force: true });
+    vi.restoreAllMocks();
   });
 
-  it('should save only safe fields', async () => {
-    const config: TestConfig = {
-      token: 'secret-token',
-      orgId: 'my-org',
-      projectPath: '/test',
-      logLevel: 'info',
-    };
+  // Identity serializer — "явное согласие сохранить всё как есть".
+  const identitySerialize = (cfg: YtConfig): Record<string, unknown> => ({ ...cfg });
 
-    await configManager.save(config);
-
-    const loaded = await configManager.load();
-    expect(loaded).toBeDefined();
-    expect(loaded?.orgId).toBe('my-org');
-    expect(loaded?.logLevel).toBe('info');
-    expect('token' in (loaded ?? {})).toBe(false); // token не сохранен
-  });
-
-  it('should return undefined if config does not exist', async () => {
-    const loaded = await configManager.load();
-    expect(loaded).toBeUndefined();
-  });
-
-  it('should delete config', async () => {
-    const config: TestConfig = {
-      token: 'secret',
-      orgId: 'org',
-      projectPath: '/test',
-    };
-
-    await configManager.save(config);
-    expect(await configManager.exists()).toBe(true);
-
-    await configManager.delete();
-    expect(await configManager.exists()).toBe(false);
-  });
-
-  it('should use custom serialize function', async () => {
-    const customManager = new ConfigManager<TestConfig>({
-      projectName: 'test_mcp_cli_custom',
-      safeFields: ['orgId', 'projectPath'],
-      serialize: (config) => ({
-        customOrgId: config.orgId,
-        customPath: config.projectPath,
-      }),
-    });
-
-    const config: TestConfig = {
-      token: 'secret',
-      orgId: 'my-org',
-      projectPath: '/test',
-    };
-
-    await customManager.save(config);
-
-    // Читаем напрямую файл чтобы проверить формат
-    const rawData = await fs.readFile(customManager.getConfigPath(), 'utf-8');
-    const parsed = JSON.parse(rawData) as Record<string, unknown>;
-
-    expect(parsed).toHaveProperty('customOrgId', 'my-org');
-    expect(parsed).toHaveProperty('customPath', '/test');
-
-    // Cleanup
-    await customManager.delete();
-    const configDir = path.dirname(customManager.getConfigPath());
-    await fs.rmdir(configDir).catch(() => {
-      // ignore
+  describe('getConfigPath', () => {
+    it('возвращает корректный путь ~/.{projectName}/config.json', () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      const p = cm.getConfigPath();
+      expect(p).toBe(path.join(tmpHome, `.${projectName}`, 'config.json'));
     });
   });
 
-  it('should use custom deserialize function', async () => {
-    const customManager = new ConfigManager<TestConfig>({
-      projectName: 'test_mcp_cli_deserialize',
-      safeFields: ['orgId', 'projectPath'],
-      deserialize: (data) => {
-        // Проверяем что orgId существует
-        if (typeof data.orgId === 'string' && data.orgId.length > 0) {
-          return data as Partial<TestConfig>;
-        }
-        return undefined;
-      },
+  describe('save с identity serialize (явное согласие)', () => {
+    it('записывает весь объект как результат identity serialize', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      await cm.save({ token: 'sec', orgId: 'org-1', apiBase: 'https://x' });
+
+      const written = JSON.parse(await fs.readFile(cm.getConfigPath(), 'utf-8')) as unknown;
+      expect(written).toEqual({ token: 'sec', orgId: 'org-1', apiBase: 'https://x' });
     });
 
-    const config: TestConfig = {
-      token: 'secret',
-      orgId: 'my-org',
-      projectPath: '/test',
-    };
+    it('создаёт директорию если не существует', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      await cm.save({ token: 'sec', orgId: 'org-1' });
 
-    await customManager.save(config);
-
-    const loaded = await customManager.load();
-    expect(loaded).toBeDefined();
-    expect(loaded?.orgId).toBe('my-org');
-
-    // Cleanup
-    await customManager.delete();
-    const configDir = path.dirname(customManager.getConfigPath());
-    await fs.rmdir(configDir).catch(() => {
-      // ignore
+      // Файл должен существовать
+      await expect(fs.access(cm.getConfigPath())).resolves.toBeUndefined();
     });
   });
 
-  it('should set file permissions to 0o600', async () => {
-    const config: TestConfig = {
-      token: 'secret',
-      orgId: 'org',
-      projectPath: '/test',
-    };
+  describe('save с serialize-хуком', () => {
+    it('сохраняет результат serialize, не оригинал', async () => {
+      const cm = new ConfigManager<YtConfig>({
+        projectName,
+        serialize: (cfg) => ({ orgId: cfg.orgId, apiBase: cfg.apiBase }),
+      });
+      await cm.save({ token: 'TOP_SECRET', orgId: 'org-1', apiBase: 'https://x' });
 
-    await configManager.save(config);
-
-    const stats = await fs.stat(configPath);
-
-    const mode = stats.mode & 0o777;
-    expect(mode).toBe(0o600);
+      const written = JSON.parse(await fs.readFile(cm.getConfigPath(), 'utf-8')) as unknown;
+      expect(written).toEqual({ orgId: 'org-1', apiBase: 'https://x' });
+      expect(written).not.toHaveProperty('token');
+    });
   });
 
-  it('should return config path', () => {
-    const expectedPath = path.join(
-      process.env['HOME'] ?? process.env['USERPROFILE'] ?? '',
-      '.test_mcp_cli',
-      'config.json'
-    );
-    expect(configPath).toBe(expectedPath);
+  describe('права доступа', () => {
+    it('файл создан с правами 0o600', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      await cm.save({ token: 'sec', orgId: 'org-1' });
+
+      const stat = await fs.stat(cm.getConfigPath());
+      // mode: нижние 9 бит = rwx для owner/group/other.
+      // 0o600 = owner rw, group/other nothing.
+      // Маскируем до permission bits.
+      const perms = stat.mode & 0o777;
+      expect(perms).toBe(0o600);
+    });
   });
 
-  it('should handle missing fields gracefully', async () => {
-    const partialConfig = {
-      token: 'secret',
-      orgId: 'org',
-      projectPath: '/test',
-      // logLevel отсутствует
-    } as TestConfig;
+  describe('load', () => {
+    it('undefined если файла нет', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      expect(await cm.load()).toBeUndefined();
+    });
 
-    await configManager.save(partialConfig);
+    it('возвращает сохранённую конфигурацию', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      await cm.save({ token: 'sec', orgId: 'org-1' });
+      expect(await cm.load()).toEqual({ token: 'sec', orgId: 'org-1' });
+    });
 
-    const loaded = await configManager.load();
-    expect(loaded).toBeDefined();
-    expect(loaded?.orgId).toBe('org');
-    expect('logLevel' in (loaded ?? {})).toBe(false);
+    it('применяет deserialize-хук', async () => {
+      const cm = new ConfigManager<YtConfig>({
+        projectName,
+        serialize: identitySerialize,
+        deserialize: (data) => ({
+          orgId: data['orgId'] as string,
+          apiBase: (data['apiBase'] as string | undefined) ?? 'default-api',
+        }),
+      });
+      await cm.save({ token: 'sec', orgId: 'org-1' });
+      const loaded = await cm.load();
+      expect(loaded).toEqual({ orgId: 'org-1', apiBase: 'default-api' });
+    });
+
+    it('возвращает undefined при битом JSON (не бросает)', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      // Создадим директорию и битый файл вручную
+      await fs.mkdir(path.dirname(cm.getConfigPath()), { recursive: true });
+      await fs.writeFile(cm.getConfigPath(), '{ broken json', 'utf-8');
+      expect(await cm.load()).toBeUndefined();
+    });
+  });
+
+  describe('exists', () => {
+    it('false если файла нет', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      expect(await cm.exists()).toBe(false);
+    });
+
+    it('true после save', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      await cm.save({ token: 's', orgId: 'o' });
+      expect(await cm.exists()).toBe(true);
+    });
+  });
+
+  describe('delete', () => {
+    it('удаляет существующий файл', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      await cm.save({ token: 's', orgId: 'o' });
+      expect(await cm.exists()).toBe(true);
+      await cm.delete();
+      expect(await cm.exists()).toBe(false);
+    });
+
+    it('noop при отсутствии файла', async () => {
+      const cm = new ConfigManager<YtConfig>({ projectName, serialize: identitySerialize });
+      await expect(cm.delete()).resolves.toBeUndefined();
+    });
   });
 });

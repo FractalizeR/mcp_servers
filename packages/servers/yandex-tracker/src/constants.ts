@@ -62,11 +62,6 @@ export const PROJECT_REPOSITORY_URL =
   'https://github.com/FractalizeR/mcp_server_yandex_tracker' as const;
 
 /**
- * Путь к entry point MCP сервера (относительно корня проекта)
- */
-export const SERVER_ENTRY_POINT = 'dist/index.js' as const;
-
-/**
  * Configuration constants re-exported from config module
  * @deprecated Import directly from '#config' instead
  */

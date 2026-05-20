@@ -25,11 +25,6 @@ export const MCP_SERVER_NAME = PROJECT_BASE_NAME;
 export const MCP_SERVER_DISPLAY_NAME = "FractalizeR's Yandex Wiki MCP" as const;
 
 /**
- * Точка входа сервера (относительный путь от package.json)
- */
-export const SERVER_ENTRY_POINT = 'dist/yandex-wiki.bundle.cjs';
-
-/**
  * Уровень логирования по умолчанию
  */
 export const DEFAULT_LOG_LEVEL = 'info';

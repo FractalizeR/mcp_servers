@@ -8,3 +8,4 @@ export * from './command-executor.js';
 export * from './config-manager.js';
 export * from './interactive-prompter.js';
 export * from './logger.js';
+export * from './launch-spec-helpers.js';

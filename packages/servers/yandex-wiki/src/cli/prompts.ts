@@ -2,13 +2,19 @@ import type { ConfigPromptDefinition } from '@fractalizer/mcp-cli';
 import type { YandexWikiMCPConfig } from './types.js';
 import { DEFAULT_LOG_LEVEL } from '../constants.js';
 
+/**
+ * Промпты сбора доменной конфигурации Yandex Wiki.
+ *
+ * Порядок важен: `orgType` спрашивается перед `orgId`, чтобы пользователь
+ * понимал, какой именно идентификатор он сейчас вводит (Я360 vs Yandex Cloud).
+ */
 export const ywConfigPrompts: ConfigPromptDefinition<YandexWikiMCPConfig>[] = [
   {
     name: 'token',
     type: 'password',
     message: 'OAuth токен Yandex Wiki:',
     mask: '*',
-    validate: (value: string | number | Record<string, string> | undefined): string | true => {
+    validate: (value): string | true => {
       if (typeof value !== 'string' || value.length === 0) {
         return 'Токен обязателен';
       }
@@ -16,11 +22,21 @@ export const ywConfigPrompts: ConfigPromptDefinition<YandexWikiMCPConfig>[] = [
     },
   },
   {
+    name: 'orgType',
+    type: 'select',
+    message: 'Тип организации:',
+    choices: [
+      { name: 'Яндекс 360 для бизнеса', value: 'yandex360' },
+      { name: 'Yandex Cloud Organization', value: 'cloud' },
+    ],
+    default: (saved) => saved?.orgType ?? 'yandex360',
+  },
+  {
     name: 'orgId',
     type: 'input',
-    message: 'ID организации:',
+    message: 'ID организации (для выбранного типа):',
     default: (saved) => saved?.orgId,
-    validate: (value: string | number | Record<string, string> | undefined): string | true => {
+    validate: (value): string | true => {
       if (typeof value !== 'string' || value.length === 0) {
         return 'ID организации обязателен';
       }

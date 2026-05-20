@@ -1,405 +1,400 @@
 /**
- * Unit tests for connectCommand
+ * Тесты connectCommand.
+ *
+ * Покрытие:
+ *  - Happy path: prompter → buildServerLaunch → validate → connect → save (после connect)
+ *  - cliOptions.client → выбирает по имени
+ *  - cliOptions.client = unknown → ошибка, save не вызван
+ *  - cliOptions.client не установлен → ошибка
+ *  - Не найдено установленных клиентов → ошибка
+ *  - validateLaunchSpec вернул ошибки → connect и save не вызваны
+ *  - buildServerLaunch бросает → connect и save не вызваны (исключение прокинуто)
+ *  - connect() бросает → save НЕ вызван (через spy) — критично для безопасности состояния
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { connectCommand } from '../../../src/commands/connect.command.js';
-import { ConnectorRegistry } from '../../../src/connectors/registry.js';
-import { ConfigManager } from '../../../src/utils/config-manager.js';
-import { InteractivePrompter } from '../../../src/utils/interactive-prompter.js';
-import { Logger } from '../../../src/utils/logger.js';
+import type { ConnectCommandOptions, IConnectorRegistry } from '../../../src/types.js';
+import type { MCPConnector } from '../../../src/connectors/base/connector.interface.js';
+import type { ConfigManager } from '../../../src/utils/config-manager.js';
 import type {
-  IConnector,
-  BaseMCPServerConfig,
-  ConnectionStatus,
+  ServerLaunchSpec,
+  ConfigPromptDefinition,
   MCPClientInfo,
 } from '../../../src/types.js';
 
-// Mock зависимостей
-vi.mock('../../../src/utils/logger.js');
+// Inquirer — мокаем для тестов промптов
+const inquirerPromptMock = vi.hoisted(() => vi.fn());
+vi.mock('inquirer', () => ({
+  default: { prompt: inquirerPromptMock },
+}));
 
-// Mock InteractivePrompter instance method
-const mockPromptServerConfig = vi.fn();
-/* eslint-disable @typescript-eslint/consistent-type-imports */
-vi.mock('../../../src/utils/interactive-prompter.js', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('../../../src/utils/interactive-prompter.js')>();
-  return {
-    ...actual,
-    InteractivePrompter: class MockInteractivePrompter {
-      static promptClientSelection = vi.fn();
-      static promptConfirmation = vi.fn();
-      static promptSelection = vi.fn();
-
-      promptServerConfig = mockPromptServerConfig;
-    },
-  };
-});
-/* eslint-enable @typescript-eslint/consistent-type-imports */
-
-interface TestConfig extends BaseMCPServerConfig {
-  projectPath: string;
-  token?: string;
-  orgId?: string;
+interface TestConfig {
+  token: string;
+  orgId: string;
 }
 
+interface ConnectorMockOpts {
+  name?: string;
+  isInstalled?: boolean;
+  connectImpl?: (spec: ServerLaunchSpec) => Promise<void>;
+  validateImpl?: (spec: ServerLaunchSpec) => Promise<string[]>;
+  getStatusImpl?: () => Promise<{
+    connected: boolean;
+    details?: { configPath: string };
+    error?: string;
+  }>;
+}
+
+function makeConnector(opts: ConnectorMockOpts = {}): MCPConnector {
+  const info: MCPClientInfo = {
+    name: opts.name ?? 'gemini',
+    displayName: (opts.name ?? 'gemini').toUpperCase(),
+    description: 'mock',
+    configPath: '/tmp/cfg.json',
+    platforms: ['darwin'],
+  };
+  return {
+    getClientInfo: () => info,
+    isInstalled: vi.fn().mockResolvedValue(opts.isInstalled ?? true),
+    connect: vi.fn(opts.connectImpl ?? ((): Promise<void> => Promise.resolve())),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+    validateLaunchSpec: vi.fn(opts.validateImpl ?? ((): Promise<string[]> => Promise.resolve([]))),
+    getStatus: vi.fn(
+      opts.getStatusImpl ??
+        ((): Promise<{ connected: boolean; details: { configPath: string } }> =>
+          Promise.resolve({ connected: true, details: { configPath: '/tmp/cfg.json' } }))
+    ),
+    getLaunchSpec: vi.fn().mockResolvedValue(null),
+  } as unknown as MCPConnector;
+}
+
+function makeRegistry(connectors: MCPConnector[]): IConnectorRegistry {
+  const map = new Map(connectors.map((c) => [c.getClientInfo().name, c]));
+  return {
+    register: vi.fn(),
+    get: vi.fn((name: string) => map.get(name)),
+    getAll: vi.fn(() => Array.from(map.values())),
+    findInstalled: vi.fn(async () => {
+      const installed: MCPConnector[] = [];
+      for (const c of map.values()) {
+        if (await c.isInstalled()) installed.push(c);
+      }
+      return installed;
+    }),
+    checkAllStatuses: vi.fn(async () => new Map()),
+  };
+}
+
+function makeConfigManager(): ConfigManager<TestConfig> {
+  return {
+    save: vi.fn().mockResolvedValue(undefined),
+    load: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+    exists: vi.fn().mockResolvedValue(false),
+    getConfigPath: vi.fn(() => '/tmp/saved.json'),
+  } as unknown as ConfigManager<TestConfig>;
+}
+
+const PROMPTS: ConfigPromptDefinition<TestConfig>[] = [
+  { name: 'token', type: 'password', message: 'Token:' },
+  { name: 'orgId', type: 'input', message: 'Org:' },
+];
+
+function buildSpec(cfg: TestConfig): ServerLaunchSpec {
+  return {
+    command: 'node',
+    args: ['/abs/script.cjs'],
+    env: { TOKEN: cfg.token, ORG: cfg.orgId },
+  };
+}
+
+beforeEach(() => {
+  inquirerPromptMock.mockReset();
+  // По умолчанию prompter вернёт всё что нужно.
+  inquirerPromptMock.mockResolvedValue({ token: 't-sec', orgId: 'org-1' });
+});
+
+// console suppression — Logger пишет много, нам не нужно засорять вывод тестов
+beforeEach(() => {
+  vi.spyOn(console, 'log').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+});
+
 describe('connectCommand', () => {
-  let registry: ConnectorRegistry<TestConfig>;
-  let configManager: ConfigManager<TestConfig>;
-  let mockConnector: IConnector<TestConfig>;
+  describe('Happy path', () => {
+    it('полный сценарий: prompts → build → validate → connect → save', async () => {
+      const conn = makeConnector({ name: 'gemini' });
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
+      const buildServerLaunch = vi.fn(buildSpec);
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-
-    // Mock Logger methods
-    vi.mocked(Logger.header).mockImplementation(() => {});
-    vi.mocked(Logger.newLine).mockImplementation(() => {});
-    vi.mocked(Logger.info).mockImplementation(() => {});
-    vi.mocked(Logger.success).mockImplementation(() => {});
-    vi.mocked(Logger.error).mockImplementation(() => {});
-    const mockSpinner = {
-      stop: vi.fn(),
-      succeed: vi.fn(),
-      fail: vi.fn(),
-    };
-    vi.mocked(Logger.spinner).mockReturnValue(mockSpinner as never);
-
-    // Create registry
-    registry = new ConnectorRegistry<TestConfig>();
-
-    // Create config manager
-    configManager = new ConfigManager<TestConfig>({
-      projectName: 'test-server',
-      safeFields: ['orgId'],
-    });
-
-    // Create mock connector
-    mockConnector = {
-      getClientInfo: vi.fn().mockReturnValue({
-        name: 'test-client',
-        displayName: 'Test Client',
-        description: 'Test Client Description',
-        configPath: '/test/path',
-        platforms: ['darwin', 'linux', 'win32'],
-      } as MCPClientInfo),
-      isInstalled: vi.fn().mockResolvedValue(true),
-      connect: vi.fn().mockResolvedValue(undefined),
-      disconnect: vi.fn().mockResolvedValue(undefined),
-      getStatus: vi.fn().mockResolvedValue({
-        connected: true,
-        details: {
-          configPath: '/test/path/config.json',
-        },
-      } as ConnectionStatus),
-      validateConfig: vi.fn().mockResolvedValue([]),
-    };
-  });
-
-  describe('when no clients are installed', () => {
-    it('should display error and exit', async () => {
-      await connectCommand({
+      const options: ConnectCommandOptions<TestConfig> = {
         registry,
         configManager,
-        configPrompts: [],
-      });
-
-      expect(Logger.error).toHaveBeenCalledWith('Не найдено установленных MCP клиентов');
-      expect(Logger.info).toHaveBeenCalledWith(
-        'Поддерживаемые клиенты: Claude Desktop, Claude Code, Codex, Gemini, Qwen'
-      );
-    });
-  });
-
-  describe('when client is specified via CLI options', () => {
-    beforeEach(() => {
-      registry.register(mockConnector);
-    });
-
-    it('should use the specified client', async () => {
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-        token: 'test-token',
-      } as TestConfig);
-      InteractivePrompter.promptConfirmation.mockResolvedValue(false);
-
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
-      });
-
-      expect(Logger.info).toHaveBeenCalledWith('Выбран клиент: Test Client');
-      expect(mockConnector.connect).toHaveBeenCalled();
-    });
-
-    it('should display error if specified client not found', async () => {
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'non-existent' },
-      });
-
-      expect(Logger.error).toHaveBeenCalledWith('Клиент "non-existent" не найден');
-      expect(mockConnector.connect).not.toHaveBeenCalled();
-    });
-
-    it.skip('should display error if specified client not installed', async () => {
-      vi.mocked(mockConnector.isInstalled).mockResolvedValue(false);
-
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
-      });
-
-      expect(Logger.error).toHaveBeenCalledWith('Клиент "test-client" не установлен');
-      expect(mockConnector.connect).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when client is selected interactively', () => {
-    beforeEach(() => {
-      registry.register(mockConnector);
-    });
-
-    it('should prompt for client selection', async () => {
-      InteractivePrompter.promptClientSelection.mockResolvedValue('test-client');
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-      } as TestConfig);
-      InteractivePrompter.promptConfirmation.mockResolvedValue(false);
-
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-      });
-
-      expect(InteractivePrompter.promptClientSelection).toHaveBeenCalled();
-      expect(mockConnector.connect).toHaveBeenCalled();
-    });
-
-    it('should handle when connector selection returns invalid client', async () => {
-      InteractivePrompter.promptClientSelection.mockResolvedValue('invalid-client');
-
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-      });
-
-      expect(Logger.error).toHaveBeenCalledWith('Не удалось выбрать клиент');
-      expect(mockConnector.connect).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('configuration handling', () => {
-    beforeEach(() => {
-      registry.register(mockConnector);
-      InteractivePrompter.promptConfirmation.mockResolvedValue(false);
-    });
-
-    it('should use saved configuration if available', async () => {
-      const savedConfig: TestConfig = {
-        projectPath: '/test/path',
-        orgId: 'saved-org',
+        configPrompts: PROMPTS,
+        buildServerLaunch,
+        cliOptions: { client: 'gemini' },
       };
 
-      vi.spyOn(configManager, 'load').mockResolvedValue(savedConfig);
-      mockPromptServerConfig.mockResolvedValue(savedConfig);
+      await connectCommand(options);
 
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
+      // 1. buildServerLaunch вызван с domainConfig
+      expect(buildServerLaunch).toHaveBeenCalledWith({ token: 't-sec', orgId: 'org-1' });
+
+      // 2. validateLaunchSpec вызван
+      expect(conn.validateLaunchSpec).toHaveBeenCalled();
+
+      // 3. connect вызван
+      expect(conn.connect).toHaveBeenCalledWith({
+        command: 'node',
+        args: ['/abs/script.cjs'],
+        env: { TOKEN: 't-sec', ORG: 'org-1' },
       });
 
-      expect(Logger.info).toHaveBeenCalledWith(
-        'Найдена сохраненная конфигурация (секретные поля будут запрошены заново)'
-      );
-      expect(mockPromptServerConfig).toHaveBeenCalledWith(savedConfig);
+      // 4. save вызван с полной domainConfig (включая токен!)
+      expect(configManager.save).toHaveBeenCalledWith({ token: 't-sec', orgId: 'org-1' });
+
+      // 5. Save вызван ПОСЛЕ connect
+      const connectOrder = vi.mocked(conn.connect).mock.invocationCallOrder[0]!;
+      const saveOrder = vi.mocked(configManager.save).mock.invocationCallOrder[0]!;
+      expect(saveOrder).toBeGreaterThan(connectOrder);
     });
 
-    it('should use buildConfig function if provided', async () => {
-      const buildConfig = vi.fn().mockReturnValue({
-        projectPath: '/custom/path',
-        customField: 'value',
-      });
-
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-      } as TestConfig);
+    it('Logger.warn про plaintext-токен выводится после save', async () => {
+      const warnSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const conn = makeConnector({ name: 'gemini' });
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
 
       await connectCommand({
         registry,
         configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
-        buildConfig,
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'gemini' },
       });
 
-      expect(buildConfig).toHaveBeenCalled();
-      expect(mockConnector.connect).toHaveBeenCalled();
+      const allOutput = warnSpy.mock.calls.flat().join('\n');
+      expect(allOutput).toMatch(/plaintext/);
     });
   });
 
-  describe('validation', () => {
-    beforeEach(() => {
-      registry.register(mockConnector);
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-      } as TestConfig);
-    });
-
-    it('should display validation errors and exit', async () => {
-      vi.mocked(mockConnector.validateConfig).mockResolvedValue([
-        'Token is required',
-        'Invalid orgId',
-      ]);
+  describe('Ошибки до connect — save НЕ вызывается', () => {
+    it('cliOptions.client = "unknown" → ошибка, save не вызван', async () => {
+      const conn = makeConnector({ name: 'gemini' });
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
 
       await connectCommand({
         registry,
         configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'unknown' },
       });
 
-      expect(Logger.error).toHaveBeenCalledWith('Ошибки конфигурации:');
-      expect(Logger.error).toHaveBeenCalledWith('  - Token is required');
-      expect(Logger.error).toHaveBeenCalledWith('  - Invalid orgId');
-      expect(mockConnector.connect).not.toHaveBeenCalled();
+      expect(conn.connect).not.toHaveBeenCalled();
+      expect(configManager.save).not.toHaveBeenCalled();
+    });
+
+    it('cliOptions.client = "unknown" → выводит список доступных клиентов (N9)', async () => {
+      const gemini = makeConnector({ name: 'gemini' });
+      const qwen = makeConnector({ name: 'qwen' });
+      const registry = makeRegistry([gemini, qwen]);
+      const configManager = makeConfigManager();
+
+      // Захватим вывод console.log (info), сделанный после ошибки.
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      await connectCommand({
+        registry,
+        configManager,
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'unknown-name' },
+      });
+
+      const allOutput = logSpy.mock.calls.flat().join(' ');
+      expect(allOutput).toContain('Доступные клиенты');
+      expect(allOutput).toMatch(/gemini/);
+      expect(allOutput).toMatch(/qwen/);
+    });
+
+    it('cliOptions.client установлен, но клиент не isInstalled → save не вызван', async () => {
+      const conn = makeConnector({ name: 'gemini', isInstalled: false });
+      const installedConn = makeConnector({ name: 'qwen', isInstalled: true });
+      const registry = makeRegistry([conn, installedConn]);
+      const configManager = makeConfigManager();
+
+      await connectCommand({
+        registry,
+        configManager,
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'gemini' },
+      });
+
+      expect(conn.connect).not.toHaveBeenCalled();
+      expect(configManager.save).not.toHaveBeenCalled();
+    });
+
+    it('Не найдено установленных клиентов → save не вызван', async () => {
+      const conn = makeConnector({ name: 'gemini', isInstalled: false });
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
+
+      await connectCommand({
+        registry,
+        configManager,
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'gemini' },
+      });
+
+      expect(configManager.save).not.toHaveBeenCalled();
+    });
+
+    it('validateLaunchSpec возвращает ошибки → connect и save не вызваны', async () => {
+      const conn = makeConnector({
+        name: 'gemini',
+        validateImpl: (): Promise<string[]> => Promise.resolve(['Файл не найден']),
+      });
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
+
+      await connectCommand({
+        registry,
+        configManager,
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'gemini' },
+      });
+
+      expect(conn.connect).not.toHaveBeenCalled();
+      expect(configManager.save).not.toHaveBeenCalled();
+    });
+
+    it('buildServerLaunch бросает → connect и save не вызваны (исключение прокидывается)', async () => {
+      const conn = makeConnector({ name: 'gemini' });
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
+      const buildServerLaunch = vi.fn(() => {
+        throw new Error('build failed');
+      });
+
+      await expect(
+        connectCommand({
+          registry,
+          configManager,
+          configPrompts: PROMPTS,
+          buildServerLaunch,
+          cliOptions: { client: 'gemini' },
+        })
+      ).rejects.toThrow('build failed');
+
+      expect(conn.connect).not.toHaveBeenCalled();
+      expect(configManager.save).not.toHaveBeenCalled();
     });
   });
 
-  describe('connection', () => {
-    beforeEach(() => {
-      registry.register(mockConnector);
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-      } as TestConfig);
-      InteractivePrompter.promptConfirmation.mockResolvedValue(false);
-    });
-
-    it('should connect successfully', async () => {
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
+  describe('КРИТИЧНО: connect бросает → save НЕ вызывается', () => {
+    it('connect throws → save not called', async () => {
+      const conn = makeConnector({
+        name: 'gemini',
+        connectImpl: (): Promise<void> => Promise.reject(new Error('connection refused')),
       });
-
-      expect(mockConnector.connect).toHaveBeenCalled();
-      const mockSpinner = vi.mocked(Logger.spinner).mock.results[1]?.value;
-      expect(mockSpinner?.succeed).toHaveBeenCalledWith(
-        'MCP сервер успешно подключен к Test Client!'
-      );
-    });
-
-    it('should handle connection errors', async () => {
-      vi.mocked(mockConnector.connect).mockRejectedValue(new Error('Connection failed'));
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
 
       await connectCommand({
         registry,
         configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'gemini' },
       });
 
-      const mockSpinner = vi.mocked(Logger.spinner).mock.results[1]?.value;
-      expect(mockSpinner?.fail).toHaveBeenCalledWith('Ошибка подключения: Connection failed');
-      expect(InteractivePrompter.promptConfirmation).not.toHaveBeenCalled();
-    });
-
-    it('should display config details after successful connection', async () => {
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
-      });
-
-      expect(Logger.info).toHaveBeenCalledWith('Конфигурация: /test/path/config.json');
+      expect(conn.connect).toHaveBeenCalledTimes(1);
+      // Это самое важное утверждение этого теста:
+      expect(configManager.save).not.toHaveBeenCalled();
     });
   });
 
-  describe('configuration saving', () => {
-    beforeEach(() => {
-      registry.register(mockConnector);
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-        token: 'test-token',
-      } as TestConfig);
-    });
+  describe('save fail (L2)', () => {
+    it('connect успешен, save бросает → ошибка логируется + путь client config', async () => {
+      const conn = makeConnector({ name: 'gemini' });
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
+      vi.mocked(configManager.save).mockRejectedValue(new Error('EACCES: permission denied'));
 
-    it('should save configuration when user confirms', async () => {
-      InteractivePrompter.promptConfirmation.mockResolvedValue(true);
-      const saveSpy = vi.spyOn(configManager, 'save').mockResolvedValue();
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       await connectCommand({
         registry,
         configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'gemini' },
       });
 
-      expect(InteractivePrompter.promptConfirmation).toHaveBeenCalledWith(
-        'Сохранить конфигурацию для следующего раза?',
-        true
-      );
-      expect(saveSpy).toHaveBeenCalled();
-      expect(Logger.success).toHaveBeenCalledWith(
-        'Конфигурация сохранена (секретные поля исключены)'
-      );
-    });
+      // Подключение всё равно произошло
+      expect(conn.connect).toHaveBeenCalled();
 
-    it('should not save configuration when user declines', async () => {
-      InteractivePrompter.promptConfirmation.mockResolvedValue(false);
-      const saveSpy = vi.spyOn(configManager, 'save').mockResolvedValue();
+      // Ошибка save логируется в stderr
+      const errOutput = errSpy.mock.calls.flat().join(' ');
+      expect(errOutput).toContain('локальный кэш конфига не сохранён');
+      expect(errOutput).toContain('EACCES');
 
-      await connectCommand({
-        registry,
-        configManager,
-        configPrompts: [],
-        cliOptions: { client: 'test-client' },
-      });
-
-      expect(saveSpy).not.toHaveBeenCalled();
+      // Пути выводятся в info
+      const logOutput = logSpy.mock.calls.flat().join(' ');
+      expect(logOutput).toContain('/tmp/saved.json');
     });
   });
 
-  describe('complete workflow', () => {
-    it('should execute full workflow successfully', async () => {
-      registry.register(mockConnector);
-
-      mockPromptServerConfig.mockResolvedValue({
-        projectPath: '/test/path',
-        token: 'test-token',
-        orgId: 'test-org',
-      } as TestConfig);
-      InteractivePrompter.promptConfirmation.mockResolvedValue(true);
-      const saveSpy = vi.spyOn(configManager, 'save').mockResolvedValue();
+  describe('Сохранённая конфигурация', () => {
+    it('configManager.load вызывается до промптов и передаётся в prompter', async () => {
+      const conn = makeConnector({ name: 'gemini' });
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
+      vi.mocked(configManager.load).mockResolvedValue({ orgId: 'saved-org' });
 
       await connectCommand({
         registry,
         configManager,
-        configPrompts: [
-          { name: 'token', type: 'password', message: 'Token:' },
-          { name: 'orgId', type: 'input', message: 'Org ID:' },
-        ],
-        cliOptions: { client: 'test-client' },
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'gemini' },
       });
 
-      expect(mockConnector.validateConfig).toHaveBeenCalled();
-      expect(mockConnector.connect).toHaveBeenCalled();
-      expect(mockConnector.getStatus).toHaveBeenCalled();
-      expect(saveSpy).toHaveBeenCalled();
-      expect(Logger.success).toHaveBeenCalledWith(
-        '✅ Готово! Теперь вы можете использовать MCP сервер в выбранном клиенте.'
-      );
+      expect(configManager.load).toHaveBeenCalled();
+    });
+  });
+
+  describe('Interactive client selection', () => {
+    it('cliOptions.client не задан → используется promptClientSelection', async () => {
+      const gemini = makeConnector({ name: 'gemini', isInstalled: true });
+      const qwen = makeConnector({ name: 'qwen', isInstalled: true });
+      const registry = makeRegistry([gemini, qwen]);
+      const configManager = makeConfigManager();
+
+      // Первый вызов prompt — это selectClient, второй — конфигурационные промпты
+      inquirerPromptMock.mockReset();
+      inquirerPromptMock
+        .mockResolvedValueOnce({ selectedClient: 'qwen' })
+        .mockResolvedValueOnce({ token: 't', orgId: 'o' });
+
+      await connectCommand({
+        registry,
+        configManager,
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        // cliOptions не задан
+      });
+
+      expect(qwen.connect).toHaveBeenCalled();
+      expect(gemini.connect).not.toHaveBeenCalled();
     });
   });
 });

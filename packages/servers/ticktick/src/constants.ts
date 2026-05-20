@@ -61,11 +61,6 @@ export const PROJECT_HOMEPAGE = 'https://github.com/FractalizeR/mcp_servers' as 
 export const PROJECT_REPOSITORY_URL = 'https://github.com/FractalizeR/mcp_servers' as const;
 
 /**
- * Path to MCP server entry point (relative to project root)
- */
-export const SERVER_ENTRY_POINT = 'dist/index.js' as const;
-
-/**
  * Configuration constants re-exported from config module
  * @deprecated Import directly from '#config' instead
  */

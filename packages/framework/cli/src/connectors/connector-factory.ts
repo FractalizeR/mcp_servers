@@ -1,5 +1,5 @@
 /**
- * Фабрика коннекторов для известных MCP клиентов
+ * Фабрика коннекторов для известных MCP клиентов.
  *
  * Централизует конфигурацию клиентов и устраняет дублирование кода.
  */
@@ -10,22 +10,74 @@ import {
   ConfigurableConnector,
   type ConnectorClientConfig,
 } from './base/configurable-connector.js';
-import type { BaseMCPServerConfig } from '../types.js';
 
 /**
- * Известные MCP клиенты
+ * Известные MCP клиенты (файл-ориентированные).
+ *
+ * `claude-code` — отдельный {@link ClaudeCodeConnector}, потому что управляется
+ * не файлом, а командами `claude mcp add/remove/list`.
  */
-export type KnownClient = 'gemini' | 'qwen' | 'codex';
+export type KnownClient = 'claude-desktop' | 'gemini' | 'qwen' | 'codex';
+
+/**
+ * Platform-aware путь к конфигу Claude Desktop.
+ *
+ * Вычисляется лениво (через функцию), чтобы избежать обращений к `os.platform()`
+ * при импорте модуля и упростить тестирование.
+ *
+ * Win32: предпочтительно используем `%APPDATA%`. Если переменная не задана
+ * (нестандартное окружение, CI без полного user profile, WSL fallback) —
+ * используем `~/AppData/Roaming/Claude/...`, что является каноническим путём
+ * для современных Windows-систем.
+ */
+function claudeDesktopConfigPath(): string {
+  const platform = os.platform();
+  if (platform === 'darwin') {
+    return path.join(os.homedir(), 'Library/Application Support/Claude/claude_desktop_config.json');
+  }
+  if (platform === 'linux') {
+    return path.join(os.homedir(), '.config/claude/claude_desktop_config.json');
+  }
+  // win32 и прочие
+  const appData = process.env['APPDATA'] ?? path.join(os.homedir(), 'AppData/Roaming');
+  return path.join(appData, 'Claude/claude_desktop_config.json');
+}
+
+/**
+ * Lazy paths для остальных клиентов — единообразие с claudeDesktopConfigPath
+ * и устойчивость к подмене `HOME`/`USERPROFILE` в runtime (важно для тестов
+ * и кастомных окружений).
+ */
+function geminiConfigPath(): string {
+  return path.join(os.homedir(), '.gemini/settings.json');
+}
+
+function qwenConfigPath(): string {
+  return path.join(os.homedir(), '.qwen/settings.json');
+}
+
+function codexConfigPath(): string {
+  return path.join(os.homedir(), '.codex/config.toml');
+}
 
 /**
  * Конфигурации известных клиентов
  */
 const CLIENT_CONFIGS: Record<KnownClient, ConnectorClientConfig> = {
+  'claude-desktop': {
+    name: 'claude-desktop',
+    displayName: 'Claude Desktop',
+    description: 'Официальное десктопное приложение Claude от Anthropic',
+    configPath: claudeDesktopConfigPath,
+    platforms: ['darwin', 'linux', 'win32'],
+    serverKey: 'mcpServers',
+    configFormat: 'json',
+  },
   gemini: {
     name: 'gemini',
     displayName: 'Gemini CLI',
     description: 'Gemini CLI для разработки с MCP серверами',
-    configPath: path.join(os.homedir(), '.gemini/settings.json'),
+    configPath: geminiConfigPath,
     platforms: ['darwin', 'linux', 'win32'],
     serverKey: 'mcpServers',
     configFormat: 'json',
@@ -34,7 +86,7 @@ const CLIENT_CONFIGS: Record<KnownClient, ConnectorClientConfig> = {
     name: 'qwen',
     displayName: 'Qwen Code',
     description: 'Qwen Code для разработки с MCP серверами',
-    configPath: path.join(os.homedir(), '.qwen/settings.json'),
+    configPath: qwenConfigPath,
     platforms: ['darwin', 'linux', 'win32'],
     serverKey: 'mcpServers',
     configFormat: 'json',
@@ -43,7 +95,7 @@ const CLIENT_CONFIGS: Record<KnownClient, ConnectorClientConfig> = {
     name: 'codex',
     displayName: 'Codex',
     description: 'CLI инструмент Codex от OpenAI',
-    configPath: path.join(os.homedir(), '.codex/config.toml'),
+    configPath: codexConfigPath,
     platforms: ['darwin', 'linux', 'win32'],
     checkCommand: 'codex --version',
     serverKey: 'mcp_servers',
@@ -52,51 +104,43 @@ const CLIENT_CONFIGS: Record<KnownClient, ConnectorClientConfig> = {
 };
 
 /**
- * Создать коннектор для известного клиента
+ * Создать коннектор для известного клиента.
  *
  * @param client - Имя известного клиента
- * @param serverName - Имя MCP сервера
- * @param entryPoint - Относительный путь к точке входа сервера
+ * @param serverName - Имя MCP сервера для записи в конфиг
  *
  * @example
  * ```typescript
- * const geminiConnector = createConnector('gemini', 'mcp-server-yandex-tracker', 'dist/yandex-tracker.bundle.cjs');
- * const qwenConnector = createConnector('qwen', 'mcp-server-yandex-tracker', 'dist/yandex-tracker.bundle.cjs');
+ * const gemini = createConnector('gemini', 'mcp-server-yandex-tracker');
+ * const desktop = createConnector('claude-desktop', 'mcp-server-yandex-tracker');
  * ```
  */
-export function createConnector<TConfig extends BaseMCPServerConfig = BaseMCPServerConfig>(
-  client: KnownClient,
-  serverName: string,
-  entryPoint: string
-): ConfigurableConnector<TConfig> {
-  const config = CLIENT_CONFIGS[client];
-  return new ConfigurableConnector<TConfig>(serverName, entryPoint, config);
+export function createConnector(client: KnownClient, serverName: string): ConfigurableConnector {
+  return new ConfigurableConnector(serverName, CLIENT_CONFIGS[client]);
 }
 
 /**
- * Создать коннектор с кастомной конфигурацией
+ * Создать коннектор с произвольной конфигурацией клиента.
  *
  * @param serverName - Имя MCP сервера
- * @param entryPoint - Относительный путь к точке входа сервера
  * @param clientConfig - Конфигурация клиента
  */
-export function createCustomConnector<TConfig extends BaseMCPServerConfig = BaseMCPServerConfig>(
+export function createCustomConnector(
   serverName: string,
-  entryPoint: string,
   clientConfig: ConnectorClientConfig
-): ConfigurableConnector<TConfig> {
-  return new ConfigurableConnector<TConfig>(serverName, entryPoint, clientConfig);
+): ConfigurableConnector {
+  return new ConfigurableConnector(serverName, clientConfig);
 }
 
 /**
- * Получить конфигурацию известного клиента
+ * Получить конфигурацию известного клиента (копию).
  */
 export function getClientConfig(client: KnownClient): ConnectorClientConfig {
   return { ...CLIENT_CONFIGS[client] };
 }
 
 /**
- * Получить список всех известных клиентов
+ * Получить список всех известных клиентов.
  */
 export function getKnownClients(): KnownClient[] {
   return Object.keys(CLIENT_CONFIGS) as KnownClient[];

@@ -4,55 +4,37 @@
  */
 
 import inquirer from 'inquirer';
-import type { BaseMCPServerConfig, MCPClientInfo, ConfigPromptDefinition } from '../types.js';
+import type { MCPClientInfo, ConfigPromptDefinition } from '../types.js';
 
 /**
- * Generic интерактивный сборщик конфигурации для MCP серверов
+ * Generic интерактивный сборщик конфигурации MCP сервера.
+ *
+ * @template TDomainConfig - Тип доменной конфигурации (произвольный объект).
  *
  * @example
  * ```typescript
- * // Определяем промпты для Yandex Tracker
- * const ytPrompts: ConfigPromptDefinition<YandexTrackerConfig>[] = [
- *   {
- *     name: 'token',
- *     type: 'password',
- *     message: 'OAuth токен:',
- *     validate: (v) => v.length > 0 || 'Токен обязателен',
- *   },
- *   {
- *     name: 'orgId',
- *     type: 'input',
- *     message: 'ID организации:',
- *   },
+ * const prompts: ConfigPromptDefinition<{ token: string; orgId: string }>[] = [
+ *   { name: 'token', type: 'password', message: 'OAuth токен:' },
+ *   { name: 'orgId', type: 'input', message: 'ID организации:' },
  * ];
  *
- * // Используем prompter
- * const prompter = new InteractivePrompter(ytPrompts);
+ * const prompter = new InteractivePrompter(prompts);
  * const config = await prompter.promptServerConfig();
  * ```
- *
- * @template TConfig - Тип конфигурации MCP сервера (расширяет BaseMCPServerConfig)
  */
-export class InteractivePrompter<TConfig extends BaseMCPServerConfig> {
+export class InteractivePrompter<TDomainConfig extends object> {
   /**
    * @param configPrompts - Определения промптов для сбора конфигурации
    */
-  constructor(private readonly configPrompts: ConfigPromptDefinition<TConfig>[]) {}
+  constructor(private readonly configPrompts: ConfigPromptDefinition<TDomainConfig>[]) {}
 
   /**
-   * Собрать конфигурацию MCP сервера через интерактивные промпты
+   * Собрать конфигурацию через интерактивные промпты.
    *
    * @param savedConfig - Ранее сохраненная конфигурация (для значений по умолчанию)
-   * @returns Собранная конфигурация (без projectPath, который добавляется позже)
-   *
-   * @example
-   * ```typescript
-   * const savedConfig = await configManager.load();
-   * const config = await prompter.promptServerConfig(savedConfig);
-   * // config = { token: '...', orgId: '...', apiBase: '...', logLevel: 'info' }
-   * ```
+   * @returns Собранная доменная конфигурация
    */
-  async promptServerConfig(savedConfig?: Partial<TConfig>): Promise<Omit<TConfig, 'projectPath'>> {
+  async promptServerConfig(savedConfig?: Partial<TDomainConfig>): Promise<TDomainConfig> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const questions: any[] = this.configPrompts.map((prompt) => {
       const question: Record<string, unknown> = {
@@ -61,13 +43,12 @@ export class InteractivePrompter<TConfig extends BaseMCPServerConfig> {
         message: prompt.message,
       };
 
-      // Add default value
       if (prompt.default !== undefined) {
         if (typeof prompt.default === 'function') {
-          question['default'] = (): TConfig[keyof TConfig] | undefined => {
+          question['default'] = (): TDomainConfig[keyof TDomainConfig] | undefined => {
             const defaultFn = prompt.default as (
-              savedConfig?: Partial<TConfig>
-            ) => TConfig[keyof TConfig] | undefined;
+              savedConfig?: Partial<TDomainConfig>
+            ) => TDomainConfig[keyof TDomainConfig] | undefined;
             return defaultFn(savedConfig);
           };
         } else {
@@ -75,22 +56,18 @@ export class InteractivePrompter<TConfig extends BaseMCPServerConfig> {
         }
       }
 
-      // Add validate function
       if (prompt.validate !== undefined) {
         question['validate'] = prompt.validate;
       }
 
-      // Add choices
       if (prompt.choices !== undefined) {
         question['choices'] = prompt.choices;
       }
 
-      // Add when condition
       if (prompt.when !== undefined) {
         question['when'] = prompt.when;
       }
 
-      // Add mask (password fields)
       if (prompt.mask !== undefined) {
         question['mask'] = prompt.mask;
       } else if (prompt.type === 'password') {
@@ -101,21 +78,14 @@ export class InteractivePrompter<TConfig extends BaseMCPServerConfig> {
     });
 
     const answers = await inquirer.prompt(questions);
-    return answers as Omit<TConfig, 'projectPath'>;
+    return answers as TDomainConfig;
   }
 
   /**
-   * Выбор MCP клиента из списка установленных
+   * Выбор MCP клиента из списка установленных.
    *
    * @param clients - Список доступных MCP клиентов
    * @returns Имя выбранного клиента
-   *
-   * @example
-   * ```typescript
-   * const installed = await registry.findInstalled();
-   * const clientName = await InteractivePrompter.promptClientSelection(installed);
-   * // clientName = 'claude-desktop' | 'claude-code' | ...
-   * ```
    */
   static async promptClientSelection(clients: MCPClientInfo[]): Promise<string> {
     const { selectedClient } = await inquirer.prompt<{ selectedClient: string }>([
@@ -134,19 +104,10 @@ export class InteractivePrompter<TConfig extends BaseMCPServerConfig> {
   }
 
   /**
-   * Запросить подтверждение (yes/no) у пользователя
+   * Запросить подтверждение (yes/no) у пользователя.
    *
    * @param message - Сообщение для отображения
    * @param defaultValue - Значение по умолчанию (true = yes, false = no)
-   * @returns true если пользователь подтвердил, false иначе
-   *
-   * @example
-   * ```typescript
-   * const shouldOverwrite = await InteractivePrompter.promptConfirmation(
-   *   'Конфигурация уже существует. Перезаписать?',
-   *   false
-   * );
-   * ```
    */
   static async promptConfirmation(message: string, defaultValue = true): Promise<boolean> {
     const { confirmed } = await inquirer.prompt<{ confirmed: boolean }>([
@@ -162,25 +123,11 @@ export class InteractivePrompter<TConfig extends BaseMCPServerConfig> {
   }
 
   /**
-   * Выбор из списка вариантов
+   * Выбор из списка вариантов.
    *
    * @param message - Сообщение для отображения
    * @param choices - Список вариантов выбора
    * @returns Выбранное значение
-   *
-   * @example
-   * ```typescript
-   * const logLevel = await InteractivePrompter.promptSelection(
-   *   'Выберите уровень логирования:',
-   *   [
-   *     { name: 'Debug', value: 'debug' },
-   *     { name: 'Info', value: 'info' },
-   *     { name: 'Warning', value: 'warn' },
-   *   ]
-   * );
-   * ```
-   *
-   * @template T - Тип возвращаемого значения (строка)
    */
   static async promptSelection<T extends string>(
     message: string,
