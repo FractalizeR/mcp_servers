@@ -41,6 +41,14 @@ export interface ConnectionStatus {
     /** Время последнего изменения конфига */
     lastModified?: Date;
 
+    /**
+     * Scope записи для коннекторов, которые управляют несколькими scope.
+     * На текущий момент используется только {@link ClaudeCodeConnector}
+     * (`user` — `~/.claude.json` (без projects), `local` — приватная запись
+     * для текущего проекта, `project` — `.mcp.json` в корне проекта).
+     */
+    scope?: 'user' | 'project' | 'local';
+
     /** Дополнительная информация */
     metadata?: Record<string, unknown>;
   };

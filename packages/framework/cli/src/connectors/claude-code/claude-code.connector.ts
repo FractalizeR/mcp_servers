@@ -3,6 +3,24 @@
  *
  * Использует команды `claude mcp add/remove/list/get` вместо записи в файл.
  *
+ * Управление scope (`local` / `user` / `project`):
+ *   - claude mcp использует разные хранилища для разных scope: local —
+ *     `~/.claude.json` → `projects["<cwd>"].mcpServers` (приватно к проекту),
+ *     user — корень `~/.claude.json` (доступен везде), project — `.mcp.json`
+ *     в корне проекта (видим команде через git).
+ *   - `claude mcp add` без `--scope` дефолтит в `local` и НЕ блокирует, если
+ *     запись уже есть в другом scope (молча создаёт дубликат).
+ *   - `claude mcp remove` без `--scope` сам ищет запись, но падает с
+ *     "exists in multiple scopes", если запись в нескольких.
+ *
+ * Поведение этого коннектора (фикс баг-а с дубликатами):
+ *   - connect → принудительно `--scope user` (стабильный default; доступен
+ *     из любой директории). Если запись уже существует (в любом scope) —
+ *     `connect` бросает осмысленную ошибку с подсказкой про `disconnect`.
+ *   - disconnect → итеративно `claude mcp get` + `claude mcp remove -s <scope>`
+ *     пока запись существует (умеет вычищать дубликаты, появившиеся ранее).
+ *   - getStatus → читает scope из `claude mcp get` и кладёт его в `details.scope`.
+ *
  * Discovery (на момент написания, Claude Code CLI 2.x):
  *   - `claude mcp list` НЕ поддерживает `--json` (только `-h/--help`).
  *     Вывод парсится как текст по строкам формата:
@@ -12,7 +30,7 @@
  *   - `claude mcp get <name>` даёт структурированный многострочный вывод:
  *       ```
  *       <name>:
- *         Scope: ...
+ *         Scope: Local config (private to you in this project)
  *         Status: ...
  *         Type: stdio
  *         Command: node
@@ -46,13 +64,25 @@ function isError(error: unknown): error is Error {
 }
 
 /**
- * Таймаут для `claude mcp list` (мс).
+ * Возможные scope записи в `claude mcp`.
+ */
+export type ClaudeCodeScope = 'user' | 'project' | 'local';
+
+/**
+ * Таймаут для `claude mcp list` / `get` (мс).
  *
  * `list` запускает stdio-серверы для health-check и при проблемах с
  * authentication-токеном/демоном клиента может зависнуть. Без таймаута CLI
  * застывает намертво.
  */
 const CLAUDE_MCP_LIST_TIMEOUT_MS = 5000;
+
+/**
+ * Лимит итераций цикла «get → remove» в {@link ClaudeCodeConnector.disconnect}.
+ * scope всего три (`user`/`project`/`local`); 4-я итерация — defensive against
+ * бесконечного цикла при неожиданных ответах CLI.
+ */
+const MAX_DISCONNECT_ITERATIONS = 4;
 
 /**
  * Коннектор для Claude Code CLI.
@@ -84,7 +114,8 @@ export class ClaudeCodeConnector extends BaseConnector {
   }
 
   /**
-   * Получить статус подключения через парсинг `claude mcp list`.
+   * Получить статус подключения через парсинг `claude mcp list` + обогащение
+   * scope из `claude mcp get`.
    *
    * Состояния:
    *  - `✓ Connected` → connected: true
@@ -94,27 +125,46 @@ export class ClaudeCodeConnector extends BaseConnector {
    *  - сервер отсутствует в выводе → connected: false
    *  - таймаут → connected: false, error: 'Timeout: ...'
    */
-  getStatus(): Promise<ConnectionStatus> {
+  async getStatus(): Promise<ConnectionStatus> {
     let output: string;
     try {
       output = CommandExecutor.execFile('claude', ['mcp', 'list'], {
         timeout: CLAUDE_MCP_LIST_TIMEOUT_MS,
       });
     } catch (error) {
-      return Promise.resolve({
+      return {
         connected: false,
         error: `Ошибка проверки статуса: ${isError(error) ? error.message : String(error)}`,
-      });
+      };
     }
 
-    return Promise.resolve(this.parseStatusFromList(output));
+    const status = this.parseStatusFromList(output);
+    // Дополняем scope, если запись присутствует. `get` дешёвый и не запускает
+    // health-check, поэтому делаем второй вызов только если в list-выводе
+    // действительно есть наша строка (status.details уже выставлен).
+    if (status.details) {
+      const scope = await this.getCurrentScope();
+      if (scope) {
+        status.details = { ...status.details, scope };
+      }
+    }
+    return status;
   }
 
   /**
-   * Подключить MCP сервер через `claude mcp add`.
+   * Подключить MCP сервер через `claude mcp add --scope user`.
    *
    * Формирует команду вида:
-   *   claude mcp add --transport stdio <name> [--env K=V ...] -- <command> [<args>...]
+   *   claude mcp add --scope user --transport stdio <name> [--env K=V ...] -- <command> [<args>...]
+   *
+   * Использование `--scope user` (вместо CLI default `local`) обеспечивает
+   * доступность сервера из любой директории и единое стабильное место хранения.
+   * Это сознательное отклонение от дефолта `claude mcp`.
+   *
+   * Перед `add` проверяет существование записи в любом scope через
+   * {@link getCurrentScope}. Если запись уже есть — бросает Error с подсказкой
+   * пользователю запустить `disconnect`, чтобы избежать дубликатов между scope
+   * (`claude mcp add` без проверки молча создаёт дубли).
    *
    * Поля {@link ServerLaunchSpec.cwd} и {@link ServerLaunchSpec.disabled}
    * НЕ поддерживаются claude-code CLI — при их наличии пишется warning и они
@@ -132,7 +182,23 @@ export class ClaudeCodeConnector extends BaseConnector {
       );
     }
 
-    const args: string[] = ['mcp', 'add', '--transport', 'stdio', this.serverName];
+    const existingScope = await this.getCurrentScope();
+    if (existingScope !== null) {
+      throw new Error(
+        `Сервер "${this.serverName}" уже зарегистрирован в claude-code (scope: ${existingScope}). ` +
+          `Запустите disconnect или удалите вручную: claude mcp remove "${this.serverName}" -s ${existingScope}`
+      );
+    }
+
+    const args: string[] = [
+      'mcp',
+      'add',
+      '--scope',
+      'user',
+      '--transport',
+      'stdio',
+      this.serverName,
+    ];
 
     for (const [key, value] of Object.entries(spec.env)) {
       args.push('--env', `${key}=${value}`);
@@ -143,8 +209,41 @@ export class ClaudeCodeConnector extends BaseConnector {
     await CommandExecutor.execInteractive('claude', args);
   }
 
+  /**
+   * Отключить MCP сервер.
+   *
+   * Алгоритм: цикл `get` → `remove --scope <scope>` пока запись существует.
+   * Это позволяет корректно вычистить случай, когда запись присутствует в
+   * нескольких scope (исторический баг ранних версий коннектора, где `add`
+   * мог создать дубликаты между local и user).
+   *
+   * Если запись не найдена ни в одном scope — бросает Error.
+   */
   async disconnect(): Promise<void> {
-    await CommandExecutor.execInteractive('claude', ['mcp', 'remove', this.serverName]);
+    let removedAny = false;
+    for (let iteration = 0; iteration < MAX_DISCONNECT_ITERATIONS; iteration++) {
+      const scope = await this.getCurrentScope();
+      if (scope === null) {
+        if (!removedAny) {
+          throw new Error(
+            `Сервер "${this.serverName}" не зарегистрирован в claude-code (ни в одном scope).`
+          );
+        }
+        return;
+      }
+      await CommandExecutor.execInteractive('claude', [
+        'mcp',
+        'remove',
+        '--scope',
+        scope,
+        this.serverName,
+      ]);
+      removedAny = true;
+    }
+    // Защитный выход — не должен срабатывать при нормальном поведении CLI.
+    throw new Error(
+      `Не удалось полностью отключить "${this.serverName}" за ${String(MAX_DISCONNECT_ITERATIONS)} итераций.`
+    );
   }
 
   /**
@@ -162,19 +261,65 @@ export class ClaudeCodeConnector extends BaseConnector {
    *          парсинг не удался.
    */
   getLaunchSpec(): Promise<ServerLaunchSpec | null> {
-    let output: string;
-    try {
-      output = CommandExecutor.execFile('claude', ['mcp', 'get', this.serverName], {
-        timeout: CLAUDE_MCP_LIST_TIMEOUT_MS,
-      });
-    } catch {
-      return Promise.resolve(null);
-    }
-
+    const output = this.runGet();
+    if (output === null) return Promise.resolve(null);
     return Promise.resolve(this.parseLaunchSpecFromGet(output));
   }
 
   // ----- internal -----
+
+  /**
+   * Выполнить `claude mcp get <name>` с таймаутом, проглотив ошибку.
+   *
+   * `claude mcp get` возвращает non-zero, когда сервер не существует ни в одном
+   * scope. В этом случае возвращаем `null` (а не пробрасываем) — вызывающий код
+   * различает «нет записи» (null) и «есть запись» (любая строка вывода).
+   */
+  private runGet(): string | null {
+    try {
+      return CommandExecutor.execFile('claude', ['mcp', 'get', this.serverName], {
+        timeout: CLAUDE_MCP_LIST_TIMEOUT_MS,
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Определить scope текущей записи через `claude mcp get`.
+   *
+   * Если запись существует в нескольких scope (исторический баг),
+   * `claude mcp get` показывает один — приоритетный (local > project > user).
+   * Этого достаточно для итеративного `disconnect`: одной итерации хватает,
+   * чтобы убрать запись из показанного scope, а следующая увидит следующий.
+   *
+   * @returns scope или `null`, если запись отсутствует / парсинг неудачен.
+   */
+  private async getCurrentScope(): Promise<ClaudeCodeScope | null> {
+    const output = this.runGet();
+    if (output === null) return null;
+    return Promise.resolve(this.parseScopeFromGet(output));
+  }
+
+  /**
+   * Извлечь scope из вывода `claude mcp get`.
+   *
+   * Формат строки: `  Scope: Local config (private to you in this project)`.
+   * Метки в выводе CLI 2.x:
+   *  - `Local config ...`   → `local`
+   *  - `User config ...`    → `user`
+   *  - `Project config ...` → `project`
+   */
+  private parseScopeFromGet(output: string): ClaudeCodeScope | null {
+    const lines = output.split('\n').map((l) => l.trim());
+    const scopeLine = lines.find((l) => l.startsWith('Scope:'));
+    if (!scopeLine) return null;
+    const value = scopeLine.slice('Scope:'.length).trim().toLowerCase();
+    if (value.startsWith('local')) return 'local';
+    if (value.startsWith('user')) return 'user';
+    if (value.startsWith('project')) return 'project';
+    return null;
+  }
 
   /**
    * Парсинг строк `claude mcp list`. Формат строки:
@@ -209,10 +354,18 @@ export class ClaudeCodeConnector extends BaseConnector {
     }
     if (statusPart.startsWith('✗')) {
       // распространённый вариант: `✗ Failed to connect`
-      return { connected: false, error: statusPart.replace(/^✗\s*/, '') };
+      return {
+        connected: false,
+        error: statusPart.replace(/^✗\s*/, ''),
+        details: { configPath: 'managed by claude mcp' },
+      };
     }
     if (statusPart.startsWith('!')) {
-      return { connected: false, error: statusPart.replace(/^!\s*/, '') };
+      return {
+        connected: false,
+        error: statusPart.replace(/^!\s*/, ''),
+        details: { configPath: 'managed by claude mcp' },
+      };
     }
     // Неизвестное состояние: считаем НЕ подключённым (consume-defensive),
     // чтобы при изменении формата claude CLI не давать false positive.

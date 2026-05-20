@@ -18,6 +18,9 @@ function displayConnectionDetails(status: ConnectionStatus): void {
   if (!status.details) return;
 
   Logger.info(`  └─ Конфиг: ${status.details.configPath}`);
+  if (status.details.scope) {
+    Logger.info(`  └─ Scope: ${status.details.scope}`);
+  }
   if (status.details.lastModified) {
     Logger.info(`  └─ Изменен: ${status.details.lastModified.toLocaleString()}`);
   }
