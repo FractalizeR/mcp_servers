@@ -20,6 +20,37 @@ describe('CommandExecutor', () => {
       expect(() => CommandExecutor.exec('false')).toThrow(/Command failed/);
     });
 
+    it('включает stderr в сообщение об ошибке (если есть)', () => {
+      // `sh -c "echo OOPS >&2; exit 1"` → stderr содержит "OOPS"
+      let caught: unknown;
+      try {
+        CommandExecutor.exec('sh -c "echo OOPS-MESSAGE >&2; exit 1"');
+      } catch (e) {
+        caught = e;
+      }
+      expect(caught).toBeInstanceOf(Error);
+      expect((caught as Error).message).toContain('Command failed');
+      expect((caught as Error).message).toContain('OOPS-MESSAGE');
+    });
+
+    it('обрезает длинный stderr до 200 символов', () => {
+      // Печатаем 500 байт `A` в stderr.
+      let caught: unknown;
+      try {
+        CommandExecutor.exec(
+          `sh -c "printf '%0.s' A{1..500} 1>&2; printf 'A%.0s' {1..500} 1>&2; exit 2"`
+        );
+      } catch (e) {
+        caught = e;
+      }
+      expect(caught).toBeInstanceOf(Error);
+      const msg = (caught as Error).message;
+      // Сообщение не должно превышать ~250 символов (200 stderr + префикс/обёртка)
+      expect(msg.length).toBeLessThan(400);
+      // Маркер обрезки
+      expect(msg).toContain('…');
+    });
+
     it('таймаут: sleep 10 + timeout 1000ms → бросает Error("Timeout: ...") за ~1s', () => {
       const start = Date.now();
       let caught: unknown;
@@ -42,6 +73,52 @@ describe('CommandExecutor', () => {
       // Эта проверка концептуальная — пропускаем, чтобы не блокировать тесты.
       // Семантика: если timeout не задан, execSync не убьёт процесс.
       expect(true).toBe(true);
+    });
+  });
+
+  describe('execFile', () => {
+    it('возвращает stdout успешной команды', () => {
+      const out = CommandExecutor.execFile('echo', ['hello-world']);
+      expect(out.trim()).toBe('hello-world');
+    });
+
+    it('передаёт аргументы как массив (без shell-интерпретации)', () => {
+      // Если бы было shell-interpretation, "$HOME" расширилось бы; через execFile — нет.
+      const out = CommandExecutor.execFile('echo', ['$HOME']);
+      expect(out.trim()).toBe('$HOME');
+    });
+
+    it('бросает Error("Command failed: ...") при ненулевом exit code', () => {
+      expect(() => CommandExecutor.execFile('false', [])).toThrow(/Command failed/);
+    });
+
+    it('таймаут: sleep 10 + timeout 1000ms → бросает Error("Timeout: ...") за ~1s', () => {
+      const start = Date.now();
+      let caught: unknown;
+      try {
+        CommandExecutor.execFile('sleep', ['10'], { timeout: 1000 });
+      } catch (e) {
+        caught = e;
+      }
+      const elapsed = Date.now() - start;
+
+      expect(caught).toBeInstanceOf(Error);
+      expect((caught as Error).message).toContain('Timeout');
+      expect((caught as Error).message).toContain('sleep 10');
+      expect((caught as Error).message).toContain('1000ms');
+      expect(elapsed).toBeLessThan(2000);
+    }, 5000);
+
+    it('включает stderr в сообщение об ошибке', () => {
+      let caught: unknown;
+      try {
+        CommandExecutor.execFile('sh', ['-c', 'echo BOOM-EF >&2; exit 1']);
+      } catch (e) {
+        caught = e;
+      }
+      expect(caught).toBeInstanceOf(Error);
+      expect((caught as Error).message).toContain('Command failed');
+      expect((caught as Error).message).toContain('BOOM-EF');
     });
   });
 

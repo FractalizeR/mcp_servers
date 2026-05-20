@@ -5,7 +5,7 @@
  * @description Утилита для выполнения shell команд с различными режимами вывода
  */
 
-import { execSync, spawn } from 'node:child_process';
+import { execFileSync, execSync, spawn } from 'node:child_process';
 
 /**
  * Опции для {@link CommandExecutor.exec}.
@@ -19,6 +19,29 @@ export interface ExecOptions {
 }
 
 /**
+ * Максимальная длина stderr в сообщении об ошибке.
+ *
+ * Цель — не раздувать message длинными выводами CLI (некоторые программы
+ * пишут многостраничный traceback). 200 символов достаточно для диагностики.
+ */
+const STDERR_PREVIEW_LIMIT = 200;
+
+/**
+ * Извлечь и обрезать stderr из объекта ошибки `execSync`/`execFileSync`.
+ */
+function extractStderr(err: unknown): string | undefined {
+  if (typeof err !== 'object' || err === null) return undefined;
+  const stderr = (err as { stderr?: unknown }).stderr;
+  if (stderr === undefined || stderr === null) return undefined;
+  const text = typeof stderr === 'string' ? stderr : String(stderr);
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return undefined;
+  return trimmed.length > STDERR_PREVIEW_LIMIT
+    ? `${trimmed.slice(0, STDERR_PREVIEW_LIMIT)}…`
+    : trimmed;
+}
+
+/**
  * Класс для выполнения shell команд
  *
  * @example
@@ -28,6 +51,9 @@ export interface ExecOptions {
  *
  * // С таймаутом
  * const output = CommandExecutor.exec('claude mcp list', { timeout: 5000 });
+ *
+ * // Безопасное выполнение без shell-интерпретации
+ * const out = CommandExecutor.execFile('claude', ['mcp', 'list'], { timeout: 5000 });
  *
  * // Проверить наличие команды
  * if (CommandExecutor.isCommandAvailable('node')) {
@@ -53,7 +79,7 @@ export class CommandExecutor {
   static exec(command: string, options: ExecOptions = {}): string {
     const execOptions: Parameters<typeof execSync>[1] = {
       encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'ignore'],
+      stdio: ['pipe', 'pipe', 'pipe'],
     };
     if (options.timeout !== undefined) {
       execOptions.timeout = options.timeout;
@@ -71,7 +97,57 @@ export class CommandExecutor {
       ) {
         throw new Error(`Timeout: ${command} exceeded ${String(options.timeout)}ms`);
       }
-      throw new Error(`Command failed: ${command}`);
+      const stderr = extractStderr(err);
+      throw new Error(
+        stderr ? `Command failed: ${command} (${stderr})` : `Command failed: ${command}`
+      );
+    }
+  }
+
+  /**
+   * Выполнить команду через `execFileSync` без shell-интерпретации.
+   *
+   * Этот метод предпочтительнее {@link exec} в случаях, когда команда и её
+   * аргументы фиксированы и НЕ должны интерпретироваться шеллом
+   * (избегаем риска инъекции, кросс-платформенных проблем с кавычками и т.п.).
+   *
+   * @param command - Имя исполняемого файла (резолвится через PATH) или абсолютный путь
+   * @param args - Аргументы команды (каждый — отдельный элемент массива)
+   * @param options - Опции (включая `timeout` в мс)
+   * @returns stdout команды
+   * @throws {Error} Если команда завершилась с ненулевым кодом или превысила таймаут
+   *
+   * @example
+   * ```typescript
+   * const out = CommandExecutor.execFile('claude', ['mcp', 'list'], { timeout: 5000 });
+   * ```
+   */
+  static execFile(command: string, args: string[], options: ExecOptions = {}): string {
+    const execOptions: Parameters<typeof execFileSync>[2] = {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    };
+    if (options.timeout !== undefined) {
+      execOptions.timeout = options.timeout;
+      execOptions.killSignal = 'SIGKILL';
+    }
+
+    const displayCmd = `${command} ${args.join(' ')}`.trim();
+
+    try {
+      return execFileSync(command, args, execOptions) as string;
+    } catch (err: unknown) {
+      const errorObj = err as { signal?: string; code?: string | number };
+      if (
+        options.timeout !== undefined &&
+        (errorObj?.signal === 'SIGKILL' || errorObj?.code === 'ETIMEDOUT')
+      ) {
+        throw new Error(`Timeout: ${displayCmd} exceeded ${String(options.timeout)}ms`);
+      }
+      const stderr = extractStderr(err);
+      throw new Error(
+        stderr ? `Command failed: ${displayCmd} (${stderr})` : `Command failed: ${displayCmd}`
+      );
     }
   }
 
