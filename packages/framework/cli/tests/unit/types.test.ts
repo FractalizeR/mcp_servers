@@ -9,7 +9,6 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 import type {
   MCPClientInfo,
   ConnectionStatus,
-  MCPClientServerConfig,
   ConfigManagerOptions,
   ConfigPromptDefinition,
   ServerLaunchSpec,
@@ -43,10 +42,10 @@ describe('types', () => {
     expect(spec.command).toBe('node');
   });
 
-  it('MCPClientServerConfig structurally compatible с ServerLaunchSpec', () => {
-    const spec: ServerLaunchSpec = { command: 'a', args: [], env: {} };
-    const cfg: MCPClientServerConfig = spec;
-    expect(cfg.command).toBe('a');
+  it('MCPClientServerConfig больше НЕ экспортируется публично (internal)', () => {
+    // @ts-expect-error: тип удалён из публичного barrel — это часть контракта
+    const _bad: import('../../src/types.js').MCPClientServerConfig | undefined = undefined;
+    expect(_bad).toBeUndefined();
   });
 
   it('ConfigManagerOptions имеет serialize/deserialize (нет safeFields)', () => {

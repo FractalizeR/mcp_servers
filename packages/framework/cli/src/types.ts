@@ -3,12 +3,13 @@
  * @packageDocumentation
  */
 
-// Re-export all client-related types
+// Re-export client-related types.
+// Note: MCPClientServerConfig / MCPClientConfig — internal-only (используются
+// внутри ConfigurableConnector для типизации raw-JSON/TOML структур). НЕ
+// re-export.
 export {
   type MCPClientInfo,
   type ConnectionStatus,
-  type MCPClientServerConfig,
-  type MCPClientConfig,
   type PromptType,
   type ConfigPromptDefinition,
   type ConfigManagerOptions,
