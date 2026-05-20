@@ -15,6 +15,18 @@ import type {
   DoctorCommandOptions,
   DoctorReport,
 } from '../types/doctor.types.js';
+import type { ServerLaunchSpec } from '../types/launch.types.js';
+
+/**
+ * Internal: ключ группы для проверок без явной group (например, доменные
+ * extraChecks без поля group).
+ */
+const UNGROUPED_GROUP_KEY = '_ungrouped';
+
+/**
+ * Internal: метка группы для рендера проверок без group.
+ */
+const UNGROUPED_GROUP_LABEL = 'Доменные проверки';
 
 /**
  * Запустить диагностику MCP подключений.
@@ -47,6 +59,20 @@ export async function doctorCommand(options: DoctorCommandOptions): Promise<Doct
 
   Logger.header('🩺 Диагностика MCP подключений');
 
+  // Per-run cache для getLaunchSpec — connector.getLaunchSpec() читает файл
+  // конфигурации (или вызывает CLI) — может быть дорогим. Внутри doctor мы
+  // вызываем его для двух проверок (interpretConnectionStatus и
+  // checkCommandExistsOnDisk), достаточно одного чтения.
+  const launchSpecCache = new Map<MCPConnector, Promise<ServerLaunchSpec | null>>();
+  const getCachedLaunchSpec = (connector: MCPConnector): Promise<ServerLaunchSpec | null> => {
+    let p = launchSpecCache.get(connector);
+    if (!p) {
+      p = connector.getLaunchSpec();
+      launchSpecCache.set(connector, p);
+    }
+    return p;
+  };
+
   // 1. Сбор client-level проверок только для установленных клиентов.
   // Порядок — как в registry.getAll() (стабильный).
   const installed = await registry.findInstalled();
@@ -54,7 +80,7 @@ export async function doctorCommand(options: DoctorCommandOptions): Promise<Doct
   const clientChecks: DoctorCheck[] = [];
   for (const connector of registry.getAll()) {
     if (!installedNames.has(connector.getClientInfo().name)) continue;
-    clientChecks.push(...buildClientChecks(connector));
+    clientChecks.push(...buildClientChecks(connector, getCachedLaunchSpec));
   }
 
   const allChecks: DoctorCheck[] = [...clientChecks, ...extraChecks];
@@ -83,12 +109,15 @@ export async function doctorCommand(options: DoctorCommandOptions): Promise<Doct
 /**
  * Собрать стандартные client-level проверки для одного коннектора.
  */
-function buildClientChecks(connector: MCPConnector): DoctorCheck[] {
+function buildClientChecks(
+  connector: MCPConnector,
+  getCachedLaunchSpec: (c: MCPConnector) => Promise<ServerLaunchSpec | null>
+): DoctorCheck[] {
   const group = connector.getClientInfo().displayName;
   return [
     buildIsInstalledCheck(connector, group),
     buildGetStatusCheck(connector, group),
-    buildCommandExistsCheck(connector, group),
+    buildCommandExistsCheck(connector, group, getCachedLaunchSpec),
   ];
 }
 
@@ -120,12 +149,16 @@ function buildGetStatusCheck(connector: MCPConnector, group: string): DoctorChec
   };
 }
 
-function buildCommandExistsCheck(connector: MCPConnector, group: string): DoctorCheck {
+function buildCommandExistsCheck(
+  connector: MCPConnector,
+  group: string,
+  getCachedLaunchSpec: (c: MCPConnector) => Promise<ServerLaunchSpec | null>
+): DoctorCheck {
   return {
     name: 'command-exists',
     description: 'Существование исполняемого файла из конфигурации клиента',
     group,
-    run: (): Promise<DoctorCheckResult> => checkCommandExistsOnDisk(connector),
+    run: (): Promise<DoctorCheckResult> => checkCommandExistsOnDisk(connector, getCachedLaunchSpec),
   };
 }
 
@@ -162,8 +195,11 @@ function interpretConnectionStatus(status: {
  *  - Команда — `npx`/`pipx`/`uvx` или относительная — `warn`.
  *  - Команда — абсолютный путь или `node` с абсолютным скриптом — `fs.access(R_OK)`.
  */
-async function checkCommandExistsOnDisk(connector: MCPConnector): Promise<DoctorCheckResult> {
-  const spec = await connector.getLaunchSpec();
+async function checkCommandExistsOnDisk(
+  connector: MCPConnector,
+  getCachedLaunchSpec: (c: MCPConnector) => Promise<ServerLaunchSpec | null>
+): Promise<DoctorCheckResult> {
+  const spec = await getCachedLaunchSpec(connector);
   if (spec === null) {
     return {
       status: 'skip',
@@ -264,7 +300,7 @@ function renderReport(report: DoctorReport): void {
   // Группировка с сохранением порядка появления group.
   const groups = new Map<string, Array<{ check: DoctorCheck; result: DoctorCheckResult }>>();
   for (const item of report.checks) {
-    const group = item.check.group ?? '_ungrouped';
+    const group = item.check.group ?? UNGROUPED_GROUP_KEY;
     let arr = groups.get(group);
     if (!arr) {
       arr = [];
@@ -274,10 +310,10 @@ function renderReport(report: DoctorReport): void {
   }
 
   for (const [group, items] of groups) {
-    if (group !== '_ungrouped') {
+    if (group !== UNGROUPED_GROUP_KEY) {
       Logger.info(`\nГруппа: ${group}`);
     } else {
-      Logger.info('\nДоменные проверки:');
+      Logger.info(`\n${UNGROUPED_GROUP_LABEL}:`);
     }
     for (const { check, result } of items) {
       renderCheck(check, result);

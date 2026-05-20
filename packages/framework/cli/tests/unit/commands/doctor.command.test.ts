@@ -306,5 +306,22 @@ describe('doctorCommand', () => {
       expect(statusCheck?.result.status).toBe('warn');
       expect(statusCheck?.result.hint).toBeTruthy();
     });
+
+    it('getLaunchSpec вызывается ровно один раз per connector (memoize, N10)', async () => {
+      const conn = makeConnector({
+        name: 'gemini',
+        isInstalled: true,
+        status: { connected: true },
+        spec: { command: '/abs/server', args: [], env: {} },
+      });
+      const registry = makeRegistry([conn]);
+      vi.mocked(fs.access).mockResolvedValue(undefined);
+
+      await doctorCommand({ registry });
+
+      // command-exists check читает spec через memoized helper; раньше было
+      // 2 вызова (status interpretation + command-exists), теперь 1.
+      expect(conn.getLaunchSpec).toHaveBeenCalledTimes(1);
+    });
   });
 });
