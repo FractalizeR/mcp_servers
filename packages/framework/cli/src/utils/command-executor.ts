@@ -8,12 +8,26 @@
 import { execSync, spawn } from 'node:child_process';
 
 /**
+ * Опции для {@link CommandExecutor.exec}.
+ */
+export interface ExecOptions {
+  /**
+   * Таймаут выполнения в миллисекундах. При превышении — процесс убивается
+   * `SIGKILL`, выбрасывается `Error('Timeout: <command> exceeded <ms>ms')`.
+   */
+  timeout?: number;
+}
+
+/**
  * Класс для выполнения shell команд
  *
  * @example
  * ```typescript
  * // Выполнить команду и получить вывод
  * const output = CommandExecutor.exec('echo "test"');
+ *
+ * // С таймаутом
+ * const output = CommandExecutor.exec('claude mcp list', { timeout: 5000 });
  *
  * // Проверить наличие команды
  * if (CommandExecutor.isCommandAvailable('node')) {
@@ -23,11 +37,12 @@ import { execSync, spawn } from 'node:child_process';
  */
 export class CommandExecutor {
   /**
-   * Выполнить команду и вернуть stdout
+   * Выполнить команду и вернуть stdout.
    *
    * @param command - Команда для выполнения
+   * @param options - Опции выполнения (включая `timeout`)
    * @returns Вывод команды
-   * @throws {Error} Если команда завершилась с ошибкой
+   * @throws {Error} Если команда завершилась с ошибкой или превысила таймаут
    *
    * @example
    * ```typescript
@@ -35,10 +50,27 @@ export class CommandExecutor {
    * console.log(nodeVersion); // v22.21.1
    * ```
    */
-  static exec(command: string): string {
+  static exec(command: string, options: ExecOptions = {}): string {
+    const execOptions: Parameters<typeof execSync>[1] = {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    };
+    if (options.timeout !== undefined) {
+      execOptions.timeout = options.timeout;
+      execOptions.killSignal = 'SIGKILL';
+    }
+
     try {
-      return execSync(command, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
-    } catch {
+      return execSync(command, execOptions) as string;
+    } catch (err: unknown) {
+      // `execSync` бросает ошибку с `signal === 'SIGKILL'` при таймауте.
+      const errorObj = err as { signal?: string; code?: string | number };
+      if (
+        options.timeout !== undefined &&
+        (errorObj?.signal === 'SIGKILL' || errorObj?.code === 'ETIMEDOUT')
+      ) {
+        throw new Error(`Timeout: ${command} exceeded ${String(options.timeout)}ms`);
+      }
       throw new Error(`Command failed: ${command}`);
     }
   }
@@ -84,7 +116,7 @@ export class CommandExecutor {
         if (code === 0) {
           resolve();
         } else {
-          reject(new Error(`Command exited with code ${code}`));
+          reject(new Error(`Command exited with code ${String(code)}`));
         }
       });
 
