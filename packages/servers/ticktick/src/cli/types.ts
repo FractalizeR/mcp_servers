@@ -1,18 +1,20 @@
-import type { BaseMCPServerConfig } from '@fractalizer/mcp-cli';
-
 /**
- * Конфигурация MCP сервера TickTick
+ * Конфигурация MCP сервера TickTick.
+ *
+ * Доменная модель CLI: формируется в результате интерактивных промптов и
+ * частично сохраняется в `~/.fractalizer_mcp_ticktick/config.json` (без
+ * секретов — см. `serializeTickTickConfig`).
  */
-export interface TickTickMCPConfig extends BaseMCPServerConfig {
-  /** OAuth Client ID */
+export interface TickTickMCPConfig {
+  /** OAuth Client ID (из TickTick Developer Portal) */
   clientId: string;
 
-  /** OAuth Client Secret */
+  /** OAuth Client Secret (СЕКРЕТ — не сохраняется на диск) */
   clientSecret: string;
 
-  /** OAuth Redirect URI */
+  /** OAuth Redirect URI (опционально, по умолчанию http://localhost:8080/callback) */
   redirectUri?: string;
 
-  /** Уровень логирования */
+  /** Уровень логирования (опционально) */
   logLevel?: 'debug' | 'info' | 'warn' | 'error';
 }
