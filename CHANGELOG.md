@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/FractalizeR/mcp_servers/compare/v1.0.0...v1.0.1) (2026-05-20)
+
+### Bug Fixes
+
+* **cli:** корректный scope в ClaudeCodeConnector ([ded12ec](https://github.com/FractalizeR/mcp_servers/commit/ded12ec65fb9e49525a567af7e07b2a587cb6905))
+
 ## [1.0.0](https://github.com/FractalizeR/mcp_servers/compare/v0.3.18...v1.0.0) (2026-05-20)
 
 ### ⚠ BREAKING CHANGES
