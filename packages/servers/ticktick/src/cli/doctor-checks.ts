@@ -88,8 +88,10 @@ function checkBundleAccessible(): DoctorCheck {
  * Проверка: сохранённая в `~/.{PROJECT_BASE_NAME}/config.json` доменная
  * конфигурация валидна (JSON + непустой `clientId`).
  *
- * Не проверяем `clientSecret`: он намеренно не сохраняется на диск (хранится
- * в keychain через build-launch). Отсутствие clientId — fail.
+ * Не проверяем `clientSecret`: он намеренно не сохраняется в этот файл —
+ * вместо этого передаётся через env при `connect` и сохраняется в конфиге
+ * MCP-клиента (например, `~/.claude.json`) в открытом виде. Keychain здесь
+ * НЕ используется. Отсутствие `clientId` — fail.
  */
 function checkSavedConfig(): DoctorCheck {
   const configPath = path.join(os.homedir(), `.${PROJECT_BASE_NAME}`, 'config.json');
