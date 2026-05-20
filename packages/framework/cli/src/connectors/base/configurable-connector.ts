@@ -10,6 +10,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { BaseConnector } from './base-connector.js';
 import { FileManager } from '../../utils/file-manager.js';
+import { resolveExecutablePath } from '../../utils/launch-spec-helpers.js';
 import type {
   ConnectionStatus,
   MCPClientInfo,
@@ -292,24 +293,26 @@ export class ConfigurableConnector extends BaseConnector {
    *    не пытаемся резолвить PATH.
    */
   private async commandExistsOnDisk(entry: MCPClientServerConfig): Promise<boolean> {
-    if (path.isAbsolute(entry.command)) {
-      return this.pathExists(entry.command);
+    const filePath = resolveExecutablePath({
+      command: entry.command,
+      args: entry.args,
+      env: entry.env,
+    });
+    if (filePath === null) {
+      // npx/pipx/relative-from-PATH или `node` без абсолютного пути в args —
+      // на диске проверить нечего, считаем OK.
+      return true;
     }
-    if (entry.command === 'node') {
-      const scriptPath = entry.args.find((a) => path.isAbsolute(a));
-      if (!scriptPath) return true;
-      return this.pathExists(scriptPath);
-    }
-    return true;
+    return this.pathExists(filePath);
   }
 
   private describeCommand(entry: MCPClientServerConfig): string {
-    if (path.isAbsolute(entry.command)) return entry.command;
-    if (entry.command === 'node') {
-      const scriptPath = entry.args.find((a) => path.isAbsolute(a));
-      return scriptPath ?? entry.command;
-    }
-    return entry.command;
+    const filePath = resolveExecutablePath({
+      command: entry.command,
+      args: entry.args,
+      env: entry.env,
+    });
+    return filePath ?? entry.command;
   }
 
   private async pathExists(p: string): Promise<boolean> {

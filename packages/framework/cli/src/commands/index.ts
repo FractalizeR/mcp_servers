@@ -13,3 +13,6 @@ export * from './connect.command.js';
 
 // Validate command (Stage 4.3)
 export * from './validate.command.js';
+
+// Doctor command (Stage 1.3 — self-diagnostics)
+export * from './doctor.command.js';

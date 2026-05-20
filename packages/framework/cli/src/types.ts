@@ -17,6 +17,15 @@ export {
 // Re-export launch spec
 export { type ServerLaunchSpec } from './types/launch.types.js';
 
+// Re-export doctor types (Stage 1.3)
+export {
+  type DoctorCheck,
+  type DoctorCheckResult,
+  type DoctorCheckStatus,
+  type DoctorReport,
+  type DoctorCommandOptions,
+} from './types/doctor.types.js';
+
 // Import for use in this file's type definitions
 import type { ConnectionStatus, ConfigPromptDefinition } from './types/client.types.js';
 import type { ServerLaunchSpec } from './types/launch.types.js';
