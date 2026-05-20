@@ -1,3 +1,53 @@
+## [1.0.0](https://github.com/FractalizeR/mcp_servers/compare/v0.3.18...v1.0.0) (2026-05-20)
+
+### ⚠ BREAKING CHANGES
+
+* **cli:** agnostic framework + domain adapters for 3 MCP servers (#387)
+* **cli:** удалены `BaseMCPServerConfig`, `safeFields` в
+`ConfigManagerOptions`, generic-параметры коннекторов. Сигнатуры
+`MCPConnector.connect`/`validateConfig` изменены.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+
+### Features
+
+* **cli:** add cwd/disabled to ServerLaunchSpec, args readonly ([37614a7](https://github.com/FractalizeR/mcp_servers/commit/37614a7f5b3452f6e69475d32956bc75669931e4))
+* **cli:** doctor command for self-diagnostics ([f33276b](https://github.com/FractalizeR/mcp_servers/commit/f33276b54cb17088f45ac1c943bddbb9de955a15))
+* **cli:** node argv-aware executable path resolver ([42eedd1](https://github.com/FractalizeR/mcp_servers/commit/42eedd1d0f38908089e2b1585eceb7957bf310f4))
+* **cli:** параллельный сбор статусов клиентов ([368a2b9](https://github.com/FractalizeR/mcp_servers/commit/368a2b9b70ae88d7766711eaa85cbf5c12d08b03))
+* **servers:** doctor checks for all MCP servers ([75251ef](https://github.com/FractalizeR/mcp_servers/commit/75251efc1959ae7a512b0e3fe4e1dd17715886b7))
+* **ticktick:** buildServerLaunch adapter ([12f961e](https://github.com/FractalizeR/mcp_servers/commit/12f961ed98d3e0f1450c6b87af46c0216e859eac))
+* **tracker:** buildServerLaunch adapter + Yandex Cloud org type ([be99303](https://github.com/FractalizeR/mcp_servers/commit/be9930353bfd243233fa1857753e111d2b15602a))
+* **wiki:** buildServerLaunch adapter + Yandex Cloud org type ([1afe20e](https://github.com/FractalizeR/mcp_servers/commit/1afe20e478755d449d095d341e6155a45c069a05))
+
+### Bug Fixes
+
+* **cli:** better UX for unknown client / save failures ([a640e34](https://github.com/FractalizeR/mcp_servers/commit/a640e3410f5bab9441d67f5a35b3b9b1cf48b007))
+* **cli:** graceful Win32 APPDATA fallback, lazy config paths ([da44971](https://github.com/FractalizeR/mcp_servers/commit/da449715f206d245674f5ec1f42111ad16726075))
+* **cli:** POSIX-portable stderr generation в command-executor test ([96e083f](https://github.com/FractalizeR/mcp_servers/commit/96e083f74c1a1ff3a8e4036ea20a245a2751b14b))
+* **cli:** preserve stderr in CommandExecutor errors ([21f6b00](https://github.com/FractalizeR/mcp_servers/commit/21f6b00cf724f1a1326cde473e92f571fa904662))
+* **cli:** use checkCommand for isInstalled when provided ([6460ac2](https://github.com/FractalizeR/mcp_servers/commit/6460ac217a78d19ac96aa9c08ca896e9f9e1453d))
+* **cli:** парсить статус claude mcp list с таймаутом 5s ([7cb4adb](https://github.com/FractalizeR/mcp_servers/commit/7cb4adb1d76aafc258cee51a5bdb59da914c5fd3))
+* **cli:** убрать промпт подтверждения, warn про plaintext-токен ([efbacf5](https://github.com/FractalizeR/mcp_servers/commit/efbacf5790745e1cb1d09098c749c4f855ec87de))
+* **servers:** warn on unknown values in deserialize configs ([572df16](https://github.com/FractalizeR/mcp_servers/commit/572df1643cbd315c6f616c41e3fc1d52ff9af5e0))
+* **ticktick:** correct doctor-check comment about secret storage ([8ed4baf](https://github.com/FractalizeR/mcp_servers/commit/8ed4baf9e55d52a7f5f540488161227042a91178))
+
+### Performance
+
+* **cli:** memoize getLaunchSpec in doctorCommand, label constant ([14ebd29](https://github.com/FractalizeR/mcp_servers/commit/14ebd2920da45b0d8a0214a8f746efcdcf979d51))
+
+### Refactoring
+
+* **cli:** agnostic framework + domain adapters for 3 MCP servers ([#387](https://github.com/FractalizeR/mcp_servers/issues/387)) ([d80a842](https://github.com/FractalizeR/mcp_servers/commit/d80a8423ab2fc4044ed671edbdf1b1bb5a7551c0))
+* **cli:** make ConfigManager serialize required ([821d545](https://github.com/FractalizeR/mcp_servers/commit/821d5457b47039b80ddc397412ae29480fd8df6f))
+* **cli:** remove internal types from public API ([8c22b10](https://github.com/FractalizeR/mcp_servers/commit/8c22b10af82b9cb12b2651c1df35287167ac6a99))
+* **cli:** use execFile for claude commands; tighten parsing ([10c63d9](https://github.com/FractalizeR/mcp_servers/commit/10c63d9da74062951c036033bfba0604b6ed8afe))
+* **cli:** объединить коннекторы в ConfigurableConnector + ClaudeCodeConnector ([47a33e6](https://github.com/FractalizeR/mcp_servers/commit/47a33e69224dcbe37ed7395b9ee6ed4cf4ab01a9))
+* **cli:** убрать BaseMCPServerConfig, агностичный framework ([f560f14](https://github.com/FractalizeR/mcp_servers/commit/f560f14af712ca2fea067cb67d2663d58cc81527))
+* **ticktick:** migrate CLI to agnostic framework API ([8e797ad](https://github.com/FractalizeR/mcp_servers/commit/8e797adede8d2ad83cfdd0a2fa141184ea287a85))
+* **tracker:** migrate CLI to agnostic framework API ([337aab0](https://github.com/FractalizeR/mcp_servers/commit/337aab0ef3df0281f13b65154955266ae1a85b78))
+* **wiki:** migrate CLI to agnostic framework API ([fc1087c](https://github.com/FractalizeR/mcp_servers/commit/fc1087c560a9f5196e8f370698e6be29b3fca118))
+
 ## [0.3.18](https://github.com/FractalizeR/mcp_servers/compare/v0.3.17...v0.3.18) (2026-04-16)
 
 ### Bug Fixes
