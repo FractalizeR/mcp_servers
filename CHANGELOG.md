@@ -1,3 +1,9 @@
+## [0.3.18](https://github.com/FractalizeR/mcp_servers/compare/v0.3.17...v0.3.18) (2026-04-16)
+
+### Bug Fixes
+
+* **config:** писать логи в ~/.cache вместо node_modules ([7cd4dc4](https://github.com/FractalizeR/mcp_servers/commit/7cd4dc440644ce9d2ca1114452a172f9413dcc98))
+
 ## [0.3.17](https://github.com/FractalizeR/mcp_servers/compare/v0.3.16...v0.3.17) (2026-04-10)
 
 ### Bug Fixes
