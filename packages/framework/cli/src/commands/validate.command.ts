@@ -1,32 +1,25 @@
 import type { ConnectorRegistry } from '../connectors/registry.js';
-import type { BaseMCPServerConfig } from '../types.js';
 import { Logger } from '../utils/logger.js';
 
 /**
  * Опции для команды validate
  */
-export interface ValidateCommandOptions<TConfig extends BaseMCPServerConfig> {
+export interface ValidateCommandOptions {
   /** Реестр MCP коннекторов */
-  registry: ConnectorRegistry<TConfig>;
+  registry: ConnectorRegistry;
 }
 
 /**
- * Команда для валидации конфигураций MCP клиентов
- * Проверяет корректность всех подключенных конфигураций
- * Завершается с кодом 1 если обнаружены ошибки
- *
- * @param options - Опции команды
+ * Команда для валидации конфигураций MCP клиентов.
+ * Проверяет корректность всех подключенных конфигураций.
+ * Завершается с кодом 1 если обнаружены ошибки.
  *
  * @example
  * ```typescript
- * const registry = new ConnectorRegistry<YourConfig>();
- * // регистрация коннекторов...
  * await validateCommand({ registry });
  * ```
  */
-export async function validateCommand<TConfig extends BaseMCPServerConfig>(
-  options: ValidateCommandOptions<TConfig>
-): Promise<void> {
+export async function validateCommand(options: ValidateCommandOptions): Promise<void> {
   const { registry } = options;
 
   Logger.header('🔍 Валидация конфигураций MCP клиентов');
@@ -38,9 +31,11 @@ export async function validateCommand<TConfig extends BaseMCPServerConfig>(
   let hasErrors = false;
   let connectedCount = 0;
 
-  for (const [name, status] of statuses.entries()) {
-    const connector = registry.get(name);
-    if (!connector) continue;
+  // Детерминированный порядок: по списку getAll()
+  for (const connector of registry.getAll()) {
+    const name = connector.getClientInfo().name;
+    const status = statuses.get(name);
+    if (!status) continue;
 
     const info = connector.getClientInfo();
     const isInstalled = await connector.isInstalled();
@@ -56,19 +51,19 @@ export async function validateCommand<TConfig extends BaseMCPServerConfig>(
       if (status.details?.configPath) {
         Logger.info(`  Файл: ${status.details.configPath}`);
       }
+    } else if (status.error) {
+      Logger.error(`${info.displayName}: ошибка в конфигурации`);
+      Logger.error(`  ${status.error}`);
+      hasErrors = true;
     } else {
-      if (status.error) {
-        Logger.error(`${info.displayName}: ошибка в конфигурации`);
-        Logger.error(`  ${status.error}`);
-        hasErrors = true;
-      } else {
-        Logger.info(`${info.displayName}: не подключен`);
-      }
+      Logger.info(`${info.displayName}: не подключен`);
     }
   }
 
   Logger.newLine();
-  Logger.info(`Итого: ${connectedCount} валидных конфигураций из ${statuses.size} проверенных`);
+  Logger.info(
+    `Итого: ${String(connectedCount)} валидных конфигураций из ${String(statuses.size)} проверенных`
+  );
 
   if (hasErrors) {
     process.exit(1);
