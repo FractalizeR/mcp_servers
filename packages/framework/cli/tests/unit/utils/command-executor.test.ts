@@ -34,12 +34,11 @@ describe('CommandExecutor', () => {
     });
 
     it('обрезает длинный stderr до 200 символов', () => {
-      // Печатаем 500 байт `A` в stderr.
+      // Печатаем 500 байт `A` в stderr — POSIX-portable (yes/head есть и в bash, и в dash).
+      // Не используем brace expansion `{1..500}` — она bash-only и не работает в Ubuntu sh→dash.
       let caught: unknown;
       try {
-        CommandExecutor.exec(
-          `sh -c "printf '%0.s' A{1..500} 1>&2; printf 'A%.0s' {1..500} 1>&2; exit 2"`
-        );
+        CommandExecutor.exec(`sh -c "yes A | head -c 500 1>&2; exit 2"`);
       } catch (e) {
         caught = e;
       }
