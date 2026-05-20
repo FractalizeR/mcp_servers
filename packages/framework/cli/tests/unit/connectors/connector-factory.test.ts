@@ -118,6 +118,27 @@ describe('connector-factory', () => {
       }
     });
 
+    it('win32 без APPDATA → fallback на ~/AppData/Roaming/Claude (N7)', () => {
+      vi.mocked(os.platform).mockReturnValue('win32');
+      vi.mocked(os.homedir).mockReturnValue('/users/me');
+      const oldAppData = process.env['APPDATA'];
+      delete process.env['APPDATA'];
+      try {
+        const c = createConnector('claude-desktop', SERVER);
+        const cfgPath = c.getClientInfo().configPath;
+        // Не должен начинаться с пустой строки + 'Claude/'
+        expect(cfgPath).not.toMatch(/^Claude\//);
+        // Должен использовать homedir + AppData/Roaming
+        expect(cfgPath).toContain('/users/me');
+        expect(cfgPath).toContain('AppData/Roaming');
+        expect(cfgPath).toMatch(/Claude\/claude_desktop_config\.json$/);
+      } finally {
+        if (oldAppData !== undefined) {
+          process.env['APPDATA'] = oldAppData;
+        }
+      }
+    });
+
     it('configPath вычисляется лениво (функция) — мок os.platform после создания тоже работает', () => {
       vi.mocked(os.platform).mockReturnValue('darwin');
       const c = createConnector('claude-desktop', SERVER);
@@ -140,6 +161,42 @@ describe('connector-factory', () => {
       expect(c).toBeInstanceOf(ConfigurableConnector);
       expect(c.getClientInfo().name).toBe('custom');
       expect(c.getClientInfo().configPath).toBe('/tmp/x.json');
+    });
+  });
+
+  describe('Lazy configPath functions (L4)', () => {
+    it('gemini configPath реагирует на смену os.homedir в runtime', () => {
+      vi.mocked(os.homedir).mockReturnValue('/users/before');
+      const c = createConnector('gemini', SERVER);
+      expect(c.getClientInfo().configPath).toContain('/users/before');
+
+      vi.mocked(os.homedir).mockReturnValue('/users/after');
+      expect(c.getClientInfo().configPath).toContain('/users/after');
+    });
+
+    it('qwen configPath реагирует на смену os.homedir в runtime', () => {
+      vi.mocked(os.homedir).mockReturnValue('/users/before');
+      const c = createConnector('qwen', SERVER);
+      expect(c.getClientInfo().configPath).toContain('/users/before');
+
+      vi.mocked(os.homedir).mockReturnValue('/users/after');
+      expect(c.getClientInfo().configPath).toContain('/users/after');
+    });
+
+    it('codex configPath реагирует на смену os.homedir в runtime', () => {
+      vi.mocked(os.homedir).mockReturnValue('/users/before');
+      const c = createConnector('codex', SERVER);
+      expect(c.getClientInfo().configPath).toContain('/users/before');
+
+      vi.mocked(os.homedir).mockReturnValue('/users/after');
+      expect(c.getClientInfo().configPath).toContain('/users/after');
+    });
+
+    it('getClientConfig возвращает configPath как функцию для всех 4 клиентов', () => {
+      for (const client of ['claude-desktop', 'gemini', 'qwen', 'codex'] as const) {
+        const cfg = getClientConfig(client);
+        expect(typeof cfg.configPath).toBe('function');
+      }
     });
   });
 

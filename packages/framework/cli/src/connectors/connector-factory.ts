@@ -24,6 +24,11 @@ export type KnownClient = 'claude-desktop' | 'gemini' | 'qwen' | 'codex';
  *
  * Вычисляется лениво (через функцию), чтобы избежать обращений к `os.platform()`
  * при импорте модуля и упростить тестирование.
+ *
+ * Win32: предпочтительно используем `%APPDATA%`. Если переменная не задана
+ * (нестандартное окружение, CI без полного user profile, WSL fallback) —
+ * используем `~/AppData/Roaming/Claude/...`, что является каноническим путём
+ * для современных Windows-систем.
  */
 function claudeDesktopConfigPath(): string {
   const platform = os.platform();
@@ -34,7 +39,25 @@ function claudeDesktopConfigPath(): string {
     return path.join(os.homedir(), '.config/claude/claude_desktop_config.json');
   }
   // win32 и прочие
-  return path.join(process.env['APPDATA'] ?? '', 'Claude/claude_desktop_config.json');
+  const appData = process.env['APPDATA'] ?? path.join(os.homedir(), 'AppData/Roaming');
+  return path.join(appData, 'Claude/claude_desktop_config.json');
+}
+
+/**
+ * Lazy paths для остальных клиентов — единообразие с claudeDesktopConfigPath
+ * и устойчивость к подмене `HOME`/`USERPROFILE` в runtime (важно для тестов
+ * и кастомных окружений).
+ */
+function geminiConfigPath(): string {
+  return path.join(os.homedir(), '.gemini/settings.json');
+}
+
+function qwenConfigPath(): string {
+  return path.join(os.homedir(), '.qwen/settings.json');
+}
+
+function codexConfigPath(): string {
+  return path.join(os.homedir(), '.codex/config.toml');
 }
 
 /**
@@ -54,7 +77,7 @@ const CLIENT_CONFIGS: Record<KnownClient, ConnectorClientConfig> = {
     name: 'gemini',
     displayName: 'Gemini CLI',
     description: 'Gemini CLI для разработки с MCP серверами',
-    configPath: path.join(os.homedir(), '.gemini/settings.json'),
+    configPath: geminiConfigPath,
     platforms: ['darwin', 'linux', 'win32'],
     serverKey: 'mcpServers',
     configFormat: 'json',
@@ -63,7 +86,7 @@ const CLIENT_CONFIGS: Record<KnownClient, ConnectorClientConfig> = {
     name: 'qwen',
     displayName: 'Qwen Code',
     description: 'Qwen Code для разработки с MCP серверами',
-    configPath: path.join(os.homedir(), '.qwen/settings.json'),
+    configPath: qwenConfigPath,
     platforms: ['darwin', 'linux', 'win32'],
     serverKey: 'mcpServers',
     configFormat: 'json',
@@ -72,7 +95,7 @@ const CLIENT_CONFIGS: Record<KnownClient, ConnectorClientConfig> = {
     name: 'codex',
     displayName: 'Codex',
     description: 'CLI инструмент Codex от OpenAI',
-    configPath: path.join(os.homedir(), '.codex/config.toml'),
+    configPath: codexConfigPath,
     platforms: ['darwin', 'linux', 'win32'],
     checkCommand: 'codex --version',
     serverKey: 'mcp_servers',
