@@ -1,13 +1,17 @@
 import type { ConfigPromptDefinition } from '@fractalizer/mcp-cli';
 import type { TickTickMCPConfig } from './types.js';
-import { DEFAULT_LOG_LEVEL } from '../constants.js';
+import { DEFAULT_LOG_LEVEL } from '#constants';
 
+/**
+ * Промпты сбора доменной конфигурации TickTick (OAuth client credentials).
+ */
 export const ticktickConfigPrompts: ConfigPromptDefinition<TickTickMCPConfig>[] = [
   {
     name: 'clientId',
     type: 'input',
     message: 'OAuth Client ID (из TickTick Developer Portal):',
-    validate: (value: string | number | Record<string, string> | undefined): string | true => {
+    default: (saved) => saved?.clientId,
+    validate: (value): string | true => {
       if (typeof value !== 'string' || value.length === 0) {
         return 'Client ID обязателен';
       }
@@ -19,7 +23,7 @@ export const ticktickConfigPrompts: ConfigPromptDefinition<TickTickMCPConfig>[] 
     type: 'password',
     message: 'OAuth Client Secret:',
     mask: '*',
-    validate: (value: string | number | Record<string, string> | undefined): string | true => {
+    validate: (value): string | true => {
       if (typeof value !== 'string' || value.length === 0) {
         return 'Client Secret обязателен';
       }

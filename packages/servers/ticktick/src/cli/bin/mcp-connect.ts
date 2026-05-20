@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * CLI для TickTick MCP Server
+ * CLI для TickTick MCP Server.
  *
- * Использует @fractalizer/mcp-cli для управления подключениями
+ * Использует `@fractalizer/mcp-cli` (агностичный framework) и доменный адаптер
+ * `buildTickTickServerLaunch` для построения спецификации запуска сервера.
  */
 
 import { program } from 'commander';
@@ -15,49 +16,40 @@ import {
   statusCommand,
   listCommand,
   validateCommand,
-  // Импортируем коннекторы
-  ClaudeDesktopConnector,
+  createConnector,
   ClaudeCodeConnector,
-  CodexConnector,
-  GeminiConnector,
-  QwenConnector,
 } from '@fractalizer/mcp-cli';
 import { ticktickConfigPrompts } from '../prompts.js';
+import { buildTickTickServerLaunch } from '../build-launch.js';
+import { serializeTickTickConfig } from '../serialize-config.js';
+import { deserializeTickTickConfig } from '../deserialize-config.js';
 import type { TickTickMCPConfig } from '../types.js';
-import { PROJECT_BASE_NAME, SERVER_ENTRY_POINT } from '../../constants.js';
+import { PROJECT_BASE_NAME } from '../../constants.js';
 
-/**
- * Main entry point
- */
 function main(): void {
-  // Создать реестр и зарегистрировать коннекторы
-  const registry = new ConnectorRegistry<TickTickMCPConfig>();
-  registry.register(
-    new ClaudeDesktopConnector<TickTickMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
-  registry.register(
-    new ClaudeCodeConnector<TickTickMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
-  registry.register(new CodexConnector<TickTickMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT));
-  registry.register(new GeminiConnector<TickTickMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT));
-  registry.register(new QwenConnector<TickTickMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT));
+  const registry = new ConnectorRegistry();
+  registry.register(createConnector('claude-desktop', PROJECT_BASE_NAME));
+  registry.register(new ClaudeCodeConnector(PROJECT_BASE_NAME));
+  registry.register(createConnector('gemini', PROJECT_BASE_NAME));
+  registry.register(createConnector('qwen', PROJECT_BASE_NAME));
+  registry.register(createConnector('codex', PROJECT_BASE_NAME));
 
-  // Создать менеджер конфигурации
   const configManager = new ConfigManager<TickTickMCPConfig>({
     projectName: PROJECT_BASE_NAME,
-    safeFields: ['redirectUri', 'logLevel', 'projectPath'],
+    serialize: serializeTickTickConfig,
+    deserialize: deserializeTickTickConfig,
   });
 
-  // Команды
   program
     .command('connect')
     .description('Подключить MCP сервер к клиенту')
     .option('--client <name>', 'Название клиента')
     .action(async (opts: { client?: string }) => {
-      await connectCommand({
+      await connectCommand<TickTickMCPConfig>({
         registry,
         configManager,
         configPrompts: ticktickConfigPrompts,
+        buildServerLaunch: buildTickTickServerLaunch,
         cliOptions: opts,
       });
     });
@@ -97,5 +89,4 @@ function main(): void {
   program.parse();
 }
 
-// Запуск
 main();
