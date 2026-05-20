@@ -63,6 +63,14 @@ export async function connectCommand<TDomainConfig extends object>(
     connector = registry.get(cliOptions.client);
     if (!connector) {
       Logger.error(`Клиент "${cliOptions.client}" не найден`);
+      const valid = registry.getAll();
+      if (valid.length > 0) {
+        Logger.info('Доступные клиенты:');
+        for (const c of valid) {
+          const info = c.getClientInfo();
+          Logger.info(`  - ${info.name} (${info.displayName})`);
+        }
+      }
       return;
     }
 
@@ -130,9 +138,21 @@ export async function connectCommand<TDomainConfig extends object>(
 
   Logger.newLine();
 
-  // 9. Безусловно сохранить доменную конфигурацию (после успешного connect)
-  await configManager.save(domainConfig);
-  Logger.success(`Конфигурация сохранена: ${configManager.getConfigPath()}`);
+  // 9. Безусловно сохранить доменную конфигурацию (после успешного connect).
+  //    Подключение к клиенту уже выполнено успешно; неудача save локального
+  //    кэша — не критична, но информируем пользователя, чтобы при необходимости
+  //    он мог разобраться (например, нет прав на ~/. dir).
+  try {
+    await configManager.save(domainConfig);
+    Logger.success(`Конфигурация сохранена: ${configManager.getConfigPath()}`);
+  } catch (saveError: unknown) {
+    const errMsg = saveError instanceof Error ? saveError.message : String(saveError);
+    Logger.error(`Подключение выполнено, но локальный кэш конфига не сохранён: ${errMsg}`);
+    Logger.info(`Путь к локальному кэшу: ${configManager.getConfigPath()}`);
+    if (status.details?.configPath) {
+      Logger.info(`Путь к client config (подключение активно): ${status.details.configPath}`);
+    }
+  }
 
   // Предупреждение о plaintext-хранении токена в конфиге клиента
   if (status.details?.configPath) {

@@ -198,6 +198,29 @@ describe('connectCommand', () => {
       expect(configManager.save).not.toHaveBeenCalled();
     });
 
+    it('cliOptions.client = "unknown" → выводит список доступных клиентов (N9)', async () => {
+      const gemini = makeConnector({ name: 'gemini' });
+      const qwen = makeConnector({ name: 'qwen' });
+      const registry = makeRegistry([gemini, qwen]);
+      const configManager = makeConfigManager();
+
+      // Захватим вывод console.log (info), сделанный после ошибки.
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      await connectCommand({
+        registry,
+        configManager,
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'unknown-name' },
+      });
+
+      const allOutput = logSpy.mock.calls.flat().join(' ');
+      expect(allOutput).toContain('Доступные клиенты');
+      expect(allOutput).toMatch(/gemini/);
+      expect(allOutput).toMatch(/qwen/);
+    });
+
     it('cliOptions.client установлен, но клиент не isInstalled → save не вызван', async () => {
       const conn = makeConnector({ name: 'gemini', isInstalled: false });
       const installedConn = makeConnector({ name: 'qwen', isInstalled: true });
@@ -295,6 +318,38 @@ describe('connectCommand', () => {
       expect(conn.connect).toHaveBeenCalledTimes(1);
       // Это самое важное утверждение этого теста:
       expect(configManager.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('save fail (L2)', () => {
+    it('connect успешен, save бросает → ошибка логируется + путь client config', async () => {
+      const conn = makeConnector({ name: 'gemini' });
+      const registry = makeRegistry([conn]);
+      const configManager = makeConfigManager();
+      vi.mocked(configManager.save).mockRejectedValue(new Error('EACCES: permission denied'));
+
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await connectCommand({
+        registry,
+        configManager,
+        configPrompts: PROMPTS,
+        buildServerLaunch: buildSpec,
+        cliOptions: { client: 'gemini' },
+      });
+
+      // Подключение всё равно произошло
+      expect(conn.connect).toHaveBeenCalled();
+
+      // Ошибка save логируется в stderr
+      const errOutput = errSpy.mock.calls.flat().join(' ');
+      expect(errOutput).toContain('локальный кэш конфига не сохранён');
+      expect(errOutput).toContain('EACCES');
+
+      // Пути выводятся в info
+      const logOutput = logSpy.mock.calls.flat().join(' ');
+      expect(logOutput).toContain('/tmp/saved.json');
     });
   });
 
