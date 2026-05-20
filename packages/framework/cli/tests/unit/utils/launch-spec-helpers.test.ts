@@ -53,4 +53,92 @@ describe('resolveExecutablePath', () => {
   it('относительная команда → null', () => {
     expect(resolveExecutablePath({ command: './local-bin', args: [], env: {} })).toBeNull();
   });
+
+  describe('Node argv-aware (N5)', () => {
+    it('--import <abs/preload> /abs/server.cjs → возвращает /abs/server.cjs (НЕ preload!)', () => {
+      // Регрессия для N5: раньше возвращался первый абсолютный путь = preload.
+      expect(
+        resolveExecutablePath({
+          command: 'node',
+          args: ['--import', '/abs/preload.mjs', '/abs/server.cjs'],
+          env: {},
+        })
+      ).toBe('/abs/server.cjs');
+    });
+
+    it('--import=<abs/preload> /abs/server.cjs → возвращает /abs/server.cjs', () => {
+      expect(
+        resolveExecutablePath({
+          command: 'node',
+          args: ['--import=/abs/preload.mjs', '/abs/server.cjs'],
+          env: {},
+        })
+      ).toBe('/abs/server.cjs');
+    });
+
+    it('--experimental-loader <loader> --enable-source-maps /abs/server.cjs', () => {
+      expect(
+        resolveExecutablePath({
+          command: 'node',
+          args: [
+            '--experimental-loader',
+            '/abs/loader.mjs',
+            '--enable-source-maps',
+            '/abs/server.cjs',
+          ],
+          env: {},
+        })
+      ).toBe('/abs/server.cjs');
+    });
+
+    it('--require <preload> /abs/server.cjs → /abs/server.cjs', () => {
+      expect(
+        resolveExecutablePath({
+          command: 'node',
+          args: ['--require', '/abs/preload.cjs', '/abs/server.cjs'],
+          env: {},
+        })
+      ).toBe('/abs/server.cjs');
+    });
+
+    it('-r <preload> /abs/server.cjs → /abs/server.cjs (короткая форма --require)', () => {
+      expect(
+        resolveExecutablePath({
+          command: 'node',
+          args: ['-r', '/abs/preload.cjs', '/abs/server.cjs'],
+          env: {},
+        })
+      ).toBe('/abs/server.cjs');
+    });
+
+    it('--inspect-brk=9229 /abs/server.cjs → /abs/server.cjs', () => {
+      expect(
+        resolveExecutablePath({
+          command: 'node',
+          args: ['--inspect-brk=9229', '/abs/server.cjs'],
+          env: {},
+        })
+      ).toBe('/abs/server.cjs');
+    });
+
+    it('node без positional аргумента → null', () => {
+      expect(
+        resolveExecutablePath({
+          command: 'node',
+          args: ['--no-warnings', '--enable-source-maps'],
+          env: {},
+        })
+      ).toBeNull();
+    });
+
+    it('node с относительным скриптом → null', () => {
+      expect(
+        resolveExecutablePath({
+          command: 'node',
+          args: ['./relative/server.cjs'],
+          env: {},
+        })
+      ).toBeNull();
+    });
+  });
 });

@@ -117,6 +117,18 @@ describe('BaseConnector.validateLaunchSpec', () => {
     expect(fs.access).toHaveBeenCalledWith('/abs/path/server.cjs');
   });
 
+  it('node + --import <preload> <script> → находит скрипт (не preload, N5)', async () => {
+    vi.mocked(fs.access).mockResolvedValue(undefined);
+    const errors = await connector.validateLaunchSpec({
+      command: 'node',
+      args: ['--import', '/abs/preload.mjs', '/abs/path/server.cjs'],
+      env: {},
+    });
+    expect(errors).toEqual([]);
+    // Главное: validateLaunchSpec проверяет скрипт, а не preload.
+    expect(fs.access).toHaveBeenCalledWith('/abs/path/server.cjs');
+  });
+
   it('node без абсолютного пути в args → ошибка', async () => {
     const errors = await connector.validateLaunchSpec({
       command: 'node',
