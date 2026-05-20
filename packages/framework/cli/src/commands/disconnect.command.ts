@@ -1,15 +1,14 @@
 import type { MCPConnector } from '../connectors/base/connector.interface.js';
 import type { ConnectorRegistry } from '../connectors/registry.js';
-import type { BaseMCPServerConfig } from '../types.js';
 import { Logger } from '../utils/logger.js';
 import { InteractivePrompter } from '../utils/interactive-prompter.js';
 
 /**
  * Опции для команды disconnect
  */
-export interface DisconnectCommandOptions<TConfig extends BaseMCPServerConfig> {
+export interface DisconnectCommandOptions {
   /** Реестр MCP коннекторов */
-  registry: ConnectorRegistry<TConfig>;
+  registry: ConnectorRegistry;
 
   /** CLI опции из командной строки */
   cliOptions?: {
@@ -21,12 +20,10 @@ export interface DisconnectCommandOptions<TConfig extends BaseMCPServerConfig> {
 /**
  * Найти подключенные коннекторы
  */
-async function findConnectedConnectors<TConfig extends BaseMCPServerConfig>(
-  registry: ConnectorRegistry<TConfig>
-): Promise<Array<MCPConnector<TConfig>>> {
+async function findConnectedConnectors(registry: ConnectorRegistry): Promise<Array<MCPConnector>> {
   const statuses = await registry.checkAllStatuses();
   return Array.from(statuses.entries())
-    .filter(([_, status]) => status.connected)
+    .filter(([, status]) => status.connected)
     .map(([name]) => registry.get(name))
     .filter((c): c is NonNullable<typeof c> => c !== undefined);
 }
@@ -34,11 +31,11 @@ async function findConnectedConnectors<TConfig extends BaseMCPServerConfig>(
 /**
  * Выбрать коннектор по имени из CLI или интерактивно
  */
-async function selectConnector<TConfig extends BaseMCPServerConfig>(
-  registry: ConnectorRegistry<TConfig>,
-  connectedConnectors: Array<MCPConnector<TConfig>>,
+async function selectConnector(
+  registry: ConnectorRegistry,
+  connectedConnectors: Array<MCPConnector>,
   clientName?: string
-): Promise<MCPConnector<TConfig> | undefined> {
+): Promise<MCPConnector | undefined> {
   if (clientName) {
     const connector = registry.get(clientName);
     if (!connector) {
@@ -64,9 +61,7 @@ async function selectConnector<TConfig extends BaseMCPServerConfig>(
 /**
  * Выполнить отключение коннектора
  */
-async function performDisconnect<TConfig extends BaseMCPServerConfig>(
-  connector: MCPConnector<TConfig>
-): Promise<boolean> {
+async function performDisconnect(connector: MCPConnector): Promise<boolean> {
   const spinner = Logger.spinner(`Отключаю от ${connector.getClientInfo().displayName}...`);
 
   try {
@@ -81,28 +76,15 @@ async function performDisconnect<TConfig extends BaseMCPServerConfig>(
 }
 
 /**
- * Команда для отключения MCP сервера от клиента
- *
- * @param options - Опции команды
+ * Команда для отключения MCP сервера от клиента.
  *
  * @example
  * ```typescript
- * const registry = new ConnectorRegistry<YourConfig>();
- * // регистрация коннекторов...
- *
- * // Интерактивный выбор клиента
  * await disconnectCommand({ registry });
- *
- * // Или указать клиент явно
- * await disconnectCommand({
- *   registry,
- *   cliOptions: { client: 'claude-desktop' }
- * });
+ * await disconnectCommand({ registry, cliOptions: { client: 'claude-desktop' } });
  * ```
  */
-export async function disconnectCommand<TConfig extends BaseMCPServerConfig>(
-  options: DisconnectCommandOptions<TConfig>
-): Promise<void> {
+export async function disconnectCommand(options: DisconnectCommandOptions): Promise<void> {
   const { registry, cliOptions } = options;
 
   Logger.header('🔌 Отключение MCP сервера');
@@ -118,7 +100,7 @@ export async function disconnectCommand<TConfig extends BaseMCPServerConfig>(
     return;
   }
 
-  Logger.success(`Найдено ${connectedConnectors.length} подключенных клиента(ов)`);
+  Logger.success(`Найдено ${String(connectedConnectors.length)} подключенных клиента(ов)`);
   Logger.newLine();
 
   const connector = await selectConnector(registry, connectedConnectors, cliOptions?.client);

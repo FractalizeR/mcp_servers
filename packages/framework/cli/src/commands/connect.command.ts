@@ -3,39 +3,42 @@
  * @packageDocumentation
  */
 
-import type { BaseMCPServerConfig, ConnectCommandOptions } from '../types.js';
+import type { ConnectCommandOptions } from '../types.js';
 import { InteractivePrompter } from '../utils/interactive-prompter.js';
 import { Logger } from '../utils/logger.js';
 
 /**
- * Команда для подключения MCP сервера к выбранному клиенту
+ * Команда подключения MCP сервера к выбранному клиенту.
  *
- * @param options - Опции команды
+ * Поток:
+ *  1. Найти установленные клиенты (`registry.findInstalled`).
+ *  2. Выбрать клиент (через CLI флаг `--client` или интерактивно).
+ *  3. Загрузить сохранённую доменную конфигурацию (`configManager.load`).
+ *  4. Собрать новую доменную конфигурацию через промпты.
+ *  5. Адаптер `buildServerLaunch(config)` → {@link ServerLaunchSpec}.
+ *  6. `connector.validateLaunchSpec(spec)`; при ошибках — abort (без `connect`/`save`).
+ *  7. `connector.connect(spec)`. При исключении управление прерывается, `save` не достигается.
+ *  8. Информационный `getStatus()`.
+ *  9. После успешного connect — `configManager.save(domainConfig)` и warning про plaintext-токен.
  *
  * @example
  * ```typescript
- * const registry = new ConnectorRegistry<YourConfig>();
- * const configManager = new ConfigManager<YourConfig>({
- *   projectName: 'your-server',
- *   safeFields: ['orgId', 'apiBase'],
- * });
- *
- * const configPrompts = [
- *   { name: 'token', type: 'password', message: 'OAuth токен:' },
- *   { name: 'orgId', type: 'input', message: 'ID организации:' },
- * ];
- *
  * await connectCommand({
  *   registry,
  *   configManager,
  *   configPrompts,
+ *   buildServerLaunch: (cfg) => ({
+ *     command: 'node',
+ *     args: ['/abs/path/server.bundle.cjs'],
+ *     env: { API_TOKEN: cfg.token, ORG_ID: cfg.orgId },
+ *   }),
  * });
  * ```
  */
-export async function connectCommand<TConfig extends BaseMCPServerConfig>(
-  options: ConnectCommandOptions<TConfig>
+export async function connectCommand<TDomainConfig extends object>(
+  options: ConnectCommandOptions<TDomainConfig>
 ): Promise<void> {
-  const { registry, configManager, configPrompts, cliOptions, buildConfig } = options;
+  const { registry, configManager, configPrompts, buildServerLaunch, cliOptions } = options;
 
   Logger.header('🔌 Подключение MCP сервера');
   Logger.newLine();
@@ -47,12 +50,11 @@ export async function connectCommand<TConfig extends BaseMCPServerConfig>(
 
   if (installedClients.length === 0) {
     Logger.error('Не найдено установленных MCP клиентов');
-    Logger.info('Поддерживаемые клиенты: Claude Desktop, Claude Code, Codex, Gemini, Qwen');
-    Logger.info('Установите хотя бы один из них для продолжения');
+    Logger.info('Установите хотя бы один поддерживаемый MCP клиент');
     return;
   }
 
-  Logger.success(`Найдено ${installedClients.length} установленных клиента(ов)`);
+  Logger.success(`Найдено ${String(installedClients.length)} установленных клиента(ов)`);
   Logger.newLine();
 
   // 2. Выбрать клиент
@@ -72,9 +74,7 @@ export async function connectCommand<TConfig extends BaseMCPServerConfig>(
 
     Logger.info(`Выбран клиент: ${connector.getClientInfo().displayName}`);
   } else {
-    const clientInfos = installedClients.map((c: (typeof installedClients)[number]) =>
-      c.getClientInfo()
-    );
+    const clientInfos = installedClients.map((c) => c.getClientInfo());
     const selectedName = await InteractivePrompter.promptClientSelection(clientInfos);
     connector = registry.get(selectedName);
   }
@@ -86,63 +86,65 @@ export async function connectCommand<TConfig extends BaseMCPServerConfig>(
 
   Logger.newLine();
 
-  // 3. Собрать конфигурацию
+  // 3. Загрузить сохранённую доменную конфигурацию
   const savedConfig = await configManager.load();
   if (savedConfig) {
     Logger.info('Найдена сохраненная конфигурация (секретные поля будут запрошены заново)');
   }
 
-  const prompter = new InteractivePrompter<TConfig>(configPrompts);
-  const serverConfig = await prompter.promptServerConfig(savedConfig);
-
-  // Построить полную конфигурацию
-  const config = buildConfig
-    ? buildConfig(serverConfig)
-    : ({
-        projectPath: process.cwd(),
-        ...serverConfig,
-      } as TConfig);
+  // 4. Собрать доменную конфигурацию
+  const prompter = new InteractivePrompter<TDomainConfig>(configPrompts);
+  const domainConfig = await prompter.promptServerConfig(savedConfig);
 
   Logger.newLine();
 
-  // 4. Валидация
-  const errors = await connector.validateConfig(config);
+  // 5. Построить spec через адаптер
+  const spec = buildServerLaunch(domainConfig);
+
+  // 6. Валидация
+  const errors = await connector.validateLaunchSpec(spec);
   if (errors.length > 0) {
-    Logger.error('Ошибки конфигурации:');
-    errors.forEach((err: string) => Logger.error(`  - ${err}`));
+    Logger.error('Ошибки конфигурации запуска:');
+    errors.forEach((err) => Logger.error(`  - ${err}`));
     return;
   }
 
-  // 5. Подключение
+  // 7. Подключение (если бросит — save не выполняется)
   const connectSpinner = Logger.spinner(`Подключаю к ${connector.getClientInfo().displayName}...`);
-
   try {
-    await connector.connect(config);
+    await connector.connect(spec);
     connectSpinner.succeed(
       `MCP сервер успешно подключен к ${connector.getClientInfo().displayName}!`
     );
-
-    const status = await connector.getStatus();
-    if (status.details) {
-      Logger.info(`Конфигурация: ${status.details.configPath}`);
-    }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     connectSpinner.fail(`Ошибка подключения: ${errorMessage}`);
     return;
   }
 
+  // 8. Информационный статус
+  const status = await connector.getStatus();
+  if (status.details?.configPath) {
+    Logger.info(`Конфигурация: ${status.details.configPath}`);
+  }
+
   Logger.newLine();
 
-  // 6. Предложить сохранить конфигурацию
-  const shouldSave = await InteractivePrompter.promptConfirmation(
-    'Сохранить конфигурацию для следующего раза?',
-    true
-  );
+  // 9. Безусловно сохранить доменную конфигурацию (после успешного connect)
+  await configManager.save(domainConfig);
+  Logger.success(`Конфигурация сохранена: ${configManager.getConfigPath()}`);
 
-  if (shouldSave) {
-    await configManager.save(config);
-    Logger.success('Конфигурация сохранена (секретные поля исключены)');
+  // Предупреждение о plaintext-хранении токена в конфиге клиента
+  if (status.details?.configPath) {
+    Logger.warn(
+      `⚠️ Токен сохранён в plaintext в ${status.details.configPath}. ` +
+        'Убедитесь, что файл недоступен другим пользователям системы.'
+    );
+  } else {
+    Logger.warn(
+      '⚠️ Токен сохранён в plaintext в конфиге клиента. ' +
+        'Убедитесь, что файл недоступен другим пользователям системы.'
+    );
   }
 
   Logger.newLine();

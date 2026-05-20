@@ -1,30 +1,23 @@
 import type { ConnectorRegistry } from '../connectors/registry.js';
-import type { BaseMCPServerConfig } from '../types.js';
 import { Logger } from '../utils/logger.js';
 
 /**
  * Опции для команды list
  */
-export interface ListCommandOptions<TConfig extends BaseMCPServerConfig> {
+export interface ListCommandOptions {
   /** Реестр MCP коннекторов */
-  registry: ConnectorRegistry<TConfig>;
+  registry: ConnectorRegistry;
 }
 
 /**
- * Команда для отображения списка всех поддерживаемых MCP клиентов
- *
- * @param options - Опции команды
+ * Команда для отображения списка всех поддерживаемых MCP клиентов.
  *
  * @example
  * ```typescript
- * const registry = new ConnectorRegistry<YourConfig>();
- * // регистрация коннекторов...
  * await listCommand({ registry });
  * ```
  */
-export async function listCommand<TConfig extends BaseMCPServerConfig>(
-  options: ListCommandOptions<TConfig>
-): Promise<void> {
+export async function listCommand(options: ListCommandOptions): Promise<void> {
   const { registry } = options;
 
   Logger.header('📋 Поддерживаемые MCP клиенты');
