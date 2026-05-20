@@ -16,6 +16,7 @@ import {
   statusCommand,
   listCommand,
   validateCommand,
+  doctorCommand,
   createConnector,
   ClaudeCodeConnector,
 } from '@fractalizer/mcp-cli';
@@ -23,6 +24,7 @@ import { ytConfigPrompts } from '../prompts.js';
 import { buildYtServerLaunch } from '../build-launch.js';
 import { serializeYtConfig } from '../serialize-config.js';
 import { deserializeYtConfig } from '../deserialize-config.js';
+import { getYtDoctorChecks } from '../doctor-checks.js';
 import type { YandexTrackerMCPConfig } from '../types.js';
 import { PROJECT_BASE_NAME } from '../../constants.js';
 
@@ -88,6 +90,17 @@ function main(): void {
     .description('Проверить валидность конфигураций MCP клиентов')
     .action(async () => {
       await validateCommand({ registry });
+    });
+
+  program
+    .command('doctor')
+    .description('Диагностика MCP подключений (выявление сломанных конфигов)')
+    .action(async () => {
+      const report = await doctorCommand({
+        registry,
+        extraChecks: getYtDoctorChecks(),
+      });
+      process.exit(report.summary.fail > 0 ? 1 : 0);
     });
 
   program.parse();

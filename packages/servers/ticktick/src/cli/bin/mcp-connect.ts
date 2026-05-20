@@ -16,6 +16,7 @@ import {
   statusCommand,
   listCommand,
   validateCommand,
+  doctorCommand,
   createConnector,
   ClaudeCodeConnector,
 } from '@fractalizer/mcp-cli';
@@ -23,6 +24,7 @@ import { ticktickConfigPrompts } from '../prompts.js';
 import { buildTickTickServerLaunch } from '../build-launch.js';
 import { serializeTickTickConfig } from '../serialize-config.js';
 import { deserializeTickTickConfig } from '../deserialize-config.js';
+import { getTickTickDoctorChecks } from '../doctor-checks.js';
 import type { TickTickMCPConfig } from '../types.js';
 import { PROJECT_BASE_NAME } from '../../constants.js';
 
@@ -84,6 +86,17 @@ function main(): void {
     .description('Проверить валидность конфигураций MCP клиентов')
     .action(async () => {
       await validateCommand({ registry });
+    });
+
+  program
+    .command('doctor')
+    .description('Диагностика MCP подключений (выявление сломанных конфигов)')
+    .action(async () => {
+      const report = await doctorCommand({
+        registry,
+        extraChecks: getTickTickDoctorChecks(),
+      });
+      process.exit(report.summary.fail > 0 ? 1 : 0);
     });
 
   program.parse();
