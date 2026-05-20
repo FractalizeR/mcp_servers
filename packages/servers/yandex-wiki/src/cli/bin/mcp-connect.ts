@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * CLI для Yandex Wiki MCP Server
+ * CLI для Yandex Wiki MCP Server.
  *
- * Использует @fractalizer/mcp-cli для управления подключениями
+ * Использует `@fractalizer/mcp-cli` (агностичный framework) и доменный адаптер
+ * `buildYwServerLaunch` для построения спецификации запуска сервера.
  */
 
 import { program } from 'commander';
@@ -15,51 +16,40 @@ import {
   statusCommand,
   listCommand,
   validateCommand,
-  // Импортируем коннекторы
-  ClaudeDesktopConnector,
+  createConnector,
   ClaudeCodeConnector,
-  CodexConnector,
-  GeminiConnector,
-  QwenConnector,
 } from '@fractalizer/mcp-cli';
 import { ywConfigPrompts } from '../prompts.js';
+import { buildYwServerLaunch } from '../build-launch.js';
+import { serializeYwConfig } from '../serialize-config.js';
+import { deserializeYwConfig } from '../deserialize-config.js';
 import type { YandexWikiMCPConfig } from '../types.js';
-import { PROJECT_BASE_NAME, SERVER_ENTRY_POINT } from '../../constants.js';
+import { PROJECT_BASE_NAME } from '../../constants.js';
 
-/**
- * Main entry point
- */
 function main(): void {
-  // Создать реестр и зарегистрировать коннекторы
-  const registry = new ConnectorRegistry<YandexWikiMCPConfig>();
-  registry.register(
-    new ClaudeDesktopConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
-  registry.register(
-    new ClaudeCodeConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
-  registry.register(new CodexConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT));
-  registry.register(
-    new GeminiConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT)
-  );
-  registry.register(new QwenConnector<YandexWikiMCPConfig>(PROJECT_BASE_NAME, SERVER_ENTRY_POINT));
+  const registry = new ConnectorRegistry();
+  registry.register(createConnector('claude-desktop', PROJECT_BASE_NAME));
+  registry.register(new ClaudeCodeConnector(PROJECT_BASE_NAME));
+  registry.register(createConnector('gemini', PROJECT_BASE_NAME));
+  registry.register(createConnector('qwen', PROJECT_BASE_NAME));
+  registry.register(createConnector('codex', PROJECT_BASE_NAME));
 
-  // Создать менеджер конфигурации
   const configManager = new ConfigManager<YandexWikiMCPConfig>({
     projectName: PROJECT_BASE_NAME,
-    safeFields: ['orgId', 'requestTimeout', 'logLevel', 'projectPath'],
+    serialize: serializeYwConfig,
+    deserialize: deserializeYwConfig,
   });
 
-  // Команды
   program
     .command('connect')
     .description('Подключить MCP сервер к клиенту')
     .option('--client <name>', 'Название клиента')
     .action(async (opts: { client?: string }) => {
-      await connectCommand({
+      await connectCommand<YandexWikiMCPConfig>({
         registry,
         configManager,
         configPrompts: ywConfigPrompts,
+        buildServerLaunch: buildYwServerLaunch,
         cliOptions: opts,
       });
     });
@@ -99,5 +89,4 @@ function main(): void {
   program.parse();
 }
 
-// Запуск
 main();
