@@ -14,6 +14,7 @@ import { CommandExecutor } from '../../../src/utils/command-executor.js';
 vi.mock('../../../src/utils/command-executor.js', () => ({
   CommandExecutor: {
     exec: vi.fn(),
+    execFile: vi.fn(),
     execSilent: vi.fn(),
     execInteractive: vi.fn(),
     isCommandAvailable: vi.fn(),
@@ -28,6 +29,7 @@ describe('ClaudeCodeConnector', () => {
   beforeEach(() => {
     connector = new ClaudeCodeConnector(SERVER_NAME);
     vi.mocked(CommandExecutor.exec).mockReset();
+    vi.mocked(CommandExecutor.execFile).mockReset();
     vi.mocked(CommandExecutor.execInteractive).mockReset();
     vi.mocked(CommandExecutor.isCommandAvailable).mockReset();
   });
@@ -56,7 +58,7 @@ describe('ClaudeCodeConnector', () => {
   // Tested on Claude Code CLI 2.x (формат `<name>: <tail> - <icon> <status>`)
   describe('парсинг `claude mcp list` (7 сценариев)', () => {
     it('сценарий 1: ✓ Connected → connected: true', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue(
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
         `\n${SERVER_NAME}: mcp-server-yandex-tracker  - ✓ Connected\n`
       );
       const status = await connector.getStatus();
@@ -66,7 +68,7 @@ describe('ClaudeCodeConnector', () => {
     });
 
     it('сценарий 2: ✗ Failed → connected: false, error без префикса', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue(
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
         `\n${SERVER_NAME}: node /invalid/path - ✗ Failed to connect\n`
       );
       const status = await connector.getStatus();
@@ -75,7 +77,7 @@ describe('ClaudeCodeConnector', () => {
     });
 
     it('сценарий 3: ! Needs authentication → connected: false, error без префикса', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue(
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
         `\n${SERVER_NAME}: https://example.com/mcp - ! Needs authentication\n`
       );
       const status = await connector.getStatus();
@@ -83,23 +85,26 @@ describe('ClaudeCodeConnector', () => {
       expect(status.error).toBe('Needs authentication');
     });
 
-    it('сценарий 4: неизвестный хвост → connected: true, error "Unknown state: <raw>"', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue(`\n${SERVER_NAME}: something - ⏳ Pending\n`);
+    it('сценарий 4: неизвестный хвост → connected: false, error "Unknown state: <raw>"', async () => {
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
+        `\n${SERVER_NAME}: something - ⏳ Pending\n`
+      );
       const status = await connector.getStatus();
-      expect(status.connected).toBe(true);
+      // Defensive: неизвестное состояние больше НЕ считается connected:true.
+      expect(status.connected).toBe(false);
       expect(status.error).toMatch(/Unknown state/);
       expect(status.error).toContain('⏳ Pending');
     });
 
     it('сценарий 5: сервер отсутствует в выводе → connected: false (без error)', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue('\nother_server: smth - ✓ Connected\n');
+      vi.mocked(CommandExecutor.execFile).mockReturnValue('\nother_server: smth - ✓ Connected\n');
       const status = await connector.getStatus();
       expect(status.connected).toBe(false);
       expect(status.error).toBeUndefined();
     });
 
     it('сценарий 6: `claude mcp list` падает с исключением → error со словом "Ошибка проверки статуса"', async () => {
-      vi.mocked(CommandExecutor.exec).mockImplementation(() => {
+      vi.mocked(CommandExecutor.execFile).mockImplementation(() => {
         throw new Error('Command failed: claude mcp list');
       });
       const status = await connector.getStatus();
@@ -108,10 +113,8 @@ describe('ClaudeCodeConnector', () => {
       expect(status.error).toContain('Command failed');
     });
 
-    it('сценарий 7: таймаут — exec бросает "Timeout: ..." → error содержит "Timeout"', async () => {
-      // Эмулируем реальное поведение CommandExecutor при таймауте:
-      // execSync убивает SIGKILL, exec оборачивает в Error('Timeout: ...')
-      vi.mocked(CommandExecutor.exec).mockImplementation(() => {
+    it('сценарий 7: таймаут — execFile бросает "Timeout: ..." → error содержит "Timeout"', async () => {
+      vi.mocked(CommandExecutor.execFile).mockImplementation(() => {
         throw new Error('Timeout: claude mcp list exceeded 5000ms');
       });
       const status = await connector.getStatus();
@@ -120,21 +123,33 @@ describe('ClaudeCodeConnector', () => {
       expect(status.error).toContain('5000ms');
     });
 
-    it('передаёт timeout 5000 в CommandExecutor.exec', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue('');
+    it('передаёт claude/mcp/list как массив + timeout 5000 в CommandExecutor.execFile', async () => {
+      vi.mocked(CommandExecutor.execFile).mockReturnValue('');
       await connector.getStatus();
-      expect(CommandExecutor.exec).toHaveBeenCalledWith(
-        'claude mcp list',
+      expect(CommandExecutor.execFile).toHaveBeenCalledWith(
+        'claude',
+        ['mcp', 'list'],
         expect.objectContaining({ timeout: 5000 })
       );
     });
 
     it('корректный матчинг при нескольких серверах в выводе', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue(
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
         `\nother: smth - ✗ Failed\n${SERVER_NAME}: node /abs/script.cjs - ✓ Connected\nthird: foo - ✓ Connected\n`
       );
       const status = await connector.getStatus();
       expect(status.connected).toBe(true);
+      expect(status.error).toBeUndefined();
+    });
+
+    it('префикс с пробелом: tracker не матчит tracker-dev', async () => {
+      // Регрессия для N1: префикс должен быть `<serverName>: ` (с пробелом).
+      const c = new ClaudeCodeConnector('tracker');
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
+        'tracker-dev: node /x.cjs - ✓ Connected\n'
+      );
+      const status = await c.getStatus();
+      expect(status.connected).toBe(false);
       expect(status.error).toBeUndefined();
     });
   });
@@ -183,10 +198,32 @@ describe('ClaudeCodeConnector', () => {
   });
 
   describe('getLaunchSpec через `claude mcp get`', () => {
-    it('парсит корректный stdio-вывод', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue(
+    it('парсит многострочный Environment (CLI 2.x: KEY=value на отдельных строках)', async () => {
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
         [
-          `${SERVER_NAME}`,
+          `${SERVER_NAME}:`,
+          '  Scope: Local config',
+          '  Status: ✓ Connected',
+          '  Type: stdio',
+          '  Command: node',
+          '  Args: /abs/script.cjs',
+          '  Environment:',
+          '    TOKEN=sec',
+          '    ORG=org-1',
+        ].join('\n')
+      );
+      const spec = await connector.getLaunchSpec();
+      expect(spec).toEqual({
+        command: 'node',
+        args: ['/abs/script.cjs'],
+        env: { TOKEN: 'sec', ORG: 'org-1' },
+      });
+    });
+
+    it('парсит legacy однострочный Environment (через запятую)', async () => {
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
+        [
+          `${SERVER_NAME}:`,
           '  Type: stdio',
           '  Command: node',
           '  Args: /abs/script.cjs',
@@ -202,7 +239,7 @@ describe('ClaudeCodeConnector', () => {
     });
 
     it('возвращает null для http/sse сервера', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue(
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
         [`server`, '  Type: http', '  Command: irrelevant'].join('\n')
       );
       const spec = await connector.getLaunchSpec();
@@ -210,32 +247,53 @@ describe('ClaudeCodeConnector', () => {
     });
 
     it('возвращает null при отсутствии Command', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue('Type: stdio\nArgs: a');
+      vi.mocked(CommandExecutor.execFile).mockReturnValue('Type: stdio\nArgs: a');
       const spec = await connector.getLaunchSpec();
       expect(spec).toBeNull();
     });
 
     it('возвращает null если CommandExecutor бросает', async () => {
-      vi.mocked(CommandExecutor.exec).mockImplementation(() => {
+      vi.mocked(CommandExecutor.execFile).mockImplementation(() => {
         throw new Error('not found');
       });
       const spec = await connector.getLaunchSpec();
       expect(spec).toBeNull();
     });
 
-    it('экранирует имя сервера с пробелами через одинарные кавычки', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue('Type: stdio\nCommand: node\nArgs:');
+    it('передаёт имя сервера как отдельный аргумент (без shell-escaping)', async () => {
+      vi.mocked(CommandExecutor.execFile).mockReturnValue('Type: stdio\nCommand: node\nArgs:');
       const c = new ClaudeCodeConnector("name with 'quote");
       await c.getLaunchSpec();
-      const [cmd] = vi.mocked(CommandExecutor.exec).mock.calls[0]!;
-      // Должно быть обёрнуто в одинарные кавычки с экранированием
-      expect(cmd).toContain("'name with '\\''quote'");
+      const [bin, args] = vi.mocked(CommandExecutor.execFile).mock.calls[0]!;
+      expect(bin).toBe('claude');
+      // Имя сервера — отдельный элемент массива, никакого экранирования не требуется.
+      expect(args).toEqual(['mcp', 'get', "name with 'quote"]);
     });
 
     it('возвращает пустые args/env когда полей нет', async () => {
-      vi.mocked(CommandExecutor.exec).mockReturnValue('Command: /abs/server');
+      vi.mocked(CommandExecutor.execFile).mockReturnValue('Command: /abs/server');
       const spec = await connector.getLaunchSpec();
       expect(spec).toEqual({ command: '/abs/server', args: [], env: {} });
+    });
+
+    it('multi-line Environment с пустой следующей строкой и trailing-секцией → env: {}', async () => {
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(
+        [
+          `${SERVER_NAME}:`,
+          '  Type: stdio',
+          '  Command: node',
+          '  Args: /abs/script.cjs',
+          '  Environment:',
+          '',
+          'To remove this server, run: claude mcp remove "x"',
+        ].join('\n')
+      );
+      const spec = await connector.getLaunchSpec();
+      expect(spec).toEqual({
+        command: 'node',
+        args: ['/abs/script.cjs'],
+        env: {},
+      });
     });
   });
 });
