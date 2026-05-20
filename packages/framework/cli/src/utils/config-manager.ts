@@ -10,9 +10,9 @@ import { FileManager } from './file-manager.js';
 /**
  * Generic менеджер конфигурации MCP сервера.
  *
- * Хранит конфигурацию в `~/.{projectName}/config.json`. По умолчанию сохраняется
- * весь объект как есть; для фильтрации (например, исключения секретов) задайте
- * `options.serialize`.
+ * Хранит конфигурацию в `~/.{projectName}/config.json`. Адаптер ОБЯЗАН передать
+ * `options.serialize` — это явное решение, какие поля сохранять (защита от
+ * случайной утечки секретов).
  *
  * @example
  * ```typescript
@@ -20,7 +20,7 @@ import { FileManager } from './file-manager.js';
  *
  * const cm = new ConfigManager<YtConfig>({
  *   projectName: 'fractalizer_mcp_yandex_tracker',
- *   // serialize-хук исключает секреты:
+ *   // serialize-хук явно исключает секреты:
  *   serialize: (cfg) => ({ orgId: cfg.orgId, apiBase: cfg.apiBase }),
  * });
  *
@@ -63,8 +63,8 @@ export class ConfigManager<TDomainConfig extends object> {
   /**
    * Сохранить конфигурацию.
    *
-   * Если `options.serialize` задан — используется его результат. Иначе записывается
-   * весь объект как есть.
+   * Всегда вызывается `options.serialize` — гарантия явного решения о том,
+   * какие поля попадают в файл (защита от утечки секретов).
    *
    * @param config - Полная конфигурация MCP сервера.
    */
@@ -72,9 +72,7 @@ export class ConfigManager<TDomainConfig extends object> {
     const configDir = path.dirname(this.configPath);
     await FileManager.ensureDir(configDir);
 
-    const dataToSave = this.options.serialize
-      ? this.options.serialize(config)
-      : (config as unknown as Record<string, unknown>);
+    const dataToSave = this.options.serialize(config);
 
     await FileManager.writeJSON(this.configPath, dataToSave);
 

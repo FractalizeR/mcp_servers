@@ -230,9 +230,13 @@ describe('Integration: full workflow (real tmp files)', () => {
       token: string;
       orgId: string;
     }
+    const identitySerialize = (cfg: YtConfig): Record<string, unknown> => ({ ...cfg });
 
-    it('save → load возвращает то же значение', async () => {
-      const cm = new ConfigManager<YtConfig>({ projectName: 'fractalizer_test_int' });
+    it('save → load возвращает то же значение (identity serialize)', async () => {
+      const cm = new ConfigManager<YtConfig>({
+        projectName: 'fractalizer_test_int',
+        serialize: identitySerialize,
+      });
       await cm.save({ token: 'sec', orgId: 'org-1' });
       expect(await cm.load()).toEqual({ token: 'sec', orgId: 'org-1' });
     });
@@ -249,7 +253,10 @@ describe('Integration: full workflow (real tmp files)', () => {
     });
 
     it('права на файл = 0o600', async () => {
-      const cm = new ConfigManager<YtConfig>({ projectName: 'fractalizer_test_int_perm' });
+      const cm = new ConfigManager<YtConfig>({
+        projectName: 'fractalizer_test_int_perm',
+        serialize: identitySerialize,
+      });
       await cm.save({ token: 's', orgId: 'o' });
       const stat = await fs.stat(cm.getConfigPath());
       expect(stat.mode & 0o777).toBe(0o600);
