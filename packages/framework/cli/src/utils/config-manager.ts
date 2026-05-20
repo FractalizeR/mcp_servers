@@ -4,60 +4,45 @@
  */
 
 import * as path from 'path';
-import type { BaseMCPServerConfig, ConfigManagerOptions } from '../types/base.types.js';
+import type { ConfigManagerOptions } from '../types/client.types.js';
 import { FileManager } from './file-manager.js';
 
 /**
- * Generic менеджер конфигурации MCP сервера
+ * Generic менеджер конфигурации MCP сервера.
  *
- * Сохраняет только безопасные поля (без секретов) в ~/.{projectName}/config.json
+ * Хранит конфигурацию в `~/.{projectName}/config.json`. По умолчанию сохраняется
+ * весь объект как есть; для фильтрации (например, исключения секретов) задайте
+ * `options.serialize`.
  *
  * @example
  * ```typescript
- * // Определяем свою конфигурацию
- * interface YandexTrackerMCPConfig extends BaseMCPServerConfig {
- *   token: string;        // СЕКРЕТ - не сохраняется
- *   orgId: string;        // Безопасно - сохраняется
- *   apiBase?: string;     // Безопасно - сохраняется
- * }
+ * interface YtConfig { token: string; orgId: string; apiBase?: string }
  *
- * // Создаем ConfigManager
- * const configManager = new ConfigManager<YandexTrackerMCPConfig>({
+ * const cm = new ConfigManager<YtConfig>({
  *   projectName: 'fractalizer_mcp_yandex_tracker',
- *
- *   // Список безопасных полей (БЕЗ token!)
- *   safeFields: ['orgId', 'apiBase', 'logLevel', 'projectPath'],
+ *   // serialize-хук исключает секреты:
+ *   serialize: (cfg) => ({ orgId: cfg.orgId, apiBase: cfg.apiBase }),
  * });
  *
- * // Сохранение конфигурации
- * await configManager.save({
- *   token: 'secret-token',
- *   orgId: 'my-org',
- *   projectPath: '/path/to/project',
- *   logLevel: 'info',
- * });
- *
- * // Загрузка конфигурации
- * const saved = await configManager.load();
- * // saved = { orgId: 'my-org', logLevel: 'info', projectPath: '/path/to/project' }
- * // token НЕ сохранен и будет запрошен заново
+ * await cm.save({ token: 's3cr3t', orgId: 'org-1' });
+ * const saved = await cm.load(); // { orgId: 'org-1' }
  * ```
  */
-export class ConfigManager<TConfig extends BaseMCPServerConfig> {
+export class ConfigManager<TDomainConfig extends object> {
   private readonly configPath: string;
 
-  constructor(private readonly options: ConfigManagerOptions<TConfig>) {
+  constructor(private readonly options: ConfigManagerOptions<TDomainConfig>) {
     const homeDir = FileManager.getHomeDir();
     const configDir = `.${options.projectName}`;
     this.configPath = path.join(homeDir, configDir, 'config.json');
   }
 
   /**
-   * Загрузить сохраненную конфигурацию
+   * Загрузить сохранённую конфигурацию.
    *
-   * @returns Partial конфигурацию (только безопасные поля) или undefined если файл не существует
+   * @returns Partial конфигурацию или `undefined`, если файл не существует.
    */
-  async load(): Promise<Partial<TConfig> | undefined> {
+  async load(): Promise<Partial<TDomainConfig> | undefined> {
     try {
       if (!(await FileManager.exists(this.configPath))) {
         return undefined;
@@ -65,39 +50,31 @@ export class ConfigManager<TConfig extends BaseMCPServerConfig> {
 
       const data = await FileManager.readJSON<Record<string, unknown>>(this.configPath);
 
-      // Кастомная десериализация если задана
       if (this.options.deserialize) {
         return this.options.deserialize(data);
       }
 
-      return data as Partial<TConfig>;
+      return data as Partial<TDomainConfig>;
     } catch {
       return undefined;
     }
   }
 
   /**
-   * Сохранить конфигурацию
-   * Автоматически фильтрует только безопасные поля
+   * Сохранить конфигурацию.
    *
-   * @param config - Полная конфигурация MCP сервера
+   * Если `options.serialize` задан — используется его результат. Иначе записывается
+   * весь объект как есть.
+   *
+   * @param config - Полная конфигурация MCP сервера.
    */
-  async save(config: TConfig): Promise<void> {
+  async save(config: TDomainConfig): Promise<void> {
     const configDir = path.dirname(this.configPath);
     await FileManager.ensureDir(configDir);
 
-    // Сохраняем только безопасные поля
-    const safeConfig: Partial<TConfig> = {};
-    for (const field of this.options.safeFields) {
-      if (field in config) {
-        safeConfig[field] = config[field];
-      }
-    }
-
-    // Кастомная сериализация если задана
     const dataToSave = this.options.serialize
       ? this.options.serialize(config)
-      : (safeConfig as Record<string, unknown>);
+      : (config as unknown as Record<string, unknown>);
 
     await FileManager.writeJSON(this.configPath, dataToSave);
 
@@ -106,7 +83,7 @@ export class ConfigManager<TConfig extends BaseMCPServerConfig> {
   }
 
   /**
-   * Удалить сохраненную конфигурацию
+   * Удалить сохранённую конфигурацию.
    */
   async delete(): Promise<void> {
     if (await FileManager.exists(this.configPath)) {
@@ -116,18 +93,14 @@ export class ConfigManager<TConfig extends BaseMCPServerConfig> {
   }
 
   /**
-   * Проверить существование конфигурации
-   *
-   * @returns true если файл конфигурации существует
+   * Проверить существование конфигурации.
    */
   async exists(): Promise<boolean> {
     return FileManager.exists(this.configPath);
   }
 
   /**
-   * Получить путь к файлу конфигурации
-   *
-   * @returns Абсолютный путь к config.json
+   * Получить путь к файлу конфигурации.
    */
   getConfigPath(): string {
     return this.configPath;

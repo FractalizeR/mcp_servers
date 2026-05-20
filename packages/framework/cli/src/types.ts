@@ -3,9 +3,8 @@
  * @packageDocumentation
  */
 
-// Re-export all base types
+// Re-export all client-related types
 export {
-  type BaseMCPServerConfig,
   type MCPClientInfo,
   type ConnectionStatus,
   type MCPClientServerConfig,
@@ -13,48 +12,54 @@ export {
   type PromptType,
   type ConfigPromptDefinition,
   type ConfigManagerOptions,
-} from './types/base.types.js';
+} from './types/client.types.js';
+
+// Re-export launch spec
+export { type ServerLaunchSpec } from './types/launch.types.js';
 
 // Import for use in this file's type definitions
-import type {
-  BaseMCPServerConfig,
-  ConnectionStatus,
-  ConfigPromptDefinition,
-} from './types/base.types.js';
+import type { ConnectionStatus, ConfigPromptDefinition } from './types/client.types.js';
+import type { ServerLaunchSpec } from './types/launch.types.js';
 import type { MCPConnector } from './connectors/base/connector.interface.js';
 import type { ConfigManager } from './utils/config-manager.js';
 
 /**
  * Опции для команды connect
+ *
+ * @template TDomainConfig - Тип доменной конфигурации MCP сервера (произвольный объект)
  */
-export interface ConnectCommandOptions<TConfig extends BaseMCPServerConfig> {
+export interface ConnectCommandOptions<TDomainConfig extends object> {
   /** Реестр коннекторов */
-  registry: IConnectorRegistry<TConfig>;
+  registry: IConnectorRegistry;
 
   /** Менеджер конфигурации */
-  configManager: ConfigManager<TConfig>;
+  configManager: ConfigManager<TDomainConfig>;
 
-  /** Промпты для сбора конфигурации */
-  configPrompts: ConfigPromptDefinition<TConfig>[];
+  /** Промпты для сбора доменной конфигурации */
+  configPrompts: ConfigPromptDefinition<TDomainConfig>[];
+
+  /**
+   * Адаптер: доменная конфигурация → спецификация запуска MCP сервера.
+   * Framework не знает структуру `TDomainConfig`, эта функция превращает её в
+   * `{ command, args, env }` для записи в конфиг клиента.
+   */
+  buildServerLaunch: (config: TDomainConfig) => ServerLaunchSpec;
 
   /** CLI опции (из commander) */
   cliOptions?: {
     client?: string;
   };
-
-  /** Опционально: функция для добавления projectPath к конфигу */
-  buildConfig?: (serverConfig: Omit<TConfig, 'projectPath'>) => TConfig;
 }
 
 /**
  * Интерфейс для реестра MCP коннекторов
  * @internal - используется только для типизации command options
  */
-export interface IConnectorRegistry<TConfig extends BaseMCPServerConfig = BaseMCPServerConfig> {
-  register(connector: MCPConnector<TConfig>): void;
-  get(name: string): MCPConnector<TConfig> | undefined;
-  getAll(): MCPConnector<TConfig>[];
-  findInstalled(): Promise<MCPConnector<TConfig>[]>;
+export interface IConnectorRegistry {
+  register(connector: MCPConnector): void;
+  get(name: string): MCPConnector | undefined;
+  getAll(): MCPConnector[];
+  findInstalled(): Promise<MCPConnector[]>;
   checkAllStatuses(): Promise<Map<string, ConnectionStatus>>;
 }
 

@@ -1,22 +1,7 @@
 /**
- * Base types for MCP CLI Framework (no external dependencies)
+ * Client-related types for MCP CLI Framework (framework-agnostic)
  * @packageDocumentation
  */
-
-/**
- * Базовая конфигурация для любого MCP сервера
- * Все MCP серверы должны расширять этот интерфейс
- */
-export interface BaseMCPServerConfig {
-  /** Абсолютный путь к директории проекта */
-  projectPath: string;
-
-  /** Уровень логирования */
-  logLevel?: 'debug' | 'info' | 'warn' | 'error';
-
-  /** Дополнительные переменные окружения для MCP сервера */
-  env?: Record<string, string>;
-}
 
 /**
  * Информация о MCP клиенте (Claude Desktop, Claude Code и т.д.)
@@ -66,6 +51,9 @@ export interface ConnectionStatus {
 
 /**
  * Конфигурация MCP сервера для записи в файл клиента (JSON/TOML)
+ *
+ * @internal Используется только реализациями коннекторов. Публичный API
+ * принимает {@link ServerLaunchSpec}.
  */
 export interface MCPClientServerConfig {
   command: string;
@@ -76,6 +64,8 @@ export interface MCPClientServerConfig {
 /**
  * Базовая структура конфигурационного файла MCP клиента
  * Generic тип для разных форматов (mcpServers, mcp_servers и т.д.)
+ *
+ * @internal Используется только реализациями коннекторов.
  */
 export type MCPClientConfig<TKey extends string = 'mcpServers'> = {
   [K in TKey]?: Record<string, MCPClientServerConfig>;
@@ -88,11 +78,13 @@ export type PromptType = 'input' | 'password' | 'select' | 'confirm' | 'number';
 
 /**
  * Определение промпта для сбора конфигурации
- * Generic по типу конфигурации и ключу поля
+ *
+ * @template TDomainConfig - Тип доменной конфигурации MCP сервера (произвольный объект)
+ * @template K - Ключ поля в конфигурации
  */
 export interface ConfigPromptDefinition<
-  TConfig extends BaseMCPServerConfig,
-  K extends keyof TConfig = keyof TConfig,
+  TDomainConfig extends object,
+  K extends keyof TDomainConfig = keyof TDomainConfig,
 > {
   /** Имя поля в конфигурации */
   name: K;
@@ -104,16 +96,18 @@ export interface ConfigPromptDefinition<
   message: string;
 
   /** Значение по умолчанию (может быть функцией от сохраненной конфигурации) */
-  default?: TConfig[K] | ((savedConfig?: Partial<TConfig>) => TConfig[K] | undefined);
+  default?:
+    | TDomainConfig[K]
+    | ((savedConfig?: Partial<TDomainConfig>) => TDomainConfig[K] | undefined);
 
   /** Функция валидации */
-  validate?: (value: TConfig[K]) => string | true;
+  validate?: (value: TDomainConfig[K]) => string | true;
 
   /** Варианты выбора (для type: 'select') */
-  choices?: Array<{ name: string; value: TConfig[K] }>;
+  choices?: Array<{ name: string; value: TDomainConfig[K] }>;
 
   /** Условное отображение промпта */
-  when?: (answers: Partial<TConfig>) => boolean;
+  when?: (answers: Partial<TDomainConfig>) => boolean;
 
   /** Маска для ввода (для type: 'password') */
   mask?: string;
@@ -121,24 +115,21 @@ export interface ConfigPromptDefinition<
 
 /**
  * Опции для ConfigManager
+ *
+ * @template TDomainConfig - Тип доменной конфигурации MCP сервера (произвольный объект)
  */
-export interface ConfigManagerOptions<TConfig extends BaseMCPServerConfig> {
+export interface ConfigManagerOptions<TDomainConfig extends object> {
   /** Название проекта (для ~/.{projectName}/config.json) */
   projectName: string;
 
   /**
-   * Поля конфигурации, которые можно сохранять (без секретов!)
-   * Например: ['orgId', 'logLevel', 'apiBase']
+   * Опционально: кастомная сериализация перед записью в файл.
+   * Если не задана — сохраняется весь объект как есть.
    */
-  safeFields: Array<keyof TConfig>;
+  serialize?: (config: TDomainConfig) => Record<string, unknown>;
 
   /**
-   * Опционально: кастомная сериализация перед записью в файл
+   * Опционально: кастомная десериализация после чтения из файла.
    */
-  serialize?: (config: TConfig) => Record<string, unknown>;
-
-  /**
-   * Опционально: кастомная десериализация после чтения из файла
-   */
-  deserialize?: (data: Record<string, unknown>) => Partial<TConfig>;
+  deserialize?: (data: Record<string, unknown>) => Partial<TDomainConfig>;
 }

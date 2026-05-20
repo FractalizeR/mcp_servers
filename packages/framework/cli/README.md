@@ -2,21 +2,26 @@
 
 **Generic CLI фреймворк для управления подключениями MCP серверов к различным клиентам.**
 
+Framework полностью **агностичен к доменной модели сервера**: оперирует двумя
+абстракциями — `TDomainConfig` (произвольный объект, opaque для framework) и
+`ServerLaunchSpec` (`{ command, args, env }` — готовая спецификация запуска).
+Маппинг доменных полей в spec выполняет вызывающий код (адаптер домена).
+
 ---
 
-## 🎯 Возможности
+## Возможности
 
 - **Универсальный** — подходит для любого MCP сервера
-- **Поддержка множества клиентов** — Claude Desktop, Claude Code, Codex, Gemini, Qwen
-- **Типобезопасность** — TypeScript generics для конфигурации
-- **Декларативные промпты** — простая настройка через `ConfigPromptDefinition`
-- **Безопасное хранение** — секреты не сохраняются, только безопасные поля
-- **Расширяемость** — легко добавить новый клиент или кастомизировать промпты
-- **Интерактивность** — удобный CLI с выбором из списка, валидацией, спиннерами
+- **Поддержка клиентов** — Claude Desktop, Claude Code, Codex, Gemini, Qwen (через `createConnector`)
+- **Типобезопасность** — TypeScript generic-параметры с `extends object`
+- **Декларативные промпты** — `ConfigPromptDefinition<T>`
+- **Структурный парсинг статуса Claude Code** — `✓ Connected`/`✗ Failed`/`! Needs authentication`
+- **Параллельный сбор статусов** — `Promise.allSettled` для всех клиентов сразу
+- **Самодиагностика** — `connector.getLaunchSpec()` для проверки актуальности записей в конфигах
 
 ---
 
-## 📦 Установка
+## Установка
 
 ```bash
 npm install @fractalizer/mcp-cli
@@ -24,36 +29,41 @@ npm install @fractalizer/mcp-cli
 
 ---
 
-## 🚀 Быстрый старт
-
-### Минимальный пример
+## Быстрый старт
 
 ```typescript
-import { connectCommand, ConnectorRegistry, ConfigManager } from '@fractalizer/mcp-cli';
-import type { BaseMCPServerConfig, ConfigPromptDefinition } from '@fractalizer/mcp-cli';
 import {
-  ClaudeDesktopConnector,
+  connectCommand,
+  ConnectorRegistry,
+  ConfigManager,
+  createConnector,
   ClaudeCodeConnector,
-} from '@fractalizer/mcp-cli/connectors';
+} from '@fractalizer/mcp-cli';
+import type {
+  ConfigPromptDefinition,
+  ServerLaunchSpec,
+} from '@fractalizer/mcp-cli';
 
-// 1. Определяем конфигурацию вашего MCP сервера
-interface MyServerConfig extends BaseMCPServerConfig {
-  apiToken: string;  // Секрет
-  orgId: string;     // Безопасное поле
+// 1. Доменная конфигурация (произвольный объект)
+interface MyServerConfig {
+  apiToken: string;
+  orgId: string;
 }
 
-// 2. Создаем реестр и регистрируем коннекторы
-const registry = new ConnectorRegistry<MyServerConfig>();
-registry.register(new ClaudeDesktopConnector('my-server', 'dist/index.js'));
-registry.register(new ClaudeCodeConnector('my-server', 'dist/index.js'));
+// 2. Реестр коннекторов
+const registry = new ConnectorRegistry();
+registry.register(createConnector('claude-desktop', 'my-server'));
+registry.register(createConnector('gemini', 'my-server'));
+registry.register(new ClaudeCodeConnector('my-server'));
 
-// 3. Создаем менеджер конфигурации
+// 3. ConfigManager (опционально, для сохранения)
 const configManager = new ConfigManager<MyServerConfig>({
   projectName: 'my-mcp-server',
-  safeFields: ['orgId', 'logLevel', 'projectPath'], // БЕЗ apiToken!
+  // serialize-хук позволяет исключать секреты при сохранении
+  serialize: (cfg) => ({ orgId: cfg.orgId }),
 });
 
-// 4. Определяем промпты для сбора конфигурации
+// 4. Промпты для сбора доменной конфигурации
 const configPrompts: ConfigPromptDefinition<MyServerConfig>[] = [
   {
     name: 'apiToken',
@@ -65,143 +75,113 @@ const configPrompts: ConfigPromptDefinition<MyServerConfig>[] = [
     name: 'orgId',
     type: 'input',
     message: 'ID организации:',
-    default: (saved) => saved?.orgId, // Используем сохраненное значение
+    default: (saved) => saved?.orgId,
   },
 ];
 
-// 5. Запускаем команду подключения
+// 5. Адаптер: доменная конфигурация → spec
+function buildServerLaunch(cfg: MyServerConfig): ServerLaunchSpec {
+  return {
+    command: 'node',
+    args: ['/abs/path/to/server.bundle.cjs'],
+    env: {
+      API_TOKEN: cfg.apiToken,
+      ORG_ID: cfg.orgId,
+    },
+  };
+}
+
+// 6. Запускаем команду подключения
 await connectCommand({
   registry,
   configManager,
   configPrompts,
+  buildServerLaunch,
 });
 ```
-
-**Что произойдет:**
-1. CLI найдет установленные MCP клиенты
-2. Предложит выбрать клиент из списка
-3. Соберет конфигурацию через интерактивные промпты
-4. Провалидирует конфигурацию
-5. Подключит MCP сервер к выбранному клиенту
-6. Сохранит безопасные поля (без секретов)
 
 ---
 
-## 📚 Основные концепции
+## Основные концепции
 
-### 1. Конфигурация MCP сервера
+### ServerLaunchSpec
 
-Все MCP серверы должны расширять `BaseMCPServerConfig`:
+Спецификация запуска MCP сервера — готовая «команда + аргументы + env»,
+записываемая в конфиг клиента:
 
 ```typescript
-interface BaseMCPServerConfig {
-  projectPath: string;                   // Путь к проекту
-  logLevel?: 'debug' | 'info' | 'warn' | 'error';
-  env?: Record<string, string>;          // Переменные окружения
-}
-
-// Расширяем для своего сервера
-interface YandexTrackerConfig extends BaseMCPServerConfig {
-  token: string;        // Секрет - НЕ сохраняется
-  orgId: string;        // Безопасно - сохраняется
-  apiBase?: string;     // Безопасно - сохраняется
+interface ServerLaunchSpec {
+  command: string;
+  args: string[];
+  env: Record<string, string>;
 }
 ```
 
-### 2. Коннекторы
+### Коннекторы
 
-**Коннектор** — адаптер для конкретного MCP клиента (Claude Desktop, Claude Code и т.д.).
+**Два типа коннекторов:**
 
-**Встроенные коннекторы:**
-- `ClaudeDesktopConnector` — Claude Desktop (macOS/Windows)
-- `ClaudeCodeConnector` — Claude Code (VSCode extension)
-- `CodexConnector` — Codex IDE
-- `GeminiConnector` — Google Gemini
-- `QwenConnector` — Alibaba Qwen
-
-**Использование:**
+1. **`ConfigurableConnector`** — файл-ориентированные клиенты (Claude Desktop,
+   Gemini, Qwen, Codex). Создаётся через фабрику `createConnector(client, serverName)`.
+2. **`ClaudeCodeConnector`** — Claude Code CLI (управляется командами `claude mcp add/remove/list/get`).
 
 ```typescript
-import { ClaudeDesktopConnector } from '@fractalizer/mcp-cli/connectors';
-
-const connector = new ClaudeDesktopConnector(
-  'my-server',      // Имя сервера в конфиге клиента
-  'dist/index.js'   // Путь к entry point вашего MCP сервера
-);
-
-// Проверить установку
-const isInstalled = await connector.isInstalled();
-
-// Подключить
-await connector.connect(config);
-
-// Отключить
-await connector.disconnect();
-
-// Проверить статус
-const status = await connector.getStatus();
+const desktop = createConnector('claude-desktop', 'my-server');
+const claudeCode = new ClaudeCodeConnector('my-server');
 ```
 
-### 3. Реестр коннекторов
-
-`ConnectorRegistry` управляет коллекцией коннекторов:
+**Контракт `MCPConnector`:**
 
 ```typescript
-const registry = new ConnectorRegistry<MyServerConfig>();
+interface MCPConnector {
+  getClientInfo(): MCPClientInfo;
+  isInstalled(): Promise<boolean>;
+  getStatus(): Promise<ConnectionStatus>;
+  connect(spec: ServerLaunchSpec): Promise<void>;
+  disconnect(): Promise<void>;
+  validateLaunchSpec(spec: ServerLaunchSpec): Promise<string[]>;
+  getLaunchSpec(): Promise<ServerLaunchSpec | null>;
+}
+```
 
-// Регистрация
-registry.register(new ClaudeDesktopConnector('my-server', 'dist/index.js'));
-registry.register(new ClaudeCodeConnector('my-server', 'dist/index.js'));
+### ConnectorRegistry
 
-// Получение
-const connector = registry.get('claude-desktop');
+```typescript
+const registry = new ConnectorRegistry();
+registry.register(createConnector('gemini', 'my-server'));
 
-// Поиск установленных
+// Установленные клиенты (проверка параллельная)
 const installed = await registry.findInstalled();
 
-// Проверка статусов всех
+// Все статусы параллельно через Promise.allSettled
 const statuses = await registry.checkAllStatuses();
 ```
 
-### 4. Менеджер конфигурации
+### ConfigManager
 
-`ConfigManager` сохраняет и загружает конфигурацию (только безопасные поля):
+Хранит **доменную** конфигурацию в `~/.{projectName}/config.json`:
 
 ```typescript
-const configManager = new ConfigManager<MyServerConfig>({
+const cm = new ConfigManager<MyConfig>({
   projectName: 'my-server',
-  safeFields: ['orgId', 'apiBase', 'logLevel'], // БЕЗ token!
+  // По умолчанию сохраняется весь объект как есть.
+  // Чтобы исключить секреты — задайте serialize:
+  serialize: (cfg) => ({ orgId: cfg.orgId, apiBase: cfg.apiBase }),
 });
 
-// Сохранить (только safeFields будут записаны)
-await configManager.save(config);
-
-// Загрузить
-const saved = await configManager.load();
-// saved = { orgId: '...', apiBase: '...', logLevel: 'info' }
-// token НЕ сохранен!
+await cm.save(config); // → ~/.my-server/config.json
+const saved = await cm.load();
 ```
 
-**Путь к файлу:** `~/.{projectName}/config.json`
+Права файла — `0o600`. Для фильтрации полей при сохранении используйте
+`serialize`-хук (единственный механизм).
 
-### 5. Интерактивные промпты
-
-`ConfigPromptDefinition` определяет, как собирать конфигурацию:
+### Интерактивные промпты
 
 ```typescript
-const prompts: ConfigPromptDefinition<MyServerConfig>[] = [
-  {
-    name: 'token',
-    type: 'password',
-    message: 'OAuth токен:',
-    validate: (value) => value ? true : 'Токен обязателен',
-  },
-  {
-    name: 'orgId',
-    type: 'input',
-    message: 'ID организации:',
-    default: (saved) => saved?.orgId, // Используем сохраненное
-  },
+const prompts: ConfigPromptDefinition<MyConfig>[] = [
+  { name: 'token', type: 'password', message: 'OAuth токен:' },
+  { name: 'orgId', type: 'input', message: 'ID организации:' },
   {
     name: 'logLevel',
     type: 'select',
@@ -209,173 +189,109 @@ const prompts: ConfigPromptDefinition<MyServerConfig>[] = [
     choices: [
       { name: 'Debug', value: 'debug' },
       { name: 'Info', value: 'info' },
-      { name: 'Warn', value: 'warn' },
-      { name: 'Error', value: 'error' },
     ],
     default: 'info',
   },
 ];
 
-const prompter = new InteractivePrompter<MyServerConfig>(prompts);
+const prompter = new InteractivePrompter<MyConfig>(prompts);
 const config = await prompter.promptServerConfig(savedConfig);
 ```
 
-**Типы промптов:**
-- `input` — текстовый ввод
-- `password` — скрытый ввод (для секретов)
-- `select` — выбор из списка
-- `confirm` — да/нет
-- `number` — числовой ввод
+**Типы промптов:** `input`, `password`, `select`, `confirm`, `number`.
 
 ---
 
-## 🎨 Команды
+## Команды
 
 ### connectCommand
 
-Подключает MCP сервер к выбранному клиенту.
+Поток:
+
+1. Найти установленные клиенты.
+2. Выбрать клиент (через `--client` или интерактивно).
+3. Загрузить сохранённую доменную конфигурацию.
+4. Собрать новую конфигурацию через промпты.
+5. `buildServerLaunch(domainConfig)` → `ServerLaunchSpec`.
+6. `connector.validateLaunchSpec(spec)`. При ошибках — abort.
+7. `connector.connect(spec)`. При исключении управление прерывается до save.
+8. `connector.getStatus()` (информационный).
+9. **После успешного connect** — `configManager.save(domainConfig)` и warning про
+   plaintext-хранение токена в конфиге клиента.
 
 ```typescript
-import { connectCommand } from '@fractalizer/mcp-cli/commands';
-
 await connectCommand({
   registry,
   configManager,
   configPrompts,
-  cliOptions: {
-    client: 'claude-desktop', // Опционально: пропустить выбор клиента
-  },
-  buildConfig: (serverConfig) => ({
-    ...serverConfig,
-    projectPath: process.cwd(),
+  buildServerLaunch: (cfg) => ({
+    command: 'node',
+    args: ['/abs/path/server.bundle.cjs'],
+    env: { API_TOKEN: cfg.token, ORG_ID: cfg.orgId },
   }),
+  cliOptions: { client: 'claude-desktop' },
 });
 ```
 
-### disconnectCommand
-
-Отключает MCP сервер от клиента.
+### disconnectCommand / statusCommand / listCommand / validateCommand
 
 ```typescript
-import { disconnectCommand } from '@fractalizer/mcp-cli/commands';
-
-await disconnectCommand({
-  registry,
-  cliOptions: {
-    client: 'claude-desktop',
-  },
-});
-```
-
-### statusCommand
-
-Показывает статус подключений для всех клиентов.
-
-```typescript
-import { statusCommand } from '@fractalizer/mcp-cli/commands';
-
+await disconnectCommand({ registry, cliOptions: { client: 'claude-desktop' } });
 await statusCommand({ registry });
-```
-
-### listCommand
-
-Показывает список всех доступных MCP клиентов.
-
-```typescript
-import { listCommand } from '@fractalizer/mcp-cli/commands';
-
 await listCommand({ registry });
+await validateCommand({ registry });
 ```
 
-### validateCommand
-
-Валидирует текущую конфигурацию для выбранного клиента.
-
-```typescript
-import { validateCommand } from '@fractalizer/mcp-cli/commands';
-
-await validateCommand({
-  registry,
-  configManager,
-  configPrompts,
-  cliOptions: {
-    client: 'claude-desktop',
-  },
-});
-```
+`statusCommand` и `validateCommand` собирают статусы параллельно через
+`Promise.allSettled`, рендерят результат в детерминированном порядке регистрации.
 
 ---
 
-## 🛠️ Утилиты
+## Утилиты
 
 ### CommandExecutor
 
-Выполнение shell команд:
-
 ```typescript
-import { CommandExecutor } from '@fractalizer/mcp-cli/utils';
+import { CommandExecutor } from '@fractalizer/mcp-cli';
 
-const result = await CommandExecutor.execute('ls -la');
-if (result.success) {
-  console.log(result.stdout);
-}
+// Простое выполнение
+const out = CommandExecutor.exec('node --version');
+
+// С таймаутом — при превышении бросает Error('Timeout: ...').
+const list = CommandExecutor.exec('claude mcp list', { timeout: 5000 });
+
+// Интерактивно (наследует stdio)
+await CommandExecutor.execInteractive('claude', ['mcp', 'add', '...']);
+
+// Проверка наличия в PATH
+if (CommandExecutor.isCommandAvailable('claude')) { /* ... */ }
 ```
 
-### FileManager
-
-Работа с файлами:
+### FileManager / Logger
 
 ```typescript
-import { FileManager } from '@fractalizer/mcp-cli/utils';
+import { FileManager, Logger } from '@fractalizer/mcp-cli';
 
-// Чтение JSON
 const data = await FileManager.readJSON('/path/to/config.json');
-
-// Запись JSON
 await FileManager.writeJSON('/path/to/config.json', data);
-
-// Проверка существования
-const exists = await FileManager.exists('/path/to/file');
-
-// Создание директории
-await FileManager.ensureDir('/path/to/dir');
-```
-
-### Logger
-
-CLI логирование:
-
-```typescript
-import { Logger } from '@fractalizer/mcp-cli/utils';
 
 Logger.info('Информация');
 Logger.success('Успех!');
-Logger.error('Ошибка!');
-Logger.warn('Предупреждение');
-
-const spinner = Logger.spinner('Загрузка...');
-// ... выполнение операции ...
-spinner.succeed('Готово!');
+Logger.warn('Внимание');
+Logger.error('Ошибка');
 ```
 
 ---
 
-## 🏗️ Создание кастомного коннектора
+## Кастомный коннектор
 
-Если нужно добавить новый MCP клиент:
+Если нужно поддержать клиент, не входящий в `KnownClient`:
 
 ```typescript
-import { BaseConnector } from '@fractalizer/mcp-cli/connectors';
-import type { MCPClientInfo, ConnectionStatus } from '@fractalizer/mcp-cli';
+import { BaseConnector } from '@fractalizer/mcp-cli';
+import type { MCPClientInfo, ConnectionStatus, ServerLaunchSpec } from '@fractalizer/mcp-cli';
 
-class MyCustomConnector<TConfig extends BaseMCPServerConfig> extends BaseConnector<TConfig> {
-  constructor(
-    private serverName: string,
-    private serverPath: string
-  ) {
-    super();
-  }
-
+class MyCustomConnector extends BaseConnector {
   getClientInfo(): MCPClientInfo {
     return {
       name: 'my-client',
@@ -386,53 +302,29 @@ class MyCustomConnector<TConfig extends BaseMCPServerConfig> extends BaseConnect
     };
   }
 
-  async isInstalled(): Promise<boolean> {
-    // Проверка установки клиента
-    return true;
-  }
+  async isInstalled(): Promise<boolean> { /* ... */ return true; }
 
-  async getStatus(): Promise<ConnectionStatus> {
-    // Проверка статуса подключения
-    return { connected: true };
-  }
+  async getStatus(): Promise<ConnectionStatus> { /* ... */ return { connected: true }; }
 
-  async connect(config: TConfig): Promise<void> {
-    // Логика подключения
-  }
+  async connect(spec: ServerLaunchSpec): Promise<void> { /* запись spec */ }
 
-  async disconnect(): Promise<void> {
-    // Логика отключения
-  }
+  async disconnect(): Promise<void> { /* удаление записи */ }
 
-  async validateConfig(config: TConfig): Promise<string[]> {
-    const errors = await super.validateConfig(config);
-    // Добавить свои проверки
-    return errors;
-  }
+  async getLaunchSpec(): Promise<ServerLaunchSpec | null> { /* чтение записи */ return null; }
 }
-
-// Использование
-const connector = new MyCustomConnector('my-server', 'dist/index.js');
-registry.register(connector);
 ```
 
----
+`BaseConnector.validateLaunchSpec` уже проверяет:
+- `spec.command` непустой;
+- абсолютный путь команды существует на диске;
+- для `command === 'node'` — первый абсолютный путь в `spec.args` существует;
+- значения `spec.env` — строки.
 
-## 📖 Примеры использования
-
-### Реальный пример: Yandex Tracker MCP
-
-См. реализацию в [`packages/servers/yandex-tracker/src/cli/`](../../servers/yandex-tracker/src/cli/).
-
----
-
-## 🔗 См. также
-
-- **[Полный API Reference](./API.md)** — детальная документация всех типов и методов
-- **[@fractalizer/mcp-infrastructure](../infrastructure/README.md)** — инфраструктурные утилиты
+Наследник может переопределить, вызвав `super.validateLaunchSpec(spec)` для
+сохранения базовых проверок.
 
 ---
 
-## 📝 Лицензия
+## Лицензия
 
 PolyForm Shield License 1.0.0

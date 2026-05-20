@@ -3,106 +3,104 @@
  * @packageDocumentation
  */
 
+import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
+import * as path from 'node:path';
 import type { MCPConnector } from './connector.interface.js';
-import type { BaseMCPServerConfig } from '../../types.js';
+import type { ConnectionStatus, MCPClientInfo } from '../../types/client.types.js';
+import type { ServerLaunchSpec } from '../../types/launch.types.js';
 
 /**
  * Абстрактный базовый класс для всех MCP коннекторов
- * Предоставляет общую функциональность и utility методы
- *
- * @template TConfig - Тип конфигурации MCP сервера
+ * Предоставляет общую функциональность и utility методы.
  *
  * @example
  * ```typescript
- * class MyConnector extends BaseConnector<MyServerConfig> {
- *   getClientInfo(): MCPClientInfo {
- *     return {
- *       name: 'my-client',
- *       displayName: 'My Client',
- *       description: 'My MCP Client',
- *       configPath: '/path/to/config',
- *       platforms: ['darwin', 'linux'],
- *     };
- *   }
- *
- *   async isInstalled(): Promise<boolean> {
- *     // implementation
- *   }
- *
- *   // ... other methods
+ * class MyConnector extends BaseConnector {
+ *   getClientInfo(): MCPClientInfo { ... }
+ *   async isInstalled(): Promise<boolean> { ... }
+ *   async connect(spec: ServerLaunchSpec): Promise<void> { ... }
+ *   // ... остальные методы
  * }
  * ```
  */
-export abstract class BaseConnector<TConfig extends BaseMCPServerConfig = BaseMCPServerConfig>
-  implements MCPConnector<TConfig>
-{
+export abstract class BaseConnector implements MCPConnector {
   /**
    * Абстрактные методы - должны быть реализованы наследниками
    */
-  abstract getClientInfo(): ReturnType<MCPConnector<TConfig>['getClientInfo']>;
-  abstract isInstalled(): ReturnType<MCPConnector<TConfig>['isInstalled']>;
-  abstract getStatus(): ReturnType<MCPConnector<TConfig>['getStatus']>;
-  abstract connect(config: TConfig): ReturnType<MCPConnector<TConfig>['connect']>;
-  abstract disconnect(): ReturnType<MCPConnector<TConfig>['disconnect']>;
+  abstract getClientInfo(): MCPClientInfo;
+  abstract isInstalled(): Promise<boolean>;
+  abstract getStatus(): Promise<ConnectionStatus>;
+  abstract connect(spec: ServerLaunchSpec): Promise<void>;
+  abstract disconnect(): Promise<void>;
+  abstract getLaunchSpec(): Promise<ServerLaunchSpec | null>;
 
   /**
-   * Базовая валидация конфигурации
-   * Проверяет обязательные поля BaseMCPServerConfig
+   * Базовая валидация спецификации запуска.
+   * Наследники могут переопределить метод, вызвав `super.validateLaunchSpec(spec)`
+   * для сохранения базовых проверок.
    *
-   * Наследники могут переопределить этот метод для добавления своих правил валидации.
-   * При переопределении рекомендуется вызывать super.validateConfig() для сохранения базовой валидации.
+   * Проверки:
+   * - `spec.command` непустой.
+   * - Если `spec.command` — абсолютный путь, проверяется существование файла.
+   * - Если `spec.command === 'node'`, ищется первый абсолютный путь в `spec.args`
+   *   (учитывая возможные Node-флаги типа `--no-warnings`) и проверяется его существование.
+   * - Значения `spec.env` обязаны быть строками (runtime-проверка для JS-вызовов).
    *
-   * @param config - Конфигурация для валидации
+   * @param spec - Спецификация для валидации
    * @returns Массив ошибок валидации (пустой если валидация успешна)
-   *
-   * @example
-   * ```typescript
-   * async validateConfig(config: MyServerConfig): Promise<string[]> {
-   *   const errors = await super.validateConfig(config);
-   *
-   *   if (!config.apiKey) {
-   *     errors.push('API ключ обязателен');
-   *   }
-   *
-   *   return errors;
-   * }
-   * ```
    */
-  validateConfig(config: TConfig): Promise<string[]> {
+  async validateLaunchSpec(spec: ServerLaunchSpec): Promise<string[]> {
     const errors: string[] = [];
 
-    // Проверка projectPath
-    if (!config.projectPath || config.projectPath.trim().length === 0) {
-      errors.push('Путь к проекту обязателен');
+    if (!spec.command || spec.command.trim().length === 0) {
+      errors.push('Команда запуска (command) обязательна');
+      return errors;
     }
 
-    // Проверка logLevel (если указан)
-    if (config.logLevel) {
-      const validLevels = ['debug', 'info', 'warn', 'error'];
-      if (!validLevels.includes(config.logLevel)) {
-        errors.push(
-          `Неверный уровень логирования: ${config.logLevel}. Допустимые: ${validLevels.join(', ')}`
-        );
+    if (path.isAbsolute(spec.command)) {
+      const ok = await this.fileExists(spec.command);
+      if (!ok) {
+        errors.push(`Файл команды не найден: ${spec.command}`);
+      }
+    } else if (spec.command === 'node') {
+      const scriptPath = spec.args.find((a) => path.isAbsolute(a));
+      if (!scriptPath) {
+        errors.push('Для команды `node` не найден абсолютный путь к скрипту в args');
+      } else {
+        const ok = await this.fileExists(scriptPath);
+        if (!ok) {
+          errors.push(`Скрипт не найден: ${scriptPath}`);
+        }
       }
     }
 
-    return Promise.resolve(errors);
+    if (spec.env && typeof spec.env === 'object') {
+      for (const [key, value] of Object.entries(spec.env)) {
+        if (typeof value !== 'string') {
+          errors.push(`Значение env.${key} должно быть строкой, получено: ${typeof value}`);
+        }
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * Проверка существования файла без выброса исключений.
+   */
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
    * Проверить поддержку текущей платформы
    * @returns true если текущая платформа поддерживается клиентом
-   *
-   * @example
-   * ```typescript
-   * async connect(config: TConfig): Promise<void> {
-   *   if (!this.isPlatformSupported()) {
-   *     throw new Error(`Платформа ${this.getCurrentPlatform()} не поддерживается`);
-   *   }
-   *   // ... rest of connect logic
-   * }
-   * ```
    */
   protected isPlatformSupported(): boolean {
     const platform = os.platform();

@@ -3,31 +3,27 @@
  * @packageDocumentation
  */
 
-import type {
-  BaseMCPServerConfig,
-  MCPClientInfo,
-  ConnectionStatus,
-} from '../../types/base.types.js';
+import type { MCPClientInfo, ConnectionStatus } from '../../types/client.types.js';
+import type { ServerLaunchSpec } from '../../types/launch.types.js';
 
 /**
- * Базовый интерфейс для всех MCP коннекторов
- * Generic по типу конфигурации сервера
+ * Базовый интерфейс для всех MCP коннекторов.
  *
- * @template TConfig - Тип конфигурации MCP сервера (расширяет BaseMCPServerConfig)
+ * Framework-агностичен к доменной модели: коннектор оперирует «универсальной»
+ * спецификацией запуска {@link ServerLaunchSpec} (`{ command, args, env }`).
+ * Маппинг доменных полей в эту спецификацию выполняет вызывающая сторона.
  *
  * @example
  * ```typescript
- * interface MyServerConfig extends BaseMCPServerConfig {
- *   apiKey: string;
- *   apiBase: string;
- * }
- *
- * class MyConnector implements MCPConnector<MyServerConfig> {
- *   // implementation
+ * class MyConnector implements MCPConnector {
+ *   async connect(spec: ServerLaunchSpec): Promise<void> {
+ *     // запись spec в конфиг клиента
+ *   }
+ *   // ... остальные методы
  * }
  * ```
  */
-export interface MCPConnector<TConfig extends BaseMCPServerConfig = BaseMCPServerConfig> {
+export interface MCPConnector {
   /**
    * Получить информацию о MCP клиенте
    * @returns Метаданные клиента (имя, описание, платформы и т.д.)
@@ -48,25 +44,35 @@ export interface MCPConnector<TConfig extends BaseMCPServerConfig = BaseMCPServe
 
   /**
    * Подключить MCP сервер к клиенту
-   * Записывает конфигурацию в файл клиента
+   * Записывает спецификацию запуска в конфигурацию клиента.
    *
-   * @param config - Конфигурация MCP сервера
-   * @throws Если клиент не установлен или конфигурация невалидна
+   * @param spec - Спецификация запуска MCP сервера
+   * @throws Если клиент не установлен или спецификация невалидна
    */
-  connect(config: TConfig): Promise<void>;
+  connect(spec: ServerLaunchSpec): Promise<void>;
 
   /**
    * Отключить MCP сервер от клиента
-   * Удаляет конфигурацию из файла клиента
+   * Удаляет конфигурацию из файла клиента.
    *
    * @throws Если клиент не установлен или сервер не подключен
    */
   disconnect(): Promise<void>;
 
   /**
-   * Валидировать конфигурацию перед подключением
-   * @param config - Конфигурация для проверки
+   * Валидировать спецификацию запуска перед подключением
+   * @param spec - Спецификация для проверки
    * @returns Массив ошибок валидации (пустой если валидация успешна)
    */
-  validateConfig(config: TConfig): Promise<string[]>;
+  validateLaunchSpec(spec: ServerLaunchSpec): Promise<string[]>;
+
+  /**
+   * Получить текущую записанную в конфиге клиента спецификацию запуска.
+   * Используется командой `doctor` для самодиагностики (например, проверка
+   * существования `command` на диске).
+   *
+   * @returns Spec, если сервер подключен; `null` если не подключен или конфиг
+   *          недоступен/повреждён.
+   */
+  getLaunchSpec(): Promise<ServerLaunchSpec | null>;
 }
