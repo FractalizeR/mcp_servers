@@ -166,4 +166,48 @@ describe('BaseConnector.validateLaunchSpec', () => {
     });
     expect(errors).toEqual([]);
   });
+
+  describe('cwd validation (H4)', () => {
+    it('cwd: undefined → не проверяется', async () => {
+      const errors = await connector.validateLaunchSpec({
+        command: 'npx',
+        args: [],
+        env: {},
+      });
+      expect(errors).toEqual([]);
+    });
+
+    it('cwd: относительный путь → ошибка', async () => {
+      const errors = await connector.validateLaunchSpec({
+        command: 'npx',
+        args: [],
+        env: {},
+        cwd: './relative/path',
+      });
+      expect(errors.some((e) => e.includes('должна быть абсолютным'))).toBe(true);
+    });
+
+    it('cwd: абсолютный путь, существует → ok', async () => {
+      vi.mocked(fs.access).mockResolvedValue(undefined);
+      const errors = await connector.validateLaunchSpec({
+        command: 'npx',
+        args: [],
+        env: {},
+        cwd: '/abs/dir',
+      });
+      expect(errors).toEqual([]);
+      expect(fs.access).toHaveBeenCalledWith('/abs/dir');
+    });
+
+    it('cwd: абсолютный путь, не существует → ошибка', async () => {
+      vi.mocked(fs.access).mockRejectedValue(new Error('ENOENT'));
+      const errors = await connector.validateLaunchSpec({
+        command: 'npx',
+        args: [],
+        env: {},
+        cwd: '/missing/dir',
+      });
+      expect(errors.some((e) => e.includes('cwd) не найдена'))).toBe(true);
+    });
+  });
 });

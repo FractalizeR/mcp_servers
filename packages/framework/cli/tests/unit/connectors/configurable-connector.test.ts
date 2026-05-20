@@ -411,6 +411,56 @@ describe('ConfigurableConnector', () => {
       expect(await c.getLaunchSpec()).toBeNull();
     });
 
+    it('сохраняет и читает обратно cwd / disabled (H4)', async () => {
+      vi.mocked(FileManager.exists).mockResolvedValue(false);
+      const c = new ConfigurableConnector(SERVER_NAME, baseJsonConfig);
+
+      await c.connect({
+        command: 'node',
+        args: ['/abs/script.cjs'],
+        env: {},
+        cwd: '/abs/workdir',
+        disabled: true,
+      });
+
+      const writtenArg = vi.mocked(FileManager.writeJSON).mock.calls[0]?.[1] as Record<
+        string,
+        Record<string, { cwd?: string; disabled?: boolean }>
+      >;
+      expect(writtenArg['mcpServers']?.[SERVER_NAME]?.cwd).toBe('/abs/workdir');
+      expect(writtenArg['mcpServers']?.[SERVER_NAME]?.disabled).toBe(true);
+
+      // Симулируем чтение того же файла
+      vi.mocked(FileManager.exists).mockResolvedValue(true);
+      vi.mocked(FileManager.readJSON).mockResolvedValue({
+        mcpServers: {
+          [SERVER_NAME]: {
+            command: 'node',
+            args: ['/abs/script.cjs'],
+            env: {},
+            cwd: '/abs/workdir',
+            disabled: true,
+          },
+        },
+      });
+      const spec = await c.getLaunchSpec();
+      expect(spec?.cwd).toBe('/abs/workdir');
+      expect(spec?.disabled).toBe(true);
+    });
+
+    it('не пишет cwd/disabled когда они undefined (clean object)', async () => {
+      vi.mocked(FileManager.exists).mockResolvedValue(false);
+      const c = new ConfigurableConnector(SERVER_NAME, baseJsonConfig);
+      await c.connect({ command: 'node', args: ['/x.cjs'], env: {} });
+      const writtenArg = vi.mocked(FileManager.writeJSON).mock.calls[0]?.[1] as Record<
+        string,
+        Record<string, Record<string, unknown>>
+      >;
+      const entry = writtenArg['mcpServers']?.[SERVER_NAME] ?? {};
+      expect('cwd' in entry).toBe(false);
+      expect('disabled' in entry).toBe(false);
+    });
+
     it('TOML: использует readTOML и custom serverKey', async () => {
       vi.mocked(FileManager.exists).mockResolvedValue(true);
       vi.mocked(FileManager.readTOML).mockResolvedValue({

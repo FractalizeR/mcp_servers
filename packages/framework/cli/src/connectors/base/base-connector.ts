@@ -47,6 +47,7 @@ export abstract class BaseConnector implements MCPConnector {
    * - Если `spec.command === 'node'`, ищется первый абсолютный путь в `spec.args`
    *   (учитывая возможные Node-флаги типа `--no-warnings`) и проверяется его существование.
    * - Значения `spec.env` обязаны быть строками (runtime-проверка для JS-вызовов).
+   * - Если задан `spec.cwd` — путь должен быть абсолютным и существовать.
    *
    * @param spec - Спецификация для валидации
    * @returns Массив ошибок валидации (пустой если валидация успешна)
@@ -80,6 +81,17 @@ export abstract class BaseConnector implements MCPConnector {
       for (const [key, value] of Object.entries(spec.env)) {
         if (typeof value !== 'string') {
           errors.push(`Значение env.${key} должно быть строкой, получено: ${typeof value}`);
+        }
+      }
+    }
+
+    if (spec.cwd !== undefined) {
+      if (!path.isAbsolute(spec.cwd)) {
+        errors.push(`Рабочая директория (cwd) должна быть абсолютным путём: ${spec.cwd}`);
+      } else {
+        const ok = await this.fileExists(spec.cwd);
+        if (!ok) {
+          errors.push(`Рабочая директория (cwd) не найдена: ${spec.cwd}`);
         }
       }
     }

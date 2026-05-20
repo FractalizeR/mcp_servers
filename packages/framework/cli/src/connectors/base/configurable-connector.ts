@@ -11,19 +11,32 @@ import * as path from 'node:path';
 import { BaseConnector } from './base-connector.js';
 import { FileManager } from '../../utils/file-manager.js';
 import { resolveExecutablePath } from '../../utils/launch-spec-helpers.js';
-import type {
-  ConnectionStatus,
-  MCPClientInfo,
-  MCPClientServerConfig,
-} from '../../types/client.types.js';
+import type { ConnectionStatus, MCPClientInfo } from '../../types/client.types.js';
 import type { ServerLaunchSpec } from '../../types/launch.types.js';
+
+/**
+ * Запись о сервере в файле конфигурации клиента.
+ *
+ * Структура соответствует фактическим JSON/TOML-форматам Claude Desktop,
+ * Gemini, Qwen, Codex. Дополнительные опциональные поля (`cwd`, `disabled`)
+ * пишутся только если заданы в {@link ServerLaunchSpec}.
+ *
+ * @internal Используется только внутри ConfigurableConnector.
+ */
+interface ClientServerConfigEntry {
+  command: string;
+  args: string[];
+  env: Record<string, string>;
+  cwd?: string;
+  disabled?: boolean;
+}
 
 /**
  * Внутренняя «расширенная» форма клиентского конфига: top-level объект с
  * произвольным ключом серверов (например, `mcpServers` или `mcp_servers`).
  * Используется для динамической работы с ключом, известным только в runtime.
  */
-type RawClientConfig = Record<string, Record<string, MCPClientServerConfig>>;
+type RawClientConfig = Record<string, Record<string, ClientServerConfigEntry>>;
 
 /**
  * Формат конфигурационного файла клиента
@@ -190,11 +203,18 @@ export class ConfigurableConnector extends BaseConnector {
 
     const serverKey = this.getServerKey();
     const servers = (config[serverKey] ??= {});
-    servers[this._serverName] = {
+    const entry: ClientServerConfigEntry = {
       command: spec.command,
-      args: spec.args,
+      args: [...spec.args],
       env: spec.env,
     };
+    if (spec.cwd !== undefined) {
+      entry.cwd = spec.cwd;
+    }
+    if (spec.disabled !== undefined) {
+      entry.disabled = spec.disabled;
+    }
+    servers[this._serverName] = entry;
 
     await this.writeConfig(config);
   }
@@ -237,11 +257,18 @@ export class ConfigurableConnector extends BaseConnector {
         return null;
       }
 
-      return {
+      const spec: ServerLaunchSpec = {
         command: entry.command,
         args: entry.args,
         env: entry.env,
       };
+      if (entry.cwd !== undefined) {
+        spec.cwd = entry.cwd;
+      }
+      if (entry.disabled !== undefined) {
+        spec.disabled = entry.disabled;
+      }
+      return spec;
     } catch {
       return null;
     }
@@ -292,7 +319,7 @@ export class ConfigurableConnector extends BaseConnector {
    *  - всё остальное (`npx`, `pipx`, относительная команда из PATH) → считаем OK,
    *    не пытаемся резолвить PATH.
    */
-  private async commandExistsOnDisk(entry: MCPClientServerConfig): Promise<boolean> {
+  private async commandExistsOnDisk(entry: ClientServerConfigEntry): Promise<boolean> {
     const filePath = resolveExecutablePath({
       command: entry.command,
       args: entry.args,
@@ -306,7 +333,7 @@ export class ConfigurableConnector extends BaseConnector {
     return this.pathExists(filePath);
   }
 
-  private describeCommand(entry: MCPClientServerConfig): string {
+  private describeCommand(entry: ClientServerConfigEntry): string {
     const filePath = resolveExecutablePath({
       command: entry.command,
       args: entry.args,
