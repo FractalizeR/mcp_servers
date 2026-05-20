@@ -29,6 +29,14 @@ export function deserializeYwConfig(data: Record<string, unknown>): Partial<Yand
   if (typeof rawOrgType === 'string') {
     if (KNOWN_ORG_TYPES.includes(rawOrgType as OrgType)) {
       result.orgType = rawOrgType as OrgType;
+    } else {
+      // Неизвестное значение игнорируем, но предупреждаем. Logger не доступен
+      // на этом уровне (deserialize вызывается из ConfigManager до инициализации
+      // приложения), поэтому используем `console.warn` в stderr.
+      console.warn(
+        `[deserializeYwConfig] Неизвестное значение orgType="${rawOrgType}" в config.json — поле опущено. ` +
+          `Ожидалось одно из: ${KNOWN_ORG_TYPES.join(', ')}.`
+      );
     }
   } else if (rawOrgType === undefined) {
     result.orgType = 'yandex360';
@@ -48,6 +56,11 @@ export function deserializeYwConfig(data: Record<string, unknown>): Partial<Yand
     rawLogLevel === 'error'
   ) {
     result.logLevel = rawLogLevel;
+  } else if (rawLogLevel !== undefined) {
+    console.warn(
+      `[deserializeYwConfig] Неизвестное значение logLevel=${JSON.stringify(rawLogLevel)} в config.json — поле опущено. ` +
+        `Ожидалось одно из: debug, info, warn, error.`
+    );
   }
 
   return result;

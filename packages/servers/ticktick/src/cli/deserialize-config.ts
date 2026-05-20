@@ -33,6 +33,14 @@ export function deserializeTickTickConfig(
     rawLogLevel === 'error'
   ) {
     result.logLevel = rawLogLevel;
+  } else if (rawLogLevel !== undefined) {
+    // Неизвестное значение игнорируем, но предупреждаем. Logger не доступен
+    // на этом уровне (deserialize вызывается из ConfigManager до инициализации
+    // приложения), поэтому используем `console.warn` в stderr.
+    console.warn(
+      `[deserializeTickTickConfig] Неизвестное значение logLevel=${JSON.stringify(rawLogLevel)} в config.json — поле опущено. ` +
+        `Ожидалось одно из: debug, info, warn, error.`
+    );
   }
 
   return result;

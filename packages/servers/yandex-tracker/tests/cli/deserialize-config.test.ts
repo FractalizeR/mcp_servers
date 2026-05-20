@@ -3,10 +3,22 @@
  * старого формата (без orgType) в текущий.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { deserializeYtConfig } from '#cli/deserialize-config.js';
 
 describe('deserializeYtConfig', () => {
+  // Заглушаем console.warn — deserialize пишет предупреждения о неизвестных
+  // значениях (N12), мы их валидируем явно, а в stderr теста они не нужны.
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
+
   describe('миграция: отсутствие orgType', () => {
     it("старый config без orgType → orgType: 'yandex360'", () => {
       const result = deserializeYtConfig({ orgId: 'org-legacy' });
@@ -43,6 +55,16 @@ describe('deserializeYtConfig', () => {
       const result = deserializeYtConfig({ orgType: 'invalid', orgId: 'o' });
 
       expect(result.orgType).toBeUndefined();
+    });
+
+    it("orgType: 'invalid' → console.warn о неизвестном значении (N12)", () => {
+      deserializeYtConfig({ orgType: 'invalid', orgId: 'o' });
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      const message = String(warnSpy.mock.calls[0]?.[0] ?? '');
+      expect(message).toContain('orgType="invalid"');
+      expect(message).toContain('yandex360');
+      expect(message).toContain('cloud');
     });
 
     it('orgType: 123 (не строка) опускается (нет миграции по умолчанию)', () => {
@@ -106,6 +128,15 @@ describe('deserializeYtConfig', () => {
       const result = deserializeYtConfig({ orgType: 'yandex360', logLevel: 'verbose' });
 
       expect(result.logLevel).toBeUndefined();
+    });
+
+    it("неизвестный logLevel='verbose' → console.warn (N12)", () => {
+      deserializeYtConfig({ orgType: 'yandex360', logLevel: 'verbose' });
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      const message = String(warnSpy.mock.calls[0]?.[0] ?? '');
+      expect(message).toContain('logLevel');
+      expect(message).toContain('verbose');
     });
 
     it('logLevel не строка → опускается', () => {

@@ -6,10 +6,22 @@
  * устойчивости к ручным правкам config.json.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { deserializeTickTickConfig } from '#cli/deserialize-config.js';
 
 describe('deserializeTickTickConfig', () => {
+  // Заглушаем console.warn — deserialize пишет предупреждения о неизвестных
+  // значениях logLevel (N12), мы их валидируем явно, а в stderr теста они не нужны.
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
+
   describe('пустой/неполный input', () => {
     it('пустой объект {} → пустой результат (нет миграции)', () => {
       const result = deserializeTickTickConfig({});
@@ -73,6 +85,15 @@ describe('deserializeTickTickConfig', () => {
       const result = deserializeTickTickConfig({ logLevel: 'verbose' });
 
       expect(result.logLevel).toBeUndefined();
+    });
+
+    it("неизвестный logLevel='verbose' → console.warn (N12)", () => {
+      deserializeTickTickConfig({ logLevel: 'verbose' });
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      const message = String(warnSpy.mock.calls[0]?.[0] ?? '');
+      expect(message).toContain('logLevel');
+      expect(message).toContain('verbose');
     });
 
     it('logLevel не строка → опускается', () => {

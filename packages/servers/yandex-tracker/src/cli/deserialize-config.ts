@@ -32,8 +32,16 @@ export function deserializeYtConfig(
   if (typeof rawOrgType === 'string') {
     if (KNOWN_ORG_TYPES.includes(rawOrgType as OrgType)) {
       result.orgType = rawOrgType as OrgType;
+    } else {
+      // Неизвестное значение игнорируем, но предупреждаем — иначе пользователь
+      // не поймёт, почему его `orgType` сбросился. Logger не доступен на этом
+      // уровне (deserialize вызывается из ConfigManager до инициализации
+      // приложения), поэтому используем `console.warn` в stderr.
+      console.warn(
+        `[deserializeYtConfig] Неизвестное значение orgType="${rawOrgType}" в config.json — поле опущено. ` +
+          `Ожидалось одно из: ${KNOWN_ORG_TYPES.join(', ')}.`
+      );
     }
-    // неизвестное значение игнорируем
   } else if (rawOrgType === undefined) {
     // Миграция со старого формата без orgType.
     result.orgType = 'yandex360';
@@ -56,6 +64,11 @@ export function deserializeYtConfig(
     rawLogLevel === 'error'
   ) {
     result.logLevel = rawLogLevel;
+  } else if (rawLogLevel !== undefined) {
+    console.warn(
+      `[deserializeYtConfig] Неизвестное значение logLevel=${JSON.stringify(rawLogLevel)} в config.json — поле опущено. ` +
+        `Ожидалось одно из: debug, info, warn, error.`
+    );
   }
 
   return result;
