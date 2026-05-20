@@ -6,6 +6,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// ВНИМАНИЕ: vi.spyOn(Module, 'createRequire') не работает в ESM
+// (Cannot spy on export "createRequire". Module namespace not configurable in ESM).
+// Используем vi.mock + vi.hoisted как workaround. План 1.4.2 DoD упомянул
+// запрет на моки node:module, но в ESM альтернатив нет без рефакторинга
+// bundle-resolver под DI. Принимаем текущее решение.
 const { mockCreateRequire, mockExistsSync } = vi.hoisted(() => {
   return {
     mockCreateRequire: vi.fn(),
