@@ -32,6 +32,18 @@ vi.mock('../../../src/utils/file-manager.js', () => ({
   },
 }));
 
+vi.mock('../../../src/utils/command-executor.js', () => ({
+  CommandExecutor: {
+    exec: vi.fn(),
+    execFile: vi.fn(),
+    execSilent: vi.fn(),
+    execInteractive: vi.fn(),
+    isCommandAvailable: vi.fn(),
+  },
+}));
+
+import { CommandExecutor } from '../../../src/utils/command-executor.js';
+
 vi.mock('node:fs/promises', async () => {
   const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
   return {
@@ -71,6 +83,7 @@ describe('ConfigurableConnector', () => {
     vi.mocked(FileManager.readTOML).mockReset();
     vi.mocked(FileManager.writeTOML).mockReset();
     vi.mocked(fs.access).mockReset();
+    vi.mocked(CommandExecutor.execFile).mockReset();
   });
 
   afterEach(() => {
@@ -117,6 +130,70 @@ describe('ConfigurableConnector', () => {
       vi.mocked(FileManager.exists).mockResolvedValue(false);
       const c = new ConfigurableConnector(SERVER_NAME, baseJsonConfig);
       expect(await c.isInstalled()).toBe(false);
+    });
+
+    describe('checkCommand (N6)', () => {
+      it('checkCommand задан + успех → true (dir-check НЕ вызывается)', async () => {
+        vi.mocked(CommandExecutor.execFile).mockReturnValue('v1.2.3\n');
+        const c = new ConfigurableConnector(SERVER_NAME, {
+          ...baseJsonConfig,
+          checkCommand: 'gemini --version',
+        });
+        expect(await c.isInstalled()).toBe(true);
+        expect(CommandExecutor.execFile).toHaveBeenCalledWith(
+          'gemini',
+          ['--version'],
+          expect.objectContaining({ timeout: 2000 })
+        );
+        expect(FileManager.exists).not.toHaveBeenCalled();
+      });
+
+      it('checkCommand задан + падает → fallback на dir-check (true если dir есть)', async () => {
+        vi.mocked(CommandExecutor.execFile).mockImplementation(() => {
+          throw new Error('Command failed');
+        });
+        vi.mocked(FileManager.exists).mockResolvedValue(true);
+        const c = new ConfigurableConnector(SERVER_NAME, {
+          ...baseJsonConfig,
+          checkCommand: 'gemini --version',
+        });
+        expect(await c.isInstalled()).toBe(true);
+        expect(FileManager.exists).toHaveBeenCalled();
+      });
+
+      it('checkCommand задан + падает + dir НЕ существует → false', async () => {
+        vi.mocked(CommandExecutor.execFile).mockImplementation(() => {
+          throw new Error('Command failed');
+        });
+        vi.mocked(FileManager.exists).mockResolvedValue(false);
+        const c = new ConfigurableConnector(SERVER_NAME, {
+          ...baseJsonConfig,
+          checkCommand: 'gemini --version',
+        });
+        expect(await c.isInstalled()).toBe(false);
+      });
+
+      it('checkCommand задан + таймаут → fallback на dir-check', async () => {
+        vi.mocked(CommandExecutor.execFile).mockImplementation(() => {
+          throw new Error('Timeout: gemini --version exceeded 2000ms');
+        });
+        vi.mocked(FileManager.exists).mockResolvedValue(true);
+        const c = new ConfigurableConnector(SERVER_NAME, {
+          ...baseJsonConfig,
+          checkCommand: 'gemini --version',
+        });
+        expect(await c.isInstalled()).toBe(true);
+      });
+
+      it('checkCommand пустая строка → используется dir-check', async () => {
+        vi.mocked(FileManager.exists).mockResolvedValue(true);
+        const c = new ConfigurableConnector(SERVER_NAME, {
+          ...baseJsonConfig,
+          checkCommand: '   ',
+        });
+        expect(await c.isInstalled()).toBe(true);
+        expect(CommandExecutor.execFile).not.toHaveBeenCalled();
+      });
     });
   });
 

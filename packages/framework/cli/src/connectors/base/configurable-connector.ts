@@ -9,10 +9,19 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { BaseConnector } from './base-connector.js';
+import { CommandExecutor } from '../../utils/command-executor.js';
 import { FileManager } from '../../utils/file-manager.js';
 import { resolveExecutablePath } from '../../utils/launch-spec-helpers.js';
 import type { ConnectionStatus, MCPClientInfo } from '../../types/client.types.js';
 import type { ServerLaunchSpec } from '../../types/launch.types.js';
+
+/**
+ * Таймаут для проверки `checkCommand` в {@link ConfigurableConnector.isInstalled}.
+ *
+ * 2 секунды — компромисс между быстрой проверкой и допуском медленных
+ * стартующих CLI (gemini, codex могут грузиться 300-500ms на старте).
+ */
+const CHECK_COMMAND_TIMEOUT_MS = 2000;
 
 /**
  * Запись о сервере в файле конфигурации клиента.
@@ -129,11 +138,50 @@ export class ConfigurableConnector extends BaseConnector {
 
   /**
    * Проверить, установлен ли клиент.
-   * По умолчанию — наличие директории конфига.
+   *
+   * Если в {@link ConnectorClientConfig.checkCommand} задана команда — пробуем
+   * выполнить её с таймаутом {@link CHECK_COMMAND_TIMEOUT_MS}. Успех (exit 0) →
+   * клиент установлен. Любая ошибка/таймаут → fallback на dir-check.
+   *
+   * Если `checkCommand` не задана — единственная проверка: наличие директории
+   * конфига.
+   *
+   * Поведение fallback мотивировано тем, что директория конфига может остаться
+   * после удаления клиента (false positive); checkCommand даёт более надёжный
+   * сигнал, но при его недоступности dir-check всё ещё лучше чем ничего.
    */
   async isInstalled(): Promise<boolean> {
+    const checkCommand = this._clientConfig.checkCommand;
+    if (checkCommand && checkCommand.trim().length > 0) {
+      const installed = this.tryCheckCommand(checkCommand);
+      if (installed) {
+        return true;
+      }
+      // Fallback на dir-check (например, бинарь временно недоступен в PATH,
+      // но клиент явно установлен — есть конфиг).
+    }
     const configDir = path.dirname(this.resolveConfigPath());
     return FileManager.exists(configDir);
+  }
+
+  /**
+   * Запустить `checkCommand` с таймаутом. Команда парсится по whitespace:
+   * первый токен — бинарь, остальное — аргументы. Выполняется через
+   * {@link CommandExecutor.execFile} (без shell-интерпретации).
+   *
+   * @returns `true` если команда успешно выполнилась (exit 0); `false` иначе.
+   */
+  private tryCheckCommand(checkCommand: string): boolean {
+    const tokens = checkCommand.split(/\s+/).filter((t) => t.length > 0);
+    const bin = tokens[0];
+    if (!bin) return false;
+    const args = tokens.slice(1);
+    try {
+      CommandExecutor.execFile(bin, args, { timeout: CHECK_COMMAND_TIMEOUT_MS });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
