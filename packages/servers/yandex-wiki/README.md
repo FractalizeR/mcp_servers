@@ -4,8 +4,25 @@ MCP сервер для работы с API Yandex Wiki.
 
 ## Установка
 
+### Способ 1: npm (глобальная установка)
+
 ```bash
 npm install -g @fractalizer/mcp-server-yandex-wiki
+```
+
+После установки доступен бинарь `mcp-wiki-connect` для подключения к MCP-клиентам
+(см. раздел [Через CLI](#через-cli-рекомендуется)).
+
+### Способ 2: Из исходников (для разработчиков)
+
+```bash
+git clone https://github.com/FractalizeR/mcp_servers.git
+cd mcp_servers
+npm install && npm run build
+
+# Подключить к MCP клиенту интерактивно
+cd packages/servers/yandex-wiki
+npm run mcp:connect
 ```
 
 ## Конфигурация
@@ -49,6 +66,34 @@ DISABLED_TOOL_GROUPS="grids,pages:delete"
 ```
 
 ## Использование
+
+### Через CLI (рекомендуется)
+
+CLI автоматически прописывает конфигурацию сервера в выбранный MCP-клиент —
+не нужно вручную редактировать JSON-файлы.
+
+**Поддерживаемые клиенты:** Claude Desktop, Claude Code, Codex, Gemini, Qwen.
+
+```bash
+# Глобальная установка — используй бинарь mcp-wiki-connect
+mcp-wiki-connect connect                    # интерактивный выбор клиента
+mcp-wiki-connect connect --client claude-code
+mcp-wiki-connect status                     # статус подключений
+mcp-wiki-connect doctor                     # диагностика сломанных конфигов
+mcp-wiki-connect disconnect                 # отключить сервер
+```
+
+Из исходников те же команды доступны через npm-скрипты:
+
+```bash
+npm run mcp:connect        # подключить сервер к MCP клиенту
+npm run mcp:disconnect     # отключить сервер
+npm run mcp:status         # статус подключений
+npm run mcp:list           # список поддерживаемых клиентов
+```
+
+При подключении CLI интерактивно запросит OAuth токен и ID организации
+(`YANDEX_ORG_ID` для Яндекс 360 или `YANDEX_CLOUD_ORG_ID` для Yandex Cloud).
 
 ### С Claude Desktop
 
