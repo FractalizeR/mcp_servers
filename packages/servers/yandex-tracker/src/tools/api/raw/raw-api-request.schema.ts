@@ -52,7 +52,11 @@ export const RawApiRequestParamsSchema = z.object({
   query: z
     .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]))
     .optional()
-    .describe('Query-параметры запроса, например {"expand": "transitions", "perPage": 50}.'),
+    .describe(
+      'Query-параметры запроса, например {"expand": "transitions", "perPage": 50}. ' +
+        'Массивы сериализуются через запятую (формат Трекера): ' +
+        '{"expand": ["transitions", "attachments"]} → expand=transitions,attachments.'
+    ),
 
   /**
    * Обязательный массив полей для фильтрации ответа (экономия контекста).

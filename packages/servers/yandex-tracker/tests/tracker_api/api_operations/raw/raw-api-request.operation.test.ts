@@ -69,6 +69,45 @@ describe('RawApiRequestOperation', () => {
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/projects', undefined);
     });
 
+    it('должна сериализовать массив в query как значения через запятую', async () => {
+      await operation.request({
+        method: 'GET',
+        path: '/v3/issues/QUEUE-1',
+        query: { expand: ['transitions', 'attachments'] },
+      });
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/issues/QUEUE-1', {
+        expand: 'transitions,attachments',
+      });
+    });
+
+    it('должна нормализовать смешанные query (массив + скаляры) без изменения скаляров', async () => {
+      await operation.request({
+        method: 'GET',
+        path: '/v3/issues/QUEUE-1',
+        query: { expand: ['comments'], perPage: 50, withDeleted: true, key: 'QUEUE-1' },
+      });
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/issues/QUEUE-1', {
+        expand: 'comments',
+        perPage: 50,
+        withDeleted: true,
+        key: 'QUEUE-1',
+      });
+    });
+
+    it('должна сериализовать массив из одного элемента без запятой', async () => {
+      await operation.request({
+        method: 'GET',
+        path: '/v3/issues/QUEUE-1',
+        query: { expand: ['transitions'] },
+      });
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/issues/QUEUE-1', {
+        expand: 'transitions',
+      });
+    });
+
     it('должна пробрасывать ошибку httpClient', async () => {
       const error = new Error('boom');
       vi.mocked(mockHttpClient.get).mockRejectedValue(error);
