@@ -10,17 +10,13 @@
  * сконфигурированного HttpClient — данная операция их не переопределяет.
  *
  * РАСШИРЕНИЕ (POST/PATCH/...): добавить ветку в switch ниже и метод в
- * RAW_API_METHODS (dto/raw). Деструктивные методы (DELETE) намеренно не
- * поддерживаются.
+ * RAW_API_METHODS (@fractalizer/mcp-core). Деструктивные методы (DELETE)
+ * намеренно не поддерживаются.
  */
 
+import { normalizeRawQuery } from '@fractalizer/mcp-core';
+import type { RawApiRequestInput } from '@fractalizer/mcp-core';
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import type { RawApiQueryParams, RawApiRequestInput } from '#tracker_api/dto/raw/index.js';
-
-/**
- * Query-значения после нормализации массивов: только скаляры.
- */
-type NormalizedQuery = Record<string, string | number | boolean>;
 
 export class RawApiRequestOperation extends BaseOperation {
   /**
@@ -36,32 +32,11 @@ export class RawApiRequestOperation extends BaseOperation {
 
     switch (method) {
       case 'GET':
-        // retry уже встроен в httpClient.get
-        return this.httpClient.get<unknown>(path, this.normalizeQuery(query));
+        // retry уже встроен в httpClient.get; массивы query → строка через запятую
+        return this.httpClient.get<unknown>(path, normalizeRawQuery(query));
       default:
         // Защита на случай рассинхрона RAW_API_METHODS и switch при расширении
         throw new Error(`Unsupported raw API method: ${String(method)}`);
     }
-  }
-
-  /**
-   * Нормализует query-параметры под формат API Трекера.
-   *
-   * Массивы сериализуются в строку через запятую (`expand=a,b`) — это
-   * конвенция Трекера и общий паттерн проекта (см. find-issues.operation,
-   * get-comments.tool). Так поведение детерминировано и не зависит от
-   * дефолтного сериализатора axios (`key[]=a&key[]=b`), который Трекер
-   * не парсит.
-   */
-  private normalizeQuery(query?: RawApiQueryParams): NormalizedQuery | undefined {
-    if (!query) {
-      return undefined;
-    }
-
-    const normalized: NormalizedQuery = {};
-    for (const [key, value] of Object.entries(query)) {
-      normalized[key] = Array.isArray(value) ? value.join(',') : value;
-    }
-    return normalized;
   }
 }

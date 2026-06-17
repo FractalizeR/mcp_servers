@@ -80,8 +80,8 @@ import type {
   UpdateSprintDto,
   SprintOutput,
   SprintsListOutput,
-  RawApiRequestInput,
 } from '#tracker_api/dto/index.js';
+import type { RawApiCapable, RawApiRequestInput } from '@fractalizer/mcp-core';
 import type {
   IssueWithUnknownFields,
   TransitionWithUnknownFields,
@@ -103,7 +103,7 @@ import type {
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
 @injectable()
-export class YandexTrackerFacade {
+export class YandexTrackerFacade implements RawApiCapable {
   constructor(
     @inject(CoreServicesContainer) private readonly core: CoreServicesContainer,
     @inject(IssueServicesContainer) private readonly issues: IssueServicesContainer,

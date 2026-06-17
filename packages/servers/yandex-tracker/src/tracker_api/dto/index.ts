@@ -123,10 +123,6 @@ export type {
   SprintsListOutput,
 } from './sprint/index.js';
 
-// Raw API DTO
-export { RAW_API_METHODS } from './raw/index.js';
-export type { RawApiMethod, RawApiQueryParams, RawApiRequestInput } from './raw/index.js';
-
 // DTO Factories (runtime code for coverage)
 export {
   // Issue factories

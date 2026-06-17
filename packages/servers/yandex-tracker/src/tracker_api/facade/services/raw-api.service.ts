@@ -11,7 +11,7 @@
 
 import { injectable, inject } from 'inversify';
 import { RawApiRequestOperation } from '#tracker_api/api_operations/raw/index.js';
-import type { RawApiRequestInput } from '#tracker_api/dto/raw/index.js';
+import type { RawApiRequestInput } from '@fractalizer/mcp-core';
 
 @injectable()
 export class RawApiService {
