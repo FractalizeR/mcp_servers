@@ -26,6 +26,9 @@ import { UpdateCellsTool } from '#tools/api/grids/cells/update/index.js';
 // Resources
 import { GetResourcesTool } from '#tools/api/resources/get/index.js';
 
+// Raw API (escape hatch)
+import { RawApiRequestTool } from '#tools/api/raw/index.js';
+
 /**
  * Все Tool классы для автоматической регистрации в DI
  *
@@ -60,4 +63,7 @@ export const TOOL_CLASSES = [
 
   // Resources
   GetResourcesTool,
+
+  // Raw API (escape hatch)
+  RawApiRequestTool,
 ] as const;

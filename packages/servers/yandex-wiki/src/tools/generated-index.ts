@@ -205,4 +205,13 @@ export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
     descriptionTokens: ['resources', 'read'],
     descriptionShort: '[Resources/Read] Получить ресурсы страницы (вложения, таблицы)',
   },
+  {
+    name: 'yw_raw_api_request',
+    category: ToolCategory.SYSTEM,
+    tags: ['raw', 'api', 'fallback', 'advanced', 'read'],
+    isHelper: false,
+    nameTokens: ['yw', 'raw', 'api', 'request'],
+    descriptionTokens: ['system', 'read', 'get', 'api', 'fallback', 'tools'],
+    descriptionShort: '[System/Read] GET к API Вики (fallback; предпочитай типизированные tools)',
+  },
 ] as const;

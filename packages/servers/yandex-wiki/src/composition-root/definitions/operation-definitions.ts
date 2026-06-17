@@ -22,6 +22,8 @@ import {
   CloneGridOperation,
   // Resource Operations
   GetResourcesOperation,
+  // Raw Operations
+  RawApiRequestOperation,
 } from '#wiki_api/api_operations/index.js';
 
 /**
@@ -51,4 +53,6 @@ export const OPERATION_CLASSES = [
   CloneGridOperation,
   // Resource Operations
   GetResourcesOperation,
+  // Raw Operations
+  RawApiRequestOperation,
 ] as const;

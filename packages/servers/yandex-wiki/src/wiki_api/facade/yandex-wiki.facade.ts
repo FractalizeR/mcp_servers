@@ -1,5 +1,6 @@
 import { injectable, inject } from 'inversify';
-import { PageService, GridService, ResourceService } from './services/index.js';
+import type { RawApiCapable, RawApiRequestInput } from '@fractalizer/mcp-core';
+import { PageService, GridService, ResourceService, RawApiService } from './services/index.js';
 import type {
   GetPageParams,
   GetPageByIdParams,
@@ -39,11 +40,12 @@ import type {
  * - НЕТ бизнес-логики
  */
 @injectable()
-export class YandexWikiFacade {
+export class YandexWikiFacade implements RawApiCapable {
   constructor(
     @inject(PageService) private readonly pageService: PageService,
     @inject(GridService) private readonly gridService: GridService,
-    @inject(ResourceService) private readonly resourceService: ResourceService
+    @inject(ResourceService) private readonly resourceService: ResourceService,
+    @inject(RawApiService) private readonly rawApiService: RawApiService
   ) {}
 
   // === Page Methods ===
@@ -194,5 +196,19 @@ export class YandexWikiFacade {
    */
   async getResources(params: GetResourcesParams): Promise<ResourcesResponse> {
     return this.resourceService.getResources(params);
+  }
+
+  // === Raw API (escape hatch) ===
+
+  /**
+   * Выполняет прямой (raw) запрос к API Яндекс.Вики.
+   *
+   * Реализация контракта RawApiCapable из @fractalizer/mcp-core.
+   *
+   * @param input - метод, путь и query-параметры
+   * @returns необработанный ответ API
+   */
+  async rawApiRequest(input: RawApiRequestInput): Promise<unknown> {
+    return this.rawApiService.request(input);
   }
 }

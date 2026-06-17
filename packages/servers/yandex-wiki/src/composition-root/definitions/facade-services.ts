@@ -3,6 +3,7 @@ import {
   PageService,
   GridService,
   ResourceService,
+  RawApiService,
   GridCrudOperationsContainer,
   GridDataOperationsContainer,
   PageOperationsContainer,
@@ -21,4 +22,5 @@ export function bindFacadeServices(container: Container): void {
   container.bind(PageService).toSelf().inSingletonScope();
   container.bind(GridService).toSelf().inSingletonScope();
   container.bind(ResourceService).toSelf().inSingletonScope();
+  container.bind(RawApiService).toSelf().inSingletonScope();
 }
