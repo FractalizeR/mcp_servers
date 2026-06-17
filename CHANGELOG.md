@@ -1,3 +1,11 @@
+## [1.2.0](https://github.com/FractalizeR/mcp_servers/compare/v1.1.1...v1.2.0) (2026-06-17)
+
+### Features
+
+* **core:** raw-API passthrough primitives + перевод tracker ([9cc0a3d](https://github.com/FractalizeR/mcp_servers/commit/9cc0a3d4a11eb5daef3922ecd0404893c08906aa))
+* **ticktick:** инструмент raw_api_request (GET-only) ([0041e68](https://github.com/FractalizeR/mcp_servers/commit/0041e68c55bc7b765c8c1bd5e0aee1ef9d5c358c))
+* **wiki:** инструмент raw_api_request (GET-only) ([7e5e455](https://github.com/FractalizeR/mcp_servers/commit/7e5e455be93c5abfe4590cd2104dae9614e24b71))
+
 ## [1.1.1](https://github.com/FractalizeR/mcp_servers/compare/v1.1.0...v1.1.1) (2026-06-17)
 
 ### Bug Fixes
