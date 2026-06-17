@@ -23,6 +23,9 @@ import { UpdateTaskOperation } from '#ticktick_api/api_operations/tasks/update-t
 import { DeleteTaskOperation } from '#ticktick_api/api_operations/tasks/delete-task.operation.js';
 import { CompleteTaskOperation } from '#ticktick_api/api_operations/tasks/complete-task.operation.js';
 
+// Raw API operation (escape hatch, read-only)
+import { RawApiRequestOperation } from '#ticktick_api/api_operations/raw/raw-api-request.operation.js';
+
 /**
  * Operation definition: maps symbol to class
  */
@@ -104,6 +107,13 @@ export const OPERATION_DEFINITIONS: OperationDefinition[] = [
   {
     symbol: TYPES.CompleteTaskOperation,
     operationClass: CompleteTaskOperation,
+    needsConfig: false,
+  },
+
+  // Raw API operation (escape hatch, read-only)
+  {
+    symbol: TYPES.RawApiRequestOperation,
+    operationClass: RawApiRequestOperation,
     needsConfig: false,
   },
 ];

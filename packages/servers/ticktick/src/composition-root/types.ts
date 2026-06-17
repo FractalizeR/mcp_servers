@@ -38,6 +38,9 @@ export const TYPES = {
   DeleteTaskOperation: Symbol.for('DeleteTaskOperation'),
   CompleteTaskOperation: Symbol.for('CompleteTaskOperation'),
 
+  // === Raw API Operation (escape hatch, read-only) ===
+  RawApiRequestOperation: Symbol.for('RawApiRequestOperation'),
+
   // === Operations Containers ===
   ProjectOperationsContainer: Symbol.for('ProjectOperationsContainer'),
   TaskOperationsContainer: Symbol.for('TaskOperationsContainer'),

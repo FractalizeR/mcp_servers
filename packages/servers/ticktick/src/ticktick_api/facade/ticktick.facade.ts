@@ -11,9 +11,11 @@
  */
 
 import { injectable, inject } from 'inversify';
+import type { RawApiCapable, RawApiRequestInput } from '@fractalizer/mcp-core';
 import { TYPES } from '#composition-root/types.js';
 import type { ProjectOperationsContainer } from './containers/project-operations.container.js';
 import type { TaskOperationsContainer } from './containers/task-operations.container.js';
+import type { RawApiRequestOperation } from '#ticktick_api/api_operations/raw/raw-api-request.operation.js';
 
 // Types from operations
 import type { ProjectData } from '#ticktick_api/api_operations/projects/get-project-data.operation.js';
@@ -29,14 +31,28 @@ import type { CreateProjectDto, UpdateProjectDto } from '#ticktick_api/dto/proje
 import type { CreateTaskDto, UpdateTaskDto } from '#ticktick_api/dto/task.dto.js';
 
 @injectable()
-export class TickTickFacade {
+export class TickTickFacade implements RawApiCapable {
   constructor(
     @inject(TYPES.ProjectOperationsContainer)
     private readonly projectOps: ProjectOperationsContainer,
 
     @inject(TYPES.TaskOperationsContainer)
-    private readonly taskOps: TaskOperationsContainer
+    private readonly taskOps: TaskOperationsContainer,
+
+    // Raw API escape hatch: операция инжектится напрямую (Service-слоя нет)
+    @inject(TYPES.RawApiRequestOperation)
+    private readonly rawApiRequestOp: RawApiRequestOperation
   ) {}
+
+  // ========== Raw API (escape hatch, read-only) ==========
+
+  /**
+   * Прямой (raw) GET-запрос к API TickTick — fallback для методов без
+   * типизированного tool. Делегирует напрямую в операцию.
+   */
+  async rawApiRequest(input: RawApiRequestInput): Promise<unknown> {
+    return this.rawApiRequestOp.request(input);
+  }
 
   // ========== Projects ==========
 

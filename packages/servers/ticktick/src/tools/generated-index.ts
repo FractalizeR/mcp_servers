@@ -265,4 +265,13 @@ export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
     descriptionShort:
       '[Helpers/GTD] Получить "следующие" задачи: средний приоритет ИЛИ срок завтра',
   },
+  {
+    name: 'fr_ticktick_raw_api_request',
+    category: ToolCategory.SYSTEM,
+    tags: ['raw', 'api', 'fallback', 'advanced', 'read'],
+    isHelper: false,
+    nameTokens: ['fr', 'ticktick', 'raw', 'api', 'request'],
+    descriptionTokens: ['system', 'read', 'get', 'api', 'fallback', 'tools'],
+    descriptionShort: '[System/Read] GET к API (fallback; предпочитай типизированные tools)',
+  },
 ] as const;

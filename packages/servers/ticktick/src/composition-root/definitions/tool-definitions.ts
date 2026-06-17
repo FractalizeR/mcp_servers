@@ -46,6 +46,9 @@ import { GetOverdueTasksTool } from '#tools/api/date-queries/get-overdue-tasks/i
 import { GetEngagedTasksTool } from '#tools/helpers/gtd/get-engaged-tasks/index.js';
 import { GetNextTasksTool } from '#tools/helpers/gtd/get-next-tasks/index.js';
 
+// === System Tools (raw API escape hatch) ===
+import { RawApiRequestTool } from '#tools/api/raw/index.js';
+
 /**
  * All tool classes for automatic DI registration
  *
@@ -94,6 +97,9 @@ export const TOOL_CLASSES = [
   // GTD helpers
   GetEngagedTasksTool,
   GetNextTasksTool,
+
+  // System (raw API escape hatch, read-only)
+  RawApiRequestTool,
 ] as const;
 
 /**
