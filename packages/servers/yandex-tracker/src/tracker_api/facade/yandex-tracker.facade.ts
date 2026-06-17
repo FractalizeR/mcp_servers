@@ -80,6 +80,7 @@ import type {
   UpdateSprintDto,
   SprintOutput,
   SprintsListOutput,
+  RawApiRequestInput,
 } from '#tracker_api/dto/index.js';
 import type {
   IssueWithUnknownFields,
@@ -119,6 +120,19 @@ export class YandexTrackerFacade {
    */
   async ping(): Promise<PingResult> {
     return this.core.user.ping();
+  }
+
+  /**
+   * Выполняет прямой (raw) запрос к API Яндекс.Трекера.
+   *
+   * Escape hatch для методов, у которых ещё нет типизированного tool.
+   * Сейчас поддерживается только GET (read-only).
+   *
+   * @param input - метод, путь и query-параметры
+   * @returns необработанный ответ API
+   */
+  async rawApiRequest(input: RawApiRequestInput): Promise<unknown> {
+    return this.core.rawApi.request(input);
   }
 
   // === Issue Methods - Batch ===

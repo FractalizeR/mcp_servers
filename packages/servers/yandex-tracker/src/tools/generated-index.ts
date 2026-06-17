@@ -457,4 +457,13 @@ export const TOOL_SEARCH_INDEX: readonly StaticToolIndex[] = [
     descriptionTokens: ['helpers', 'demo'],
     descriptionShort: '[Helpers/Demo] Тестовый инструмент',
   },
+  {
+    name: 'fr_yandex_tracker_raw_api_request',
+    category: ToolCategory.SYSTEM,
+    tags: ['raw', 'api', 'fallback', 'advanced', 'read'],
+    isHelper: false,
+    nameTokens: ['fr', 'yandex', 'tracker', 'raw', 'api', 'request'],
+    descriptionTokens: ['system', 'read', 'get', 'api', 'fallback', 'tools'],
+    descriptionShort: '[System/Read] GET к API (fallback; предпочитай типизированные tools)',
+  },
 ] as const;

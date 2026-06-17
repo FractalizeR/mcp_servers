@@ -94,6 +94,7 @@ import {
   CreateSprintOperation,
   UpdateSprintOperation,
 } from '#tracker_api/api_operations/sprint/index.js';
+import { RawApiRequestOperation } from '#tracker_api/api_operations/raw/index.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -165,6 +166,7 @@ export const OPERATION_CLASSES = [
   GetSprintOperation,
   CreateSprintOperation,
   UpdateSprintOperation,
+  RawApiRequestOperation,
 ] as const;
 
 /**

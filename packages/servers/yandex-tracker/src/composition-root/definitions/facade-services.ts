@@ -38,6 +38,7 @@ import {
   IssueAttachmentService,
   BulkChangeService,
   IssueService,
+  RawApiService,
 } from '#tracker_api/facade/services/index.js';
 import {
   IssueOperationsContainer,
@@ -97,6 +98,9 @@ export function bindFacadeServices(container: Container): void {
 
   // Issue Service
   container.bind(IssueService).toSelf();
+
+  // Raw API Service
+  container.bind(RawApiService).toSelf();
 
   // Services Containers (для YandexTrackerFacade - группируют сервисы)
   container.bind(CoreServicesContainer).toSelf();

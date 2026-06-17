@@ -68,6 +68,7 @@ import {
 } from '#tools/api/bulk-change/index.js';
 import { IssueUrlTool } from '#tools/helpers/issue-url/index.js';
 import { DemoTool } from '#tools/helpers/demo/index.js';
+import { RawApiRequestTool } from '#tools/api/raw/index.js';
 
 /**
  * Массив всех Tool классов в проекте
@@ -135,6 +136,7 @@ export const TOOL_CLASSES = [
   GetBulkChangeStatusTool,
   IssueUrlTool,
   DemoTool,
+  RawApiRequestTool,
 ] as const;
 
 /**

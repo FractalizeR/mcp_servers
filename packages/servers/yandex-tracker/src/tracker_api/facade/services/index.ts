@@ -28,3 +28,4 @@ export { QueueService } from './queue.service.js';
 export { IssueAttachmentService } from './issue-attachment.service.js';
 export { BulkChangeService } from './bulk-change.service.js';
 export { IssueService } from './issue.service.js';
+export { RawApiService } from './raw-api.service.js';
