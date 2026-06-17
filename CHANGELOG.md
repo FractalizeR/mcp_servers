@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/FractalizeR/mcp_servers/compare/v1.0.1...v1.1.0) (2026-06-17)
+
+### Features
+
+* **tools:** raw_api_request — прямой GET к API Яндекс.Трекера ([9ae30dc](https://github.com/FractalizeR/mcp_servers/commit/9ae30dc6195a49032d4bbbb817dd2da61afcfa14))
+
 ## [1.0.1](https://github.com/FractalizeR/mcp_servers/compare/v1.0.0...v1.0.1) (2026-05-20)
 
 ### Bug Fixes
