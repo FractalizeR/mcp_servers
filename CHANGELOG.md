@@ -1,3 +1,9 @@
+## [1.1.1](https://github.com/FractalizeR/mcp_servers/compare/v1.1.0...v1.1.1) (2026-06-17)
+
+### Bug Fixes
+
+* **tools:** сериализация массивов в query raw_api_request через запятую ([4976c7f](https://github.com/FractalizeR/mcp_servers/commit/4976c7f2d32591e5daa85d57655fada020505015))
+
 ## [1.1.0](https://github.com/FractalizeR/mcp_servers/compare/v1.0.1...v1.1.0) (2026-06-17)
 
 ### Features
