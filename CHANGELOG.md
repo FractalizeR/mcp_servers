@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/FractalizeR/mcp_servers/compare/v1.4.0...v1.5.0) (2026-06-18)
+
+### Features
+
+* **tracker:** полная пагинация всех list-эндпоинтов (этап 2) ([eb0f493](https://github.com/FractalizeR/mcp_servers/commit/eb0f49377387a5fdca6aababd55e22f9f2160f7c))
+
 ## [1.4.0](https://github.com/FractalizeR/mcp_servers/compare/v1.3.0...v1.4.0) (2026-06-18)
 
 ### Features
