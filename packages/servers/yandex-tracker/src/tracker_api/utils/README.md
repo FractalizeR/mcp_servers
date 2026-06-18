@@ -17,67 +17,45 @@
 
 ```
 src/tracker_api/utils/
-├── pagination.util.ts    # PaginationUtil
-├── file-upload.util.ts   # FileUploadUtil
-└── index.ts              # Экспорты
+├── tracker-paginator.util.ts   # TrackerPaginator
+├── file-upload.util.ts         # FileUploadUtil
+├── file-download.util.ts       # FileDownloadUtil
+├── duration.util.ts            # DurationUtil
+└── index.ts                    # Экспорты
 ```
 
 ---
 
-## 📊 PaginationUtil
+## 📊 TrackerPaginator
 
-Утилиты для работы с пагинацией в API запросах.
+Доменная логика пагинации Яндекс.Трекера: проход по `Link rel="next"`
+с защитными лимитами и сборка `PaginationMeta` из заголовков ответа.
 
-### buildQueryParams
+Generic-примитивы (`parseLinkHeader`, нормализация заголовков) живут во
+фреймворке `@fractalizer/mcp-infrastructure`; здесь — только доменная
+политика Трекера (seek/`X-Total-*`, `maxItems`/`maxPages`, частичный отказ).
 
-Построить query параметры для пагинации:
+### Константы
 
-```typescript
-const params = PaginationUtil.buildQueryParams({
-  perPage: 50,
-  page: 2
-});
-// URLSearchParams { perPage: "50", page: "2" }
-```
+- `DEFAULT_MAX_ITEMS = 500` — лимит по записям (прокси токенов агента).
+- `DEFAULT_MAX_PAGES = 100` — backstop по числу страниц.
+- `DEFAULT_MAX_PER_PAGE = 100` — рекомендуемый `perPage` для fetchAll.
 
-### parsePaginatedResponse
+### stripHost
 
-Распарсить ответ с пагинацией от API:
+Превращает абсолютный next-URL в относительный путь+query; defense-in-depth
+guard отбрасывает пути не из `/v2/`|`/v3/` (возвращает `undefined`).
 
-```typescript
-const response = {
-  items: [comment1, comment2],
-  total: 150,
-  page: 2,
-  perPage: 50
-};
-const parsed = PaginationUtil.parsePaginatedResponse<Comment>(response);
-// PaginatedResponse<Comment>
-```
+### buildMeta
 
-### parseFromHeaders
+Собирает `PaginationMeta` из заголовков (`X-Total-Count`/`X-Total-Pages`)
+и состояния обхода (`hasNextPage`/`fetchedAll`/`truncated`/`hasError`).
 
-Распарсить пагинацию из заголовков HTTP:
+### fetchAllPages
 
-```typescript
-const items = [comment1, comment2];
-const headers = {
-  'x-total-count': '150',
-  'x-page': '2',
-  'x-per-page': '50'
-};
-const parsed = PaginationUtil.parseFromHeaders(items, headers);
-// PaginatedResponse<Comment>
-```
-
-### calculateTotalPages
-
-Вычислить общее количество страниц:
-
-```typescript
-const totalPages = PaginationUtil.calculateTotalPages(150, 50);
-// 3
-```
+Полный обход по `Link rel="next"` до исчерпания или защитного лимита.
+При ошибке после страниц 1..N-1 возвращает частичный результат
+(`hasError=true`), собранное не теряется.
 
 ---
 
@@ -160,8 +138,8 @@ FileUploadUtil.formatFileSize(1536);           // "1.5 KB"
 
 ✅ **Правильно:**
 ```typescript
-export class PaginationUtil {
-  static buildQueryParams(params: PaginationParams): URLSearchParams {
+export class TrackerPaginator {
+  static stripHost(url: string): string | undefined {
     // ...
   }
 }
@@ -169,8 +147,8 @@ export class PaginationUtil {
 
 ❌ **Неправильно:**
 ```typescript
-export class PaginationUtil {
-  buildQueryParams(params: PaginationParams): URLSearchParams {
+export class TrackerPaginator {
+  stripHost(url: string): string | undefined {
     // ...
   }
 }
@@ -198,11 +176,11 @@ static setDefaultMimeType(mimeType: string): void {
 
 ✅ **Правильно:**
 ```typescript
-static calculateTotalPages(total: number, perPage: number): number {
-  if (perPage <= 0) {
-    throw new Error('perPage must be greater than 0');
+static validateFileSize(size: number, maxSize: number): boolean {
+  if (size < 0) {
+    throw new Error('size must be non-negative');
   }
-  return Math.ceil(total / perPage);
+  return size <= maxSize;
 }
 ```
 
@@ -232,28 +210,42 @@ static calculateTotalPages(total: number, perPage: number): number {
 
 ## 🧪 Примеры использования в Operations
 
-### Использование PaginationUtil
+### Использование TrackerPaginator
 
 ```typescript
 export class GetCommentsOperation extends BaseOperation {
   async execute(
     issueKey: string,
-    params: PaginationParams
-  ): Promise<PaginatedResponse<CommentWithUnknownFields>> {
-    // Построить query параметры
-    const queryParams = PaginationUtil.buildQueryParams(params);
+    params: PaginationParams & { fetchAll?: boolean; maxItems?: number }
+  ): Promise<PaginatedResult<CommentWithUnknownFields>> {
+    const path = `/v3/issues/${issueKey}/comments`;
+    const first = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path, params);
 
-    // Выполнить запрос
-    const response = await this.httpClient.get(
-      `/v3/issues/${issueKey}/comments`,
-      queryParams
-    );
+    if (!params.fetchAll) {
+      return {
+        items: first.data,
+        pagination: TrackerPaginator.buildMeta({
+          headers: first.headers,
+          pagesFetched: 1,
+          truncated: false,
+          hasError: false,
+          nextUrl: undefined, // вычисляется из Link заголовка first.headers
+          page: params.page,
+          perPage: params.perPage,
+        }),
+      };
+    }
 
-    // Распарсить ответ
-    return PaginationUtil.parsePaginatedResponse<CommentWithUnknownFields>(response);
+    return TrackerPaginator.fetchAllPages<CommentWithUnknownFields>({
+      firstResponse: first,
+      requestNext: (p) => this.httpClient.getWithResponse(p),
+      maxItems: params.maxItems,
+    });
   }
 }
 ```
+
+> Точная разводка single-page/fetchAll и cache-key — этап 2 плана пагинации.
 
 ### Использование FileUploadUtil
 

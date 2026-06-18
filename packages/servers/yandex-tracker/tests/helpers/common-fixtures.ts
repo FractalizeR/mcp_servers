@@ -7,7 +7,6 @@
 import type {
   UserRef,
   PaginationParams,
-  PaginatedResponse,
   TimestampFields,
 } from '../../src/tracker_api/entities/common/index.js';
 
@@ -40,27 +39,6 @@ export function createPaginationParams(overrides?: Partial<PaginationParams>): P
   return {
     perPage: 50,
     page: 1,
-    ...overrides,
-  };
-}
-
-/**
- * Создать PaginatedResponse для тестов
- *
- * @example
- * ```typescript
- * const response = createPaginatedResponse([item1, item2], { total: 10 });
- * ```
- */
-export function createPaginatedResponse<T>(
-  items: T[],
-  overrides?: Partial<Omit<PaginatedResponse<T>, 'items'>>
-): PaginatedResponse<T> {
-  return {
-    items,
-    total: items.length,
-    page: 1,
-    perPage: 50,
     ...overrides,
   };
 }

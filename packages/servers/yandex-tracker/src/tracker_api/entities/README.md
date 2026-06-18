@@ -18,7 +18,7 @@
 ```
 src/tracker_api/entities/
 ├── common/                  # Общие типы (v2.0+)
-│   ├── pagination.entity.ts # PaginationParams, PaginatedResponse
+│   ├── pagination.entity.ts # PaginationParams, PaginationMeta, PaginatedResult
 │   ├── user-ref.entity.ts   # UserRef (облегченная версия User)
 │   ├── timestamp.entity.ts  # TimestampFields (createdAt, updatedAt)
 │   └── index.ts             # Экспорты common types
@@ -58,14 +58,24 @@ interface PaginationParams {
 }
 ```
 
-### PaginatedResponse<T> — Ответ с пагинацией
+### PaginatedResult<T> — Результат list-операции
 
 ```typescript
-interface PaginatedResponse<T> {
-  readonly items: T[];       // Элементы текущей страницы
-  readonly total: number;    // Общее количество
-  readonly page: number;     // Текущая страница
-  readonly perPage: number;  // Элементов на странице
+interface PaginationMeta {
+  readonly page?: number;        // если применимо к запросу
+  readonly perPage?: number;     // если применимо к запросу
+  readonly total?: number;       // только при X-Total-Count
+  readonly totalPages?: number;  // только при X-Total-Pages
+  readonly hasNextPage: boolean; // есть ли ещё данные
+  readonly fetchedAll: boolean;  // возвращён полный набор
+  readonly truncated: boolean;   // обрезано лимитом maxItems/maxPages
+  readonly pagesFetched: number; // сколько страниц загружено
+  readonly hasError: boolean;    // частичный отказ при обходе
+}
+
+interface PaginatedResult<T> {
+  readonly items: T[];
+  readonly pagination: PaginationMeta;
 }
 ```
 

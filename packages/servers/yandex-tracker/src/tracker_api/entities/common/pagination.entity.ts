@@ -39,36 +39,61 @@ export interface PaginationParams {
 }
 
 /**
- * Ответ с пагинацией от API
+ * Метаданные пагинации, прикладываемые к результату list-операций.
  *
- * @example
- * ```typescript
- * const response: PaginatedResponse<Comment> = {
- *   items: [comment1, comment2],
- *   total: 150,
- *   page: 2,
- *   perPage: 50
- * };
- * ```
+ * Единый тип и для single-page (одна страница + признаки наличия ещё данных),
+ * и для fetchAll (полный обход). Режимы различаются по флагам
+ * `fetchedAll`/`truncated`/`hasError`.
+ *
+ * `total`/`totalPages` заполняются только когда сервер прислал заголовки
+ * `X-Total-Count`/`X-Total-Pages` (seek-механизм `_search`); для чистого
+ * Link-cursor их может не быть — тогда ориентир `hasNextPage`.
  */
-export interface PaginatedResponse<T> {
+export interface PaginationMeta {
+  /** Номер текущей страницы (если применимо к запросу) */
+  readonly page?: number | undefined;
+
+  /** Размер страницы (если применимо к запросу) */
+  readonly perPage?: number | undefined;
+
+  /** Общее количество элементов (только при `X-Total-Count`) */
+  readonly total?: number | undefined;
+
+  /** Общее количество страниц (только при `X-Total-Pages`) */
+  readonly totalPages?: number | undefined;
+
+  /** Есть ли ещё данные за пределами возвращённых элементов */
+  readonly hasNextPage: boolean;
+
+  /** Возвращён полный набор данных (нет `hasNextPage` и не было ошибок) */
+  readonly fetchedAll: boolean;
+
+  /** Выдача обрезана защитным лимитом (`maxItems`/`maxPages`) */
+  readonly truncated: boolean;
+
+  /** Сколько страниц фактически загружено */
+  readonly pagesFetched: number;
+
   /**
-   * Элементы текущей страницы
+   * При обходе произошла ошибка после сбора части страниц.
+   *
+   * Возвращён частичный результат: `fetchedAll=false`, собранные ранее
+   * страницы не потеряны.
    */
+  readonly hasError: boolean;
+}
+
+/**
+ * Результат list-операции: элементы + метаданные пагинации.
+ *
+ * Сквозной контракт для всех пагинируемых endpoint'ов
+ * (changelog, comments, worklog, links, attachments, components,
+ * checklist, queues, projects, find_issues).
+ */
+export interface PaginatedResult<T> {
+  /** Элементы (возможно усечённые до `maxItems`) */
   readonly items: T[];
 
-  /**
-   * Общее количество элементов (всего)
-   */
-  readonly total: number;
-
-  /**
-   * Текущая страница
-   */
-  readonly page: number;
-
-  /**
-   * Количество элементов на странице
-   */
-  readonly perPage: number;
+  /** Метаданные пагинации */
+  readonly pagination: PaginationMeta;
 }

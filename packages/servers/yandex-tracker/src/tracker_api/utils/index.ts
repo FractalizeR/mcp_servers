@@ -2,6 +2,12 @@
  * Утилиты для работы с API
  */
 
-export { PaginationUtil } from './pagination.util.js';
+export {
+  TrackerPaginator,
+  DEFAULT_MAX_ITEMS,
+  DEFAULT_MAX_PAGES,
+  DEFAULT_MAX_PER_PAGE,
+} from './tracker-paginator.util.js';
+export type { BuildMetaInput, FetchAllPagesOptions } from './tracker-paginator.util.js';
 export { FileUploadUtil } from './file-upload.util.js';
 export { FileDownloadUtil } from './file-download.util.js';
