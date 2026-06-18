@@ -1,3 +1,10 @@
+## [1.3.0](https://github.com/FractalizeR/mcp_servers/compare/v1.2.0...v1.3.0) (2026-06-18)
+
+### Features
+
+* **infra:** доступ к заголовкам ответа для пагинации ([079c737](https://github.com/FractalizeR/mcp_servers/commit/079c73712c183685ff935e122d53eab2d89c5b26))
+* **tracker:** TrackerPaginator — проход по страницам (этап 1.2) ([8afa62d](https://github.com/FractalizeR/mcp_servers/commit/8afa62dd9f3ad6f00b108146562065858b1531ce))
+
 ## [1.2.0](https://github.com/FractalizeR/mcp_servers/compare/v1.1.1...v1.2.0) (2026-06-17)
 
 ### Features
