@@ -7,9 +7,24 @@ import { GetIssueLinksTool } from '#tools/api/issues/links/get/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createLinkListFixture } from '#helpers/link.fixture.js';
+
+/** Метаданные пагинации по умолчанию (одна страница, всё получено). */
+const META: PaginationMeta = {
+  hasNextPage: false,
+  fetchedAll: true,
+  truncated: false,
+  hasError: false,
+  pagesFetched: 1,
+};
+
+/** Обернуть массив связей в PaginatedResult (value batch-результата). */
+function paginated(items: LinkWithUnknownFields[]): PaginatedResult<LinkWithUnknownFields> {
+  return { items, pagination: META };
+}
 
 describe('GetIssueLinksTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -99,7 +114,7 @@ describe('GetIssueLinksTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockLinks,
+          value: paginated(mockLinks),
         },
       ]);
 
@@ -119,7 +134,7 @@ describe('GetIssueLinksTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockLinks,
+          value: paginated(mockLinks),
         },
       ]);
 
@@ -128,7 +143,10 @@ describe('GetIssueLinksTool', () => {
         fields: ['id', 'type'],
       });
 
-      expect(mockTrackerFacade.getIssueLinks).toHaveBeenCalledWith(['TEST-123']);
+      expect(mockTrackerFacade.getIssueLinks).toHaveBeenCalledWith(
+        ['TEST-123'],
+        expect.objectContaining({ fetchAll: undefined })
+      );
     });
 
     it('должен вернуть unified batch result', async () => {
@@ -137,7 +155,7 @@ describe('GetIssueLinksTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockLinks,
+          value: paginated(mockLinks),
         },
       ]);
 
@@ -155,6 +173,7 @@ describe('GetIssueLinksTool', () => {
             issueId: string;
             links: LinkWithUnknownFields[];
             count: number;
+            pagination: PaginationMeta;
           }>;
           failed: Array<{ issueId: string; error: string }>;
           fieldsReturned: string[];
@@ -167,6 +186,12 @@ describe('GetIssueLinksTool', () => {
       expect(parsed.data.successful[0].issueId).toBe('TEST-123');
       expect(parsed.data.successful[0].count).toBe(3);
       expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
+      // Регрессия: прежние ключи (links/count) на месте + добавлено поле pagination
+      expect(parsed.data.successful[0].links).toHaveLength(3);
+      expect(parsed.data.successful[0].pagination).toMatchObject({
+        hasNextPage: false,
+        fetchedAll: true,
+      });
     });
 
     it('должен вернуть пустой массив для задачи без связей', async () => {
@@ -175,7 +200,7 @@ describe('GetIssueLinksTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: [],
+          value: paginated([]),
         },
       ]);
 
@@ -208,13 +233,13 @@ describe('GetIssueLinksTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockLinks,
+          value: paginated(mockLinks),
         },
         {
           status: 'fulfilled',
           key: 'TEST-456',
           index: 1,
-          value: [],
+          value: paginated([]),
         },
       ]);
 
@@ -249,7 +274,7 @@ describe('GetIssueLinksTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockLinks,
+          value: paginated(mockLinks),
         },
       ]);
 
@@ -285,7 +310,7 @@ describe('GetIssueLinksTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockLinks,
+          value: paginated(mockLinks),
         },
       ]);
 
@@ -309,13 +334,13 @@ describe('GetIssueLinksTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockLinks,
+          value: paginated(mockLinks),
         },
         {
           status: 'fulfilled',
           key: 'TEST-456',
           index: 1,
-          value: [],
+          value: paginated([]),
         },
       ]);
 
@@ -355,7 +380,7 @@ describe('GetIssueLinksTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockLinks,
+          value: paginated(mockLinks),
         },
         {
           status: 'rejected',

@@ -9,6 +9,24 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createComponentFixture } from '#helpers/component.fixture.js';
+import type { ComponentWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
+
+/** Обернуть массив компонентов в PaginatedResult (single-page). */
+function paginated(
+  items: ComponentWithUnknownFields[]
+): PaginatedResult<ComponentWithUnknownFields> {
+  return {
+    items,
+    pagination: {
+      hasNextPage: false,
+      fetchedAll: true,
+      truncated: false,
+      hasError: false,
+      pagesFetched: 1,
+    },
+  };
+}
 
 describe('GetComponentsTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -75,7 +93,7 @@ describe('GetComponentsTool', () => {
           createComponentFixture({ id: '1', name: 'Component 1' }),
           createComponentFixture({ id: '2', name: 'Component 2' }),
         ];
-        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
+        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
 
         const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'name'] });
 
@@ -93,7 +111,7 @@ describe('GetComponentsTool', () => {
           createComponentFixture({ id: '2', name: 'Component 2' }),
           createComponentFixture({ id: '3', name: 'Component 3' }),
         ];
-        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
+        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
 
         const result = await tool.execute({ queueId: 'MYQUEUE', fields: ['id', 'name'] });
 
@@ -116,6 +134,7 @@ describe('GetComponentsTool', () => {
             count: number;
             queueId: string;
             fieldsReturned: string[];
+            pagination: { hasNextPage: boolean; fetchedAll: boolean };
           };
         };
         expect(parsed.success).toBe(true);
@@ -123,10 +142,30 @@ describe('GetComponentsTool', () => {
         expect(parsed.data.count).toBe(3);
         expect(parsed.data.queueId).toBe('MYQUEUE');
         expect(parsed.data.fieldsReturned).toEqual(['id', 'name']);
+        // Регрессия: прежние ключи на месте + добавлен pagination
+        expect(parsed.data.pagination).toEqual({
+          hasNextPage: false,
+          fetchedAll: true,
+          truncated: false,
+          hasError: false,
+          pagesFetched: 1,
+        });
+      });
+
+      it('должен пробрасывать параметры пагинации в фасад', async () => {
+        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated([]));
+
+        await tool.execute({ queueId: 'Q', fields: ['id'], fetchAll: true, maxItems: 10 });
+
+        expect(mockTrackerFacade.getComponents).toHaveBeenCalledWith({
+          queueId: 'Q',
+          fetchAll: true,
+          maxItems: 10,
+        });
       });
 
       it('должен обработать пустой список компонентов', async () => {
-        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue([]);
+        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated([]));
 
         const result = await tool.execute({ queueId: 'EMPTY', fields: ['id', 'name'] });
 
@@ -161,7 +200,7 @@ describe('GetComponentsTool', () => {
             assignAuto: true,
           }),
         ];
-        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
+        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
 
         const result = await tool.execute({ queueId: 'PROJECT', fields: ['id', 'name'] });
 
@@ -179,7 +218,7 @@ describe('GetComponentsTool', () => {
 
       it('должен получить один компонент', async () => {
         const mockComponents = [createComponentFixture({ id: '1', name: 'Single Component' })];
-        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
+        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
 
         const result = await tool.execute({ queueId: 'SINGLE', fields: ['id', 'name'] });
 
@@ -200,7 +239,7 @@ describe('GetComponentsTool', () => {
         const mockComponents = Array.from({ length: 50 }, (_, i) =>
           createComponentFixture({ id: `${i + 1}`, name: `Component ${i + 1}` })
         );
-        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(mockComponents);
+        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
 
         const result = await tool.execute({ queueId: 'LARGE', fields: ['id', 'name'] });
 

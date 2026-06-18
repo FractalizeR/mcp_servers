@@ -70,7 +70,7 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
 
       // 3. API v3: поиск задач через findIssues
       // Строим объект с условным добавлением свойств для совместимости с exactOptionalPropertyTypes
-      const issues = await this.facade.findIssues({
+      const result = await this.facade.findIssues({
         ...(searchParams.query && { query: searchParams.query }),
         ...(searchParams.filter && { filter: searchParams.filter }),
         ...(searchParams.keys && { keys: searchParams.keys }),
@@ -80,29 +80,33 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
         ...(searchParams.perPage !== undefined && { perPage: searchParams.perPage }),
         ...(searchParams.page !== undefined && { page: searchParams.page }),
         ...(searchParams.expand && { expand: searchParams.expand }),
+        ...(searchParams.fetchAll !== undefined && { fetchAll: searchParams.fetchAll }),
+        ...(searchParams.maxItems !== undefined && { maxItems: searchParams.maxItems }),
       });
 
-      // 4. Фильтрация полей
-      const filteredIssues = issues.map((issue) =>
+      // 4. Фильтрация полей (DP-6: не оборачиваем — сохраняем ключи issues/count,
+      //    pagination добавляем соседним полем)
+      const filteredIssues = result.items.map((issue) =>
         ResponseFieldFilter.filter<IssueWithUnknownFields>(issue, fields)
       );
 
       // 5. Логирование результатов
       this.logger.info('Задачи найдены', {
-        count: issues.length,
+        count: result.items.length,
         fieldsCount: fields.length,
       });
 
       return this.formatSuccess({
-        count: issues.length,
+        count: result.items.length,
         issues: filteredIssues,
+        pagination: result.pagination,
         fieldsReturned: fields,
         searchCriteria: {
           hasQuery: !!searchParams.query,
           hasFilter: !!searchParams.filter,
           keysCount: searchParams.keys?.length ?? 0,
           hasQueue: !!searchParams.queue,
-          perPage: searchParams.perPage ?? 50,
+          ...(searchParams.perPage !== undefined ? { perPage: searchParams.perPage } : {}),
         },
       });
     } catch (error: unknown) {

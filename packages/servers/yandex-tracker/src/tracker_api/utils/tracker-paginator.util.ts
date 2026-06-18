@@ -130,6 +130,35 @@ export class TrackerPaginator {
   }
 
   /**
+   * Обернуть одну (первую) страницу в `PaginatedResult` с метаданными.
+   *
+   * Режим по умолчанию (без `fetchAll`): один запрос, `hasNextPage`
+   * вычисляется из заголовков `Link`/`X-Total-*`. Агент листает вручную
+   * через `page`.
+   *
+   * @param response - конверт ответа (data + заголовки)
+   * @param opts - номер/размер страницы для проброса в метаданные
+   */
+  public static singlePage<T>(
+    response: HttpResponseEnvelope<T[]>,
+    opts: { readonly page?: number | undefined; readonly perPage?: number | undefined } = {}
+  ): PaginatedResult<T> {
+    const next = TrackerPaginator.nextUrl(response.headers);
+
+    const meta = TrackerPaginator.buildMeta({
+      headers: response.headers,
+      pagesFetched: 1,
+      truncated: false,
+      hasError: false,
+      nextUrl: next,
+      ...(opts.page !== undefined ? { page: opts.page } : {}),
+      ...(opts.perPage !== undefined ? { perPage: opts.perPage } : {}),
+    });
+
+    return { items: [...response.data], pagination: meta };
+  }
+
+  /**
    * Полный обход по `Link rel="next"` до исчерпания или защитного лимита.
    *
    * Страницы строго последовательны (next известен только из предыдущего

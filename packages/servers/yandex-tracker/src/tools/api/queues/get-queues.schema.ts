@@ -3,32 +3,55 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema, PageSchema, makePerPageSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  PageSchema,
+  makePerPageSchema,
+  FetchAllSchema,
+  MaxItemsSchema,
+  noPageFetchAllConflict,
+  PAGINATION_CONFLICT_MESSAGE,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения списка очередей
  */
-export const GetQueuesParamsSchema = z.object({
-  /**
-   * Количество записей на странице (опционально, потолок 100)
-   */
-  perPage: makePerPageSchema(100),
+export const GetQueuesParamsSchema = z
+  .object({
+    /**
+     * Количество записей на странице (опционально, потолок 100)
+     */
+    perPage: makePerPageSchema(100),
 
-  /**
-   * Номер страницы (опционально, начинается с 1)
-   */
-  page: PageSchema,
+    /**
+     * Номер страницы (опционально, начинается с 1)
+     */
+    page: PageSchema,
 
-  /**
-   * Дополнительные поля для включения в ответ (опционально)
-   */
-  expand: z.string().optional(),
+    /**
+     * Полный обход всех страниц (opt-in)
+     */
+    fetchAll: FetchAllSchema,
 
-  /**
-   * Список полей для возврата (обязательно)
-   */
-  fields: FieldsSchema,
-});
+    /**
+     * Лимит записей на цепочку обхода при fetchAll=true
+     */
+    maxItems: MaxItemsSchema,
+
+    /**
+     * Дополнительные поля для включения в ответ (опционально)
+     */
+    expand: z.string().optional(),
+
+    /**
+     * Список полей для возврата (обязательно)
+     */
+    fields: FieldsSchema,
+  })
+  .refine(noPageFetchAllConflict, {
+    message: PAGINATION_CONFLICT_MESSAGE,
+    path: ['page'],
+  });
 
 /**
  * Вывод типа из схемы

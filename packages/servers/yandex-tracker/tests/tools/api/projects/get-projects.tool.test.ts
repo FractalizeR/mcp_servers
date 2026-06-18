@@ -9,6 +9,32 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createProjectListFixture } from '#helpers/project.fixture.js';
+import type { PaginatedResult, ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
+
+/**
+ * Обернуть массив проектов в PaginatedResult.
+ *
+ * `total` кладём в pagination (как реальный X-Total-Count), чтобы проверить
+ * прокидывание в `data.total` инструмента.
+ */
+function paginated(
+  items: ProjectWithUnknownFields[],
+  total?: number,
+  overrides: Partial<PaginatedResult<ProjectWithUnknownFields>['pagination']> = {}
+): PaginatedResult<ProjectWithUnknownFields> {
+  return {
+    items,
+    pagination: {
+      hasNextPage: false,
+      fetchedAll: true,
+      truncated: false,
+      hasError: false,
+      pagesFetched: 1,
+      ...(total !== undefined ? { total } : {}),
+      ...overrides,
+    },
+  };
+}
 
 describe('GetProjectsTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -49,10 +75,7 @@ describe('GetProjectsTool', () => {
     describe('получение списка проектов', () => {
       it('должен получить список проектов без параметров', async () => {
         const mockProjects = createProjectListFixture(3);
-        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue({
-          projects: mockProjects,
-          total: 3,
-        });
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects, 3));
 
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
@@ -81,10 +104,7 @@ describe('GetProjectsTool', () => {
 
       it('должен получить список проектов с пагинацией', async () => {
         const mockProjects = createProjectListFixture(10);
-        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue({
-          projects: mockProjects,
-          total: 50,
-        });
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects, 50));
 
         const result = await tool.execute({ perPage: 10, page: 2, fields: ['id', 'key', 'name'] });
 
@@ -108,10 +128,7 @@ describe('GetProjectsTool', () => {
 
       it('должен получить проекты с expand параметром', async () => {
         const mockProjects = createProjectListFixture(2);
-        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue({
-          projects: mockProjects,
-          total: 2,
-        });
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects, 2));
 
         const result = await tool.execute({ expand: 'queues', fields: ['id', 'key', 'name'] });
 
@@ -132,10 +149,7 @@ describe('GetProjectsTool', () => {
 
       it('должен отфильтровать проекты по queueId', async () => {
         const mockProjects = createProjectListFixture(1);
-        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue({
-          projects: mockProjects,
-          total: 1,
-        });
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects, 1));
 
         const result = await tool.execute({ queueId: 'QUEUE1', fields: ['id', 'key', 'name'] });
 
@@ -156,10 +170,7 @@ describe('GetProjectsTool', () => {
       });
 
       it('должен обработать пустой список проектов', async () => {
-        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue({
-          projects: [],
-          total: 0,
-        });
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated([], 0));
 
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
@@ -181,12 +192,27 @@ describe('GetProjectsTool', () => {
         expect(parsed.data.total).toBe(0);
       });
 
+      it('НЕ подделывает total, если сервер не прислал X-Total-Count', async () => {
+        const mockProjects = createProjectListFixture(2);
+        // total не задан → pagination.total === undefined
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects));
+
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
+
+        expect(result.isError).toBeUndefined();
+        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+          success: boolean;
+          data: { projects: unknown[]; count: number; total?: number };
+        };
+        expect(parsed.success).toBe(true);
+        expect(parsed.data.count).toBe(2);
+        // total отсутствует (не фейковая длина страницы)
+        expect(parsed.data.total).toBeUndefined();
+      });
+
       it('должен обработать большое количество проектов', async () => {
         const mockProjects = createProjectListFixture(50);
-        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue({
-          projects: mockProjects,
-          total: 100,
-        });
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects, 100));
 
         const result = await tool.execute({ perPage: 50, fields: ['id', 'key', 'name'] });
 
@@ -205,10 +231,7 @@ describe('GetProjectsTool', () => {
 
     describe('валидация параметров', () => {
       it('должен принять все валидные параметры', async () => {
-        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue({
-          projects: [],
-          total: 0,
-        });
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated([], 0));
 
         const result = await tool.execute({
           perPage: 25,
@@ -274,6 +297,73 @@ describe('GetProjectsTool', () => {
         };
         expect(parsed.success).toBe(false);
         expect(parsed.error).toBe('Permission denied');
+      });
+    });
+
+    describe('пагинация', () => {
+      it('добавляет pagination в выдачу, сохраняя прежние ключи (регрессия)', async () => {
+        const mockProjects = createProjectListFixture(2);
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(
+          paginated(mockProjects, 7, { hasNextPage: true, fetchedAll: false })
+        );
+
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
+
+        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+          data: {
+            projects: unknown[];
+            total: number;
+            count: number;
+            pagination: { hasNextPage: boolean; total?: number };
+          };
+        };
+        // Прежние ключи на месте
+        expect(parsed.data.projects).toHaveLength(2);
+        expect(parsed.data.count).toBe(2);
+        // total — реальный из X-Total-Count, а не длина страницы
+        expect(parsed.data.total).toBe(7);
+        // Новое поле pagination
+        expect(parsed.data.pagination.hasNextPage).toBe(true);
+        expect(parsed.data.pagination.total).toBe(7);
+      });
+
+      it('total опущен, если X-Total-Count отсутствует (не подделываем длиной страницы)', async () => {
+        const mockProjects = createProjectListFixture(3);
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects));
+
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
+
+        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+          data: { total?: number; count: number };
+        };
+        expect(parsed.data.total).toBeUndefined();
+        expect(parsed.data.count).toBe(3);
+      });
+
+      it('прокидывает fetchAll/maxItems в фасад', async () => {
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated([], 0));
+
+        await tool.execute({ fetchAll: true, maxItems: 200, fields: ['id', 'key', 'name'] });
+
+        expect(mockTrackerFacade.getProjects).toHaveBeenCalledWith(
+          expect.objectContaining({ fetchAll: true, maxItems: 200 })
+        );
+      });
+
+      it('возвращает ошибку валидации при конфликте page + fetchAll', async () => {
+        const result = await tool.execute({
+          page: 2,
+          fetchAll: true,
+          fields: ['id', 'key', 'name'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
       });
     });
   });

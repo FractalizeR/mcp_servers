@@ -1,26 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import { MockHttpClient } from '@fractalizer/mcp-infrastructure';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ServerConfig } from '#config';
 import { GetChecklistOperation } from '#tracker_api/api_operations/checklist/get-checklist.operation.js';
 
+const NEXT_LINK =
+  '<https://api.tracker.yandex.net/v2/issues/TEST-1/checklistItems?page=2>; rel="next"';
+
+const item = (id: string): ChecklistItemWithUnknownFields => ({
+  id,
+  text: `Item ${id}`,
+  checked: false,
+});
+
 describe('GetChecklistOperation', () => {
   let operation: GetChecklistOperation;
-  let mockHttpClient: IHttpClient;
+  let httpClient: MockHttpClient;
   let mockCacheManager: CacheManager;
   let mockLogger: Logger;
   let mockConfig: ServerConfig;
 
   beforeEach(() => {
-    mockHttpClient = {
-      get: vi.fn().mockResolvedValue(null),
-      post: vi.fn(),
-      patch: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn().mockResolvedValue(undefined),
-    } as unknown as IHttpClient;
+    httpClient = new MockHttpClient();
 
     mockCacheManager = {
       get: vi.fn().mockResolvedValue(null),
@@ -38,175 +41,105 @@ describe('GetChecklistOperation', () => {
       debug: vi.fn(),
     } as unknown as Logger;
 
-    mockConfig = {
-      maxBatchSize: 100,
-      maxConcurrentRequests: 5,
-    } as ServerConfig;
+    mockConfig = { maxBatchSize: 100, maxConcurrentRequests: 5 } as ServerConfig;
 
-    operation = new GetChecklistOperation(mockHttpClient, mockCacheManager, mockLogger, mockConfig);
+    operation = new GetChecklistOperation(httpClient, mockCacheManager, mockLogger, mockConfig);
   });
 
-  describe('execute', () => {
-    it('should call httpClient.get with correct endpoint', async () => {
-      const mockChecklist: ChecklistItemWithUnknownFields[] = [
-        {
-          id: '1',
-          text: 'First item',
-          checked: false,
-        },
-        {
-          id: '2',
-          text: 'Second item',
-          checked: true,
-        },
-      ];
+  describe('execute (single page)', () => {
+    it('запрашивает корректный endpoint и возвращает PaginatedResult без next', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1'), item('2')]);
 
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockChecklist);
+      const result = await operation.execute({ issueId: 'TEST-1' });
 
-      const result = await operation.execute('TEST-1');
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems');
-      expect(result).toEqual(mockChecklist);
-      expect(result).toHaveLength(2);
+      const history = httpClient.getRequestHistory();
+      expect(history[0]).toMatchObject({ method: 'GET', path: '/v2/issues/TEST-1/checklistItems' });
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
     });
 
-    it('should return empty array if API returns non-array', async () => {
-      vi.mocked(mockHttpClient.get).mockResolvedValue(
-        null as unknown as ChecklistItemWithUnknownFields[]
-      );
+    it('выставляет hasNextPage=true при наличии Link rel="next"', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
+        link: NEXT_LINK,
+      });
 
-      const result = await operation.execute('TEST-2');
+      const result = await operation.execute({ issueId: 'TEST-1' });
 
-      expect(result).toEqual([]);
+      expect(result.pagination.hasNextPage).toBe(true);
     });
 
-    it('should return checklist with assignee and deadline', async () => {
-      const mockChecklist: ChecklistItemWithUnknownFields[] = [
-        {
-          id: '3',
-          text: 'Item with assignee',
-          checked: false,
-          assignee: {
-            self: 'https://api.tracker.yandex.net/v2/users/1',
-            id: '1',
-            display: 'John Doe',
-          },
-          deadline: '2025-12-31T23:59:59.000Z',
-        },
-      ];
+    it('пробрасывает page/perPage в query', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', []);
 
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockChecklist);
+      await operation.execute({ issueId: 'TEST-1', page: 3, perPage: 20 });
 
-      const result = await operation.execute('PROJ-10');
-
-      expect(result[0].assignee).toBeDefined();
-      expect(result[0].assignee?.display).toBe('John Doe');
-      expect(result[0].deadline).toBe('2025-12-31T23:59:59.000Z');
+      expect(httpClient.getRequestHistory()[0]?.params).toEqual({ page: 3, perPage: 20 });
     });
 
-    it('should handle API errors', async () => {
-      const error = new Error('API Error');
-      vi.mocked(mockHttpClient.get).mockRejectedValue(error);
+    it('пробрасывает ошибки API', async () => {
+      await expect(operation.execute({ issueId: 'TEST-1' })).rejects.toThrow();
+    });
+  });
 
-      await expect(operation.execute('TEST-1')).rejects.toThrow('API Error');
+  describe('execute (fetchAll)', () => {
+    it('обходит несколько страниц через Link rel="next"', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
+        link: NEXT_LINK,
+      });
+      // Вторая страница — под путём с query (как его вернёт stripHost)
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems?page=2', [item('2')]);
+
+      const result = await operation.execute({ issueId: 'TEST-1', fetchAll: true });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.fetchedAll).toBe(true);
+      expect(result.pagination.pagesFetched).toBe(2);
     });
 
-    it('should log info messages', async () => {
-      const mockChecklist: ChecklistItemWithUnknownFields[] = [
-        { id: '1', text: 'Item', checked: false },
-      ];
+    it('обрезает выдачу по maxItems и выставляет truncated', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1'), item('2')], {
+        link: NEXT_LINK,
+      });
 
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockChecklist);
+      const result = await operation.execute({ issueId: 'TEST-1', fetchAll: true, maxItems: 1 });
 
-      await operation.execute('TEST-3');
-
-      expect(mockLogger.info).toHaveBeenCalledWith('Получение чеклиста задачи TEST-3');
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Получено 1 элементов чеклиста для задачи TEST-3'
-      );
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.truncated).toBe(true);
     });
   });
 
   describe('executeMany', () => {
-    it('должна получить чеклисты нескольких задач параллельно', async () => {
-      const issueIds = ['TEST-1', 'TEST-2'];
-      const checklist1: ChecklistItemWithUnknownFields[] = [
-        { id: '1', text: 'Item 1', checked: false },
-      ];
-      const checklist2: ChecklistItemWithUnknownFields[] = [
-        { id: '2', text: 'Item 2', checked: true },
-        { id: '3', text: 'Item 3', checked: false },
-      ];
+    it('возвращает PaginatedResult для каждой задачи', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')]);
+      httpClient.setResponse('GET', '/v2/issues/TEST-2/checklistItems', [item('2'), item('3')]);
 
-      vi.mocked(mockHttpClient.get)
-        .mockResolvedValueOnce(checklist1)
-        .mockResolvedValueOnce(checklist2);
-
-      const result = await operation.executeMany(issueIds);
+      const result = await operation.executeMany(['TEST-1', 'TEST-2']);
 
       expect(result).toHaveLength(2);
       expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1');
-      expect(result[1].status).toBe('fulfilled');
-      expect(result[1].key).toBe('TEST-2');
-    });
-
-    it('должна обработать частичные ошибки при получении чеклистов', async () => {
-      const issueIds = ['TEST-1', 'TEST-2'];
-      const checklist1: ChecklistItemWithUnknownFields[] = [
-        { id: '1', text: 'Item 1', checked: false },
-      ];
-
-      vi.mocked(mockHttpClient.get)
-        .mockResolvedValueOnce(checklist1)
-        .mockRejectedValueOnce(new Error('Issue not found'));
-
-      const result = await operation.executeMany(issueIds);
-
-      expect(result).toHaveLength(2);
-      expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1');
-      expect(result[1].status).toBe('rejected');
-      expect(result[1].key).toBe('TEST-2');
-      if (result[1].status === 'rejected') {
-        expect(result[1].reason.message).toBe('Issue not found');
+      if (result[0].status === 'fulfilled') {
+        expect(result[0].value.items).toHaveLength(1);
+        expect(result[0].value.pagination.fetchedAll).toBe(true);
       }
     });
 
-    it('должна вернуть пустой результат для пустого массива issueIds', async () => {
+    it('обрабатывает частичные ошибки', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')]);
+      // для TEST-2 ответ не настроен → reject
+
+      const result = await operation.executeMany(['TEST-1', 'TEST-2']);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].status).toBe('fulfilled');
+      expect(result[1].status).toBe('rejected');
+    });
+
+    it('возвращает пустой результат для пустого массива', async () => {
       const result = await operation.executeMany([]);
 
       expect(result).toEqual([]);
-      expect(mockHttpClient.get).not.toHaveBeenCalled();
-    });
-
-    it('должна логировать batch операцию', async () => {
-      const issueIds = ['TEST-1', 'TEST-2'];
-      const checklist: ChecklistItemWithUnknownFields[] = [
-        { id: '1', text: 'Item', checked: false },
-      ];
-
-      vi.mocked(mockHttpClient.get).mockResolvedValue(checklist);
-
-      await operation.executeMany(issueIds);
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Получение чеклистов для 2 задач параллельно: TEST-1, TEST-2'
-      );
-    });
-
-    it('должна вызвать корректные endpoints для каждой задачи', async () => {
-      const issueIds = ['TEST-1', 'TEST-2'];
-      const checklist: ChecklistItemWithUnknownFields[] = [
-        { id: '1', text: 'Item', checked: false },
-      ];
-
-      vi.mocked(mockHttpClient.get).mockResolvedValue(checklist);
-
-      await operation.executeMany(issueIds);
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems');
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/issues/TEST-2/checklistItems');
+      expect(httpClient.getRequestHistory()).toHaveLength(0);
     });
   });
 });

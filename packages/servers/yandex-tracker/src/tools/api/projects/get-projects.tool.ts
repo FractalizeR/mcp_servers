@@ -26,7 +26,7 @@ export class GetProjectsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { fields, perPage, page, expand, queueId } = validation.data;
+    const { fields, perPage, page, expand, queueId, fetchAll, maxItems } = validation.data;
 
     try {
       this.logger.info('Получение списка проектов', {
@@ -41,21 +41,30 @@ export class GetProjectsTool extends BaseTool<YandexTrackerFacade> {
         page,
         expand,
         queueId,
+        fetchAll,
+        maxItems,
       });
+
+      // `total` — ТОЛЬКО реальное значение из заголовка X-Total-Count.
+      // Не подделываем длиной страницы (исходный баг). Если сервер total не
+      // прислал — поля нет; ориентир `pagination.hasNextPage`. Количество
+      // элементов на этой странице — в `count`.
+      const total = result.pagination.total;
 
       this.logger.info('Список проектов получен', {
-        count: result.projects.length,
-        total: result.total,
+        count: result.items.length,
+        ...(total !== undefined ? { total } : {}),
       });
 
-      const filteredProjects = result.projects.map((project) =>
+      const filteredProjects = result.items.map((project) =>
         ResponseFieldFilter.filter<ProjectWithUnknownFields>(project, fields)
       );
 
       return this.formatSuccess({
         projects: filteredProjects,
-        total: result.total,
+        ...(total !== undefined ? { total } : {}),
         count: filteredProjects.length,
+        pagination: result.pagination,
         fieldsReturned: fields,
       });
     } catch (error: unknown) {

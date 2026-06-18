@@ -7,10 +7,34 @@ import { GetIssueChangelogTool } from '#tools/api/issues/changelog/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { ChangelogEntryWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/common/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_CHANGELOG_FIELDS } from '#helpers/test-fields.js';
+
+/**
+ * Метаданные пагинации по умолчанию (одна полная страница).
+ */
+const SINGLE_PAGE_META: PaginationMeta = {
+  hasNextPage: false,
+  fetchedAll: true,
+  truncated: false,
+  hasError: false,
+  pagesFetched: 1,
+};
+
+/**
+ * Обёртка массива записей истории в PaginatedResult (как теперь возвращает фасад).
+ */
+function page(
+  items: ChangelogEntryWithUnknownFields[]
+): PaginatedResult<ChangelogEntryWithUnknownFields> {
+  return { items, pagination: SINGLE_PAGE_META };
+}
+
+/** Тип batch-результата changelog после введения пагинации. */
+type ChangelogBatch = BatchResult<string, PaginatedResult<ChangelogEntryWithUnknownFields>>;
 
 describe('GetIssueChangelogTool (batch mode)', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -94,11 +118,11 @@ describe('GetIssueChangelogTool (batch mode)', () => {
 
   describe('Batch operations', () => {
     it('должен вызвать getIssueChangelog с массивом ключей', async () => {
-      const mockBatchResult: BatchResult<string, ChangelogEntryWithUnknownFields[]> = [
+      const mockBatchResult: ChangelogBatch = [
         {
           status: 'fulfilled',
           key: 'QUEUE-123',
-          value: [mockChangelogEntry1],
+          value: page([mockChangelogEntry1]),
           index: 0,
         },
       ];
@@ -110,21 +134,21 @@ describe('GetIssueChangelogTool (batch mode)', () => {
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
-      expect(mockTrackerFacade.getIssueChangelog).toHaveBeenCalledWith(['QUEUE-123']);
+      expect(mockTrackerFacade.getIssueChangelog).toHaveBeenCalledWith(['QUEUE-123'], {});
     });
 
     it('должен вернуть batch результаты с successful и failed', async () => {
-      const mockBatchResult: BatchResult<string, ChangelogEntryWithUnknownFields[]> = [
+      const mockBatchResult: ChangelogBatch = [
         {
           status: 'fulfilled',
           key: 'QUEUE-123',
-          value: [mockChangelogEntry1],
+          value: page([mockChangelogEntry1]),
           index: 0,
         },
         {
           status: 'fulfilled',
           key: 'QUEUE-456',
-          value: [],
+          value: page([]),
           index: 1,
         },
       ];
@@ -154,11 +178,11 @@ describe('GetIssueChangelogTool (batch mode)', () => {
     });
 
     it('должен обработать частичные ошибки (mixed success/failure)', async () => {
-      const mockBatchResult: BatchResult<string, ChangelogEntryWithUnknownFields[]> = [
+      const mockBatchResult: ChangelogBatch = [
         {
           status: 'fulfilled',
           key: 'QUEUE-123',
-          value: [mockChangelogEntry1],
+          value: page([mockChangelogEntry1]),
           index: 0,
         },
         {
@@ -195,11 +219,11 @@ describe('GetIssueChangelogTool (batch mode)', () => {
 
   describe('Field filtering', () => {
     it('должен фильтровать поля в batch результатах', async () => {
-      const mockBatchResult: BatchResult<string, ChangelogEntryWithUnknownFields[]> = [
+      const mockBatchResult: ChangelogBatch = [
         {
           status: 'fulfilled',
           key: 'QUEUE-123',
-          value: [mockChangelogEntry1],
+          value: page([mockChangelogEntry1]),
           index: 0,
         },
       ];
@@ -229,11 +253,11 @@ describe('GetIssueChangelogTool (batch mode)', () => {
 
   describe('Logging', () => {
     it('должен логировать batch операции', async () => {
-      const mockBatchResult: BatchResult<string, ChangelogEntryWithUnknownFields[]> = [
+      const mockBatchResult: ChangelogBatch = [
         {
           status: 'fulfilled',
           key: 'QUEUE-123',
-          value: [mockChangelogEntry1],
+          value: page([mockChangelogEntry1]),
           index: 0,
         },
       ];
@@ -268,6 +292,68 @@ describe('GetIssueChangelogTool (batch mode)', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('Ошибка при получении истории изменений задач');
+    });
+  });
+
+  describe('Pagination', () => {
+    it('должен добавлять pagination в каждую успешную запись (регрессия: changelog/totalEntries на месте)', async () => {
+      const mockBatchResult: ChangelogBatch = [
+        { status: 'fulfilled', key: 'QUEUE-123', value: page([mockChangelogEntry1]), index: 0 },
+      ];
+      vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
+
+      const result = await tool.execute({
+        issueKeys: ['QUEUE-123'],
+        fields: STANDARD_CHANGELOG_FIELDS,
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: {
+          successful: Array<{
+            issueKey: string;
+            changelog: unknown[];
+            totalEntries: number;
+            pagination: { hasNextPage: boolean };
+          }>;
+        };
+      };
+      const item = parsed.data.successful[0];
+      expect(item?.issueKey).toBe('QUEUE-123');
+      expect(item?.changelog).toHaveLength(1);
+      expect(item?.totalEntries).toBe(1);
+      expect(item?.pagination).toBeDefined();
+      expect(item?.pagination.hasNextPage).toBe(false);
+    });
+
+    it('должен передавать параметры пагинации в фасад (page/perPage/fetchAll/maxItems)', async () => {
+      const mockBatchResult: ChangelogBatch = [
+        { status: 'fulfilled', key: 'QUEUE-123', value: page([]), index: 0 },
+      ];
+      vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
+
+      await tool.execute({
+        issueKeys: ['QUEUE-123'],
+        fetchAll: true,
+        maxItems: 300,
+        perPage: 50,
+        fields: STANDARD_CHANGELOG_FIELDS,
+      });
+
+      expect(mockTrackerFacade.getIssueChangelog).toHaveBeenCalledWith(
+        ['QUEUE-123'],
+        expect.objectContaining({ fetchAll: true, maxItems: 300, perPage: 50 })
+      );
+    });
+
+    it('должен отклонить конфликт page + fetchAll', async () => {
+      const result = await tool.execute({
+        issueKeys: ['QUEUE-123'],
+        page: 2,
+        fetchAll: true,
+        fields: STANDARD_CHANGELOG_FIELDS,
+      });
+
+      expect(result.isError).toBe(true);
     });
   });
 });

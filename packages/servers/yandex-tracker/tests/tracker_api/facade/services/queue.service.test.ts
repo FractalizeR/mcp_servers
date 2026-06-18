@@ -15,10 +15,26 @@ import type {
   CreateQueueDto,
   GetQueueFieldsDto,
   QueueOutput,
-  QueuesListOutput,
   QueueFieldsOutput,
   QueuePermissionsOutput,
 } from '#tracker_api/dto/index.js';
+import type { PaginatedResult, QueueWithUnknownFields } from '#tracker_api/entities/index.js';
+
+/** Обернуть очереди в PaginatedResult для моков сервиса. */
+function paginatedQueues(items: QueueWithUnknownFields[]): PaginatedResult<QueueWithUnknownFields> {
+  return {
+    items,
+    pagination: {
+      page: 1,
+      perPage: 50,
+      hasNextPage: false,
+      fetchedAll: true,
+      truncated: false,
+      hasError: false,
+      pagesFetched: 1,
+    },
+  };
+}
 import type {
   UpdateQueueParams,
   ManageQueueAccessParams,
@@ -78,7 +94,7 @@ describe('QueueService', () => {
 
   describe('getQueues', () => {
     it('должен делегировать вызов ops.getQueues.execute без параметров', async () => {
-      const mockResult: QueuesListOutput = [createQueueFixture()];
+      const mockResult = paginatedQueues([createQueueFixture() as QueueWithUnknownFields]);
 
       vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);
 
@@ -90,7 +106,7 @@ describe('QueueService', () => {
 
     it('должен делегировать вызов ops.getQueues.execute с параметрами', async () => {
       const params: GetQueuesDto = { perPage: 50, page: 2 };
-      const mockResult: QueuesListOutput = [createQueueFixture()];
+      const mockResult = paginatedQueues([createQueueFixture() as QueueWithUnknownFields]);
 
       vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);
 
@@ -100,12 +116,13 @@ describe('QueueService', () => {
       expect(result).toBe(mockResult);
     });
 
-    it('должен возвращать пустой массив если очередей нет', async () => {
-      vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue([]);
+    it('должен возвращать пустой результат если очередей нет', async () => {
+      const mockResult = paginatedQueues([]);
+      vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);
 
       const result = await service.getQueues();
 
-      expect(result).toEqual([]);
+      expect(result.items).toEqual([]);
     });
   });
 

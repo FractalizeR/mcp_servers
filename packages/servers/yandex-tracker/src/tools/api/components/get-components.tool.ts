@@ -29,22 +29,28 @@ export class GetComponentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { queueId, fields } = validation.data;
+    const { queueId, fields, page, perPage, fetchAll, maxItems } = validation.data;
 
     try {
       this.logger.info('Получение списка компонентов очереди', {
         queueId,
       });
 
-      const components = await this.facade.getComponents({ queueId });
+      const result = await this.facade.getComponents({
+        queueId,
+        ...(page !== undefined ? { page } : {}),
+        ...(perPage !== undefined ? { perPage } : {}),
+        ...(fetchAll !== undefined ? { fetchAll } : {}),
+        ...(maxItems !== undefined ? { maxItems } : {}),
+      });
 
       // Фильтрация полей для каждого компонента
-      const filteredComponents = components.map((component) =>
+      const filteredComponents = result.items.map((component) =>
         ResponseFieldFilter.filter<ComponentWithUnknownFields>(component, fields)
       );
 
       this.logger.info('Список компонентов получен', {
-        count: components.length,
+        count: result.items.length,
         queueId,
       });
 
@@ -53,6 +59,7 @@ export class GetComponentsTool extends BaseTool<YandexTrackerFacade> {
         count: filteredComponents.length,
         queueId,
         fieldsReturned: fields,
+        pagination: result.pagination,
       });
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка компонентов', error);

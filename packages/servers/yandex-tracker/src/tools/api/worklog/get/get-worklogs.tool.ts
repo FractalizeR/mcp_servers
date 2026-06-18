@@ -7,15 +7,10 @@
  * - Валидация через Zod
  */
 
-import {
-  BaseTool,
-  ResponseFieldFilter,
-  BatchResultProcessor,
-  ResultLogger,
-} from '@fractalizer/mcp-core';
+import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
+import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
 import { GetWorklogsParamsSchema } from '#tools/api/worklog/get/get-worklogs.schema.js';
 
 import { GET_WORKLOGS_TOOL_METADATA } from './get-worklogs.metadata.js';
@@ -50,7 +45,7 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, fields } = validation.data;
+    const { issueIds, fields, page, perPage, fetchAll, maxItems } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -62,16 +57,15 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
       );
 
       // 3. API v2: получение записей времени через batch-метод
-      const results = await this.facade.getWorklogsMany(issueIds);
+      const results = await this.facade.getWorklogsMany(issueIds, {
+        page,
+        perPage,
+        fetchAll,
+        maxItems,
+      });
 
-      // 4. Обработка результатов через BatchResultProcessor
-      const processedResults = BatchResultProcessor.process(
-        results,
-        (worklogs: WorklogWithUnknownFields[]): Partial<WorklogWithUnknownFields>[] =>
-          worklogs.map((worklog) =>
-            ResponseFieldFilter.filter<WorklogWithUnknownFields>(worklog, fields)
-          )
-      );
+      // 4. Обработка результатов через BatchResultProcessor (с пагинацией)
+      const processedResults = BatchResultProcessor.process(results, paginatedFieldFilter(fields));
 
       // 5. Логирование результатов
       ResultLogger.logBatchResults(
@@ -92,8 +86,9 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
         failed: processedResults.failed.length,
         worklogs: processedResults.successful.map((item) => ({
           issueId: item.key,
-          worklogs: item.data,
-          count: item.data.length,
+          worklogs: item.data.items,
+          count: item.data.items.length,
+          pagination: item.data.pagination,
         })),
         errors: processedResults.failed.map((item) => ({
           issueId: item.key,

@@ -7,12 +7,8 @@
  * - Валидация через Zod
  */
 
-import {
-  BaseTool,
-  ResponseFieldFilter,
-  BatchResultProcessor,
-  ResultLogger,
-} from '@fractalizer/mcp-core';
+import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
+import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -49,7 +45,7 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, perPage, page, expand, fields } = validation.data;
+    const { issueIds, perPage, page, fetchAll, maxItems, expand, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -64,16 +60,16 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
       const results = await this.facade.getCommentsMany(issueIds, {
         perPage,
         page,
+        fetchAll,
+        maxItems,
         expand: expand?.join(','),
       });
 
       // 4. Обработка результатов через BatchResultProcessor
+      // paginatedFieldFilter фильтрует items и прокидывает pagination без изменений
       const processedResults = BatchResultProcessor.process(
         results,
-        (comments: CommentWithUnknownFields[]): Partial<CommentWithUnknownFields>[] =>
-          comments.map((comment) =>
-            ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fields)
-          )
+        paginatedFieldFilter<CommentWithUnknownFields>(fields)
       );
 
       // 5. Логирование результатов
@@ -95,8 +91,9 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
         failed: processedResults.failed.length,
         comments: processedResults.successful.map((item) => ({
           issueId: item.key,
-          comments: item.data,
-          count: item.data.length,
+          comments: item.data.items,
+          count: item.data.items.length,
+          pagination: item.data.pagination,
         })),
         errors: processedResults.failed.map((item) => ({
           issueId: item.key,

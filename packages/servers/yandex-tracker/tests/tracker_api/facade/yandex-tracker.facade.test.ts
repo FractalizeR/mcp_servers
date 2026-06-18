@@ -469,7 +469,7 @@ describe('YandexTrackerFacade', () => {
 
       const result = await facade.getIssueChangelog(issueKey);
 
-      expect(mockIssuesContainer.issue.getIssueChangelog).toHaveBeenCalledWith(issueKey);
+      expect(mockIssuesContainer.issue.getIssueChangelog).toHaveBeenCalledWith(issueKey, {});
       expect(result).toEqual(mockResult);
     });
 
@@ -587,7 +587,7 @@ describe('YandexTrackerFacade', () => {
 
         const result = await facade.getWorklogs(issueId);
 
-        expect(mockIssuesContainer.worklog.getWorklogs).toHaveBeenCalledWith(issueId);
+        expect(mockIssuesContainer.worklog.getWorklogs).toHaveBeenCalledWith(issueId, undefined);
         expect(result).toEqual(mockResult);
       });
     });

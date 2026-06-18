@@ -23,7 +23,9 @@ import { AddWorklogOperation } from '#tracker_api/api_operations/worklog/add-wor
 import { UpdateWorklogOperation } from '#tracker_api/api_operations/worklog/update-worklog.operation.js';
 import { DeleteWorklogOperation } from '#tracker_api/api_operations/worklog/delete-worklog.operation.js';
 import type { AddWorklogInput, UpdateWorklogInput } from '#tracker_api/dto/index.js';
+import type { GetWorklogsInput } from '#tracker_api/dto/worklog/get-worklogs.input.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
 @injectable()
@@ -40,23 +42,29 @@ export class WorklogService {
   ) {}
 
   /**
-   * Получает список записей времени задачи
+   * Получает список записей времени задачи (одна страница или полный обход)
    * @param issueId - идентификатор или ключ задачи
-   * @returns массив записей времени
+   * @param input - параметры пагинации (page/perPage/fetchAll/maxItems)
+   * @returns пагинированный результат с метаданными
    */
-  async getWorklogs(issueId: string): Promise<WorklogWithUnknownFields[]> {
-    return this.getWorklogsOp.execute(issueId);
+  async getWorklogs(
+    issueId: string,
+    input: GetWorklogsInput = {}
+  ): Promise<PaginatedResult<WorklogWithUnknownFields>> {
+    return this.getWorklogsOp.execute(issueId, input);
   }
 
   /**
    * Получает записи времени для нескольких задач параллельно
    * @param issueIds - массив идентификаторов задач
-   * @returns результаты в формате BatchResult
+   * @param input - параметры пагинации (применяются ко всем задачам)
+   * @returns результаты в формате BatchResult с PaginatedResult в value
    */
   async getWorklogsMany(
-    issueIds: string[]
-  ): Promise<BatchResult<string, WorklogWithUnknownFields[]>> {
-    return this.getWorklogsOp.executeMany(issueIds);
+    issueIds: string[],
+    input: GetWorklogsInput = {}
+  ): Promise<BatchResult<string, PaginatedResult<WorklogWithUnknownFields>>> {
+    return this.getWorklogsOp.executeMany(issueIds, input);
   }
 
   /**

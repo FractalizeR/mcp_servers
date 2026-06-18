@@ -84,7 +84,8 @@ export interface FindIssuesInputDto {
   /**
    * Номер страницы для пагинации
    *
-   * ВАЖНО: Для >10000 результатов используй scroll (не реализовано в v1)
+   * ВАЖНО: Для >10000 результатов используй scroll (не реализовано в v1).
+   * Игнорируется при fetchAll=true (обход стартует с первой страницы).
    */
   page?: number | undefined;
 
@@ -98,4 +99,21 @@ export interface FindIssuesInputDto {
    * Пример: ["transitions", "attachments"]
    */
   expand?: string[] | undefined;
+
+  /**
+   * Полный обход всех страниц (opt-in).
+   *
+   * Если true — обойти все страницы по `Link rel="next"` (или перебором `page`,
+   * если сервер прислал `X-Total-Pages`) с защитным лимитом maxItems.
+   * Несовместимо с явным page.
+   */
+  fetchAll?: boolean | undefined;
+
+  /**
+   * Защитный лимит по количеству задач при fetchAll=true.
+   *
+   * По умолчанию 500 (применяет паджинатор). При срабатывании в метаданных
+   * выставляется pagination.truncated=true.
+   */
+  maxItems?: number | undefined;
 }

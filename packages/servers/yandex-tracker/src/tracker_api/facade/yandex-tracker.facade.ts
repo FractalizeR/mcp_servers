@@ -33,6 +33,12 @@ import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-iss
 import type { BatchIssueLinksResult } from '#tracker_api/api_operations/link/get-issue-links.operation.js';
 import type { BatchChangelogResult } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
+import type { GetIssueChangelogInputDto } from '#tracker_api/dto/issue/get-issue-changelog-input.dto.js';
+import type { GetWorklogsInput } from '#tracker_api/dto/worklog/get-worklogs.input.js';
+import type { GetAttachmentsInput } from '#tracker_api/dto/attachment/get-attachments.input.js';
+import type { GetIssueLinksInput } from '#tracker_api/dto/link/get-issue-links.input.js';
+import type { GetComponentsInput } from '#tracker_api/dto/component/get-components.dto.js';
+import type { GetChecklistInput } from '#tracker_api/dto/checklist/get-checklist.dto.js';
 import type {
   FindIssuesInputDto,
   CreateIssueDto,
@@ -43,11 +49,9 @@ import type {
   CreateQueueDto,
   GetQueueFieldsDto,
   QueueOutput,
-  QueuesListOutput,
   QueueFieldsOutput,
   QueuePermissionsOutput,
   ComponentOutput,
-  ComponentsListOutput,
   CreateLinkDto,
   AddCommentInput,
   EditCommentInput,
@@ -62,7 +66,6 @@ import type {
   GetProjectsDto,
   CreateProjectDto,
   ProjectOutput,
-  ProjectsListOutput,
   BulkUpdateIssuesInputDto,
   BulkTransitionIssuesInputDto,
   BulkMoveIssuesInputDto,
@@ -91,6 +94,10 @@ import type {
   WorklogWithUnknownFields,
   AttachmentWithUnknownFields,
   ChecklistItemWithUnknownFields,
+  ComponentWithUnknownFields,
+  ProjectWithUnknownFields,
+  QueueWithUnknownFields,
+  PaginatedResult,
   BulkChangeOperationWithUnknownFields,
 } from '#tracker_api/entities/index.js';
 import type {
@@ -185,8 +192,11 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @param issueKeys - массив ключей задач
    * @returns массив результатов (fulfilled | rejected)
    */
-  async getIssueChangelog(issueKeys: string[]): Promise<BatchChangelogResult[]> {
-    return this.issues.issue.getIssueChangelog(issueKeys);
+  async getIssueChangelog(
+    issueKeys: string[],
+    input: GetIssueChangelogInputDto = {}
+  ): Promise<BatchChangelogResult[]> {
+    return this.issues.issue.getIssueChangelog(issueKeys, input);
   }
 
   // === Issue Methods - Transitions ===
@@ -222,7 +232,7 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @param params - параметры запроса (perPage, page, expand)
    * @returns массив очередей
    */
-  async getQueues(params?: GetQueuesDto): Promise<QueuesListOutput> {
+  async getQueues(params?: GetQueuesDto): Promise<PaginatedResult<QueueWithUnknownFields>> {
     return this.queues.queue.getQueues(params);
   }
 
@@ -278,7 +288,7 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @param params - параметры запроса (опционально)
    * @returns список проектов
    */
-  async getProjects(params?: GetProjectsDto): Promise<ProjectsListOutput> {
+  async getProjects(params?: GetProjectsDto): Promise<PaginatedResult<ProjectWithUnknownFields>> {
     return this.projectAgile.project.getProjects(params);
   }
 
@@ -325,7 +335,9 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @param queueId - ключ или ID очереди
    * @returns массив компонентов очереди
    */
-  async getComponents(params: { queueId: string }): Promise<ComponentsListOutput> {
+  async getComponents(
+    params: GetComponentsInput
+  ): Promise<PaginatedResult<ComponentWithUnknownFields>> {
     return this.queues.component.getComponents(params);
   }
 
@@ -376,8 +388,11 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @param issueIds - массив ключей или ID задач
    * @returns массив результатов (fulfilled | rejected)
    */
-  async getIssueLinks(issueIds: string[]): Promise<BatchIssueLinksResult[]> {
-    return this.issues.link.getIssueLinks(issueIds);
+  async getIssueLinks(
+    issueIds: string[],
+    input?: GetIssueLinksInput
+  ): Promise<BatchIssueLinksResult[]> {
+    return this.issues.link.getIssueLinks(issueIds, input);
   }
 
   /**
@@ -453,7 +468,7 @@ export class YandexTrackerFacade implements RawApiCapable {
   async getComments(
     issueId: string,
     input?: GetCommentsInput
-  ): Promise<CommentWithUnknownFields[]> {
+  ): Promise<PaginatedResult<CommentWithUnknownFields>> {
     return this.issues.comment.getComments(issueId, input);
   }
 
@@ -466,7 +481,7 @@ export class YandexTrackerFacade implements RawApiCapable {
   async getCommentsMany(
     issueIds: string[],
     input?: GetCommentsInput
-  ): Promise<BatchResult<string, CommentWithUnknownFields[]>> {
+  ): Promise<BatchResult<string, PaginatedResult<CommentWithUnknownFields>>> {
     return this.issues.comment.getCommentsMany(issueIds, input);
   }
 
@@ -524,8 +539,10 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @param issueId - идентификатор или ключ задачи
    * @returns массив элементов чеклиста
    */
-  async getChecklist(issueId: string): Promise<ChecklistItemWithUnknownFields[]> {
-    return this.issues.checklist.getChecklist(issueId);
+  async getChecklist(
+    input: GetChecklistInput
+  ): Promise<PaginatedResult<ChecklistItemWithUnknownFields>> {
+    return this.issues.checklist.getChecklist(input);
   }
 
   /**
@@ -534,9 +551,10 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @returns результаты в формате BatchResult
    */
   async getChecklistMany(
-    issueIds: string[]
-  ): Promise<BatchResult<string, ChecklistItemWithUnknownFields[]>> {
-    return this.issues.checklist.getChecklistMany(issueIds);
+    issueIds: string[],
+    options?: Omit<GetChecklistInput, 'issueId'>
+  ): Promise<BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>>> {
+    return this.issues.checklist.getChecklistMany(issueIds, options);
   }
 
   /**
@@ -630,8 +648,11 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @param issueId - идентификатор или ключ задачи
    * @returns массив записей времени
    */
-  async getWorklogs(issueId: string): Promise<WorklogWithUnknownFields[]> {
-    return this.issues.worklog.getWorklogs(issueId);
+  async getWorklogs(
+    issueId: string,
+    input?: GetWorklogsInput
+  ): Promise<PaginatedResult<WorklogWithUnknownFields>> {
+    return this.issues.worklog.getWorklogs(issueId, input);
   }
 
   /**
@@ -640,9 +661,10 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @returns результаты в формате BatchResult
    */
   async getWorklogsMany(
-    issueIds: string[]
-  ): Promise<BatchResult<string, WorklogWithUnknownFields[]>> {
-    return this.issues.worklog.getWorklogsMany(issueIds);
+    issueIds: string[],
+    input?: GetWorklogsInput
+  ): Promise<BatchResult<string, PaginatedResult<WorklogWithUnknownFields>>> {
+    return this.issues.worklog.getWorklogsMany(issueIds, input);
   }
 
   /**
@@ -703,8 +725,11 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @param issueId - ключ или ID задачи
    * @returns массив прикрепленных файлов
    */
-  async getAttachments(issueId: string): Promise<AttachmentWithUnknownFields[]> {
-    return this.issues.attachment.getAttachments(issueId);
+  async getAttachments(
+    issueId: string,
+    input?: GetAttachmentsInput
+  ): Promise<PaginatedResult<AttachmentWithUnknownFields>> {
+    return this.issues.attachment.getAttachments(issueId, input);
   }
 
   /**
@@ -713,9 +738,10 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @returns результаты в формате BatchResult
    */
   async getAttachmentsMany(
-    issueIds: string[]
-  ): Promise<BatchResult<string, AttachmentWithUnknownFields[]>> {
-    return this.issues.attachment.getAttachmentsMany(issueIds);
+    issueIds: string[],
+    input?: GetAttachmentsInput
+  ): Promise<BatchResult<string, PaginatedResult<AttachmentWithUnknownFields>>> {
+    return this.issues.attachment.getAttachmentsMany(issueIds, input);
   }
 
   /**

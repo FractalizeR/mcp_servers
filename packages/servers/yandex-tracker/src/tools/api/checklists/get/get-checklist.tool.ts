@@ -7,15 +7,10 @@
  * - Валидация через Zod
  */
 
-import {
-  BaseTool,
-  ResponseFieldFilter,
-  BatchResultProcessor,
-  ResultLogger,
-} from '@fractalizer/mcp-core';
+import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
+import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
 import { GetChecklistParamsSchema } from '#tools/api/checklists/get/get-checklist.schema.js';
 
 import { GET_CHECKLIST_TOOL_METADATA } from './get-checklist.metadata.js';
@@ -50,7 +45,7 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, fields } = validation.data;
+    const { issueIds, fields, page, perPage, fetchAll, maxItems } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -62,16 +57,15 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
       );
 
       // 3. API v2: получение чеклистов для нескольких задач через batch-метод
-      const results = await this.facade.getChecklistMany(issueIds);
+      const results = await this.facade.getChecklistMany(issueIds, {
+        ...(page !== undefined ? { page } : {}),
+        ...(perPage !== undefined ? { perPage } : {}),
+        ...(fetchAll !== undefined ? { fetchAll } : {}),
+        ...(maxItems !== undefined ? { maxItems } : {}),
+      });
 
-      // 4. Обработка результатов через BatchResultProcessor
-      const processedResults = BatchResultProcessor.process(
-        results,
-        (checklist: ChecklistItemWithUnknownFields[]): Partial<ChecklistItemWithUnknownFields>[] =>
-          checklist.map((item) =>
-            ResponseFieldFilter.filter<ChecklistItemWithUnknownFields>(item, fields)
-          )
-      );
+      // 4. Обработка результатов: фильтрация полей + проброс пагинации
+      const processedResults = BatchResultProcessor.process(results, paginatedFieldFilter(fields));
 
       // 5. Логирование результатов
       ResultLogger.logBatchResults(
@@ -90,8 +84,9 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
         total: issueIds.length,
         successful: processedResults.successful.map((item) => ({
           issueId: item.key,
-          itemsCount: Array.isArray(item.data) ? item.data.length : 0,
-          checklist: item.data,
+          itemsCount: item.data.items.length,
+          checklist: item.data.items,
+          pagination: item.data.pagination,
         })),
         failed: processedResults.failed.map((item) => ({
           issueId: item.key,

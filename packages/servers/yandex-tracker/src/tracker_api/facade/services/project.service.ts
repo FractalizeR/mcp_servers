@@ -24,12 +24,8 @@ import { GetProjectOperation } from '#tracker_api/api_operations/project/get-pro
 import { CreateProjectOperation } from '#tracker_api/api_operations/project/create-project.operation.js';
 import { UpdateProjectOperation } from '#tracker_api/api_operations/project/update-project.operation.js';
 import { DeleteProjectOperation } from '#tracker_api/api_operations/project/delete-project.operation.js';
-import type {
-  GetProjectsDto,
-  CreateProjectDto,
-  ProjectOutput,
-  ProjectsListOutput,
-} from '#tracker_api/dto/index.js';
+import type { GetProjectsDto, CreateProjectDto, ProjectOutput } from '#tracker_api/dto/index.js';
+import type { PaginatedResult, ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
 import type {
   GetProjectParams,
   UpdateProjectParams,
@@ -54,9 +50,9 @@ export class ProjectService {
   /**
    * Получает список проектов
    * @param params - параметры запроса (опционально)
-   * @returns список проектов
+   * @returns страница проектов с метаданными пагинации
    */
-  async getProjects(params?: GetProjectsDto): Promise<ProjectsListOutput> {
+  async getProjects(params?: GetProjectsDto): Promise<PaginatedResult<ProjectWithUnknownFields>> {
     return this.getProjectsOp.execute(params);
   }
 

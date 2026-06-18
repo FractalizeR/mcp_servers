@@ -24,7 +24,9 @@ import { UpdateChecklistItemOperation } from '#tracker_api/api_operations/checkl
 import { DeleteChecklistItemOperation } from '#tracker_api/api_operations/checklist/delete-checklist-item.operation.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { AddChecklistItemInput, UpdateChecklistItemInput } from '#tracker_api/dto/index.js';
+import type { GetChecklistInput } from '#tracker_api/dto/checklist/get-checklist.dto.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
 
 @injectable()
 export class ChecklistService {
@@ -40,23 +42,27 @@ export class ChecklistService {
   ) {}
 
   /**
-   * Получает чеклист задачи
-   * @param issueId - идентификатор или ключ задачи
-   * @returns массив элементов чеклиста
+   * Получает чеклист задачи (с пагинацией)
+   * @param input - задача + опциональные параметры пагинации
+   * @returns `PaginatedResult` с элементами чеклиста и метаданными
    */
-  async getChecklist(issueId: string): Promise<ChecklistItemWithUnknownFields[]> {
-    return this.getChecklistOp.execute(issueId);
+  async getChecklist(
+    input: GetChecklistInput
+  ): Promise<PaginatedResult<ChecklistItemWithUnknownFields>> {
+    return this.getChecklistOp.execute(input);
   }
 
   /**
-   * Получает чеклисты для нескольких задач параллельно
+   * Получает чеклисты для нескольких задач параллельно (с пагинацией)
    * @param issueIds - массив ключей или ID задач
-   * @returns результаты batch-операции
+   * @param options - общие параметры пагинации (применяются ко всем задачам)
+   * @returns результаты batch-операции с `PaginatedResult` в каждой задаче
    */
   async getChecklistMany(
-    issueIds: string[]
-  ): Promise<BatchResult<string, ChecklistItemWithUnknownFields[]>> {
-    return this.getChecklistOp.executeMany(issueIds);
+    issueIds: string[],
+    options: Omit<GetChecklistInput, 'issueId'> = {}
+  ): Promise<BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>>> {
+    return this.getChecklistOp.executeMany(issueIds, options);
   }
 
   /**

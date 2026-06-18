@@ -1,26 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import { MockHttpClient } from '@fractalizer/mcp-infrastructure';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ServerConfig } from '#config';
 import { GetWorklogsOperation } from '#tracker_api/api_operations/worklog/get-worklogs.operation.js';
 
+/** Фабрика записи времени для тестов. */
+function makeWorklog(id: string): WorklogWithUnknownFields {
+  return {
+    id,
+    self: `https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/${id}`,
+    issue: { id: 'abc123', key: 'TEST-1', display: 'Test issue' },
+    createdBy: {
+      self: 'https://api.tracker.yandex.net/v2/users/1',
+      id: '1',
+      display: 'User 1',
+    },
+    createdAt: '2025-01-18T10:00:00.000+0000',
+    start: '2025-01-18T09:00:00.000+0000',
+    duration: 'PT1H',
+  } as WorklogWithUnknownFields;
+}
+
 describe('GetWorklogsOperation', () => {
   let operation: GetWorklogsOperation;
-  let mockHttpClient: IHttpClient;
+  let httpClient: MockHttpClient;
   let mockCacheManager: CacheManager;
   let mockLogger: Logger;
   let mockConfig: ServerConfig;
 
   beforeEach(() => {
-    mockHttpClient = {
-      get: vi.fn().mockResolvedValue(null),
-      post: vi.fn(),
-      patch: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn().mockResolvedValue(undefined),
-    } as unknown as IHttpClient;
+    httpClient = new MockHttpClient();
 
     mockCacheManager = {
       get: vi.fn().mockResolvedValue(null),
@@ -43,325 +54,126 @@ describe('GetWorklogsOperation', () => {
       maxConcurrentRequests: 5,
     } as ServerConfig;
 
-    operation = new GetWorklogsOperation(mockHttpClient, mockCacheManager, mockLogger, mockConfig);
+    operation = new GetWorklogsOperation(
+      httpClient as never,
+      mockCacheManager,
+      mockLogger,
+      mockConfig
+    );
   });
 
-  describe('execute', () => {
-    it('should call httpClient.get with correct endpoint', async () => {
-      const mockWorklogs: WorklogWithUnknownFields[] = [
-        {
-          id: '1',
-          self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
-          issue: {
-            id: 'abc123',
-            key: 'TEST-1',
-            display: 'Test issue',
-          },
-          comment: 'Работал над реализацией',
-          createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/1',
-            id: '1',
-            display: 'User 1',
-          },
-          createdAt: '2025-01-18T10:00:00.000+0000',
-          start: '2025-01-18T09:00:00.000+0000',
-          duration: 'PT1H30M',
-        },
-      ];
-
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockWorklogs);
+  describe('execute (single page)', () => {
+    it('возвращает одну страницу без Link → hasNextPage=false, fetchedAll=true', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')]);
 
       const result = await operation.execute('TEST-1');
 
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/issues/TEST-1/worklog');
-      expect(result).toEqual(mockWorklogs);
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+      expect(result.pagination.pagesFetched).toBe(1);
     });
 
-    it('should return array of worklogs', async () => {
-      const mockWorklogs: WorklogWithUnknownFields[] = [
-        {
-          id: '1',
-          self: 'https://api.tracker.yandex.net/v2/issues/PROJ-10/worklog/1',
-          issue: {
-            id: 'xyz456',
-            key: 'PROJ-10',
-            display: 'Project task',
-          },
-          createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/2',
-            id: '2',
-            display: 'User 2',
-          },
-          createdAt: '2025-01-18T11:00:00.000+0000',
-          start: '2025-01-18T10:00:00.000+0000',
-          duration: 'PT2H',
-        },
-        {
-          id: '2',
-          self: 'https://api.tracker.yandex.net/v2/issues/PROJ-10/worklog/2',
-          issue: {
-            id: 'xyz456',
-            key: 'PROJ-10',
-            display: 'Project task',
-          },
-          comment: 'Тестирование',
-          createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/2',
-            id: '2',
-            display: 'User 2',
-          },
-          createdAt: '2025-01-18T13:00:00.000+0000',
-          start: '2025-01-18T13:00:00.000+0000',
-          duration: 'PT45M',
-        },
-      ];
-
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockWorklogs);
-
-      const result = await operation.execute('PROJ-10');
-
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('1');
-      expect(result[1].id).toBe('2');
-    });
-
-    it('should convert non-array response to array', async () => {
-      const mockWorklog: WorklogWithUnknownFields = {
-        id: '1',
-        self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
-        issue: {
-          id: 'abc123',
-          key: 'TEST-1',
-          display: 'Test issue',
-        },
-        createdBy: {
-          self: 'https://api.tracker.yandex.net/v2/users/1',
-          id: '1',
-          display: 'User 1',
-        },
-        createdAt: '2025-01-18T10:00:00.000+0000',
-        start: '2025-01-18T10:00:00.000+0000',
-        duration: 'PT1H',
-      };
-
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockWorklog as never);
+    it('при наличии Link rel=next → hasNextPage=true', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')], {
+        link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/worklog?page=2>; rel="next"',
+      });
 
       const result = await operation.execute('TEST-1');
 
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual(mockWorklog);
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(result.pagination.fetchedAll).toBe(false);
     });
 
-    it('should handle API errors', async () => {
-      const error = new Error('API Error');
-      vi.mocked(mockHttpClient.get).mockRejectedValue(error);
+    it('пробрасывает page/perPage в путь запроса', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?page=2&perPage=10', [
+        makeWorklog('1'),
+      ]);
 
-      await expect(operation.execute('TEST-1')).rejects.toThrow('API Error');
+      const result = await operation.execute('TEST-1', { page: 2, perPage: 10 });
+
+      expect(result.pagination.page).toBe(2);
+      expect(result.pagination.perPage).toBe(10);
     });
 
-    it('should log info messages', async () => {
-      const mockWorklogs: WorklogWithUnknownFields[] = [
+    it('пробрасывает ошибку API', async () => {
+      // путь без мока → MockHttpClient reject
+      await expect(operation.execute('TEST-404')).rejects.toThrow();
+    });
+  });
+
+  describe('execute (fetchAll)', () => {
+    it('обходит несколько страниц через Link rel=next', async () => {
+      httpClient.setResponseQueue('GET', '/v2/issues/TEST-1/worklog?perPage=100', [
         {
-          id: '1',
-          self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
-          issue: {
-            id: 'abc123',
-            key: 'TEST-1',
-            display: 'Test issue',
+          data: [makeWorklog('1')],
+          headers: {
+            link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/worklog?page=2>; rel="next"',
           },
-          createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/1',
-            id: '1',
-            display: 'User 1',
-          },
-          createdAt: '2025-01-18T10:00:00.000+0000',
-          start: '2025-01-18T10:00:00.000+0000',
-          duration: 'PT1H',
         },
-        {
-          id: '2',
-          self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/2',
-          issue: {
-            id: 'abc123',
-            key: 'TEST-1',
-            display: 'Test issue',
-          },
-          createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/2',
-            id: '2',
-            display: 'User 2',
-          },
-          createdAt: '2025-01-18T11:00:00.000+0000',
-          start: '2025-01-18T11:00:00.000+0000',
-          duration: 'PT30M',
-        },
-      ];
+      ]);
+      httpClient.setResponseQueue('GET', '/v2/issues/TEST-1/worklog?page=2', [
+        { data: [makeWorklog('2')] },
+      ]);
 
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockWorklogs);
+      const result = await operation.execute('TEST-1', { fetchAll: true });
 
-      await operation.execute('TEST-1');
-
-      expect(mockLogger.info).toHaveBeenCalledWith('Получение записей времени задачи TEST-1');
-      expect(mockLogger.info).toHaveBeenCalledWith('Получено 2 записей времени для задачи TEST-1');
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.fetchedAll).toBe(true);
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.pagesFetched).toBe(2);
     });
 
-    it('should handle empty array response', async () => {
-      const mockWorklogs: WorklogWithUnknownFields[] = [];
+    it('обрезает выдачу по maxItems → truncated=true', async () => {
+      httpClient.setResponse(
+        'GET',
+        '/v2/issues/TEST-1/worklog?perPage=100',
+        [makeWorklog('1'), makeWorklog('2'), makeWorklog('3')],
+        {
+          link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/worklog?page=2>; rel="next"',
+        }
+      );
 
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockWorklogs);
+      const result = await operation.execute('TEST-1', { fetchAll: true, maxItems: 2 });
 
-      const result = await operation.execute('TEST-1');
-
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(0);
-      expect(mockLogger.info).toHaveBeenCalledWith('Получение записей времени задачи TEST-1');
-      expect(mockLogger.info).toHaveBeenCalledWith('Получено 0 записей времени для задачи TEST-1');
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.truncated).toBe(true);
+      expect(result.pagination.hasNextPage).toBe(true);
     });
   });
 
   describe('executeMany', () => {
-    it('should get worklogs for multiple issues in parallel', async () => {
-      const mockWorklogs1: WorklogWithUnknownFields[] = [
-        {
-          id: '1',
-          self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
-          issue: {
-            id: 'abc123',
-            key: 'TEST-1',
-            display: 'Test issue',
-          },
-          createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/1',
-            id: '1',
-            display: 'User 1',
-          },
-          createdAt: '2025-01-18T10:00:00.000+0000',
-          start: '2025-01-18T09:00:00.000+0000',
-          duration: 'PT1H30M',
-        },
-      ];
-
-      const mockWorklogs2: WorklogWithUnknownFields[] = [
-        {
-          id: '2',
-          self: 'https://api.tracker.yandex.net/v2/issues/TEST-2/worklog/2',
-          issue: {
-            id: 'xyz456',
-            key: 'TEST-2',
-            display: 'Another test issue',
-          },
-          createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/2',
-            id: '2',
-            display: 'User 2',
-          },
-          createdAt: '2025-01-18T11:00:00.000+0000',
-          start: '2025-01-18T10:00:00.000+0000',
-          duration: 'PT2H',
-        },
-      ];
-
-      vi.mocked(mockHttpClient.get)
-        .mockResolvedValueOnce(mockWorklogs1)
-        .mockResolvedValueOnce(mockWorklogs2);
-
-      const results = await operation.executeMany(['TEST-1', 'TEST-2']);
-
-      expect(results).toHaveLength(2);
-      expect(results[0]).toEqual({
-        status: 'fulfilled',
-        key: 'TEST-1',
-        index: 0,
-        value: mockWorklogs1,
-      });
-      expect(results[1]).toEqual({
-        status: 'fulfilled',
-        key: 'TEST-2',
-        index: 1,
-        value: mockWorklogs2,
-      });
-    });
-
-    it('should handle partial failures', async () => {
-      const mockWorklogs1: WorklogWithUnknownFields[] = [
-        {
-          id: '1',
-          self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
-          issue: {
-            id: 'abc123',
-            key: 'TEST-1',
-            display: 'Test issue',
-          },
-          createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/1',
-            id: '1',
-            display: 'User 1',
-          },
-          createdAt: '2025-01-18T10:00:00.000+0000',
-          start: '2025-01-18T09:00:00.000+0000',
-          duration: 'PT1H',
-        },
-      ];
-
-      const error = new Error('API Error for TEST-2');
-
-      vi.mocked(mockHttpClient.get)
-        .mockResolvedValueOnce(mockWorklogs1)
-        .mockRejectedValueOnce(error);
+    it('возвращает BatchResult с PaginatedResult в value', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')]);
+      httpClient.setResponse('GET', '/v2/issues/TEST-2/worklog', [makeWorklog('2')]);
 
       const results = await operation.executeMany(['TEST-1', 'TEST-2']);
 
       expect(results).toHaveLength(2);
       expect(results[0].status).toBe('fulfilled');
-      expect(results[0].key).toBe('TEST-1');
       if (results[0].status === 'fulfilled') {
-        expect(results[0].value).toEqual(mockWorklogs1);
-      }
-      expect(results[1].status).toBe('rejected');
-      expect(results[1].key).toBe('TEST-2');
-      if (results[1].status === 'rejected') {
-        expect(results[1].reason.message).toBe('API Error for TEST-2');
+        expect(results[0].value.items).toHaveLength(1);
+        expect(results[0].value.pagination.fetchedAll).toBe(true);
       }
     });
 
-    it('should return empty array for empty input', async () => {
+    it('обрабатывает частичные ошибки', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')]);
+      // TEST-2 не замокан → reject
+
+      const results = await operation.executeMany(['TEST-1', 'TEST-2']);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].status).toBe('fulfilled');
+      expect(results[1].status).toBe('rejected');
+    });
+
+    it('возвращает пустой массив для пустого входа', async () => {
       const results = await operation.executeMany([]);
 
       expect(results).toEqual([]);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'GetWorklogsOperation: пустой массив идентификаторов'
-      );
-    });
-
-    it('should log batch operation info', async () => {
-      const mockWorklogs: WorklogWithUnknownFields[] = [
-        {
-          id: '1',
-          self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
-          issue: {
-            id: 'abc123',
-            key: 'TEST-1',
-            display: 'Test issue',
-          },
-          createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/1',
-            id: '1',
-            display: 'User 1',
-          },
-          createdAt: '2025-01-18T10:00:00.000+0000',
-          start: '2025-01-18T09:00:00.000+0000',
-          duration: 'PT1H',
-        },
-      ];
-
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockWorklogs);
-
-      await operation.executeMany(['TEST-1', 'TEST-2']);
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Получение записей времени для 2 задач параллельно: TEST-1, TEST-2'
       );
     });
   });

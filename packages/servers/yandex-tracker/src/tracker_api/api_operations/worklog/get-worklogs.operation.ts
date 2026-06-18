@@ -3,6 +3,7 @@
  *
  * Ответственность (SRP):
  * - ТОЛЬКО получение записей времени задачи (single и batch режимы)
+ * - Пагинация: одна страница (по умолчанию) или полный обход (fetchAll)
  * - Параллельное выполнение через ParallelExecutor (batch режим)
  * - НЕТ добавления/редактирования/удаления записей
  *
@@ -11,7 +12,10 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
+import { TrackerPaginator, DEFAULT_MAX_PER_PAGE } from '#tracker_api/utils/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/index.js';
+import type { GetWorklogsInput } from '#tracker_api/dto/worklog/get-worklogs.input.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 
@@ -31,45 +35,62 @@ export class GetWorklogsOperation extends BaseOperation {
       maxConcurrentRequests: config.maxConcurrentRequests,
     });
   }
+
   /**
-   * Получает список записей времени задачи
+   * Получает записи времени задачи (одна страница или полный обход).
    *
    * @param issueId - идентификатор или ключ задачи (например, 'QUEUE-123')
-   * @returns массив записей времени
+   * @param input - параметры пагинации (page/perPage/fetchAll/maxItems)
+   * @returns пагинированный результат с метаданными
    * @throws {Error} если запрос завершился с ошибкой
    *
    * ВАЖНО:
-   * - Retry делается автоматически в HttpClient.get
-   * - API возвращает массив записей времени
+   * - Retry делается автоматически в HttpClient
    * - Эндпоинт из API v2 (не v3!)
+   * - Link-следование no-op, если заголовка нет (контракт стабилен)
    */
-  async execute(issueId: string): Promise<WorklogWithUnknownFields[]> {
+  async execute(
+    issueId: string,
+    input: GetWorklogsInput = {}
+  ): Promise<PaginatedResult<WorklogWithUnknownFields>> {
     this.logger.info(`Получение записей времени задачи ${issueId}`);
 
-    const endpoint = `/v2/issues/${issueId}/worklog`;
+    const fetchAll = input.fetchAll === true;
+    const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
+    const path = this.buildPath(issueId, input.page, effectivePerPage);
 
-    const worklogs = await this.httpClient.get<WorklogWithUnknownFields[]>(endpoint);
+    const first = await this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(path);
 
-    this.logger.info(
-      `Получено ${Array.isArray(worklogs) ? worklogs.length : 1} записей времени для задачи ${issueId}`
-    );
+    const result = fetchAll
+      ? await TrackerPaginator.fetchAllPages<WorklogWithUnknownFields>({
+          firstResponse: first,
+          requestNext: (p) => this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(p),
+          ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
+          ...(input.page !== undefined ? { page: input.page } : {}),
+          ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+        })
+      : TrackerPaginator.singlePage<WorklogWithUnknownFields>(first, {
+          page: input.page,
+          perPage: input.perPage,
+        });
 
-    return Array.isArray(worklogs) ? worklogs : [worklogs];
+    this.logger.info(`Получено ${result.items.length} записей времени для задачи ${issueId}`);
+
+    return result;
   }
 
   /**
    * Получает записи времени для нескольких задач параллельно
    *
    * @param issueIds - массив идентификаторов задач
-   * @returns массив результатов в формате BatchResult
+   * @param input - параметры пагинации (применяются ко всем задачам)
+   * @returns результаты в формате BatchResult с PaginatedResult в value
    * @throws {Error} если количество задач превышает maxBatchSize
-   *
-   * ВАЖНО:
-   * - Использует ParallelExecutor для соблюдения maxConcurrentRequests
-   * - Retry делается автоматически в HttpClient.get
    */
-  async executeMany(issueIds: string[]): Promise<BatchResult<string, WorklogWithUnknownFields[]>> {
-    // Проверка на пустой массив
+  async executeMany(
+    issueIds: string[],
+    input: GetWorklogsInput = {}
+  ): Promise<BatchResult<string, PaginatedResult<WorklogWithUnknownFields>>> {
     if (issueIds.length === 0) {
       this.logger.warn('GetWorklogsOperation: пустой массив идентификаторов');
       return [];
@@ -79,16 +100,28 @@ export class GetWorklogsOperation extends BaseOperation {
       `Получение записей времени для ${issueIds.length} задач параллельно: ${issueIds.join(', ')}`
     );
 
-    // Создаём операции для каждой задачи
     const operations = issueIds.map((issueId) => ({
       key: issueId,
-      fn: async (): Promise<WorklogWithUnknownFields[]> => {
-        // Вызываем существующий метод execute() для каждой задачи
-        return this.execute(issueId);
-      },
+      fn: async (): Promise<PaginatedResult<WorklogWithUnknownFields>> =>
+        this.execute(issueId, input),
     }));
 
-    // Выполняем через ParallelExecutor (централизованный throttling)
     return this.parallelExecutor.executeParallel(operations, 'get worklogs');
+  }
+
+  /**
+   * Построить путь с query-параметрами пагинации.
+   */
+  private buildPath(issueId: string, page?: number, perPage?: number): string {
+    const base = `/v2/issues/${issueId}/worklog`;
+    const query = new URLSearchParams();
+    if (page !== undefined) {
+      query.set('page', String(page));
+    }
+    if (perPage !== undefined) {
+      query.set('perPage', String(perPage));
+    }
+    const qs = query.toString();
+    return qs.length > 0 ? `${base}?${qs}` : base;
   }
 }

@@ -25,6 +25,7 @@ import { CreateLinkOperation } from '#tracker_api/api_operations/link/create-lin
 import { DeleteLinkOperation } from '#tracker_api/api_operations/link/delete-link.operation.js';
 import type { LinkWithUnknownFields, LinkRelationship } from '#tracker_api/entities/link.entity.js';
 import type { CreateLinkDto } from '#tracker_api/dto/link/create-link.dto.js';
+import type { GetIssueLinksInput } from '#tracker_api/dto/link/get-issue-links.input.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
 @injectable()
@@ -38,10 +39,14 @@ export class IssueLinkService {
   /**
    * Получает связи для нескольких задач параллельно
    * @param issueIds - массив ключей или ID задач
-   * @returns массив результатов (fulfilled | rejected)
+   * @param input - параметры пагинации (применяются ко всем задачам)
+   * @returns массив результатов (fulfilled | rejected) с PaginatedResult в value
    */
-  async getIssueLinks(issueIds: string[]): Promise<BatchIssueLinksResult[]> {
-    return this.getLinksOp.execute(issueIds);
+  async getIssueLinks(
+    issueIds: string[],
+    input: GetIssueLinksInput = {}
+  ): Promise<BatchIssueLinksResult[]> {
+    return this.getLinksOp.execute(issueIds, input);
   }
 
   /**

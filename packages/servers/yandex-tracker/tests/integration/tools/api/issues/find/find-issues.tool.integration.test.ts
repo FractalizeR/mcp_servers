@@ -61,8 +61,9 @@ describe('find-issues integration tests', () => {
         hasFilter: false,
         keysCount: 2,
         hasQueue: false,
-        perPage: 50,
       });
+      // perPage не задавали → не подделываем дефолтом
+      expect(response.searchCriteria.perPage).toBeUndefined();
 
       mockServer.assertAllRequestsDone();
     });

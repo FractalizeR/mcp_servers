@@ -160,7 +160,7 @@ const facade = new YandexTrackerFacade(
 ```typescript
 it('должна делегировать вызов IssueService.findIssues', async () => {
   const params: FindIssuesInputDto = { query: 'status: open', perPage: 50 };
-  const mockResult: FindIssuesResult = [/* ... */];
+  const mockResult: FindIssuesResult = { items: [/* ... */], pagination: {/* ... */} };
 
   vi.mocked(mockIssueService.findIssues).mockResolvedValue(mockResult);
 

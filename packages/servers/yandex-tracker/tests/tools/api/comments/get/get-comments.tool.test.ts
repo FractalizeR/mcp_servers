@@ -10,6 +10,24 @@ import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createCommentListFixture } from '#helpers/comment.fixture.js';
+import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/index.js';
+
+/** Метаданные пагинации по умолчанию для single-page без Link. */
+const defaultMeta: PaginationMeta = {
+  hasNextPage: false,
+  fetchedAll: true,
+  truncated: false,
+  hasError: false,
+  pagesFetched: 1,
+};
+
+/** Обернуть массив комментариев в PaginatedResult (как теперь отдаёт фасад). */
+function paginated(
+  items: CommentWithUnknownFields[],
+  meta: Partial<PaginationMeta> = {}
+): PaginatedResult<CommentWithUnknownFields> {
+  return { items, pagination: { ...defaultMeta, ...meta } };
+}
 
 describe('GetCommentsTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -135,7 +153,7 @@ describe('GetCommentsTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockComments,
+          value: paginated(mockComments),
         },
       ]);
 
@@ -155,7 +173,7 @@ describe('GetCommentsTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockComments,
+          value: paginated(mockComments),
         },
       ]);
 
@@ -167,6 +185,8 @@ describe('GetCommentsTool', () => {
       expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: undefined,
         page: undefined,
+        fetchAll: undefined,
+        maxItems: undefined,
         expand: undefined,
       });
     });
@@ -177,7 +197,7 @@ describe('GetCommentsTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockComments,
+          value: paginated(mockComments),
         },
       ]);
 
@@ -191,6 +211,8 @@ describe('GetCommentsTool', () => {
       expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: 50,
         page: 2,
+        fetchAll: undefined,
+        maxItems: undefined,
         expand: undefined,
       });
     });
@@ -201,7 +223,7 @@ describe('GetCommentsTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockComments,
+          value: paginated(mockComments),
         },
       ]);
 
@@ -214,6 +236,8 @@ describe('GetCommentsTool', () => {
       expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: undefined,
         page: undefined,
+        fetchAll: undefined,
+        maxItems: undefined,
         expand: 'attachments',
       });
     });
@@ -224,7 +248,7 @@ describe('GetCommentsTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockComments,
+          value: paginated(mockComments),
         },
       ]);
 
@@ -258,13 +282,88 @@ describe('GetCommentsTool', () => {
       expect(parsed.data.fieldsReturned).toEqual(['id', 'text']);
     });
 
+    it('должен включать pagination в каждый элемент comments', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: paginated(mockComments, { hasNextPage: true, fetchedAll: false, total: 42 }),
+        },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: ['TEST-123'],
+        fields: ['id', 'text'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: {
+          comments: Array<{
+            issueId: string;
+            comments: CommentWithUnknownFields[];
+            count: number;
+            pagination: PaginationMeta;
+          }>;
+        };
+      };
+      // Регрессия формата: прежние ключи на месте
+      expect(parsed.data.comments[0].issueId).toBe('TEST-123');
+      expect(parsed.data.comments[0].comments).toHaveLength(3);
+      expect(parsed.data.comments[0].count).toBe(3);
+      // Аддитивно: метаданные пагинации
+      expect(parsed.data.comments[0].pagination).toBeDefined();
+      expect(parsed.data.comments[0].pagination.hasNextPage).toBe(true);
+      expect(parsed.data.comments[0].pagination.fetchedAll).toBe(false);
+      expect(parsed.data.comments[0].pagination.total).toBe(42);
+    });
+
+    it('должен передавать fetchAll и maxItems в фасад', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: paginated(mockComments),
+        },
+      ]);
+
+      await tool.execute({
+        issueIds: ['TEST-123'],
+        fetchAll: true,
+        maxItems: 200,
+        fields: ['id', 'text'],
+      });
+
+      expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
+        perPage: undefined,
+        page: undefined,
+        fetchAll: true,
+        maxItems: 200,
+        expand: undefined,
+      });
+    });
+
+    it('должен отклонить одновременное указание page и fetchAll', async () => {
+      const result = await tool.execute({
+        issueIds: ['TEST-123'],
+        page: 2,
+        fetchAll: true,
+        fields: ['id', 'text'],
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0]?.text).toContain('валидации');
+    });
+
     it('должен вернуть пустой массив для задачи без комментариев', async () => {
       vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
         {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: [],
+          value: paginated([]),
         },
       ]);
 
@@ -296,13 +395,13 @@ describe('GetCommentsTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockComments,
+          value: paginated(mockComments),
         },
         {
           status: 'fulfilled',
           key: 'TEST-456',
           index: 1,
-          value: [],
+          value: paginated([]),
         },
       ]);
 
@@ -341,7 +440,7 @@ describe('GetCommentsTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockComments,
+          value: paginated(mockComments),
         },
       ]);
 
@@ -365,13 +464,13 @@ describe('GetCommentsTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockComments,
+          value: paginated(mockComments),
         },
         {
           status: 'fulfilled',
           key: 'TEST-456',
           index: 1,
-          value: [],
+          value: paginated([]),
         },
       ]);
 
@@ -411,7 +510,7 @@ describe('GetCommentsTool', () => {
           status: 'fulfilled',
           key: 'TEST-123',
           index: 0,
-          value: mockComments,
+          value: paginated(mockComments),
         },
         {
           status: 'rejected',

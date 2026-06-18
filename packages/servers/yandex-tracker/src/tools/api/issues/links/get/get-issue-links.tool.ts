@@ -7,15 +7,10 @@
  * - Валидация через Zod
  */
 
-import {
-  BaseTool,
-  ResponseFieldFilter,
-  BatchResultProcessor,
-  ResultLogger,
-} from '@fractalizer/mcp-core';
+import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
+import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
 import { GetIssueLinksParamsSchema } from './get-issue-links.schema.js';
 
 import { GET_ISSUE_LINKS_TOOL_METADATA } from './get-issue-links.metadata.js';
@@ -55,7 +50,7 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, fields } = validation.data;
+    const { issueIds, fields, page, perPage, fetchAll, maxItems } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -67,14 +62,15 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
       );
 
       // 3. API v3: получение связей через batch-метод
-      const results = await this.facade.getIssueLinks(issueIds);
+      const results = await this.facade.getIssueLinks(issueIds, {
+        page,
+        perPage,
+        fetchAll,
+        maxItems,
+      });
 
-      // 4. Обработка результатов через BatchResultProcessor
-      const processedResults = BatchResultProcessor.process(
-        results,
-        (links: LinkWithUnknownFields[]): LinkWithUnknownFields[] =>
-          links.map((link) => ResponseFieldFilter.filter<LinkWithUnknownFields>(link, fields))
-      );
+      // 4. Обработка результатов через BatchResultProcessor (с пагинацией)
+      const processedResults = BatchResultProcessor.process(results, paginatedFieldFilter(fields));
 
       // 5. Логирование результатов
       ResultLogger.logBatchResults(
@@ -93,8 +89,9 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
         total: issueIds.length,
         successful: processedResults.successful.map((item) => ({
           issueId: item.key,
-          links: item.data,
-          count: item.data.length,
+          links: item.data.items,
+          count: item.data.items.length,
+          pagination: item.data.pagination,
         })),
         failed: processedResults.failed.map((item) => ({
           issueId: item.key,

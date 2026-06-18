@@ -9,6 +9,27 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createQueueListFixture } from '#helpers/queue.fixture.js';
+import type { PaginatedResult, QueueWithUnknownFields } from '#tracker_api/entities/index.js';
+
+/** Обернуть массив очередей в PaginatedResult (single-page по умолчанию). */
+function paginated(
+  items: QueueWithUnknownFields[],
+  overrides: Partial<PaginatedResult<QueueWithUnknownFields>['pagination']> = {}
+): PaginatedResult<QueueWithUnknownFields> {
+  return {
+    items,
+    pagination: {
+      page: 1,
+      perPage: 50,
+      hasNextPage: false,
+      fetchedAll: true,
+      truncated: false,
+      hasError: false,
+      pagesFetched: 1,
+      ...overrides,
+    },
+  };
+}
 
 describe('GetQueuesTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -49,7 +70,7 @@ describe('GetQueuesTool', () => {
     describe('валидация параметров (Zod)', () => {
       it('должен использовать дефолтные значения если параметры не указаны', async () => {
         const mockQueues = createQueueListFixture(3);
-        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(paginated(mockQueues));
 
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
@@ -99,7 +120,7 @@ describe('GetQueuesTool', () => {
 
       it('должен принимать корректные параметры пагинации', async () => {
         const mockQueues = createQueueListFixture(10);
-        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(paginated(mockQueues));
 
         const result = await tool.execute({ perPage: 10, page: 2, fields: ['id', 'key', 'name'] });
 
@@ -115,7 +136,7 @@ describe('GetQueuesTool', () => {
     describe('получение списка очередей', () => {
       it('должен получить список очередей без expand', async () => {
         const mockQueues = createQueueListFixture(3);
-        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(paginated(mockQueues));
 
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
@@ -153,7 +174,7 @@ describe('GetQueuesTool', () => {
 
       it('должен получить список очередей с expand параметром', async () => {
         const mockQueues = createQueueListFixture(2);
-        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(paginated(mockQueues));
 
         const result = await tool.execute({ expand: 'projects', fields: ['id', 'key', 'name'] });
 
@@ -172,7 +193,7 @@ describe('GetQueuesTool', () => {
 
       it('должен получить список с кастомными perPage и page', async () => {
         const mockQueues = createQueueListFixture(5);
-        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(mockQueues);
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(paginated(mockQueues));
 
         const result = await tool.execute({ perPage: 5, page: 3, fields: ['id', 'key', 'name'] });
 
@@ -195,7 +216,7 @@ describe('GetQueuesTool', () => {
       });
 
       it('должен обработать пустой результат', async () => {
-        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue([]);
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(paginated([]));
 
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
@@ -249,6 +270,61 @@ describe('GetQueuesTool', () => {
         };
         expect(parsed.success).toBe(false);
         expect(parsed.error).toBe('Network timeout');
+      });
+    });
+
+    describe('пагинация', () => {
+      it('добавляет pagination в выдачу, сохраняя прежние ключи (регрессия)', async () => {
+        const mockQueues = createQueueListFixture(2);
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(
+          paginated(mockQueues, { hasNextPage: true, fetchedAll: false, total: 9 })
+        );
+
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
+
+        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+          data: {
+            queues: unknown[];
+            count: number;
+            page: number;
+            perPage: number;
+            pagination: { hasNextPage: boolean; total?: number };
+          };
+        };
+        // Прежние ключи на месте
+        expect(parsed.data.queues).toHaveLength(2);
+        expect(parsed.data.count).toBe(2);
+        expect(parsed.data.page).toBe(1);
+        expect(parsed.data.perPage).toBe(50);
+        // Новое поле pagination
+        expect(parsed.data.pagination.hasNextPage).toBe(true);
+        expect(parsed.data.pagination.total).toBe(9);
+      });
+
+      it('прокидывает fetchAll/maxItems в фасад', async () => {
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(paginated([]));
+
+        await tool.execute({ fetchAll: true, maxItems: 300, fields: ['id', 'key', 'name'] });
+
+        expect(mockTrackerFacade.getQueues).toHaveBeenCalledWith(
+          expect.objectContaining({ fetchAll: true, maxItems: 300 })
+        );
+      });
+
+      it('возвращает ошибку валидации при конфликте page + fetchAll', async () => {
+        const result = await tool.execute({
+          page: 2,
+          fetchAll: true,
+          fields: ['id', 'key', 'name'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
       });
     });
   });

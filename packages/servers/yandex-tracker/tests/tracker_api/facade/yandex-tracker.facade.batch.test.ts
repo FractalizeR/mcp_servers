@@ -305,7 +305,10 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
       const result = await facade.getChecklistMany(issueIds);
 
-      expect(mockIssuesContainer.checklist.getChecklistMany).toHaveBeenCalledWith(issueIds);
+      expect(mockIssuesContainer.checklist.getChecklistMany).toHaveBeenCalledWith(
+        issueIds,
+        undefined
+      );
       expect(result).toBe(mockResult);
     });
   });
@@ -388,7 +391,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
       const result = await facade.getWorklogsMany(issueIds);
 
-      expect(mockIssuesContainer.worklog.getWorklogsMany).toHaveBeenCalledWith(issueIds);
+      expect(mockIssuesContainer.worklog.getWorklogsMany).toHaveBeenCalledWith(issueIds, undefined);
       expect(result).toBe(mockResult);
     });
   });
@@ -427,7 +430,10 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
       const result = await facade.getAttachmentsMany(issueIds);
 
-      expect(mockIssuesContainer.attachment.getAttachmentsMany).toHaveBeenCalledWith(issueIds);
+      expect(mockIssuesContainer.attachment.getAttachmentsMany).toHaveBeenCalledWith(
+        issueIds,
+        undefined
+      );
       expect(result).toBe(mockResult);
     });
   });
@@ -559,7 +565,10 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
       const result = await facade.getAttachments(issueId);
 
-      expect(mockIssuesContainer.attachment.getAttachments).toHaveBeenCalledWith(issueId);
+      expect(mockIssuesContainer.attachment.getAttachments).toHaveBeenCalledWith(
+        issueId,
+        undefined
+      );
       expect(result).toBe(mockResult);
     });
   });

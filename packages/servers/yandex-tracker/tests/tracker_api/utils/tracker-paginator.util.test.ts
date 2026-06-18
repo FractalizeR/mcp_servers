@@ -223,4 +223,46 @@ describe('TrackerPaginator', () => {
       expect(DEFAULT_MAX_ITEMS).toBe(500);
     });
   });
+
+  describe('singlePage', () => {
+    it('без Link/X-Total — hasNextPage=false, fetchedAll=true, pagesFetched=1', () => {
+      const result = TrackerPaginator.singlePage(envelope([1, 2, 3]), { page: 1, perPage: 50 });
+
+      expect(result.items).toEqual([1, 2, 3]);
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+      expect(result.pagination.truncated).toBe(false);
+      expect(result.pagination.hasError).toBe(false);
+      expect(result.pagination.pagesFetched).toBe(1);
+      expect(result.pagination.page).toBe(1);
+      expect(result.pagination.perPage).toBe(50);
+    });
+
+    it('есть Link rel=next — hasNextPage=true, fetchedAll=false (есть ещё данные)', () => {
+      const result = TrackerPaginator.singlePage(envelope([1, 2], linkNext('/v3/items?page=2')));
+
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(result.pagination.fetchedAll).toBe(false);
+      expect(result.pagination.truncated).toBe(false);
+    });
+
+    it('X-Total-* прокидываются в метаданные', () => {
+      const result = TrackerPaginator.singlePage(
+        envelope([1, 2], { 'x-total-count': '42', 'x-total-pages': '21' }),
+        { page: 1, perPage: 2 }
+      );
+
+      expect(result.pagination.total).toBe(42);
+      expect(result.pagination.totalPages).toBe(21);
+      // page*perPage (1*2=2) < total(42) → есть ещё данные
+      expect(result.pagination.hasNextPage).toBe(true);
+    });
+
+    it('копирует массив items (не держит ссылку на response.data)', () => {
+      const data = [1, 2];
+      const result = TrackerPaginator.singlePage(envelope(data));
+      expect(result.items).not.toBe(data);
+      expect(result.items).toEqual([1, 2]);
+    });
+  });
 });

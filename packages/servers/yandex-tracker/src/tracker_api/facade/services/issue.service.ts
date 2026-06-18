@@ -20,6 +20,7 @@ import { IssueOperationsContainer } from './containers/index.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
 import type { BatchChangelogResult } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
+import type { GetIssueChangelogInputDto } from '#tracker_api/dto/issue/get-issue-changelog-input.dto.js';
 import type {
   FindIssuesInputDto,
   CreateIssueDto,
@@ -46,8 +47,8 @@ export class IssueService {
 
   /**
    * Ищет задачи по заданным критериям
-   * @param params - параметры поиска (query/filter/keys/queue)
-   * @returns массив найденных задач
+   * @param params - параметры поиска (query/filter/keys/queue) + пагинация
+   * @returns страница найденных задач + метаданные пагинации
    */
   async findIssues(params: FindIssuesInputDto): Promise<FindIssuesResult> {
     return this.ops.findIssues.execute(params);
@@ -73,12 +74,16 @@ export class IssueService {
   }
 
   /**
-   * Получает историю изменений задач (batch-режим)
+   * Получает историю изменений задач (batch-режим, с пагинацией)
    * @param issueKeys - массив ключей задач
-   * @returns массив результатов (fulfilled | rejected)
+   * @param input - общие параметры пагинации (page/perPage/fetchAll/maxItems)
+   * @returns массив результатов (fulfilled | rejected); значение — страница истории + метаданные
    */
-  async getIssueChangelog(issueKeys: string[]): Promise<BatchChangelogResult[]> {
-    return this.ops.getIssueChangelog.execute(issueKeys);
+  async getIssueChangelog(
+    issueKeys: string[],
+    input: GetIssueChangelogInputDto = {}
+  ): Promise<BatchChangelogResult[]> {
+    return this.ops.getIssueChangelog.execute(issueKeys, input);
   }
 
   /**

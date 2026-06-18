@@ -209,7 +209,7 @@ describe('IssueService', () => {
 
       const result = await service.getIssueChangelog(issueKeys);
 
-      expect(mockOpsContainer.getIssueChangelog.execute).toHaveBeenCalledWith(issueKeys);
+      expect(mockOpsContainer.getIssueChangelog.execute).toHaveBeenCalledWith(issueKeys, {});
       expect(result).toBe(mockResult);
     });
   });

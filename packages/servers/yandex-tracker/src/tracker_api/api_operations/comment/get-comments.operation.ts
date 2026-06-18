@@ -12,10 +12,15 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
+import { TrackerPaginator } from '#tracker_api/utils/index.js';
 import type { GetCommentsInput } from '#tracker_api/dto/index.js';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
-import type { BatchResult } from '@fractalizer/mcp-infrastructure';
+import type { PaginatedResult } from '#tracker_api/entities/index.js';
+import type { BatchResult, HttpResponseEnvelope } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
+
+/** Максимум `perPage` для endpoint'а комментариев (v3 допускает до 500). */
+const COMMENTS_MAX_PER_PAGE = 500;
 
 export class GetCommentsOperation extends BaseOperation {
   private readonly parallelExecutor: ParallelExecutor;
@@ -35,37 +40,88 @@ export class GetCommentsOperation extends BaseOperation {
   }
 
   /**
-   * Получает список комментариев задачи
+   * Получает список комментариев задачи с метаданными пагинации
    *
    * @param issueId - идентификатор или ключ задачи (например, 'QUEUE-123')
-   * @param input - параметры запроса (пагинация, expand)
-   * @returns массив комментариев
+   * @param input - параметры запроса (пагинация, expand, fetchAll, maxItems)
+   * @returns страница комментариев + метаданные пагинации
    * @throws {Error} если запрос завершился с ошибкой
    *
    * ВАЖНО:
-   * - Retry делается автоматически в HttpClient.get
-   * - API возвращает массив комментариев
-   * - Поддерживает пагинацию через perPage и page параметры
+   * - Retry делается автоматически в HttpClient.getWithResponse
+   * - По умолчанию — одна страница + метаданные (агент листает вручную через page)
+   * - При fetchAll=true — полный обход по Link rel="next" с защитным лимитом maxItems
+   * - API возвращает массив комментариев; нормализуем не-массив к массиву
    */
   async execute(
     issueId: string,
     input: GetCommentsInput = {}
-  ): Promise<CommentWithUnknownFields[]> {
+  ): Promise<PaginatedResult<CommentWithUnknownFields>> {
     this.logger.info(`Получение комментариев задачи ${issueId}`);
 
-    // Подготовка query параметров
+    // В fetchAll perPage поднимаем к максимуму endpoint'а (comments допускает
+    // до 500) ради меньшего числа round-trip'ов; maxItems всё равно режет
+    // финальную выдачу.
+    const effectivePerPage =
+      input.fetchAll === true ? (input.perPage ?? COMMENTS_MAX_PER_PAGE) : input.perPage;
+
+    const path = this.buildPath(issueId, {
+      perPage: effectivePerPage,
+      page: input.page,
+      expand: input.expand,
+    });
+
+    const first = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path);
+
+    // Нормализация: API может вернуть один объект вместо массива.
+    const normalized = this.normalizeEnvelope(first);
+
+    const result =
+      input.fetchAll === true
+        ? await TrackerPaginator.fetchAllPages<CommentWithUnknownFields>({
+            firstResponse: normalized,
+            requestNext: async (p) =>
+              this.normalizeEnvelope(
+                await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(p)
+              ),
+            ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
+            ...(input.page !== undefined ? { page: input.page } : {}),
+            ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+            onError: (error, pagesFetched) => {
+              this.logger.warn(
+                `Частичный отказ при обходе комментариев задачи ${issueId} ` +
+                  `(загружено страниц: ${pagesFetched}): ${String(error)}`
+              );
+            },
+          })
+        : TrackerPaginator.singlePage<CommentWithUnknownFields>(normalized, {
+            ...(input.page !== undefined ? { page: input.page } : {}),
+            ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
+          });
+
+    this.logger.info(`Получено ${result.items.length} комментариев для задачи ${issueId}`);
+
+    return result;
+  }
+
+  /**
+   * Собрать относительный путь эндпоинта с query-параметрами.
+   */
+  private buildPath(
+    issueId: string,
+    params: { perPage?: number | undefined; page?: number | undefined; expand?: string | undefined }
+  ): string {
     const queryParams: Record<string, string> = {};
-    if (input.perPage !== undefined) {
-      queryParams['perPage'] = String(input.perPage);
+    if (params.perPage !== undefined) {
+      queryParams['perPage'] = String(params.perPage);
     }
-    if (input.page !== undefined) {
-      queryParams['page'] = String(input.page);
+    if (params.page !== undefined) {
+      queryParams['page'] = String(params.page);
     }
-    if (input.expand !== undefined) {
-      queryParams['expand'] = input.expand;
+    if (params.expand !== undefined) {
+      queryParams['expand'] = params.expand;
     }
 
-    // Формирование URL с query параметрами
     const queryString =
       Object.keys(queryParams).length > 0
         ? `?${Object.entries(queryParams)
@@ -73,15 +129,19 @@ export class GetCommentsOperation extends BaseOperation {
             .join('&')}`
         : '';
 
-    const endpoint = `/v3/issues/${issueId}/comments${queryString}`;
+    return `/v3/issues/${issueId}/comments${queryString}`;
+  }
 
-    const comments = await this.httpClient.get<CommentWithUnknownFields[]>(endpoint);
-
-    this.logger.info(
-      `Получено ${Array.isArray(comments) ? comments.length : 1} комментариев для задачи ${issueId}`
-    );
-
-    return Array.isArray(comments) ? comments : [comments];
+  /**
+   * Нормализовать конверт ответа: API может вернуть один объект вместо массива.
+   */
+  private normalizeEnvelope(
+    envelope: HttpResponseEnvelope<CommentWithUnknownFields[]>
+  ): HttpResponseEnvelope<CommentWithUnknownFields[]> {
+    if (Array.isArray(envelope.data)) {
+      return envelope;
+    }
+    return { data: [envelope.data], headers: envelope.headers };
   }
 
   /**
@@ -100,7 +160,7 @@ export class GetCommentsOperation extends BaseOperation {
   async executeMany(
     issueIds: string[],
     input: GetCommentsInput = {}
-  ): Promise<BatchResult<string, CommentWithUnknownFields[]>> {
+  ): Promise<BatchResult<string, PaginatedResult<CommentWithUnknownFields>>> {
     // Проверка на пустой массив
     if (issueIds.length === 0) {
       this.logger.warn('GetCommentsOperation: пустой массив идентификаторов');
@@ -114,7 +174,7 @@ export class GetCommentsOperation extends BaseOperation {
     // Создаём операции для каждой задачи
     const operations = issueIds.map((issueId) => ({
       key: issueId,
-      fn: async (): Promise<CommentWithUnknownFields[]> => {
+      fn: async (): Promise<PaginatedResult<CommentWithUnknownFields>> => {
         // Вызываем существующий метод execute() для каждой задачи
         return this.execute(issueId, input);
       },

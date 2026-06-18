@@ -6,12 +6,21 @@
  * - НЕТ добавления/редактирования/удаления элементов
  *
  * API: GET /v2/issues/{issueId}/checklistItems
+ *
+ * Кеширование: операция кеш НЕ использует (по-прежнему) — кеш-аудит расхождений
+ * не выявил.
  */
 
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
-import type { BatchResult } from '@fractalizer/mcp-infrastructure';
+import type { BatchResult, QueryParams } from '@fractalizer/mcp-infrastructure';
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
+import {
+  TrackerPaginator,
+  DEFAULT_MAX_PER_PAGE,
+} from '#tracker_api/utils/tracker-paginator.util.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
+import type { GetChecklistInput } from '#tracker_api/dto/checklist/get-checklist.dto.js';
 import type { ServerConfig } from '#config';
 
 export class GetChecklistOperation extends BaseOperation {
@@ -29,40 +38,71 @@ export class GetChecklistOperation extends BaseOperation {
       maxConcurrentRequests: config.maxConcurrentRequests,
     });
   }
+
   /**
-   * Получает чеклист задачи
+   * Получает чеклист задачи.
    *
-   * @param issueId - идентификатор или ключ задачи (например, 'QUEUE-123')
-   * @returns массив элементов чеклиста
+   * @param input - задача + опциональные параметры пагинации
+   * @returns `PaginatedResult` с элементами чеклиста и метаданными
    * @throws {Error} если запрос завершился с ошибкой
    *
    * ВАЖНО:
-   * - Retry делается автоматически в HttpClient.get
+   * - Retry делается автоматически в HttpClient
    * - API возвращает массив элементов чеклиста
    */
-  async execute(issueId: string): Promise<ChecklistItemWithUnknownFields[]> {
+  async execute(
+    input: GetChecklistInput
+  ): Promise<PaginatedResult<ChecklistItemWithUnknownFields>> {
+    const { issueId } = input;
     this.logger.info(`Получение чеклиста задачи ${issueId}`);
 
-    const checklist = await this.httpClient.get<ChecklistItemWithUnknownFields[]>(
-      `/v2/issues/${issueId}/checklistItems`
+    const fetchAll = input.fetchAll === true;
+    // В режиме fetchAll поднимаем perPage к рекомендуемому максимуму ради
+    // меньшего числа round-trip'ов (maxItems всё равно режет финальную выдачу).
+    const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
+
+    const path = `/v2/issues/${issueId}/checklistItems`;
+    const params = this.buildParams(input.page, effectivePerPage);
+
+    const first = await this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(
+      path,
+      params
     );
 
-    this.logger.info(
-      `Получено ${Array.isArray(checklist) ? checklist.length : 0} элементов чеклиста для задачи ${issueId}`
-    );
+    const result = fetchAll
+      ? await TrackerPaginator.fetchAllPages<ChecklistItemWithUnknownFields>({
+          firstResponse: first,
+          requestNext: (p) => this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(p),
+          ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
+          ...(input.page !== undefined ? { page: input.page } : {}),
+          ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+          onError: (error, pagesFetched) =>
+            this.logger.warn(
+              `Частичный отказ при обходе чеклиста задачи ${issueId} ` +
+                `после ${pagesFetched} стр.: ${String(error)}`
+            ),
+        })
+      : TrackerPaginator.singlePage<ChecklistItemWithUnknownFields>(first, {
+          page: input.page,
+          perPage: input.perPage,
+        });
 
-    return Array.isArray(checklist) ? checklist : [];
+    this.logger.info(`Получено ${result.items.length} элементов чеклиста для задачи ${issueId}`);
+
+    return result;
   }
 
   /**
-   * Получает чеклисты для нескольких задач параллельно
+   * Получает чеклисты для нескольких задач параллельно.
    *
    * @param issueIds - массив идентификаторов или ключей задач
-   * @returns результаты batch-операции
+   * @param options - общие параметры пагинации (применяются ко всем задачам)
+   * @returns результаты batch-операции с `PaginatedResult` в каждой задаче
    */
   async executeMany(
-    issueIds: string[]
-  ): Promise<BatchResult<string, ChecklistItemWithUnknownFields[]>> {
+    issueIds: string[],
+    options: Omit<GetChecklistInput, 'issueId'> = {}
+  ): Promise<BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>>> {
     if (issueIds.length === 0) {
       this.logger.warn('GetChecklistOperation: пустой массив issueIds');
       return [];
@@ -73,9 +113,24 @@ export class GetChecklistOperation extends BaseOperation {
 
     const operations = issueIds.map((issueId) => ({
       key: issueId,
-      fn: async (): Promise<ChecklistItemWithUnknownFields[]> => this.execute(issueId),
+      fn: async (): Promise<PaginatedResult<ChecklistItemWithUnknownFields>> =>
+        this.execute({ issueId, ...options }),
     }));
 
     return this.parallelExecutor.executeParallel(operations, 'get checklists');
+  }
+
+  /**
+   * Собирает query-параметры запроса (только заданные значения).
+   */
+  private buildParams(page?: number, perPage?: number): QueryParams | undefined {
+    const params: QueryParams = {};
+    if (page !== undefined) {
+      params['page'] = page;
+    }
+    if (perPage !== undefined) {
+      params['perPage'] = perPage;
+    }
+    return Object.keys(params).length > 0 ? params : undefined;
   }
 }

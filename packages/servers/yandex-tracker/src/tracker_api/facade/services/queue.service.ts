@@ -25,10 +25,10 @@ import type {
   CreateQueueDto,
   GetQueueFieldsDto,
   QueueOutput,
-  QueuesListOutput,
   QueueFieldsOutput,
   QueuePermissionsOutput,
 } from '#tracker_api/dto/index.js';
+import type { PaginatedResult, QueueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type {
   UpdateQueueParams,
   ManageQueueAccessParams,
@@ -41,9 +41,9 @@ export class QueueService {
   /**
    * Получает список очередей
    * @param params - параметры запроса (опционально)
-   * @returns массив очередей
+   * @returns страница очередей с метаданными пагинации
    */
-  async getQueues(params?: GetQueuesDto): Promise<QueuesListOutput> {
+  async getQueues(params?: GetQueuesDto): Promise<PaginatedResult<QueueWithUnknownFields>> {
     return this.ops.getQueues.execute(params);
   }
 

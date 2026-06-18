@@ -31,7 +31,9 @@ import type {
   DownloadAttachmentInput,
   DownloadAttachmentOutput,
 } from '#tracker_api/dto/index.js';
+import type { GetAttachmentsInput } from '#tracker_api/dto/attachment/get-attachments.input.js';
 import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/index.js';
 
 @injectable()
 export class IssueAttachmentService {
@@ -49,23 +51,29 @@ export class IssueAttachmentService {
   ) {}
 
   /**
-   * Получает список всех прикрепленных файлов к задаче
+   * Получает список прикрепленных файлов задачи (одна страница или полный обход)
    * @param issueId - ключ или ID задачи
-   * @returns массив прикрепленных файлов
+   * @param input - параметры пагинации (page/perPage/fetchAll/maxItems)
+   * @returns пагинированный результат с метаданными
    */
-  async getAttachments(issueId: string): Promise<AttachmentWithUnknownFields[]> {
-    return this.getAttachmentsOp.execute(issueId);
+  async getAttachments(
+    issueId: string,
+    input: GetAttachmentsInput = {}
+  ): Promise<PaginatedResult<AttachmentWithUnknownFields>> {
+    return this.getAttachmentsOp.execute(issueId, input);
   }
 
   /**
    * Получает списки прикрепленных файлов для нескольких задач параллельно
    * @param issueIds - массив ключей или ID задач
-   * @returns результаты batch-операции
+   * @param input - параметры пагинации (применяются ко всем задачам)
+   * @returns результаты batch-операции с PaginatedResult в value
    */
   async getAttachmentsMany(
-    issueIds: string[]
-  ): Promise<BatchResult<string, AttachmentWithUnknownFields[]>> {
-    return this.getAttachmentsOp.executeMany(issueIds);
+    issueIds: string[],
+    input: GetAttachmentsInput = {}
+  ): Promise<BatchResult<string, PaginatedResult<AttachmentWithUnknownFields>>> {
+    return this.getAttachmentsOp.executeMany(issueIds, input);
   }
 
   /**

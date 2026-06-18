@@ -28,6 +28,7 @@ import type {
   GetCommentsInput,
 } from '#tracker_api/dto/index.js';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
 @injectable()
@@ -63,13 +64,13 @@ export class CommentService {
   /**
    * Получает список комментариев задачи
    * @param issueId - идентификатор или ключ задачи
-   * @param input - параметры запроса (пагинация, expand)
-   * @returns массив комментариев
+   * @param input - параметры запроса (пагинация, expand, fetchAll, maxItems)
+   * @returns страница комментариев + метаданные пагинации
    */
   async getComments(
     issueId: string,
     input?: GetCommentsInput
-  ): Promise<CommentWithUnknownFields[]> {
+  ): Promise<PaginatedResult<CommentWithUnknownFields>> {
     return this.getCommentsOp.execute(issueId, input);
   }
 
@@ -82,7 +83,7 @@ export class CommentService {
   async getCommentsMany(
     issueIds: string[],
     input?: GetCommentsInput
-  ): Promise<BatchResult<string, CommentWithUnknownFields[]>> {
+  ): Promise<BatchResult<string, PaginatedResult<CommentWithUnknownFields>>> {
     return this.getCommentsOp.executeMany(issueIds, input);
   }
 

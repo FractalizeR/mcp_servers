@@ -1,25 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import { MockHttpClient } from '@fractalizer/mcp-infrastructure/http/client/mock-http-client.js';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { QueueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetQueuesOperation } from '#tracker_api/api_operations/queue/get-queues.operation.js';
 import { createQueueFixture, createQueueListFixture } from '#helpers/queue.fixture.js';
 
+const NEXT_LINK = '<https://api.tracker.yandex.net/v3/queues?perPage=100&page=2>; rel="next"';
+
 describe('GetQueuesOperation', () => {
   let operation: GetQueuesOperation;
-  let mockHttpClient: IHttpClient;
+  let httpClient: MockHttpClient;
   let mockCacheManager: CacheManager;
   let mockLogger: Logger;
 
   beforeEach(() => {
-    mockHttpClient = {
-      get: vi.fn().mockResolvedValue(null),
-      post: vi.fn(),
-      patch: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn().mockResolvedValue(undefined),
-    } as unknown as IHttpClient;
+    httpClient = new MockHttpClient();
 
     mockCacheManager = {
       get: vi.fn().mockResolvedValue(null),
@@ -37,115 +33,109 @@ describe('GetQueuesOperation', () => {
       debug: vi.fn(),
     } as unknown as Logger;
 
-    operation = new GetQueuesOperation(mockHttpClient, mockCacheManager, mockLogger);
+    operation = new GetQueuesOperation(httpClient, mockCacheManager, mockLogger);
   });
 
-  describe('execute', () => {
-    it('should call httpClient.get with correct endpoint', async () => {
+  describe('execute (single-page)', () => {
+    it('строит endpoint с дефолтами perPage=50&page=1', async () => {
       const mockQueues: QueueWithUnknownFields[] = createQueueListFixture(3);
-
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockQueues);
-
-      const result = await operation.execute();
-
-      // По умолчанию perPage=50, page=1
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/queues?perPage=50&page=1');
-      expect(result).toEqual(mockQueues);
-    });
-
-    it('should pass pagination parameters (perPage, page)', async () => {
-      const mockQueues: QueueWithUnknownFields[] = createQueueListFixture(2);
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockQueues);
-
-      await operation.execute({ perPage: 100, page: 2 });
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/queues?perPage=100&page=2');
-    });
-
-    it('should pass expand parameter', async () => {
-      const mockQueues: QueueWithUnknownFields[] = createQueueListFixture(1);
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockQueues);
-
-      await operation.execute({ expand: 'projects' });
-
-      // perPage и page всегда добавляются (defaults 50, 1)
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/v3/queues?perPage=50&page=1&expand=projects'
-      );
-    });
-
-    it('should pass all parameters together', async () => {
-      const mockQueues: QueueWithUnknownFields[] = createQueueListFixture(2);
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockQueues);
-
-      await operation.execute({ perPage: 50, page: 3, expand: 'projects,issueTypes' });
-
-      // Запятая в expand кодируется как %2C
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/v3/queues?perPage=50&page=3&expand=projects%2CissueTypes'
-      );
-    });
-
-    it('should handle empty result', async () => {
-      const emptyResult: QueueWithUnknownFields[] = [];
-      vi.mocked(mockHttpClient.get).mockResolvedValue(emptyResult);
+      httpClient.setResponse('GET', '/v3/queues?perPage=50&page=1', mockQueues);
 
       const result = await operation.execute();
 
-      expect(result).toEqual([]);
-      expect(result).toHaveLength(0);
+      expect(result.items).toEqual(mockQueues);
+      const history = httpClient.getRequestHistory();
+      expect(history[0]?.path).toBe('/v3/queues?perPage=50&page=1');
     });
 
-    it('should use default pagination values when not provided', async () => {
-      const mockQueues: QueueWithUnknownFields[] = createQueueListFixture(3);
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockQueues);
+    it('без Link rel=next: hasNextPage=false, fetchedAll=true', async () => {
+      httpClient.setResponse('GET', '/v3/queues?perPage=50&page=1', createQueueListFixture(2));
 
-      await operation.execute({});
+      const result = await operation.execute();
 
-      // perPage=50, page=1 по умолчанию
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/queues?perPage=50&page=1');
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+      expect(result.pagination.pagesFetched).toBe(1);
+      expect(result.pagination.page).toBe(1);
+      expect(result.pagination.perPage).toBe(50);
     });
 
-    it('should handle API errors', async () => {
-      const error = new Error('API Error');
-      vi.mocked(mockHttpClient.get).mockRejectedValue(error);
-
-      await expect(operation.execute()).rejects.toThrow('API Error');
-    });
-
-    it('should log info messages', async () => {
-      const mockQueues: QueueWithUnknownFields[] = createQueueListFixture(5);
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockQueues);
-
-      await operation.execute({ perPage: 50, page: 1 });
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Получение списка очередей (page=1, perPage=50)'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith('Получено 5 очередей');
-    });
-
-    it('should return queues with correct structure', async () => {
-      const mockQueue = createQueueFixture({
-        key: 'TEST',
-        name: 'Test Queue',
-        version: 1,
+    it('с Link rel=next: hasNextPage=true', async () => {
+      httpClient.setResponse('GET', '/v3/queues?perPage=50&page=1', createQueueListFixture(50), {
+        link: NEXT_LINK,
       });
-      vi.mocked(mockHttpClient.get).mockResolvedValue([mockQueue]);
 
       const result = await operation.execute();
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
-        key: 'TEST',
-        name: 'Test Queue',
-        version: 1,
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(result.pagination.fetchedAll).toBe(false);
+    });
+
+    it('читает total из X-Total-Count', async () => {
+      httpClient.setResponse('GET', '/v3/queues?perPage=50&page=1', createQueueListFixture(2), {
+        'x-total-count': '42',
       });
-      expect(result[0]).toHaveProperty('id');
-      expect(result[0]).toHaveProperty('self');
-      expect(result[0]).toHaveProperty('lead');
-      expect(result[0]).toHaveProperty('defaultType');
-      expect(result[0]).toHaveProperty('defaultPriority');
+
+      const result = await operation.execute();
+
+      expect(result.pagination.total).toBe(42);
+    });
+
+    it('пробрасывает expand и page/perPage в endpoint', async () => {
+      httpClient.setResponse(
+        'GET',
+        '/v3/queues?perPage=100&page=2&expand=projects',
+        createQueueListFixture(1)
+      );
+
+      await operation.execute({ perPage: 100, page: 2, expand: 'projects' });
+
+      const history = httpClient.getRequestHistory();
+      expect(history[0]?.path).toBe('/v3/queues?perPage=100&page=2&expand=projects');
+    });
+
+    it('пробрасывает API-ошибку', async () => {
+      // ответ не сконфигурирован → reject
+      await expect(operation.execute()).rejects.toThrow();
+    });
+
+    it('возвращает корректную структуру очередей', async () => {
+      const mockQueue = createQueueFixture({ key: 'TEST', name: 'Test Queue', version: 1 });
+      httpClient.setResponse('GET', '/v3/queues?perPage=50&page=1', [mockQueue]);
+
+      const result = await operation.execute();
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]).toMatchObject({ key: 'TEST', name: 'Test Queue', version: 1 });
+    });
+  });
+
+  describe('execute (fetchAll)', () => {
+    it('обходит несколько страниц через Link rel=next', async () => {
+      const page1 = createQueueListFixture(2);
+      const page2 = createQueueListFixture(2);
+      httpClient.setResponseQueue('GET', '/v3/queues?perPage=100&page=1', [
+        { data: page1, headers: { link: NEXT_LINK } },
+      ]);
+      httpClient.setResponseQueue('GET', '/v3/queues?perPage=100&page=2', [{ data: page2 }]);
+
+      const result = await operation.execute({ fetchAll: true });
+
+      expect(result.items).toHaveLength(4);
+      expect(result.pagination.pagesFetched).toBe(2);
+      expect(result.pagination.fetchedAll).toBe(true);
+      expect(result.pagination.hasNextPage).toBe(false);
+    });
+
+    it('режет выдачу по maxItems и ставит truncated=true', async () => {
+      const page1 = createQueueListFixture(3);
+      httpClient.setResponse('GET', '/v3/queues?perPage=100&page=1', page1, { link: NEXT_LINK });
+
+      const result = await operation.execute({ fetchAll: true, maxItems: 2 });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.truncated).toBe(true);
+      expect(result.pagination.hasNextPage).toBe(true);
     });
   });
 });

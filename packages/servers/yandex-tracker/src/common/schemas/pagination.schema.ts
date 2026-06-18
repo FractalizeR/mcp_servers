@@ -72,10 +72,10 @@ export const FetchAllSchema = z
   .boolean()
   .optional()
   .describe(
-    'Если true — обойти все страницы по Link rel="next" с защитными лимитами ' +
-      '(maxItems на цепочку, maxTotalItems на весь ответ). По умолчанию false — ' +
-      'возвращается одна страница; листать вручную через page, ориентируясь на ' +
-      'pagination.hasNextPage. Несовместимо с явным page.'
+    'Если true — обойти все страницы по Link rel="next" с защитным лимитом ' +
+      'maxItems на цепочку. По умолчанию false — возвращается одна страница; ' +
+      'листать вручную через page, ориентируясь на pagination.hasNextPage. ' +
+      'Несовместимо с явным page.'
   );
 
 /**

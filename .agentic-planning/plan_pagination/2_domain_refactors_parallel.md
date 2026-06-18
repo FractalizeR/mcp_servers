@@ -1,5 +1,24 @@
 # Этап 2 — Доменные правки операций и инструментов (parallel)
 
+> **СТАТУС: ✅ ГОТОВО** (все 10 эндпоинтов: changelog, comments, worklog,
+> attachments, links, components, checklist, queues, projects, find_issues).
+> Реализовано 5 параллельными агентами (изоляция по сервис-файлам; changelog
+> ушёл в группу find_issues, т.к. делят `issue.service.ts`) + интегратор фасада.
+> `validate:quiet`=0, knip=0, пакет ~2097 тестов. Расширенное ревью
+> (Claude+Codex+DeepSeek) пройдено; исправлены: H1 (ложный hasNextPage в
+> find_issues page-режиме + регрессионный тест), projects total (не подделываем
+> длиной страницы), comments perPage→500 в fetchAll, truthy→!==undefined в
+> projects/queues, searchCriteria.perPage не фабрикуется, describe FetchAll
+> приведён к факту.
+>
+> **Отложено (см. этап 3 / решение пользователя):**
+> - `maxTotalItems` (общий бюджет batch, HIGH в разделе 8) — схема готова
+>   (`MaxTotalItemsSchema`), но НЕ подключена; describe больше его не обещает.
+> - Орфанные `ProjectsListOutput`/`QueuesListOutput`/`ComponentsListOutput` —
+>   удалить в cleanup (knip пока не флагует, реэкспорт через barrel).
+> - Неединообразный формат batch-вывода (successful/failed как числа vs массивы;
+>   changelog `failed[].key`) — pre-existing, не регрессия этапа 2.
+
 **Зависимости:** этап 1 целиком (контракты `HttpResponseEnvelope`, `Paginator`, `PaginatedResult`, общие схемы) должен быть готов и провалидирован.
 
 **Изоляция:** группы не пересекаются по файлам → можно раздать параллельным агентам в разных ветках.

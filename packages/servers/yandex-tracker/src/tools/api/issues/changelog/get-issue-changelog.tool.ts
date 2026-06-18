@@ -10,7 +10,8 @@
 import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { ResponseFieldFilter, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
+import { BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
+import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
 import type { ChangelogEntryWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetIssueChangelogParamsSchema } from '#tools/api/issues/changelog/get-issue-changelog.schema.js';
 
@@ -51,7 +52,7 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueKeys, fields } = validation.data;
+    const { issueKeys, fields, page, perPage, fetchAll, maxItems } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -62,18 +63,19 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
         fields
       );
 
-      // 3. API v3: получение истории изменений через batch-метод
-      const results = await this.facade.getIssueChangelog(issueKeys);
+      // 3. API v3: получение истории изменений через batch-метод (с пагинацией)
+      const results = await this.facade.getIssueChangelog(issueKeys, {
+        ...(page !== undefined && { page }),
+        ...(perPage !== undefined && { perPage }),
+        ...(fetchAll !== undefined && { fetchAll }),
+        ...(maxItems !== undefined && { maxItems }),
+      });
 
       // 4. Обработка результатов через BatchResultProcessor
+      //    paginatedFieldFilter фильтрует items и прокидывает pagination без изменений
       const processedResults = BatchResultProcessor.process(
         results,
-        (
-          changelog: ChangelogEntryWithUnknownFields[]
-        ): Partial<ChangelogEntryWithUnknownFields>[] =>
-          changelog.map((entry) =>
-            ResponseFieldFilter.filter<ChangelogEntryWithUnknownFields>(entry, fields)
-          )
+        paginatedFieldFilter<ChangelogEntryWithUnknownFields>(fields)
       );
 
       // 5. Логирование результатов
@@ -93,8 +95,9 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
         total: issueKeys.length,
         successful: processedResults.successful.map((item) => ({
           issueKey: item.key,
-          changelog: item.data,
-          totalEntries: Array.isArray(item.data) ? item.data.length : 0,
+          changelog: item.data.items,
+          totalEntries: item.data.items.length,
+          pagination: item.data.pagination,
         })),
         failed: processedResults.failed.map((item) => ({
           key: item.key,

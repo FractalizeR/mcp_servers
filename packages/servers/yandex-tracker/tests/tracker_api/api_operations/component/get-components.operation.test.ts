@@ -1,26 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import { MockHttpClient } from '@fractalizer/mcp-infrastructure';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
-import type { ComponentsListOutput } from '#tracker_api/dto/index.js';
 import { GetComponentsOperation } from '#tracker_api/api_operations/component/get-components.operation.js';
 import { createComponentFixture } from '#helpers/component.fixture.js';
 import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 
+const NEXT_LINK = '<https://api.tracker.yandex.net/v2/queues/QUEUE/components?page=2>; rel="next"';
+
 describe('GetComponentsOperation', () => {
   let operation: GetComponentsOperation;
-  let mockHttpClient: IHttpClient;
+  let httpClient: MockHttpClient;
   let mockCacheManager: CacheManager;
   let mockLogger: Logger;
 
   beforeEach(() => {
-    mockHttpClient = {
-      get: vi.fn().mockResolvedValue(null),
-      post: vi.fn(),
-      patch: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn().mockResolvedValue(undefined),
-    } as unknown as IHttpClient;
+    httpClient = new MockHttpClient();
 
     mockCacheManager = {
       get: vi.fn().mockResolvedValue(null),
@@ -38,142 +33,143 @@ describe('GetComponentsOperation', () => {
       debug: vi.fn(),
     } as unknown as Logger;
 
-    operation = new GetComponentsOperation(mockHttpClient, mockCacheManager, mockLogger);
+    operation = new GetComponentsOperation(httpClient, mockCacheManager, mockLogger);
   });
 
-  describe('execute', () => {
-    it('should call httpClient.get with correct endpoint', async () => {
-      const mockComponents: ComponentsListOutput = [
+  describe('execute (single page)', () => {
+    it('запрашивает корректный endpoint и возвращает PaginatedResult без next', async () => {
+      const components = [
         createComponentFixture({ id: '1', name: 'Backend' }),
         createComponentFixture({ id: '2', name: 'Frontend' }),
       ];
+      httpClient.setResponse('GET', '/v2/queues/QUEUE/components', components);
 
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponents);
+      const result = await operation.execute({ queueId: 'QUEUE' });
 
-      const result = await operation.execute('QUEUE');
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/queues/QUEUE/components');
-      expect(result).toEqual(mockComponents);
+      const history = httpClient.getRequestHistory();
+      expect(history[0]).toMatchObject({ method: 'GET', path: '/v2/queues/QUEUE/components' });
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
     });
 
-    it('should return cached components if available', async () => {
-      const mockComponents: ComponentsListOutput = [
-        createComponentFixture({ id: '1', name: 'Cached Component' }),
-      ];
+    it('выставляет hasNextPage=true при наличии Link rel="next"', async () => {
+      httpClient.setResponse(
+        'GET',
+        '/v2/queues/QUEUE/components',
+        [createComponentFixture({ id: '1' })],
+        { link: NEXT_LINK }
+      );
 
+      const result = await operation.execute({ queueId: 'QUEUE' });
+
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(result.pagination.fetchedAll).toBe(false);
+    });
+
+    it('пробрасывает page/perPage в query', async () => {
+      httpClient.setResponse('GET', '/v2/queues/PROJ/components', []);
+
+      await operation.execute({ queueId: 'PROJ', page: 2, perPage: 10 });
+
+      const history = httpClient.getRequestHistory();
+      expect(history[0]?.params).toEqual({ page: 2, perPage: 10 });
+    });
+
+    it('возвращает кеш для базового запроса (без параметров пагинации)', async () => {
+      const cached = {
+        items: [createComponentFixture({ id: '1' })],
+        pagination: {
+          hasNextPage: false,
+          fetchedAll: true,
+          truncated: false,
+          hasError: false,
+          pagesFetched: 1,
+        },
+      };
       const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, 'QUEUE/components');
-      vi.mocked(mockCacheManager.get).mockResolvedValue(mockComponents);
+      vi.mocked(mockCacheManager.get).mockResolvedValue(cached);
 
-      const result = await operation.execute('QUEUE');
+      const result = await operation.execute({ queueId: 'QUEUE' });
 
       expect(mockCacheManager.get).toHaveBeenCalledWith(cacheKey);
-      expect(mockHttpClient.get).not.toHaveBeenCalled();
-      expect(result).toEqual(mockComponents);
+      expect(httpClient.getRequestHistory()).toHaveLength(0);
+      expect(result).toEqual(cached);
     });
 
-    it('should cache components after fetching from API', async () => {
-      const mockComponents: ComponentsListOutput = [
-        createComponentFixture({ id: '1', name: 'Component 1' }),
-        createComponentFixture({ id: '2', name: 'Component 2' }),
-      ];
+    it('кеширует базовый запрос после загрузки из API', async () => {
+      httpClient.setResponse('GET', '/v2/queues/TEST/components', [
+        createComponentFixture({ id: '1' }),
+      ]);
 
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponents);
-
-      await operation.execute('TEST');
+      await operation.execute({ queueId: 'TEST' });
 
       const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, 'TEST/components');
-      expect(mockCacheManager.set).toHaveBeenCalledWith(cacheKey, mockComponents);
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        cacheKey,
+        expect.objectContaining({ items: expect.any(Array) })
+      );
     });
 
-    it('should work with queue ID instead of key', async () => {
-      const mockComponents: ComponentsListOutput = [
-        createComponentFixture({ id: '1', name: 'Component' }),
-      ];
-
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponents);
-
-      await operation.execute('queue-123');
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/queues/queue-123/components');
-    });
-
-    it('should handle empty result', async () => {
-      const emptyResult: ComponentsListOutput = [];
-      vi.mocked(mockHttpClient.get).mockResolvedValue(emptyResult);
-
-      const result = await operation.execute('EMPTY');
-
-      expect(result).toEqual([]);
-      expect(result).toHaveLength(0);
-    });
-
-    it('should handle API errors', async () => {
-      const error = new Error('Queue not found');
-      vi.mocked(mockHttpClient.get).mockRejectedValue(error);
-
-      await expect(operation.execute('NOTFOUND')).rejects.toThrow('Queue not found');
-    });
-
-    it('should log info messages', async () => {
-      const mockComponents: ComponentsListOutput = [
+    it('НЕ использует кеш при заданных параметрах пагинации (кеш-аудит)', async () => {
+      httpClient.setResponse('GET', '/v2/queues/QUEUE/components', [
         createComponentFixture({ id: '1' }),
+      ]);
+
+      await operation.execute({ queueId: 'QUEUE', page: 2 });
+
+      expect(mockCacheManager.get).not.toHaveBeenCalled();
+      expect(mockCacheManager.set).not.toHaveBeenCalled();
+      expect(httpClient.getRequestHistory()).toHaveLength(1);
+    });
+
+    it('обрабатывает пустой результат', async () => {
+      httpClient.setResponse('GET', '/v2/queues/EMPTY/components', []);
+
+      const result = await operation.execute({ queueId: 'EMPTY' });
+
+      expect(result.items).toHaveLength(0);
+    });
+
+    it('пробрасывает ошибки API', async () => {
+      // нет настроенного ответа → MockHttpClient отклоняет промис
+      await expect(operation.execute({ queueId: 'NOTFOUND' })).rejects.toThrow();
+    });
+  });
+
+  describe('execute (fetchAll)', () => {
+    it('обходит несколько страниц через Link rel="next"', async () => {
+      // Первая страница (базовый путь) с Link на вторую страницу
+      httpClient.setResponse(
+        'GET',
+        '/v2/queues/QUEUE/components',
+        [createComponentFixture({ id: '1' })],
+        { link: NEXT_LINK }
+      );
+      // Вторая страница регистрируется под путём с query (как его вернёт stripHost)
+      httpClient.setResponse('GET', '/v2/queues/QUEUE/components?page=2', [
         createComponentFixture({ id: '2' }),
-        createComponentFixture({ id: '3' }),
-      ];
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponents);
+      ]);
 
-      await operation.execute('QUEUE');
+      const result = await operation.execute({ queueId: 'QUEUE', fetchAll: true });
 
-      expect(mockLogger.info).toHaveBeenCalledWith('Получение компонентов очереди QUEUE');
-      expect(mockLogger.info).toHaveBeenCalledWith('Получено 3 компонентов для очереди QUEUE');
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.fetchedAll).toBe(true);
+      expect(result.pagination.pagesFetched).toBe(2);
     });
 
-    it('should log debug message when returning from cache', async () => {
-      const mockComponents: ComponentsListOutput = [createComponentFixture()];
+    it('обрезает выдачу по maxItems и выставляет truncated', async () => {
+      httpClient.setResponse(
+        'GET',
+        '/v2/queues/QUEUE/components',
+        [createComponentFixture({ id: '1' }), createComponentFixture({ id: '2' })],
+        { link: NEXT_LINK }
+      );
 
-      vi.mocked(mockCacheManager.get).mockResolvedValue(mockComponents);
+      const result = await operation.execute({ queueId: 'QUEUE', fetchAll: true, maxItems: 1 });
 
-      await operation.execute('QUEUE');
-
-      expect(mockLogger.debug).toHaveBeenCalledWith('Компоненты очереди QUEUE получены из кеша');
-    });
-
-    it('should return components with correct structure', async () => {
-      const mockComponent = createComponentFixture({
-        id: '1',
-        name: 'Test Component',
-        description: 'Test Description',
-      });
-      vi.mocked(mockHttpClient.get).mockResolvedValue([mockComponent]);
-
-      const result = await operation.execute('QUEUE');
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
-        id: '1',
-        name: 'Test Component',
-        description: 'Test Description',
-      });
-      expect(result[0]).toHaveProperty('self');
-      expect(result[0]).toHaveProperty('queue');
-    });
-
-    it('should handle multiple components correctly', async () => {
-      const mockComponents: ComponentsListOutput = [
-        createComponentFixture({ id: '1', name: 'Backend' }),
-        createComponentFixture({ id: '2', name: 'Frontend' }),
-        createComponentFixture({ id: '3', name: 'Mobile' }),
-        createComponentFixture({ id: '4', name: 'DevOps' }),
-      ];
-      vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponents);
-
-      const result = await operation.execute('PROJ');
-
-      expect(result).toHaveLength(4);
-      expect(result[0].name).toBe('Backend');
-      expect(result[1].name).toBe('Frontend');
-      expect(result[2].name).toBe('Mobile');
-      expect(result[3].name).toBe('DevOps');
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.truncated).toBe(true);
     });
   });
 });

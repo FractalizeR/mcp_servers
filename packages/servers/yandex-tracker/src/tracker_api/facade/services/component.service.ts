@@ -22,7 +22,10 @@ import { GetComponentsOperation } from '#tracker_api/api_operations/component/ge
 import { CreateComponentOperation } from '#tracker_api/api_operations/component/create-component.operation.js';
 import { UpdateComponentOperation } from '#tracker_api/api_operations/component/update-component.operation.js';
 import { DeleteComponentOperation } from '#tracker_api/api_operations/component/delete-component.operation.js';
-import type { ComponentOutput, ComponentsListOutput } from '#tracker_api/dto/index.js';
+import type { ComponentOutput } from '#tracker_api/dto/index.js';
+import type { GetComponentsInput } from '#tracker_api/dto/component/get-components.dto.js';
+import type { ComponentWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
 
 @injectable()
 export class ComponentService {
@@ -34,12 +37,14 @@ export class ComponentService {
   ) {}
 
   /**
-   * Получает список компонентов очереди
-   * @param queueId - ключ или ID очереди
-   * @returns массив компонентов очереди
+   * Получает список компонентов очереди (с пагинацией)
+   * @param params - очередь + опциональные параметры пагинации
+   * @returns `PaginatedResult` с компонентами и метаданными пагинации
    */
-  async getComponents(params: { queueId: string }): Promise<ComponentsListOutput> {
-    return this.getComponentsOp.execute(params.queueId);
+  async getComponents(
+    params: GetComponentsInput
+  ): Promise<PaginatedResult<ComponentWithUnknownFields>> {
+    return this.getComponentsOp.execute(params);
   }
 
   /**

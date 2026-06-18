@@ -7,15 +7,10 @@
  * - Валидация через Zod
  */
 
-import {
-  BaseTool,
-  ResponseFieldFilter,
-  BatchResultProcessor,
-  ResultLogger,
-} from '@fractalizer/mcp-core';
+import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js';
+import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
 import { GetAttachmentsParamsSchema } from './get-attachments.schema.js';
 
 import { GET_ATTACHMENTS_TOOL_METADATA } from './get-attachments.metadata.js';
@@ -50,7 +45,7 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, fields } = validation.data;
+    const { issueIds, fields, page, perPage, fetchAll, maxItems } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -62,16 +57,15 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
       );
 
       // 3. API v2: получение списка файлов для нескольких задач через batch-метод
-      const results = await this.facade.getAttachmentsMany(issueIds);
+      const results = await this.facade.getAttachmentsMany(issueIds, {
+        page,
+        perPage,
+        fetchAll,
+        maxItems,
+      });
 
-      // 4. Обработка результатов через BatchResultProcessor
-      const processedResults = BatchResultProcessor.process(
-        results,
-        (attachments: AttachmentWithUnknownFields[]): Partial<AttachmentWithUnknownFields>[] =>
-          attachments.map((attachment) =>
-            ResponseFieldFilter.filter<AttachmentWithUnknownFields>(attachment, fields)
-          )
-      );
+      // 4. Обработка результатов через BatchResultProcessor (с пагинацией)
+      const processedResults = BatchResultProcessor.process(results, paginatedFieldFilter(fields));
 
       // 5. Логирование результатов
       ResultLogger.logBatchResults(
@@ -90,8 +84,9 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
         total: issueIds.length,
         successful: processedResults.successful.map((item) => ({
           issueId: item.key,
-          attachmentsCount: Array.isArray(item.data) ? item.data.length : 0,
-          attachments: item.data,
+          attachmentsCount: item.data.items.length,
+          attachments: item.data.items,
+          pagination: item.data.pagination,
         })),
         failed: processedResults.failed.map((item) => ({
           issueId: item.key,

@@ -15,4 +15,16 @@ export interface GetQueuesDto {
    * @example 'projects' | 'components' | 'versions'
    */
   expand?: string | undefined;
+
+  /**
+   * Если true — обойти все страницы по `Link rel="next"` с защитным лимитом
+   * `maxItems`. По умолчанию — одна страница.
+   */
+  fetchAll?: boolean | undefined;
+
+  /**
+   * Максимум записей на одну цепочку обхода при `fetchAll=true`
+   * (по умолчанию применяет паджинатор — `DEFAULT_MAX_ITEMS`).
+   */
+  maxItems?: number | undefined;
 }

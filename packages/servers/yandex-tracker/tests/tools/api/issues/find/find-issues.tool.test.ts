@@ -10,6 +10,25 @@ import { FindIssuesTool } from '#tools/api/issues/find/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
+import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/common/index.js';
+
+/**
+ * Метаданные пагинации по умолчанию (одна полная страница).
+ */
+const SINGLE_PAGE_META: PaginationMeta = {
+  hasNextPage: false,
+  fetchedAll: true,
+  truncated: false,
+  hasError: false,
+  pagesFetched: 1,
+};
+
+/**
+ * Обёртка массива задач в PaginatedResult (как теперь возвращает фасад).
+ */
+function page(items: IssueWithUnknownFields[]): PaginatedResult<IssueWithUnknownFields> {
+  return { items, pagination: SINGLE_PAGE_META };
+}
 
 describe('FindIssuesTool', () => {
   let tool: FindIssuesTool;
@@ -139,7 +158,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен принять валидный query параметр', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
@@ -148,7 +167,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен принять валидный keys параметр', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({ keys: ['QUEUE-123'], fields: STANDARD_ISSUE_FIELDS });
 
@@ -157,7 +176,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен принять валидный queue параметр', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({ queue: 'QUEUE', fields: STANDARD_ISSUE_FIELDS });
 
@@ -166,7 +185,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен принять валидный filter параметр', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
         filter: { status: 'open' },
@@ -180,7 +199,7 @@ describe('FindIssuesTool', () => {
 
   describe('Operation calls', () => {
     it('должен вызвать FindIssuesOperation с query параметром', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       await tool.execute({ query: 'Author: me() Status: open', fields: STANDARD_ISSUE_FIELDS });
 
@@ -190,7 +209,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен вызвать FindIssuesOperation с keys параметром', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1, mockIssue2]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1, mockIssue2]));
 
       await tool.execute({ keys: ['QUEUE-123', 'QUEUE-456'], fields: STANDARD_ISSUE_FIELDS });
 
@@ -200,7 +219,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен вызвать FindIssuesOperation с queue параметром', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       await tool.execute({ queue: 'MYQUEUE', fields: STANDARD_ISSUE_FIELDS });
 
@@ -210,7 +229,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен вызвать FindIssuesOperation с filter параметром', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const filter = { status: 'open', priority: 'high' };
       await tool.execute({ filter, fields: STANDARD_ISSUE_FIELDS });
@@ -221,7 +240,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен передать параметры пагинации (perPage, page)', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       await tool.execute({
         query: 'Author: me()',
@@ -236,7 +255,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен передать параметры сортировки (order)', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const order = ['+created', '-priority'];
       await tool.execute({ query: 'Author: me()', order, fields: STANDARD_ISSUE_FIELDS });
@@ -245,7 +264,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен передать expand параметр', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const expand = ['transitions', 'attachments'];
       await tool.execute({ query: 'Author: me()', expand, fields: STANDARD_ISSUE_FIELDS });
@@ -258,7 +277,7 @@ describe('FindIssuesTool', () => {
 
   describe('Field filtering', () => {
     it('должен фильтровать поля в результатах', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
         query: 'Author: me()',
@@ -283,7 +302,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен вернуть поля с фильтрацией', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
@@ -301,7 +320,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен правильно фильтровать вложенные поля', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
         query: 'Author: me()',
@@ -323,7 +342,7 @@ describe('FindIssuesTool', () => {
 
   describe('Error handling', () => {
     it('должен обработать пустые результаты', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([]));
 
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
@@ -381,7 +400,7 @@ describe('FindIssuesTool', () => {
 
   describe('Logging', () => {
     it('должен логировать начало и результаты операции', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1, mockIssue2]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1, mockIssue2]));
 
       await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
@@ -393,7 +412,7 @@ describe('FindIssuesTool', () => {
     });
 
     it('должен логировать параметры поиска', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       await tool.execute({
         query: 'Status: open',
@@ -415,7 +434,7 @@ describe('FindIssuesTool', () => {
 
   describe('Response format', () => {
     it('должен возвращать корректный формат ответа', async () => {
-      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue([mockIssue1, mockIssue2]);
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1, mockIssue2]));
 
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
@@ -431,7 +450,7 @@ describe('FindIssuesTool', () => {
             hasFilter: boolean;
             keysCount: number;
             hasQueue: boolean;
-            perPage: number;
+            perPage?: number;
           };
         };
       };
@@ -440,7 +459,56 @@ describe('FindIssuesTool', () => {
       expect(parsed.data.issues).toHaveLength(2);
       expect(parsed.data.searchCriteria).toBeDefined();
       expect(parsed.data.searchCriteria.hasQuery).toBe(true);
-      expect(parsed.data.searchCriteria.perPage).toBe(50); // default
+      // perPage не задан в запросе → не подделываем дефолтом, поле опущено
+      expect(parsed.data.searchCriteria.perPage).toBeUndefined();
+    });
+  });
+
+  describe('Pagination', () => {
+    it('должен добавлять поле pagination в ответ (регрессия формата: issues/count на месте)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: { count: number; issues: unknown[]; pagination: { hasNextPage: boolean } };
+      };
+      expect(parsed.success).toBe(true);
+      // прежние ключи сохранены
+      expect(parsed.data.count).toBe(1);
+      expect(parsed.data.issues).toHaveLength(1);
+      // новое поле
+      expect(parsed.data.pagination).toBeDefined();
+      expect(parsed.data.pagination.hasNextPage).toBe(false);
+    });
+
+    it('должен передавать fetchAll и maxItems в фасад', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      await tool.execute({
+        query: 'Author: me()',
+        fetchAll: true,
+        maxItems: 200,
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
+        expect.objectContaining({ fetchAll: true, maxItems: 200 })
+      );
+    });
+
+    it('должен отклонить конфликт page + fetchAll', async () => {
+      const result = await tool.execute({
+        query: 'Author: me()',
+        page: 2,
+        fetchAll: true,
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      expect(result.isError).toBe(true);
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as { success: boolean };
+      expect(parsed.success).toBe(false);
     });
   });
 });

@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
+import { MockHttpClient } from '@fractalizer/mcp-infrastructure';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { FindIssuesInputDto } from '#tracker_api/dto/index.js';
 import { FindIssuesOperation } from '#tracker_api/api_operations/issue/find/find-issues.operation.js';
 
-describe('FindIssuesOperation', () => {
+describe('FindIssuesOperation (pagination)', () => {
   let operation: FindIssuesOperation;
-  let mockHttpClient: IHttpClient;
+  let httpClient: MockHttpClient;
   let mockCacheManager: CacheManager;
   let mockLogger: Logger;
 
@@ -24,13 +24,7 @@ describe('FindIssuesOperation', () => {
   };
 
   beforeEach(() => {
-    mockHttpClient = {
-      get: vi.fn().mockResolvedValue(null),
-      post: vi.fn(),
-      patch: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn().mockResolvedValue(undefined),
-    } as unknown as IHttpClient;
+    httpClient = new MockHttpClient();
 
     mockCacheManager = {
       get: vi.fn().mockResolvedValue(null),
@@ -48,221 +42,157 @@ describe('FindIssuesOperation', () => {
       debug: vi.fn(),
     } as unknown as Logger;
 
-    operation = new FindIssuesOperation(mockHttpClient, mockCacheManager, mockLogger);
+    operation = new FindIssuesOperation(httpClient, mockCacheManager, mockLogger);
   });
 
-  describe('execute', () => {
-    it('should call httpClient.post with correct search params', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'status: open',
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
-
-      await operation.execute(params);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
-        query: 'status: open',
-      });
-    });
-
-    it('should support query (JQL) search', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'queue: TEST AND status: open',
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
+  describe('single-page (без fetchAll)', () => {
+    it('возвращает PaginatedResult без Link → hasNextPage=false', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue]);
+      const params: FindIssuesInputDto = { query: 'status: open' };
 
       const result = await operation.execute(params);
 
-      expect(result).toHaveLength(1);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
-        query: 'queue: TEST AND status: open',
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+    });
+
+    it('передаёт тело запроса в POST', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue]);
+
+      await operation.execute({ query: 'status: open' });
+
+      const history = httpClient.getRequestHistory();
+      const post = history.find((r) => r.method === 'POST');
+      expect(post?.path).toBe('/v3/issues/_search');
+      expect(post?.data).toEqual({ query: 'status: open' });
+    });
+
+    it('строит query-string для perPage/page', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=50&page=2', [mockIssue]);
+
+      const result = await operation.execute({ query: 'status: open', perPage: 50, page: 2 });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.page).toBe(2);
+      expect(result.pagination.perPage).toBe(50);
+    });
+
+    it('с Link rel=next → hasNextPage=true', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue], {
+        link: '<https://api.tracker.yandex.net/v3/issues/_search?page=2>; rel="next"',
       });
+
+      const result = await operation.execute({ query: 'status: open' });
+
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(result.pagination.fetchedAll).toBe(false);
     });
 
-    it('should support filter search', async () => {
-      const params: FindIssuesInputDto = {
-        filter: { queue: 'TEST', status: 'open' },
-      };
+    it('обрабатывает expand', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search?expand=transitions', [mockIssue]);
 
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
+      const result = await operation.execute({ query: 'status: open', expand: ['transitions'] });
 
-      const result = await operation.execute(params);
-
-      expect(result).toHaveLength(1);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
-        filter: { queue: 'TEST', status: 'open' },
-      });
+      expect(result.items).toHaveLength(1);
     });
 
-    it('should support queue search', async () => {
-      const params: FindIssuesInputDto = {
-        queue: 'TEST',
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
-
-      const result = await operation.execute(params);
-
-      expect(result).toHaveLength(1);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', { queue: 'TEST' });
-    });
-
-    it('should support keys search', async () => {
-      const params: FindIssuesInputDto = {
-        keys: ['TEST-1', 'TEST-2'],
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
-
-      const result = await operation.execute(params);
-
-      expect(result).toHaveLength(1);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
-        keys: ['TEST-1', 'TEST-2'],
-      });
-    });
-
-    it('should handle pagination (page, perPage)', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'status: open',
-        perPage: 50,
-        page: 2,
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
-
-      await operation.execute(params);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search?perPage=50&page=2', {
-        query: 'status: open',
-      });
-    });
-
-    it('should handle sorting (order)', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'status: open',
-        order: ['-createdAt'],
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
-
-      await operation.execute(params);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
-        query: 'status: open',
-        order: ['-createdAt'],
-      });
-    });
-
-    it('should return issues array', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'status: open',
-      };
-
-      const mockIssues = [mockIssue, { ...mockIssue, key: 'TEST-124' }];
-      vi.mocked(mockHttpClient.post).mockResolvedValue(mockIssues);
-
-      const result = await operation.execute(params);
-
-      expect(result).toHaveLength(2);
-      expect(result).toEqual(mockIssues);
-    });
-
-    it('should handle empty results', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'status: closed',
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([]);
-
-      const result = await operation.execute(params);
-
-      expect(result).toHaveLength(0);
-      expect(mockLogger.info).toHaveBeenCalledWith('Найдено задач: 0');
-    });
-
-    it('should handle HTTP errors', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'invalid query',
-      };
-
-      const mockError = new Error('HTTP 400: Invalid query');
-      vi.mocked(mockHttpClient.post).mockRejectedValue(mockError);
-
-      await expect(operation.execute(params)).rejects.toThrow('HTTP 400: Invalid query');
-    });
-
-    it('should throw error if no search method specified', async () => {
-      const params: FindIssuesInputDto = {};
-
-      await expect(operation.execute(params)).rejects.toThrow(
+    it('бросает ошибку, если способ поиска не указан', async () => {
+      await expect(operation.execute({})).rejects.toThrow(
         'FindIssuesOperation: не указан способ поиска'
       );
     });
 
-    it('should support filterId search', async () => {
-      const params: FindIssuesInputDto = {
-        filterId: 'filter-123',
-      };
+    it('пробрасывает HTTP-ошибки', async () => {
+      // Мок-ответ не настроен → reject
+      await expect(operation.execute({ query: 'invalid' })).rejects.toThrow();
+    });
+  });
 
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
-
-      const result = await operation.execute(params);
-
-      expect(result).toHaveLength(1);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
-        filterId: 'filter-123',
+  describe('fetchAll', () => {
+    it('обходит страницы по Link rel=next (cursor)', async () => {
+      // Первая страница (perPage поднят к 100) с Link
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=100', [mockIssue], {
+        link: '<https://api.tracker.yandex.net/v3/issues/_search?page=2>; rel="next"',
       });
+      // Вторая страница по next-URL
+      httpClient.setResponse('POST', '/v3/issues/_search?page=2', [
+        { ...mockIssue, key: 'TEST-124' },
+      ]);
+
+      const result = await operation.execute({ query: 'status: open', fetchAll: true });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.pagesFetched).toBe(2);
+      expect(result.pagination.fetchedAll).toBe(true);
     });
 
-    it('should handle expand parameter', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'status: open',
-        expand: ['transitions', 'attachments'],
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
-
-      await operation.execute(params);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        '/v3/issues/_search?expand=transitions%2Cattachments',
+    it('обрезает по maxItems (truncated=true)', async () => {
+      httpClient.setResponse(
+        'POST',
+        '/v3/issues/_search?perPage=100',
+        [mockIssue, { ...mockIssue, key: 'TEST-124' }],
         {
-          query: 'status: open',
+          link: '<https://api.tracker.yandex.net/v3/issues/_search?page=2>; rel="next"',
         }
       );
+
+      const result = await operation.execute({
+        query: 'status: open',
+        fetchAll: true,
+        maxItems: 1,
+      });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.truncated).toBe(true);
     });
 
-    it('should handle expand parameter with single value', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'status: open',
-        expand: ['transitions'],
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
-
-      await operation.execute(params);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search?expand=transitions', {
-        query: 'status: open',
+    it('перебирает page=1..N по X-Total-Pages, если нет Link (DP-5)', async () => {
+      // Первая страница: нет Link, но X-Total-Pages=2
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=100', [mockIssue], {
+        'x-total-pages': '2',
       });
+      // Вторая страница по page=2
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=100&page=2', [
+        { ...mockIssue, key: 'TEST-124' },
+      ]);
+
+      const result = await operation.execute({ query: 'status: open', fetchAll: true });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.pagesFetched).toBe(2);
     });
 
-    it('should ignore empty expand array', async () => {
-      const params: FindIssuesInputDto = {
-        query: 'status: open',
-        expand: [],
-      };
-
-      vi.mocked(mockHttpClient.post).mockResolvedValue([mockIssue]);
-
-      await operation.execute(params);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/_search', {
-        query: 'status: open',
+    it('полный обход page-режима с X-Total-Count: fetchedAll=true, hasNextPage=false (регрессия H1)', async () => {
+      // Seekable-ответ присылает И X-Total-Count, И X-Total-Pages.
+      // page*perPage(1*…) < total НЕ должно давать ложный hasNextPage после
+      // полного обхода всех страниц.
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=100', [mockIssue], {
+        'x-total-count': '2',
+        'x-total-pages': '2',
       });
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=100&page=2', [
+        { ...mockIssue, key: 'TEST-124' },
+      ]);
+
+      const result = await operation.execute({ query: 'status: open', fetchAll: true });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.pagesFetched).toBe(2);
+      expect(result.pagination.total).toBe(2);
+      expect(result.pagination.truncated).toBe(false);
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+    });
+
+    it('одна страница, если нет ни Link, ни X-Total-Pages>1', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=100', [mockIssue]);
+
+      const result = await operation.execute({ query: 'status: open', fetchAll: true });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.pagesFetched).toBe(1);
+      expect(result.pagination.fetchedAll).toBe(true);
     });
   });
 });

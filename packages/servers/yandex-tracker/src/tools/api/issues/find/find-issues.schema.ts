@@ -3,7 +3,15 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema, PageSchema, makePerPageSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  PageSchema,
+  makePerPageSchema,
+  FetchAllSchema,
+  MaxItemsSchema,
+  noPageFetchAllConflict,
+  PAGINATION_CONFLICT_MESSAGE,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для поиска задач
@@ -65,6 +73,16 @@ export const FindIssuesParamsSchema = z
     expand: z.array(z.string()).optional(),
 
     /**
+     * Полный обход всех страниц (opt-in). Несовместимо с явным page.
+     */
+    fetchAll: FetchAllSchema,
+
+    /**
+     * Защитный лимит по количеству задач при fetchAll=true.
+     */
+    maxItems: MaxItemsSchema,
+
+    /**
      * Опциональный массив полей для фильтрации ответа
      */
     fields: FieldsSchema,
@@ -84,7 +102,11 @@ export const FindIssuesParamsSchema = z
       message:
         'Должен быть указан хотя бы один способ поиска: query, filter, keys, queue или filterId',
     }
-  );
+  )
+  .refine(noPageFetchAllConflict, {
+    message: PAGINATION_CONFLICT_MESSAGE,
+    path: ['page'],
+  });
 
 /**
  * Вывод типа из схемы
