@@ -11,3 +11,5 @@ export {
 export type { BuildMetaInput, FetchAllPagesOptions } from './tracker-paginator.util.js';
 export { FileUploadUtil } from './file-upload.util.js';
 export { FileDownloadUtil } from './file-download.util.js';
+export { paginatedFieldFilter } from './paginated-field-filter.util.js';
+export type { FilteredPaginatedResult } from './paginated-field-filter.util.js';

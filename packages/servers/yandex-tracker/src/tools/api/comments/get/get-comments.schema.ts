@@ -3,7 +3,13 @@
  */
 
 import { z } from 'zod';
-import { IssueKeysSchema, ExpandSchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeysSchema,
+  ExpandSchema,
+  FieldsSchema,
+  PageSchema,
+  makePerPageSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения комментариев
@@ -17,12 +23,12 @@ export const GetCommentsParamsSchema = z.object({
   /**
    * Количество комментариев на странице (опционально)
    */
-  perPage: z.number().int().positive().max(500).optional(),
+  perPage: makePerPageSchema(500),
 
   /**
    * Номер страницы (опционально)
    */
-  page: z.number().int().positive().optional(),
+  page: PageSchema,
 
   /**
    * Параметр expand для включения дополнительных данных (опционально)

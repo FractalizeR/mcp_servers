@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema } from '#common/schemas/index.js';
+import { FieldsSchema, PageSchema, makePerPageSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения списка проектов
@@ -12,12 +12,12 @@ export const GetProjectsParamsSchema = z.object({
   /**
    * Количество записей на странице (опционально)
    */
-  perPage: z.number().int().min(1).max(100).optional(),
+  perPage: makePerPageSchema(100),
 
   /**
    * Номер страницы (начинается с 1)
    */
-  page: z.number().int().min(1).optional(),
+  page: PageSchema,
 
   /**
    * Дополнительные поля для включения в ответ (опционально)

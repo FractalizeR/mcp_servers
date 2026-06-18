@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema } from '#common/schemas/index.js';
+import { FieldsSchema, PageSchema, makePerPageSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для поиска задач
@@ -49,14 +49,14 @@ export const FindIssuesParamsSchema = z
     order: z.array(z.string()).optional(),
 
     /**
-     * Количество результатов на странице
+     * Количество результатов на странице (без жёсткого потолка для _search)
      */
-    perPage: z.number().int().positive().optional(),
+    perPage: makePerPageSchema(),
 
     /**
      * Номер страницы
      */
-    page: z.number().int().positive().optional(),
+    page: PageSchema,
 
     /**
      * Расширение ответа дополнительными полями

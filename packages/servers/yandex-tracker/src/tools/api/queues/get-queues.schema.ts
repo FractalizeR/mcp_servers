@@ -3,21 +3,21 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema } from '#common/schemas/index.js';
+import { FieldsSchema, PageSchema, makePerPageSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения списка очередей
  */
 export const GetQueuesParamsSchema = z.object({
   /**
-   * Количество записей на странице (опционально, по умолчанию 50)
+   * Количество записей на странице (опционально, потолок 100)
    */
-  perPage: z.number().int().positive().max(100).optional(),
+  perPage: makePerPageSchema(100),
 
   /**
    * Номер страницы (опционально, начинается с 1)
    */
-  page: z.number().int().positive().optional(),
+  page: PageSchema,
 
   /**
    * Дополнительные поля для включения в ответ (опционально)
