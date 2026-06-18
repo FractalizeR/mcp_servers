@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/FractalizeR/mcp_servers/compare/v1.3.0...v1.4.0) (2026-06-18)
+
+### Features
+
+* **tracker:** общие схемы пагинации + paginatedFieldFilter (этап 1.3) ([cede233](https://github.com/FractalizeR/mcp_servers/commit/cede2335e24940e9c1aa99e9e1f90b479ffe1e78)), closes [#8](https://github.com/FractalizeR/mcp_servers/issues/8)
+
 ## [1.3.0](https://github.com/FractalizeR/mcp_servers/compare/v1.2.0...v1.3.0) (2026-06-18)
 
 ### Features
