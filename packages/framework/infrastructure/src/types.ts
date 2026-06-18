@@ -78,6 +78,26 @@ export interface ApiResponse<T = unknown> {
 }
 
 /**
+ * HTTP-заголовки ответа в нормализованном виде.
+ *
+ * Ключи приведены к нижнему регистру, значения — строки
+ * (массивы заголовков склеены через ', ').
+ */
+export type ResponseHeaders = Record<string, string>;
+
+/**
+ * Конверт HTTP-ответа: данные + заголовки.
+ *
+ * Используется методами `getWithResponse`/`postWithResponse` для доступа
+ * к заголовкам пагинации (`Link`, `X-Total-Count`, `X-Total-Pages`),
+ * которые `get`/`post` отбрасывают.
+ */
+export interface HttpResponseEnvelope<T = unknown> {
+  readonly data: T;
+  readonly headers: ResponseHeaders;
+}
+
+/**
  * Допустимые типы значений для query-параметров HTTP запросов
  */
 export type QueryParamValue = string | number | boolean | string[] | undefined;

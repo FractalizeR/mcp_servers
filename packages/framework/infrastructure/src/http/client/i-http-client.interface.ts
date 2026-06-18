@@ -5,7 +5,7 @@
  * Реализации: AxiosHttpClient (production), MockHttpClient (tests)
  */
 
-import type { QueryParams } from '../../types.js';
+import type { QueryParams, HttpResponseEnvelope } from '../../types.js';
 
 export interface IHttpClient {
   /**
@@ -23,6 +23,34 @@ export interface IHttpClient {
    * @returns данные ответа
    */
   post<T = unknown>(path: string, data?: unknown): Promise<T>;
+
+  /**
+   * Выполняет GET запрос и возвращает данные ВМЕСТЕ с заголовками ответа.
+   *
+   * Нужен для пагинации: заголовки `Link`, `X-Total-Count`, `X-Total-Pages`
+   * недоступны через обычный `get` (он отдаёт только тело).
+   *
+   * @param path - путь к ресурсу
+   * @param params - опциональные query параметры
+   * @returns конверт `{ data, headers }`
+   */
+  getWithResponse<T>(path: string, params?: QueryParams): Promise<HttpResponseEnvelope<T>>;
+
+  /**
+   * Выполняет POST запрос и возвращает данные ВМЕСТЕ с заголовками ответа.
+   *
+   * Нужен для пагинации POST `_search` (seek: `Link`/`X-Total-*`).
+   *
+   * @param path - путь к ресурсу
+   * @param data - данные для отправки
+   * @param params - опциональные query параметры
+   * @returns конверт `{ data, headers }`
+   */
+  postWithResponse<T = unknown>(
+    path: string,
+    data?: unknown,
+    params?: QueryParams
+  ): Promise<HttpResponseEnvelope<T>>;
 
   /**
    * Выполняет PATCH запрос

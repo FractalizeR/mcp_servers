@@ -403,6 +403,62 @@ describe('AxiosHttpClient', () => {
     });
   });
 
+  describe('getWithResponse / postWithResponse', () => {
+    it('getWithResponse возвращает данные и нормализованные заголовки', async () => {
+      // Arrange
+      mockAxiosInstance.get.mockResolvedValue({
+        data: [1, 2],
+        headers: { 'X-Total-Count': '150', Link: '<https://api/x?page=2>; rel="next"' },
+      });
+
+      // Act
+      const res = await httpClient.getWithResponse<number[]>('/list');
+
+      // Assert
+      expect(res.data).toEqual([1, 2]);
+      expect(res.headers['x-total-count']).toBe('150');
+      expect(res.headers['link']).toBe('<https://api/x?page=2>; rel="next"');
+    });
+
+    it('postWithResponse прокидывает params в config и возвращает заголовки', async () => {
+      // Arrange
+      mockAxiosInstance.post.mockResolvedValue({
+        data: ['a'],
+        headers: { 'X-Total-Pages': '3' },
+      });
+
+      // Act
+      const res = await httpClient.postWithResponse(
+        '/v3/issues/_search',
+        { query: 'x' },
+        {
+          perPage: 50,
+        }
+      );
+
+      // Assert
+      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+        '/v3/issues/_search',
+        { query: 'x' },
+        { params: { perPage: 50 } }
+      );
+      expect(res.data).toEqual(['a']);
+      expect(res.headers['x-total-pages']).toBe('3');
+    });
+
+    it('get возвращает пустые заголовки, если axios их не дал', async () => {
+      // Arrange
+      mockAxiosInstance.get.mockResolvedValue({ data: { ok: true } });
+
+      // Act
+      const res = await httpClient.getWithResponse('/x');
+
+      // Assert
+      expect(res.data).toEqual({ ok: true });
+      expect(res.headers).toEqual({});
+    });
+  });
+
   describe('getAxiosInstance', () => {
     it('должен вернуть axios instance', () => {
       // Act

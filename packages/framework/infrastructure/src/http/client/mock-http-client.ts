@@ -2,14 +2,28 @@
  * Mock HTTP Client для тестирования
  *
  * Простая реализация IHttpClient для unit/integration тестов.
- * Позволяет настраивать ответы для разных запросов.
+ * Позволяет настраивать ответы (включая заголовки и мульти-страничные
+ * последовательности) для разных запросов.
  */
 
 import type { IHttpClient } from './i-http-client.interface.js';
-import type { QueryParams } from '../../types.js';
+import type { QueryParams, HttpResponseEnvelope, ResponseHeaders } from '../../types.js';
+
+/** Один сконфигурированный мок-ответ: тело + заголовки. */
+interface MockEntry {
+  data: unknown;
+  headers: ResponseHeaders;
+}
 
 export class MockHttpClient implements IHttpClient {
-  private responses: Map<string, unknown> = new Map();
+  /**
+   * Очередь ответов на ключ `METHOD:path`.
+   *
+   * Семантика FIFO со «залипанием» последнего элемента: пока в очереди >1
+   * ответа — каждый запрос забирает следующий; когда остаётся 1 — он
+   * возвращается на все последующие запросы (поведение одиночного setResponse).
+   */
+  private responses: Map<string, MockEntry[]> = new Map();
   private requestHistory: Array<{
     method: string;
     path: string;
@@ -18,14 +32,35 @@ export class MockHttpClient implements IHttpClient {
   }> = [];
 
   /**
-   * Установить мок-ответ для конкретного пути
+   * Установить мок-ответ для конкретного пути (перезаписывает очередь).
    * @param method - HTTP метод
    * @param path - путь запроса
    * @param response - данные ответа
+   * @param headers - опциональные заголовки ответа (для пагинации: `link`, `x-total-count`, ...)
    */
-  setResponse<T>(method: string, path: string, response: T): void {
+  setResponse<T>(method: string, path: string, response: T, headers?: ResponseHeaders): void {
     const key = `${method.toUpperCase()}:${path}`;
-    this.responses.set(key, response);
+    this.responses.set(key, [{ data: response, headers: this.normalize(headers) }]);
+  }
+
+  /**
+   * Установить ПОСЛЕДОВАТЕЛЬНОСТЬ ответов для пути (FIFO) — для тестов
+   * мульти-страничной пагинации (включая POST `_search` на тот же путь).
+   *
+   * @param method - HTTP метод
+   * @param path - путь запроса
+   * @param pages - страницы по порядку; каждая — `{ data, headers? }`
+   */
+  setResponseQueue<T>(
+    method: string,
+    path: string,
+    pages: Array<{ data: T; headers?: ResponseHeaders }>
+  ): void {
+    const key = `${method.toUpperCase()}:${path}`;
+    this.responses.set(
+      key,
+      pages.map((page) => ({ data: page.data, headers: this.normalize(page.headers) }))
+    );
   }
 
   /**
@@ -56,49 +91,71 @@ export class MockHttpClient implements IHttpClient {
 
   get<T>(path: string, params?: QueryParams): Promise<T> {
     this.requestHistory.push({ method: 'GET', path, ...(params && { params }) });
-    const key = `GET:${path}`;
-    const response = this.responses.get(key);
-
-    if (response === undefined) {
-      return Promise.reject(new Error(`No mock response configured for GET ${path}`));
-    }
-
-    return Promise.resolve(response as T);
+    return this.resolve('GET', path).then((entry) => entry.data as T);
   }
 
   post<T = unknown>(path: string, data?: unknown): Promise<T> {
     this.requestHistory.push({ method: 'POST', path, data });
-    const key = `POST:${path}`;
-    const response = this.responses.get(key);
-
-    if (response === undefined) {
-      return Promise.reject(new Error(`No mock response configured for POST ${path}`));
-    }
-
-    return Promise.resolve(response as T);
+    return this.resolve('POST', path).then((entry) => entry.data as T);
   }
 
   patch<T = unknown>(path: string, data?: unknown): Promise<T> {
     this.requestHistory.push({ method: 'PATCH', path, data });
-    const key = `PATCH:${path}`;
-    const response = this.responses.get(key);
-
-    if (response === undefined) {
-      return Promise.reject(new Error(`No mock response configured for PATCH ${path}`));
-    }
-
-    return Promise.resolve(response as T);
+    return this.resolve('PATCH', path).then((entry) => entry.data as T);
   }
 
   delete<T = unknown>(path: string, _data?: unknown): Promise<T> {
     this.requestHistory.push({ method: 'DELETE', path });
-    const key = `DELETE:${path}`;
-    const response = this.responses.get(key);
+    return this.resolve('DELETE', path).then((entry) => entry.data as T);
+  }
 
-    if (response === undefined) {
-      return Promise.reject(new Error(`No mock response configured for DELETE ${path}`));
+  getWithResponse<T>(path: string, params?: QueryParams): Promise<HttpResponseEnvelope<T>> {
+    this.requestHistory.push({ method: 'GET', path, ...(params && { params }) });
+    return this.resolve('GET', path).then((entry) => ({
+      data: entry.data as T,
+      headers: entry.headers,
+    }));
+  }
+
+  postWithResponse<T = unknown>(
+    path: string,
+    data?: unknown,
+    params?: QueryParams
+  ): Promise<HttpResponseEnvelope<T>> {
+    this.requestHistory.push({ method: 'POST', path, data, ...(params && { params }) });
+    return this.resolve('POST', path).then((entry) => ({
+      data: entry.data as T,
+      headers: entry.headers,
+    }));
+  }
+
+  /**
+   * Забрать следующий ответ из очереди по ключу `METHOD:path`.
+   * Последний элемент «залипает» (возвращается повторно).
+   */
+  private resolve(method: string, path: string): Promise<MockEntry> {
+    const key = `${method}:${path}`;
+    const queue = this.responses.get(key);
+
+    if (!queue || queue.length === 0) {
+      return Promise.reject(new Error(`No mock response configured for ${method} ${path}`));
     }
 
-    return Promise.resolve(response as T);
+    const entry = queue.length > 1 ? queue.shift() : queue[0];
+    if (!entry) {
+      return Promise.reject(new Error(`No mock response configured for ${method} ${path}`));
+    }
+    return Promise.resolve(entry);
+  }
+
+  private normalize(headers?: ResponseHeaders): ResponseHeaders {
+    const result: ResponseHeaders = {};
+    if (!headers) {
+      return result;
+    }
+    for (const [key, value] of Object.entries(headers)) {
+      result[key.toLowerCase()] = value;
+    }
+    return result;
   }
 }

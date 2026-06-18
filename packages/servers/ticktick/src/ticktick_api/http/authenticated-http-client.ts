@@ -6,11 +6,24 @@
  */
 
 import axios from 'axios';
-import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import type { IHttpClient, QueryParams, RetryStrategy } from '@fractalizer/mcp-infrastructure';
-import { RetryHandler, ErrorMapper } from '@fractalizer/mcp-infrastructure';
+import type {
+  AxiosInstance,
+  AxiosError,
+  AxiosRequestConfig,
+  InternalAxiosRequestConfig,
+} from 'axios';
+import type {
+  IHttpClient,
+  QueryParams,
+  RetryStrategy,
+  HttpResponseEnvelope,
+} from '@fractalizer/mcp-infrastructure';
+import { RetryHandler, ErrorMapper, normalizeHeaders } from '@fractalizer/mcp-infrastructure';
 import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { TickTickOAuthClient } from '../auth/oauth-client.js';
+
+/** HTTP-методы, поддерживающие возврат конверта с заголовками. */
+type EnvelopeMethod = 'get' | 'post';
 
 /**
  * Configuration for AuthenticatedHttpClient
@@ -97,16 +110,39 @@ export class AuthenticatedHttpClient implements IHttpClient {
   }
 
   /**
+   * Единый приватный запрос с retry, возвращающий данные + заголовки.
+   * На нём построены get/post (берут только .data) и
+   * getWithResponse/postWithResponse (возвращают конверт целиком).
+   */
+  private async requestWithResponse<T>(
+    method: EnvelopeMethod,
+    path: string,
+    data?: unknown,
+    params?: QueryParams
+  ): Promise<HttpResponseEnvelope<T>> {
+    return this.retryHandler.executeWithRetry(async () => {
+      const config: AxiosRequestConfig | undefined = params !== undefined ? { params } : undefined;
+
+      const response =
+        method === 'get'
+          ? await this.client.get<T>(path, { params })
+          : config
+            ? await this.client.post<T>(path, data, config)
+            : await this.client.post<T>(path, data);
+
+      return { data: response.data, headers: normalizeHeaders(response.headers) };
+    });
+  }
+
+  /**
    * Execute GET request with retry logic
    *
    * @param path - API endpoint path
    * @param params - Optional query parameters
    */
   async get<T>(path: string, params?: QueryParams): Promise<T> {
-    return this.retryHandler.executeWithRetry(async () => {
-      const response = await this.client.get<T>(path, { params });
-      return response.data;
-    });
+    const { data } = await this.requestWithResponse<T>('get', path, undefined, params);
+    return data;
   }
 
   /**
@@ -116,10 +152,26 @@ export class AuthenticatedHttpClient implements IHttpClient {
    * @param data - Request body data
    */
   async post<T = unknown>(path: string, data?: unknown): Promise<T> {
-    return this.retryHandler.executeWithRetry(async () => {
-      const response = await this.client.post<T>(path, data);
-      return response.data;
-    });
+    const { data: result } = await this.requestWithResponse<T>('post', path, data);
+    return result;
+  }
+
+  /**
+   * GET с возвратом данных и заголовков ответа (для пагинации).
+   */
+  async getWithResponse<T>(path: string, params?: QueryParams): Promise<HttpResponseEnvelope<T>> {
+    return this.requestWithResponse<T>('get', path, undefined, params);
+  }
+
+  /**
+   * POST с возвратом данных и заголовков ответа (для пагинации).
+   */
+  async postWithResponse<T = unknown>(
+    path: string,
+    data?: unknown,
+    params?: QueryParams
+  ): Promise<HttpResponseEnvelope<T>> {
+    return this.requestWithResponse<T>('post', path, data, params);
   }
 
   /**

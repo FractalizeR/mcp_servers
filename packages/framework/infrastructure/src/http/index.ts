@@ -28,3 +28,7 @@ export { RetryHandler } from './retry/retry-handler.js';
 export { ErrorMapper } from './error/error-mapper.js';
 export { ApiErrorClass } from './error/api-error.class.js';
 export type { ApiErrorDetails } from './error/api-error.class.js';
+
+// Response utilities (header normalization, Link header parsing)
+export { normalizeHeaders, parseLinkHeader } from './response/index.js';
+export type { ParsedLinkHeader } from './response/index.js';

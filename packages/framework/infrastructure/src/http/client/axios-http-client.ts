@@ -14,14 +14,18 @@
  */
 
 import axios from 'axios';
-import type { AxiosInstance, AxiosError } from 'axios';
+import type { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import type { HttpConfig } from './http-config.interface.js';
 import type { IHttpClient } from './i-http-client.interface.js';
 import type { Logger } from '../../logging/index.js';
-import type { QueryParams } from '../../types.js';
+import type { QueryParams, HttpResponseEnvelope } from '../../types.js';
 import { ErrorMapper } from '../error/index.js';
+import { normalizeHeaders } from '../response/index.js';
 import { RetryHandler } from '../retry/index.js';
 import type { RetryStrategy } from '../retry/index.js';
+
+/** HTTP-методы, поддерживающие возврат конверта с заголовками. */
+type EnvelopeMethod = 'get' | 'post';
 
 export class AxiosHttpClient implements IHttpClient {
   private readonly client: AxiosInstance;
@@ -88,16 +92,47 @@ export class AxiosHttpClient implements IHttpClient {
   }
 
   /**
+   * Единый приватный запрос с retry, возвращающий данные + нормализованные
+   * заголовки. На нём построены и `get/post` (берут только `.data`),
+   * и `getWithResponse/postWithResponse` (возвращают конверт целиком).
+   *
+   * @param method - HTTP-метод (get | post)
+   * @param path - путь к ресурсу
+   * @param data - тело запроса (для POST)
+   * @param params - query-параметры
+   * @returns конверт `{ data, headers }`
+   */
+  private async requestWithResponse<T>(
+    method: EnvelopeMethod,
+    path: string,
+    data?: unknown,
+    params?: QueryParams
+  ): Promise<HttpResponseEnvelope<T>> {
+    return this.retryHandler.executeWithRetry(async () => {
+      // config передаём в POST только при наличии params, чтобы сохранить
+      // обратную совместимость вызова this.client.post(path, data).
+      const config: AxiosRequestConfig | undefined = params !== undefined ? { params } : undefined;
+
+      const response =
+        method === 'get'
+          ? await this.client.get<T>(path, { params })
+          : config
+            ? await this.client.post<T>(path, data, config)
+            : await this.client.post<T>(path, data);
+
+      return { data: response.data, headers: normalizeHeaders(response.headers) };
+    });
+  }
+
+  /**
    * Выполняет GET запрос с retry логикой
    * @param path - путь к ресурсу
    * @param params - опциональные query параметры
    * @returns данные ответа
    */
   async get<T>(path: string, params?: QueryParams): Promise<T> {
-    return this.retryHandler.executeWithRetry(async () => {
-      const response = await this.client.get<T>(path, { params });
-      return response.data;
-    });
+    const { data } = await this.requestWithResponse<T>('get', path, undefined, params);
+    return data;
   }
 
   /**
@@ -107,10 +142,26 @@ export class AxiosHttpClient implements IHttpClient {
    * @returns данные ответа
    */
   async post<T = unknown>(path: string, data?: unknown): Promise<T> {
-    return this.retryHandler.executeWithRetry(async () => {
-      const response = await this.client.post<T>(path, data);
-      return response.data;
-    });
+    const { data: result } = await this.requestWithResponse<T>('post', path, data);
+    return result;
+  }
+
+  /**
+   * GET с возвратом данных и заголовков ответа (для пагинации).
+   */
+  async getWithResponse<T>(path: string, params?: QueryParams): Promise<HttpResponseEnvelope<T>> {
+    return this.requestWithResponse<T>('get', path, undefined, params);
+  }
+
+  /**
+   * POST с возвратом данных и заголовков ответа (для пагинации `_search`).
+   */
+  async postWithResponse<T = unknown>(
+    path: string,
+    data?: unknown,
+    params?: QueryParams
+  ): Promise<HttpResponseEnvelope<T>> {
+    return this.requestWithResponse<T>('post', path, data, params);
   }
 
   /**
