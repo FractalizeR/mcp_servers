@@ -264,14 +264,30 @@ const filtered = items.map(item =>
 ## 📊 Пагинация в list-инструментах
 
 List-инструменты добавляют поле `pagination` к выдаче **аддитивно** — прежние ключи
-(`comments`/`issues`/`count`/...) сохраняются для обратной совместимости.
+(`comments`/`issues`/`count`/...) сохраняются. Пагинация всех 10 list-инструментов
+основана на едином непрозрачном курсоре (`cursor`); поле `page` **удалено** (breaking).
+
+**Механизм (через `pagination.nextCursor`):**
+- В ответе `pagination.nextCursor` присутствует ⟺ есть следующая страница (выводится из
+  `Link rel="next"`). Агент передаёт его в параметр `cursor` **того же** инструмента для
+  следующей страницы — для агента это чёрный ящик.
+- `pagination.total`/`totalPages` отдаются **только** для seekable-эндпоинтов
+  (`queues`/`projects`/`find_issues` — у них `Link rel="seek"`). У cursor-эндпоинтов
+  (`changelog`/`comments`/`links`/`worklog`/`checklist`) их нет (seek-gating).
+- Непагинируемые `components`/`attachments` возвращают все элементы за один ответ — блока
+  `pagination` нет, пагин-параметры в схеме отсутствуют.
 
 **Общие схемы** (`#common/schemas`, единый источник истины — не дублируй по файлам):
+- `CursorSchema` — непрозрачный курсор (`cursor`); несовместим с `perPage`/`fetchAll`/
+  `maxItems`/`maxTotalItems`, в batch валиден только при одном issueId.
 - `FetchAllSchema` — opt-in полного обхода (`fetchAll`).
 - `MaxItemsSchema` — лимит записей на цепочку (per-issue, дефолт 500, потолок 1000).
 - `MaxTotalItemsSchema` — общий потолок на batch-ответ (дефолт 1000, потолок 5000).
-- `PageSchema` / `makePerPageSchema(max?)` / `PerPageSchema`.
-- `noPageFetchAllConflict` + `PAGINATION_CONFLICT_MESSAGE` — `.refine`, запрещает `page`+`fetchAll`.
+- `makePerPageSchema(max?)` / `PerPageSchema`.
+- `noCursorWithBulkParams` + `PAGINATION_CURSOR_CONFLICT_MESSAGE` — `.refine`: `cursor`
+  исключает `perPage`/`fetchAll`/`maxItems`/`maxTotalItems`.
+- `cursorRequiresSingleIssue` + `PAGINATION_CURSOR_BATCH_MESSAGE` — `.refine` для batch:
+  `cursor` валиден ТОЛЬКО при `issueIds.length === 1`.
 
 **Schema:**
 ```typescript
@@ -279,12 +295,14 @@ export const GetCommentsSchema = z
   .object({
     issueIds: IssueKeysSchema,
     fields: FieldsSchema,
-    page: PageSchema,
-    perPage: PerPageSchema,
+    cursor: CursorSchema,
+    perPage: makePerPageSchema(500),
     fetchAll: FetchAllSchema,
     maxItems: MaxItemsSchema,
+    maxTotalItems: MaxTotalItemsSchema,
   })
-  .refine(noPageFetchAllConflict, { message: PAGINATION_CONFLICT_MESSAGE, path: ['page'] });
+  .refine(noCursorWithBulkParams, { message: PAGINATION_CURSOR_CONFLICT_MESSAGE, path: ['cursor'] })
+  .refine(cursorRequiresSingleIssue, { message: PAGINATION_CURSOR_BATCH_MESSAGE, path: ['cursor'] });
 ```
 
 **Tool (batch):** распаковывай `PaginatedResult` хелпером `paginatedFieldFilter`
@@ -295,7 +313,7 @@ const successful = processed.successful.map((i) => ({
   issueId: i.key,
   comments: i.data.items,
   count: i.data.items.length,
-  pagination: i.data.pagination,  // ← аддитивно
+  pagination: i.data.pagination,  // ← аддитивно (с nextCursor, если есть ещё страница)
 }));
 ```
 
@@ -304,7 +322,7 @@ const successful = processed.successful.map((i) => ({
 сохранён, `pagination` добавлен соседним полем.
 
 **Семантика для агента** (через `.describe()`): по умолчанию возвращается одна страница —
-листать вручную через `page`, ориентируясь на `pagination.hasNextPage`. `fetchAll=true`
+для следующей передай `pagination.nextCursor` в `cursor` того же инструмента. `fetchAll=true`
 подтягивает все страницы до `maxItems`/`maxTotalItems`; обрезка отражается в `truncated`.
 
 ---

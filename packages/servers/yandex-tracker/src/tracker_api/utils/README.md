@@ -18,6 +18,10 @@
 ```
 src/tracker_api/utils/
 ├── tracker-paginator.util.ts   # TrackerPaginator
+├── cursor-codec.util.ts        # CursorCodec (opaque-курсор)
+├── item-budget.util.ts         # ItemBudget (общий бюджет batch)
+├── paginated-field-filter.util.ts  # paginatedFieldFilter
+├── strip-host.util.ts          # stripTrackerHost
 ├── file-upload.util.ts         # FileUploadUtil
 ├── file-download.util.ts       # FileDownloadUtil
 ├── duration.util.ts            # DurationUtil
@@ -30,6 +34,8 @@ src/tracker_api/utils/
 
 Доменная логика пагинации Яндекс.Трекера: проход по `Link rel="next"`
 с защитными лимитами и сборка `PaginationMeta` из заголовков ответа.
+Пагинация переведена на непрозрачный курсор; легаси-поле `page` и
+`buildLegacyMeta` удалены — наружу отдаётся `pagination.nextCursor`.
 
 Generic-примитивы (`parseLinkHeader`, нормализация заголовков) живут во
 фреймворке `@fractalizer/mcp-infrastructure`; здесь — только доменная
@@ -44,18 +50,45 @@ Generic-примитивы (`parseLinkHeader`, нормализация заго
 ### stripHost
 
 Превращает абсолютный next-URL в относительный путь+query; defense-in-depth
-guard отбрасывает пути не из `/v2/`|`/v3/` (возвращает `undefined`).
+guard отбрасывает пути не из `/v2/`|`/v3/` (возвращает `undefined`). Делегирует
+в `stripTrackerHost` — общий модуль, разделяемый паджинатором и `CursorCodec`.
 
 ### buildMeta
 
-Собирает `PaginationMeta` из заголовков (`X-Total-Count`/`X-Total-Pages`)
-и состояния обхода (`hasNextPage`/`fetchedAll`/`truncated`/`hasError`).
+Собирает `PaginationMeta` из заголовков и состояния обхода
+(`hasNextPage`/`fetchedAll`/`truncated`/`hasError`). Ключевая политика:
+- `hasNextPage`/`nextCursor` выводятся **только** из `Link rel="next"` (+ `truncated`);
+- `total`/`totalPages` отдаются **только** при `Link rel="seek"` (seek-gating против
+  ложного `totalPages` у cursor-эндпоинтов вроде comments);
+- `nextCursor = CursorCodec.encode(path, tag, cursorExtra)` кодируется лишь при наличии
+  `tag` (непагинируемые эндпоинты тег не передают → `nextCursor` отсутствует);
+- `cursorExtra` — доп. нагрузка в курсоре (хеш тела `_search` для find_issues, R2).
 
-### fetchAllPages
+### singlePage / fetchAllPages
 
-Полный обход по `Link rel="next"` до исчерпания или защитного лимита.
-При ошибке после страниц 1..N-1 возвращает частичный результат
-(`hasError=true`), собранное не теряется.
+`singlePage(response, { perPage?, tag?, cursorExtra? })` — оборачивает одну (первую)
+страницу. `fetchAllPages(opts)` — полный обход по `Link rel="next"` до исчерпания или
+защитного лимита; принимает `tag`/`cursorExtra` (включают cursor-режим), `maxItems`,
+`maxPages`, `perPage`, общий `budget` (`ItemBudget`). При ошибке после страниц 1..N-1
+возвращает частичный результат (`hasError=true`), собранное не теряется.
+
+---
+
+## 🔐 CursorCodec
+
+Кодек непрозрачного (opaque) курсора пагинации. Курсор для агента — чёрный ящик:
+он лишь передаёт `pagination.nextCursor` обратно тому же инструменту.
+
+- `encode(relativePath, tag, extra?)` → `c1:` + base64url(JSON `{t,p,h?}`). `t` — тег
+  семейства эндпоинта (`CURSOR_TAGS`), `p` — относительный next-путь, `h` — опц. доп.
+  нагрузка (хеш тела `_search`).
+- `decode(cursor, expectedTag)` → `{ path, extra? }`. **Никогда** не делает тихий fallback
+  на первую страницу: при любой проблеме бросает `InvalidCursorError` — неизвестная версия
+  (не `c1:`), битый base64/JSON/структура, mismatch тега (кросс-эндпоинт курсор), путь не
+  из `/v[23]/` (guard через `stripTrackerHost`).
+- `CURSOR_TAGS` — теги семейств (changelog/comments/links/worklog/checklist/queues/projects/
+  findIssues). Непагинируемые components/attachments курсор не выдают и тега не имеют.
+- `CURSOR_VERSION_PREFIX = 'c1:'` — версия формата (forward-compat).
 
 ---
 
@@ -216,36 +249,29 @@ static validateFileSize(size: number, maxSize: number): boolean {
 export class GetCommentsOperation extends BaseOperation {
   async execute(
     issueKey: string,
-    params: PaginationParams & { fetchAll?: boolean; maxItems?: number }
+    input: GetCommentsInput
   ): Promise<PaginatedResult<CommentWithUnknownFields>> {
-    const path = `/v3/issues/${issueKey}/comments`;
-    const first = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path, params);
-
-    if (!params.fetchAll) {
-      return {
-        items: first.data,
-        pagination: TrackerPaginator.buildMeta({
-          headers: first.headers,
-          pagesFetched: 1,
-          truncated: false,
-          hasError: false,
-          nextUrl: undefined, // вычисляется из Link заголовка first.headers
-          page: params.page,
-          perPage: params.perPage,
-        }),
-      };
+    // Курсор: один запрос по декодированному пути (perPage/expand уже вшиты в путь).
+    if (input.cursor !== undefined) {
+      const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.comments);
+      const resp = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path);
+      return TrackerPaginator.singlePage(resp, { tag: CURSOR_TAGS.comments });
     }
 
-    return TrackerPaginator.fetchAllPages<CommentWithUnknownFields>({
-      firstResponse: first,
-      requestNext: (p) => this.httpClient.getWithResponse(p),
-      maxItems: params.maxItems,
-    });
+    const path = `/v3/issues/${issueKey}/comments`;
+    const first = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path);
+
+    return input.fetchAll === true
+      ? TrackerPaginator.fetchAllPages<CommentWithUnknownFields>({
+          firstResponse: first,
+          requestNext: (p) => this.httpClient.getWithResponse(p),
+          tag: CURSOR_TAGS.comments,
+          maxItems: input.maxItems,
+        })
+      : TrackerPaginator.singlePage(first, { tag: CURSOR_TAGS.comments, perPage: input.perPage });
   }
 }
 ```
-
-> Точная разводка single-page/fetchAll и cache-key — этап 2 плана пагинации.
 
 ### Использование FileUploadUtil
 

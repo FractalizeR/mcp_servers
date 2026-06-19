@@ -219,17 +219,29 @@ return processed;   // { total, successful, failed, fieldsReturned }
 **Все list-эндпоинты пагинируются единообразно** через `TrackerPaginator`
 (`#tracker_api/utils`) + `getWithResponse`/`postWithResponse` (заголовки ответа).
 
-**Гибридный подход:**
-- по умолчанию — одна страница + метаданные (`pagination.hasNextPage`/`total`/...);
-  агент листает вручную через `page`;
+**⚠️ BREAKING CHANGE:** пагинация переведена на единый непрозрачный курсор; параметр
+`page` **удалён** из всех 10 list-инструментов.
+
+**Подход (cursor):**
+- по умолчанию — одна страница + `pagination`. Для следующей страницы агент передаёт
+  `pagination.nextCursor` в параметр `cursor` **того же** инструмента (чёрный ящик,
+  кодирует путь+perPage; выводится из `Link rel="next"`).
+- `cursor` несовместим с `perPage`/`fetchAll`/`maxItems`/`maxTotalItems`; в batch валиден
+  только при одном issueId.
+- `total`/`totalPages` отдаются **только** для seekable (queues/projects/find_issues,
+  `Link rel="seek"`); у cursor-эндпоинтов (changelog/comments/links/worklog/checklist) их нет.
 - `fetchAll=true` — полный обход по `Link rel="next"` с лимитами `maxItems` (500/цепочку)
   и `maxTotalItems` (1000/batch-ответ); обрезка → `pagination.truncated=true`.
+- Непагинируемые `components`/`attachments` — без блока `pagination` (все элементы за раз).
 
 **Для нового list-эндпоинта:**
-- Operation → `Promise<PaginatedResult<T>>`; single-page vs `fetchAllPages` по `fetchAll`.
-- Schema: подключи общие схемы `#common/schemas` (`FetchAllSchema`/`MaxItemsSchema`/
-  `PageSchema`/`PerPageSchema`) + `.refine(noPageFetchAllConflict, ...)`.
+- Operation → `Promise<PaginatedResult<T>>`; передавай `tag` (из `CURSOR_TAGS`) в
+  `singlePage`/`fetchAllPages`; ветка `cursor` → `CursorCodec.decode(cursor, tag)` + 1 запрос.
+- Schema: подключи общие схемы `#common/schemas` (`CursorSchema`/`FetchAllSchema`/
+  `MaxItemsSchema`/`MaxTotalItemsSchema`/`makePerPageSchema`) + `.refine(noCursorWithBulkParams)`
+  и (для batch) `.refine(cursorRequiresSingleIssue)`.
 - Tool: добавь `pagination` **аддитивно**, прежние ключи не меняй.
+- Непагинируемые эндпоинты: операцию вызывай без `tag`, пагин-параметры в схему не добавляй.
 - ⚠️ **Cache-key** обязан учитывать пагинационные параметры (или не кешировать при них).
 
 **Детали:** [src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md),

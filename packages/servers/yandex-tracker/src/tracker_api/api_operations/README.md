@@ -159,36 +159,49 @@ const issue = await this.withCache(cacheKey, async () => {
 List-операции возвращают `PaginatedResult<T> = { items: T[]; pagination: PaginationMeta }`
 вместо «голого» массива. Логику инкапсулирует `TrackerPaginator` (`#tracker_api/utils`),
 HTTP-заголовки даёт `getWithResponse`/`postWithResponse` (`@fractalizer/mcp-infrastructure`).
+Пагинация переведена на единый непрозрачный курсор; параметр `page` **удалён** (breaking).
 
 **Два механизма Трекера (определяет сервер, не клиент):**
 - **Link `rel="next"`** (cursor) — GET-коллекции (changelog, comments, worklog, links,
-  attachments, components, checklist, queues, projects). Идём по next-URL до исчерпания.
-- **Seekable** — POST `_search` (find_issues): `Link rel="next"` + `X-Total-Count`/`X-Total-Pages`.
-  Следуем Link, если он есть; иначе перебираем `page=1..X-Total-Pages`.
+  checklist, queues, projects). Идём по next-URL до исчерпания. `total`/`totalPages` НЕ
+  заполняются (нет seek).
+- **Seekable** — POST `_search` (find_issues), а также queues/projects: `Link rel="seek"`
+  даёт `X-Total-Count`/`X-Total-Pages`. find_issues: следуем `Link rel="next"`, если он
+  есть; иначе перебираем `page=1..X-Total-Pages` (внутренний fallback, наружу page не виден).
+- **Непагинируемые** — components/attachments: возвращают все элементы за один ответ,
+  `TrackerPaginator` не вызывают (нет `pagination` в выдаче).
 
-Проход по `Link rel="next"` — no-op там, где заголовка нет, поэтому единый механизм
-безопасен для всех list-эндпоинтов (`total`/`totalPages` заполняются только для seek).
+**Курсор (для каждого пагинируемого эндпоинта свой `tag` из `CURSOR_TAGS`):**
+- В ответе `pagination.nextCursor` = `CursorCodec.encode(next-путь, tag)` ⟺ есть `Link
+  rel="next"`. При получении `cursor` операция вызывает `CursorCodec.decode(cursor, tag)`
+  (битый/чужой курсор → `InvalidCursorError`) и делает один запрос по декодированному пути.
+- `perPage`/`expand` уже вшиты в путь курсора → повторно их не передаём (для GET).
 
 **Паттерн в операции (single GET):**
 ```typescript
-async execute(
-  key: string,
-  params: PaginationParams & { fetchAll?: boolean; maxItems?: number }
-): Promise<PaginatedResult<CommentWithUnknownFields>> {
-  const path = `/v3/issues/${key}/comments`;
-  const first = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path, params);
-  return params.fetchAll === true
-    ? TrackerPaginator.fetchAllPages({
-        firstResponse: first,
-        requestNext: (p) => this.httpClient.getWithResponse(p),
-        maxItems: params.maxItems,
-      })
-    : TrackerPaginator.singlePage(first, { page: params.page, perPage: params.perPage });
+async execute(key: string, input: GetCommentsInput): Promise<PaginatedResult<CommentWithUnknownFields>> {
+  if (input.cursor !== undefined) {
+    const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.comments);
+    const resp = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path);
+    return TrackerPaginator.singlePage(resp, { tag: CURSOR_TAGS.comments });
+  }
+  const path = this.buildPath(key, input);
+  const first = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path);
+  return input.fetchAll === true
+    ? TrackerPaginator.fetchAllPages({ firstResponse: first, requestNext: (p) => this.httpClient.getWithResponse(p), tag: CURSOR_TAGS.comments, maxItems: input.maxItems })
+    : TrackerPaginator.singlePage(first, { tag: CURSOR_TAGS.comments, perPage: input.perPage });
 }
 ```
 
+**find_issues (replay + хеш тела, R2):** курсор кодирует next-путь + sha256 канонического
+тела (`cursorExtra: bodyHash`). При возобновлении агент передаёт `cursor` + повторно
+критерии (query/filter/keys/queue/filterId/order); операция канонизирует их, считает хеш и
+сверяет с `extra` из курсора (mismatch → explicit error). `expand` в `Link` отсутствует —
+дописывается к пути отдельно. Тело POST повторяется при каждом запросе цепочки.
+
 **Batch:** каждая задача `ParallelExecutor` возвращает `PaginatedResult<T>`, итог —
 `BatchResult<string, PaginatedResult<T>>` (tool распаковывает через `paginatedFieldFilter`).
+В batch `cursor` валиден только при одном issueId (refine в схеме).
 
 **Защитные лимиты (в записях, не страницах — прокси токенов агента):**
 - `maxItems=500` — на одну цепочку пагинации (per-issue); при упоре `truncated=true`.
@@ -196,7 +209,7 @@ async execute(
 - `maxPages=100` — вторичный backstop от runaway.
 
 **⚠️ Кеш-аудит (обязательно для каждой list-операции):** cache-key либо включает
-пагинационные параметры (`page`/`perPage`/`fetchAll`/`maxItems`), либо при заданных
+пагинационные параметры (`cursor`/`perPage`/`fetchAll`/`maxItems`), либо при заданных
 пагинационных параметрах кеш не используется. Иначе первая страница «залипает» в кеше
 и `fetchAll` возвращает её же. Scroll API (>10000 результатов) — out of scope.
 
