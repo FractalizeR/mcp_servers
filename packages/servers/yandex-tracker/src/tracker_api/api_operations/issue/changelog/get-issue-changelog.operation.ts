@@ -127,6 +127,7 @@ export class GetIssueChangelogOperation extends BaseOperation {
       input.fetchAll === true ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
 
     const path = this.buildPath(issueKey, {
+      ...(input.page !== undefined ? { page: input.page } : {}),
       ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
     });
 
@@ -134,6 +135,7 @@ export class GetIssueChangelogOperation extends BaseOperation {
 
     if (input.fetchAll !== true) {
       const single = TrackerPaginator.singlePage(first, {
+        ...(input.page !== undefined ? { page: input.page } : {}),
         ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
       });
       this.logger.debug(`История изменений для ${issueKey}: ${single.items.length} записей`);

@@ -103,6 +103,24 @@ describe('GetIssueChangelogOperation (pagination)', () => {
     }
   });
 
+  it('single-page прокидывает page в endpoint и метаданные (регрессия)', async () => {
+    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog?page=2&perPage=50', [
+      makeEntry('1', 'TEST-1'),
+    ]);
+
+    const result = await operation.execute(['TEST-1'], { page: 2, perPage: 50 });
+
+    const first = result[0];
+    expect(first?.status).toBe('fulfilled');
+    if (first?.status === 'fulfilled') {
+      expect(first.value.pagination.page).toBe(2);
+      expect(first.value.pagination.perPage).toBe(50);
+    }
+    expect(httpClient.getRequestHistory()).toContainEqual(
+      expect.objectContaining({ path: '/v3/issues/TEST-1/changelog?page=2&perPage=50' })
+    );
+  });
+
   it('fetchAll обходит несколько страниц через Link rel=next', async () => {
     // Стартовая страница (perPage поднимается к 100 → path с query)
     httpClient.setResponse(
