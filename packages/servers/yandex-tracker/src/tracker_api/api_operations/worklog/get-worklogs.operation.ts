@@ -12,7 +12,12 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
-import { TrackerPaginator, DEFAULT_MAX_PER_PAGE } from '#tracker_api/utils/index.js';
+import {
+  TrackerPaginator,
+  DEFAULT_MAX_PER_PAGE,
+  ItemBudget,
+  DEFAULT_MAX_TOTAL_ITEMS,
+} from '#tracker_api/utils/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/index.js';
 import type { GetWorklogsInput } from '#tracker_api/dto/worklog/get-worklogs.input.js';
@@ -51,7 +56,8 @@ export class GetWorklogsOperation extends BaseOperation {
    */
   async execute(
     issueId: string,
-    input: GetWorklogsInput = {}
+    input: GetWorklogsInput = {},
+    budget?: ItemBudget
   ): Promise<PaginatedResult<WorklogWithUnknownFields>> {
     this.logger.info(`Получение записей времени задачи ${issueId}`);
 
@@ -66,8 +72,8 @@ export class GetWorklogsOperation extends BaseOperation {
           firstResponse: first,
           requestNext: (p) => this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(p),
           ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-          ...(input.page !== undefined ? { page: input.page } : {}),
           ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+          ...(budget !== undefined ? { budget } : {}),
         })
       : TrackerPaginator.singlePage<WorklogWithUnknownFields>(first, {
           page: input.page,
@@ -100,10 +106,15 @@ export class GetWorklogsOperation extends BaseOperation {
       `Получение записей времени для ${issueIds.length} задач параллельно: ${issueIds.join(', ')}`
     );
 
+    const budget =
+      input.fetchAll === true
+        ? new ItemBudget(input.maxTotalItems ?? DEFAULT_MAX_TOTAL_ITEMS)
+        : undefined;
+
     const operations = issueIds.map((issueId) => ({
       key: issueId,
       fn: async (): Promise<PaginatedResult<WorklogWithUnknownFields>> =>
-        this.execute(issueId, input),
+        this.execute(issueId, input, budget),
     }));
 
     return this.parallelExecutor.executeParallel(operations, 'get worklogs');

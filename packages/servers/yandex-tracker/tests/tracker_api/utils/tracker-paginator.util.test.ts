@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { HttpResponseEnvelope, ResponseHeaders } from '@fractalizer/mcp-infrastructure';
 import { TrackerPaginator, DEFAULT_MAX_ITEMS } from '#tracker_api/utils/tracker-paginator.util.js';
+import { ItemBudget } from '#tracker_api/utils/item-budget.util.js';
 
 /** Хелпер: собрать конверт ответа. */
 function envelope<T>(data: T[], headers: ResponseHeaders = {}): HttpResponseEnvelope<T[]> {
@@ -221,6 +222,45 @@ describe('TrackerPaginator', () => {
 
     it('дефолтный maxItems применяется', async () => {
       expect(DEFAULT_MAX_ITEMS).toBe(500);
+    });
+
+    it('общий budget ограничивает выдачу и truncated=true', async () => {
+      const budget = new ItemBudget(3);
+      const requestNext = vi.fn();
+
+      const result = await TrackerPaginator.fetchAllPages({
+        firstResponse: envelope([1, 2, 3, 4, 5], linkNext('/v3/items?page=2')),
+        requestNext,
+        budget,
+      });
+
+      // budget=3 режет первую же страницу до 3 записей
+      expect(result.items).toEqual([1, 2, 3]);
+      expect(result.pagination.truncated).toBe(true);
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(budget.remaining).toBe(0);
+      // обход остановлен — следующая страница не запрашивалась
+      expect(requestNext).not.toHaveBeenCalled();
+    });
+
+    it('budget делится между цепочками (вторая получает остаток)', async () => {
+      const budget = new ItemBudget(5);
+
+      const first = await TrackerPaginator.fetchAllPages({
+        firstResponse: envelope([1, 2, 3]),
+        requestNext: vi.fn(),
+        budget,
+      });
+      const second = await TrackerPaginator.fetchAllPages({
+        firstResponse: envelope([4, 5, 6, 7]),
+        requestNext: vi.fn(),
+        budget,
+      });
+
+      expect(first.items).toEqual([1, 2, 3]);
+      expect(second.items).toEqual([4, 5]); // остаток бюджета = 2
+      expect(second.pagination.truncated).toBe(true);
+      expect(budget.remaining).toBe(0);
     });
   });
 

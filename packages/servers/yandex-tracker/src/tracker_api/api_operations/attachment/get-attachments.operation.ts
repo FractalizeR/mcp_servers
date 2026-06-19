@@ -14,7 +14,12 @@ import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
-import { TrackerPaginator, DEFAULT_MAX_PER_PAGE } from '#tracker_api/utils/index.js';
+import {
+  TrackerPaginator,
+  DEFAULT_MAX_PER_PAGE,
+  ItemBudget,
+  DEFAULT_MAX_TOTAL_ITEMS,
+} from '#tracker_api/utils/index.js';
 import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/index.js';
 import type { GetAttachmentsInput } from '#tracker_api/dto/attachment/get-attachments.input.js';
@@ -50,38 +55,61 @@ export class GetAttachmentsOperation extends BaseOperation {
    */
   async execute(
     issueId: string,
-    input: GetAttachmentsInput = {}
+    input: GetAttachmentsInput = {},
+    budget?: ItemBudget
+  ): Promise<PaginatedResult<AttachmentWithUnknownFields>> {
+    const hasPaginationParams =
+      input.page !== undefined ||
+      input.perPage !== undefined ||
+      input.fetchAll !== undefined ||
+      input.maxItems !== undefined;
+
+    // Кеш применяем только к «базовому» запросу без пагинационных параметров,
+    // под каноническим ключом list:${issueId} — его инвалидируют upload/delete.
+    // Иначе разные срезы пагинации схлопывались бы в один ответ, а точечная
+    // инвалидация (exact-key delete) не попадала бы по суффиксному ключу (stale).
+    if (!hasPaginationParams) {
+      const cacheKey = EntityCacheKey.createKey(EntityType.ATTACHMENT, `list:${issueId}`);
+      return this.withCache(cacheKey, async () => this.fetch(issueId, input, budget));
+    }
+
+    return this.fetch(issueId, input, budget);
+  }
+
+  /**
+   * Выполнить HTTP-запрос(ы) и собрать `PaginatedResult` (без кеша).
+   */
+  private async fetch(
+    issueId: string,
+    input: GetAttachmentsInput,
+    budget?: ItemBudget
   ): Promise<PaginatedResult<AttachmentWithUnknownFields>> {
     const fetchAll = input.fetchAll === true;
     const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
-    const cacheSuffix = `list:${issueId}:p=${input.page ?? ''}:pp=${effectivePerPage ?? ''}:all=${fetchAll}:mi=${input.maxItems ?? ''}`;
-    const cacheKey = EntityCacheKey.createKey(EntityType.ATTACHMENT, cacheSuffix);
 
-    return this.withCache(cacheKey, async () => {
-      this.logger.debug(`GetAttachmentsOperation: получение списка файлов для ${issueId}`);
+    this.logger.debug(`GetAttachmentsOperation: получение списка файлов для ${issueId}`);
 
-      const path = this.buildPath(issueId, input.page, effectivePerPage);
-      const first = await this.httpClient.getWithResponse<AttachmentWithUnknownFields[]>(path);
+    const path = this.buildPath(issueId, input.page, effectivePerPage);
+    const first = await this.httpClient.getWithResponse<AttachmentWithUnknownFields[]>(path);
 
-      const result = fetchAll
-        ? await TrackerPaginator.fetchAllPages<AttachmentWithUnknownFields>({
-            firstResponse: first,
-            requestNext: (p) => this.httpClient.getWithResponse<AttachmentWithUnknownFields[]>(p),
-            ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-            ...(input.page !== undefined ? { page: input.page } : {}),
-            ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
-          })
-        : TrackerPaginator.singlePage<AttachmentWithUnknownFields>(first, {
-            page: input.page,
-            perPage: input.perPage,
-          });
+    const result = fetchAll
+      ? await TrackerPaginator.fetchAllPages<AttachmentWithUnknownFields>({
+          firstResponse: first,
+          requestNext: (p) => this.httpClient.getWithResponse<AttachmentWithUnknownFields[]>(p),
+          ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
+          ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+          ...(budget !== undefined ? { budget } : {}),
+        })
+      : TrackerPaginator.singlePage<AttachmentWithUnknownFields>(first, {
+          page: input.page,
+          perPage: input.perPage,
+        });
 
-      this.logger.info(
-        `GetAttachmentsOperation: получено ${result.items.length} файлов для ${issueId}`
-      );
+    this.logger.info(
+      `GetAttachmentsOperation: получено ${result.items.length} файлов для ${issueId}`
+    );
 
-      return result;
-    });
+    return result;
   }
 
   /**
@@ -103,10 +131,15 @@ export class GetAttachmentsOperation extends BaseOperation {
     const issuesList = issueIds.join(', ');
     this.logger.info(`Получение файлов для ${issueIds.length} задач параллельно: ${issuesList}`);
 
+    const budget =
+      input.fetchAll === true
+        ? new ItemBudget(input.maxTotalItems ?? DEFAULT_MAX_TOTAL_ITEMS)
+        : undefined;
+
     const operations = issueIds.map((issueId) => ({
       key: issueId,
       fn: async (): Promise<PaginatedResult<AttachmentWithUnknownFields>> =>
-        this.execute(issueId, input),
+        this.execute(issueId, input, budget),
     }));
 
     return this.parallelExecutor.executeParallel(operations, 'get attachments');

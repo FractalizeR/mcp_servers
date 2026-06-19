@@ -17,6 +17,7 @@ import { parseLinkHeader } from '@fractalizer/mcp-infrastructure';
 import type { HttpResponseEnvelope, ResponseHeaders } from '@fractalizer/mcp-infrastructure';
 
 import type { PaginatedResult, PaginationMeta } from '../entities/common/index.js';
+import type { ItemBudget } from './item-budget.util.js';
 
 /** Защитный лимит по записям (прокси токенов агента). */
 export const DEFAULT_MAX_ITEMS = 500;
@@ -69,10 +70,16 @@ export interface FetchAllPagesOptions<T> {
   readonly maxItems?: number;
   /** Лимит по страницам (дефолт `DEFAULT_MAX_PAGES`). */
   readonly maxPages?: number;
-  /** Номер стартовой страницы — прокидывается в метаданные. */
-  readonly page?: number;
   /** Размер страницы — прокидывается в метаданные. */
   readonly perPage?: number;
+  /**
+   * Общий бюджет записей на весь batch-ответ (необязателен).
+   *
+   * Если задан — цепочка берёт не больше `min(maxItems, budget.remaining)`
+   * записей и атомарно списывает собранное. По исчерпании бюджета цепочка
+   * останавливается с `truncated=true`.
+   */
+  readonly budget?: ItemBudget;
   /** Колбэк для логирования частичного отказа (warning). */
   readonly onError?: (error: unknown, pagesFetched: number) => void;
 }
@@ -168,14 +175,38 @@ export class TrackerPaginator {
   public static async fetchAllPages<T>(opts: FetchAllPagesOptions<T>): Promise<PaginatedResult<T>> {
     const maxItems = opts.maxItems ?? DEFAULT_MAX_ITEMS;
     const maxPages = opts.maxPages ?? DEFAULT_MAX_PAGES;
+    const budget = opts.budget;
 
-    const items: T[] = [...opts.firstResponse.data];
+    const items: T[] = [];
+    let droppedByLimit = false;
+
+    // Принять записи страницы с учётом per-chain `maxItems` и общего `budget`.
+    // Списание из бюджета синхронно (между чтением и consume нет await),
+    // поэтому параллельные цепочки суммарно не превышают общий потолок.
+    const accept = (data: T[]): void => {
+      const chainRoom = maxItems - items.length;
+      const budgetRoom = budget !== undefined ? budget.remaining : Number.POSITIVE_INFINITY;
+      const room = Math.max(0, Math.min(chainRoom, budgetRoom));
+      const take = Math.min(data.length, room);
+      if (take > 0) {
+        items.push(...data.slice(0, take));
+        budget?.consume(take);
+      }
+      if (take < data.length) {
+        droppedByLimit = true;
+      }
+    };
+
+    accept(opts.firstResponse.data);
     let pagesFetched = 1;
     let headers = opts.firstResponse.headers;
     let next = TrackerPaginator.nextUrl(headers);
     let hasError = false;
 
-    while (next !== undefined && items.length < maxItems && pagesFetched < maxPages) {
+    const limitReached = (): boolean =>
+      items.length >= maxItems || (budget !== undefined && budget.remaining <= 0);
+
+    while (next !== undefined && !limitReached() && pagesFetched < maxPages) {
       const path = TrackerPaginator.stripHost(next);
       if (path === undefined) {
         next = undefined;
@@ -191,31 +222,29 @@ export class TrackerPaginator {
         break;
       }
 
-      items.push(...response.data);
+      accept(response.data);
       pagesFetched += 1;
       headers = response.headers;
       next = TrackerPaginator.nextUrl(headers);
     }
 
-    // Ещё есть next, но мы остановились по maxItems/maxPages.
-    let truncated = next !== undefined;
-    let finalItems = items;
-    if (items.length > maxItems) {
-      finalItems = items.slice(0, maxItems);
-      truncated = true;
-    }
+    // truncated, если остались данные (next) или мы отбросили часть страницы
+    // по защитному лимиту (maxItems/budget).
+    const truncated = next !== undefined || droppedByLimit;
 
+    // ВАЖНО: стартовый `page` НЕ прокидываем в метаданные. После полного обхода
+    // эвристика `page*perPage < total` со стартовой страницей дала бы ложный
+    // hasNextPage=true; наличие следующих данных отражают `nextUrl`/`truncated`.
     const meta = TrackerPaginator.buildMeta({
       headers,
       pagesFetched,
       truncated,
       hasError,
       nextUrl: next,
-      ...(opts.page !== undefined ? { page: opts.page } : {}),
       ...(opts.perPage !== undefined ? { perPage: opts.perPage } : {}),
     });
 
-    return { items: finalItems, pagination: meta };
+    return { items, pagination: meta };
   }
 
   /**

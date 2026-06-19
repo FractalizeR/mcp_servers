@@ -19,7 +19,12 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { EntityCacheKey, EntityType, ParallelExecutor } from '@fractalizer/mcp-infrastructure';
-import { TrackerPaginator, DEFAULT_MAX_PER_PAGE } from '#tracker_api/utils/index.js';
+import {
+  TrackerPaginator,
+  DEFAULT_MAX_PER_PAGE,
+  ItemBudget,
+  DEFAULT_MAX_TOTAL_ITEMS,
+} from '#tracker_api/utils/index.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/index.js';
 import type { GetIssueLinksInput } from '#tracker_api/dto/link/get-issue-links.input.js';
@@ -85,42 +90,68 @@ export class GetIssueLinksOperation extends BaseOperation {
       `Получение связей для ${issueIds.length} задач параллельно: ${issueIds.join(', ')}`
     );
 
-    const fetchAll = input.fetchAll === true;
-    const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
+    const hasPaginationParams =
+      input.page !== undefined ||
+      input.perPage !== undefined ||
+      input.fetchAll !== undefined ||
+      input.maxItems !== undefined;
 
-    // Создаём операции с кешированием для каждой задачи
+    // Общий бюджет записей на весь batch-ответ (только в режиме fetchAll).
+    const budget =
+      input.fetchAll === true
+        ? new ItemBudget(input.maxTotalItems ?? DEFAULT_MAX_TOTAL_ITEMS)
+        : undefined;
+
+    // Создаём операции для каждой задачи. Кеш применяем только к «базовому»
+    // запросу без пагинационных параметров, под каноническим ключом
+    // ${issueId}/links — его инвалидируют create/delete-link. Иначе суффиксный
+    // ключ не попал бы под exact-key delete (stale cache).
     const operations = issueIds.map((issueId) => ({
       key: issueId,
       fn: async (): Promise<PaginatedResult<LinkWithUnknownFields>> => {
-        const cacheSuffix = `${issueId}/links:p=${input.page ?? ''}:pp=${effectivePerPage ?? ''}:all=${fetchAll}:mi=${input.maxItems ?? ''}`;
-        const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, cacheSuffix);
+        if (!hasPaginationParams) {
+          const cacheKey = EntityCacheKey.createKey(EntityType.ISSUE, `${issueId}/links`);
+          return this.withCache(cacheKey, async () => this.fetch(issueId, input, budget));
+        }
 
-        return this.withCache(cacheKey, async () => {
-          const path = this.buildPath(issueId, input.page, effectivePerPage);
-          const first = await this.httpClient.getWithResponse<LinkWithUnknownFields[]>(path);
-
-          const result = fetchAll
-            ? await TrackerPaginator.fetchAllPages<LinkWithUnknownFields>({
-                firstResponse: first,
-                requestNext: (p) => this.httpClient.getWithResponse<LinkWithUnknownFields[]>(p),
-                ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-                ...(input.page !== undefined ? { page: input.page } : {}),
-                ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
-              })
-            : TrackerPaginator.singlePage<LinkWithUnknownFields>(first, {
-                page: input.page,
-                perPage: input.perPage,
-              });
-
-          this.logger.debug(`Получено ${result.items.length} связей для задачи ${issueId}`);
-
-          return result;
-        });
+        return this.fetch(issueId, input, budget);
       },
     }));
 
     // Выполняем через ParallelExecutor (централизованный throttling)
     return this.parallelExecutor.executeParallel(operations, 'get issue links');
+  }
+
+  /**
+   * Выполнить HTTP-запрос(ы) и собрать `PaginatedResult` для одной задачи (без кеша).
+   */
+  private async fetch(
+    issueId: string,
+    input: GetIssueLinksInput,
+    budget?: ItemBudget
+  ): Promise<PaginatedResult<LinkWithUnknownFields>> {
+    const fetchAll = input.fetchAll === true;
+    const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
+
+    const path = this.buildPath(issueId, input.page, effectivePerPage);
+    const first = await this.httpClient.getWithResponse<LinkWithUnknownFields[]>(path);
+
+    const result = fetchAll
+      ? await TrackerPaginator.fetchAllPages<LinkWithUnknownFields>({
+          firstResponse: first,
+          requestNext: (p) => this.httpClient.getWithResponse<LinkWithUnknownFields[]>(p),
+          ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
+          ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+          ...(budget !== undefined ? { budget } : {}),
+        })
+      : TrackerPaginator.singlePage<LinkWithUnknownFields>(first, {
+          page: input.page,
+          perPage: input.perPage,
+        });
+
+    this.logger.debug(`Получено ${result.items.length} связей для задачи ${issueId}`);
+
+    return result;
   }
 
   /**

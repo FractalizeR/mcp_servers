@@ -44,7 +44,6 @@ export class GetQueuesOperation extends BaseOperation {
         firstResponse: first,
         requestNext: (path) => this.httpClient.getWithResponse<QueueWithUnknownFields[]>(path),
         ...(maxItems !== undefined ? { maxItems } : {}),
-        page,
         perPage: effectivePerPage,
         onError: (error, pagesFetched) => {
           this.logger.warn('Частичный отказ при обходе страниц очередей', {

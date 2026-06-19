@@ -49,7 +49,6 @@ export class GetProjectsOperation extends BaseOperation {
         firstResponse: first,
         requestNext: (path) => this.httpClient.getWithResponse<ProjectWithUnknownFields[]>(path),
         ...(maxItems !== undefined ? { maxItems } : {}),
-        ...(page !== undefined ? { page } : {}),
         ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
         onError: (error, pagesFetched) => {
           this.logger.warn('Частичный отказ при обходе страниц проектов', {

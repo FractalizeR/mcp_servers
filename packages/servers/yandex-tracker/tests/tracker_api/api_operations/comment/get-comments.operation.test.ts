@@ -227,5 +227,33 @@ describe('GetCommentsOperation', () => {
         'Получение комментариев для 2 задач параллельно: TEST-1, TEST-2'
       );
     });
+
+    it('maxTotalItems ограничивает суммарную выдачу batch-ответа (fetchAll)', async () => {
+      // Две задачи по 2 комментария; общий потолок 3 → суммарно ровно 3.
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments?perPage=500', [
+        makeComment('1'),
+        makeComment('2'),
+      ]);
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-2/comments?perPage=500', [
+        makeComment('3'),
+        makeComment('4'),
+      ]);
+
+      const result = await operation.executeMany(['TEST-1', 'TEST-2'], {
+        fetchAll: true,
+        maxTotalItems: 3,
+      });
+
+      const totalItems = result.reduce(
+        (sum, r) => sum + (r.status === 'fulfilled' ? r.value.items.length : 0),
+        0
+      );
+      expect(totalItems).toBe(3);
+      // одна из задач обрезана по исчерпанию общего бюджета
+      const truncatedCount = result.filter(
+        (r) => r.status === 'fulfilled' && r.value.pagination.truncated
+      ).length;
+      expect(truncatedCount).toBe(1);
+    });
   });
 });

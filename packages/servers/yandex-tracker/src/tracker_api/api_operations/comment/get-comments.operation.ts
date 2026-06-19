@@ -12,7 +12,7 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
-import { TrackerPaginator } from '#tracker_api/utils/index.js';
+import { TrackerPaginator, ItemBudget, DEFAULT_MAX_TOTAL_ITEMS } from '#tracker_api/utils/index.js';
 import type { GetCommentsInput } from '#tracker_api/dto/index.js';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/index.js';
@@ -55,7 +55,8 @@ export class GetCommentsOperation extends BaseOperation {
    */
   async execute(
     issueId: string,
-    input: GetCommentsInput = {}
+    input: GetCommentsInput = {},
+    budget?: ItemBudget
   ): Promise<PaginatedResult<CommentWithUnknownFields>> {
     this.logger.info(`Получение комментариев задачи ${issueId}`);
 
@@ -85,8 +86,8 @@ export class GetCommentsOperation extends BaseOperation {
                 await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(p)
               ),
             ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-            ...(input.page !== undefined ? { page: input.page } : {}),
             ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+            ...(budget !== undefined ? { budget } : {}),
             onError: (error, pagesFetched) => {
               this.logger.warn(
                 `Частичный отказ при обходе комментариев задачи ${issueId} ` +
@@ -171,12 +172,18 @@ export class GetCommentsOperation extends BaseOperation {
       `Получение комментариев для ${issueIds.length} задач параллельно: ${issueIds.join(', ')}`
     );
 
+    // Общий бюджет записей на весь batch-ответ (только в режиме fetchAll).
+    const budget =
+      input.fetchAll === true
+        ? new ItemBudget(input.maxTotalItems ?? DEFAULT_MAX_TOTAL_ITEMS)
+        : undefined;
+
     // Создаём операции для каждой задачи
     const operations = issueIds.map((issueId) => ({
       key: issueId,
       fn: async (): Promise<PaginatedResult<CommentWithUnknownFields>> => {
         // Вызываем существующий метод execute() для каждой задачи
-        return this.execute(issueId, input);
+        return this.execute(issueId, input, budget);
       },
     }));
 

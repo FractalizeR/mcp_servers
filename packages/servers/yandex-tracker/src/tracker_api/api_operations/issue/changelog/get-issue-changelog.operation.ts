@@ -23,7 +23,12 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
-import { TrackerPaginator, DEFAULT_MAX_PER_PAGE } from '#tracker_api/utils/index.js';
+import {
+  TrackerPaginator,
+  DEFAULT_MAX_PER_PAGE,
+  ItemBudget,
+  DEFAULT_MAX_TOTAL_ITEMS,
+} from '#tracker_api/utils/index.js';
 import type { ChangelogEntryWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
 import type { GetIssueChangelogInputDto } from '#tracker_api/dto/issue/get-issue-changelog-input.dto.js';
@@ -89,11 +94,17 @@ export class GetIssueChangelogOperation extends BaseOperation {
       `Получение истории изменений для ${issueKeys.length} задач: ${issueKeys.join(', ')}`
     );
 
+    // Общий бюджет записей на весь batch-ответ (только в режиме fetchAll).
+    const budget =
+      input.fetchAll === true
+        ? new ItemBudget(input.maxTotalItems ?? DEFAULT_MAX_TOTAL_ITEMS)
+        : undefined;
+
     // Создаём операции без кеширования (история часто меняется)
     const operations = issueKeys.map((issueKey) => ({
       key: issueKey,
       fn: (): Promise<PaginatedResult<ChangelogEntryWithUnknownFields>> =>
-        this.fetchChangelog(issueKey, input),
+        this.fetchChangelog(issueKey, input, budget),
     }));
 
     // Выполняем через ParallelExecutor (централизованный throttling)
@@ -108,14 +119,14 @@ export class GetIssueChangelogOperation extends BaseOperation {
    */
   private async fetchChangelog(
     issueKey: string,
-    input: GetIssueChangelogInputDto
+    input: GetIssueChangelogInputDto,
+    budget?: ItemBudget
   ): Promise<PaginatedResult<ChangelogEntryWithUnknownFields>> {
     // В режиме fetchAll поднимаем perPage к рекомендуемому максимуму (меньше round-trip'ов).
     const effectivePerPage =
       input.fetchAll === true ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
 
     const path = this.buildPath(issueKey, {
-      ...(input.page !== undefined ? { page: input.page } : {}),
       ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
     });
 
@@ -123,7 +134,6 @@ export class GetIssueChangelogOperation extends BaseOperation {
 
     if (input.fetchAll !== true) {
       const single = TrackerPaginator.singlePage(first, {
-        ...(input.page !== undefined ? { page: input.page } : {}),
         ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
       });
       this.logger.debug(`История изменений для ${issueKey}: ${single.items.length} записей`);
@@ -134,8 +144,8 @@ export class GetIssueChangelogOperation extends BaseOperation {
       firstResponse: first,
       requestNext: (p) => this.httpClient.getWithResponse<ChangelogEntryWithUnknownFields[]>(p),
       ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-      ...(input.page !== undefined ? { page: input.page } : {}),
       ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+      ...(budget !== undefined ? { budget } : {}),
       onError: (error, pagesFetched) =>
         this.logger.warn(`Частичный отказ при обходе истории ${issueKey}`, {
           error,

@@ -154,6 +154,54 @@ const issue = await this.withCache(cacheKey, async () => {
 
 ---
 
+## 📊 Пагинация list-операций
+
+List-операции возвращают `PaginatedResult<T> = { items: T[]; pagination: PaginationMeta }`
+вместо «голого» массива. Логику инкапсулирует `TrackerPaginator` (`#tracker_api/utils`),
+HTTP-заголовки даёт `getWithResponse`/`postWithResponse` (`@fractalizer/mcp-infrastructure`).
+
+**Два механизма Трекера (определяет сервер, не клиент):**
+- **Link `rel="next"`** (cursor) — GET-коллекции (changelog, comments, worklog, links,
+  attachments, components, checklist, queues, projects). Идём по next-URL до исчерпания.
+- **Seekable** — POST `_search` (find_issues): `Link rel="next"` + `X-Total-Count`/`X-Total-Pages`.
+  Следуем Link, если он есть; иначе перебираем `page=1..X-Total-Pages`.
+
+Проход по `Link rel="next"` — no-op там, где заголовка нет, поэтому единый механизм
+безопасен для всех list-эндпоинтов (`total`/`totalPages` заполняются только для seek).
+
+**Паттерн в операции (single GET):**
+```typescript
+async execute(
+  key: string,
+  params: PaginationParams & { fetchAll?: boolean; maxItems?: number }
+): Promise<PaginatedResult<CommentWithUnknownFields>> {
+  const path = `/v3/issues/${key}/comments`;
+  const first = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path, params);
+  return params.fetchAll === true
+    ? TrackerPaginator.fetchAllPages({
+        firstResponse: first,
+        requestNext: (p) => this.httpClient.getWithResponse(p),
+        maxItems: params.maxItems,
+      })
+    : TrackerPaginator.singlePage(first, { page: params.page, perPage: params.perPage });
+}
+```
+
+**Batch:** каждая задача `ParallelExecutor` возвращает `PaginatedResult<T>`, итог —
+`BatchResult<string, PaginatedResult<T>>` (tool распаковывает через `paginatedFieldFilter`).
+
+**Защитные лимиты (в записях, не страницах — прокси токенов агента):**
+- `maxItems=500` — на одну цепочку пагинации (per-issue); при упоре `truncated=true`.
+- `maxTotalItems=1000` — общий потолок на весь batch-ответ инструмента.
+- `maxPages=100` — вторичный backstop от runaway.
+
+**⚠️ Кеш-аудит (обязательно для каждой list-операции):** cache-key либо включает
+пагинационные параметры (`page`/`perPage`/`fetchAll`/`maxItems`), либо при заданных
+пагинационных параметрах кеш не используется. Иначе первая страница «залипает» в кеше
+и `fetchAll` возвращает её же. Scroll API (>10000 результатов) — out of scope.
+
+---
+
 ## 📋 Чек-лист создания Operation
 
 - [ ] Создать файл `src/tracker_api/api_operations/{feature}/{name}.operation.ts`

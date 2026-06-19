@@ -7,6 +7,7 @@ import { IssueKeysSchema, FieldsSchema } from '#common/schemas/index.js';
 import {
   FetchAllSchema,
   MaxItemsSchema,
+  MaxTotalItemsSchema,
   PageSchema,
   PerPageSchema,
   noPageFetchAllConflict,
@@ -43,6 +44,9 @@ export const GetWorklogsParamsSchema = z
 
     /** Максимум записей на одну задачу при fetchAll=true. */
     maxItems: MaxItemsSchema,
+
+    /** Общий потолок записей на весь batch-ответ при fetchAll=true (опционально) */
+    maxTotalItems: MaxTotalItemsSchema,
   })
   .refine(noPageFetchAllConflict, {
     message: PAGINATION_CONFLICT_MESSAGE,

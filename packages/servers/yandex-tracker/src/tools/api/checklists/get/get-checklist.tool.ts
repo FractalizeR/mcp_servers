@@ -45,7 +45,7 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, fields, page, perPage, fetchAll, maxItems } = validation.data;
+    const { issueIds, fields, page, perPage, fetchAll, maxItems, maxTotalItems } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -62,6 +62,7 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
         ...(perPage !== undefined ? { perPage } : {}),
         ...(fetchAll !== undefined ? { fetchAll } : {}),
         ...(maxItems !== undefined ? { maxItems } : {}),
+        ...(maxTotalItems !== undefined ? { maxTotalItems } : {}),
       });
 
       // 4. Обработка результатов: фильтрация полей + проброс пагинации

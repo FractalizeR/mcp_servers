@@ -10,6 +10,7 @@ import {
   PerPageSchema,
   FetchAllSchema,
   MaxItemsSchema,
+  MaxTotalItemsSchema,
   noPageFetchAllConflict,
   PAGINATION_CONFLICT_MESSAGE,
 } from '#common/schemas/index.js';
@@ -45,6 +46,9 @@ export const GetIssueChangelogParamsSchema = z
      * Защитный лимит по количеству записей на одну задачу при fetchAll=true.
      */
     maxItems: MaxItemsSchema,
+
+    /** Общий потолок записей на весь batch-ответ при fetchAll=true (опционально) */
+    maxTotalItems: MaxTotalItemsSchema,
 
     /**
      * Опциональный массив полей для фильтрации ответа

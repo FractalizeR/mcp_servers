@@ -10,6 +10,7 @@ import {
   PerPageSchema,
   FetchAllSchema,
   MaxItemsSchema,
+  MaxTotalItemsSchema,
   noPageFetchAllConflict,
   PAGINATION_CONFLICT_MESSAGE,
 } from '#common/schemas/index.js';
@@ -48,6 +49,9 @@ export const GetChecklistParamsSchema = z
 
     /** Максимум записей на задачу при fetchAll=true (по умолчанию 500). */
     maxItems: MaxItemsSchema,
+
+    /** Общий потолок записей на весь batch-ответ при fetchAll=true (опционально) */
+    maxTotalItems: MaxTotalItemsSchema,
   })
   .refine(noPageFetchAllConflict, {
     message: PAGINATION_CONFLICT_MESSAGE,

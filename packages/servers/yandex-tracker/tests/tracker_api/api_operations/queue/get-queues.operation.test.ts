@@ -137,5 +137,19 @@ describe('GetQueuesOperation', () => {
       expect(result.pagination.truncated).toBe(true);
       expect(result.pagination.hasNextPage).toBe(true);
     });
+
+    it('не выставляет ложный hasNextPage при X-Total-Count после полного обхода', async () => {
+      // Регрессия: стартовый page=1 не должен прокидываться в buildMeta —
+      // иначе hasMoreByTotal (1*100 < 150) дал бы ложный hasNextPage=true.
+      const page = createQueueListFixture(2);
+      httpClient.setResponse('GET', '/v3/queues?perPage=100&page=1', page, {
+        'x-total-count': '150',
+      });
+
+      const result = await operation.execute({ fetchAll: true });
+
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+    });
   });
 });

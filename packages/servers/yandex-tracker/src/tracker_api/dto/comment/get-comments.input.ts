@@ -27,4 +27,11 @@ export interface GetCommentsInput extends PaginationParams {
    * `pagination.truncated=true`.
    */
   maxItems?: number | undefined;
+  /**
+   * Общий потолок записей на весь batch-ответ при `fetchAll=true`.
+   *
+   * Дефолт применяет операция (`DEFAULT_MAX_TOTAL_ITEMS`). По достижении
+   * оставшиеся задачи отдают только собранное с `pagination.truncated=true`.
+   */
+  maxTotalItems?: number | undefined;
 }

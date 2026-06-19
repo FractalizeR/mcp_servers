@@ -82,6 +82,35 @@ describe('GetAttachmentsOperation', () => {
     it('пробрасывает ошибку API', async () => {
       await expect(operation.execute('TEST-404')).rejects.toThrow();
     });
+
+    it('кеширует базовый запрос под каноническим ключом list:{issueId}', async () => {
+      httpClient.setResponse(
+        'GET',
+        '/v2/issues/TEST-1/attachments',
+        createAttachmentListFixture(1)
+      );
+
+      await operation.execute('TEST-1');
+
+      // ключ кеша не зависит от пагинации → совпадает с инвалидацией upload/delete
+      expect(mockCacheManager.set).toHaveBeenCalledTimes(1);
+      const cacheKey = (mockCacheManager.set as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+      expect(cacheKey).toContain('list:TEST-1');
+      expect(cacheKey).not.toMatch(/p=|pp=|all=|mi=/);
+    });
+
+    it('при заданных пагинационных параметрах кеш не используется', async () => {
+      httpClient.setResponse(
+        'GET',
+        '/v2/issues/TEST-1/attachments?page=2',
+        createAttachmentListFixture(1)
+      );
+
+      await operation.execute('TEST-1', { page: 2 });
+
+      expect(mockCacheManager.get).not.toHaveBeenCalled();
+      expect(mockCacheManager.set).not.toHaveBeenCalled();
+    });
   });
 
   describe('execute (fetchAll)', () => {

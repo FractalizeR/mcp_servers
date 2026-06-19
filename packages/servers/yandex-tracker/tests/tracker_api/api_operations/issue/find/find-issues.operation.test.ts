@@ -194,5 +194,49 @@ describe('FindIssuesOperation (pagination)', () => {
       expect(result.pagination.pagesFetched).toBe(1);
       expect(result.pagination.fetchedAll).toBe(true);
     });
+
+    it('Link только с rel=seek (без next) → fallback на X-Total-Pages', async () => {
+      // Регрессия: проверяем rel="next", а не наличие любого Link. Иначе
+      // cursor-обход вернул бы одну страницу, минуя перебор по X-Total-Pages.
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=100', [mockIssue], {
+        link: '<https://api.tracker.yandex.net/v3/issues/_search?{&page}>; rel="seek"',
+        'x-total-pages': '2',
+      });
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=100&page=2', [
+        { ...mockIssue, key: 'TEST-124' },
+      ]);
+
+      const result = await operation.execute({ query: 'status: open', fetchAll: true });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.pagination.pagesFetched).toBe(2);
+    });
+
+    it('прокидывает expand на страницы 2..N в page-режиме', async () => {
+      httpClient.setResponse(
+        'POST',
+        '/v3/issues/_search?perPage=100&expand=transitions',
+        [mockIssue],
+        {
+          'x-total-pages': '2',
+        }
+      );
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=100&page=2&expand=transitions', [
+        { ...mockIssue, key: 'TEST-124' },
+      ]);
+
+      const result = await operation.execute({
+        query: 'status: open',
+        fetchAll: true,
+        expand: ['transitions'],
+      });
+
+      expect(result.items).toHaveLength(2);
+      expect(httpClient.getRequestHistory()).toContainEqual(
+        expect.objectContaining({
+          path: '/v3/issues/_search?perPage=100&page=2&expand=transitions',
+        })
+      );
+    });
   });
 });

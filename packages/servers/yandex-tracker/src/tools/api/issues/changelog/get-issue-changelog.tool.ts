@@ -52,7 +52,7 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueKeys, fields, page, perPage, fetchAll, maxItems } = validation.data;
+    const { issueKeys, fields, page, perPage, fetchAll, maxItems, maxTotalItems } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -69,6 +69,7 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
         ...(perPage !== undefined && { perPage }),
         ...(fetchAll !== undefined && { fetchAll }),
         ...(maxItems !== undefined && { maxItems }),
+        ...(maxTotalItems !== undefined && { maxTotalItems }),
       });
 
       // 4. Обработка результатов через BatchResultProcessor

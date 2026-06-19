@@ -22,4 +22,11 @@ export interface GetWorklogsInput {
 
   /** Максимум записей на одну цепочку при `fetchAll=true` (дефолт применяет паджинатор). */
   maxItems?: number | undefined;
+  /**
+   * Общий потолок записей на весь batch-ответ при `fetchAll=true`.
+   *
+   * Дефолт применяет операция (`DEFAULT_MAX_TOTAL_ITEMS`). По достижении
+   * оставшиеся задачи отдают только собранное с `pagination.truncated=true`.
+   */
+  maxTotalItems?: number | undefined;
 }

@@ -11,6 +11,7 @@ import {
   makePerPageSchema,
   FetchAllSchema,
   MaxItemsSchema,
+  MaxTotalItemsSchema,
   noPageFetchAllConflict,
   PAGINATION_CONFLICT_MESSAGE,
 } from '#common/schemas/index.js';
@@ -46,6 +47,9 @@ export const GetCommentsParamsSchema = z
      * Максимум комментариев на одну задачу при fetchAll=true (опционально)
      */
     maxItems: MaxItemsSchema,
+
+    /** Общий потолок записей на весь batch-ответ при fetchAll=true (опционально) */
+    maxTotalItems: MaxTotalItemsSchema,
 
     /**
      * Параметр expand для включения дополнительных данных (опционально)

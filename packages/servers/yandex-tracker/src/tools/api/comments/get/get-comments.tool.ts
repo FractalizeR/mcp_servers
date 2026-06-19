@@ -45,7 +45,8 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, perPage, page, fetchAll, maxItems, expand, fields } = validation.data;
+    const { issueIds, perPage, page, fetchAll, maxItems, maxTotalItems, expand, fields } =
+      validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -62,6 +63,7 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
         page,
         fetchAll,
         maxItems,
+        maxTotalItems,
         expand: expand?.join(','),
       });
 

@@ -18,6 +18,7 @@ import {
   TrackerPaginator,
   DEFAULT_MAX_PER_PAGE,
 } from '#tracker_api/utils/tracker-paginator.util.js';
+import { ItemBudget, DEFAULT_MAX_TOTAL_ITEMS } from '#tracker_api/utils/item-budget.util.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
 import type { GetChecklistInput } from '#tracker_api/dto/checklist/get-checklist.dto.js';
@@ -51,7 +52,8 @@ export class GetChecklistOperation extends BaseOperation {
    * - API возвращает массив элементов чеклиста
    */
   async execute(
-    input: GetChecklistInput
+    input: GetChecklistInput,
+    budget?: ItemBudget
   ): Promise<PaginatedResult<ChecklistItemWithUnknownFields>> {
     const { issueId } = input;
     this.logger.info(`Получение чеклиста задачи ${issueId}`);
@@ -74,8 +76,8 @@ export class GetChecklistOperation extends BaseOperation {
           firstResponse: first,
           requestNext: (p) => this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(p),
           ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-          ...(input.page !== undefined ? { page: input.page } : {}),
           ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+          ...(budget !== undefined ? { budget } : {}),
           onError: (error, pagesFetched) =>
             this.logger.warn(
               `Частичный отказ при обходе чеклиста задачи ${issueId} ` +
@@ -111,10 +113,15 @@ export class GetChecklistOperation extends BaseOperation {
     const issuesList = issueIds.join(', ');
     this.logger.info(`Получение чеклистов для ${issueIds.length} задач параллельно: ${issuesList}`);
 
+    const budget =
+      options.fetchAll === true
+        ? new ItemBudget(options.maxTotalItems ?? DEFAULT_MAX_TOTAL_ITEMS)
+        : undefined;
+
     const operations = issueIds.map((issueId) => ({
       key: issueId,
       fn: async (): Promise<PaginatedResult<ChecklistItemWithUnknownFields>> =>
-        this.execute({ issueId, ...options }),
+        this.execute({ issueId, ...options }, budget),
     }));
 
     return this.parallelExecutor.executeParallel(operations, 'get checklists');

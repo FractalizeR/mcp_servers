@@ -24,10 +24,15 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { TrackerPaginator, DEFAULT_MAX_PER_PAGE } from '#tracker_api/utils/index.js';
+import {
+  TrackerPaginator,
+  DEFAULT_MAX_PER_PAGE,
+  DEFAULT_MAX_PAGES,
+} from '#tracker_api/utils/index.js';
 import type { FindIssuesInputDto } from '#tracker_api/dto/index.js';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
+import { parseLinkHeader } from '@fractalizer/mcp-infrastructure';
 import type { HttpResponseEnvelope } from '@fractalizer/mcp-infrastructure';
 
 /**
@@ -106,9 +111,11 @@ export class FindIssuesOperation extends BaseOperation {
     requestBody: Record<string, unknown>,
     perPage: number | undefined
   ): Promise<FindIssuesResult> {
-    const hasLink = first.headers['link'] !== undefined;
+    // Проверяем именно `rel="next"`, а не наличие любого `Link`: при `rel="seek"`
+    // без `next` cursor-обход вернул бы одну страницу, минуя fallback по X-Total-Pages.
+    const hasNext = parseLinkHeader(first.headers['link'])['next'] !== undefined;
 
-    if (hasLink) {
+    if (hasNext) {
       // Cursor-режим: next известен из заголовка; тело сохраняем тем же.
       return TrackerPaginator.fetchAllPages({
         firstResponse: first,
@@ -123,7 +130,9 @@ export class FindIssuesOperation extends BaseOperation {
 
     const totalPages = this.parseTotalPages(first.headers['x-total-pages']);
     if (totalPages !== undefined && totalPages > 1) {
-      return this.fetchByPageNumbers(first, totalPages, requestBody, perPage, params.maxItems);
+      return this.fetchByPageNumbers(first, totalPages, requestBody, perPage, params.maxItems, {
+        ...(params.expand !== undefined ? { expand: params.expand } : {}),
+      });
     }
 
     // Ни Link, ни X-Total-Pages > 1 — одна страница.
@@ -145,17 +154,22 @@ export class FindIssuesOperation extends BaseOperation {
     requestBody: Record<string, unknown>,
     perPage: number | undefined,
     maxItems: number | undefined,
+    opts: { expand?: string[] | undefined } = {},
     maxItemsDefault = 500
   ): Promise<FindIssuesResult> {
     const limit = maxItems ?? maxItemsDefault;
+    // Backstop по числу страниц (как в TrackerPaginator.fetchAllPages): защита от
+    // рантэвея при большом X-Total-Pages с маленьким perPage.
+    const lastPage = Math.min(totalPages, DEFAULT_MAX_PAGES);
     const items: IssueWithUnknownFields[] = [...first.data];
     let pagesFetched = 1;
     let hasError = false;
 
-    for (let page = 2; page <= totalPages && items.length < limit; page += 1) {
+    for (let page = 2; page <= lastPage && items.length < limit; page += 1) {
       const endpoint = this.buildEndpoint({
         page,
         ...(perPage !== undefined ? { perPage } : {}),
+        ...(opts.expand !== undefined ? { expand: opts.expand } : {}),
       });
 
       try {
