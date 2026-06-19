@@ -50,20 +50,15 @@ export interface BuildMetaInput {
   readonly hasError: boolean;
   /** URL следующей страницы, если ещё есть данные. */
   readonly nextUrl?: string | undefined;
-  /**
-   * @deprecated Номер текущей страницы — только для легаси-режима (без `tag`).
-   * Удаляется в этапе 3.1 вместе с публичным `page`.
-   */
-  readonly page?: number | undefined;
   /** Размер страницы (если применимо к запросу). */
   readonly perPage?: number | undefined;
   /**
-   * Тег семейства эндпоинта. Его наличие ВКЛЮЧАЕТ cursor-режим (R5/R6):
-   * - `nextCursor` кодируется из `Link rel="next"`;
-   * - `total`/`totalPages` отдаются ТОЛЬКО при `rel="seek"` (seek-gating);
-   * - эвристика `page*perPage < total` и поле `page` НЕ применяются.
+   * Тег семейства эндпоинта. При наличии в `nextCursor` кодируется путь
+   * следующей страницы (`CursorCodec.encode(path, tag, cursorExtra)`).
+   * Непагинируемые эндпоинты тег не передают → `nextCursor` отсутствует.
    *
-   * Без `tag` сохраняется легаси-поведение (для немигрированных эндпоинтов до 2.x).
+   * Независимо от тега: `total`/`totalPages` отдаются ТОЛЬКО при `rel="seek"`
+   * (seek-gating), а `hasNextPage` выводится из `Link rel="next"`/`truncated`.
    */
   readonly tag?: CursorTag | undefined;
   /**
@@ -139,22 +134,13 @@ export class TrackerPaginator {
   /**
    * Собрать `PaginationMeta` из заголовков и состояния обхода.
    *
-   * Режим выбирается по `input.tag`:
-   * - есть `tag` → cursor-режим (`nextCursor` + seek-gating, R5/R6);
-   * - нет `tag` → легаси-режим (X-Total без seek-gating, поле `page`) для
-   *   немигрированных эндпоинтов; удаляется в этапе 3.1.
+   * - `hasNextPage`/`nextCursor` выводятся ИСКЛЮЧИТЕЛЬНО из `Link rel="next"`
+   *   (+ `truncated` при срабатывании защитного лимита);
+   * - `total`/`totalPages` отдаются ТОЛЬКО при `rel="seek"` (seek-gating против
+   *   ложного `totalPages` у cursor-эндпоинтов вроде comments);
+   * - `nextCursor` кодируется лишь при наличии `tag` (непагинируемые его не дают).
    */
   public static buildMeta(input: BuildMetaInput): PaginationMeta {
-    return input.tag !== undefined
-      ? TrackerPaginator.buildCursorMeta(input, input.tag)
-      : TrackerPaginator.buildLegacyMeta(input);
-  }
-
-  /**
-   * Cursor-режим: `nextCursor` из `Link rel="next"`, `total`/`totalPages` только
-   * при `rel="seek"`. Без эвристики `page*perPage < total` и без поля `page`.
-   */
-  private static buildCursorMeta(input: BuildMetaInput, tag: CursorTag): PaginationMeta {
     const path = input.nextUrl !== undefined ? stripTrackerHost(input.nextUrl) : undefined;
     const hasNextPage = Boolean(path) || input.truncated;
     const fetchedAll = !hasNextPage && !input.hasError;
@@ -168,7 +154,9 @@ export class TrackerPaginator {
       : undefined;
 
     const nextCursor =
-      path !== undefined ? CursorCodec.encode(path, tag, input.cursorExtra) : undefined;
+      path !== undefined && input.tag !== undefined
+        ? CursorCodec.encode(path, input.tag, input.cursorExtra)
+        : undefined;
 
     return {
       hasNextPage,
@@ -184,45 +172,15 @@ export class TrackerPaginator {
   }
 
   /**
-   * @deprecated Легаси-режим (без `tag`): X-Total без seek-gating, поле `page`,
-   * эвристика `page*perPage < total`. Удаляется в этапе 3.1 после миграции всех
-   * эндпоинтов на cursor.
-   */
-  private static buildLegacyMeta(input: BuildMetaInput): PaginationMeta {
-    const total = TrackerPaginator.parseIntHeader(input.headers['x-total-count']);
-    const totalPages = TrackerPaginator.parseIntHeader(input.headers['x-total-pages']);
-
-    const hasMoreByTotal =
-      total !== undefined && input.page !== undefined && input.perPage !== undefined
-        ? input.page * input.perPage < total
-        : false;
-
-    const hasNextPage = Boolean(input.nextUrl) || input.truncated || hasMoreByTotal;
-    const fetchedAll = !hasNextPage && !input.hasError;
-
-    return {
-      hasNextPage,
-      fetchedAll,
-      truncated: input.truncated,
-      hasError: input.hasError,
-      pagesFetched: input.pagesFetched,
-      ...(input.page !== undefined ? { page: input.page } : {}),
-      ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
-      ...(total !== undefined ? { total } : {}),
-      ...(totalPages !== undefined ? { totalPages } : {}),
-    };
-  }
-
-  /**
    * Обернуть одну (первую) страницу в `PaginatedResult` с метаданными.
    *
    * Режим по умолчанию (без `fetchAll`): один запрос, `hasNextPage`
    * вычисляется из заголовков `Link`/`X-Total-*`. Агент листает вручную
    * через `page`.
    *
-   * Cursor-режим включается передачей `opts.tag`: тогда meta получает `nextCursor`
-   * и seek-gating (`total`/`totalPages` только при `rel="seek"`). Без `tag` —
-   * легаси-поведение (поле `page`), пока эндпоинт не мигрирован (этап 2.x).
+   * `nextCursor` появляется в meta при передаче `opts.tag` (если в ответе есть
+   * `Link rel="next"`). `total`/`totalPages` — только при `rel="seek"`.
+   * Непагинируемые эндпоинты вызывают без `tag` → `nextCursor` отсутствует.
    *
    * @param response - конверт ответа (data + заголовки)
    * @param opts - размер страницы / тег эндпоинта для проброса в метаданные
@@ -230,7 +188,6 @@ export class TrackerPaginator {
   public static singlePage<T>(
     response: HttpResponseEnvelope<T[]>,
     opts: {
-      readonly page?: number | undefined;
       readonly perPage?: number | undefined;
       readonly tag?: CursorTag | undefined;
       readonly cursorExtra?: string | undefined;
@@ -244,7 +201,6 @@ export class TrackerPaginator {
       truncated: false,
       hasError: false,
       nextUrl: next,
-      ...(opts.page !== undefined ? { page: opts.page } : {}),
       ...(opts.perPage !== undefined ? { perPage: opts.perPage } : {}),
       ...(opts.tag !== undefined ? { tag: opts.tag } : {}),
       ...(opts.cursorExtra !== undefined ? { cursorExtra: opts.cursorExtra } : {}),

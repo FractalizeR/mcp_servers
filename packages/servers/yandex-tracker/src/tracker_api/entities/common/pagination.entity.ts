@@ -38,12 +38,6 @@ export interface PaginationParams {
    * `perPage`/`fetchAll`/`maxItems`/`maxTotalItems`.
    */
   readonly cursor?: string | undefined;
-
-  /**
-   * @deprecated Номер страницы (начинается с 1). Заменён на `cursor`; удаляется
-   * в этапе 3.1. Новый код не использует.
-   */
-  readonly page?: number | undefined;
 }
 
 /**
@@ -67,12 +61,6 @@ export interface PaginationMeta {
    * страницу. Непагинируемые эндпоинты блок `pagination` не возвращают вовсе.
    */
   readonly nextCursor?: string | undefined;
-
-  /**
-   * @deprecated Номер текущей страницы — только легаси (немигрированные
-   * эндпоинты). Удаляется в этапе 3.1 вместе с публичным `page`.
-   */
-  readonly page?: number | undefined;
 
   /** Размер страницы (если применимо к запросу) */
   readonly perPage?: number | undefined;

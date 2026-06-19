@@ -50,23 +50,42 @@ describe('TrackerPaginator', () => {
   });
 
   describe('buildMeta', () => {
-    it('заполняет total/totalPages из X-Total-* заголовков', () => {
+    it('заполняет total/totalPages из X-Total-* при наличии rel="seek"', () => {
       const meta = TrackerPaginator.buildMeta({
-        headers: { 'x-total-count': '150', 'x-total-pages': '3' },
+        headers: {
+          ...linkNextSeek('/v3/queues?page=2'),
+          'x-total-count': '150',
+          'x-total-pages': '3',
+        },
         pagesFetched: 1,
         truncated: false,
         hasError: false,
-        page: 1,
+        nextUrl: 'https://api.tracker.yandex.net/v3/queues?page=2',
         perPage: 50,
       });
 
       expect(meta.total).toBe(150);
       expect(meta.totalPages).toBe(3);
-      expect(meta.hasNextPage).toBe(true); // 1*50 < 150
+      expect(meta.hasNextPage).toBe(true); // есть nextUrl
       expect(meta.fetchedAll).toBe(false);
     });
 
-    it('без X-Total-* не заполняет total/totalPages', () => {
+    it('X-Total-* БЕЗ rel="seek" игнорируются (seek-gating)', () => {
+      const meta = TrackerPaginator.buildMeta({
+        headers: { 'x-total-count': '150', 'x-total-pages': '3' },
+        pagesFetched: 1,
+        truncated: false,
+        hasError: false,
+        perPage: 50,
+      });
+
+      expect(meta.total).toBeUndefined();
+      expect(meta.totalPages).toBeUndefined();
+      expect(meta.hasNextPage).toBe(false);
+      expect(meta.fetchedAll).toBe(true);
+    });
+
+    it('без заголовков не заполняет total/totalPages', () => {
       const meta = TrackerPaginator.buildMeta({
         headers: {},
         pagesFetched: 1,
@@ -91,6 +110,8 @@ describe('TrackerPaginator', () => {
 
       expect(meta.hasNextPage).toBe(true);
       expect(meta.fetchedAll).toBe(false);
+      // без tag курсор не кодируется
+      expect(meta.nextCursor).toBeUndefined();
     });
 
     it('hasError ломает fetchedAll даже без next', () => {
@@ -106,9 +127,12 @@ describe('TrackerPaginator', () => {
       expect(meta.hasError).toBe(true);
     });
 
-    it('игнорирует нечисловой X-Total-Count', () => {
+    it('игнорирует нечисловой X-Total-Count (при seek)', () => {
       const meta = TrackerPaginator.buildMeta({
-        headers: { 'x-total-count': 'n/a' },
+        headers: {
+          link: '<https://api.tracker.yandex.net/v3/queues?{&page}>; rel="seek"',
+          'x-total-count': 'n/a',
+        },
         pagesFetched: 1,
         truncated: false,
         hasError: false,
@@ -276,7 +300,7 @@ describe('TrackerPaginator', () => {
 
   describe('singlePage', () => {
     it('без Link/X-Total — hasNextPage=false, fetchedAll=true, pagesFetched=1', () => {
-      const result = TrackerPaginator.singlePage(envelope([1, 2, 3]), { page: 1, perPage: 50 });
+      const result = TrackerPaginator.singlePage(envelope([1, 2, 3]), { perPage: 50 });
 
       expect(result.items).toEqual([1, 2, 3]);
       expect(result.pagination.hasNextPage).toBe(false);
@@ -284,8 +308,8 @@ describe('TrackerPaginator', () => {
       expect(result.pagination.truncated).toBe(false);
       expect(result.pagination.hasError).toBe(false);
       expect(result.pagination.pagesFetched).toBe(1);
-      expect(result.pagination.page).toBe(1);
       expect(result.pagination.perPage).toBe(50);
+      expect(result.pagination.nextCursor).toBeUndefined();
     });
 
     it('есть Link rel=next — hasNextPage=true, fetchedAll=false (есть ещё данные)', () => {
@@ -296,16 +320,29 @@ describe('TrackerPaginator', () => {
       expect(result.pagination.truncated).toBe(false);
     });
 
-    it('X-Total-* прокидываются в метаданные', () => {
+    it('X-Total-* прокидываются только при rel="seek"', () => {
       const result = TrackerPaginator.singlePage(
-        envelope([1, 2], { 'x-total-count': '42', 'x-total-pages': '21' }),
-        { page: 1, perPage: 2 }
+        envelope([1, 2], {
+          ...linkNextSeek('/v3/queues?page=2'),
+          'x-total-count': '42',
+          'x-total-pages': '21',
+        }),
+        { perPage: 2 }
       );
 
       expect(result.pagination.total).toBe(42);
       expect(result.pagination.totalPages).toBe(21);
-      // page*perPage (1*2=2) < total(42) → есть ещё данные
       expect(result.pagination.hasNextPage).toBe(true);
+    });
+
+    it('X-Total-* без rel="seek" не прокидываются', () => {
+      const result = TrackerPaginator.singlePage(
+        envelope([1, 2], { 'x-total-count': '42', 'x-total-pages': '21' }),
+        { perPage: 2 }
+      );
+
+      expect(result.pagination.total).toBeUndefined();
+      expect(result.pagination.totalPages).toBeUndefined();
     });
 
     it('копирует массив items (не держит ссылку на response.data)', () => {

@@ -4,7 +4,6 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  PageSchema,
   PerPageSchema,
   CursorSchema,
   makePerPageSchema,
@@ -13,23 +12,9 @@ import {
   MaxTotalItemsSchema,
   MAX_ITEMS_CEILING,
   MAX_TOTAL_ITEMS_CEILING,
-  noPageFetchAllConflict,
   noCursorWithBulkParams,
   cursorRequiresSingleIssue,
 } from '#common/schemas/pagination.schema.js';
-
-describe('PageSchema', () => {
-  it('принимает положительные целые и undefined', () => {
-    expect(PageSchema.safeParse(1).success).toBe(true);
-    expect(PageSchema.safeParse(undefined).success).toBe(true);
-  });
-
-  it('отклоняет 0, отрицательные и дробные', () => {
-    expect(PageSchema.safeParse(0).success).toBe(false);
-    expect(PageSchema.safeParse(-1).success).toBe(false);
-    expect(PageSchema.safeParse(1.5).success).toBe(false);
-  });
-});
 
 describe('makePerPageSchema', () => {
   it('с потолком: режет значения выше max', () => {
@@ -81,25 +66,6 @@ describe('MaxTotalItemsSchema', () => {
 
   it('отклоняет выше потолка', () => {
     expect(MaxTotalItemsSchema.safeParse(MAX_TOTAL_ITEMS_CEILING + 1).success).toBe(false);
-  });
-});
-
-describe('noPageFetchAllConflict', () => {
-  it('запрещает page вместе с fetchAll=true', () => {
-    expect(noPageFetchAllConflict({ page: 2, fetchAll: true })).toBe(false);
-  });
-
-  it('разрешает page без fetchAll', () => {
-    expect(noPageFetchAllConflict({ page: 2 })).toBe(true);
-    expect(noPageFetchAllConflict({ page: 2, fetchAll: false })).toBe(true);
-  });
-
-  it('разрешает fetchAll=true без page', () => {
-    expect(noPageFetchAllConflict({ fetchAll: true })).toBe(true);
-  });
-
-  it('разрешает пустой объект', () => {
-    expect(noPageFetchAllConflict({})).toBe(true);
   });
 });
 

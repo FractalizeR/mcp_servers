@@ -34,19 +34,6 @@ export const MAX_ITEMS_CEILING = 1000;
 export const MAX_TOTAL_ITEMS_CEILING = 5000;
 
 /**
- * @deprecated Номер страницы (с 1). Заменён на {@link CursorSchema} (opaque
- * cursor); удаляется в этапе 3.1. Новые схемы используют `cursor`.
- *
- * При `fetchAll=true` игнорируется — обход стартует с первой страницы.
- */
-export const PageSchema = z
-  .number()
-  .int()
-  .positive()
-  .optional()
-  .describe('Номер страницы (начинается с 1). Игнорируется при fetchAll=true.');
-
-/**
  * Непрозрачный курсор следующей страницы.
  *
  * Значение берётся из `pagination.nextCursor` предыдущего ответа того же
@@ -129,31 +116,6 @@ export const MaxTotalItemsSchema = z
       `(по умолчанию 1000, максимум ${MAX_TOTAL_ITEMS_CEILING}). По достижении ` +
       'оставшиеся задачи отдают только первую страницу с pagination.truncated=true.'
   );
-
-/**
- * @deprecated Сообщение об ошибке конфликта `page` + `fetchAll`. Удаляется в
- * этапе 3.1 вместе с {@link noPageFetchAllConflict}.
- */
-export const PAGINATION_CONFLICT_MESSAGE =
-  'Параметры page и fetchAll несовместимы: при fetchAll=true обход всегда ' +
-  'начинается с первой страницы. Уберите page либо fetchAll.';
-
-/**
- * @deprecated Предикат для `.refine`: запрещает одновременное `page` и
- * `fetchAll=true`. Заменён на {@link noCursorWithBulkParams}; удаляется в 3.1.
- *
- * @example
- * MySchema.refine(noPageFetchAllConflict, {
- *   message: PAGINATION_CONFLICT_MESSAGE,
- *   path: ['page'],
- * })
- */
-export function noPageFetchAllConflict(data: {
-  readonly page?: number | undefined;
-  readonly fetchAll?: boolean | undefined;
-}): boolean {
-  return !(data.fetchAll === true && data.page !== undefined);
-}
 
 /**
  * Сообщение об ошибке конфликта `cursor` с параметрами первой выборки/bulk-обхода.
