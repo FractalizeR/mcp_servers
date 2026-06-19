@@ -1,3 +1,9 @@
+## [1.6.0](https://github.com/FractalizeR/mcp_servers/compare/v1.5.2...v1.6.0) (2026-06-19)
+
+### Features
+
+* **tracker:** этап 1.1 — общие контракты opaque-cursor пагинации ([f7a00c4](https://github.com/FractalizeR/mcp_servers/commit/f7a00c471ba4a985358da981548bee695d57a235))
+
 ## [1.5.2](https://github.com/FractalizeR/mcp_servers/compare/v1.5.1...v1.5.2) (2026-06-19)
 
 ### Bug Fixes
