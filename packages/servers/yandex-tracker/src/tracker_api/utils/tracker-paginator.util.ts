@@ -66,6 +66,15 @@ export interface BuildMetaInput {
    * Без `tag` сохраняется легаси-поведение (для немигрированных эндпоинтов до 2.x).
    */
   readonly tag?: CursorTag | undefined;
+  /**
+   * Доп. нагрузка семейства эндпоинта, вшиваемая в `nextCursor`
+   * (`CursorCodec.encode(path, tag, cursorExtra)`).
+   *
+   * Используется `find_issues` (`_search`) для хеша канонического тела (R2):
+   * операция кладёт сюда хеш, чтобы при возобновлении сверить повторно
+   * переданные критерии. Игнорируется без `tag`.
+   */
+  readonly cursorExtra?: string | undefined;
 }
 
 /**
@@ -100,6 +109,11 @@ export interface FetchAllPagesOptions<T> {
    * Без него финальная meta строится в легаси-режиме (без `nextCursor`).
    */
   readonly tag?: CursorTag;
+  /**
+   * Доп. нагрузка в `nextCursor` финальной meta (хеш тела `_search`, R2).
+   * См. {@link BuildMetaInput.cursorExtra}.
+   */
+  readonly cursorExtra?: string;
   /** Колбэк для логирования частичного отказа (warning). */
   readonly onError?: (error: unknown, pagesFetched: number) => void;
 }
@@ -153,7 +167,8 @@ export class TrackerPaginator {
       ? TrackerPaginator.parseIntHeader(input.headers['x-total-pages'])
       : undefined;
 
-    const nextCursor = path !== undefined ? CursorCodec.encode(path, tag) : undefined;
+    const nextCursor =
+      path !== undefined ? CursorCodec.encode(path, tag, input.cursorExtra) : undefined;
 
     return {
       hasNextPage,
@@ -218,6 +233,7 @@ export class TrackerPaginator {
       readonly page?: number | undefined;
       readonly perPage?: number | undefined;
       readonly tag?: CursorTag | undefined;
+      readonly cursorExtra?: string | undefined;
     } = {}
   ): PaginatedResult<T> {
     const next = TrackerPaginator.nextUrl(response.headers);
@@ -231,6 +247,7 @@ export class TrackerPaginator {
       ...(opts.page !== undefined ? { page: opts.page } : {}),
       ...(opts.perPage !== undefined ? { perPage: opts.perPage } : {}),
       ...(opts.tag !== undefined ? { tag: opts.tag } : {}),
+      ...(opts.cursorExtra !== undefined ? { cursorExtra: opts.cursorExtra } : {}),
     });
 
     return { items: [...response.data], pagination: meta };
@@ -314,6 +331,7 @@ export class TrackerPaginator {
       nextUrl: next,
       ...(opts.perPage !== undefined ? { perPage: opts.perPage } : {}),
       ...(opts.tag !== undefined ? { tag: opts.tag } : {}),
+      ...(opts.cursorExtra !== undefined ? { cursorExtra: opts.cursorExtra } : {}),
     });
 
     return { items, pagination: meta };

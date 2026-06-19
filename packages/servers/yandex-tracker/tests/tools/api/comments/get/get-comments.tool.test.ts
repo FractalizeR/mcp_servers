@@ -76,7 +76,8 @@ describe('GetCommentsTool', () => {
       expect(definition.inputSchema.required).toEqual(['issueIds', 'fields']);
       expect(definition.inputSchema.properties?.['issueIds']).toBeDefined();
       expect(definition.inputSchema.properties?.['perPage']).toBeDefined();
-      expect(definition.inputSchema.properties?.['page']).toBeDefined();
+      expect(definition.inputSchema.properties?.['cursor']).toBeDefined();
+      expect(definition.inputSchema.properties?.['page']).toBeUndefined();
       expect(definition.inputSchema.properties?.['expand']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
@@ -136,10 +137,22 @@ describe('GetCommentsTool', () => {
       expect(result.content[0]?.text).toContain('валидации');
     });
 
-    it('должен отклонить некорректный page (0)', async () => {
+    it('должен отклонить cursor вместе с perPage (bulk-конфликт)', async () => {
       const result = await tool.execute({
         issueIds: ['TEST-123'],
-        page: 0,
+        cursor: 'c1:abc',
+        perPage: 50,
+        fields: ['id', 'text'],
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0]?.text).toContain('валидации');
+    });
+
+    it('должен отклонить cursor при нескольких issueIds (batch-ограничение)', async () => {
+      const result = await tool.execute({
+        issueIds: ['TEST-123', 'TEST-456'],
+        cursor: 'c1:abc',
         fields: ['id', 'text'],
       });
 
@@ -184,14 +197,15 @@ describe('GetCommentsTool', () => {
 
       expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: undefined,
-        page: undefined,
+        cursor: undefined,
         fetchAll: undefined,
         maxItems: undefined,
+        maxTotalItems: undefined,
         expand: undefined,
       });
     });
 
-    it('должен вызвать getCommentsMany с параметрами пагинации', async () => {
+    it('должен вызвать getCommentsMany с perPage', async () => {
       vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
         {
           status: 'fulfilled',
@@ -204,15 +218,41 @@ describe('GetCommentsTool', () => {
       await tool.execute({
         issueIds: ['TEST-123'],
         perPage: 50,
-        page: 2,
         fields: ['id', 'text'],
       });
 
       expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: 50,
-        page: 2,
+        cursor: undefined,
         fetchAll: undefined,
         maxItems: undefined,
+        maxTotalItems: undefined,
+        expand: undefined,
+      });
+    });
+
+    it('должен прокинуть cursor в фасад (single issueId)', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: paginated(mockComments),
+        },
+      ]);
+
+      await tool.execute({
+        issueIds: ['TEST-123'],
+        cursor: 'c1:abc',
+        fields: ['id', 'text'],
+      });
+
+      expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
+        perPage: undefined,
+        cursor: 'c1:abc',
+        fetchAll: undefined,
+        maxItems: undefined,
+        maxTotalItems: undefined,
         expand: undefined,
       });
     });
@@ -235,9 +275,10 @@ describe('GetCommentsTool', () => {
 
       expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: undefined,
-        page: undefined,
+        cursor: undefined,
         fetchAll: undefined,
         maxItems: undefined,
+        maxTotalItems: undefined,
         expand: 'attachments',
       });
     });
@@ -338,17 +379,18 @@ describe('GetCommentsTool', () => {
 
       expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(['TEST-123'], {
         perPage: undefined,
-        page: undefined,
+        cursor: undefined,
         fetchAll: true,
         maxItems: 200,
+        maxTotalItems: undefined,
         expand: undefined,
       });
     });
 
-    it('должен отклонить одновременное указание page и fetchAll', async () => {
+    it('должен отклонить одновременное указание cursor и fetchAll', async () => {
       const result = await tool.execute({
         issueIds: ['TEST-123'],
-        page: 2,
+        cursor: 'c1:abc',
         fetchAll: true,
         fields: ['id', 'text'],
       });

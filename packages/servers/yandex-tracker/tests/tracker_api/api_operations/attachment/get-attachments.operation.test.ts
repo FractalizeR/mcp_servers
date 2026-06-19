@@ -1,5 +1,9 @@
 /**
- * Unit тесты для GetAttachmentsOperation (с пагинацией)
+ * Unit тесты для GetAttachmentsOperation
+ *
+ * Эндпоинт НЕ пагинируется — операция делает один запрос и возвращает все
+ * вложения. Проверяется единственный запрос, кеш под каноническим ключом и
+ * batch-режим.
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -49,41 +53,25 @@ describe('GetAttachmentsOperation', () => {
     );
   });
 
-  describe('execute (single page)', () => {
-    it('возвращает одну страницу без Link → hasNextPage=false, fetchedAll=true', async () => {
+  describe('execute', () => {
+    it('делает один запрос и возвращает все вложения (hasNextPage=false)', async () => {
       httpClient.setResponse(
         'GET',
         '/v2/issues/TEST-1/attachments',
-        createAttachmentListFixture(2)
+        createAttachmentListFixture(3)
       );
 
       const result = await operation.execute('TEST-1');
 
-      expect(result.items).toHaveLength(2);
+      const history = httpClient.getRequestHistory();
+      expect(history).toHaveLength(1);
+      expect(history[0]).toMatchObject({ method: 'GET', path: '/v2/issues/TEST-1/attachments' });
+      expect(result.items).toHaveLength(3);
       expect(result.pagination.hasNextPage).toBe(false);
       expect(result.pagination.fetchedAll).toBe(true);
     });
 
-    it('при наличии Link rel=next → hasNextPage=true', async () => {
-      httpClient.setResponse(
-        'GET',
-        '/v2/issues/TEST-1/attachments',
-        createAttachmentListFixture(1),
-        {
-          link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/attachments?page=2>; rel="next"',
-        }
-      );
-
-      const result = await operation.execute('TEST-1');
-
-      expect(result.pagination.hasNextPage).toBe(true);
-    });
-
-    it('пробрасывает ошибку API', async () => {
-      await expect(operation.execute('TEST-404')).rejects.toThrow();
-    });
-
-    it('кеширует базовый запрос под каноническим ключом list:{issueId}', async () => {
+    it('не отправляет пагинационные query-параметры', async () => {
       httpClient.setResponse(
         'GET',
         '/v2/issues/TEST-1/attachments',
@@ -92,62 +80,28 @@ describe('GetAttachmentsOperation', () => {
 
       await operation.execute('TEST-1');
 
-      // ключ кеша не зависит от пагинации → совпадает с инвалидацией upload/delete
+      const req = httpClient.getRequestHistory()[0];
+      expect(req?.path).toBe('/v2/issues/TEST-1/attachments');
+      expect(req?.params).toBeUndefined();
+    });
+
+    it('пробрасывает ошибку API', async () => {
+      await expect(operation.execute('TEST-404')).rejects.toThrow();
+    });
+
+    it('кеширует запрос под каноническим ключом list:{issueId}', async () => {
+      httpClient.setResponse(
+        'GET',
+        '/v2/issues/TEST-1/attachments',
+        createAttachmentListFixture(1)
+      );
+
+      await operation.execute('TEST-1');
+
       expect(mockCacheManager.set).toHaveBeenCalledTimes(1);
       const cacheKey = (mockCacheManager.set as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
       expect(cacheKey).toContain('list:TEST-1');
       expect(cacheKey).not.toMatch(/p=|pp=|all=|mi=/);
-    });
-
-    it('при заданных пагинационных параметрах кеш не используется', async () => {
-      httpClient.setResponse(
-        'GET',
-        '/v2/issues/TEST-1/attachments?page=2',
-        createAttachmentListFixture(1)
-      );
-
-      await operation.execute('TEST-1', { page: 2 });
-
-      expect(mockCacheManager.get).not.toHaveBeenCalled();
-      expect(mockCacheManager.set).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('execute (fetchAll)', () => {
-    it('обходит несколько страниц через Link rel=next', async () => {
-      httpClient.setResponseQueue('GET', '/v2/issues/TEST-1/attachments?perPage=100', [
-        {
-          data: createAttachmentListFixture(1),
-          headers: {
-            link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/attachments?page=2>; rel="next"',
-          },
-        },
-      ]);
-      httpClient.setResponseQueue('GET', '/v2/issues/TEST-1/attachments?page=2', [
-        { data: createAttachmentListFixture(1) },
-      ]);
-
-      const result = await operation.execute('TEST-1', { fetchAll: true });
-
-      expect(result.items).toHaveLength(2);
-      expect(result.pagination.fetchedAll).toBe(true);
-      expect(result.pagination.pagesFetched).toBe(2);
-    });
-
-    it('обрезает выдачу по maxItems → truncated=true', async () => {
-      httpClient.setResponse(
-        'GET',
-        '/v2/issues/TEST-1/attachments?perPage=100',
-        createAttachmentListFixture(3),
-        {
-          link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/attachments?page=2>; rel="next"',
-        }
-      );
-
-      const result = await operation.execute('TEST-1', { fetchAll: true, maxItems: 2 });
-
-      expect(result.items).toHaveLength(2);
-      expect(result.pagination.truncated).toBe(true);
     });
   });
 

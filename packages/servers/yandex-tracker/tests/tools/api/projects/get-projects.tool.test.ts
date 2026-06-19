@@ -64,7 +64,8 @@ describe('GetProjectsTool', () => {
       expect(definition.description).toContain('[Projects/Read] Получить список проектов');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.properties?.['perPage']).toBeDefined();
-      expect(definition.inputSchema.properties?.['page']).toBeDefined();
+      expect(definition.inputSchema.properties?.['cursor']).toBeDefined();
+      expect(definition.inputSchema.properties?.['page']).toBeUndefined();
       expect(definition.inputSchema.properties?.['expand']).toBeDefined();
       expect(definition.inputSchema.properties?.['queueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
@@ -83,7 +84,6 @@ describe('GetProjectsTool', () => {
         expect(mockTrackerFacade.getProjects).toHaveBeenCalledWith({});
         expect(mockLogger.info).toHaveBeenCalledWith('Получение списка проектов', {
           perPage: 50,
-          page: 1,
           expand: 'none',
           queueId: 'all',
         });
@@ -102,16 +102,15 @@ describe('GetProjectsTool', () => {
         expect(parsed.data.count).toBe(3);
       });
 
-      it('должен получить список проектов с пагинацией', async () => {
+      it('должен получить список проектов с perPage', async () => {
         const mockProjects = createProjectListFixture(10);
         vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects, 50));
 
-        const result = await tool.execute({ perPage: 10, page: 2, fields: ['id', 'key', 'name'] });
+        const result = await tool.execute({ perPage: 10, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getProjects).toHaveBeenCalledWith({
           perPage: 10,
-          page: 2,
         });
 
         const parsed = JSON.parse(result.content[0]?.text || '{}') as {
@@ -235,7 +234,6 @@ describe('GetProjectsTool', () => {
 
         const result = await tool.execute({
           perPage: 25,
-          page: 3,
           expand: 'team',
           queueId: 'TEST',
           fields: ['id', 'key', 'name'],
@@ -244,7 +242,6 @@ describe('GetProjectsTool', () => {
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.getProjects).toHaveBeenCalledWith({
           perPage: 25,
-          page: 3,
           expand: 'team',
           queueId: 'TEST',
         });
@@ -350,9 +347,27 @@ describe('GetProjectsTool', () => {
         );
       });
 
-      it('возвращает ошибку валидации при конфликте page + fetchAll', async () => {
+      it('прокидывает cursor в фасад; nextCursor доходит до выдачи', async () => {
+        const mockProjects = createProjectListFixture(1);
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(
+          paginated(mockProjects, undefined, { hasNextPage: true, nextCursor: 'c1:next' })
+        );
+
+        const result = await tool.execute({ cursor: 'c1:abc', fields: ['id', 'key', 'name'] });
+
+        expect(result.isError).toBeUndefined();
+        expect(mockTrackerFacade.getProjects).toHaveBeenCalledWith(
+          expect.objectContaining({ cursor: 'c1:abc' })
+        );
+        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+          data: { pagination: { nextCursor?: string } };
+        };
+        expect(parsed.data.pagination.nextCursor).toBe('c1:next');
+      });
+
+      it('возвращает ошибку валидации при конфликте cursor + fetchAll', async () => {
         const result = await tool.execute({
-          page: 2,
+          cursor: 'c1:abc',
           fetchAll: true,
           fields: ['id', 'key', 'name'],
         });

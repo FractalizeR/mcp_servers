@@ -134,7 +134,7 @@ describe('GetComponentsTool', () => {
             count: number;
             queueId: string;
             fieldsReturned: string[];
-            pagination: { hasNextPage: boolean; fetchedAll: boolean };
+            pagination?: unknown;
           };
         };
         expect(parsed.success).toBe(true);
@@ -142,26 +142,8 @@ describe('GetComponentsTool', () => {
         expect(parsed.data.count).toBe(3);
         expect(parsed.data.queueId).toBe('MYQUEUE');
         expect(parsed.data.fieldsReturned).toEqual(['id', 'name']);
-        // Регрессия: прежние ключи на месте + добавлен pagination
-        expect(parsed.data.pagination).toEqual({
-          hasNextPage: false,
-          fetchedAll: true,
-          truncated: false,
-          hasError: false,
-          pagesFetched: 1,
-        });
-      });
-
-      it('должен пробрасывать параметры пагинации в фасад', async () => {
-        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated([]));
-
-        await tool.execute({ queueId: 'Q', fields: ['id'], fetchAll: true, maxItems: 10 });
-
-        expect(mockTrackerFacade.getComponents).toHaveBeenCalledWith({
-          queueId: 'Q',
-          fetchAll: true,
-          maxItems: 10,
-        });
+        // Эндпоинт не пагинируется → ключа pagination в ответе нет.
+        expect('pagination' in parsed.data).toBe(false);
       });
 
       it('должен обработать пустой список компонентов', async () => {

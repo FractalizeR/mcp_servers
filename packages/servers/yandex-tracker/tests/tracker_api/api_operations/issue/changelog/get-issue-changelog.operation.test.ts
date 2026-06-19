@@ -5,6 +5,7 @@ import { MockHttpClient } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 import type { ChangelogEntryWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetIssueChangelogOperation } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
+import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
 
 /**
  * Хелпер: одна минимальная запись истории.
@@ -103,22 +104,82 @@ describe('GetIssueChangelogOperation (pagination)', () => {
     }
   });
 
-  it('single-page прокидывает page в endpoint и метаданные (регрессия)', async () => {
-    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog?page=2&perPage=50', [
+  it('single-page прокидывает perPage в endpoint и метаданные (без page)', async () => {
+    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog?perPage=50', [
       makeEntry('1', 'TEST-1'),
     ]);
 
-    const result = await operation.execute(['TEST-1'], { page: 2, perPage: 50 });
+    const result = await operation.execute(['TEST-1'], { perPage: 50 });
 
     const first = result[0];
     expect(first?.status).toBe('fulfilled');
     if (first?.status === 'fulfilled') {
-      expect(first.value.pagination.page).toBe(2);
+      // page больше не отдаётся в cursor-режиме
+      expect(first.value.pagination.page).toBeUndefined();
       expect(first.value.pagination.perPage).toBe(50);
     }
     expect(httpClient.getRequestHistory()).toContainEqual(
-      expect.objectContaining({ path: '/v3/issues/TEST-1/changelog?page=2&perPage=50' })
+      expect.objectContaining({ path: '/v3/issues/TEST-1/changelog?perPage=50' })
     );
+  });
+
+  it('single-page с rel=next отдаёт nextCursor, декодируемый в next-путь', async () => {
+    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog', [makeEntry('1', 'TEST-1')], {
+      link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/changelog?id=NEXT>; rel="next"',
+    });
+
+    const result = await operation.execute(['TEST-1']);
+
+    const first = result[0];
+    if (first?.status !== 'fulfilled') {
+      throw new Error('expected fulfilled');
+    }
+    const cursor = first.value.pagination.nextCursor;
+    expect(cursor).toBeDefined();
+    expect(CursorCodec.decode(cursor!, CURSOR_TAGS.changelog).path).toBe(
+      '/v3/issues/TEST-1/changelog?id=NEXT'
+    );
+  });
+
+  it('cursor-режим: листание по nextCursor возвращает следующие записи', async () => {
+    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog', [makeEntry('1', 'TEST-1')], {
+      link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/changelog?id=NEXT>; rel="next"',
+    });
+    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog?id=NEXT', [
+      makeEntry('2', 'TEST-1'),
+    ]);
+
+    const firstBatch = await operation.execute(['TEST-1']);
+    const first = firstBatch[0];
+    if (first?.status !== 'fulfilled') {
+      throw new Error('expected fulfilled');
+    }
+    const cursor = first.value.pagination.nextCursor;
+    expect(CursorCodec.decode(cursor!, CURSOR_TAGS.changelog).path).toBe(
+      '/v3/issues/TEST-1/changelog?id=NEXT'
+    );
+
+    const secondBatch = await operation.execute(['TEST-1'], { cursor });
+    const second = secondBatch[0];
+    if (second?.status !== 'fulfilled') {
+      throw new Error('expected fulfilled');
+    }
+    expect(second.value.items.map((e) => e.id)).toEqual(['2']);
+    expect(httpClient.getRequestHistory()).toContainEqual(
+      expect.objectContaining({ method: 'GET', path: '/v3/issues/TEST-1/changelog?id=NEXT' })
+    );
+  });
+
+  it('cursor-режим: битый курсор → InvalidCursorError', async () => {
+    const result = await operation.execute(['TEST-1'], { cursor: 'bad' });
+
+    // execute оборачивает per-issue ошибки в rejected (ParallelExecutor),
+    // причина — InvalidCursorError.
+    const first = result[0];
+    expect(first?.status).toBe('rejected');
+    if (first?.status === 'rejected') {
+      expect(first.reason).toBeInstanceOf(InvalidCursorError);
+    }
   });
 
   it('fetchAll обходит несколько страниц через Link rel=next', async () => {

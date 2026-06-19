@@ -18,6 +18,7 @@ import {
   TrackerPaginator,
   DEFAULT_MAX_PER_PAGE,
 } from '#tracker_api/utils/tracker-paginator.util.js';
+import { CursorCodec, CURSOR_TAGS } from '#tracker_api/utils/cursor-codec.util.js';
 import { ItemBudget, DEFAULT_MAX_TOTAL_ITEMS } from '#tracker_api/utils/item-budget.util.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
@@ -58,13 +59,28 @@ export class GetChecklistOperation extends BaseOperation {
     const { issueId } = input;
     this.logger.info(`Получение чеклиста задачи ${issueId}`);
 
+    // Курсор-режим: путь и размер страницы зашиты в курсоре. Декодирование
+    // валидирует версию/тег/путь и бросает InvalidCursorError при проблеме.
+    if (input.cursor !== undefined) {
+      const { path: cursorPath } = CursorCodec.decode(input.cursor, CURSOR_TAGS.checklist);
+      const resp =
+        await this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(cursorPath);
+      const cursorResult = TrackerPaginator.singlePage<ChecklistItemWithUnknownFields>(resp, {
+        tag: CURSOR_TAGS.checklist,
+      });
+      this.logger.info(
+        `Получено ${cursorResult.items.length} элементов чеклиста для задачи ${issueId}`
+      );
+      return cursorResult;
+    }
+
     const fetchAll = input.fetchAll === true;
     // В режиме fetchAll поднимаем perPage к рекомендуемому максимуму ради
     // меньшего числа round-trip'ов (maxItems всё равно режет финальную выдачу).
     const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
 
     const path = `/v2/issues/${issueId}/checklistItems`;
-    const params = this.buildParams(input.page, effectivePerPage);
+    const params = this.buildParams(effectivePerPage);
 
     const first = await this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(
       path,
@@ -75,6 +91,7 @@ export class GetChecklistOperation extends BaseOperation {
       ? await TrackerPaginator.fetchAllPages<ChecklistItemWithUnknownFields>({
           firstResponse: first,
           requestNext: (p) => this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(p),
+          tag: CURSOR_TAGS.checklist,
           ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
           ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
           ...(budget !== undefined ? { budget } : {}),
@@ -85,8 +102,8 @@ export class GetChecklistOperation extends BaseOperation {
             ),
         })
       : TrackerPaginator.singlePage<ChecklistItemWithUnknownFields>(first, {
-          page: input.page,
-          perPage: input.perPage,
+          tag: CURSOR_TAGS.checklist,
+          ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
         });
 
     this.logger.info(`Получено ${result.items.length} элементов чеклиста для задачи ${issueId}`);
@@ -130,11 +147,8 @@ export class GetChecklistOperation extends BaseOperation {
   /**
    * Собирает query-параметры запроса (только заданные значения).
    */
-  private buildParams(page?: number, perPage?: number): QueryParams | undefined {
+  private buildParams(perPage?: number): QueryParams | undefined {
     const params: QueryParams = {};
-    if (page !== undefined) {
-      params['page'] = page;
-    }
     if (perPage !== undefined) {
       params['perPage'] = perPage;
     }

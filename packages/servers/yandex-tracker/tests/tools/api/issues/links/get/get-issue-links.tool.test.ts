@@ -108,6 +108,29 @@ describe('GetIssueLinksTool', () => {
       expect(result.content[0]?.text).toContain('валидации');
     });
 
+    it('должен отклонить cursor при нескольких issueIds', async () => {
+      const result = await tool.execute({
+        issueIds: ['TEST-1', 'TEST-2'],
+        fields: ['id', 'type'],
+        cursor: 'c1:abc',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0]?.text).toContain('валидации');
+    });
+
+    it('должен отклонить cursor вместе с bulk-параметрами (fetchAll)', async () => {
+      const result = await tool.execute({
+        issueIds: ['TEST-1'],
+        fields: ['id', 'type'],
+        cursor: 'c1:abc',
+        fetchAll: true,
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0]?.text).toContain('валидации');
+    });
+
     it('должен принять корректные параметры', async () => {
       vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue([
         {
@@ -146,6 +169,28 @@ describe('GetIssueLinksTool', () => {
       expect(mockTrackerFacade.getIssueLinks).toHaveBeenCalledWith(
         ['TEST-123'],
         expect.objectContaining({ fetchAll: undefined })
+      );
+    });
+
+    it('должен прокинуть cursor в фасад', async () => {
+      vi.mocked(mockTrackerFacade.getIssueLinks).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: paginated(mockLinks),
+        },
+      ]);
+
+      await tool.execute({
+        issueIds: ['TEST-123'],
+        fields: ['id', 'type'],
+        cursor: 'c1:abc',
+      });
+
+      expect(mockTrackerFacade.getIssueLinks).toHaveBeenCalledWith(
+        ['TEST-123'],
+        expect.objectContaining({ cursor: 'c1:abc' })
       );
     });
 

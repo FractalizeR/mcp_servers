@@ -50,7 +50,8 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, fields, page, perPage, fetchAll, maxItems, maxTotalItems } = validation.data;
+    const { issueIds, fields, cursor, perPage, fetchAll, maxItems, maxTotalItems } =
+      validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -63,7 +64,7 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
 
       // 3. API v3: получение связей через batch-метод
       const results = await this.facade.getIssueLinks(issueIds, {
-        page,
+        cursor,
         perPage,
         fetchAll,
         maxItems,

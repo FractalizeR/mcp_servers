@@ -6,13 +6,15 @@ import { z } from 'zod';
 import {
   IssueKeySchema,
   FieldsSchema,
-  PageSchema,
   PerPageSchema,
   FetchAllSchema,
   MaxItemsSchema,
   MaxTotalItemsSchema,
-  noPageFetchAllConflict,
-  PAGINATION_CONFLICT_MESSAGE,
+  CursorSchema,
+  noCursorWithBulkParams,
+  PAGINATION_CURSOR_CONFLICT_MESSAGE,
+  cursorRequiresSingleIssue,
+  PAGINATION_CURSOR_BATCH_MESSAGE,
 } from '#common/schemas/index.js';
 
 /**
@@ -21,6 +23,10 @@ import {
  * Паттерн: GET операции с массивом идентификаторов
  * - Массив issueIds для получения чеклистов нескольких задач
  * - Общие параметры (fields, пагинация) применяются ко всем результатам
+ *
+ * Пагинация: непрозрачный `cursor` (из `pagination.nextCursor`) либо первая
+ * страница + `fetchAll`. Курсор несовместим с bulk-параметрами и допустим
+ * только при одном issueId.
  */
 export const GetChecklistParamsSchema = z
   .object({
@@ -38,8 +44,8 @@ export const GetChecklistParamsSchema = z
      */
     fields: FieldsSchema,
 
-    /** Номер страницы (с 1). Игнорируется при fetchAll=true. */
-    page: PageSchema,
+    /** Непрозрачный курсор следующей страницы из pagination.nextCursor. */
+    cursor: CursorSchema,
 
     /** Количество записей на странице (1..100). */
     perPage: PerPageSchema,
@@ -53,9 +59,13 @@ export const GetChecklistParamsSchema = z
     /** Общий потолок записей на весь batch-ответ при fetchAll=true (опционально) */
     maxTotalItems: MaxTotalItemsSchema,
   })
-  .refine(noPageFetchAllConflict, {
-    message: PAGINATION_CONFLICT_MESSAGE,
-    path: ['page'],
+  .refine(noCursorWithBulkParams, {
+    message: PAGINATION_CURSOR_CONFLICT_MESSAGE,
+    path: ['cursor'],
+  })
+  .refine(cursorRequiresSingleIssue, {
+    message: PAGINATION_CURSOR_BATCH_MESSAGE,
+    path: ['cursor'],
   });
 
 /**

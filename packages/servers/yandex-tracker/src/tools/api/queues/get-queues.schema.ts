@@ -5,12 +5,12 @@
 import { z } from 'zod';
 import {
   FieldsSchema,
-  PageSchema,
+  CursorSchema,
   makePerPageSchema,
   FetchAllSchema,
   MaxItemsSchema,
-  noPageFetchAllConflict,
-  PAGINATION_CONFLICT_MESSAGE,
+  noCursorWithBulkParams,
+  PAGINATION_CURSOR_CONFLICT_MESSAGE,
 } from '#common/schemas/index.js';
 
 /**
@@ -24,9 +24,9 @@ export const GetQueuesParamsSchema = z
     perPage: makePerPageSchema(100),
 
     /**
-     * Номер страницы (опционально, начинается с 1)
+     * Непрозрачный курсор следующей страницы (из pagination.nextCursor)
      */
-    page: PageSchema,
+    cursor: CursorSchema,
 
     /**
      * Полный обход всех страниц (opt-in)
@@ -48,9 +48,9 @@ export const GetQueuesParamsSchema = z
      */
     fields: FieldsSchema,
   })
-  .refine(noPageFetchAllConflict, {
-    message: PAGINATION_CONFLICT_MESSAGE,
-    path: ['page'],
+  .refine(noCursorWithBulkParams, {
+    message: PAGINATION_CURSOR_CONFLICT_MESSAGE,
+    path: ['cursor'],
   });
 
 /**

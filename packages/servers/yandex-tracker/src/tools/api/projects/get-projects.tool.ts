@@ -26,19 +26,18 @@ export class GetProjectsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { fields, perPage, page, expand, queueId, fetchAll, maxItems } = validation.data;
+    const { fields, perPage, cursor, expand, queueId, fetchAll, maxItems } = validation.data;
 
     try {
       this.logger.info('Получение списка проектов', {
         perPage: perPage ?? 50,
-        page: page ?? 1,
         expand: expand ?? 'none',
         queueId: queueId ?? 'all',
       });
 
       const result = await this.facade.getProjects({
         perPage,
-        page,
+        cursor,
         expand,
         queueId,
         fetchAll,

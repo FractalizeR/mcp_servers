@@ -1,8 +1,8 @@
 /**
- * Unit тесты для GetAttachmentsTool (с пагинацией)
+ * Unit тесты для GetAttachmentsTool
  *
- * Фасад мокается; проверяется регрессия формата (ключи attachments/
- * attachmentsCount) и добавление поля pagination.
+ * Фасад мокается. Эндпоинт НЕ пагинируется: проверяется регрессия формата
+ * (ключи attachments/attachmentsCount) и ОТСУТСТВИЕ блока pagination в выходе.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -61,38 +61,20 @@ describe('GetAttachmentsTool', () => {
       const result = await tool.execute({ issueIds: ['TEST-1'] });
       expect(result.isError).toBe(true);
     });
-
-    it('отклоняет конфликт page + fetchAll', async () => {
-      const result = await tool.execute({
-        issueIds: ['TEST-1'],
-        fields: ['id'],
-        page: 2,
-        fetchAll: true,
-      });
-      expect(result.isError).toBe(true);
-    });
   });
 
   describe('Operation calls', () => {
-    it('передаёт параметры пагинации в фасад', async () => {
+    it('вызывает getAttachmentsMany только с issueIds (без пагинации)', async () => {
       vi.mocked(mockTrackerFacade.getAttachmentsMany).mockResolvedValue([
         { status: 'fulfilled', key: 'TEST-1', index: 0, value: paginated(mockAttachments) },
       ]);
 
-      await tool.execute({
-        issueIds: ['TEST-1'],
-        fields: ['id'],
-        fetchAll: true,
-        maxItems: 10,
-      });
+      await tool.execute({ issueIds: ['TEST-1'], fields: ['id'] });
 
-      expect(mockTrackerFacade.getAttachmentsMany).toHaveBeenCalledWith(
-        ['TEST-1'],
-        expect.objectContaining({ fetchAll: true, maxItems: 10 })
-      );
+      expect(mockTrackerFacade.getAttachmentsMany).toHaveBeenCalledWith(['TEST-1']);
     });
 
-    it('возвращает прежние ключи (attachments/attachmentsCount) + pagination', async () => {
+    it('возвращает прежние ключи (attachments/attachmentsCount) и НЕ содержит pagination', async () => {
       vi.mocked(mockTrackerFacade.getAttachmentsMany).mockResolvedValue([
         { status: 'fulfilled', key: 'TEST-1', index: 0, value: paginated(mockAttachments) },
       ]);
@@ -108,7 +90,6 @@ describe('GetAttachmentsTool', () => {
             issueId: string;
             attachments: AttachmentWithUnknownFields[];
             attachmentsCount: number;
-            pagination: PaginationMeta;
           }>;
         };
       };
@@ -117,10 +98,7 @@ describe('GetAttachmentsTool', () => {
       expect(parsed.data.successful[0].issueId).toBe('TEST-1');
       expect(parsed.data.successful[0].attachmentsCount).toBe(2);
       expect(parsed.data.successful[0].attachments).toHaveLength(2);
-      expect(parsed.data.successful[0].pagination).toMatchObject({
-        hasNextPage: false,
-        fetchedAll: true,
-      });
+      expect(parsed.data.successful[0]).not.toHaveProperty('pagination');
     });
 
     it('фильтрует поля в файлах', async () => {

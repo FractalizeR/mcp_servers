@@ -78,7 +78,7 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
         ...(searchParams.filterId && { filterId: searchParams.filterId }),
         ...(searchParams.order && { order: searchParams.order }),
         ...(searchParams.perPage !== undefined && { perPage: searchParams.perPage }),
-        ...(searchParams.page !== undefined && { page: searchParams.page }),
+        ...(searchParams.cursor !== undefined && { cursor: searchParams.cursor }),
         ...(searchParams.expand && { expand: searchParams.expand }),
         ...(searchParams.fetchAll !== undefined && { fetchAll: searchParams.fetchAll }),
         ...(searchParams.maxItems !== undefined && { maxItems: searchParams.maxItems }),
@@ -106,7 +106,6 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
           hasFilter: !!searchParams.filter,
           keysCount: searchParams.keys?.length ?? 0,
           hasQueue: !!searchParams.queue,
-          ...(searchParams.perPage !== undefined ? { perPage: searchParams.perPage } : {}),
         },
       });
     } catch (error: unknown) {

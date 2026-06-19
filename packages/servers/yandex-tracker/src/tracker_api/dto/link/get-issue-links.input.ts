@@ -5,14 +5,19 @@
  *
  * Семантика пагинации:
  * - по умолчанию (`fetchAll` не задан/false) — одна страница + метаданные;
- *   листать вручную через `page`;
+ *   листать через `cursor` (значение `pagination.nextCursor` предыдущего ответа);
  * - `fetchAll=true` — полный обход по `Link rel="next"` с защитным `maxItems`.
  *
  * API: GET /v3/issues/{issueId}/links
  */
 export interface GetIssueLinksInput {
-  /** Номер страницы (с 1). Игнорируется при `fetchAll=true`. */
-  page?: number | undefined;
+  /**
+   * Непрозрачный курсор следующей страницы (из `pagination.nextCursor`).
+   *
+   * Несовместим с `perPage`/`fetchAll`/`maxItems`/`maxTotalItems` (размер
+   * страницы зафиксирован внутри курсора).
+   */
+  cursor?: string | undefined;
 
   /** Размер страницы. При `fetchAll=true` поднимается к рекомендуемому максимуму. */
   perPage?: number | undefined;

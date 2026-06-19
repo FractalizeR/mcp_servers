@@ -5,6 +5,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ServerConfig } from '#config';
 import { GetWorklogsOperation } from '#tracker_api/api_operations/worklog/get-worklogs.operation.js';
+import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
 
 /** Фабрика записи времени для тестов. */
 function makeWorklog(id: string): WorklogWithUnknownFields {
@@ -85,14 +86,12 @@ describe('GetWorklogsOperation', () => {
       expect(result.pagination.fetchedAll).toBe(false);
     });
 
-    it('пробрасывает page/perPage в путь запроса', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?page=2&perPage=10', [
-        makeWorklog('1'),
-      ]);
+    it('пробрасывает perPage в путь запроса', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?perPage=10', [makeWorklog('1')]);
 
-      const result = await operation.execute('TEST-1', { page: 2, perPage: 10 });
+      const result = await operation.execute('TEST-1', { perPage: 10 });
 
-      expect(result.pagination.page).toBe(2);
+      expect(result.items).toHaveLength(1);
       expect(result.pagination.perPage).toBe(10);
     });
 
@@ -175,6 +174,59 @@ describe('GetWorklogsOperation', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'GetWorklogsOperation: пустой массив идентификаторов'
       );
+    });
+  });
+
+  describe('cursor pagination', () => {
+    it('single-page выдаёт nextCursor, декодирование ведёт по next-пути', async () => {
+      // Первая страница: есть Link rel=next → nextCursor определён.
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')], {
+        link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/worklog?id=NEXT>; rel="next"',
+      });
+
+      const first = await operation.execute('TEST-1');
+      const nextCursor = first.pagination.nextCursor;
+      expect(nextCursor).toBeDefined();
+
+      // Курсор декодируется в относительный next-путь.
+      const decoded = CursorCodec.decode(nextCursor as string, CURSOR_TAGS.worklog);
+      expect(decoded.path).toBe('/v2/issues/TEST-1/worklog?id=NEXT');
+
+      // Повторный вызов с курсором идёт по декодированному пути.
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?id=NEXT', [makeWorklog('2')]);
+
+      const second = await operation.execute('TEST-1', { cursor: nextCursor });
+      expect(second.items).toHaveLength(1);
+      expect((second.items[0] as { id: string }).id).toBe('2');
+      expect(second.pagination.hasNextPage).toBe(false);
+      expect(second.pagination.nextCursor).toBeUndefined();
+    });
+
+    it('битый курсор → InvalidCursorError', async () => {
+      await expect(operation.execute('TEST-1', { cursor: 'broken-cursor' })).rejects.toBeInstanceOf(
+        InvalidCursorError
+      );
+    });
+
+    it('курсор чужого инструмента → InvalidCursorError', async () => {
+      const alien = CursorCodec.encode('/v3/issues/TEST-1/links?id=X', CURSOR_TAGS.links);
+
+      await expect(operation.execute('TEST-1', { cursor: alien })).rejects.toBeInstanceOf(
+        InvalidCursorError
+      );
+    });
+
+    it('executeMany листает одну задачу по курсору', async () => {
+      const cursor = CursorCodec.encode('/v2/issues/TEST-1/worklog?id=NEXT', CURSOR_TAGS.worklog);
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?id=NEXT', [makeWorklog('2')]);
+
+      const results = await operation.executeMany(['TEST-1'], { cursor });
+
+      expect(results).toHaveLength(1);
+      expect(results[0].status).toBe('fulfilled');
+      if (results[0].status === 'fulfilled') {
+        expect(results[0].value.items).toHaveLength(1);
+      }
     });
   });
 });

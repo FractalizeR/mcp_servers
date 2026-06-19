@@ -223,6 +223,44 @@ describe('GetChecklistTool', () => {
       });
     });
 
+    it('должен прокинуть cursor в фасад (одна задача)', async () => {
+      const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+      ];
+      vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
+
+      await tool.execute({
+        issueIds: ['TEST-123'],
+        fields: ['id', 'text'],
+        cursor: 'c1:opaque',
+      });
+
+      expect(mockTrackerFacade.getChecklistMany).toHaveBeenCalledWith(['TEST-123'], {
+        cursor: 'c1:opaque',
+      });
+    });
+
+    it('должен отклонить cursor вместе с perPage (refine)', async () => {
+      const result = await tool.execute({
+        issueIds: ['TEST-123'],
+        fields: ['id', 'text'],
+        cursor: 'c1:opaque',
+        perPage: 10,
+      });
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('должен отклонить cursor при нескольких issueIds (refine)', async () => {
+      const result = await tool.execute({
+        issueIds: ['TEST-123', 'TEST-456'],
+        fields: ['id', 'text'],
+        cursor: 'c1:opaque',
+      });
+
+      expect(result.isError).toBe(true);
+    });
+
     it('должен вернуть чеклисты нескольких задач', async () => {
       const checklist1 = createChecklistOutputFixture(2);
       const checklist2 = createChecklistOutputFixture(4);

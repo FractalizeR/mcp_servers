@@ -28,6 +28,8 @@ import {
   DEFAULT_MAX_PER_PAGE,
   ItemBudget,
   DEFAULT_MAX_TOTAL_ITEMS,
+  CursorCodec,
+  CURSOR_TAGS,
 } from '#tracker_api/utils/index.js';
 import type { ChangelogEntryWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
@@ -122,12 +124,23 @@ export class GetIssueChangelogOperation extends BaseOperation {
     input: GetIssueChangelogInputDto,
     budget?: ItemBudget
   ): Promise<PaginatedResult<ChangelogEntryWithUnknownFields>> {
+    // Курсор: один запрос по декодированному пути (perPage уже в нём).
+    if (input.cursor !== undefined) {
+      const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.changelog);
+      const response =
+        await this.httpClient.getWithResponse<ChangelogEntryWithUnknownFields[]>(path);
+      const single = TrackerPaginator.singlePage(response, { tag: CURSOR_TAGS.changelog });
+      this.logger.debug(
+        `История изменений для ${issueKey} (cursor): ${single.items.length} записей`
+      );
+      return single;
+    }
+
     // В режиме fetchAll поднимаем perPage к рекомендуемому максимуму (меньше round-trip'ов).
     const effectivePerPage =
       input.fetchAll === true ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
 
     const path = this.buildPath(issueKey, {
-      ...(input.page !== undefined ? { page: input.page } : {}),
       ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
     });
 
@@ -135,7 +148,7 @@ export class GetIssueChangelogOperation extends BaseOperation {
 
     if (input.fetchAll !== true) {
       const single = TrackerPaginator.singlePage(first, {
-        ...(input.page !== undefined ? { page: input.page } : {}),
+        tag: CURSOR_TAGS.changelog,
         ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
       });
       this.logger.debug(`История изменений для ${issueKey}: ${single.items.length} записей`);
@@ -145,6 +158,7 @@ export class GetIssueChangelogOperation extends BaseOperation {
     const all = await TrackerPaginator.fetchAllPages({
       firstResponse: first,
       requestNext: (p) => this.httpClient.getWithResponse<ChangelogEntryWithUnknownFields[]>(p),
+      tag: CURSOR_TAGS.changelog,
       ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
       ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
       ...(budget !== undefined ? { budget } : {}),
@@ -164,14 +178,8 @@ export class GetIssueChangelogOperation extends BaseOperation {
   /**
    * Сформировать path `/v3/issues/{issueKey}/changelog` с query-параметрами.
    */
-  private buildPath(
-    issueKey: string,
-    opts: { page?: number | undefined; perPage?: number | undefined }
-  ): string {
+  private buildPath(issueKey: string, opts: { perPage?: number | undefined }): string {
     const queryParams: Record<string, string> = {};
-    if (opts.page !== undefined) {
-      queryParams['page'] = String(opts.page);
-    }
     if (opts.perPage !== undefined) {
       queryParams['perPage'] = String(opts.perPage);
     }

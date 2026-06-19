@@ -345,15 +345,43 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       );
     });
 
-    it('должен отклонить конфликт page + fetchAll', async () => {
+    it('должен отклонить конфликт cursor + fetchAll', async () => {
       const result = await tool.execute({
         issueKeys: ['QUEUE-123'],
-        page: 2,
+        cursor: 'c1:abc',
         fetchAll: true,
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
       expect(result.isError).toBe(true);
+    });
+
+    it('должен отклонить cursor при нескольких issueKeys (batch-ограничение)', async () => {
+      const result = await tool.execute({
+        issueKeys: ['QUEUE-123', 'QUEUE-456'],
+        cursor: 'c1:abc',
+        fields: STANDARD_CHANGELOG_FIELDS,
+      });
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('должен прокинуть cursor в фасад (single issueKey)', async () => {
+      const mockBatchResult: ChangelogBatch = [
+        { status: 'fulfilled', key: 'QUEUE-123', value: page([]), index: 0 },
+      ];
+      vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
+
+      await tool.execute({
+        issueKeys: ['QUEUE-123'],
+        cursor: 'c1:abc',
+        fields: STANDARD_CHANGELOG_FIELDS,
+      });
+
+      expect(mockTrackerFacade.getIssueChangelog).toHaveBeenCalledWith(
+        ['QUEUE-123'],
+        expect.objectContaining({ cursor: 'c1:abc' })
+      );
     });
   });
 });

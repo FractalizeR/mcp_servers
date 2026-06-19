@@ -66,7 +66,6 @@ describe('get-queues integration tests', () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_queues', {
         perPage: 50,
-        page: 2,
         fields: STANDARD_QUEUE_FIELDS,
       });
 

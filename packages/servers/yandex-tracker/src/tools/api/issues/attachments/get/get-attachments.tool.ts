@@ -5,6 +5,9 @@
  * - Batch-режим: получение файлов из нескольких задач
  * - Минимальная бизнес-логика
  * - Валидация через Zod
+ *
+ * ВАЖНО: эндпоинт НЕ пагинируется — возвращает все вложения за один ответ,
+ * поэтому в выходе нет блока `pagination` и параметров пагинации.
  */
 
 import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
@@ -45,7 +48,7 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, fields, page, perPage, fetchAll, maxItems, maxTotalItems } = validation.data;
+    const { issueIds, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -56,16 +59,11 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
         fields
       );
 
-      // 3. API v2: получение списка файлов для нескольких задач через batch-метод
-      const results = await this.facade.getAttachmentsMany(issueIds, {
-        page,
-        perPage,
-        fetchAll,
-        maxItems,
-        maxTotalItems,
-      });
+      // 3. API v2: получение списка файлов для нескольких задач через batch-метод.
+      // Эндпоинт НЕ пагинируется — возвращает все вложения за один ответ.
+      const results = await this.facade.getAttachmentsMany(issueIds);
 
-      // 4. Обработка результатов через BatchResultProcessor (с пагинацией)
+      // 4. Обработка результатов через BatchResultProcessor
       const processedResults = BatchResultProcessor.process(results, paginatedFieldFilter(fields));
 
       // 5. Логирование результатов
@@ -87,7 +85,6 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
           issueId: item.key,
           attachmentsCount: item.data.items.length,
           attachments: item.data.items,
-          pagination: item.data.pagination,
         })),
         failed: processedResults.failed.map((item) => ({
           issueId: item.key,

@@ -6,6 +6,7 @@ import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { GetCommentsInput } from '#tracker_api/dto/index.js';
 import type { ServerConfig } from '#config';
 import { GetCommentsOperation } from '#tracker_api/api_operations/comment/get-comments.operation.js';
+import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
 
 /** Фабрика тестового комментария. */
 function makeComment(id: string, text = `Comment ${id}`): CommentWithUnknownFields {
@@ -26,6 +27,13 @@ function makeComment(id: string, text = `Comment ${id}`): CommentWithUnknownFiel
 function nextLink(page: number): Record<string, string> {
   return {
     link: `<https://api.tracker.yandex.net/v3/issues/TEST-1/comments?page=${page}>; rel="next"`,
+  };
+}
+
+/** Заголовок Link с rel="next" по id-курсору (как реально отдаёт API комментариев). */
+function nextLinkById(id: string): Record<string, string> {
+  return {
+    link: `<https://api.tracker.yandex.net/v3/issues/TEST-1/comments?id=${id}>; rel="next"`,
   };
 }
 
@@ -101,16 +109,17 @@ describe('GetCommentsOperation', () => {
       expect(result.pagination.fetchedAll).toBe(false);
     });
 
-    it('should pass pagination parameters to endpoint', async () => {
-      mockHttpClient.setResponse('GET', '/v3/issues/PROJ-10/comments?perPage=50&page=2', []);
+    it('should pass perPage parameter to endpoint (no page)', async () => {
+      mockHttpClient.setResponse('GET', '/v3/issues/PROJ-10/comments?perPage=50', []);
 
-      const input: GetCommentsInput = { perPage: 50, page: 2 };
+      const input: GetCommentsInput = { perPage: 50 };
       const result = await operation.execute('PROJ-10', input);
 
-      expect(result.pagination.page).toBe(2);
       expect(result.pagination.perPage).toBe(50);
+      // page больше не отдаётся в cursor-режиме
+      expect(result.pagination.page).toBeUndefined();
       expect(mockHttpClient.getRequestHistory()).toContainEqual(
-        expect.objectContaining({ path: '/v3/issues/PROJ-10/comments?perPage=50&page=2' })
+        expect.objectContaining({ path: '/v3/issues/PROJ-10/comments?perPage=50' })
       );
     });
 
@@ -138,6 +147,68 @@ describe('GetCommentsOperation', () => {
 
     it('should propagate API errors', async () => {
       await expect(operation.execute('UNKNOWN-1')).rejects.toThrow();
+    });
+
+    it('exposes nextCursor decoding to the next-URL path (Link rel=next by id)', async () => {
+      mockHttpClient.setResponse(
+        'GET',
+        '/v3/issues/TEST-1/comments',
+        [makeComment('1')],
+        nextLinkById('NEXT')
+      );
+
+      const result = await operation.execute('TEST-1');
+
+      expect(result.pagination.nextCursor).toBeDefined();
+      const decoded = CursorCodec.decode(result.pagination.nextCursor!, CURSOR_TAGS.comments);
+      expect(decoded.path).toBe('/v3/issues/TEST-1/comments?id=NEXT');
+    });
+
+    it('does NOT emit total/totalPages without rel=seek (X-Total-* present)', async () => {
+      // Регрессия: раньше X-Total-Pages рисовал ложный totalPages даже без seek.
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments', [makeComment('1')], {
+        'x-total-count': '42',
+        'x-total-pages': '5',
+      });
+
+      const result = await operation.execute('TEST-1');
+
+      expect(result.pagination.total).toBeUndefined();
+      expect(result.pagination.totalPages).toBeUndefined();
+    });
+  });
+
+  describe('execute (cursor mode)', () => {
+    it('paginates via cursor: nextCursor → request next page → next records', async () => {
+      // Первая страница отдаёт Link rel=next по id-курсору.
+      mockHttpClient.setResponse(
+        'GET',
+        '/v3/issues/TEST-1/comments',
+        [makeComment('1')],
+        nextLinkById('NEXT')
+      );
+      // Декодированный путь курсора возвращает следующие записи.
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments?id=NEXT', [makeComment('2')]);
+
+      const firstPage = await operation.execute('TEST-1');
+      const cursor = firstPage.pagination.nextCursor;
+      expect(cursor).toBeDefined();
+
+      const expectedPath = CursorCodec.decode(cursor!, CURSOR_TAGS.comments).path;
+      expect(expectedPath).toBe('/v3/issues/TEST-1/comments?id=NEXT');
+
+      const secondPage = await operation.execute('TEST-1', { cursor });
+
+      expect(secondPage.items.map((c) => c.id)).toEqual(['2']);
+      expect(mockHttpClient.getRequestHistory()).toContainEqual(
+        expect.objectContaining({ method: 'GET', path: '/v3/issues/TEST-1/comments?id=NEXT' })
+      );
+    });
+
+    it('throws InvalidCursorError on a broken cursor', async () => {
+      await expect(operation.execute('TEST-1', { cursor: 'bad' })).rejects.toBeInstanceOf(
+        InvalidCursorError
+      );
     });
   });
 

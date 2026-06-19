@@ -45,7 +45,8 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, fields, page, perPage, fetchAll, maxItems, maxTotalItems } = validation.data;
+    const { issueIds, fields, cursor, perPage, fetchAll, maxItems, maxTotalItems } =
+      validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -58,7 +59,7 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
 
       // 3. API v2: получение записей времени через batch-метод
       const results = await this.facade.getWorklogsMany(issueIds, {
-        page,
+        cursor,
         perPage,
         fetchAll,
         maxItems,

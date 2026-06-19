@@ -6,13 +6,15 @@ import { z } from 'zod';
 import {
   IssueKeysSchema,
   FieldsSchema,
-  PageSchema,
   PerPageSchema,
   FetchAllSchema,
   MaxItemsSchema,
   MaxTotalItemsSchema,
-  noPageFetchAllConflict,
-  PAGINATION_CONFLICT_MESSAGE,
+  CursorSchema,
+  noCursorWithBulkParams,
+  cursorRequiresSingleIssue,
+  PAGINATION_CURSOR_CONFLICT_MESSAGE,
+  PAGINATION_CURSOR_BATCH_MESSAGE,
 } from '#common/schemas/index.js';
 
 /**
@@ -28,9 +30,10 @@ export const GetIssueChangelogParamsSchema = z
     issueKeys: IssueKeysSchema.describe('Массив ключей задач (например, ["QUEUE-1", "QUEUE-2"])'),
 
     /**
-     * Номер страницы (с 1). Игнорируется при fetchAll=true.
+     * Непрозрачный курсор следующей страницы (из pagination.nextCursor).
+     * Допустим только при ровно одном issueKey; несовместим с bulk-параметрами.
      */
-    page: PageSchema,
+    cursor: CursorSchema,
 
     /**
      * Количество записей истории на странице (1..100).
@@ -38,7 +41,7 @@ export const GetIssueChangelogParamsSchema = z
     perPage: PerPageSchema,
 
     /**
-     * Полный обход всех страниц истории (opt-in). Несовместимо с явным page.
+     * Полный обход всех страниц истории (opt-in).
      */
     fetchAll: FetchAllSchema,
 
@@ -55,9 +58,15 @@ export const GetIssueChangelogParamsSchema = z
      */
     fields: FieldsSchema,
   })
-  .refine(noPageFetchAllConflict, {
-    message: PAGINATION_CONFLICT_MESSAGE,
-    path: ['page'],
+  .refine(noCursorWithBulkParams, {
+    message: PAGINATION_CURSOR_CONFLICT_MESSAGE,
+    path: ['cursor'],
+  })
+  // Поле задач в changelog называется issueKeys — адаптируем под предикат,
+  // который оперирует issueIds (общий контракт batch-инструментов).
+  .refine((data) => cursorRequiresSingleIssue({ cursor: data.cursor, issueIds: data.issueKeys }), {
+    message: PAGINATION_CURSOR_BATCH_MESSAGE,
+    path: ['cursor'],
   });
 
 /**

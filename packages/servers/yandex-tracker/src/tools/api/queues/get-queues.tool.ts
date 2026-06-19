@@ -29,20 +29,17 @@ export class GetQueuesTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { fields, perPage = 50, page = 1, expand, fetchAll, maxItems } = validation.data;
+    const { fields, perPage, cursor, expand, fetchAll, maxItems } = validation.data;
 
     try {
       this.logger.info('Получение списка очередей', {
-        perPage,
-        page,
         expand: expand ?? 'none',
       });
 
-      const result = await this.facade.getQueues({ perPage, page, expand, fetchAll, maxItems });
+      const result = await this.facade.getQueues({ perPage, cursor, expand, fetchAll, maxItems });
 
       this.logger.info('Список очередей получен', {
         count: result.items.length,
-        page,
       });
 
       const filteredQueues = result.items.map((queue) =>
@@ -52,8 +49,6 @@ export class GetQueuesTool extends BaseTool<YandexTrackerFacade> {
       return this.formatSuccess({
         queues: filteredQueues,
         count: filteredQueues.length,
-        page,
-        perPage,
         pagination: result.pagination,
         fieldsReturned: fields,
       });

@@ -7,13 +7,15 @@ import {
   IssueKeysSchema,
   ExpandSchema,
   FieldsSchema,
-  PageSchema,
+  CursorSchema,
   makePerPageSchema,
   FetchAllSchema,
   MaxItemsSchema,
   MaxTotalItemsSchema,
-  noPageFetchAllConflict,
-  PAGINATION_CONFLICT_MESSAGE,
+  noCursorWithBulkParams,
+  cursorRequiresSingleIssue,
+  PAGINATION_CURSOR_CONFLICT_MESSAGE,
+  PAGINATION_CURSOR_BATCH_MESSAGE,
 } from '#common/schemas/index.js';
 
 /**
@@ -34,9 +36,10 @@ export const GetCommentsParamsSchema = z
     perPage: makePerPageSchema(500),
 
     /**
-     * Номер страницы (опционально)
+     * Непрозрачный курсор следующей страницы (из pagination.nextCursor).
+     * Допустим только при ровно одном issueId; несовместим с bulk-параметрами.
      */
-    page: PageSchema,
+    cursor: CursorSchema,
 
     /**
      * Opt-in полного обхода всех страниц (опционально)
@@ -62,9 +65,13 @@ export const GetCommentsParamsSchema = z
      */
     fields: FieldsSchema,
   })
-  .refine(noPageFetchAllConflict, {
-    message: PAGINATION_CONFLICT_MESSAGE,
-    path: ['page'],
+  .refine(noCursorWithBulkParams, {
+    message: PAGINATION_CURSOR_CONFLICT_MESSAGE,
+    path: ['cursor'],
+  })
+  .refine(cursorRequiresSingleIssue, {
+    message: PAGINATION_CURSOR_BATCH_MESSAGE,
+    path: ['cursor'],
   });
 
 /**

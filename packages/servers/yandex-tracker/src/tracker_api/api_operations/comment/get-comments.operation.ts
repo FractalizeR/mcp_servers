@@ -12,7 +12,13 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
-import { TrackerPaginator, ItemBudget, DEFAULT_MAX_TOTAL_ITEMS } from '#tracker_api/utils/index.js';
+import {
+  TrackerPaginator,
+  ItemBudget,
+  DEFAULT_MAX_TOTAL_ITEMS,
+  CursorCodec,
+  CURSOR_TAGS,
+} from '#tracker_api/utils/index.js';
 import type { GetCommentsInput } from '#tracker_api/dto/index.js';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/index.js';
@@ -60,6 +66,20 @@ export class GetCommentsOperation extends BaseOperation {
   ): Promise<PaginatedResult<CommentWithUnknownFields>> {
     this.logger.info(`Получение комментариев задачи ${issueId}`);
 
+    // Курсор: один запрос по декодированному пути (perPage/expand уже в нём).
+    if (input.cursor !== undefined) {
+      const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.comments);
+      const response = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path);
+      const normalizedCursor = this.normalizeEnvelope(response);
+      const single = TrackerPaginator.singlePage<CommentWithUnknownFields>(normalizedCursor, {
+        tag: CURSOR_TAGS.comments,
+      });
+      this.logger.info(
+        `Получено ${single.items.length} комментариев для задачи ${issueId} (cursor)`
+      );
+      return single;
+    }
+
     // В fetchAll perPage поднимаем к максимуму endpoint'а (comments допускает
     // до 500) ради меньшего числа round-trip'ов; maxItems всё равно режет
     // финальную выдачу.
@@ -68,7 +88,6 @@ export class GetCommentsOperation extends BaseOperation {
 
     const path = this.buildPath(issueId, {
       perPage: effectivePerPage,
-      page: input.page,
       expand: input.expand,
     });
 
@@ -85,6 +104,7 @@ export class GetCommentsOperation extends BaseOperation {
               this.normalizeEnvelope(
                 await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(p)
               ),
+            tag: CURSOR_TAGS.comments,
             ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
             ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
             ...(budget !== undefined ? { budget } : {}),
@@ -96,7 +116,7 @@ export class GetCommentsOperation extends BaseOperation {
             },
           })
         : TrackerPaginator.singlePage<CommentWithUnknownFields>(normalized, {
-            ...(input.page !== undefined ? { page: input.page } : {}),
+            tag: CURSOR_TAGS.comments,
             ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
           });
 
@@ -110,14 +130,11 @@ export class GetCommentsOperation extends BaseOperation {
    */
   private buildPath(
     issueId: string,
-    params: { perPage?: number | undefined; page?: number | undefined; expand?: string | undefined }
+    params: { perPage?: number | undefined; expand?: string | undefined }
   ): string {
     const queryParams: Record<string, string> = {};
     if (params.perPage !== undefined) {
       queryParams['perPage'] = String(params.perPage);
-    }
-    if (params.page !== undefined) {
-      queryParams['page'] = String(params.page);
     }
     if (params.expand !== undefined) {
       queryParams['expand'] = params.expand;

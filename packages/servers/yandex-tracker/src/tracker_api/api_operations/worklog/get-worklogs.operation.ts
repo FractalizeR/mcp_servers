@@ -17,6 +17,8 @@ import {
   DEFAULT_MAX_PER_PAGE,
   ItemBudget,
   DEFAULT_MAX_TOTAL_ITEMS,
+  CursorCodec,
+  CURSOR_TAGS,
 } from '#tracker_api/utils/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/index.js';
@@ -61,9 +63,24 @@ export class GetWorklogsOperation extends BaseOperation {
   ): Promise<PaginatedResult<WorklogWithUnknownFields>> {
     this.logger.info(`Получение записей времени задачи ${issueId}`);
 
+    // Курсор-режим: декодируем путь следующей страницы и отдаём ровно одну
+    // страницу (размер уже зашит в курсор). При битом/чужом курсоре decode
+    // бросает InvalidCursorError (доходит до агента как explicit-ошибка).
+    if (input.cursor !== undefined) {
+      const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.worklog);
+      const resp = await this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(path);
+      const cursorResult = TrackerPaginator.singlePage<WorklogWithUnknownFields>(resp, {
+        tag: CURSOR_TAGS.worklog,
+      });
+      this.logger.info(
+        `Получено ${cursorResult.items.length} записей времени для задачи ${issueId} (cursor)`
+      );
+      return cursorResult;
+    }
+
     const fetchAll = input.fetchAll === true;
     const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
-    const path = this.buildPath(issueId, input.page, effectivePerPage);
+    const path = this.buildPath(issueId, effectivePerPage);
 
     const first = await this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(path);
 
@@ -71,13 +88,14 @@ export class GetWorklogsOperation extends BaseOperation {
       ? await TrackerPaginator.fetchAllPages<WorklogWithUnknownFields>({
           firstResponse: first,
           requestNext: (p) => this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(p),
+          tag: CURSOR_TAGS.worklog,
           ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
           ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
           ...(budget !== undefined ? { budget } : {}),
         })
       : TrackerPaginator.singlePage<WorklogWithUnknownFields>(first, {
-          page: input.page,
-          perPage: input.perPage,
+          tag: CURSOR_TAGS.worklog,
+          ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
         });
 
     this.logger.info(`Получено ${result.items.length} записей времени для задачи ${issueId}`);
@@ -121,14 +139,11 @@ export class GetWorklogsOperation extends BaseOperation {
   }
 
   /**
-   * Построить путь с query-параметрами пагинации.
+   * Построить путь первой страницы с query-параметром perPage.
    */
-  private buildPath(issueId: string, page?: number, perPage?: number): string {
+  private buildPath(issueId: string, perPage?: number): string {
     const base = `/v2/issues/${issueId}/worklog`;
     const query = new URLSearchParams();
-    if (page !== undefined) {
-      query.set('page', String(page));
-    }
     if (perPage !== undefined) {
       query.set('perPage', String(perPage));
     }

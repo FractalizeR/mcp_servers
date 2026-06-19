@@ -5,12 +5,12 @@
 import { z } from 'zod';
 import {
   FieldsSchema,
-  PageSchema,
+  CursorSchema,
   makePerPageSchema,
   FetchAllSchema,
   MaxItemsSchema,
-  noPageFetchAllConflict,
-  PAGINATION_CONFLICT_MESSAGE,
+  noCursorWithBulkParams,
+  PAGINATION_CURSOR_CONFLICT_MESSAGE,
 } from '#common/schemas/index.js';
 
 /**
@@ -62,9 +62,12 @@ export const FindIssuesParamsSchema = z
     perPage: makePerPageSchema(),
 
     /**
-     * Номер страницы
+     * Непрозрачный курсор следующей страницы (из pagination.nextCursor).
+     *
+     * При курсоре критерии поиска (query/filter/keys/queue/filterId/order)
+     * ОБЯЗАНЫ быть переданы повторно: операция сверяет их хеш с хешем в курсоре.
      */
-    page: PageSchema,
+    cursor: CursorSchema,
 
     /**
      * Расширение ответа дополнительными полями
@@ -73,7 +76,7 @@ export const FindIssuesParamsSchema = z
     expand: z.array(z.string()).optional(),
 
     /**
-     * Полный обход всех страниц (opt-in). Несовместимо с явным page.
+     * Полный обход всех страниц (opt-in). Несовместимо с cursor.
      */
     fetchAll: FetchAllSchema,
 
@@ -103,9 +106,9 @@ export const FindIssuesParamsSchema = z
         'Должен быть указан хотя бы один способ поиска: query, filter, keys, queue или filterId',
     }
   )
-  .refine(noPageFetchAllConflict, {
-    message: PAGINATION_CONFLICT_MESSAGE,
-    path: ['page'],
+  .refine(noCursorWithBulkParams, {
+    message: PAGINATION_CURSOR_CONFLICT_MESSAGE,
+    path: ['cursor'],
   });
 
 /**

@@ -4,15 +4,17 @@
  * API: GET /v2/issues/{issueId}/checklistItems
  *
  * Параметры пагинации опциональны:
- * - по умолчанию (`fetchAll` не задан/false) — одна страница + метаданные;
+ * - по умолчанию (`fetchAll` не задан/false) — одна страница + метаданные
+ *   (`pagination.nextCursor` для следующей);
+ * - `cursor` — продолжение с конкретной страницы (декодируется в путь);
  * - `fetchAll=true` — полный обход по Link rel="next" с защитным лимитом `maxItems`.
  */
 export interface GetChecklistInput {
   /** Идентификатор или ключ задачи (например, 'QUEUE-123'). */
   issueId: string;
 
-  /** Номер страницы (с 1). Игнорируется при fetchAll=true. */
-  page?: number | undefined;
+  /** Непрозрачный курсор следующей страницы (из `pagination.nextCursor`). */
+  cursor?: string | undefined;
 
   /** Количество записей на странице. */
   perPage?: number | undefined;

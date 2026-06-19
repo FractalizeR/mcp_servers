@@ -16,7 +16,6 @@ import type { UpdateProjectDto } from './update-project.dto.js';
 export function createGetProjectsDto(overrides?: Partial<GetProjectsDto>): GetProjectsDto {
   return {
     perPage: 50,
-    page: 1,
     ...overrides,
   };
 }

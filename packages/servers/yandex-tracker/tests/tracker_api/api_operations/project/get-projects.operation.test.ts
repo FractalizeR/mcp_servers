@@ -5,8 +5,14 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetProjectsOperation } from '#tracker_api/api_operations/project/get-projects.operation.js';
 import { createProjectListFixture } from '#helpers/project.fixture.js';
+import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
 
 const NEXT_LINK = '<https://api.tracker.yandex.net/v2/projects?perPage=100&page=2>; rel="next"';
+// Seekable v2: ответ присылает И rel="next", И rel="seek" → total сохраняется.
+const NEXT_AND_SEEK_LINK =
+  '<https://api.tracker.yandex.net/v2/projects?page=2>; rel="next", ' +
+  '<https://api.tracker.yandex.net/v2/projects?{&page}>; rel="seek"';
+const SEEK_ONLY_LINK = '<https://api.tracker.yandex.net/v2/projects?{&page}>; rel="seek"';
 
 describe('GetProjectsOperation', () => {
   let operation: GetProjectsOperation;
@@ -48,7 +54,7 @@ describe('GetProjectsOperation', () => {
       expect(history[0]?.path).toBe('/v2/projects');
     });
 
-    it('без Link rel=next: hasNextPage=false, fetchedAll=true', async () => {
+    it('без Link rel=next: hasNextPage=false, fetchedAll=true, без page', async () => {
       httpClient.setResponse('GET', '/v2/projects', createProjectListFixture(2));
 
       const result = await operation.execute({});
@@ -56,9 +62,11 @@ describe('GetProjectsOperation', () => {
       expect(result.pagination.hasNextPage).toBe(false);
       expect(result.pagination.fetchedAll).toBe(true);
       expect(result.pagination.pagesFetched).toBe(1);
+      // Курсор-режим: legacy-поле page больше не выставляется.
+      expect(result.pagination.page).toBeUndefined();
     });
 
-    it('с Link rel=next: hasNextPage=true', async () => {
+    it('с Link rel=next: hasNextPage=true и появляется nextCursor', async () => {
       httpClient.setResponse('GET', '/v2/projects', createProjectListFixture(2), {
         link: NEXT_LINK,
       });
@@ -67,11 +75,13 @@ describe('GetProjectsOperation', () => {
 
       expect(result.pagination.hasNextPage).toBe(true);
       expect(result.pagination.fetchedAll).toBe(false);
+      expect(result.pagination.nextCursor).toBeDefined();
     });
 
-    it('БАГ-ФИКС: total берётся из X-Total-Count, а не из длины страницы', async () => {
+    it('seek-режим v2: total берётся из X-Total-Count (а не из длины страницы)', async () => {
       // страница содержит 2 элемента, но реальный total = 137
       httpClient.setResponse('GET', '/v2/projects', createProjectListFixture(2), {
+        link: SEEK_ONLY_LINK,
         'x-total-count': '137',
       });
 
@@ -89,12 +99,12 @@ describe('GetProjectsOperation', () => {
       expect(result.pagination.total).toBeUndefined();
     });
 
-    it('пробрасывает пагинацию в endpoint (page, perPage)', async () => {
-      httpClient.setResponse('GET', '/v2/projects?page=2&perPage=100', createProjectListFixture(2));
+    it('пробрасывает perPage в endpoint (без page)', async () => {
+      httpClient.setResponse('GET', '/v2/projects?perPage=100', createProjectListFixture(2));
 
-      await operation.execute({ page: 2, perPage: 100 });
+      await operation.execute({ perPage: 100 });
 
-      expect(httpClient.getRequestHistory()[0]?.path).toBe('/v2/projects?page=2&perPage=100');
+      expect(httpClient.getRequestHistory()[0]?.path).toBe('/v2/projects?perPage=100');
     });
 
     it('пробрасывает expand', async () => {
@@ -111,6 +121,47 @@ describe('GetProjectsOperation', () => {
       await operation.execute({ queueId: 'QUEUE1' });
 
       expect(httpClient.getRequestHistory()[0]?.path).toBe('/v2/projects?queueId=QUEUE1');
+    });
+  });
+
+  describe('execute (cursor)', () => {
+    it('seek-режим: nextCursor декодируется в next-путь', async () => {
+      httpClient.setResponse('GET', '/v2/projects', createProjectListFixture(2), {
+        link: NEXT_AND_SEEK_LINK,
+        'x-total-count': '137',
+      });
+
+      const result = await operation.execute({});
+
+      expect(result.pagination.total).toBe(137);
+      const decoded = CursorCodec.decode(
+        result.pagination.nextCursor as string,
+        CURSOR_TAGS.projects
+      );
+      expect(decoded.path).toBe('/v2/projects?page=2');
+    });
+
+    it('повторный вызов с cursor идёт по декодированному пути (один запрос)', async () => {
+      httpClient.setResponse('GET', '/v2/projects', createProjectListFixture(2), {
+        link: NEXT_AND_SEEK_LINK,
+      });
+      const first = await operation.execute({});
+      const cursor = first.pagination.nextCursor as string;
+      expect(cursor).toBeDefined();
+
+      const decoded = CursorCodec.decode(cursor, CURSOR_TAGS.projects);
+      httpClient.setResponse('GET', decoded.path, createProjectListFixture(1));
+
+      const second = await operation.execute({ cursor });
+
+      expect(second.items).toHaveLength(1);
+      const history = httpClient.getRequestHistory();
+      expect(history).toHaveLength(2);
+      expect(history[1]?.path).toBe(decoded.path);
+    });
+
+    it('битый курсор → InvalidCursorError', async () => {
+      await expect(operation.execute({ cursor: 'broken' })).rejects.toThrow(InvalidCursorError);
     });
   });
 

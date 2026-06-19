@@ -430,6 +430,23 @@ describe('TrackerPaginator', () => {
     });
   });
 
+  describe('cursorExtra (хеш тела для find_issues, R2)', () => {
+    it('cursorExtra вшивается в nextCursor и извлекается при decode', () => {
+      const result = TrackerPaginator.singlePage(
+        envelope([1], linkNext('/v3/issues/_search?page=2')),
+        { perPage: 50, tag: CURSOR_TAGS.findIssues, cursorExtra: 'hash-abc' }
+      );
+
+      expect(result.pagination.nextCursor).toBeDefined();
+      const decoded = CursorCodec.decode(
+        result.pagination.nextCursor as string,
+        CURSOR_TAGS.findIssues
+      );
+      expect(decoded.path).toBe('/v3/issues/_search?page=2');
+      expect(decoded.extra).toBe('hash-abc');
+    });
+  });
+
   describe('fetchAllPages cursor-режим (tag)', () => {
     it('truncated по maxItems → nextCursor для возобновления', async () => {
       const requestNext = vi

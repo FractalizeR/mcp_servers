@@ -52,7 +52,8 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueKeys, fields, page, perPage, fetchAll, maxItems, maxTotalItems } = validation.data;
+    const { issueKeys, fields, cursor, perPage, fetchAll, maxItems, maxTotalItems } =
+      validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -65,7 +66,7 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
 
       // 3. API v3: получение истории изменений через batch-метод (с пагинацией)
       const results = await this.facade.getIssueChangelog(issueKeys, {
-        ...(page !== undefined && { page }),
+        ...(cursor !== undefined && { cursor }),
         ...(perPage !== undefined && { perPage }),
         ...(fetchAll !== undefined && { fetchAll }),
         ...(maxItems !== undefined && { maxItems }),

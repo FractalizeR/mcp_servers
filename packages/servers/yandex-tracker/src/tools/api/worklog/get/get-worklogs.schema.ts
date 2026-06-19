@@ -5,13 +5,15 @@
 import { z } from 'zod';
 import { IssueKeysSchema, FieldsSchema } from '#common/schemas/index.js';
 import {
+  CursorSchema,
   FetchAllSchema,
   MaxItemsSchema,
   MaxTotalItemsSchema,
-  PageSchema,
   PerPageSchema,
-  noPageFetchAllConflict,
-  PAGINATION_CONFLICT_MESSAGE,
+  noCursorWithBulkParams,
+  cursorRequiresSingleIssue,
+  PAGINATION_CURSOR_CONFLICT_MESSAGE,
+  PAGINATION_CURSOR_BATCH_MESSAGE,
 } from '#common/schemas/index.js';
 
 /**
@@ -33,8 +35,8 @@ export const GetWorklogsParamsSchema = z
      */
     fields: FieldsSchema,
 
-    /** Номер страницы (с 1). Игнорируется при fetchAll=true. */
-    page: PageSchema,
+    /** Непрозрачный курсор следующей страницы (из pagination.nextCursor). */
+    cursor: CursorSchema,
 
     /** Количество записей на странице. */
     perPage: PerPageSchema,
@@ -48,9 +50,13 @@ export const GetWorklogsParamsSchema = z
     /** Общий потолок записей на весь batch-ответ при fetchAll=true (опционально) */
     maxTotalItems: MaxTotalItemsSchema,
   })
-  .refine(noPageFetchAllConflict, {
-    message: PAGINATION_CONFLICT_MESSAGE,
-    path: ['page'],
+  .refine(noCursorWithBulkParams, {
+    message: PAGINATION_CURSOR_CONFLICT_MESSAGE,
+    path: ['cursor'],
+  })
+  .refine(cursorRequiresSingleIssue, {
+    message: PAGINATION_CURSOR_BATCH_MESSAGE,
+    path: ['cursor'],
   });
 
 /**

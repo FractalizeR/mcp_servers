@@ -29,20 +29,16 @@ export class GetComponentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { queueId, fields, page, perPage, fetchAll, maxItems } = validation.data;
+    const { queueId, fields } = validation.data;
 
     try {
       this.logger.info('Получение списка компонентов очереди', {
         queueId,
       });
 
-      const result = await this.facade.getComponents({
-        queueId,
-        ...(page !== undefined ? { page } : {}),
-        ...(perPage !== undefined ? { perPage } : {}),
-        ...(fetchAll !== undefined ? { fetchAll } : {}),
-        ...(maxItems !== undefined ? { maxItems } : {}),
-      });
+      // Эндпоинт компонентов не пагинируется — возвращает все компоненты
+      // очереди за один ответ.
+      const result = await this.facade.getComponents({ queueId });
 
       // Фильтрация полей для каждого компонента
       const filteredComponents = result.items.map((component) =>
@@ -59,7 +55,6 @@ export class GetComponentsTool extends BaseTool<YandexTrackerFacade> {
         count: filteredComponents.length,
         queueId,
         fieldsReturned: fields,
-        pagination: result.pagination,
       });
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка компонентов', error);

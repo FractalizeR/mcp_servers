@@ -45,7 +45,8 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, fields, page, perPage, fetchAll, maxItems, maxTotalItems } = validation.data;
+    const { issueIds, fields, cursor, perPage, fetchAll, maxItems, maxTotalItems } =
+      validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -58,7 +59,7 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
 
       // 3. API v2: получение чеклистов для нескольких задач через batch-метод
       const results = await this.facade.getChecklistMany(issueIds, {
-        ...(page !== undefined ? { page } : {}),
+        ...(cursor !== undefined ? { cursor } : {}),
         ...(perPage !== undefined ? { perPage } : {}),
         ...(fetchAll !== undefined ? { fetchAll } : {}),
         ...(maxItems !== undefined ? { maxItems } : {}),

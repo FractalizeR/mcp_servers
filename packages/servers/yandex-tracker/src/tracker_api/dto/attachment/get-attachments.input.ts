@@ -1,32 +1,20 @@
 /**
- * DTO параметров получения списка файлов задачи (list, с пагинацией).
+ * DTO параметров получения списка файлов задачи (list).
  *
  * Используется в GetAttachmentsOperation / IssueAttachmentService.getAttachments[Many].
  *
- * Семантика пагинации:
- * - по умолчанию (`fetchAll` не задан/false) — одна страница + метаданные;
- *   листать вручную через `page`;
- * - `fetchAll=true` — полный обход по `Link rel="next"` с защитным `maxItems`.
+ * ВАЖНО: эндпоинт `/v2/issues/{issueId}/attachments` НЕ пагинируется — API
+ * отдаёт все вложения за один ответ (подтверждено сырыми заголовками: нет
+ * `Link rel="next"`). Поэтому параметров пагинации/курсора у DTO нет.
  *
  * API: GET /v2/issues/{issueId}/attachments
  */
 export interface GetAttachmentsInput {
-  /** Номер страницы (с 1). Игнорируется при `fetchAll=true`. */
-  page?: number | undefined;
-
-  /** Размер страницы. При `fetchAll=true` поднимается к рекомендуемому максимуму. */
-  perPage?: number | undefined;
-
-  /** Opt-in полного обхода всех страниц по `Link rel="next"`. */
-  fetchAll?: boolean | undefined;
-
-  /** Максимум записей на одну цепочку при `fetchAll=true` (дефолт применяет паджинатор). */
-  maxItems?: number | undefined;
   /**
-   * Общий потолок записей на весь batch-ответ при `fetchAll=true`.
+   * Зарезервировано под будущие параметры запроса (например, expand).
    *
-   * Дефолт применяет операция (`DEFAULT_MAX_TOTAL_ITEMS`). По достижении
-   * оставшиеся задачи отдают только собранное с `pagination.truncated=true`.
+   * Сейчас вложения возвращаются целиком одним ответом — дополнительных полей
+   * нет. Интерфейс сохранён для совместимости сигнатур operation/facade.
    */
-  maxTotalItems?: number | undefined;
+  readonly [key: string]: never;
 }

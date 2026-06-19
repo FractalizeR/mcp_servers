@@ -5,6 +5,7 @@ import { MockHttpClient } from '@fractalizer/mcp-infrastructure';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { FindIssuesInputDto } from '#tracker_api/dto/index.js';
 import { FindIssuesOperation } from '#tracker_api/api_operations/issue/find/find-issues.operation.js';
+import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
 
 describe('FindIssuesOperation (pagination)', () => {
   let operation: FindIssuesOperation;
@@ -68,17 +69,24 @@ describe('FindIssuesOperation (pagination)', () => {
       expect(post?.data).toEqual({ query: 'status: open' });
     });
 
-    it('строит query-string для perPage/page', async () => {
-      httpClient.setResponse('POST', '/v3/issues/_search?perPage=50&page=2', [mockIssue]);
+    it('строит query-string для perPage', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search?perPage=50', [mockIssue]);
 
-      const result = await operation.execute({ query: 'status: open', perPage: 50, page: 2 });
+      const result = await operation.execute({ query: 'status: open', perPage: 50 });
 
       expect(result.items).toHaveLength(1);
-      expect(result.pagination.page).toBe(2);
       expect(result.pagination.perPage).toBe(50);
     });
 
-    it('с Link rel=next → hasNextPage=true', async () => {
+    it('не возвращает top-level page в метаданных (cursor-режим)', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue]);
+
+      const result = await operation.execute({ query: 'status: open' });
+
+      expect(result.pagination).not.toHaveProperty('page');
+    });
+
+    it('с Link rel=next → hasNextPage=true и nextCursor определён', async () => {
       httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue], {
         link: '<https://api.tracker.yandex.net/v3/issues/_search?page=2>; rel="next"',
       });
@@ -87,6 +95,7 @@ describe('FindIssuesOperation (pagination)', () => {
 
       expect(result.pagination.hasNextPage).toBe(true);
       expect(result.pagination.fetchedAll).toBe(false);
+      expect(result.pagination.nextCursor).toBeDefined();
     });
 
     it('обрабатывает expand', async () => {
@@ -164,10 +173,10 @@ describe('FindIssuesOperation (pagination)', () => {
     });
 
     it('полный обход page-режима с X-Total-Count: fetchedAll=true, hasNextPage=false (регрессия H1)', async () => {
-      // Seekable-ответ присылает И X-Total-Count, И X-Total-Pages.
-      // page*perPage(1*…) < total НЕ должно давать ложный hasNextPage после
-      // полного обхода всех страниц.
+      // Seekable-ответ присылает Link rel="seek" + X-Total-Count + X-Total-Pages.
+      // Нет rel="next" → fallback по X-Total-Pages. total берётся из seek-заголовков.
       httpClient.setResponse('POST', '/v3/issues/_search?perPage=100', [mockIssue], {
+        link: '<https://api.tracker.yandex.net/v3/issues/_search?{&page}>; rel="seek"',
         'x-total-count': '2',
         'x-total-pages': '2',
       });
@@ -236,6 +245,98 @@ describe('FindIssuesOperation (pagination)', () => {
         expect.objectContaining({
           path: '/v3/issues/_search?perPage=100&page=2&expand=transitions',
         })
+      );
+    });
+  });
+
+  describe('cursor (R2: хеш тела)', () => {
+    it('первая страница с Link rel=next+seek → nextCursor, total, decode даёт path+hash; cursor листает дальше', async () => {
+      // Первая POST-страница: rel="next" (cursor-обход) + rel="seek" (total) + X-Total.
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue], {
+        link:
+          '<https://api.tracker.yandex.net/v3/issues/_search?page=2>; rel="next", ' +
+          '<https://api.tracker.yandex.net/v3/issues/_search?{&page}>; rel="seek"',
+        'x-total-count': '2',
+      });
+
+      const first = await operation.execute({ query: 'status: open' });
+
+      expect(first.pagination.nextCursor).toBeDefined();
+      expect(first.pagination.total).toBe(2);
+
+      const decoded = CursorCodec.decode(
+        first.pagination.nextCursor as string,
+        CURSOR_TAGS.findIssues
+      );
+      expect(decoded.path).toBe('/v3/issues/_search?page=2');
+      expect(decoded.extra).toBeDefined();
+
+      // Повторный вызов с тем же query + cursor: POST по декодированному пути,
+      // тем же телом, отдаёт следующие записи.
+      httpClient.setResponse('POST', '/v3/issues/_search?page=2', [
+        { ...mockIssue, key: 'TEST-124' },
+      ]);
+
+      const second = await operation.execute({
+        query: 'status: open',
+        cursor: first.pagination.nextCursor as string,
+      });
+
+      expect(second.items).toHaveLength(1);
+      expect(second.items[0]?.key).toBe('TEST-124');
+
+      const history = httpClient.getRequestHistory();
+      const cursorPost = history.find((r) => r.path === '/v3/issues/_search?page=2');
+      expect(cursorPost?.data).toEqual({ query: 'status: open' });
+    });
+
+    it('дописывает expand к декодированному пути курсора', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue], {
+        link: '<https://api.tracker.yandex.net/v3/issues/_search?page=2>; rel="next"',
+      });
+      const first = await operation.execute({ query: 'status: open' });
+
+      httpClient.setResponse('POST', '/v3/issues/_search?page=2&expand=transitions', [
+        { ...mockIssue, key: 'TEST-124' },
+      ]);
+
+      const second = await operation.execute({
+        query: 'status: open',
+        cursor: first.pagination.nextCursor as string,
+        expand: ['transitions'],
+      });
+
+      expect(second.items).toHaveLength(1);
+      expect(httpClient.getRequestHistory()).toContainEqual(
+        expect.objectContaining({ path: '/v3/issues/_search?page=2&expand=transitions' })
+      );
+    });
+
+    it('сверка хеша: курсор от одних критериев + другой query → throw (mismatch)', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue], {
+        link: '<https://api.tracker.yandex.net/v3/issues/_search?page=2>; rel="next"',
+      });
+      const first = await operation.execute({ query: 'status: open' });
+
+      await expect(
+        operation.execute({
+          query: 'status: closed',
+          cursor: first.pagination.nextCursor as string,
+        })
+      ).rejects.toThrow('Критерии поиска не совпадают с курсором');
+    });
+
+    it('битый курсор → InvalidCursorError', async () => {
+      await expect(
+        operation.execute({ query: 'status: open', cursor: 'not-a-valid-cursor' })
+      ).rejects.toThrow(InvalidCursorError);
+    });
+
+    it('курсор требует переданный способ поиска (validateSearchMethod)', async () => {
+      // Валидный по форме курсор, но без критериев — отказ ещё до decode.
+      const cursor = CursorCodec.encode('/v3/issues/_search?page=2', CURSOR_TAGS.findIssues, 'x');
+      await expect(operation.execute({ cursor })).rejects.toThrow(
+        'FindIssuesOperation: не указан способ поиска'
       );
     });
   });

@@ -95,7 +95,6 @@ describe('get-comments integration tests', () => {
     const result = await client.callTool('fr_yandex_tracker_get_comments', {
       issueIds: [issueKey],
       perPage: 10,
-      page: 1,
       fields: ['id', 'text'],
     });
 

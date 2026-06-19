@@ -155,25 +155,19 @@ describe('find-issues integration tests', () => {
       mockServer.assertAllRequestsDone();
     });
 
-    it('должен поддерживать пагинацию (perPage, page)', async () => {
+    it('должен поддерживать пагинацию (perPage)', async () => {
       // Arrange
       const issueKeys = ['QUEUE-1', 'QUEUE-2'];
 
       mockServer.mockFindIssuesSuccess(issueKeys, (body, params) => {
         // Проверяем и body, и query params
-        return (
-          body['query'] === 'Author: me()' &&
-          params !== undefined &&
-          params['perPage'] === 2 &&
-          params['page'] === 1
-        );
+        return body['query'] === 'Author: me()' && params !== undefined && params['perPage'] === 2;
       });
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'Author: me()',
         perPage: 2,
-        page: 1,
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -184,7 +178,8 @@ describe('find-issues integration tests', () => {
       const response = responseWrapper.data;
 
       expect(response.count).toBe(2);
-      expect(response.searchCriteria.perPage).toBe(2);
+      // R14: perPage больше не эхуется в searchCriteria
+      expect(response.searchCriteria).not.toHaveProperty('perPage');
 
       mockServer.assertAllRequestsDone();
     });
@@ -359,11 +354,12 @@ describe('find-issues integration tests', () => {
       expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
     });
 
-    it('должен вернуть ошибку для невалидного page (не целое число)', async () => {
+    it('должен вернуть ошибку для невалидного perPage (не целое число)', async () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_find_issues', {
         query: 'test',
-        page: 1.5,
+        perPage: 1.5,
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       // Assert

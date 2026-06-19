@@ -5,9 +5,10 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ServerConfig } from '#config';
 import { GetChecklistOperation } from '#tracker_api/api_operations/checklist/get-checklist.operation.js';
+import { InvalidCursorError } from '#tracker_api/utils/cursor-codec.util.js';
 
 const NEXT_LINK =
-  '<https://api.tracker.yandex.net/v2/issues/TEST-1/checklistItems?page=2>; rel="next"';
+  '<https://api.tracker.yandex.net/v2/issues/TEST-1/checklistItems?id=ID2>; rel="next"';
 
 const item = (id: string): ChecklistItemWithUnknownFields => ({
   id,
@@ -69,12 +70,23 @@ describe('GetChecklistOperation', () => {
       expect(result.pagination.hasNextPage).toBe(true);
     });
 
-    it('пробрасывает page/perPage в query', async () => {
+    it('пробрасывает perPage в query (без page)', async () => {
       httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', []);
 
-      await operation.execute({ issueId: 'TEST-1', page: 3, perPage: 20 });
+      await operation.execute({ issueId: 'TEST-1', perPage: 20 });
 
-      expect(httpClient.getRequestHistory()[0]?.params).toEqual({ page: 3, perPage: 20 });
+      expect(httpClient.getRequestHistory()[0]?.params).toEqual({ perPage: 20 });
+    });
+
+    it('выдаёт nextCursor при наличии Link rel="next"', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
+        link: NEXT_LINK,
+      });
+
+      const result = await operation.execute({ issueId: 'TEST-1' });
+
+      expect(result.pagination.nextCursor).toBeDefined();
+      expect(result.pagination.hasNextPage).toBe(true);
     });
 
     it('пробрасывает ошибки API', async () => {
@@ -88,7 +100,7 @@ describe('GetChecklistOperation', () => {
         link: NEXT_LINK,
       });
       // Вторая страница — под путём с query (как его вернёт stripHost)
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems?page=2', [item('2')]);
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems?id=ID2', [item('2')]);
 
       const result = await operation.execute({ issueId: 'TEST-1', fetchAll: true });
 
@@ -106,6 +118,35 @@ describe('GetChecklistOperation', () => {
 
       expect(result.items).toHaveLength(1);
       expect(result.pagination.truncated).toBe(true);
+    });
+  });
+
+  describe('execute (cursor)', () => {
+    it('курсорная регрессия: nextCursor → повторный вызов отдаёт следующие записи', async () => {
+      // Первая страница отдаёт Link rel="next" с ?id=ID2 → nextCursor
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
+        link: NEXT_LINK,
+      });
+      // Декодированный путь курсора (stripHost от next) отдаёт следующую запись
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems?id=ID2', [item('2')]);
+
+      const firstPage = await operation.execute({ issueId: 'TEST-1' });
+      const cursor = firstPage.pagination.nextCursor;
+      expect(cursor).toBeDefined();
+
+      const secondPage = await operation.execute({ issueId: 'TEST-1', cursor: cursor as string });
+
+      // Повторный запрос ушёл по декодированному из курсора пути
+      const lastReq = httpClient.getRequestHistory().at(-1);
+      expect(lastReq?.path).toBe('/v2/issues/TEST-1/checklistItems?id=ID2');
+      expect(secondPage.items).toHaveLength(1);
+      expect(secondPage.items[0]?.id).toBe('2');
+    });
+
+    it('битый курсор → InvalidCursorError', async () => {
+      await expect(
+        operation.execute({ issueId: 'TEST-1', cursor: 'not-a-valid-cursor' })
+      ).rejects.toBeInstanceOf(InvalidCursorError);
     });
   });
 

@@ -8,6 +8,7 @@ import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-m
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ServerConfig } from '#config';
 import { GetIssueLinksOperation } from '#tracker_api/api_operations/link/get-issue-links.operation.js';
+import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
 import { createLinkListFixture } from '#helpers/link.fixture.js';
 
 describe('GetIssueLinksOperation', () => {
@@ -134,6 +135,79 @@ describe('GetIssueLinksOperation', () => {
         expect(results[0].value.items).toHaveLength(2);
         expect(results[0].value.pagination.truncated).toBe(true);
       }
+    });
+  });
+
+  describe('cursor pagination', () => {
+    it('single-page выдаёт nextCursor, декодирование ведёт по next-пути', async () => {
+      // Первая страница: есть Link rel=next → nextCursor определён.
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/links', createLinkListFixture(1), {
+        link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/links?id=NEXT>; rel="next"',
+      });
+
+      const first = await operation.execute(['TEST-1']);
+      expect(first[0].status).toBe('fulfilled');
+      if (first[0].status !== 'fulfilled') {
+        return;
+      }
+      const nextCursor = first[0].value.pagination.nextCursor;
+      expect(nextCursor).toBeDefined();
+
+      // Курсор декодируется в относительный next-путь.
+      const decoded = CursorCodec.decode(nextCursor as string, CURSOR_TAGS.links);
+      expect(decoded.path).toBe('/v3/issues/TEST-1/links?id=NEXT');
+
+      // Повторный вызов с курсором идёт по декодированному пути и отдаёт
+      // следующие записи (без Link → последняя страница).
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/links?id=NEXT', createLinkListFixture(2));
+
+      const second = await operation.execute(['TEST-1'], { cursor: nextCursor });
+      expect(second[0].status).toBe('fulfilled');
+      if (second[0].status === 'fulfilled') {
+        expect(second[0].value.items).toHaveLength(2);
+        expect(second[0].value.pagination.hasNextPage).toBe(false);
+        expect(second[0].value.pagination.nextCursor).toBeUndefined();
+      }
+    });
+
+    it('битый курсор → InvalidCursorError (без тихого fallback)', async () => {
+      const results = await operation.execute(['TEST-1'], { cursor: 'broken-cursor' });
+
+      expect(results[0].status).toBe('rejected');
+      if (results[0].status === 'rejected') {
+        expect(results[0].reason).toBeInstanceOf(InvalidCursorError);
+      }
+    });
+
+    it('курсор чужого инструмента → InvalidCursorError', async () => {
+      const alien = CursorCodec.encode('/v3/issues/TEST-1/comments?id=X', CURSOR_TAGS.comments);
+
+      const results = await operation.execute(['TEST-1'], { cursor: alien });
+
+      expect(results[0].status).toBe('rejected');
+      if (results[0].status === 'rejected') {
+        expect(results[0].reason).toBeInstanceOf(InvalidCursorError);
+      }
+    });
+
+    it('с cursor НЕ используется кеш базового запроса (bypass)', async () => {
+      const cursor = CursorCodec.encode('/v3/issues/TEST-1/links?id=NEXT', CURSOR_TAGS.links);
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/links?id=NEXT', createLinkListFixture(1));
+
+      await operation.execute(['TEST-1'], { cursor });
+
+      // Кеш базового запроса не должен читаться/писаться при курсорном листании,
+      // иначе курсор вернул бы кешированную первую страницу.
+      expect(mockCacheManager.get).not.toHaveBeenCalled();
+      expect(mockCacheManager.set).not.toHaveBeenCalled();
+    });
+
+    it('базовый запрос (без cursor) использует кеш', async () => {
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/links', createLinkListFixture(1));
+
+      await operation.execute(['TEST-1']);
+
+      expect(mockCacheManager.get).toHaveBeenCalled();
     });
   });
 });

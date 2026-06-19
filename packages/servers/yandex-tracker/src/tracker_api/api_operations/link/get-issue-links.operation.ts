@@ -24,6 +24,8 @@ import {
   DEFAULT_MAX_PER_PAGE,
   ItemBudget,
   DEFAULT_MAX_TOTAL_ITEMS,
+  CursorCodec,
+  CURSOR_TAGS,
 } from '#tracker_api/utils/index.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/index.js';
@@ -91,7 +93,7 @@ export class GetIssueLinksOperation extends BaseOperation {
     );
 
     const hasPaginationParams =
-      input.page !== undefined ||
+      input.cursor !== undefined ||
       input.perPage !== undefined ||
       input.fetchAll !== undefined ||
       input.maxItems !== undefined;
@@ -130,23 +132,37 @@ export class GetIssueLinksOperation extends BaseOperation {
     input: GetIssueLinksInput,
     budget?: ItemBudget
   ): Promise<PaginatedResult<LinkWithUnknownFields>> {
+    // Курсор-режим: декодируем путь следующей страницы и отдаём ровно одну
+    // страницу (размер уже зашит в курсор). При битом/чужом курсоре decode
+    // бросает InvalidCursorError (доходит до агента как explicit-ошибка).
+    if (input.cursor !== undefined) {
+      const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.links);
+      const resp = await this.httpClient.getWithResponse<LinkWithUnknownFields[]>(path);
+      const result = TrackerPaginator.singlePage<LinkWithUnknownFields>(resp, {
+        tag: CURSOR_TAGS.links,
+      });
+      this.logger.debug(`Получено ${result.items.length} связей для задачи ${issueId} (cursor)`);
+      return result;
+    }
+
     const fetchAll = input.fetchAll === true;
     const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
 
-    const path = this.buildPath(issueId, input.page, effectivePerPage);
+    const path = this.buildPath(issueId, effectivePerPage);
     const first = await this.httpClient.getWithResponse<LinkWithUnknownFields[]>(path);
 
     const result = fetchAll
       ? await TrackerPaginator.fetchAllPages<LinkWithUnknownFields>({
           firstResponse: first,
           requestNext: (p) => this.httpClient.getWithResponse<LinkWithUnknownFields[]>(p),
+          tag: CURSOR_TAGS.links,
           ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
           ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
           ...(budget !== undefined ? { budget } : {}),
         })
       : TrackerPaginator.singlePage<LinkWithUnknownFields>(first, {
-          page: input.page,
-          perPage: input.perPage,
+          tag: CURSOR_TAGS.links,
+          ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
         });
 
     this.logger.debug(`Получено ${result.items.length} связей для задачи ${issueId}`);
@@ -155,14 +171,11 @@ export class GetIssueLinksOperation extends BaseOperation {
   }
 
   /**
-   * Построить путь с query-параметрами пагинации.
+   * Построить путь первой страницы с query-параметром perPage.
    */
-  private buildPath(issueId: string, page?: number, perPage?: number): string {
+  private buildPath(issueId: string, perPage?: number): string {
     const base = `/v3/issues/${issueId}/links`;
     const query = new URLSearchParams();
-    if (page !== undefined) {
-      query.set('page', String(page));
-    }
     if (perPage !== undefined) {
       query.set('perPage', String(perPage));
     }

@@ -45,7 +45,7 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueIds, perPage, page, fetchAll, maxItems, maxTotalItems, expand, fields } =
+    const { issueIds, perPage, cursor, fetchAll, maxItems, maxTotalItems, expand, fields } =
       validation.data;
 
     try {
@@ -60,7 +60,7 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
       // 3. API v3: получение комментариев через batch-метод
       const results = await this.facade.getCommentsMany(issueIds, {
         perPage,
-        page,
+        cursor,
         fetchAll,
         maxItems,
         maxTotalItems,

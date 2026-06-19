@@ -10,9 +10,12 @@
  */
 export interface GetIssueChangelogInputDto {
   /**
-   * Номер страницы (с 1). Игнорируется при fetchAll=true.
+   * Непрозрачный курсор следующей страницы (из pagination.nextCursor).
+   *
+   * Кодирует относительный путь предыдущего запроса. При наличии операция
+   * делает ровно один запрос по декодированному пути (perPage/page уже в нём).
    */
-  page?: number | undefined;
+  cursor?: string | undefined;
 
   /**
    * Количество записей на странице.
@@ -23,7 +26,7 @@ export interface GetIssueChangelogInputDto {
    * Полный обход всех страниц истории (opt-in).
    *
    * Если true — обойти все страницы по `Link rel="next"` с защитным лимитом
-   * maxItems. Несовместимо с явным page.
+   * maxItems. Несовместимо с явным cursor.
    */
   fetchAll?: boolean | undefined;
 

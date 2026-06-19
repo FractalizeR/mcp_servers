@@ -143,10 +143,12 @@ describe('FindIssuesTool', () => {
       expect(parsed.success).toBe(false);
     });
 
-    it('должен отклонить невалидный page (ноль)', async () => {
+    it('должен отклонить cursor вместе с perPage (конфликт)', async () => {
       const result = await tool.execute({
         query: 'Author: me()',
-        page: 0,
+        cursor: 'c1:abc',
+        perPage: 10,
+        fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(result.isError).toBe(true);
@@ -239,18 +241,31 @@ describe('FindIssuesTool', () => {
       );
     });
 
-    it('должен передать параметры пагинации (perPage, page)', async () => {
+    it('должен передать параметр пагинации perPage', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       await tool.execute({
         query: 'Author: me()',
         perPage: 20,
-        page: 2,
         fields: STANDARD_ISSUE_FIELDS,
       });
 
       expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
-        expect.objectContaining({ perPage: 20, page: 2 })
+        expect.objectContaining({ perPage: 20 })
+      );
+    });
+
+    it('должен передать cursor в фасад', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      await tool.execute({
+        query: 'Author: me()',
+        cursor: 'c1:abc',
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
+        expect.objectContaining({ cursor: 'c1:abc' })
       );
     });
 
@@ -483,6 +498,19 @@ describe('FindIssuesTool', () => {
       expect(parsed.data.pagination.hasNextPage).toBe(false);
     });
 
+    it('не должен возвращать top-level page в ответе (R14)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: Record<string, unknown> & { searchCriteria: Record<string, unknown> };
+      };
+      expect(parsed.data).not.toHaveProperty('page');
+      expect(parsed.data.searchCriteria).not.toHaveProperty('page');
+      expect(parsed.data.searchCriteria).not.toHaveProperty('perPage');
+    });
+
     it('должен передавать fetchAll и maxItems в фасад', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
@@ -498,10 +526,10 @@ describe('FindIssuesTool', () => {
       );
     });
 
-    it('должен отклонить конфликт page + fetchAll', async () => {
+    it('должен отклонить конфликт cursor + fetchAll', async () => {
       const result = await tool.execute({
         query: 'Author: me()',
-        page: 2,
+        cursor: 'c1:abc',
         fetchAll: true,
         fields: STANDARD_ISSUE_FIELDS,
       });

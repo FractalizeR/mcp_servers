@@ -72,14 +72,36 @@ describe('GetWorklogsTool', () => {
       expect(result.isError).toBe(true);
     });
 
-    it('отклоняет конфликт page + fetchAll', async () => {
+    it('отклоняет конфликт cursor + bulk-параметров (fetchAll)', async () => {
       const result = await tool.execute({
         issueIds: ['TEST-1'],
         fields: ['id'],
-        page: 2,
+        cursor: 'c1:abc',
         fetchAll: true,
       });
       expect(result.isError).toBe(true);
+    });
+
+    it('отклоняет cursor при нескольких issueIds', async () => {
+      const result = await tool.execute({
+        issueIds: ['TEST-1', 'TEST-2'],
+        fields: ['id'],
+        cursor: 'c1:abc',
+      });
+      expect(result.isError).toBe(true);
+    });
+
+    it('прокидывает cursor в фасад', async () => {
+      vi.mocked(mockTrackerFacade.getWorklogsMany).mockResolvedValue([
+        { status: 'fulfilled', key: 'TEST-1', index: 0, value: paginated(mockWorklogs) },
+      ]);
+
+      await tool.execute({ issueIds: ['TEST-1'], fields: ['id'], cursor: 'c1:abc' });
+
+      expect(mockTrackerFacade.getWorklogsMany).toHaveBeenCalledWith(
+        ['TEST-1'],
+        expect.objectContaining({ cursor: 'c1:abc' })
+      );
     });
   });
 

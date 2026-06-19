@@ -18,7 +18,6 @@ import type { ManageQueueAccessDto } from './manage-queue-access.dto.js';
 export function createGetQueuesDto(overrides?: Partial<GetQueuesDto>): GetQueuesDto {
   return {
     perPage: 50,
-    page: 1,
     ...overrides,
   };
 }
