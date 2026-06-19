@@ -39,4 +39,15 @@ describe('parseLinkHeader', () => {
     const result = parseLinkHeader('<https://api/x>; title="foo"');
     expect(result['next']).toBeUndefined();
   });
+
+  it('rel регистронезависим (RFC 5988): rel="Next" → ключ next', () => {
+    const result = parseLinkHeader('<https://api/x?page=2>; rel="Next"');
+    expect(result['next']).toBe('https://api/x?page=2');
+  });
+
+  it('multi-token rel ("next prev") регистрируется под каждым токеном', () => {
+    const result = parseLinkHeader('<https://api/x?page=2>; rel="next prev"');
+    expect(result['next']).toBe('https://api/x?page=2');
+    expect(result['prev']).toBe('https://api/x?page=2');
+  });
 });

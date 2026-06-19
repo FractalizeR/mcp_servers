@@ -56,7 +56,14 @@ export function parseLinkHeader(headerValue?: string): ParsedLinkHeader {
     const relMatch = /rel\s*=\s*"?([^";]+)"?/.exec(attrs);
     const rel = relMatch?.[1]?.trim();
     if (rel && rel.length > 0) {
-      result[rel] = url;
+      // RFC 5988: rel — регистронезависим и может содержать несколько
+      // space-separated токенов (`rel="next prev"`). Регистрируем URL под
+      // каждым токеном в lowercase, чтобы поиск по `next`/`seek` был надёжным.
+      for (const token of rel.toLowerCase().split(/\s+/)) {
+        if (token.length > 0) {
+          result[token] = url;
+        }
+      }
     }
   }
 
