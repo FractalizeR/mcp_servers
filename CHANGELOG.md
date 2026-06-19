@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/FractalizeR/mcp_servers/compare/v1.5.0...v1.5.1) (2026-06-19)
+
+### Bug Fixes
+
+* **infra:** parseLinkHeader — регистронезависимый rel + multi-token ([8037c4e](https://github.com/FractalizeR/mcp_servers/commit/8037c4e5e6b264961c74ed08f31fad0a9157ddac))
+* **tracker:** пагинация — стабильный hasNextPage, кеш-аудит, _search; +maxTotalItems ([a31d461](https://github.com/FractalizeR/mcp_servers/commit/a31d4610f6ad44143d8b6e0fbe4650d18d64db2e))
+
 ## [1.5.0](https://github.com/FractalizeR/mcp_servers/compare/v1.4.0...v1.5.0) (2026-06-18)
 
 ### Features
