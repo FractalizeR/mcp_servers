@@ -81,6 +81,24 @@ next-пути, напр. `/v3/issues/X/changelog?id=...&perPage=3`). Серве�
 4. **Версионирование курсора**: короткий префикс-версия в токене (напр. `c1:`)
    для forward-compat.
 
+## Верификация worklog/checklist (R7) — ЗАКРЫТО в этапе 1.1 (2026-06-19)
+
+**Вердикт: ОСТАВИТЬ cursor-механизм для `worklog` и `checklist` (директива группам 2.2/2.3).**
+
+Источник истины — эталонный Python SDK `yandex_tracker_client/connection.py:234-256`:
+решение о пагинации принимается ИСКЛЮЧИТЕЛЬНО по `if 'next' in response.links`
+(seek → `SeekablePaginatedList`, иначе `PaginatedList`, нет next → plain list).
+worklog (`/v2/issues/{id}/worklog/{id}`) и checklistItems
+(`/v2/issues/{id}/checklistItems/{id}`) НЕ имеют спец-обработки — подчиняются тому же
+универсальному инварианту `Link rel="next"`. Живых данных в орг. нет → подтвердить
+«не пагинируется» НЕЛЬЗЯ.
+
+Следствие: удалять пагинацию у них РИСКОВАННО (тихая потеря хвоста, если API всё же
+отдаёт `next`). Cursor-механизм безопасен по построению: если API не пагинирует —
+`hasNextPage=false`, `nextCursor` отсутствует, все элементы приходят за один ответ
+(no-op). Поэтому группы 2.2 (worklog) и 2.3 (checklist) НЕ убирают пагин-параметры,
+а переводят на `cursor` как все cursor-эндпоинты. Теги: `wlog`, `chk`.
+
 ## Этапы (см. отдельные файлы)
 
 - `1.1_*_sequential` — общие контракты (схема/entity/paginator/codec). БЛОКИРУЮЩИЙ.

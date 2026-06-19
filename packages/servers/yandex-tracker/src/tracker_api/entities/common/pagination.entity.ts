@@ -31,9 +31,17 @@ export interface PaginationParams {
   readonly perPage?: number | undefined;
 
   /**
-   * Номер страницы (начинается с 1)
+   * Непрозрачный курсор следующей страницы из `pagination.nextCursor`.
    *
-   * По умолчанию: 1
+   * Содержит зафиксированный путь+perPage предыдущего запроса; использовать
+   * только с тем же инструментом, который его выдал. Несовместим с
+   * `perPage`/`fetchAll`/`maxItems`/`maxTotalItems`.
+   */
+  readonly cursor?: string | undefined;
+
+  /**
+   * @deprecated Номер страницы (начинается с 1). Заменён на `cursor`; удаляется
+   * в этапе 3.1. Новый код не использует.
    */
   readonly page?: number | undefined;
 }
@@ -45,21 +53,34 @@ export interface PaginationParams {
  * и для fetchAll (полный обход). Режимы различаются по флагам
  * `fetchedAll`/`truncated`/`hasError`.
  *
- * `total`/`totalPages` заполняются только когда сервер прислал заголовки
- * `X-Total-Count`/`X-Total-Pages` (seek-механизм `_search`); для чистого
- * Link-cursor их может не быть — тогда ориентир `hasNextPage`.
+ * `total`/`totalPages` заполняются ТОЛЬКО когда ответ содержит `rel="seek"`
+ * (seekable-эндпоинты: queues/projects/`_search`). Для чистого Link-cursor
+ * (changelog/comments/...) их нет даже при наличии `X-Total-*` (seek-gating
+ * против ложного `totalPages`) — ориентир `hasNextPage`/`nextCursor`.
  */
 export interface PaginationMeta {
-  /** Номер текущей страницы (если применимо к запросу) */
+  /**
+   * Непрозрачный курсор следующей страницы.
+   *
+   * Присутствует ⟺ `hasNextPage === true` (выводится из `Link rel="next"`).
+   * Передайте его в `cursor` того же инструмента, чтобы получить следующую
+   * страницу. Непагинируемые эндпоинты блок `pagination` не возвращают вовсе.
+   */
+  readonly nextCursor?: string | undefined;
+
+  /**
+   * @deprecated Номер текущей страницы — только легаси (немигрированные
+   * эндпоинты). Удаляется в этапе 3.1 вместе с публичным `page`.
+   */
   readonly page?: number | undefined;
 
   /** Размер страницы (если применимо к запросу) */
   readonly perPage?: number | undefined;
 
-  /** Общее количество элементов (только при `X-Total-Count`) */
+  /** Общее количество элементов (только при `rel="seek"` + `X-Total-Count`) */
   readonly total?: number | undefined;
 
-  /** Общее количество страниц (только при `X-Total-Pages`) */
+  /** Общее количество страниц (только при `rel="seek"` + `X-Total-Pages`) */
   readonly totalPages?: number | undefined;
 
   /** Есть ли ещё данные за пределами возвращённых элементов */

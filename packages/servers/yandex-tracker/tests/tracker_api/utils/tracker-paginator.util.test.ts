@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { HttpResponseEnvelope, ResponseHeaders } from '@fractalizer/mcp-infrastructure';
 import { TrackerPaginator, DEFAULT_MAX_ITEMS } from '#tracker_api/utils/tracker-paginator.util.js';
 import { ItemBudget } from '#tracker_api/utils/item-budget.util.js';
+import { CursorCodec, CURSOR_TAGS } from '#tracker_api/utils/cursor-codec.util.js';
 
 /** Хелпер: собрать конверт ответа. */
 function envelope<T>(data: T[], headers: ResponseHeaders = {}): HttpResponseEnvelope<T[]> {
@@ -11,6 +12,15 @@ function envelope<T>(data: T[], headers: ResponseHeaders = {}): HttpResponseEnve
 /** Хелпер: заголовок Link с next на относительный путь. */
 function linkNext(path: string): ResponseHeaders {
   return { link: `<https://api.tracker.yandex.net${path}>; rel="next"` };
+}
+
+/** Хелпер: заголовок Link с next + seek (seekable-эндпоинт). */
+function linkNextSeek(path: string): ResponseHeaders {
+  return {
+    link:
+      `<https://api.tracker.yandex.net${path}>; rel="next", ` +
+      `<https://api.tracker.yandex.net/v3/queues?{&page}>; rel="seek"`,
+  };
 }
 
 describe('TrackerPaginator', () => {
@@ -303,6 +313,166 @@ describe('TrackerPaginator', () => {
       const result = TrackerPaginator.singlePage(envelope(data));
       expect(result.items).not.toBe(data);
       expect(result.items).toEqual([1, 2]);
+    });
+  });
+
+  // --- cursor-режим (этап 1.1): включается передачей tag ---
+
+  describe('buildMeta cursor-режим (tag)', () => {
+    it('nextCursor кодируется из Link rel=next и декодируется обратно в путь', () => {
+      const meta = TrackerPaginator.buildMeta({
+        headers: linkNext('/v3/issues/A-1/changelog?id=abc&perPage=50'),
+        pagesFetched: 1,
+        truncated: false,
+        hasError: false,
+        nextUrl: 'https://api.tracker.yandex.net/v3/issues/A-1/changelog?id=abc&perPage=50',
+        tag: CURSOR_TAGS.changelog,
+      });
+
+      expect(meta.hasNextPage).toBe(true);
+      expect(meta.nextCursor).toBeDefined();
+      expect(CursorCodec.decode(meta.nextCursor as string, CURSOR_TAGS.changelog).path).toBe(
+        '/v3/issues/A-1/changelog?id=abc&perPage=50'
+      );
+      // page в cursor-режиме не выставляется
+      expect(meta.page).toBeUndefined();
+    });
+
+    it('без next — нет nextCursor, hasNextPage=false, fetchedAll=true', () => {
+      const meta = TrackerPaginator.buildMeta({
+        headers: {},
+        pagesFetched: 1,
+        truncated: false,
+        hasError: false,
+        tag: CURSOR_TAGS.comments,
+      });
+
+      expect(meta.hasNextPage).toBe(false);
+      expect(meta.nextCursor).toBeUndefined();
+      expect(meta.fetchedAll).toBe(true);
+    });
+
+    it('seek-gating НЕГАТИВ: X-Total без rel=seek → нет total/totalPages (регрессия comments)', () => {
+      const meta = TrackerPaginator.buildMeta({
+        headers: {
+          ...linkNext('/v3/issues/A-1/comments?id=5'),
+          'x-total-count': '12',
+          'x-total-pages': '4',
+        },
+        pagesFetched: 1,
+        truncated: false,
+        hasError: false,
+        nextUrl: 'https://api.tracker.yandex.net/v3/issues/A-1/comments?id=5',
+        tag: CURSOR_TAGS.comments,
+      });
+
+      expect(meta.total).toBeUndefined();
+      expect(meta.totalPages).toBeUndefined();
+      // листание всё равно возможно по курсору
+      expect(meta.hasNextPage).toBe(true);
+      expect(meta.nextCursor).toBeDefined();
+    });
+
+    it('seek-gating ПОЗИТИВ: rel=seek + X-Total → total/totalPages присутствуют (R8)', () => {
+      const meta = TrackerPaginator.buildMeta({
+        headers: {
+          ...linkNextSeek('/v3/queues?page=2'),
+          'x-total-count': '28',
+          'x-total-pages': '14',
+        },
+        pagesFetched: 1,
+        truncated: false,
+        hasError: false,
+        nextUrl: 'https://api.tracker.yandex.net/v3/queues?page=2',
+        tag: CURSOR_TAGS.queues,
+      });
+
+      expect(meta.total).toBe(28);
+      expect(meta.totalPages).toBe(14);
+      expect(meta.hasNextPage).toBe(true);
+      expect(meta.nextCursor).toBeDefined();
+    });
+
+    it('последняя seekable-страница: seek+X-Total без next → total есть, hasNextPage=false (R8/X1)', () => {
+      const meta = TrackerPaginator.buildMeta({
+        headers: {
+          link: '<https://api.tracker.yandex.net/v3/queues?{&page}>; rel="seek"',
+          'x-total-count': '28',
+          'x-total-pages': '14',
+        },
+        pagesFetched: 1,
+        truncated: false,
+        hasError: false,
+        tag: CURSOR_TAGS.queues,
+      });
+
+      expect(meta.total).toBe(28);
+      expect(meta.totalPages).toBe(14);
+      expect(meta.hasNextPage).toBe(false);
+      expect(meta.nextCursor).toBeUndefined();
+      expect(meta.fetchedAll).toBe(true);
+    });
+  });
+
+  describe('singlePage cursor-режим (tag)', () => {
+    it('nextCursor из Link rel=next с id= (id-cursor эндпоинт)', () => {
+      const result = TrackerPaginator.singlePage(
+        envelope([1, 2], linkNext('/v3/issues/A-1/comments?id=99&perPage=50')),
+        { perPage: 50, tag: CURSOR_TAGS.comments }
+      );
+
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(result.pagination.nextCursor).toBeDefined();
+      expect(
+        CursorCodec.decode(result.pagination.nextCursor as string, CURSOR_TAGS.comments).path
+      ).toBe('/v3/issues/A-1/comments?id=99&perPage=50');
+      expect(result.pagination.page).toBeUndefined();
+    });
+  });
+
+  describe('fetchAllPages cursor-режим (tag)', () => {
+    it('truncated по maxItems → nextCursor для возобновления', async () => {
+      const requestNext = vi
+        .fn()
+        .mockResolvedValueOnce(envelope([3, 4], linkNext('/v3/items?page=3')));
+
+      const result = await TrackerPaginator.fetchAllPages({
+        firstResponse: envelope([1, 2], linkNext('/v3/items?page=2')),
+        requestNext,
+        maxItems: 4,
+        tag: CURSOR_TAGS.findIssues,
+      });
+
+      expect(result.items).toEqual([1, 2, 3, 4]);
+      expect(result.pagination.truncated).toBe(true);
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(result.pagination.nextCursor).toBeDefined();
+      expect(
+        CursorCodec.decode(result.pagination.nextCursor as string, CURSOR_TAGS.findIssues).path
+      ).toBe('/v3/items?page=3');
+    });
+
+    it('полный обход seekable → total сохраняется на финальной странице, нет nextCursor', async () => {
+      const requestNext = vi.fn().mockResolvedValueOnce(
+        envelope([3, 4], {
+          link: '<https://api.tracker.yandex.net/v3/queues?{&page}>; rel="seek"',
+          'x-total-count': '4',
+          'x-total-pages': '2',
+        })
+      );
+
+      const result = await TrackerPaginator.fetchAllPages({
+        firstResponse: envelope([1, 2], linkNextSeek('/v3/queues?page=2')),
+        requestNext,
+        tag: CURSOR_TAGS.queues,
+      });
+
+      expect(result.items).toEqual([1, 2, 3, 4]);
+      expect(result.pagination.fetchedAll).toBe(true);
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.nextCursor).toBeUndefined();
+      expect(result.pagination.total).toBe(4);
+      expect(result.pagination.totalPages).toBe(2);
     });
   });
 });

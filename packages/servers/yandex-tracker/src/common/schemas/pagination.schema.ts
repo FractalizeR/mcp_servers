@@ -34,7 +34,8 @@ export const MAX_ITEMS_CEILING = 1000;
 export const MAX_TOTAL_ITEMS_CEILING = 5000;
 
 /**
- * Номер страницы (с 1). Идентичен для всех list-эндпоинтов.
+ * @deprecated Номер страницы (с 1). Заменён на {@link CursorSchema} (opaque
+ * cursor); удаляется в этапе 3.1. Новые схемы используют `cursor`.
  *
  * При `fetchAll=true` игнорируется — обход стартует с первой страницы.
  */
@@ -44,6 +45,24 @@ export const PageSchema = z
   .positive()
   .optional()
   .describe('Номер страницы (начинается с 1). Игнорируется при fetchAll=true.');
+
+/**
+ * Непрозрачный курсор следующей страницы.
+ *
+ * Значение берётся из `pagination.nextCursor` предыдущего ответа того же
+ * инструмента. Кодирует путь и размер страницы предыдущего запроса, поэтому
+ * несовместим с `perPage`/`fetchAll`/`maxItems`/`maxTotalItems`
+ * (см. {@link noCursorWithBulkParams}). Для batch-инструментов допустим только
+ * при ровно одном issueId (см. {@link cursorRequiresSingleIssue}).
+ */
+export const CursorSchema = z
+  .string()
+  .optional()
+  .describe(
+    'Непрозрачный курсор следующей страницы из pagination.nextCursor. ' +
+      'Использовать ТОЛЬКО с тем же инструментом, который его выдал. ' +
+      'Несовместим с perPage/fetchAll/maxItems/maxTotalItems.'
+  );
 
 /**
  * Фабрика схемы `perPage`: потолок зависит от endpoint'а Трекера.
@@ -112,16 +131,16 @@ export const MaxTotalItemsSchema = z
   );
 
 /**
- * Сообщение об ошибке конфликта `page` + `fetchAll`.
+ * @deprecated Сообщение об ошибке конфликта `page` + `fetchAll`. Удаляется в
+ * этапе 3.1 вместе с {@link noPageFetchAllConflict}.
  */
 export const PAGINATION_CONFLICT_MESSAGE =
   'Параметры page и fetchAll несовместимы: при fetchAll=true обход всегда ' +
   'начинается с первой страницы. Уберите page либо fetchAll.';
 
 /**
- * Предикат для `.refine`: запрещает одновременное указание `page` и `fetchAll=true`.
- *
- * Лог агенту не виден, поэтому конфликт сигнализируем ошибкой валидации.
+ * @deprecated Предикат для `.refine`: запрещает одновременное `page` и
+ * `fetchAll=true`. Заменён на {@link noCursorWithBulkParams}; удаляется в 3.1.
  *
  * @example
  * MySchema.refine(noPageFetchAllConflict, {
@@ -134,4 +153,74 @@ export function noPageFetchAllConflict(data: {
   readonly fetchAll?: boolean | undefined;
 }): boolean {
   return !(data.fetchAll === true && data.page !== undefined);
+}
+
+/**
+ * Сообщение об ошибке конфликта `cursor` с параметрами первой выборки/bulk-обхода.
+ */
+export const PAGINATION_CURSOR_CONFLICT_MESSAGE =
+  'Курсор несовместим с perPage/fetchAll/maxItems/maxTotalItems: размер страницы ' +
+  'и параметры обхода зафиксированы внутри курсора. Передайте только cursor.';
+
+/**
+ * Предикат для `.refine` (R9): `cursor` исключает любой из параметров первой
+ * выборки/bulk-обхода (`perPage`/`fetchAll`/`maxItems`/`maxTotalItems`).
+ *
+ * Все они либо уже зафиксированы внутри курсор-пути (`perPage`), либо относятся
+ * к режиму полного обхода (`fetchAll`/`maxItems`/`maxTotalItems`), который с
+ * ручным курсором не совмещается.
+ *
+ * @example
+ * MySchema.refine(noCursorWithBulkParams, {
+ *   message: PAGINATION_CURSOR_CONFLICT_MESSAGE,
+ *   path: ['cursor'],
+ * })
+ */
+export function noCursorWithBulkParams(data: {
+  readonly cursor?: string | undefined;
+  readonly perPage?: number | undefined;
+  readonly fetchAll?: boolean | undefined;
+  readonly maxItems?: number | undefined;
+  readonly maxTotalItems?: number | undefined;
+}): boolean {
+  if (data.cursor === undefined) {
+    return true;
+  }
+  return (
+    data.perPage === undefined &&
+    data.fetchAll === undefined &&
+    data.maxItems === undefined &&
+    data.maxTotalItems === undefined
+  );
+}
+
+/**
+ * Сообщение об ошибке использования курсора в batch-инструменте с >1 issueId.
+ */
+export const PAGINATION_CURSOR_BATCH_MESSAGE =
+  'Курсор относится к одной задаче и допустим только при передаче ровно одного ' +
+  'issueId. Листайте задачи по одной либо используйте fetchAll для нескольких.';
+
+/**
+ * Предикат для `.refine` (R1): в batch-инструментах курсор валиден ТОЛЬКО при
+ * `issueIds.length === 1`.
+ *
+ * Курсор декодируется в путь конкретной задачи (`/v3/issues/A-1/comments?id=...`);
+ * применение того же пути к другим задачам дало бы 404 или чужие данные.
+ * fetchAll остаётся допустимым для нескольких задач (он per-issue внутри).
+ *
+ * @example
+ * MySchema.refine(cursorRequiresSingleIssue, {
+ *   message: PAGINATION_CURSOR_BATCH_MESSAGE,
+ *   path: ['cursor'],
+ * })
+ */
+export function cursorRequiresSingleIssue(data: {
+  readonly cursor?: string | undefined;
+  readonly issueIds?: readonly unknown[] | undefined;
+}): boolean {
+  if (data.cursor === undefined) {
+    return true;
+  }
+  return data.issueIds !== undefined && data.issueIds.length === 1;
 }

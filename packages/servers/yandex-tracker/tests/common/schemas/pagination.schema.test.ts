@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest';
 import {
   PageSchema,
   PerPageSchema,
+  CursorSchema,
   makePerPageSchema,
   FetchAllSchema,
   MaxItemsSchema,
@@ -13,6 +14,8 @@ import {
   MAX_ITEMS_CEILING,
   MAX_TOTAL_ITEMS_CEILING,
   noPageFetchAllConflict,
+  noCursorWithBulkParams,
+  cursorRequiresSingleIssue,
 } from '#common/schemas/pagination.schema.js';
 
 describe('PageSchema', () => {
@@ -97,5 +100,65 @@ describe('noPageFetchAllConflict', () => {
 
   it('разрешает пустой объект', () => {
     expect(noPageFetchAllConflict({})).toBe(true);
+  });
+});
+
+describe('CursorSchema', () => {
+  it('принимает строку и undefined', () => {
+    expect(CursorSchema.safeParse('c1:abc').success).toBe(true);
+    expect(CursorSchema.safeParse(undefined).success).toBe(true);
+  });
+
+  it('отклоняет не-строку', () => {
+    expect(CursorSchema.safeParse(123).success).toBe(false);
+  });
+});
+
+describe('noCursorWithBulkParams', () => {
+  it('разрешает курсор сам по себе', () => {
+    expect(noCursorWithBulkParams({ cursor: 'c1:x' })).toBe(true);
+  });
+
+  it('разрешает любые bulk-параметры без курсора', () => {
+    expect(
+      noCursorWithBulkParams({ perPage: 50, fetchAll: true, maxItems: 100, maxTotalItems: 200 })
+    ).toBe(true);
+    expect(noCursorWithBulkParams({})).toBe(true);
+  });
+
+  it('запрещает курсор вместе с perPage', () => {
+    expect(noCursorWithBulkParams({ cursor: 'c1:x', perPage: 50 })).toBe(false);
+  });
+
+  it('запрещает курсор вместе с fetchAll', () => {
+    expect(noCursorWithBulkParams({ cursor: 'c1:x', fetchAll: true })).toBe(false);
+  });
+
+  it('запрещает курсор вместе с maxItems', () => {
+    expect(noCursorWithBulkParams({ cursor: 'c1:x', maxItems: 100 })).toBe(false);
+  });
+
+  it('запрещает курсор вместе с maxTotalItems', () => {
+    expect(noCursorWithBulkParams({ cursor: 'c1:x', maxTotalItems: 200 })).toBe(false);
+  });
+});
+
+describe('cursorRequiresSingleIssue', () => {
+  it('разрешает курсор при ровно одном issueId', () => {
+    expect(cursorRequiresSingleIssue({ cursor: 'c1:x', issueIds: ['A-1'] })).toBe(true);
+  });
+
+  it('запрещает курсор при нескольких issueId', () => {
+    expect(cursorRequiresSingleIssue({ cursor: 'c1:x', issueIds: ['A-1', 'B-2'] })).toBe(false);
+  });
+
+  it('запрещает курсор при пустом/отсутствующем issueIds', () => {
+    expect(cursorRequiresSingleIssue({ cursor: 'c1:x', issueIds: [] })).toBe(false);
+    expect(cursorRequiresSingleIssue({ cursor: 'c1:x' })).toBe(false);
+  });
+
+  it('разрешает любое число issueId без курсора', () => {
+    expect(cursorRequiresSingleIssue({ issueIds: ['A-1', 'B-2'] })).toBe(true);
+    expect(cursorRequiresSingleIssue({})).toBe(true);
   });
 });
