@@ -214,6 +214,27 @@ return processed;   // { total, successful, failed, fieldsReturned }
 
 **Примеры:** get-comments.tool.ts, add-comment.tool.ts, get-issues.tool.ts
 
+### 2.2. Пагинация list-эндпоинтов
+
+**Все list-эндпоинты пагинируются единообразно** через `TrackerPaginator`
+(`#tracker_api/utils`) + `getWithResponse`/`postWithResponse` (заголовки ответа).
+
+**Гибридный подход:**
+- по умолчанию — одна страница + метаданные (`pagination.hasNextPage`/`total`/...);
+  агент листает вручную через `page`;
+- `fetchAll=true` — полный обход по `Link rel="next"` с лимитами `maxItems` (500/цепочку)
+  и `maxTotalItems` (1000/batch-ответ); обрезка → `pagination.truncated=true`.
+
+**Для нового list-эндпоинта:**
+- Operation → `Promise<PaginatedResult<T>>`; single-page vs `fetchAllPages` по `fetchAll`.
+- Schema: подключи общие схемы `#common/schemas` (`FetchAllSchema`/`MaxItemsSchema`/
+  `PageSchema`/`PerPageSchema`) + `.refine(noPageFetchAllConflict, ...)`.
+- Tool: добавь `pagination` **аддитивно**, прежние ключи не меняй.
+- ⚠️ **Cache-key** обязан учитывать пагинационные параметры (или не кешировать при них).
+
+**Детали:** [src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md),
+[src/tools/README.md](src/tools/README.md), [src/tracker_api/utils/README.md](src/tracker_api/utils/README.md)
+
 ### 3. 🔍 Фильтрация полей (обязательно)
 
 **Все MCP tools требуют явного указания возвращаемых полей:**

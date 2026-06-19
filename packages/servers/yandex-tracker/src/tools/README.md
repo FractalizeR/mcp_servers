@@ -261,6 +261,54 @@ const filtered = items.map(item =>
 
 ---
 
+## 📊 Пагинация в list-инструментах
+
+List-инструменты добавляют поле `pagination` к выдаче **аддитивно** — прежние ключи
+(`comments`/`issues`/`count`/...) сохраняются для обратной совместимости.
+
+**Общие схемы** (`#common/schemas`, единый источник истины — не дублируй по файлам):
+- `FetchAllSchema` — opt-in полного обхода (`fetchAll`).
+- `MaxItemsSchema` — лимит записей на цепочку (per-issue, дефолт 500, потолок 1000).
+- `MaxTotalItemsSchema` — общий потолок на batch-ответ (дефолт 1000, потолок 5000).
+- `PageSchema` / `makePerPageSchema(max?)` / `PerPageSchema`.
+- `noPageFetchAllConflict` + `PAGINATION_CONFLICT_MESSAGE` — `.refine`, запрещает `page`+`fetchAll`.
+
+**Schema:**
+```typescript
+export const GetCommentsSchema = z
+  .object({
+    issueIds: IssueKeysSchema,
+    fields: FieldsSchema,
+    page: PageSchema,
+    perPage: PerPageSchema,
+    fetchAll: FetchAllSchema,
+    maxItems: MaxItemsSchema,
+  })
+  .refine(noPageFetchAllConflict, { message: PAGINATION_CONFLICT_MESSAGE, path: ['page'] });
+```
+
+**Tool (batch):** распаковывай `PaginatedResult` хелпером `paginatedFieldFilter`
+(`#tracker_api/utils`), сохраняя прежний ключ + добавляя `pagination`:
+```typescript
+const processed = BatchResultProcessor.process(results, paginatedFieldFilter(fields));
+const successful = processed.successful.map((i) => ({
+  issueId: i.key,
+  comments: i.data.items,
+  count: i.data.items.length,
+  pagination: i.data.pagination,  // ← аддитивно
+}));
+```
+
+**Tool (single):** отфильтруй `result.items` через `ResponseFieldFilter`, верни прежний ключ
++ `pagination: result.pagination`. `find_issues` НЕ оборачивается — ключ `issues`/`count`
+сохранён, `pagination` добавлен соседним полем.
+
+**Семантика для агента** (через `.describe()`): по умолчанию возвращается одна страница —
+листать вручную через `page`, ориентируясь на `pagination.hasNextPage`. `fetchAll=true`
+подтягивает все страницы до `maxItems`/`maxTotalItems`; обрезка отражается в `truncated`.
+
+---
+
 ## 📋 Процесс создания нового API Tool
 
 ### Шаг 1: Создать структуру файлов
