@@ -136,7 +136,7 @@ export class GetIssueLinksOperation extends BaseOperation {
     // страницу (размер уже зашит в курсор). При битом/чужом курсоре decode
     // бросает InvalidCursorError (доходит до агента как explicit-ошибка).
     if (input.cursor !== undefined) {
-      const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.links);
+      const { path } = CursorCodec.decodeForIssue(input.cursor, CURSOR_TAGS.links, issueId);
       const resp = await this.httpClient.getWithResponse<LinkWithUnknownFields[]>(path);
       const result = TrackerPaginator.singlePage<LinkWithUnknownFields>(resp, {
         tag: CURSOR_TAGS.links,

@@ -89,5 +89,35 @@ describe('CursorCodec', () => {
       const decoded = CursorCodec.decode(`${CURSOR_VERSION_PREFIX}${b64}`, CURSOR_TAGS.comments);
       expect(decoded.path).toBe('/v3/issues/A-1/comments?id=5');
     });
+
+    it('пустой payload после префикса → InvalidCursorError', () => {
+      expect(() => CursorCodec.decode(CURSOR_VERSION_PREFIX, CURSOR_TAGS.comments)).toThrow(
+        InvalidCursorError
+      );
+    });
+
+    it('валидный токен с дописанным мусором (вне алфавита base64url) → InvalidCursorError', () => {
+      // Buffer.from(base64url) молча игнорирует посторонние символы — строгий guard
+      // обязан отбить такой «битый» курсор, а не принять его (R3/R12).
+      const valid = CursorCodec.encode('/v3/issues/A-1/comments?id=5', CURSOR_TAGS.comments);
+      expect(() => CursorCodec.decode(`${valid}!!!`, CURSOR_TAGS.comments)).toThrow(
+        InvalidCursorError
+      );
+    });
+  });
+
+  describe('decodeForIssue (привязка курсора к задаче, F1)', () => {
+    it('пропускает курсор той же задачи', () => {
+      const cursor = CursorCodec.encode('/v3/issues/A-1/comments?id=5', CURSOR_TAGS.comments);
+      const decoded = CursorCodec.decodeForIssue(cursor, CURSOR_TAGS.comments, 'A-1');
+      expect(decoded.path).toBe('/v3/issues/A-1/comments?id=5');
+    });
+
+    it('бросает на курсоре ДРУГОЙ задачи (кросс-issue)', () => {
+      const cursor = CursorCodec.encode('/v3/issues/A-1/comments?id=5', CURSOR_TAGS.comments);
+      expect(() => CursorCodec.decodeForIssue(cursor, CURSOR_TAGS.comments, 'B-2')).toThrow(
+        InvalidCursorError
+      );
+    });
   });
 });

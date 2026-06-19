@@ -80,8 +80,8 @@ export const FetchAllSchema = z
   .describe(
     'Если true — обойти все страницы по Link rel="next" с защитным лимитом ' +
       'maxItems на цепочку. По умолчанию false — возвращается одна страница; ' +
-      'листать вручную через page, ориентируясь на pagination.hasNextPage. ' +
-      'Несовместимо с явным page.'
+      'для следующей передайте pagination.nextCursor в параметр cursor. ' +
+      'Несовместимо с cursor.'
   );
 
 /**
@@ -148,9 +148,11 @@ export function noCursorWithBulkParams(data: {
   if (data.cursor === undefined) {
     return true;
   }
+  // `fetchAll: false` — семантический no-op (обхода нет), поэтому конфликтует
+  // только явный `fetchAll: true`. Остальные параметры конфликтуют любым значением.
   return (
     data.perPage === undefined &&
-    data.fetchAll === undefined &&
+    data.fetchAll !== true &&
     data.maxItems === undefined &&
     data.maxTotalItems === undefined
   );

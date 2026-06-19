@@ -154,11 +154,46 @@ export class CursorCodec {
   }
 
   /**
+   * Декодировать курсор issue-scoped эндпоинта и сверить принадлежность задаче.
+   *
+   * Защита от тихо неверных данных: `cursorRequiresSingleIssue` гарантирует один
+   * issueId, но не то, что курсор выдан именно для НЕГО. Курсор задачи A с
+   * `issueId=B` дал бы данные A под меткой B. Здесь путь обязан содержать
+   * `/issues/{issueId}/`; иначе — {@link InvalidCursorError} (как кросс-эндпоинт R13).
+   *
+   * @param cursor - непрозрачная строка-курсор
+   * @param expectedTag - тег семейства эндпоинта
+   * @param issueId - идентификатор/ключ задачи текущего запроса
+   * @throws {InvalidCursorError} при битом/чужом курсоре ИЛИ курсоре другой задачи
+   */
+  public static decodeForIssue(
+    cursor: string,
+    expectedTag: CursorTag,
+    issueId: string
+  ): DecodedCursor {
+    const decoded = CursorCodec.decode(cursor, expectedTag);
+    if (!decoded.path.includes(`/issues/${issueId}/`)) {
+      throw new InvalidCursorError(
+        'Курсор принадлежит другой задаче и не может быть использован здесь. ' +
+          'Передавайте курсор тому же issueId, для которого он был выдан.'
+      );
+    }
+    return decoded;
+  }
+
+  /**
    * Распарсить base64url-полезную нагрузку в валидную {@link CursorPayload}.
    *
    * @throws {InvalidCursorError} при битом base64/JSON или неверной форме payload
    */
   private static parsePayload(b64: string): CursorPayload {
+    // Buffer.from(_, 'base64url') молча игнорирует посторонние символы, поэтому
+    // строгий guard алфавита base64url (включая пустую строку) — иначе битый
+    // курсор с «мусором» прошёл бы вместо явной ошибки (R3/R12).
+    if (!/^[A-Za-z0-9_-]+$/.test(b64)) {
+      throw new InvalidCursorError('Курсор повреждён (недопустимые символы в payload).');
+    }
+
     let json: string;
     try {
       json = Buffer.from(b64, 'base64url').toString('utf8');

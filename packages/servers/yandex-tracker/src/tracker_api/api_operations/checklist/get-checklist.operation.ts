@@ -62,7 +62,11 @@ export class GetChecklistOperation extends BaseOperation {
     // Курсор-режим: путь и размер страницы зашиты в курсоре. Декодирование
     // валидирует версию/тег/путь и бросает InvalidCursorError при проблеме.
     if (input.cursor !== undefined) {
-      const { path: cursorPath } = CursorCodec.decode(input.cursor, CURSOR_TAGS.checklist);
+      const { path: cursorPath } = CursorCodec.decodeForIssue(
+        input.cursor,
+        CURSOR_TAGS.checklist,
+        issueId
+      );
       const resp =
         await this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(cursorPath);
       const cursorResult = TrackerPaginator.singlePage<ChecklistItemWithUnknownFields>(resp, {

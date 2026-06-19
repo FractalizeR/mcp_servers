@@ -55,7 +55,7 @@ export class GetCommentsOperation extends BaseOperation {
    *
    * ВАЖНО:
    * - Retry делается автоматически в HttpClient.getWithResponse
-   * - По умолчанию — одна страница + метаданные (агент листает вручную через page)
+   * - По умолчанию — одна страница + метаданные (агент листает через pagination.nextCursor)
    * - При fetchAll=true — полный обход по Link rel="next" с защитным лимитом maxItems
    * - API возвращает массив комментариев; нормализуем не-массив к массиву
    */
@@ -68,7 +68,7 @@ export class GetCommentsOperation extends BaseOperation {
 
     // Курсор: один запрос по декодированному пути (perPage/expand уже в нём).
     if (input.cursor !== undefined) {
-      const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.comments);
+      const { path } = CursorCodec.decodeForIssue(input.cursor, CURSOR_TAGS.comments, issueId);
       const response = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path);
       const normalizedCursor = this.normalizeEnvelope(response);
       const single = TrackerPaginator.singlePage<CommentWithUnknownFields>(normalizedCursor, {

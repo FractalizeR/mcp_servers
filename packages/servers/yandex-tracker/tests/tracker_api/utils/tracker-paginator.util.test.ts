@@ -371,8 +371,8 @@ describe('TrackerPaginator', () => {
       expect(CursorCodec.decode(meta.nextCursor as string, CURSOR_TAGS.changelog).path).toBe(
         '/v3/issues/A-1/changelog?id=abc&perPage=50'
       );
-      // page в cursor-режиме не выставляется
-      expect(meta.page).toBeUndefined();
+      // поле page удалено из контракта meta
+      expect('page' in meta).toBe(false);
     });
 
     it('без next — нет nextCursor, hasNextPage=false, fetchedAll=true', () => {
@@ -463,7 +463,24 @@ describe('TrackerPaginator', () => {
       expect(
         CursorCodec.decode(result.pagination.nextCursor as string, CURSOR_TAGS.comments).path
       ).toBe('/v3/issues/A-1/comments?id=99&perPage=50');
-      expect(result.pagination.page).toBeUndefined();
+      expect('page' in result.pagination).toBe(false);
+    });
+
+    it('mid-page truncation (droppedByLimit) НЕ выдаёт nextCursor (F2)', async () => {
+      // budget=3 режет первую страницу из 5 записей посреди → resume небезопасен
+      const budget = new ItemBudget(3);
+      const result = await TrackerPaginator.fetchAllPages({
+        firstResponse: envelope([1, 2, 3, 4, 5], linkNext('/v3/items?page=2')),
+        requestNext: vi.fn(),
+        tag: CURSOR_TAGS.comments,
+        budget,
+      });
+
+      expect(result.items).toEqual([1, 2, 3]);
+      expect(result.pagination.truncated).toBe(true);
+      expect(result.pagination.hasNextPage).toBe(true);
+      // nextCursor подавлен: он указывал бы на page=2, пропуская записи 4,5
+      expect(result.pagination.nextCursor).toBeUndefined();
     });
   });
 

@@ -126,7 +126,7 @@ export class GetIssueChangelogOperation extends BaseOperation {
   ): Promise<PaginatedResult<ChangelogEntryWithUnknownFields>> {
     // Курсор: один запрос по декодированному пути (perPage уже в нём).
     if (input.cursor !== undefined) {
-      const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.changelog);
+      const { path } = CursorCodec.decodeForIssue(input.cursor, CURSOR_TAGS.changelog, issueKey);
       const response =
         await this.httpClient.getWithResponse<ChangelogEntryWithUnknownFields[]>(path);
       const single = TrackerPaginator.singlePage(response, { tag: CURSOR_TAGS.changelog });

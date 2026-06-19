@@ -67,7 +67,7 @@ export class GetWorklogsOperation extends BaseOperation {
     // страницу (размер уже зашит в курсор). При битом/чужом курсоре decode
     // бросает InvalidCursorError (доходит до агента как explicit-ошибка).
     if (input.cursor !== undefined) {
-      const { path } = CursorCodec.decode(input.cursor, CURSOR_TAGS.worklog);
+      const { path } = CursorCodec.decodeForIssue(input.cursor, CURSOR_TAGS.worklog, issueId);
       const resp = await this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(path);
       const cursorResult = TrackerPaginator.singlePage<WorklogWithUnknownFields>(resp, {
         tag: CURSOR_TAGS.worklog,

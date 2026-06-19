@@ -325,27 +325,9 @@ export class FindIssuesOperation extends BaseOperation {
    * тот же поиск (replay тела), а не подменяет критерии под чужой next-путь.
    */
   private hashRequestBody(params: FindIssuesInputDto): string {
-    const body: Record<string, unknown> = {};
-    if (params.query !== undefined) {
-      body['query'] = params.query;
-    }
-    if (params.filter !== undefined) {
-      body['filter'] = params.filter;
-    }
-    if (params.keys !== undefined) {
-      body['keys'] = params.keys;
-    }
-    if (params.queue !== undefined) {
-      body['queue'] = params.queue;
-    }
-    if (params.filterId !== undefined) {
-      body['filterId'] = params.filterId;
-    }
-    if (params.order !== undefined) {
-      body['order'] = params.order;
-    }
-
-    const json = JSON.stringify(FindIssuesOperation.canonicalize(body));
+    // Единый источник тела — `buildRequestBody`: при добавлении нового критерия
+    // поиска хеш и реальное тело replay не разойдутся (иначе был бы тихий mismatch).
+    const json = JSON.stringify(FindIssuesOperation.canonicalize(this.buildRequestBody(params)));
     return createHash('sha256').update(json, 'utf8').digest('base64url');
   }
 

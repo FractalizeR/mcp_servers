@@ -276,15 +276,19 @@ export class TrackerPaginator {
     // по защитному лимиту (maxItems/budget).
     const truncated = next !== undefined || droppedByLimit;
 
-    // ВАЖНО: стартовый `page` НЕ прокидываем в метаданные. После полного обхода
-    // эвристика `page*perPage < total` со стартовой страницей дала бы ложный
-    // hasNextPage=true; наличие следующих данных отражают `nextUrl`/`truncated`.
+    // ВАЖНО (F2): при mid-page truncation (`droppedByLimit`) `next` указывает на
+    // СЛЕДУЮЩУЮ API-страницу, пропуская отброшенный хвост текущей. Безопасного
+    // курсора на середину страницы нет, поэтому `nextCursor` НЕ выдаём (передаём
+    // nextUrl=undefined). `truncated=true` всё равно держит `hasNextPage=true` —
+    // агент видит, что выдача обрезана, но не может «возобновить» с пропуском.
+    const safeNextUrl = droppedByLimit ? undefined : next;
+
     const meta = TrackerPaginator.buildMeta({
       headers,
       pagesFetched,
       truncated,
       hasError,
-      nextUrl: next,
+      nextUrl: safeNextUrl,
       ...(opts.perPage !== undefined ? { perPage: opts.perPage } : {}),
       ...(opts.tag !== undefined ? { tag: opts.tag } : {}),
       ...(opts.cursorExtra !== undefined ? { cursorExtra: opts.cursorExtra } : {}),
