@@ -1,3 +1,9 @@
+## [1.5.2](https://github.com/FractalizeR/mcp_servers/compare/v1.5.1...v1.5.2) (2026-06-19)
+
+### Bug Fixes
+
+* **tracker:** changelog — восстановлен page в single-page режиме ([7056e08](https://github.com/FractalizeR/mcp_servers/commit/7056e08849d2787983cc07255194a8d76b9d0dcc))
+
 ## [1.5.1](https://github.com/FractalizeR/mcp_servers/compare/v1.5.0...v1.5.1) (2026-06-19)
 
 ### Bug Fixes
