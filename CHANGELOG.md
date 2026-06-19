@@ -1,3 +1,17 @@
+## [1.7.0](https://github.com/FractalizeR/mcp_servers/compare/v1.6.0...v1.7.0) (2026-06-19)
+
+### Features
+
+* **tracker:** этап 2 — перевод всех list-эндпоинтов на opaque-cursor ([1a6e8f5](https://github.com/FractalizeR/mcp_servers/commit/1a6e8f501bae7931d261ad696a4aa639993ab92e))
+
+### Bug Fixes
+
+* **tracker:** ревью cursor — привязка к задаче, mid-page, строгий base64url ([8146215](https://github.com/FractalizeR/mcp_servers/commit/8146215827474cc9992b5c4b5f11b16485cdbd1b))
+
+### Refactoring
+
+* **tracker:** этап 3.1 — удаление legacy page ([b9bcf12](https://github.com/FractalizeR/mcp_servers/commit/b9bcf12904c41feb8887b42e157617433a86bc99))
+
 ## [1.6.0](https://github.com/FractalizeR/mcp_servers/compare/v1.5.2...v1.6.0) (2026-06-19)
 
 ### Features
