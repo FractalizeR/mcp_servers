@@ -3,7 +3,12 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения одного проекта
@@ -29,3 +34,16 @@ export const GetProjectParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type GetProjectParams = z.infer<typeof GetProjectParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const GetProjectOutputDataSchema = z.object({
+  project: FilteredEntitySchema,
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const GetProjectOutputSchema = buildOutputSchema(GetProjectOutputDataSchema);

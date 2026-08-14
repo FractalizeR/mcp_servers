@@ -24,4 +24,5 @@ export const DELETE_LINK_TOOL_METADATA: StaticToolMetadata = {
   tags: ['links', 'write', 'delete', 'remove', 'relationships'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueId', 'linkId'],
 } as const;

@@ -8,9 +8,13 @@
  */
 
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { DeleteCommentParamsSchema } from '#tools/api/comments/delete/delete-comment.schema.js';
+import {
+  DeleteCommentParamsSchema,
+  DeleteCommentOutputSchema,
+} from '#tools/api/comments/delete/delete-comment.schema.js';
 
 import { DELETE_COMMENT_TOOL_METADATA } from './delete-comment.metadata.js';
 
@@ -36,6 +40,27 @@ export class DeleteCommentTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DeleteCommentParamsSchema {
     return DeleteCommentParamsSchema;
   }
+
+  /**
+   * Destructive (безвозвратное удаление комментария) и idempotent: повторное
+   * удаление уже удалённого комментария не меняет конечное состояние (второй
+   * вызов просто попадёт в failed с "не найден", но не откатит и не задвоит
+   * эффект первого).
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Удалить комментарии',
+      outputSchema: DeleteCommentOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, DeleteCommentParamsSchema);

@@ -10,9 +10,10 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { DemoParamsSchema } from './demo.schema.js';
+import { DemoParamsSchema, DemoOutputSchema } from './demo.schema.js';
 
 import { DEMO_TOOL_METADATA } from './demo.metadata.js';
 
@@ -29,6 +30,25 @@ export class DemoTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DemoParamsSchema {
     return DemoParamsSchema;
   }
+
+  /**
+   * Демонстрационный tool без побочных эффектов: не трогает внешний API
+   * (echo + timestamp локально), поэтому openWorldHint: false.
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Демонстрационный инструмент',
+      outputSchema: DemoOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    };
+  }
+
   execute(params: ToolCallParams): Promise<ToolResult> {
     // Валидация параметров через BaseTool
     const validation = this.validateParams(params, DemoParamsSchema);

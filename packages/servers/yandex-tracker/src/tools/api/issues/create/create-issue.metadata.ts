@@ -24,4 +24,5 @@ export const CREATE_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['create', 'new', 'write', 'issue'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['queue', 'assignee', 'priority', 'type', 'fields'],
 } as const;

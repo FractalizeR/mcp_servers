@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { TaskEntityOutputSchema, buildSuccessOutputSchema } from '#tools/shared/index.js';
 import { OptionalFieldsSchema, OptionalPrioritySchema } from '#common/schemas/index.js';
 
 /**
@@ -32,3 +33,28 @@ export const BatchCreateTasksParamsSchema = z.object({
  * Type inference from schema
  */
 export type BatchCreateTasksParams = z.infer<typeof BatchCreateTasksParamsSchema>;
+
+/**
+ * Shape of `data` in the success envelope (`{ success: true, data }`)
+ */
+export const BatchCreateTasksOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.number(),
+  failed: z.number(),
+  tasks: z.array(TaskEntityOutputSchema),
+  errors: z.array(
+    z.object({
+      index: z.number(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: z.array(z.string()),
+});
+
+/**
+ * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
+ * not just `data` (see base-tool.ts SuccessEnvelope).
+ */
+export const BATCH_CREATE_TASKS_OUTPUT_SCHEMA = buildSuccessOutputSchema(
+  BatchCreateTasksOutputDataSchema
+);

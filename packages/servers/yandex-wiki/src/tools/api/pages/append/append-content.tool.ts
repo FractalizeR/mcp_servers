@@ -1,15 +1,33 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { AppendContentDto, InsertLocation } from '#wiki_api/dto/index.js';
-import { AppendContentParamsSchema } from './append-content.schema.js';
+import {
+  AppendContentParamsSchema,
+  AppendContentOutputDataSchema,
+} from './append-content.schema.js';
 import { APPEND_CONTENT_TOOL_METADATA } from './append-content.metadata.js';
+import { withDefinitionExtras, buildOutputSchema } from '../../../shared/tool-definition-extras.js';
 
 export class AppendContentTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = APPEND_CONTENT_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof AppendContentParamsSchema {
     return AppendContentParamsSchema;
+  }
+
+  override getDefinition(): ToolDefinition {
+    return withDefinitionExtras(super.getDefinition(), {
+      title: 'Добавить контент к странице',
+      outputSchema: buildOutputSchema(AppendContentOutputDataSchema),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

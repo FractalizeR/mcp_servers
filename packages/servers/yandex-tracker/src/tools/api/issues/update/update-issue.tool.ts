@@ -8,12 +8,16 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ResponseFieldFilter, ResultLogger } from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { UpdateIssueDto } from '#tracker_api/dto/index.js';
-import { UpdateIssueParamsSchema } from '#tools/api/issues/update/update-issue.schema.js';
+import {
+  UpdateIssueParamsSchema,
+  UpdateIssueOutputSchema,
+} from '#tools/api/issues/update/update-issue.schema.js';
 
 import { UPDATE_ISSUE_TOOL_METADATA } from './update-issue.metadata.js';
 
@@ -44,6 +48,21 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof UpdateIssueParamsSchema {
     return UpdateIssueParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Обновить задачу',
+      outputSchema: UpdateIssueOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, UpdateIssueParamsSchema);

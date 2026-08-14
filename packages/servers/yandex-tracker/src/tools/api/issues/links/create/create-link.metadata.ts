@@ -24,4 +24,5 @@ export const CREATE_LINK_TOOL_METADATA: StaticToolMetadata = {
   tags: ['links', 'write', 'create', 'relationships', 'subtasks', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueId', 'relationship', 'targetIssue', 'fields'],
 } as const;

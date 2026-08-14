@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PageIdSchema, WikiFieldsSchema } from '#common/schemas/index.js';
+import { PageIdSchema, WikiFieldsSchema, PageOutputSchema } from '#common/schemas/index.js';
 
 const InsertLocationSchema = z.enum(['top', 'bottom']).describe('Позиция вставки');
 
@@ -17,3 +17,8 @@ export const AppendContentParamsSchema = z.object({
 });
 
 export type AppendContentParams = z.infer<typeof AppendContentParamsSchema>;
+
+export const AppendContentOutputDataSchema = z.object({
+  message: z.string(),
+  page: PageOutputSchema,
+});

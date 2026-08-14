@@ -18,4 +18,5 @@ export const UPDATE_TASK_TOOL_METADATA: StaticToolMetadata = {
   tags: ['task', 'update', 'edit', 'modify'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['projectId', 'taskId'],
 } as const;

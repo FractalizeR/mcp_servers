@@ -24,4 +24,5 @@ export const UPDATE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['components', 'update', 'write', 'modify'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['componentId', 'assignAuto', 'fields'],
 } as const;

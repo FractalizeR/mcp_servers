@@ -24,4 +24,5 @@ export const BULK_TRANSITION_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   tags: ['bulk', 'transition', 'status', 'workflow', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['transition'],
 } as const;

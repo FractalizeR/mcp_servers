@@ -24,4 +24,5 @@ export const CREATE_QUEUE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['queue', 'create', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['key', 'lead', 'defaultType', 'defaultPriority', 'issueTypes', 'fields'],
 } as const;

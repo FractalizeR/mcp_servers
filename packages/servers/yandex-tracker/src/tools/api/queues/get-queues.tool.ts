@@ -3,9 +3,10 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { GetQueuesParamsSchema } from './get-queues.schema.js';
+import { GetQueuesParamsSchema, GetQueuesOutputSchema } from './get-queues.schema.js';
 
 import type { QueueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GET_QUEUES_TOOL_METADATA } from './get-queues.metadata.js';
@@ -23,6 +24,21 @@ export class GetQueuesTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetQueuesParamsSchema {
     return GetQueuesParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Список очередей',
+      outputSchema: GetQueuesOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     const validation = this.validateParams(params, GetQueuesParamsSchema);
     if (!validation.success) {

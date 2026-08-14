@@ -24,4 +24,5 @@ export const GET_CHECKLIST_TOOL_METADATA: StaticToolMetadata = {
   tags: ['checklist', 'get', 'read', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['issueIds', 'fields', 'cursor', 'perPage'],
 } as const;

@@ -3,7 +3,13 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 import { BaseChecklistItemFieldsSchema } from '../base-checklist-item.schema.js';
 
 /**
@@ -52,3 +58,31 @@ export const AddChecklistItemParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type AddChecklistItemParams = z.infer<typeof AddChecklistItemParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const AddChecklistItemOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.number(),
+  failed: z.number(),
+  items: z.array(
+    z.object({
+      issueId: z.string(),
+      itemId: z.string(),
+      item: FilteredEntitySchema,
+    })
+  ),
+  errors: z.array(
+    z.object({
+      issueId: z.string(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const AddChecklistItemOutputSchema = buildOutputSchema(AddChecklistItemOutputDataSchema);

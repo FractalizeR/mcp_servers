@@ -18,4 +18,5 @@ export const GET_TASKS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['tasks', 'get', 'read', 'batch', 'bulk'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['projectId', 'taskId'],
 } as const;

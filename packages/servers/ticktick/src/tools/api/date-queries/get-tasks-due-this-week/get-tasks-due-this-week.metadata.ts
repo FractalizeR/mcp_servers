@@ -15,4 +15,5 @@ export const GET_TASKS_DUE_THIS_WEEK_TOOL_METADATA: StaticToolMetadata = {
   tags: ['tasks', 'week', 'due'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [],
 } as const;

@@ -18,4 +18,5 @@ export const BATCH_CREATE_TASKS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['tasks', 'batch', 'create', 'bulk'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['projectId'],
 } as const;

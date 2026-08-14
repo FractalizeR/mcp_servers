@@ -9,10 +9,14 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ResultLogger } from '@fractalizer/mcp-core';
-import { BulkMoveIssuesParamsSchema } from './bulk-move-issues.schema.js';
+import {
+  BulkMoveIssuesParamsSchema,
+  BulkMoveIssuesOutputSchema,
+} from './bulk-move-issues.schema.js';
 
 import { BULK_MOVE_ISSUES_TOOL_METADATA } from './bulk-move-issues.metadata.js';
 
@@ -42,6 +46,26 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof BulkMoveIssuesParamsSchema {
     return BulkMoveIssuesParamsSchema;
   }
+
+  /**
+   * idempotent: перемещение того же набора задач в ту же очередь с теми же
+   * values повторно приводит к тому же конечному состоянию (задачи уже там),
+   * даже если API запускает новую асинхронную операцию на каждый вызов.
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Массовое перемещение задач между очередями',
+      outputSchema: BulkMoveIssuesOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, BulkMoveIssuesParamsSchema);

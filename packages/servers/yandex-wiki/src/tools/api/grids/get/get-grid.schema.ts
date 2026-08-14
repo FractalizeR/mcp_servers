@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WikiFieldsSchema } from '#common/schemas/index.js';
+import { WikiFieldsSchema, GridOutputSchema } from '#common/schemas/index.js';
 
 export const GetGridParamsSchema = z.object({
   idx: z.string().uuid().describe('ID таблицы (UUID)'),
@@ -11,3 +11,8 @@ export const GetGridParamsSchema = z.object({
 });
 
 export type GetGridParams = z.infer<typeof GetGridParamsSchema>;
+
+export const GetGridOutputDataSchema = z.object({
+  message: z.string(),
+  grid: GridOutputSchema,
+});

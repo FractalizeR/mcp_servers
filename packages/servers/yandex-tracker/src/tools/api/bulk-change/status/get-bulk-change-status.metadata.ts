@@ -24,4 +24,5 @@ export const GET_BULK_CHANGE_STATUS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['bulk', 'status', 'progress', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['operationId'],
 } as const;

@@ -15,4 +15,5 @@ export const GET_TASKS_DUE_TODAY_TOOL_METADATA: StaticToolMetadata = {
   tags: ['tasks', 'today', 'due', 'deadline'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [],
 } as const;

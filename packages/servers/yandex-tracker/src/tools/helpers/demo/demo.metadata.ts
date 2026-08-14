@@ -24,4 +24,6 @@ export const DEMO_TOOL_METADATA: StaticToolMetadata = {
   tags: ['demo', 'example', 'test'],
   isHelper: true,
   requiresExplicitUserConsent: false,
+  // message — единственный параметр, и это произвольный пользовательский текст
+  // (демонстрационное сообщение) — allow-list оставлен пустым намеренно.
 } as const;

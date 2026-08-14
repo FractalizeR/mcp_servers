@@ -11,4 +11,5 @@ export const CREATE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'create', 'page', 'wiki'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['slug', 'page_type', 'grid_format', 'fields', 'is_silent'],
 } as const;

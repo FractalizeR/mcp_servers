@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GridOutputSchema } from '#common/schemas/index.js';
 
 export const MoveRowsParamsSchema = z.object({
   idx: z.string().uuid().describe('ID таблицы (UUID)'),
@@ -10,3 +11,8 @@ export const MoveRowsParamsSchema = z.object({
 });
 
 export type MoveRowsParams = z.infer<typeof MoveRowsParamsSchema>;
+
+export const MoveRowsOutputDataSchema = z.object({
+  message: z.string(),
+  grid: GridOutputSchema,
+});

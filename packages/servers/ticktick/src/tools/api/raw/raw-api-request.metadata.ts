@@ -23,4 +23,8 @@ export const RAW_API_REQUEST_TOOL_METADATA: StaticToolMetadata = {
   tags: ['raw', 'api', 'fallback', 'advanced', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  // Ни один параметр raw-запроса не является чистым идентификатором:
+  // path — произвольный маршрут (может нести встроенные ID, но не сам ID),
+  // query — открытый набор пар ключ-значение, потенциально с текстом.
+  redactionAllowlist: [],
 } as const;

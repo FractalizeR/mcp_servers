@@ -8,3 +8,8 @@ export const CloneGridParamsSchema = z.object({
 });
 
 export type CloneGridParams = z.infer<typeof CloneGridParamsSchema>;
+
+export const CloneGridOutputDataSchema = z.object({
+  message: z.string(),
+  status_url: z.string(),
+});

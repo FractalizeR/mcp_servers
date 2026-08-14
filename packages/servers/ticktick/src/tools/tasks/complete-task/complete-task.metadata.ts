@@ -18,4 +18,5 @@ export const COMPLETE_TASK_TOOL_METADATA: StaticToolMetadata = {
   tags: ['task', 'complete', 'done', 'finish'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['projectId', 'taskId'],
 } as const;

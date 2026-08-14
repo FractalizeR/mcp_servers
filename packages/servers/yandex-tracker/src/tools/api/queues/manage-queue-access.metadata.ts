@@ -24,4 +24,5 @@ export const MANAGE_QUEUE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['queue', 'access', 'permissions', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['queueId', 'role', 'subjects', 'action', 'fields'],
 } as const;

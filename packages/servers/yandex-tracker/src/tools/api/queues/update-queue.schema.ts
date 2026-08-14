@@ -3,7 +3,12 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для обновления очереди
@@ -54,3 +59,17 @@ export const UpdateQueueParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type UpdateQueueParams = z.infer<typeof UpdateQueueParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const UpdateQueueOutputDataSchema = z.object({
+  queueKey: z.string(),
+  queue: FilteredEntitySchema,
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const UpdateQueueOutputSchema = buildOutputSchema(UpdateQueueOutputDataSchema);

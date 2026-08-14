@@ -3,11 +3,12 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
 import type { ProjectWithUnknownFields } from '#ticktick_api/entities/project.entity.js';
 import { GET_PROJECT_TOOL_METADATA } from './get-project.metadata.js';
-import { GetProjectParamsSchema } from './get-project.schema.js';
+import { GetProjectParamsSchema, GET_PROJECT_OUTPUT_SCHEMA } from './get-project.schema.js';
 
 export class GetProjectTool extends BaseTool<TickTickFacade> {
   static override readonly METADATA = GET_PROJECT_TOOL_METADATA;
@@ -17,6 +18,25 @@ export class GetProjectTool extends BaseTool<TickTickFacade> {
    */
   protected override getParamsSchema(): typeof GetProjectParamsSchema {
     return GetProjectParamsSchema;
+  }
+
+  /**
+   * Extend auto-generated definition with title/outputSchema/annotations
+   * (пакет 3.1.C.ticktick — не выводятся автоматически из METADATA, см.
+   * base-tool.ts getDefinition()).
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Get Project',
+      outputSchema: GET_PROJECT_OUTPUT_SCHEMA,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

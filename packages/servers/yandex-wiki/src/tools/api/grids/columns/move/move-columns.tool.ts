@@ -1,14 +1,33 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { MoveColumnsParamsSchema } from './move-columns.schema.js';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
+import { MoveColumnsParamsSchema, MoveColumnsOutputDataSchema } from './move-columns.schema.js';
 import { MOVE_COLUMNS_TOOL_METADATA } from './move-columns.metadata.js';
+import {
+  withDefinitionExtras,
+  buildOutputSchema,
+} from '../../../../shared/tool-definition-extras.js';
 
 export class MoveColumnsTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = MOVE_COLUMNS_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof MoveColumnsParamsSchema {
     return MoveColumnsParamsSchema;
+  }
+
+  /** idempotentHint: true — та же логика, что у move_rows (см. её комментарий). */
+  override getDefinition(): ToolDefinition {
+    return withDefinitionExtras(super.getDefinition(), {
+      title: 'Переместить колонки в таблице',
+      outputSchema: buildOutputSchema(MoveColumnsOutputDataSchema),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

@@ -24,4 +24,5 @@ export const GET_COMMENTS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['comment', 'get', 'list', 'read', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['issueIds', 'fields', 'expand', 'cursor', 'perPage'],
 } as const;

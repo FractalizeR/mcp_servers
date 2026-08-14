@@ -24,4 +24,8 @@ export const RAW_API_REQUEST_TOOL_METADATA: StaticToolMetadata = {
   tags: ['raw', 'api', 'fallback', 'advanced', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  // path/method — часть имени вызываемого API-эндпоинта, видны и без раскрытия
+  // (безопасны как queue/issueId). query/fields не раскрываем — query может
+  // нести значения фильтров, введённые агентом.
+  redactionAllowlist: ['method', 'path', 'fields'],
 } as const;

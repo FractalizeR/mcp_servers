@@ -13,10 +13,11 @@ import {
   BatchResultProcessor,
   ResultLogger,
 } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
-import { CreateLinkParamsSchema } from './create-link.schema.js';
+import { CreateLinkParamsSchema, CreateLinkOutputSchema } from './create-link.schema.js';
 
 import { CREATE_LINK_TOOL_METADATA } from './create-link.metadata.js';
 
@@ -43,6 +44,26 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof CreateLinkParamsSchema {
     return CreateLinkParamsSchema;
   }
+
+  /**
+   * Не idempotent: повторное создание той же связи не гарантированно "схлопывается"
+   * в API до одной записи — трактуем как create-подобную операцию (см. отчёт
+   * пакета 3.1.C.tracker).
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Создать связи между задачами',
+      outputSchema: CreateLinkOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, CreateLinkParamsSchema);

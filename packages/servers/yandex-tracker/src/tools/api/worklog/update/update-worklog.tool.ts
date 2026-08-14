@@ -9,10 +9,14 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
-import { UpdateWorklogParamsSchema } from '#tools/api/worklog/update/update-worklog.schema.js';
+import {
+  UpdateWorklogParamsSchema,
+  UpdateWorklogOutputSchema,
+} from '#tools/api/worklog/update/update-worklog.schema.js';
 
 import { UPDATE_WORKLOG_TOOL_METADATA } from './update-worklog.metadata.js';
 
@@ -37,6 +41,21 @@ export class UpdateWorklogTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof UpdateWorklogParamsSchema {
     return UpdateWorklogParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Обновить запись времени',
+      outputSchema: UpdateWorklogOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, UpdateWorklogParamsSchema);

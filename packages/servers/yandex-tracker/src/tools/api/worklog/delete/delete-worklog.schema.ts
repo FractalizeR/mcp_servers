@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema } from '#common/schemas/index.js';
+import { IssueKeySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для удаления записи времени
@@ -24,3 +24,17 @@ export const DeleteWorklogParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type DeleteWorklogParams = z.infer<typeof DeleteWorklogParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const DeleteWorklogOutputDataSchema = z.object({
+  issueId: z.string(),
+  worklogId: z.string(),
+  message: z.string(),
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const DeleteWorklogOutputSchema = buildOutputSchema(DeleteWorklogOutputDataSchema);

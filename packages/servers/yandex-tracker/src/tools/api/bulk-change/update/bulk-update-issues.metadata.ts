@@ -24,4 +24,8 @@ export const BULK_UPDATE_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   tags: ['bulk', 'update', 'mass', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  // values — passthrough-объект, смешивающий безопасные (priority/type/tags) и
+  // пользовательский текст (summary/description) на одном уровне вложенности —
+  // не раскрываем ни один из его ключей, чтобы не задеть текстовые поля.
+  redactionAllowlist: ['issues'],
 } as const;

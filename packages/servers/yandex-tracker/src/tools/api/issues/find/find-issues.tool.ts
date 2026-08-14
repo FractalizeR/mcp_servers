@@ -8,11 +8,15 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ResponseFieldFilter, ResultLogger } from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
-import { FindIssuesParamsSchema } from '#tools/api/issues/find/find-issues.schema.js';
+import {
+  FindIssuesParamsSchema,
+  FindIssuesOutputSchema,
+} from '#tools/api/issues/find/find-issues.schema.js';
 
 import { FIND_ISSUES_TOOL_METADATA } from './find-issues.metadata.js';
 /**
@@ -42,6 +46,21 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof FindIssuesParamsSchema {
     return FindIssuesParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Поиск задач',
+      outputSchema: FindIssuesOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, FindIssuesParamsSchema);

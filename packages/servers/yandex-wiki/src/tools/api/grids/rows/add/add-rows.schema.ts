@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GridOutputSchema } from '#common/schemas/index.js';
 
 const BGColorSchema = z.enum([
   'blue',
@@ -30,3 +31,8 @@ export const AddRowsParamsSchema = z.object({
 });
 
 export type AddRowsParams = z.infer<typeof AddRowsParamsSchema>;
+
+export const AddRowsOutputDataSchema = z.object({
+  message: z.string(),
+  grid: GridOutputSchema,
+});

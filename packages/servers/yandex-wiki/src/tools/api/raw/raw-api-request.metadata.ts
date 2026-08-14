@@ -24,4 +24,5 @@ export const RAW_API_REQUEST_TOOL_METADATA: StaticToolMetadata = {
   tags: ['raw', 'api', 'fallback', 'advanced', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['method', 'path', 'fields'],
 } as const;

@@ -24,4 +24,5 @@ export const TRANSITION_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['transition', 'status', 'workflow', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueKey', 'transitionId', 'fields'],
 } as const;

@@ -18,4 +18,5 @@ export const PING_TOOL_METADATA: StaticToolMetadata = {
   tags: ['ping', 'health', 'status', 'system'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [],
 } as const;

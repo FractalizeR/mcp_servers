@@ -11,4 +11,5 @@ export const GET_PAGE_BY_ID_TOOL_METADATA: StaticToolMetadata = {
   tags: ['read', 'get', 'page', 'wiki', 'id'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['idx', 'fields', 'raise_on_redirect', 'revision_id'],
 } as const;

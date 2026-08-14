@@ -3,7 +3,13 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для обновления записи времени
@@ -47,3 +53,19 @@ export const UpdateWorklogParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type UpdateWorklogParams = z.infer<typeof UpdateWorklogParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ *
+ * ВНИМАНИЕ: ключ отфильтрованной записи здесь называется `data` (а не
+ * `worklog`, как в других инструментах worklog) — см. update-worklog.tool.ts.
+ */
+export const UpdateWorklogOutputDataSchema = z.object({
+  data: FilteredEntitySchema,
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const UpdateWorklogOutputSchema = buildOutputSchema(UpdateWorklogOutputDataSchema);

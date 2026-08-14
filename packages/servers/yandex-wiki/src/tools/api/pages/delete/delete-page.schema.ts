@@ -6,3 +6,9 @@ export const DeletePageParamsSchema = z.object({
 });
 
 export type DeletePageParams = z.infer<typeof DeletePageParamsSchema>;
+
+export const DeletePageOutputDataSchema = z.object({
+  message: z.string(),
+  recovery_token: z.string(),
+  hint: z.string(),
+});

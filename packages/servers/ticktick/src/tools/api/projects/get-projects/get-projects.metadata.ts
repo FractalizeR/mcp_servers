@@ -19,4 +19,5 @@ export const GET_PROJECTS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['projects', 'list', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [],
 } as const;

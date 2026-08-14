@@ -24,4 +24,7 @@ export const ADD_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['comment', 'add', 'create', 'write', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  // issueId/attachmentIds — идентификаторы (безопасны); fields — имена API-полей
+  // (структурные, не пользовательский текст). text (тело комментария) НЕ включён.
+  redactionAllowlist: ['issueId', 'attachmentIds', 'fields'],
 } as const;

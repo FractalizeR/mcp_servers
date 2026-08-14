@@ -18,4 +18,5 @@ export const DELETE_TASK_TOOL_METADATA: StaticToolMetadata = {
   tags: ['task', 'delete', 'remove'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['projectId', 'taskId'],
 } as const;

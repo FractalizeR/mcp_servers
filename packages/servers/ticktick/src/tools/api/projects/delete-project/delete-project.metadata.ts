@@ -18,4 +18,5 @@ export const DELETE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['project', 'delete', 'remove'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['projectId'],
 } as const;

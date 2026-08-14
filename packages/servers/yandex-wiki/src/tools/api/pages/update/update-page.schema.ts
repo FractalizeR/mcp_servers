@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PageIdSchema, WikiFieldsSchema } from '#common/schemas/index.js';
+import { PageIdSchema, WikiFieldsSchema, PageOutputSchema } from '#common/schemas/index.js';
 
 export const UpdatePageParamsSchema = z.object({
   idx: PageIdSchema,
@@ -11,3 +11,8 @@ export const UpdatePageParamsSchema = z.object({
 });
 
 export type UpdatePageParams = z.infer<typeof UpdatePageParamsSchema>;
+
+export const UpdatePageOutputDataSchema = z.object({
+  message: z.string(),
+  page: PageOutputSchema,
+});

@@ -13,6 +13,7 @@
  * "attributes,content", к фильтрации ответа отношения не имеющая).
  */
 
+import { z } from 'zod';
 import { createRawApiRequestSchema } from '@fractalizer/mcp-core';
 import { ResponseFieldsSchema } from '#common/schemas/index.js';
 
@@ -33,3 +34,16 @@ export const RawApiRequestParamsSchema = createRawApiRequestSchema({
 });
 
 export { WIKI_RAW_PATH_PATTERN };
+
+/**
+ * Данные успешного результата (см. BaseRawApiRequestTool.execute во framework):
+ * `{ method, path, data: filtered, fieldsReturned }`. `data` — произвольный
+ * JSON-ответ API Вики (форма зависит от вызванного метода), поэтому
+ * `z.unknown()`.
+ */
+export const RawApiRequestOutputDataSchema = z.object({
+  method: z.literal('GET'),
+  path: z.string(),
+  data: z.unknown(),
+  fieldsReturned: z.array(z.string()),
+});

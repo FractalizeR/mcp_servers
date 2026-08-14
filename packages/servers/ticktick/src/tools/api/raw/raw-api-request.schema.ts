@@ -12,8 +12,10 @@
  * - дополнительно core-фабрика запрещает сегменты `..` (path traversal).
  */
 
+import { z } from 'zod';
 import { createRawApiRequestSchema } from '@fractalizer/mcp-core';
 import { FieldsSchema } from '#common/schemas/index.js';
+import { buildSuccessOutputSchema } from '#tools/shared/index.js';
 
 /**
  * Паттерн пути TickTick. Версия (/open/v1) уже в baseURL — путь без неё.
@@ -29,3 +31,25 @@ export const RawApiRequestParamsSchema = createRawApiRequestSchema({
   pathExample: '/project/{projectId}/data',
   fieldsSchema: FieldsSchema,
 });
+
+/**
+ * Shape of `data` in the success envelope (`{ success: true, data }`).
+ *
+ * `data` — произвольный ответ raw API (метод/путь выбирает вызывающий), поэтому
+ * описан как z.unknown() — валидный JSON Schema `{}` (соответствует любому
+ * значению), а не конкретная форма.
+ */
+export const RawApiRequestOutputDataSchema = z.object({
+  method: z.literal('GET'),
+  path: z.string(),
+  data: z.unknown(),
+  fieldsReturned: z.array(z.string()),
+});
+
+/**
+ * outputSchema (JSON Schema 2020-12) — описывает весь success envelope, не
+ * только `data` (см. base-tool.ts SuccessEnvelope).
+ */
+export const RAW_API_REQUEST_OUTPUT_SCHEMA = buildSuccessOutputSchema(
+  RawApiRequestOutputDataSchema
+);

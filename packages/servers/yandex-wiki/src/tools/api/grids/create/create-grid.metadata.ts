@@ -11,4 +11,5 @@ export const CREATE_GRID_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'create', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['page_id', 'page_slug'],
 } as const;

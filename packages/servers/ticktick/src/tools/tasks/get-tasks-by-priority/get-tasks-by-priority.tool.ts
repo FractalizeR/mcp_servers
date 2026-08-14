@@ -3,10 +3,14 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
-import { GetTasksByPriorityParamsSchema } from './get-tasks-by-priority.schema.js';
+import {
+  GetTasksByPriorityParamsSchema,
+  GET_TASKS_BY_PRIORITY_OUTPUT_SCHEMA,
+} from './get-tasks-by-priority.schema.js';
 import { GET_TASKS_BY_PRIORITY_TOOL_METADATA } from './get-tasks-by-priority.metadata.js';
 
 /**
@@ -33,6 +37,25 @@ export class GetTasksByPriorityTool extends BaseTool<TickTickFacade> {
    */
   protected override getParamsSchema(): typeof GetTasksByPriorityParamsSchema {
     return GetTasksByPriorityParamsSchema;
+  }
+
+  /**
+   * Extend auto-generated definition with title/outputSchema/annotations
+   * (пакет 3.1.C.ticktick — не выводятся автоматически из METADATA, см.
+   * base-tool.ts getDefinition()).
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Get Tasks by Priority',
+      outputSchema: GET_TASKS_BY_PRIORITY_OUTPUT_SCHEMA,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

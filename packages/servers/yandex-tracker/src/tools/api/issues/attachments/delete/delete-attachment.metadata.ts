@@ -20,4 +20,5 @@ export const DELETE_ATTACHMENT_TOOL_METADATA = {
   tags: ['attachments', 'write', 'delete', 'files'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueId', 'attachmentId'],
 } as const;

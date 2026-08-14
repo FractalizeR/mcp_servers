@@ -1,14 +1,32 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { RemoveRowsParamsSchema } from './remove-rows.schema.js';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
+import { RemoveRowsParamsSchema, RemoveRowsOutputDataSchema } from './remove-rows.schema.js';
 import { REMOVE_ROWS_TOOL_METADATA } from './remove-rows.metadata.js';
+import {
+  withDefinitionExtras,
+  buildOutputSchema,
+} from '../../../../shared/tool-definition-extras.js';
 
 export class RemoveRowsTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = REMOVE_ROWS_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof RemoveRowsParamsSchema {
     return RemoveRowsParamsSchema;
+  }
+
+  override getDefinition(): ToolDefinition {
+    return withDefinitionExtras(super.getDefinition(), {
+      title: 'Удалить строки из таблицы',
+      outputSchema: buildOutputSchema(RemoveRowsOutputDataSchema),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

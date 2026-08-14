@@ -14,6 +14,10 @@ import {
   cursorRequiresSingleIssue,
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   PAGINATION_CURSOR_BATCH_MESSAGE,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  PaginationMetaSchema,
+  buildOutputSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -63,3 +67,32 @@ export const GetWorklogsParamsSchema = z
  * Вывод типа из схемы
  */
 export type GetWorklogsParams = z.infer<typeof GetWorklogsParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const GetWorklogsOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.number(),
+  failed: z.number(),
+  worklogs: z.array(
+    z.object({
+      issueId: z.string(),
+      worklogs: z.array(FilteredEntitySchema),
+      count: z.number(),
+      pagination: PaginationMetaSchema,
+    })
+  ),
+  errors: z.array(
+    z.object({
+      issueId: z.string(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const GetWorklogsOutputSchema = buildOutputSchema(GetWorklogsOutputDataSchema);

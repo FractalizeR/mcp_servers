@@ -18,4 +18,5 @@ export const SEARCH_TASKS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['tasks', 'search', 'find', 'query'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [],
 } as const;

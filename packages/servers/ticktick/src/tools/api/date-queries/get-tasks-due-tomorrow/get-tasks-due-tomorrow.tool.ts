@@ -5,9 +5,13 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { GetTasksDueTomorrowParamsSchema } from './get-tasks-due-tomorrow.schema.js';
+import {
+  GetTasksDueTomorrowParamsSchema,
+  GET_TASKS_DUE_TOMORROW_OUTPUT_SCHEMA,
+} from './get-tasks-due-tomorrow.schema.js';
 import { GET_TASKS_DUE_TOMORROW_TOOL_METADATA } from './get-tasks-due-tomorrow.metadata.js';
 import { filterFieldsArray } from '#tools/shared/index.js';
 
@@ -16,6 +20,25 @@ export class GetTasksDueTomorrowTool extends BaseTool<TickTickFacade> {
 
   protected override getParamsSchema(): typeof GetTasksDueTomorrowParamsSchema {
     return GetTasksDueTomorrowParamsSchema;
+  }
+
+  /**
+   * Extend auto-generated definition with title/outputSchema/annotations
+   * (пакет 3.1.C.ticktick — не выводятся автоматически из METADATA, см.
+   * base-tool.ts getDefinition()).
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Get Tasks Due Tomorrow',
+      outputSchema: GET_TASKS_DUE_TOMORROW_OUTPUT_SCHEMA,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

@@ -8,9 +8,10 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import { PingParamsSchema } from './ping.schema.js';
+import { PingParamsSchema, PingOutputSchema } from './ping.schema.js';
 import { PING_TOOL_METADATA } from './ping.metadata.js';
 
 /**
@@ -29,6 +30,24 @@ export class PingTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof PingParamsSchema {
     return PingParamsSchema;
   }
+
+  /**
+   * Ping реально обращается к API Трекера (facade.ping()) — openWorldHint: true.
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Проверка доступности сервера',
+      outputSchema: PingOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   /**
    * Выполнение проверки подключения
    */

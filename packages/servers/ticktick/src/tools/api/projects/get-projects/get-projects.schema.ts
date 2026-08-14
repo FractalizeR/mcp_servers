@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { ProjectEntityOutputSchema, buildSuccessOutputSchema } from '#tools/shared/index.js';
 import { FieldsSchema } from '@fractalizer/mcp-core';
 
 /**
@@ -19,3 +20,18 @@ export const GetProjectsParamsSchema = z.object({
  * Type inference from schema
  */
 export type GetProjectsParams = z.infer<typeof GetProjectsParamsSchema>;
+
+/**
+ * Shape of `data` in the success envelope (`{ success: true, data }`)
+ */
+export const GetProjectsOutputDataSchema = z.object({
+  total: z.number(),
+  projects: z.array(ProjectEntityOutputSchema),
+  fieldsReturned: z.array(z.string()),
+});
+
+/**
+ * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
+ * not just `data` (see base-tool.ts SuccessEnvelope).
+ */
+export const GET_PROJECTS_OUTPUT_SCHEMA = buildSuccessOutputSchema(GetProjectsOutputDataSchema);

@@ -3,7 +3,13 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для загрузки файла в задачу
@@ -49,3 +55,17 @@ export const UploadAttachmentParamsSchema = z
  * Вывод типа из схемы
  */
 export type UploadAttachmentParams = z.infer<typeof UploadAttachmentParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const UploadAttachmentOutputDataSchema = z.object({
+  issueId: z.string(),
+  attachment: FilteredEntitySchema,
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const UploadAttachmentOutputSchema = buildOutputSchema(UploadAttachmentOutputDataSchema);

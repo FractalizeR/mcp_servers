@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema } from '#common/schemas/index.js';
+import { IssueKeySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для удаления комментариев (batch-режим)
@@ -37,3 +37,29 @@ export const DeleteCommentParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type DeleteCommentParams = z.infer<typeof DeleteCommentParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const DeleteCommentOutputDataSchema = z.object({
+  total: z.number().describe('Всего запрошено комментариев к удалению'),
+  successful: z.array(
+    z.object({
+      issueId: z.string(),
+      commentId: z.string(),
+      success: z.literal(true),
+    })
+  ),
+  failed: z.array(
+    z.object({
+      issueId: z.string(),
+      commentId: z.string(),
+      error: z.string(),
+    })
+  ),
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const DeleteCommentOutputSchema = buildOutputSchema(DeleteCommentOutputDataSchema);

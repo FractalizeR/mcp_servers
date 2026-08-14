@@ -24,4 +24,5 @@ export const DELETE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['components', 'delete', 'write', 'remove'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['componentId'],
 } as const;

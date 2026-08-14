@@ -16,8 +16,9 @@
  */
 
 import { BaseRawApiRequestTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
-import { RawApiRequestParamsSchema } from './raw-api-request.schema.js';
+import { RawApiRequestParamsSchema, RawApiRequestOutputSchema } from './raw-api-request.schema.js';
 import { RAW_API_REQUEST_TOOL_METADATA } from './raw-api-request.metadata.js';
 
 /**
@@ -34,5 +35,23 @@ export class RawApiRequestTool extends BaseRawApiRequestTool<YandexTrackerFacade
    */
   protected override getParamsSchema(): typeof RawApiRequestParamsSchema {
     return RawApiRequestParamsSchema;
+  }
+
+  /**
+   * GET-only escape hatch: read-only, идемпотентен (GET без побочных
+   * эффектов), обращается во внешний API Трекера.
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Прямой запрос к API (GET)',
+      outputSchema: RawApiRequestOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
   }
 }

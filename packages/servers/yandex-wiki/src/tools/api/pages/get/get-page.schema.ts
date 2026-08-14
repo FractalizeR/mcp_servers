@@ -3,6 +3,7 @@ import {
   PageSlugSchema,
   WikiFieldsSchema,
   OptionalResponseFieldsSchema,
+  PageOutputSchema,
 } from '#common/schemas/index.js';
 
 export const GetPageParamsSchema = z.object({
@@ -17,3 +18,9 @@ export const GetPageParamsSchema = z.object({
 });
 
 export type GetPageParams = z.infer<typeof GetPageParamsSchema>;
+
+/** Данные успешного результата (см. GetPageTool.execute) — вход buildOutputSchema() */
+export const GetPageOutputDataSchema = z.object({
+  page: PageOutputSchema,
+  fieldsReturned: z.array(z.string()),
+});

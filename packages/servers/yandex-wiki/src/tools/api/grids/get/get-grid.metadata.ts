@@ -11,4 +11,5 @@ export const GET_GRID_TOOL_METADATA: StaticToolMetadata = {
   tags: ['read', 'get', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['idx', 'fields', 'only_cols', 'only_rows', 'sort'],
 } as const;

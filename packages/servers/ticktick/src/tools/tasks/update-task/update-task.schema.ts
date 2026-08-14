@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { TaskEntityOutputSchema, buildSuccessOutputSchema } from '#tools/shared/index.js';
 import { OptionalFieldsSchema, OptionalPrioritySchema } from '#common/schemas/index.js';
 
 /**
@@ -23,3 +24,18 @@ export const UpdateTaskParamsSchema = z.object({
  * Type inference from schema
  */
 export type UpdateTaskParams = z.infer<typeof UpdateTaskParamsSchema>;
+
+/**
+ * Shape of `data` in the success envelope (`{ success: true, data }`)
+ */
+export const UpdateTaskOutputDataSchema = z.object({
+  message: z.string(),
+  task: TaskEntityOutputSchema,
+  fieldsReturned: z.array(z.string()),
+});
+
+/**
+ * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
+ * not just `data` (see base-tool.ts SuccessEnvelope).
+ */
+export const UPDATE_TASK_OUTPUT_SCHEMA = buildSuccessOutputSchema(UpdateTaskOutputDataSchema);

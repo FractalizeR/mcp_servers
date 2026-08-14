@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GridOutputSchema } from '#common/schemas/index.js';
 
 export const RemoveColumnsParamsSchema = z.object({
   idx: z.string().uuid().describe('ID таблицы (UUID)'),
@@ -7,3 +8,8 @@ export const RemoveColumnsParamsSchema = z.object({
 });
 
 export type RemoveColumnsParams = z.infer<typeof RemoveColumnsParamsSchema>;
+
+export const RemoveColumnsOutputDataSchema = z.object({
+  message: z.string(),
+  grid: GridOutputSchema,
+});

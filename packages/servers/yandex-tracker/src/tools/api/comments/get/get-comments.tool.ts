@@ -8,11 +8,15 @@
  */
 
 import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
-import { GetCommentsParamsSchema } from '#tools/api/comments/get/get-comments.schema.js';
+import {
+  GetCommentsParamsSchema,
+  GetCommentsOutputSchema,
+} from '#tools/api/comments/get/get-comments.schema.js';
 
 import { GET_COMMENTS_TOOL_METADATA } from './get-comments.metadata.js';
 
@@ -38,6 +42,21 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetCommentsParamsSchema {
     return GetCommentsParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Комментарии задач',
+      outputSchema: GetCommentsOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, GetCommentsParamsSchema);

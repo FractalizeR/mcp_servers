@@ -6,3 +6,11 @@ export {
   type ResponseFields,
   type OptionalResponseFields,
 } from './response-fields.schema.js';
+export {
+  PageOutputSchema,
+  type PageOutput,
+  GridOutputSchema,
+  type GridOutput,
+  ResourceOutputSchema,
+  type ResourceOutput,
+} from './output/index.js';

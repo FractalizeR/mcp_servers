@@ -24,4 +24,5 @@ export const GET_ISSUE_LINKS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['links', 'read', 'relationships', 'subtasks', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['issueIds', 'fields', 'cursor', 'perPage'],
 } as const;

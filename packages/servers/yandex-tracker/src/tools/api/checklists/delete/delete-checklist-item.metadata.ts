@@ -24,4 +24,5 @@ export const DELETE_CHECKLIST_ITEM_TOOL_METADATA: StaticToolMetadata = {
   tags: ['checklist', 'delete', 'remove', 'write', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueId', 'itemId'],
 } as const;

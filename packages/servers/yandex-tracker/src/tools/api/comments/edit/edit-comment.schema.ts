@@ -3,7 +3,13 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для редактирования комментариев (batch-режим)
@@ -50,3 +56,30 @@ export const EditCommentParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type EditCommentParams = z.infer<typeof EditCommentParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const EditCommentOutputDataSchema = z.object({
+  total: z.number().describe('Всего запрошено комментариев к редактированию'),
+  successful: z.array(
+    z.object({
+      issueId: z.string(),
+      commentId: z.string(),
+      comment: FilteredEntitySchema,
+    })
+  ),
+  failed: z.array(
+    z.object({
+      issueId: z.string(),
+      commentId: z.string(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const EditCommentOutputSchema = buildOutputSchema(EditCommentOutputDataSchema);

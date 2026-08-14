@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema } from '#common/schemas/index.js';
+import { IssueKeySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема элемента чеклиста для удаления
@@ -40,3 +40,33 @@ export const DeleteChecklistItemParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type DeleteChecklistItemParams = z.infer<typeof DeleteChecklistItemParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const DeleteChecklistItemOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.number(),
+  failed: z.number(),
+  items: z.array(
+    z.object({
+      issueId: z.string(),
+      itemId: z.string(),
+      success: z.literal(true),
+    })
+  ),
+  errors: z.array(
+    z.object({
+      issueId: z.string(),
+      itemId: z.string(),
+      error: z.string(),
+    })
+  ),
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const DeleteChecklistItemOutputSchema = buildOutputSchema(
+  DeleteChecklistItemOutputDataSchema
+);

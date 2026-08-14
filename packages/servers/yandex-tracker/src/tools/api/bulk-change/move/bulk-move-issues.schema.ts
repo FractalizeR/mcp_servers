@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема для опциональных полей при перемещении
@@ -56,3 +57,25 @@ export const BulkMoveIssuesParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type BulkMoveIssuesParams = z.infer<typeof BulkMoveIssuesParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ *
+ * Операция асинхронная — сразу возвращается только `operationId` для опроса
+ * через `get_bulk_change_status`, а не финальный результат перемещения.
+ */
+export const BulkMoveIssuesOutputDataSchema = z.object({
+  message: z.string(),
+  operationId: z.string(),
+  status: z.string(),
+  totalIssues: z.number(),
+  targetQueue: z.string(),
+  moveAllFields: z.boolean(),
+  additionalFields: z.array(z.string()),
+  note: z.string(),
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const BulkMoveIssuesOutputSchema = buildOutputSchema(BulkMoveIssuesOutputDataSchema);

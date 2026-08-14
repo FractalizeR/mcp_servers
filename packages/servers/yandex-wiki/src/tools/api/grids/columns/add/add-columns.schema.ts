@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GridOutputSchema } from '#common/schemas/index.js';
 
 const ColumnTypeSchema = z.enum([
   'string',
@@ -51,3 +52,8 @@ export const AddColumnsParamsSchema = z.object({
 });
 
 export type AddColumnsParams = z.infer<typeof AddColumnsParamsSchema>;
+
+export const AddColumnsOutputDataSchema = z.object({
+  message: z.string(),
+  grid: GridOutputSchema,
+});

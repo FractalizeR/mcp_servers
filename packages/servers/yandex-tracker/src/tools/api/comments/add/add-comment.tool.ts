@@ -13,10 +13,14 @@ import {
   BatchResultProcessor,
   ResultLogger,
 } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
-import { AddCommentParamsSchema } from '#tools/api/comments/add/add-comment.schema.js';
+import {
+  AddCommentParamsSchema,
+  AddCommentOutputSchema,
+} from '#tools/api/comments/add/add-comment.schema.js';
 
 import { ADD_COMMENT_TOOL_METADATA } from './add-comment.metadata.js';
 
@@ -42,6 +46,28 @@ export class AddCommentTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof AddCommentParamsSchema {
     return AddCommentParamsSchema;
   }
+
+  /**
+   * Расширяет автогенерированное definition аннотациями и outputSchema (пакет 3.1.C.tracker).
+   *
+   * Не read-only (создаёт новые комментарии), не destructive (ничего не удаляет),
+   * не idempotent (повторный вызов с теми же аргументами создаёт ДУБЛИКАТ
+   * комментария, а не возвращает прежний результат).
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Добавить комментарии',
+      outputSchema: AddCommentOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, AddCommentParamsSchema);

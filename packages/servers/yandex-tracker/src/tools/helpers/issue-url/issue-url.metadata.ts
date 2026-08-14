@@ -24,4 +24,5 @@ export const ISSUE_URL_TOOL_METADATA: StaticToolMetadata = {
   tags: ['url', 'link', 'helper'],
   isHelper: true,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['issueKeys'],
 } as const;

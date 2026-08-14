@@ -9,3 +9,12 @@ export const ClonePageParamsSchema = z.object({
 });
 
 export type ClonePageParams = z.infer<typeof ClonePageParamsSchema>;
+
+export const ClonePageOutputDataSchema = z.object({
+  message: z.string(),
+  operation_id: z.string(),
+  operation_type: z.string(),
+  status_url: z.string(),
+  dry_run: z.boolean(),
+  hint: z.string(),
+});

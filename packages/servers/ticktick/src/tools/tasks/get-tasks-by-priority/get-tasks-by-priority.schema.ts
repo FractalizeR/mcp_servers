@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { TaskEntityOutputSchema, buildSuccessOutputSchema } from '#tools/shared/index.js';
 import { FieldsSchema, PrioritySchema } from '#common/schemas/index.js';
 
 /**
@@ -17,3 +18,22 @@ export const GetTasksByPriorityParamsSchema = z.object({
  * Type inference from schema
  */
 export type GetTasksByPriorityParams = z.infer<typeof GetTasksByPriorityParamsSchema>;
+
+/**
+ * Shape of `data` in the success envelope (`{ success: true, data }`)
+ */
+export const GetTasksByPriorityOutputDataSchema = z.object({
+  priority: z.number(),
+  priorityLabel: z.string(),
+  total: z.number(),
+  tasks: z.array(TaskEntityOutputSchema),
+  fieldsReturned: z.array(z.string()),
+});
+
+/**
+ * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
+ * not just `data` (see base-tool.ts SuccessEnvelope).
+ */
+export const GET_TASKS_BY_PRIORITY_OUTPUT_SCHEMA = buildSuccessOutputSchema(
+  GetTasksByPriorityOutputDataSchema
+);

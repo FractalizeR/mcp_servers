@@ -11,6 +11,10 @@ import {
   MaxItemsSchema,
   noCursorWithBulkParams,
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  PaginationMetaSchema,
+  buildOutputSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -57,3 +61,18 @@ export const GetQueuesParamsSchema = z
  * Вывод типа из схемы
  */
 export type GetQueuesParams = z.infer<typeof GetQueuesParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const GetQueuesOutputDataSchema = z.object({
+  queues: z.array(FilteredEntitySchema),
+  count: z.number(),
+  pagination: PaginationMetaSchema,
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const GetQueuesOutputSchema = buildOutputSchema(GetQueuesOutputDataSchema);

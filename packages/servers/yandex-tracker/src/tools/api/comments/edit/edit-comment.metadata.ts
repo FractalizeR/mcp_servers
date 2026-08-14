@@ -24,4 +24,5 @@ export const EDIT_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['comment', 'edit', 'update', 'write', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueId', 'commentId', 'fields'],
 } as const;

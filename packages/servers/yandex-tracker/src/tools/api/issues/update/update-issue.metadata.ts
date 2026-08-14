@@ -24,4 +24,5 @@ export const UPDATE_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['update', 'edit', 'modify', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueKey', 'assignee', 'priority', 'type', 'status', 'fields'],
 } as const;

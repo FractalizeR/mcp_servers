@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема для тегов (add/remove)
@@ -58,3 +59,20 @@ export const BulkUpdateIssuesParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type BulkUpdateIssuesParams = z.infer<typeof BulkUpdateIssuesParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const BulkUpdateIssuesOutputDataSchema = z.object({
+  message: z.string(),
+  operationId: z.string(),
+  status: z.string(),
+  totalIssues: z.number(),
+  updatedFields: z.array(z.string()),
+  note: z.string(),
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const BulkUpdateIssuesOutputSchema = buildOutputSchema(BulkUpdateIssuesOutputDataSchema);

@@ -11,4 +11,5 @@ export const REMOVE_ROWS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'remove', 'delete', 'rows', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['idx', 'revision', 'row_ids'],
 } as const;

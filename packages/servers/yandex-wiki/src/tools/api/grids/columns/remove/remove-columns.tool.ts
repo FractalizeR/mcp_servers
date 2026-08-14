@@ -1,14 +1,35 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { RemoveColumnsParamsSchema } from './remove-columns.schema.js';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
+import {
+  RemoveColumnsParamsSchema,
+  RemoveColumnsOutputDataSchema,
+} from './remove-columns.schema.js';
 import { REMOVE_COLUMNS_TOOL_METADATA } from './remove-columns.metadata.js';
+import {
+  withDefinitionExtras,
+  buildOutputSchema,
+} from '../../../../shared/tool-definition-extras.js';
 
 export class RemoveColumnsTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = REMOVE_COLUMNS_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof RemoveColumnsParamsSchema {
     return RemoveColumnsParamsSchema;
+  }
+
+  override getDefinition(): ToolDefinition {
+    return withDefinitionExtras(super.getDefinition(), {
+      title: 'Удалить колонки из таблицы',
+      outputSchema: buildOutputSchema(RemoveColumnsOutputDataSchema),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

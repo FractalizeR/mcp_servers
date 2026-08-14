@@ -18,4 +18,5 @@ export const CREATE_TASK_TOOL_METADATA: StaticToolMetadata = {
   tags: ['task', 'create', 'new', 'add'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['projectId'],
 } as const;

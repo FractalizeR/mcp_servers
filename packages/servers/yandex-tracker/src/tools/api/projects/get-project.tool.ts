@@ -3,9 +3,10 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { GetProjectParamsSchema } from './get-project.schema.js';
+import { GetProjectParamsSchema, GetProjectOutputSchema } from './get-project.schema.js';
 import type { ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
 
 import { GET_PROJECT_TOOL_METADATA } from './get-project.metadata.js';
@@ -20,6 +21,21 @@ export class GetProjectTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetProjectParamsSchema {
     return GetProjectParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Параметры проекта',
+      outputSchema: GetProjectOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     const validation = this.validateParams(params, GetProjectParamsSchema);
     if (!validation.success) {

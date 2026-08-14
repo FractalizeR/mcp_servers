@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 import { FieldsSchema } from '#common/schemas/index.js';
+import { TaskEntityOutputSchema, buildSuccessOutputSchema } from '#tools/shared/index.js';
 
 /**
  * Parameters schema for getting a single task
@@ -18,3 +19,17 @@ export const GetTaskParamsSchema = z.object({
  * Type inference from schema
  */
 export type GetTaskParams = z.infer<typeof GetTaskParamsSchema>;
+
+/**
+ * Shape of `data` in the success envelope (`{ success: true, data }`)
+ */
+export const GetTaskOutputDataSchema = z.object({
+  task: TaskEntityOutputSchema,
+  fieldsReturned: z.array(z.string()),
+});
+
+/**
+ * outputSchema (JSON Schema 2020-12) for GetTaskTool — describes the whole
+ * success envelope, not just `data` (see base-tool.ts SuccessEnvelope).
+ */
+export const GET_TASK_OUTPUT_SCHEMA = buildSuccessOutputSchema(GetTaskOutputDataSchema);

@@ -24,4 +24,5 @@ export const GET_QUEUES_TOOL_METADATA: StaticToolMetadata = {
   tags: ['queues', 'list', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['perPage', 'cursor', 'expand', 'fields'],
 } as const;

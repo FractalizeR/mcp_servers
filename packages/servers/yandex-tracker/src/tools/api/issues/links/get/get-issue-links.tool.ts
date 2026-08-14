@@ -8,10 +8,11 @@
  */
 
 import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
-import { GetIssueLinksParamsSchema } from './get-issue-links.schema.js';
+import { GetIssueLinksParamsSchema, GetIssueLinksOutputSchema } from './get-issue-links.schema.js';
 
 import { GET_ISSUE_LINKS_TOOL_METADATA } from './get-issue-links.metadata.js';
 
@@ -43,6 +44,21 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetIssueLinksParamsSchema {
     return GetIssueLinksParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Связи задач',
+      outputSchema: GetIssueLinksOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, GetIssueLinksParamsSchema);

@@ -11,4 +11,5 @@ export const CLONE_GRID_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'clone', 'copy', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['idx', 'target', 'with_data'],
 } as const;

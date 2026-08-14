@@ -11,4 +11,5 @@ export const UPDATE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'update', 'page', 'wiki'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['idx', 'allow_merge', 'fields', 'is_silent'],
 } as const;

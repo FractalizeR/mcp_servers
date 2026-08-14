@@ -11,4 +11,13 @@ export const GET_RESOURCES_TOOL_METADATA: StaticToolMetadata = {
   tags: ['read', 'get', 'resources', 'attachments', 'grids'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [
+    'idx',
+    'cursor',
+    'order_by',
+    'order_direction',
+    'page_id',
+    'page_size',
+    'types',
+  ],
 } as const;

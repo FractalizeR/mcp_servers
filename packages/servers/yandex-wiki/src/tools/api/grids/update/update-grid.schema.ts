@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GridOutputSchema } from '#common/schemas/index.js';
 
 const SortConfigSchema = z.object({
   column_slug: z.string().describe('Slug колонки для сортировки'),
@@ -13,3 +14,8 @@ export const UpdateGridParamsSchema = z.object({
 });
 
 export type UpdateGridParams = z.infer<typeof UpdateGridParamsSchema>;
+
+export const UpdateGridOutputDataSchema = z.object({
+  message: z.string(),
+  grid: GridOutputSchema,
+});

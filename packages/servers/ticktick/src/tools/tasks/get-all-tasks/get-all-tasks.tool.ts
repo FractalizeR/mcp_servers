@@ -5,11 +5,12 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import { TaskStatusValues } from '#common/schemas/index.js';
-import { GetAllTasksParamsSchema } from './get-all-tasks.schema.js';
+import { GetAllTasksParamsSchema, GET_ALL_TASKS_OUTPUT_SCHEMA } from './get-all-tasks.schema.js';
 import { GET_ALL_TASKS_TOOL_METADATA } from './get-all-tasks.metadata.js';
 
 /**
@@ -26,6 +27,25 @@ export class GetAllTasksTool extends BaseTool<TickTickFacade> {
    */
   protected override getParamsSchema(): typeof GetAllTasksParamsSchema {
     return GetAllTasksParamsSchema;
+  }
+
+  /**
+   * Extend auto-generated definition with title/outputSchema/annotations
+   * (пакет 3.1.C.ticktick — не выводятся автоматически из METADATA, см.
+   * base-tool.ts getDefinition()).
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Get All Tasks',
+      outputSchema: GET_ALL_TASKS_OUTPUT_SCHEMA,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

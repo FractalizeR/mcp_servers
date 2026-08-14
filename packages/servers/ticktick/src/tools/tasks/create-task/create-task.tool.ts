@@ -3,11 +3,12 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import type { CreateTaskDto } from '#ticktick_api/dto/index.js';
-import { CreateTaskParamsSchema } from './create-task.schema.js';
+import { CreateTaskParamsSchema, CREATE_TASK_OUTPUT_SCHEMA } from './create-task.schema.js';
 import { CREATE_TASK_TOOL_METADATA } from './create-task.metadata.js';
 
 /**
@@ -24,6 +25,25 @@ export class CreateTaskTool extends BaseTool<TickTickFacade> {
    */
   protected override getParamsSchema(): typeof CreateTaskParamsSchema {
     return CreateTaskParamsSchema;
+  }
+
+  /**
+   * Extend auto-generated definition with title/outputSchema/annotations
+   * (пакет 3.1.C.ticktick — не выводятся автоматически из METADATA, см.
+   * base-tool.ts getDefinition()).
+   */
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Create Task',
+      outputSchema: CREATE_TASK_OUTPUT_SCHEMA,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

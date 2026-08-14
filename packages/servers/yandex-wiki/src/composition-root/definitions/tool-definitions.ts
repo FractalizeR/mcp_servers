@@ -8,6 +8,7 @@ import { UpdatePageTool } from '#tools/api/pages/update/index.js';
 import { DeletePageTool } from '#tools/api/pages/delete/index.js';
 import { ClonePageTool } from '#tools/api/pages/clone/index.js';
 import { AppendContentTool } from '#tools/api/pages/append/index.js';
+import { DiffPageTool } from '#tools/api/pages/diff/index.js';
 
 // Grids
 import { CreateGridTool } from '#tools/api/grids/create/index.js';
@@ -46,6 +47,7 @@ export const TOOL_CLASSES = [
   DeletePageTool,
   ClonePageTool,
   AppendContentTool,
+  DiffPageTool,
 
   // Grids
   CreateGridTool,

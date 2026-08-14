@@ -24,4 +24,5 @@ export const CREATE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['components', 'create', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['queueId', 'assignAuto', 'fields'],
 } as const;

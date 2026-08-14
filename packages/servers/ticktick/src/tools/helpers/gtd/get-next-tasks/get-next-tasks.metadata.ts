@@ -15,4 +15,5 @@ export const GET_NEXT_TASKS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['gtd', 'next', 'upcoming'],
   isHelper: true,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [],
 } as const;

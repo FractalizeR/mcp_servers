@@ -15,6 +15,10 @@ import {
   cursorRequiresSingleIssue,
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   PAGINATION_CURSOR_BATCH_MESSAGE,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  PaginationMetaSchema,
+  buildOutputSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -73,3 +77,30 @@ export const GetIssueChangelogParamsSchema = z
  * Вывод типа из схемы
  */
 export type GetIssueChangelogParams = z.infer<typeof GetIssueChangelogParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const GetIssueChangelogOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.array(
+    z.object({
+      issueKey: z.string(),
+      changelog: z.array(FilteredEntitySchema),
+      totalEntries: z.number(),
+      pagination: PaginationMetaSchema,
+    })
+  ),
+  failed: z.array(
+    z.object({
+      key: z.string(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const GetIssueChangelogOutputSchema = buildOutputSchema(GetIssueChangelogOutputDataSchema);

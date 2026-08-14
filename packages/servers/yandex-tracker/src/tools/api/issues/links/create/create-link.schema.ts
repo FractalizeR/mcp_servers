@@ -3,7 +3,13 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Enum для типов связей (relationship)
@@ -55,3 +61,31 @@ export const CreateLinkParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type CreateLinkParams = z.infer<typeof CreateLinkParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const CreateLinkOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.number(),
+  failed: z.number(),
+  links: z.array(
+    z.object({
+      issueId: z.string(),
+      linkId: z.string(),
+      link: FilteredEntitySchema,
+    })
+  ),
+  errors: z.array(
+    z.object({
+      issueId: z.string(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const CreateLinkOutputSchema = buildOutputSchema(CreateLinkOutputDataSchema);

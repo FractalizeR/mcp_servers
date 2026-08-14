@@ -18,4 +18,5 @@ export const GET_TASKS_BY_PRIORITY_TOOL_METADATA: StaticToolMetadata = {
   tags: ['tasks', 'priority', 'filter'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [],
 } as const;

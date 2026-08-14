@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PageSlugSchema, WikiFieldsSchema } from '#common/schemas/index.js';
+import { PageSlugSchema, WikiFieldsSchema, PageOutputSchema } from '#common/schemas/index.js';
 
 export const CreatePageParamsSchema = z.object({
   page_type: z.enum(['page', 'grid', 'cloud_page', 'wysiwyg', 'template']).describe('Тип страницы'),
@@ -12,3 +12,8 @@ export const CreatePageParamsSchema = z.object({
 });
 
 export type CreatePageParams = z.infer<typeof CreatePageParamsSchema>;
+
+export const CreatePageOutputDataSchema = z.object({
+  message: z.string(),
+  page: PageOutputSchema,
+});

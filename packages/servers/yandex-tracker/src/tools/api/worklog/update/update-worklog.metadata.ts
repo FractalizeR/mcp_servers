@@ -24,4 +24,5 @@ export const UPDATE_WORKLOG_TOOL_METADATA: StaticToolMetadata = {
   tags: ['worklog', 'update', 'edit', 'modify', 'time'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueId', 'worklogId', 'start', 'duration', 'fields'],
 } as const;

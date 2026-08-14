@@ -3,7 +3,12 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  FieldsSchema,
+  FilteredEntitySchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для выполнения перехода задачи
@@ -40,3 +45,21 @@ export const TransitionIssueParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type TransitionIssueParams = z.infer<typeof TransitionIssueParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ *
+ * `fieldsReturned` — либо эхо параметра `fields`, либо литерал `'all'`, когда
+ * `fields` не передан (см. tool.ts: `fields ?? 'all'`).
+ */
+export const TransitionIssueOutputDataSchema = z.object({
+  issueKey: z.string(),
+  transitionId: z.string(),
+  issue: FilteredEntitySchema,
+  fieldsReturned: z.union([z.array(z.string()), z.literal('all')]),
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const TransitionIssueOutputSchema = buildOutputSchema(TransitionIssueOutputDataSchema);

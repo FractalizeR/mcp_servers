@@ -3,10 +3,14 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { ComponentWithUnknownFields } from '#tracker_api/entities/index.js';
-import { CreateComponentParamsSchema } from './create-component.schema.js';
+import {
+  CreateComponentParamsSchema,
+  CreateComponentOutputSchema,
+} from './create-component.schema.js';
 
 import { CREATE_COMPONENT_TOOL_METADATA } from './create-component.metadata.js';
 
@@ -23,6 +27,21 @@ export class CreateComponentTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof CreateComponentParamsSchema {
     return CreateComponentParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Создать компонент',
+      outputSchema: CreateComponentOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     const validation = this.validateParams(params, CreateComponentParamsSchema);
     if (!validation.success) {

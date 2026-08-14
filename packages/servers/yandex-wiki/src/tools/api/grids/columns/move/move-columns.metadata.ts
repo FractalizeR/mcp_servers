@@ -11,4 +11,5 @@ export const MOVE_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'move', 'columns', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['idx', 'revision', 'column_slug', 'position', 'columns_count'],
 } as const;

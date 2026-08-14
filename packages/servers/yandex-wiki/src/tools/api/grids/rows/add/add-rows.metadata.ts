@@ -11,4 +11,5 @@ export const ADD_ROWS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'add', 'rows', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['idx', 'revision', 'position', 'after_row_id'],
 } as const;

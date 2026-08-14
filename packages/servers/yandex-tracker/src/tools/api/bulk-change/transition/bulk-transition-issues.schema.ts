@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема для опциональных полей при переходе
@@ -47,3 +48,23 @@ export const BulkTransitionIssuesParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type BulkTransitionIssuesParams = z.infer<typeof BulkTransitionIssuesParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const BulkTransitionIssuesOutputDataSchema = z.object({
+  message: z.string(),
+  operationId: z.string(),
+  status: z.string(),
+  totalIssues: z.number(),
+  transition: z.string(),
+  additionalFields: z.array(z.string()),
+  note: z.string(),
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const BulkTransitionIssuesOutputSchema = buildOutputSchema(
+  BulkTransitionIssuesOutputDataSchema
+);

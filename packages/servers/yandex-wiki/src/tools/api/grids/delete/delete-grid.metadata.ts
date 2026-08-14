@@ -11,4 +11,5 @@ export const DELETE_GRID_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'delete', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['idx'],
 } as const;

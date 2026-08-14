@@ -24,4 +24,7 @@ export const FIND_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   tags: ['search', 'query', 'filter', 'issues'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  // query/filter НЕ включены: поисковые запросы/фильтры могут нести произвольный
+  // пользовательский текст.
+  redactionAllowlist: ['queue', 'keys', 'filterId', 'perPage', 'cursor', 'fields'],
 } as const;

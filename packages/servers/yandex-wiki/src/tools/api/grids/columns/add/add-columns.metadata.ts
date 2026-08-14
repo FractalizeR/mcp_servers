@@ -11,4 +11,5 @@ export const ADD_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'add', 'columns', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['idx', 'revision', 'position'],
 } as const;

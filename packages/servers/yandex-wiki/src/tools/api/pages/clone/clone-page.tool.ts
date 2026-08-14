@@ -1,14 +1,29 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { ClonePageParamsSchema } from './clone-page.schema.js';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
+import { ClonePageParamsSchema, ClonePageOutputDataSchema } from './clone-page.schema.js';
 import { CLONE_PAGE_TOOL_METADATA } from './clone-page.metadata.js';
+import { withDefinitionExtras, buildOutputSchema } from '../../../shared/tool-definition-extras.js';
 
 export class ClonePageTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = CLONE_PAGE_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof ClonePageParamsSchema {
     return ClonePageParamsSchema;
+  }
+
+  override getDefinition(): ToolDefinition {
+    return withDefinitionExtras(super.getDefinition(), {
+      title: 'Клонировать страницу',
+      outputSchema: buildOutputSchema(ClonePageOutputDataSchema),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

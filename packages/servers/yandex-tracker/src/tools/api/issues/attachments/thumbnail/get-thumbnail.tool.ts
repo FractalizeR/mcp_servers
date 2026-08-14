@@ -9,9 +9,10 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { GetThumbnailParamsSchema } from './get-thumbnail.schema.js';
+import { GetThumbnailParamsSchema, GetThumbnailOutputSchema } from './get-thumbnail.schema.js';
 import { writeFile } from 'node:fs/promises';
 
 import { GET_THUMBNAIL_TOOL_METADATA } from './get-thumbnail.metadata.js';
@@ -43,6 +44,21 @@ export class GetThumbnailTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof GetThumbnailParamsSchema {
     return GetThumbnailParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Миниатюра изображения',
+      outputSchema: GetThumbnailOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, GetThumbnailParamsSchema);

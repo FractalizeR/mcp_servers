@@ -3,7 +3,13 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для добавления комментария (batch-режим)
@@ -49,3 +55,31 @@ export const AddCommentParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type AddCommentParams = z.infer<typeof AddCommentParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const AddCommentOutputDataSchema = z.object({
+  total: z.number().describe('Всего запрошено комментариев к добавлению'),
+  successful: z.number().describe('Количество успешно добавленных комментариев'),
+  failed: z.number().describe('Количество комментариев, добавить которые не удалось'),
+  comments: z.array(
+    z.object({
+      issueId: z.string(),
+      commentId: z.string(),
+      comment: FilteredEntitySchema,
+    })
+  ),
+  errors: z.array(
+    z.object({
+      issueId: z.string(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const AddCommentOutputSchema = buildOutputSchema(AddCommentOutputDataSchema);

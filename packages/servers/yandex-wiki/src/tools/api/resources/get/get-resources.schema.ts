@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PageIdSchema } from '#common/schemas/index.js';
+import { PageIdSchema, ResourceOutputSchema } from '#common/schemas/index.js';
 
 const ResourceTypeSchema = z.enum(['attachment', 'grid', 'sharepoint_resource']);
 
@@ -21,3 +21,10 @@ export const GetResourcesParamsSchema = z.object({
 });
 
 export type GetResourcesParams = z.infer<typeof GetResourcesParamsSchema>;
+
+export const GetResourcesOutputDataSchema = z.object({
+  message: z.string(),
+  results: z.array(ResourceOutputSchema),
+  next_cursor: z.string().optional(),
+  prev_cursor: z.string().optional(),
+});

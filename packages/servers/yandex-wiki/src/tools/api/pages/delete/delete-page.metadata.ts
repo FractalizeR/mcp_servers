@@ -11,4 +11,5 @@ export const DELETE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['delete', 'remove', 'page', 'wiki'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['idx'],
 } as const;

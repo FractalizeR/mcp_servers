@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PageIdSchema } from '#common/schemas/index.js';
+import { PageIdSchema, GridOutputSchema } from '#common/schemas/index.js';
 
 export const CreateGridParamsSchema = z.object({
   title: z.string().min(1).max(255).describe('Название таблицы (1-255 символов)'),
@@ -8,3 +8,8 @@ export const CreateGridParamsSchema = z.object({
 });
 
 export type CreateGridParams = z.infer<typeof CreateGridParamsSchema>;
+
+export const CreateGridOutputDataSchema = z.object({
+  message: z.string(),
+  grid: GridOutputSchema,
+});

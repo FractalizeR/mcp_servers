@@ -24,4 +24,5 @@ export const GET_COMPONENTS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['components', 'list', 'read', 'queue'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['queueId', 'fields'],
 } as const;

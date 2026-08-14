@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GridOutputSchema } from '#common/schemas/index.js';
 
 const CellUpdateSchema = z.object({
   row_id: z.number().describe('ID строки'),
@@ -13,3 +14,8 @@ export const UpdateCellsParamsSchema = z.object({
 });
 
 export type UpdateCellsParams = z.infer<typeof UpdateCellsParamsSchema>;
+
+export const UpdateCellsOutputDataSchema = z.object({
+  message: z.string(),
+  grid: GridOutputSchema,
+});

@@ -24,4 +24,5 @@ export const DELETE_WORKLOG_TOOL_METADATA: StaticToolMetadata = {
   tags: ['worklog', 'delete', 'remove', 'time'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueId', 'worklogId'],
 } as const;

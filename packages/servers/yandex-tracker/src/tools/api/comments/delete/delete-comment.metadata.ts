@@ -24,4 +24,5 @@ export const DELETE_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['comment', 'delete', 'remove', 'write', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueId', 'commentId'],
 } as const;

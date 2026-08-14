@@ -15,4 +15,5 @@ export const GET_OVERDUE_TASKS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['tasks', 'overdue', 'late', 'missed'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [],
 } as const;

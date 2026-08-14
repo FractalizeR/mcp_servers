@@ -11,4 +11,5 @@ export const UPDATE_GRID_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'update', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['idx', 'revision'],
 } as const;

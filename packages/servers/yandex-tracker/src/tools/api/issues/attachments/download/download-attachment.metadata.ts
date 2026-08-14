@@ -24,4 +24,5 @@ export const DOWNLOAD_ATTACHMENT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['attachments', 'read', 'download', 'files'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['issueId', 'attachmentId'],
 } as const;

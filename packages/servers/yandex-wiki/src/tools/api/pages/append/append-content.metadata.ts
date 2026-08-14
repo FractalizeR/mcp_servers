@@ -11,4 +11,14 @@ export const APPEND_CONTENT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'append', 'add', 'content', 'page', 'wiki'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: [
+    'idx',
+    'body_location',
+    'section_id',
+    'section_location',
+    'anchor_fallback',
+    'anchor_regex',
+    'is_silent',
+    'fields',
+  ],
 } as const;

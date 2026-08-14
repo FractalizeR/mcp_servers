@@ -15,6 +15,10 @@ import {
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   cursorRequiresSingleIssue,
   PAGINATION_CURSOR_BATCH_MESSAGE,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  PaginationMetaSchema,
+  buildOutputSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -72,3 +76,30 @@ export const GetChecklistParamsSchema = z
  * Вывод типа из схемы
  */
 export type GetChecklistParams = z.infer<typeof GetChecklistParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const GetChecklistOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.array(
+    z.object({
+      issueId: z.string(),
+      itemsCount: z.number(),
+      checklist: z.array(FilteredEntitySchema),
+      pagination: PaginationMetaSchema,
+    })
+  ),
+  failed: z.array(
+    z.object({
+      issueId: z.string(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const GetChecklistOutputSchema = buildOutputSchema(GetChecklistOutputDataSchema);

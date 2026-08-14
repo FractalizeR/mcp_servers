@@ -8,9 +8,13 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { DownloadAttachmentParamsSchema } from './download-attachment.schema.js';
+import {
+  DownloadAttachmentParamsSchema,
+  DownloadAttachmentOutputSchema,
+} from './download-attachment.schema.js';
 import { writeFile } from 'node:fs/promises';
 
 import { DOWNLOAD_ATTACHMENT_TOOL_METADATA } from './download-attachment.metadata.js';
@@ -42,6 +46,21 @@ export class DownloadAttachmentTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DownloadAttachmentParamsSchema {
     return DownloadAttachmentParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Скачать файл из задачи',
+      outputSchema: DownloadAttachmentOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, DownloadAttachmentParamsSchema);

@@ -3,7 +3,13 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения списка файлов задач (batch-режим)
@@ -36,3 +42,29 @@ export const GetAttachmentsParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type GetAttachmentsParams = z.infer<typeof GetAttachmentsParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const GetAttachmentsOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.array(
+    z.object({
+      issueId: z.string(),
+      attachmentsCount: z.number(),
+      attachments: z.array(FilteredEntitySchema),
+    })
+  ),
+  failed: z.array(
+    z.object({
+      issueId: z.string(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const GetAttachmentsOutputSchema = buildOutputSchema(GetAttachmentsOutputDataSchema);

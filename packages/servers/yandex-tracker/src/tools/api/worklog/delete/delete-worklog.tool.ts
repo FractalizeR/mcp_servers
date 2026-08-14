@@ -8,9 +8,13 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { DeleteWorklogParamsSchema } from '#tools/api/worklog/delete/delete-worklog.schema.js';
+import {
+  DeleteWorklogParamsSchema,
+  DeleteWorklogOutputSchema,
+} from '#tools/api/worklog/delete/delete-worklog.schema.js';
 
 import { DELETE_WORKLOG_TOOL_METADATA } from './delete-worklog.metadata.js';
 
@@ -35,6 +39,21 @@ export class DeleteWorklogTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof DeleteWorklogParamsSchema {
     return DeleteWorklogParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Удалить запись времени',
+      outputSchema: DeleteWorklogOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, DeleteWorklogParamsSchema);

@@ -6,7 +6,13 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, FieldsSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для добавления записей времени (batch-режим)
@@ -59,3 +65,31 @@ export const AddWorklogParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type AddWorklogParams = z.infer<typeof AddWorklogParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const AddWorklogOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.number(),
+  failed: z.number(),
+  worklogs: z.array(
+    z.object({
+      issueId: z.string(),
+      worklogId: z.string(),
+      worklog: FilteredEntitySchema,
+    })
+  ),
+  errors: z.array(
+    z.object({
+      issueId: z.string(),
+      error: z.string(),
+    })
+  ),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const AddWorklogOutputSchema = buildOutputSchema(AddWorklogOutputDataSchema);

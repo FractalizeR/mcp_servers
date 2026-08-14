@@ -11,4 +11,5 @@ export const CLONE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'clone', 'copy', 'page', 'wiki'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['idx', 'target', 'subscribe_me'],
 } as const;

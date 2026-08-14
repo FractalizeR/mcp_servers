@@ -24,4 +24,5 @@ export const ADD_CHECKLIST_ITEM_TOOL_METADATA: StaticToolMetadata = {
   tags: ['checklist', 'add', 'create', 'write', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['issueId', 'checked', 'assignee', 'deadline', 'fields'],
 } as const;

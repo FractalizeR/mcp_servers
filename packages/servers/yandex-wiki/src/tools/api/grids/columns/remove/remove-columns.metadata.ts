@@ -11,4 +11,5 @@ export const REMOVE_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['write', 'remove', 'delete', 'columns', 'grid', 'table'],
   isHelper: false,
   requiresExplicitUserConsent: true,
+  redactionAllowlist: ['idx', 'revision', 'column_slugs'],
 } as const;

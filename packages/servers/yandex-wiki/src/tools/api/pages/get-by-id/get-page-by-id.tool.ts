@@ -1,14 +1,29 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { GetPageByIdParamsSchema } from './get-page-by-id.schema.js';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
+import { GetPageByIdParamsSchema, GetPageByIdOutputDataSchema } from './get-page-by-id.schema.js';
 import { GET_PAGE_BY_ID_TOOL_METADATA } from './get-page-by-id.metadata.js';
+import { withDefinitionExtras, buildOutputSchema } from '../../../shared/tool-definition-extras.js';
 
 export class GetPageByIdTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = GET_PAGE_BY_ID_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof GetPageByIdParamsSchema {
     return GetPageByIdParamsSchema;
+  }
+
+  override getDefinition(): ToolDefinition {
+    return withDefinitionExtras(super.getDefinition(), {
+      title: 'Получить страницу по ID',
+      outputSchema: buildOutputSchema(GetPageByIdOutputDataSchema),
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

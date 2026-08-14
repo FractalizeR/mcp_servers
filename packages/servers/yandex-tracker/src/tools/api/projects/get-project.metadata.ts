@@ -24,4 +24,5 @@ export const GET_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['project', 'read', 'details'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['projectId', 'expand', 'fields'],
 } as const;

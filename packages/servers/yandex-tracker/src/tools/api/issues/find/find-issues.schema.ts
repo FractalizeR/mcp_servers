@@ -11,6 +11,10 @@ import {
   MaxItemsSchema,
   noCursorWithBulkParams,
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  PaginationMetaSchema,
+  buildOutputSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -115,3 +119,24 @@ export const FindIssuesParamsSchema = z
  * Вывод типа из схемы
  */
 export type FindIssuesParams = z.infer<typeof FindIssuesParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const FindIssuesOutputDataSchema = z.object({
+  count: z.number(),
+  issues: z.array(FilteredEntitySchema),
+  pagination: PaginationMetaSchema,
+  fieldsReturned: FieldsReturnedSchema,
+  searchCriteria: z.object({
+    hasQuery: z.boolean(),
+    hasFilter: z.boolean(),
+    keysCount: z.number(),
+    hasQueue: z.boolean(),
+  }),
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const FindIssuesOutputSchema = buildOutputSchema(FindIssuesOutputDataSchema);

@@ -24,4 +24,5 @@ export const GET_WORKLOGS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['worklog', 'get', 'list', 'read', 'time', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: ['issueIds', 'fields', 'cursor', 'perPage'],
 } as const;

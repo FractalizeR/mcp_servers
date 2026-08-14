@@ -9,10 +9,14 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
+import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ResultLogger } from '@fractalizer/mcp-core';
-import { BulkUpdateIssuesParamsSchema } from './bulk-update-issues.schema.js';
+import {
+  BulkUpdateIssuesParamsSchema,
+  BulkUpdateIssuesOutputSchema,
+} from './bulk-update-issues.schema.js';
 
 import { BULK_UPDATE_ISSUES_TOOL_METADATA } from './bulk-update-issues.metadata.js';
 
@@ -41,6 +45,21 @@ export class BulkUpdateIssuesTool extends BaseTool<YandexTrackerFacade> {
   protected override getParamsSchema(): typeof BulkUpdateIssuesParamsSchema {
     return BulkUpdateIssuesParamsSchema;
   }
+
+  override getDefinition(): ToolDefinition {
+    return {
+      ...super.getDefinition(),
+      title: 'Массовое обновление полей задач',
+      outputSchema: BulkUpdateIssuesOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, BulkUpdateIssuesParamsSchema);

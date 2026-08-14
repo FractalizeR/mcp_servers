@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema } from '#common/schemas/index.js';
+import { IssueKeySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для удаления связи (batch-режим)
@@ -37,3 +37,29 @@ export const DeleteLinkParamsSchema = z.object({
  * Вывод типа из схемы
  */
 export type DeleteLinkParams = z.infer<typeof DeleteLinkParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ */
+export const DeleteLinkOutputDataSchema = z.object({
+  total: z.number(),
+  successful: z.array(
+    z.object({
+      issueId: z.string(),
+      linkId: z.string(),
+      success: z.literal(true),
+    })
+  ),
+  failed: z.array(
+    z.object({
+      issueId: z.string(),
+      linkId: z.string(),
+      error: z.string(),
+    })
+  ),
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const DeleteLinkOutputSchema = buildOutputSchema(DeleteLinkOutputDataSchema);

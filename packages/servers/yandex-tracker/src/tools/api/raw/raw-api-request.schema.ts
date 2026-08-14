@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 import { createRawApiRequestSchema } from '@fractalizer/mcp-core';
-import { FieldsSchema } from '#common/schemas/index.js';
+import { FieldsSchema, FieldsReturnedSchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров прямого (raw) запроса к API Яндекс.Трекера.
@@ -30,3 +30,24 @@ export const RawApiRequestParamsSchema = createRawApiRequestSchema({
  * Вывод типа из схемы
  */
 export type RawApiRequestParams = z.infer<typeof RawApiRequestParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ *
+ * Форма зеркалирует `BaseRawApiRequestTool.execute()` (framework,
+ * `packages/framework/core/src/tools/raw/base-raw-api-request.tool.ts`):
+ * `data` — сырой (отфильтрованный по `fields`, если применимо) ответ API,
+ * форма которого заранее не известна (объект/массив/скаляр — see комментарий
+ * про ResponseFieldFilter в base-raw-api-request.tool.ts), поэтому `unknown`.
+ */
+export const RawApiRequestOutputDataSchema = z.object({
+  method: z.literal('GET'),
+  path: z.string(),
+  data: z.unknown(),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const RawApiRequestOutputSchema = buildOutputSchema(RawApiRequestOutputDataSchema);

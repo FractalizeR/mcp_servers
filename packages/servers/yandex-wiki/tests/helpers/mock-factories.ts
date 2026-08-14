@@ -77,6 +77,7 @@ export function createMockFacade(): Partial<YandexWikiFacade> {
     moveRows: vi.fn(),
     moveColumns: vi.fn(),
     cloneGrid: vi.fn(),
+    rawApiRequest: vi.fn(),
   };
 }
 

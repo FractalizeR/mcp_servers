@@ -24,4 +24,14 @@ export const CREATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['project', 'create', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  redactionAllowlist: [
+    'key',
+    'lead',
+    'status',
+    'startDate',
+    'endDate',
+    'queueIds',
+    'teamUserIds',
+    'fields',
+  ],
 } as const;

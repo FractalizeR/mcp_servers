@@ -11,6 +11,10 @@ import {
   MaxItemsSchema,
   noCursorWithBulkParams,
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  PaginationMetaSchema,
+  buildOutputSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -62,3 +66,22 @@ export const GetProjectsParamsSchema = z
  * Вывод типа из схемы
  */
 export type GetProjectsParams = z.infer<typeof GetProjectsParamsSchema>;
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ *
+ * `total` — только реальное значение из `pagination.total` (seekable endpoint),
+ * поэтому опционально (см. комментарий в tool.ts).
+ */
+export const GetProjectsOutputDataSchema = z.object({
+  projects: z.array(FilteredEntitySchema),
+  total: z.number().optional(),
+  count: z.number(),
+  pagination: PaginationMetaSchema,
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+/**
+ * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)
+ */
+export const GetProjectsOutputSchema = buildOutputSchema(GetProjectsOutputDataSchema);
