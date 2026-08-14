@@ -25,7 +25,7 @@ import { loadConfig } from '#config';
 import type { ServerConfig } from '#config';
 import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { ToolRegistry } from '@fractalizer/mcp-core';
-import { MCP_SERVER_NAME, YANDEX_TRACKER_ESSENTIAL_TOOLS } from './constants.js';
+import { MCP_SERVER_NAME } from './constants.js';
 
 // DI Container (Composition Root)
 import { createContainer, TYPES } from '#composition-root/index.js';
@@ -74,16 +74,11 @@ function setupServer(
   server.setRequestHandler(ListToolsRequestSchema, () => {
     logger.info(`📋 Запрос tools/list от клиента`);
 
-    const definitions = toolRegistry.getDefinitionsByMode(
-      config.toolDiscoveryMode,
-      config.essentialTools,
-      config.enabledToolCategories,
-      config.disabledToolGroups
-    );
+    const definitions = toolRegistry.getDefinitions(config.disabledToolGroups);
 
     const metrics = calculateToolsMetrics(definitions);
     logToolsMetrics(logger, config, definitions, metrics);
-    logToolsWarnings(logger, config, metrics);
+    logToolsWarnings(logger, metrics);
 
     return {
       tools: definitions.map((def) => ({
@@ -188,21 +183,8 @@ async function main(): Promise<void> {
     // Загрузка конфигурации
     const config = loadConfig();
 
-    // ✅ Переопределяем essentialTools в зависимости от режима discovery
-    // - eager: только ping (search_tools избыточен, т.к. Claude видит все инструменты)
-    // - lazy: ping + search_tools (search_tools нужен для discovery)
-    const essentialTools =
-      config.toolDiscoveryMode === 'eager'
-        ? ['fr_yandex_tracker_ping']
-        : YANDEX_TRACKER_ESSENTIAL_TOOLS;
-
-    const configWithEssentialTools: ServerConfig = {
-      ...config,
-      essentialTools,
-    };
-
     // Создание DI контейнера (Logger создаётся внутри)
-    const container = await createContainer(configWithEssentialTools);
+    const container = await createContainer(config);
 
     // Получение Logger из контейнера
     logger = container.get<Logger>(TYPES.Logger);
@@ -232,7 +214,7 @@ async function main(): Promise<void> {
     );
 
     // Настройка обработчиков сервера
-    setupServer(server, toolRegistry, configWithEssentialTools, logger);
+    setupServer(server, toolRegistry, config, logger);
 
     // Настройка обработчиков сигналов
     setupSignalHandlers(server, logger);

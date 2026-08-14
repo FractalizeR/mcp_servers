@@ -17,13 +17,16 @@ export default mergeConfig(
       // Performance monitoring: warn about tests slower than 300ms
       slowTestThreshold: 300,
       // Исключить legacy тесты (сохранены для rollback, но не запускаются)
-      exclude: ['**/node_modules/**', '**/dist/**', '**/.{git,cache,output,temp}/**', 'tests/cli-legacy/**'],
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/.{git,cache,output,temp}/**',
+        'tests/cli-legacy/**',
+      ],
     },
     resolve: {
       alias: {
         // Framework packages (междупакетные зависимости для vitest)
-        '@fractalizer/mcp-search': path.resolve(__dirname, '../../framework/search/src'),
-        '@fractalizer/mcp-search/*': path.resolve(__dirname, '../../framework/search/src/*'),
         '@fractalizer/mcp-core': path.resolve(__dirname, '../../framework/core/src'),
         '@fractalizer/mcp-core/*': path.resolve(__dirname, '../../framework/core/src/*'),
         '@fractalizer/mcp-infrastructure': path.resolve(

@@ -229,9 +229,8 @@ function bindOperations(container: Container): void {
   - [ ] Для Operation: добавь 1 строку в `definitions/operation-definitions.ts`
   - [ ] ВСЁ! (Символы, bind, registry — автоматически)
 
-⚠️ **Особый случай:** Helper tools с нестандартным конструктором
-(как `SearchToolsTool`) требуют отдельной регистрации в `container.ts`.
-
+Все Tool и Operation классы регистрируются единым автоматическим путём — особых случаев с
+ручной регистрацией в `container.ts` больше нет.
 
 ## 🚨 Критические правила
 

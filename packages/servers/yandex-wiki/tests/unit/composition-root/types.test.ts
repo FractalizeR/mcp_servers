@@ -74,7 +74,6 @@ describe('DI Symbols', () => {
       expect(TYPES.CacheManager).toBeDefined();
       expect(TYPES.YandexWikiFacade).toBeDefined();
       expect(TYPES.ToolRegistry).toBeDefined();
-      expect(TYPES.ToolSearchEngine).toBeDefined();
     });
 
     it('токены инфраструктуры должны быть символами', () => {

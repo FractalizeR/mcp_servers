@@ -18,8 +18,6 @@ export const DEFAULT_MAX_CONCURRENT_REQUESTS = 10 as const;
 export const DEFAULT_LOGS_DIR = 'logs' as const;
 export const DEFAULT_LOG_MAX_SIZE = 51200 as const; // 50KB
 export const DEFAULT_LOG_MAX_FILES = 20 as const;
-export const DEFAULT_TOOL_DISCOVERY_MODE = 'eager' as const;
-export const DEFAULT_ESSENTIAL_TOOLS = ['ping', 'search_tools'] as const;
 export const DEFAULT_RETRY_ATTEMPTS = 3 as const;
 export const DEFAULT_RETRY_MIN_DELAY = 1000 as const;
 export const DEFAULT_RETRY_MAX_DELAY = 10000 as const;
@@ -39,8 +37,6 @@ export const ENV_VAR_NAMES = {
   PRETTY_LOGS: 'PRETTY_LOGS',
   LOG_MAX_SIZE: 'LOG_MAX_SIZE',
   LOG_MAX_FILES: 'LOG_MAX_FILES',
-  TOOL_DISCOVERY_MODE: 'TOOL_DISCOVERY_MODE',
-  ESSENTIAL_TOOLS: 'ESSENTIAL_TOOLS',
   RETRY_ATTEMPTS: 'YANDEX_WIKI_RETRY_ATTEMPTS',
   RETRY_MIN_DELAY: 'YANDEX_WIKI_RETRY_MIN_DELAY',
   RETRY_MAX_DELAY: 'YANDEX_WIKI_RETRY_MAX_DELAY',

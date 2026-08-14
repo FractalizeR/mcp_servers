@@ -10,7 +10,7 @@
 
 **Текущая структура:**
 - **API Tools** — работа с Яндекс.Трекер (задачи, проекты, комментарии, работа с очередями)
-- **Helper Tools** — утилиты (ping, search_tools)
+- **Helper Tools** — вспомогательные утилиты (ping, demo, issue-url)
 
 **Слоистая архитектура:**
 ```
@@ -41,9 +41,9 @@ src/tools/
 │   ├── projects/
 │   └── queues/
 ├── helpers/                      # Вспомогательные tools
-│   ├── ping/
-│   └── search-tools/
-└── ping.tool.ts                  # Корневой ping tool
+│   ├── demo/
+│   └── issue-url/
+└── ping.tool.ts                  # Корневой ping tool (System/Health, не helper)
 ```
 
 ---
@@ -78,7 +78,7 @@ execute() {
 
 **Каждый tool ДОЛЖЕН иметь:**
 
-1. **Static METADATA** — для Tool Search Engine + категоризация
+1. **Static METADATA** — категоризация и сортировка в `tools/list`
 ```typescript
 static readonly METADATA: ToolMetadata = {
   name: 'get_issues',
@@ -122,8 +122,8 @@ return this.formatSuccess({ issues: filtered });
 **Обязательные метаданные:**
 - `category` — основная категория (issues, helpers, system)
 - `subcategory` — read/write/workflow (опционально)
-- `priority` — critical/high/normal/low (опционально, default: normal)
-- `tags` — для поиска через search_tools (опционально)
+- `priority` — critical/high/normal/low (опционально, default: normal); определяет порядок в `tools/list`
+- `tags` — для категоризации (опционально)
 
 **Description формат:** `[Category/Subcategory] Краткое описание` (≤80 символов)
 
@@ -142,7 +142,7 @@ return this.formatSuccess({ issues: filtered });
 
 **Tool использует `generateDefinitionFromSchema(metadata, schema)` вместо отдельных `*.definition.ts` (удалены).**
 
-**Детали:** См. [Core Framework README](../../../../framework/core/README.md) и [ARCHITECTURE.md](../../../../ARCHITECTURE.md)
+**Детали:** См. [Core Framework README](../../../../framework/core/README.md) и [ARCHITECTURE.md](../../../../../ARCHITECTURE.md)
 
 ---
 
@@ -473,12 +473,12 @@ ResultLogger.logBatchSuccess(logger, 'operation_name', {
 
 ---
 
-## 📊 Tool Discovery Modes
+## 📊 Управление составом инструментов
 
-**Eager (по умолчанию):** Все tools видны сразу (Claude Code on the Web, production)
-**Lazy (экспериментально):** Только essential tools + search (Claude Desktop, 30+ tools)
+`tools/list` всегда отдаёт полный набор, прошедший access policy, в детерминированном порядке.
+Единственный рубильник — `DISABLED_TOOL_GROUPS` (по умолчанию пустой — ничего не отключено).
 
-**Детали:** [../../CLAUDE.md](../../CLAUDE.md#51-tool-discovery-mode)
+**Детали:** [../../CLAUDE.md](../../CLAUDE.md)
 
 ---
 
@@ -494,7 +494,7 @@ ResultLogger.logBatchSuccess(logger, 'operation_name', {
 
 ## 🔗 См. также
 
-- **Общие утилиты:** [@fractalizer/mcp-core](../../../../../framework/core/src/tools/common/README.md)
+- **Общие утилиты:** [@fractalizer/mcp-core](../../../../framework/core/src/tools/common/README.md)
 - **API Operations:** [../tracker_api/api_operations/README.md](../tracker_api/api_operations/README.md)
 - **Dependency Injection:** [../composition-root/README.md](../composition-root/README.md)
 - **Yandex Tracker CLAUDE.md:** [../../CLAUDE.md](../../CLAUDE.md)

@@ -7,7 +7,7 @@
 ## ⚡ ВАЖНО
 
 **Перед работой с Yandex Tracker пакетом:**
-1. 📖 **[Корневой CLAUDE.md](../../CLAUDE.md)** — общие правила monorepo
+1. 📖 **[Корневой CLAUDE.md](../../../CLAUDE.md)** — общие правила monorepo
 2. 📖 **Этот файл** — специфика Yandex Tracker
 3. 📖 **[README.md](./README.md)** — описание пакета
 
@@ -23,7 +23,6 @@
 - **Vitest** (тесты, покрытие ≥80%)
 - **dependency-cruiser** (валидация архитектурных правил)
 - **MCP SDK** (Model Context Protocol)
-- **Tool Search System** (из @fractalizer/mcp-search)
 - **API:** Яндекс.Трекер v2/v3 (используются обе официально поддерживаемые версии)
 
 ---
@@ -36,7 +35,6 @@
 ```typescript
 import { BaseTool } from '@fractalizer/mcp-core';
 import { HttpClient } from '@fractalizer/mcp-infrastructure';
-import { ToolSearchEngine } from '@fractalizer/mcp-search';
 ```
 
 **✅ Внутренние импорты (внутри yandex-tracker):**
@@ -304,47 +302,19 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
 - ✅ Невозможен schema-definition mismatch
 - ✅ Упрощение создания tools (меньше файлов)
 
-**Детали:** См. [../../ARCHITECTURE.md](../../ARCHITECTURE.md#schema-to-definition-generator), [packages/framework/core/README.md](../../framework/core/README.md)
+**Детали:** См. [../../../ARCHITECTURE.md](../../../ARCHITECTURE.md#schema-to-definition-generator), [packages/framework/core/README.md](../../framework/core/README.md)
 
-### 5. Статические метаданные для Tool Search
+### 5. Статические метаданные Tool (категоризация и порядок)
 
 - ✅ ОБЯЗАТЕЛЬНО добавляй `static readonly METADATA: StaticToolMetadata` во все tools
-- ✅ Используется для compile-time индексирования (@fractalizer/mcp-search)
-- ✅ Позволяет SearchToolsTool находить tools без загрузки всего кода
-- ⚠️ При добавлении нового tool — запусти `npm run build` (автоматически обновит индекс)
-
-### 6. Tool Discovery Mode
-
-**⚠️ ВАЖНО:** По умолчанию используется `eager` режим из-за ограничений Claude Code on the Web.
-
-**Концепция:**
-- **Eager режим (по умолчанию):** `tools/list` возвращает ВСЕ инструменты сразу
-  - ✅ Совместимо с Claude Code on the Web и другими MCP клиентами
-  - ⚠️ Больше токенов при подключении (но работает стабильно)
-
-- **Lazy режим (экспериментальный):** `tools/list` возвращает только essential инструменты
-  - ❌ НЕ работает с Claude Code on the Web (клиент блокирует вызовы)
-  - ✅ Работает с Claude Desktop и другими клиентами с правильной реализацией MCP
-  - ✅ Экономия токенов: 100+ инструментов без перегрузки контекста
-
-**Конфигурация через ENV:**
-```bash
-# По умолчанию: eager (для совместимости с Claude Code on the Web)
-TOOL_DISCOVERY_MODE=eager
-
-# Экспериментально: lazy режим (только для Claude Desktop и совместимых клиентов)
-TOOL_DISCOVERY_MODE=lazy
-ESSENTIAL_TOOLS=ping,search_tools
-```
-
-**Workflow в lazy режиме (только Claude Desktop):**
-1. Получает `tools/list` → видит только `[ping, search_tools]`
-2. Использует `search_tools` для поиска нужного инструмента
-3. Вызывает найденный инструмент
-
-**Когда использовать:**
-- ✅ `eager` (по умолчанию): Claude Code on the Web, production
-- ⚠️ `lazy`: Claude Desktop, 30+ инструментов, экспериментальный режим
+- `category`/`subcategory` — используются `DISABLED_TOOL_GROUPS` (единственный рубильник состава,
+  по умолчанию пустой — ничего не отключено; та же policy применяется и к `tools/list`, и к
+  `tools/call`; неизвестное имя группы — предупреждение в stderr с перечнем допустимых значений)
+- `priority` — определяет место в `tools/list`. Сортировка — контракт: приоритет как первый ключ,
+  имя как обязательный tie-breaker; два подряд вызова `tools/list` дают побайтово одинаковый список
+- ⚠️ Устаревшие env-переменные прежнего режима discovery удалены целиком (не no-op): если клиент их
+  всё ещё выставляет, сервер печатает предупреждение в stderr при старте и продолжает работу с
+  полным набором инструментов
 
 ### 6. Логирование (Pino)
 
@@ -487,7 +457,7 @@ static readonly METADATA = {
 
 ### Добавление Operation
 
-- [ ] 📖 Прочитай [src/api_operations/README.md](src/api_operations/README.md)
+- [ ] 📖 Прочитай [src/tracker_api/api_operations/README.md](src/tracker_api/api_operations/README.md)
 - [ ] Наследуй `BaseOperation`
 - [ ] Для batch: используй `ParallelExecutor`, возвращай `BatchResult<T>`
 - [ ] **АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:** Добавь **1 строку** в `src/composition-root/definitions/operation-definitions.ts`
@@ -496,14 +466,14 @@ static readonly METADATA = {
 
 ### Добавление Entity
 
-- [ ] 📖 Прочитай [src/entities/README.md](src/entities/README.md)
+- [ ] 📖 Прочитай [src/tracker_api/entities/README.md](src/tracker_api/entities/README.md)
 - [ ] Создай интерфейс (только known поля)
 - [ ] Создай `{Name}WithUnknownFields = WithUnknownFields<{Name}>`
 - [ ] Экспорт в `index.ts`
 
 ### Добавление DTO
 
-- [ ] 📖 Прочитай [src/dto/README.md](src/dto/README.md)
+- [ ] 📖 Прочитай [src/tracker_api/dto/README.md](src/tracker_api/dto/README.md)
 - [ ] Создай Input DTO (с `[key: string]: unknown` если нужно)
 - [ ] Для update — все поля опциональны
 - [ ] Экспорт в `index.ts`
@@ -535,14 +505,14 @@ packages/servers/yandex-tracker/
 └── README.md                # Описание пакета
 ```
 
-**Подробно:** корневой [ARCHITECTURE.md](../../ARCHITECTURE.md)
+**Подробно:** корневой [ARCHITECTURE.md](../../../ARCHITECTURE.md)
 
 ---
 
 ## 🔗 ДОПОЛНИТЕЛЬНО
 
-- **Архитектура monorepo:** [../../ARCHITECTURE.md](../../ARCHITECTURE.md)
-- **Корневой CLAUDE.md:** [../../CLAUDE.md](../../CLAUDE.md)
+- **Архитектура monorepo:** [../../../ARCHITECTURE.md](../../../ARCHITECTURE.md)
+- **Корневой CLAUDE.md:** [../../../CLAUDE.md](../../../CLAUDE.md)
 - **API справка:** `../../yandex_tracker_client/` (Python SDK)
 
 <!-- LIMIT_EXCEPTION: +11 строк (2.75%) для добавления секции Batch Operations Pattern -->

@@ -109,8 +109,6 @@ describe('Entry Point Exports (Smoke)', () => {
       maxConcurrentRequests: 10,
       logLevel: 'error' as const,
       prettyLogs: false,
-      toolDiscoveryMode: 'eager' as const,
-      essentialTools: ['yw_ping'],
     };
 
     // Создание контейнера должно работать

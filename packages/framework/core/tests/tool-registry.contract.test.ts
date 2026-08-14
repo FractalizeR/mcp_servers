@@ -252,120 +252,75 @@ describe('ToolRegistry - Contract Tests', () => {
     });
   });
 
-  describe('Инвариант 4: Фильтрация по категориям', () => {
-    it('getDefinitionsByCategories() фильтрует tools по категории', () => {
-      const registry = new ToolRegistry(mockContainer, mockLogger, [
-        MockTool as unknown as ToolConstructor, // category: 'test'
-        OtherCategoryMockTool as unknown as ToolConstructor, // category: 'other'
-      ]);
-
-      const definitions = registry.getDefinitionsByCategories({
-        includeAll: false,
-        categories: new Set(['test']),
-        categoriesWithSubcategories: new Map(),
-      });
-
-      expect(definitions.length).toBe(1);
-      expect(definitions[0].name).toBe('tool1');
-    });
-
-    it('getDefinitionsByCategories() с includeAll=true возвращает все tools', () => {
-      const registry = new ToolRegistry(mockContainer, mockLogger, [
-        MockTool as unknown as ToolConstructor,
-        OtherCategoryMockTool as unknown as ToolConstructor,
-      ]);
-
-      const definitions = registry.getDefinitionsByCategories({
-        includeAll: true,
-        categories: new Set(),
-        categoriesWithSubcategories: new Map(),
-      });
-
-      expect(definitions.length).toBe(2);
-    });
-
-    it('getDefinitionsByCategories() поддерживает фильтрацию по subcategory', () => {
-      const registry = new ToolRegistry(mockContainer, mockLogger, [
-        MockTool as unknown as ToolConstructor,
-      ]);
-
-      const definitions = registry.getDefinitionsByCategories({
-        includeAll: false,
-        categories: new Set(),
-        categoriesWithSubcategories: new Map([['test', new Set(['mock'])]]),
-      });
-
-      expect(definitions.length).toBe(1);
-      expect(definitions[0].name).toBe('tool1');
-    });
-  });
-
-  describe('Инвариант 5: Lazy/Eager режимы', () => {
-    it('getDefinitionsByMode("lazy") возвращает только essential tools', () => {
-      const registry = new ToolRegistry(mockContainer, mockLogger, [
-        MockTool as unknown as ToolConstructor,
-        CriticalMockTool as unknown as ToolConstructor,
-      ]);
-
-      const definitions = registry.getDefinitionsByMode('lazy', ['tool1']);
-
-      expect(definitions.length).toBe(1);
-      expect(definitions[0].name).toBe('tool1');
-    });
-
-    it('getDefinitionsByMode("eager") возвращает все tools', () => {
-      const registry = new ToolRegistry(mockContainer, mockLogger, [
-        MockTool as unknown as ToolConstructor,
-        CriticalMockTool as unknown as ToolConstructor,
-      ]);
-
-      const definitions = registry.getDefinitionsByMode('eager');
-
-      expect(definitions.length).toBe(2);
-    });
-
-    it('getDefinitionsByMode("eager") с фильтром категорий', () => {
-      const registry = new ToolRegistry(mockContainer, mockLogger, [
-        MockTool as unknown as ToolConstructor,
-        OtherCategoryMockTool as unknown as ToolConstructor,
-      ]);
-
-      const definitions = registry.getDefinitionsByMode('eager', undefined, {
-        includeAll: false,
-        categories: new Set(['test']),
-        categoriesWithSubcategories: new Map(),
-      });
-
-      expect(definitions.length).toBe(1);
-      expect(definitions[0].name).toBe('tool1');
-    });
-  });
-
-  describe('Инвариант 6: Негативный фильтр (disabled groups)', () => {
+  describe('Инвариант 4: Негативный фильтр (disabled groups)', () => {
     it('disabledFilter исключает инструменты отключенной категории', () => {
       const registry = new ToolRegistry(mockContainer, mockLogger, [
         MockTool as unknown as ToolConstructor, // category: 'test'
         OtherCategoryMockTool as unknown as ToolConstructor, // category: 'other'
       ]);
 
-      const definitions = registry.getDefinitionsByMode(
-        'eager',
-        undefined,
-        undefined, // позитивный фильтр
-        {
-          // негативный фильтр
-          includeAll: false,
-          categories: new Set(['test']),
-          categoriesWithSubcategories: new Map(),
-        }
-      );
+      const definitions = registry.getDefinitions({
+        includeAll: false,
+        categories: new Set(['test']),
+        categoriesWithSubcategories: new Map(),
+      });
 
       expect(definitions.length).toBe(1);
       expect(definitions[0].name).toBe('other_tool');
     });
+
+    it('без disabledFilter возвращает все tools (эквивалентно getDefinitions())', () => {
+      const registry = new ToolRegistry(mockContainer, mockLogger, [
+        MockTool as unknown as ToolConstructor,
+        OtherCategoryMockTool as unknown as ToolConstructor,
+      ]);
+
+      const definitions = registry.getDefinitions();
+
+      expect(definitions.length).toBe(2);
+    });
   });
 
-  describe('Инвариант 7: Получение tool по имени', () => {
+  describe('Инвариант 5: Детерминированный порядок tools/list (контракт)', () => {
+    it('два последовательных вызова getDefinitions() дают побайтово одинаковый список', () => {
+      const registry = new ToolRegistry(mockContainer, mockLogger, [
+        MockTool as unknown as ToolConstructor,
+        CriticalMockTool as unknown as ToolConstructor,
+        HighPriorityMockTool as unknown as ToolConstructor,
+        LowPriorityMockTool as unknown as ToolConstructor,
+        OtherCategoryMockTool as unknown as ToolConstructor,
+      ]);
+
+      const first = registry.getDefinitions();
+      const second = registry.getDefinitions();
+
+      expect(JSON.stringify(second)).toBe(JSON.stringify(first));
+    });
+
+    it('сортировка полная: приоритет первым ключом, имя — обязательный tie-breaker', () => {
+      // ToolA → 'a_tool', ToolB → 'z_tool' (см. classToInstance fallback в
+      // beforeEach), оба priority: normal — порядок внутри одного приоритета
+      // не должен зависеть от порядка регистрации в DI.
+      class ToolA extends MockTool {
+        static override METADATA = { category: 'test', priority: 'normal' as const };
+      }
+      class ToolB extends MockTool {
+        static override METADATA = { category: 'test', priority: 'normal' as const };
+      }
+
+      // Регистрируем в "неправильном" порядке (B раньше A) — сортировка должна
+      // всё равно поставить a_tool раньше z_tool.
+      const registry = new ToolRegistry(mockContainer, mockLogger, [
+        ToolB as unknown as ToolConstructor,
+        ToolA as unknown as ToolConstructor,
+      ]);
+
+      const names = registry.getDefinitions().map((d) => d.name);
+      expect(names).toEqual(['a_tool', 'z_tool']);
+    });
+  });
+
+  describe('Инвариант 6: Получение tool по имени', () => {
     it('getTool(name) возвращает tool по exact name', () => {
       const registry = new ToolRegistry(mockContainer, mockLogger, [
         MockTool as unknown as ToolConstructor,
@@ -388,7 +343,7 @@ describe('ToolRegistry - Contract Tests', () => {
     });
   });
 
-  describe('Инвариант 8: Выполнение tool', () => {
+  describe('Инвариант 7: Выполнение tool', () => {
     it('execute(name, params) вызывает tool.execute()', async () => {
       const registry = new ToolRegistry(mockContainer, mockLogger, [
         MockTool as unknown as ToolConstructor,
@@ -412,7 +367,7 @@ describe('ToolRegistry - Contract Tests', () => {
     });
   });
 
-  describe('Инвариант 9: Lazy initialization', () => {
+  describe('Инвариант 8: Lazy initialization', () => {
     it('tools не инициализированы при создании registry', () => {
       new ToolRegistry(mockContainer, mockLogger, [MockTool as unknown as ToolConstructor]);
 
@@ -432,7 +387,7 @@ describe('ToolRegistry - Contract Tests', () => {
     });
   });
 
-  describe('Инвариант 10: Дополнительная регистрация', () => {
+  describe('Инвариант 9: Дополнительная регистрация', () => {
     it('registerToolFromContainer() добавляет tool после инициализации', () => {
       const registry = new ToolRegistry(mockContainer, mockLogger, [
         MockTool as unknown as ToolConstructor,
@@ -451,7 +406,7 @@ describe('ToolRegistry - Contract Tests', () => {
     });
   });
 
-  describe('Инвариант 11: Пустой registry', () => {
+  describe('Инвариант 10: Пустой registry', () => {
     it('getDefinitions() на пустом registry возвращает []', () => {
       const registry = new ToolRegistry(mockContainer, mockLogger, []);
 

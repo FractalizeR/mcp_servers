@@ -2,10 +2,12 @@
  * Сервис для фильтрации инструментов
  *
  * Ответственность (SRP):
- * - Фильтрация tools по категориям и подкатегориям
- * - Применение позитивных и негативных фильтров
- * - Валидация запрошенных категорий
+ * - Применение негативного фильтра (отключённые группы, DISABLED_TOOL_GROUPS)
+ * - Валидация запрошенных категорий/подкатегорий
  * - Логирование фильтрации
+ *
+ * Позитивный фильтр (ENABLED_TOOL_CATEGORIES) удалён вместе с lazy discovery:
+ * единственный оставшийся рубильник — негативный список отключённых групп.
  */
 
 import type { Logger } from '@fractalizer/mcp-infrastructure';
@@ -19,100 +21,66 @@ export class ToolFilterService {
   constructor(private readonly logger: Logger) {}
 
   /**
-   * Фильтрация по категориям (позитивный фильтр)
+   * Негативная проверка: исключён ли один tool фильтром отключённых групп
    *
-   * @param tools - Массив tools
-   * @param filter - Фильтр категорий
-   * @returns Отфильтрованный массив
+   * Чистая функция без побочных эффектов — специально для переиспользования
+   * вне контекста построения полного списка (см. ToolAccessPolicy), где нужен
+   * вердикт по одному инструменту, а не отфильтрованный массив.
+   *
+   * ЕДИНЫЙ источник истины: {@link applyDisabledFilter} и `ToolAccessPolicy`
+   * обязаны использовать именно этот метод, чтобы решение о видимости в
+   * tools/list и решение о доступности в tools/call не могли разойтись.
+   *
+   * @param tool - Проверяемый tool
+   * @param disabledFilter - Фильтр отключённых категорий/подкатегорий
+   * @returns true, если tool должен быть исключён
    */
-  filterByCategories(tools: BaseTool[], filter: ParsedCategoryFilter): BaseTool[] {
-    // Если includeAll = true, возвращаем все инструменты
-    if (filter.includeAll) {
-      return tools;
+  static isDisabledByFilter(tool: BaseTool, disabledFilter: ParsedCategoryFilter): boolean {
+    const toolClass = tool.constructor as typeof BaseTool;
+    const metadata = toolClass.METADATA;
+
+    if (!metadata?.category) {
+      // Инструменты без категории никогда не отключаются
+      return false;
     }
 
-    // Валидация запрошенных категорий
-    this.validateCategories(tools, filter);
+    const category = metadata.category;
+    const subcategory = metadata.subcategory;
 
-    // Фильтрация
-    const filtered = tools.filter((tool) => {
-      const toolClass = tool.constructor as typeof BaseTool;
-      const metadata = toolClass.METADATA;
+    // Проверка 1: категория полностью отключена
+    if (disabledFilter.categories.has(category)) {
+      return true;
+    }
 
-       
-      if (!metadata?.category) {
-        // Инструменты без категории всегда включены (backwards compatibility)
+    // Проверка 2: подкатегория отключена
+    if (subcategory && disabledFilter.categoriesWithSubcategories.has(category)) {
+      const disabledSubcategories = disabledFilter.categoriesWithSubcategories.get(category);
+      if (disabledSubcategories?.has(subcategory)) {
         return true;
       }
+    }
 
-      const category = metadata.category;
-      const subcategory = metadata.subcategory;
-
-      // Проверка 1: категория без подкатегории (включает все подкатегории)
-      if (filter.categories.has(category)) {
-        return true;
-      }
-
-      // Проверка 2: категория с конкретными подкатегориями
-      if (subcategory && filter.categoriesWithSubcategories.has(category)) {
-        const allowedSubcategories = filter.categoriesWithSubcategories.get(category);
-        if (allowedSubcategories) {
-          return allowedSubcategories.has(subcategory);
-        }
-      }
-
-      return false;
-    });
-
-    // Логирование фильтрации
-    this.logger.info('Tools filtered by categories', {
-      totalTools: tools.length,
-      filteredTools: filtered.length,
-      categories: Array.from(filter.categories),
-      categoriesWithSubcategories: Array.from(filter.categoriesWithSubcategories.entries()).map(
-        ([cat, subcats]) => ({ category: cat, subcategories: Array.from(subcats) })
-      ),
-    });
-
-    return filtered;
+    return false;
   }
 
   /**
    * Применить негативный фильтр (исключение отключенных групп)
+   *
+   * Валидирует имена категорий/подкатегорий из фильтра ПЕРЕД применением:
+   * опечатка или неизвестная группа не должна молчать — см. {@link validateCategories}.
    *
    * @param tools - Список инструментов
    * @param disabledFilter - Фильтр отключенных категорий/подкатегорий
    * @returns Отфильтрованный список инструментов
    */
   applyDisabledFilter(tools: BaseTool[], disabledFilter: ParsedCategoryFilter): BaseTool[] {
-    const filtered = tools.filter((tool) => {
-      const toolClass = tool.constructor as typeof BaseTool;
-      const metadata = toolClass.METADATA;
+    // Валидация запрошенных категорий (warn в stderr+файл для неизвестных имён)
+    this.validateCategories(tools, disabledFilter);
 
-       
-      if (!metadata?.category) {
-        // Инструменты без категории всегда включены
-        return true;
-      }
-
-      const category = metadata.category;
-      const subcategory = metadata.subcategory;
-
-      // Проверка 1: категория полностью отключена
-      if (disabledFilter.categories.has(category)) {
-        return false;
-      }
-
-      // Проверка 2: подкатегория отключена
-      if (subcategory && disabledFilter.categoriesWithSubcategories.has(category)) {
-        const disabledSubcategories = disabledFilter.categoriesWithSubcategories.get(category);
-        if (disabledSubcategories?.has(subcategory)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
+    // Единая логика — см. ToolFilterService.isDisabledByFilter
+    const filtered = tools.filter(
+      (tool) => !ToolFilterService.isDisabledByFilter(tool, disabledFilter)
+    );
 
     // Логирование отключенных групп
     this.logger.info('✂️  Применён фильтр отключенных групп', {
@@ -147,7 +115,6 @@ export class ToolFilterService {
       const toolClass = tool.constructor as typeof BaseTool;
       const metadata = toolClass.METADATA;
 
-       
       if (metadata && metadata.category) {
         knownCategories.add(metadata.category);
 

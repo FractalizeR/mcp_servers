@@ -37,10 +37,7 @@ describe('MCP Server Lifecycle (Smoke)', () => {
     cache: {
       ttlMs: 300000,
     },
-    tools: {
-      discoveryMode: 'eager',
-      essentialTools: ['fr_ticktick_ping'],
-    },
+    tools: {},
     logging: {
       level: 'error', // Minimal logs for smoke test
       dir: '/tmp/ticktick-mcp-test-logs',
@@ -135,10 +132,7 @@ describe('MCP Server Lifecycle (Smoke)', () => {
       cache: {
         ttlMs: 300000,
       },
-      tools: {
-        discoveryMode: 'eager',
-        essentialTools: ['fr_ticktick_ping'],
-      },
+      tools: {},
       logging: {
         level: 'error',
         dir: '/tmp/ticktick-mcp-test-logs',
@@ -153,40 +147,26 @@ describe('MCP Server Lifecycle (Smoke)', () => {
     await expect(createContainer(minimalConfig)).resolves.toBeDefined();
   });
 
-  it('should support lazy and eager discovery modes', async () => {
-    // Arrange
-    const lazyConfig = {
-      ...fakeConfig,
-      tools: {
-        ...fakeConfig.tools,
-        discoveryMode: 'lazy' as const,
-        essentialTools: ['fr_ticktick_ping', 'fr_ticktick_search_tools'],
-      },
-    };
-    const eagerConfig = {
-      ...fakeConfig,
-      tools: { ...fakeConfig.tools, discoveryMode: 'eager' as const },
-    };
-
+  it('tools/list always returns the full set of tools (lazy discovery removed)', async () => {
     // Act
-    const lazyContainer = await createContainer(lazyConfig);
-    const eagerContainer = await createContainer(eagerConfig);
-
-    const lazyRegistry = lazyContainer.get<ToolRegistry>(TYPES.ToolRegistry);
-    const eagerRegistry = eagerContainer.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    // Both modes register all tools (getAllTools)
-    // The difference is which tools are exported via getDefinitionsByMode
-    const lazyDefinitions = lazyRegistry.getEssentialDefinitions(lazyConfig.tools.essentialTools);
-    const eagerDefinitions = eagerRegistry.getDefinitions();
+    const container = await createContainer(fakeConfig);
+    const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+    const definitions = registry.getDefinitions();
 
     // Assert
-    expect(lazyRegistry).toBeDefined();
-    expect(eagerRegistry).toBeDefined();
-    // In lazy mode only essential tools (minus search_tools if not bound)
-    expect(lazyDefinitions.length).toBeGreaterThanOrEqual(1);
-    // In eager mode all tools
-    expect(eagerDefinitions.length).toBeGreaterThan(10);
+    expect(registry).toBeDefined();
+    expect(definitions.length).toBeGreaterThan(10);
+  });
+
+  it('DoD: two consecutive tools/list calls return a byte-identical list', async () => {
+    // Act
+    const container = await createContainer(fakeConfig);
+    const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+    const first = registry.getDefinitions();
+    const second = registry.getDefinitions();
+
+    // Assert
+    expect(JSON.stringify(second)).toBe(JSON.stringify(first));
   });
 
   it('should return all tools with correct metadata in eager mode', async () => {

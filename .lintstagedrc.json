@@ -3,7 +3,9 @@
     "sort-package-json"
   ],
   "**/*.ts": [
-    "prettier --write",
+    "prettier --write"
+  ],
+  "packages/**/*.ts": [
     "eslint --fix"
   ]
 }

@@ -2,11 +2,14 @@
 /**
  * Smoke-test MCP server
  *
- * Checks:
+ * Checks on the REAL built bundle:
  * 1. Server starts successfully
  * 2. Responds to JSON-RPC tools/list request
- * 3. Returns valid list of tools
- * 4. Server gracefully shuts down
+ * 3. Returns a valid full list of tools
+ * 4. Two consecutive tools/list calls return a byte-identical list (DoD 2.1)
+ * 5. The deprecated TOOL_DISCOVERY_MODE env var does not crash the server and
+ *    prints a warning to stderr (DoD 2.1.A)
+ * 6. Server gracefully shuts down
  */
 
 import { spawn } from 'node:child_process';
@@ -31,7 +34,7 @@ interface JSONRPCResponse {
   };
 }
 
-const TIMEOUT_MS = 10000; // 10 seconds for entire test
+const TIMEOUT_MS = 20000; // 20 seconds for entire test (main scenario + separate process for DoD 2.1.A)
 const SERVER_STARTUP_DELAY_MS = 1000; // 1 second for server startup
 
 /**
@@ -52,7 +55,13 @@ async function main(): Promise<void> {
     });
 
     // Run test with timeout
-    await Promise.race([runSmokeTest(), timeoutPromise]);
+    await Promise.race([
+      (async () => {
+        await runSmokeTest();
+        await runDeprecatedEnvVarSmokeTest();
+      })(),
+      timeoutPromise,
+    ]);
 
     console.log('\n✅ Smoke test passed!');
     process.exit(0);
@@ -137,7 +146,7 @@ async function main(): Promise<void> {
     console.log('   Request sent, waiting for response...');
 
     // 3. Wait for response
-    const response = await waitForJSONRPCResponse(stdoutData, serverProcess);
+    const response = await waitForJSONRPCResponse(stdoutData, serverProcess, 1);
 
     // 4. Validate response
     console.log('\n3️⃣  Validating response');
@@ -145,6 +154,22 @@ async function main(): Promise<void> {
 
     console.log('   ✓ Response is valid');
     console.log(`   ✓ Found ${response.result?.tools?.length ?? 0} tools`);
+
+    // 5. DoD 2.1: two consecutive tools/list calls return a byte-identical list
+    console.log('\n4️⃣  Checking order determinism (second tools/list)');
+    const secondRequest: JSONRPCRequest = { jsonrpc: '2.0', method: 'tools/list', id: 2 };
+    serverProcess.stdin?.write(JSON.stringify(secondRequest) + '\n');
+    const secondResponse = await waitForJSONRPCResponse(stdoutData, serverProcess, 2);
+
+    const firstToolsJson = JSON.stringify(response.result?.tools ?? []);
+    const secondToolsJson = JSON.stringify(secondResponse.result?.tools ?? []);
+    if (firstToolsJson !== secondToolsJson) {
+      throw new Error(
+        'Two consecutive tools/list calls returned DIFFERENT lists — deterministic order ' +
+          'contract is violated (see ToolSorter.sortByPriority).'
+      );
+    }
+    console.log('   ✓ List is byte-identical');
   }
 
   /**
@@ -152,7 +177,8 @@ async function main(): Promise<void> {
    */
   async function waitForJSONRPCResponse(
     stdoutBuffer: string,
-    process: ReturnType<typeof spawn>
+    process: ReturnType<typeof spawn>,
+    expectedId: number
   ): Promise<JSONRPCResponse> {
     return new Promise((resolve, reject) => {
       let buffer = stdoutBuffer;
@@ -167,7 +193,7 @@ async function main(): Promise<void> {
 
           try {
             const parsed = JSON.parse(line) as JSONRPCResponse;
-            if (parsed.jsonrpc === '2.0' && parsed.id === 1) {
+            if (parsed.jsonrpc === '2.0' && parsed.id === expectedId) {
               process.stdout?.off('data', onData);
               resolve(parsed);
               return;
@@ -249,12 +275,105 @@ async function main(): Promise<void> {
       }
     }
 
-    // Check that search_tools is NOT present (in eager mode it should not be there)
+    // Check that search_tools is NOT present — @fractalizer/mcp-search package
+    // has been removed, progressive tool disclosure is no longer server-side
     if (toolNames.includes('search_tools')) {
       throw new Error(
-        'Tool "search_tools" is present in list, but server is running in eager mode. ' +
-          'In eager mode search_tools is redundant.'
+        'Tool "search_tools" is present in list, but the mcp-search package is removed.'
       );
+    }
+  }
+}
+
+/**
+ * DoD 2.1.A: the deprecated TOOL_DISCOVERY_MODE env var must not crash the
+ * server — it should only warn on stderr and continue normal operation.
+ *
+ * Separate process, separate lifecycle (own start/stop), since the env var
+ * only matters at startup.
+ */
+async function runDeprecatedEnvVarSmokeTest(): Promise<void> {
+  console.log('\n5️⃣  Checking TOOL_DISCOVERY_MODE deprecation warning');
+
+  const child = spawn('node', ['dist/ticktick.bundle.cjs'], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    env: {
+      ...process.env,
+      LOG_LEVEL: 'error',
+      TICKTICK_ACCESS_TOKEN: 'dummy-token-for-smoke-test',
+      TOOL_DISCOVERY_MODE: 'eager', // No longer supported — should warn, not crash
+    },
+  });
+
+  let stdoutData = '';
+  let stderrData = '';
+  child.stdout?.on('data', (data) => {
+    stdoutData += data.toString();
+  });
+  child.stderr?.on('data', (data) => {
+    stderrData += data.toString();
+  });
+
+  try {
+    await sleep(SERVER_STARTUP_DELAY_MS);
+
+    if (child.exitCode !== null || child.killed) {
+      throw new Error(
+        `Server crashed at startup with deprecated TOOL_DISCOVERY_MODE\nstderr: ${stderrData}`
+      );
+    }
+
+    if (!stderrData.includes('TOOL_DISCOVERY_MODE')) {
+      throw new Error(
+        `Server did not print a TOOL_DISCOVERY_MODE warning to stderr.\nstderr: ${stderrData}`
+      );
+    }
+    console.log('   ✓ Warning printed to stderr, server did not crash');
+
+    // Server should keep responding normally to tools/list
+    const request: JSONRPCRequest = { jsonrpc: '2.0', method: 'tools/list', id: 1 };
+    child.stdin?.write(JSON.stringify(request) + '\n');
+
+    const response = await new Promise<JSONRPCResponse>((resolve, reject) => {
+      let buffer = stdoutData;
+      const onData = (data: Buffer): void => {
+        buffer += data.toString();
+        for (const line of buffer.split('\n')) {
+          if (!line.trim()) continue;
+          try {
+            const parsed = JSON.parse(line) as JSONRPCResponse;
+            if (parsed.jsonrpc === '2.0' && parsed.id === 1) {
+              child.stdout?.off('data', onData);
+              resolve(parsed);
+              return;
+            }
+          } catch {
+            // incomplete JSON, keep waiting
+          }
+        }
+      };
+      child.stdout?.on('data', onData);
+      setTimeout(() => {
+        child.stdout?.off('data', onData);
+        reject(
+          new Error('Timeout waiting for tools/list after TOOL_DISCOVERY_MODE warning (5000ms)')
+        );
+      }, 5000);
+    });
+
+    if (response.error || !response.result?.tools?.length) {
+      throw new Error(
+        `tools/list did not work normally after the warning: ${JSON.stringify(response)}`
+      );
+    }
+    console.log(`   ✓ tools/list keeps working (${response.result.tools.length} tools)`);
+  } finally {
+    if (!child.killed) {
+      child.kill('SIGTERM');
+      await sleep(1000);
+      if (!child.killed) {
+        child.kill('SIGKILL');
+      }
     }
   }
 }

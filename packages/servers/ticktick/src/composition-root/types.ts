@@ -48,9 +48,6 @@ export const TYPES = {
   // === TickTick Facade ===
   TickTickFacade: Symbol.for('TickTickFacade'),
 
-  // === Tool Registry (will be added in stage 5) ===
+  // === Tool Registry ===
   ToolRegistry: Symbol.for('ToolRegistry'),
-
-  // === Search Engine (will be added in stage 5) ===
-  ToolSearchEngine: Symbol.for('ToolSearchEngine'),
 } as const;

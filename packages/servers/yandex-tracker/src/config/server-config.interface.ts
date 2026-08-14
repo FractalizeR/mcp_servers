@@ -55,56 +55,13 @@ export interface ServerConfig {
   /** Количество ротируемых лог-файлов (по умолчанию: 20) */
   logMaxFiles: number;
   /**
-   * Режим обнаружения инструментов для MCP tools/list endpoint
-   *
-   * - 'lazy': tools/list возвращает только essential tools (ping, search_tools)
-   *   Claude должен использовать search_tools для обнаружения остальных инструментов
-   *   Рекомендуется для 30+ инструментов (экономия контекста, масштабируемость)
-   *
-   * - 'eager': tools/list возвращает все инструменты (стандартное MCP поведение)
-   *   Рекомендуется для <20 инструментов или отладки
-   *
-   * @default 'lazy'
-   */
-  toolDiscoveryMode: 'lazy' | 'eager';
-  /**
-   * Список essential инструментов для lazy режима
-   *
-   * Эти инструменты ВСЕГДА возвращаются в tools/list независимо от режима.
-   *
-   * По умолчанию: ['ping', 'search_tools']
-   *
-   * Используй для:
-   * - Базовых инструментов (ping, health check)
-   * - Discovery инструментов (search_tools)
-   * - Критически важных операций, которые Claude должен видеть сразу
-   */
-  essentialTools: readonly string[];
-  /**
-   * Фильтр категорий инструментов для eager режима (позитивный фильтр)
-   *
-   * Позволяет включить только определенные категории/подкатегории инструментов.
-   *
-   * Формат переменной окружения ENABLED_TOOL_CATEGORIES:
-   * - Пустая строка или undefined: все категории (по умолчанию)
-   * - "issues,comments": только категории issues и comments (все подкатегории)
-   * - "issues:read,comments:write": только issues/read и comments/write подкатегории
-   * - "issues,comments:write,queues:read": смешанный формат
-   *
-   * Graceful degradation:
-   * - Неизвестные категории: warning в лог, пропускаются
-   * - Неверный формат: warning, используется includeAll=true
-   *
-   * Работает только в eager режиме. В lazy режиме используется essentialTools.
-   *
-   * @deprecated Используйте disabledToolGroups вместо этого (более интуитивный негативный фильтр)
-   * @default undefined (все категории)
-   */
-  enabledToolCategories?: ParsedCategoryFilter;
-  /**
-   * Отключенные группы инструментов (негативный фильтр)
+   * Отключенные группы инструментов (единственный рубильник видимости/исполняемости)
    *
    * Позволяет отключить определенные категории/подкатегории инструментов.
+   * `tools/list` всегда отдаёт полный набор инструментов, прошедший этот фильтр —
+   * progressive disclosure (essential tools, lazy discovery) убран: основной
+   * потребитель — готовые клиенты (Claude Code, Claude Desktop, Codex), где
+   * поиск инструментов уже реализован на их стороне.
    *
    * Формат переменной окружения DISABLED_TOOL_GROUPS:
    * - Пустая строка или undefined: все инструменты включены (по умолчанию)
@@ -113,11 +70,11 @@ export interface ServerConfig {
    * - "components,issues:worklog,helpers:demo": смешанный формат
    *
    * Graceful degradation:
-   * - Неизвестные категории: warning в лог, пропускаются
+   * - Неизвестные категории: warning в лог (stderr), пропускаются
    * - Неверный формат: warning, игнорируется
    *
-   * Работает в обоих режимах (lazy и eager).
-   * Имеет приоритет над enabledToolCategories если указаны оба.
+   * Отключённая группа не только скрывается из tools/list, но и не вызывается —
+   * см. `ConfiguredToolAccessPolicy`.
    *
    * @default undefined (все инструменты включены)
    */

@@ -22,15 +22,6 @@ export const MCP_SERVER_NAME = PROJECT_BASE_NAME;
 export const MCP_TOOL_PREFIX = 'fr_yandex_tracker_' as const;
 
 /**
- * Essential tools для Yandex Tracker (с правильными префиксами)
- *
- * ✅ Имена включают префиксы там где нужно:
- * - 'fr_yandex_tracker_ping' - yandex-tracker tool (с префиксом)
- * - 'search_tools' - framework tool (БЕЗ префикса)
- */
-export const YANDEX_TRACKER_ESSENTIAL_TOOLS = ['fr_yandex_tracker_ping', 'search_tools'] as const;
-
-/**
  * Отображаемое название MCP сервера
  */
 export const MCP_SERVER_DISPLAY_NAME = "FractalizeR's Yandex Tracker MCP" as const;
@@ -74,7 +65,5 @@ export {
   DEFAULT_LOGS_DIR,
   DEFAULT_LOG_MAX_SIZE,
   DEFAULT_LOG_MAX_FILES,
-  DEFAULT_TOOL_DISCOVERY_MODE,
-  DEFAULT_ESSENTIAL_TOOLS,
   ENV_VAR_NAMES,
 } from '#config';

@@ -20,17 +20,7 @@ import { InMemoryCacheManager } from '@fractalizer/mcp-infrastructure';
 import { YandexWikiFacade } from '#wiki_api/facade/yandex-wiki.facade.js';
 
 // Tool Registry
-import { ToolRegistry } from '@fractalizer/mcp-core';
-
-// Search Engine
-import { ToolSearchEngine } from '@fractalizer/mcp-search';
-import { WeightedCombinedStrategy } from '@fractalizer/mcp-search';
-import { NameSearchStrategy } from '@fractalizer/mcp-search';
-import { DescriptionSearchStrategy } from '@fractalizer/mcp-search';
-import { CategorySearchStrategy } from '@fractalizer/mcp-search';
-import { FuzzySearchStrategy } from '@fractalizer/mcp-search';
-import type { ISearchStrategy } from '@fractalizer/mcp-search';
-import type { StrategyType } from '@fractalizer/mcp-search';
+import { ToolRegistry, ConfiguredToolAccessPolicy } from '@fractalizer/mcp-core';
 
 // Автоматически импортируемые определения
 import { TOOL_CLASSES, OPERATION_CLASSES, bindFacadeServices } from './definitions/index.js';
@@ -146,26 +136,6 @@ function bindFacade(container: Container): void {
 }
 
 /**
- * Регистрация поисковой системы tools
- */
-function bindSearchEngine(container: Container): void {
-  container.bind<ToolSearchEngine>(TYPES.ToolSearchEngine).toDynamicValue(() => {
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    const strategies = new Map<StrategyType, ISearchStrategy>([
-      ['name', new NameSearchStrategy()],
-      ['description', new DescriptionSearchStrategy()],
-      ['category', new CategorySearchStrategy()],
-      ['fuzzy', new FuzzySearchStrategy(3)],
-    ]);
-
-    const combinedStrategy = new WeightedCombinedStrategy(strategies);
-
-    return new ToolSearchEngine(null, toolRegistry, combinedStrategy);
-  });
-}
-
-/**
  * Регистрация Tools
  */
 function bindTools(container: Container): void {
@@ -184,10 +154,6 @@ function bindTools(container: Container): void {
 
     const symbol = Symbol.for(className);
 
-    if (className === 'SearchToolsTool') {
-      continue;
-    }
-
     container.bind(symbol).toDynamicValue(() => {
       const facade = container.get<YandexWikiFacade>(TYPES.YandexWikiFacade);
       const loggerInstance = container.get<Logger>(TYPES.Logger);
@@ -200,26 +166,19 @@ function bindTools(container: Container): void {
 }
 
 /**
- * Регистрация SearchToolsTool
- */
-async function bindSearchToolsTool(container: Container): Promise<void> {
-  const { SearchToolsTool } = await import('@fractalizer/mcp-search');
-
-  container.bind(Symbol.for('SearchToolsTool')).toDynamicValue(() => {
-    const searchEngine = container.get<ToolSearchEngine>(TYPES.ToolSearchEngine);
-    const loggerInstance = container.get<Logger>(TYPES.Logger);
-    return new SearchToolsTool(searchEngine, loggerInstance);
-  });
-}
-
-/**
  * Регистрация ToolRegistry
+ *
+ * ACCESS POLICY: ToolAccessPolicy строится из той же конфигурации
+ * (disabledToolGroups), что определяет состав tools/list в server.ts —
+ * единый источник истины о доступности tool для tools/list (видимость)
+ * и tools/call (исполняемость).
  */
-function bindToolRegistry(container: Container): void {
+function bindToolRegistry(container: Container, config: ServerConfig): void {
   container.bind<ToolRegistry>(TYPES.ToolRegistry).toDynamicValue(() => {
     const loggerInstance = container.get<Logger>(TYPES.Logger);
+    const accessPolicy = new ConfiguredToolAccessPolicy(config.disabledToolGroups);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any);
+    return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any, accessPolicy);
   });
 }
 
@@ -247,16 +206,7 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
   bindTools(container);
 
   // 4. ToolRegistry
-  bindToolRegistry(container);
-
-  // 5-7. SearchEngine и SearchToolsTool только в lazy mode
-  if (config.toolDiscoveryMode === 'lazy') {
-    bindSearchEngine(container);
-    await bindSearchToolsTool(container);
-
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-    toolRegistry.registerToolFromContainer('SearchToolsTool');
-  }
+  bindToolRegistry(container, config);
 
   // Логирование
   const logger = container.get<Logger>(TYPES.Logger);

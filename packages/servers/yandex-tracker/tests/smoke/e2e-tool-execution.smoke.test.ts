@@ -22,8 +22,6 @@ describe('E2E Tool Execution (Smoke)', () => {
     maxConcurrentRequests: 10,
     logLevel: 'error',
     prettyLogs: false,
-    toolDiscoveryMode: 'lazy',
-    essentialTools: ['fr_yandex_tracker_ping'],
   };
 
   afterEach(() => {
@@ -109,35 +107,9 @@ describe('E2E Tool Execution (Smoke)', () => {
     expect(typeof responseText).toBe('string');
   });
 
-  it('должен загрузить все essential tools в lazy mode', async () => {
-    // Arrange
-    const config = {
-      ...fakeConfig,
-      toolDiscoveryMode: 'lazy' as const,
-      essentialTools: ['fr_yandex_tracker_ping', 'search_tools'],
-    };
-
+  it('должен загрузить полный набор tools (lazy discovery убран)', async () => {
     // Act
-    const container = await createContainer(config);
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    // Assert
-    const pingTool = toolRegistry.getTool('fr_yandex_tracker_ping');
-    const searchTool = toolRegistry.getTool('search_tools');
-
-    expect(pingTool).toBeDefined();
-    expect(searchTool).toBeDefined();
-  });
-
-  it('должен загрузить все tools в eager mode', async () => {
-    // Arrange
-    const config = {
-      ...fakeConfig,
-      toolDiscoveryMode: 'eager' as const,
-    };
-
-    // Act
-    const container = await createContainer(config);
+    const container = await createContainer(fakeConfig);
     const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
     const allTools = toolRegistry.getAllTools();
 
@@ -146,6 +118,8 @@ describe('E2E Tool Execution (Smoke)', () => {
     expect(allTools.some((t) => t.getMetadata().definition.name === 'fr_yandex_tracker_ping')).toBe(
       true
     );
+    // search_tools больше не существует как отдельный tool (пакет mcp-search удалён)
+    expect(toolRegistry.getTool('search_tools')).toBeUndefined();
   });
 
   it('должен корректно обрабатывать tool metadata', async () => {

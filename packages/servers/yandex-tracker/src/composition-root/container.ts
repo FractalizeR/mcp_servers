@@ -23,17 +23,7 @@ import { InMemoryCacheManager } from '@fractalizer/mcp-infrastructure';
 import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 
 // Tool Registry
-import { ToolRegistry } from '@fractalizer/mcp-core';
-
-// Search Engine
-import { ToolSearchEngine } from '@fractalizer/mcp-search';
-import { WeightedCombinedStrategy } from '@fractalizer/mcp-search';
-import { NameSearchStrategy } from '@fractalizer/mcp-search';
-import { DescriptionSearchStrategy } from '@fractalizer/mcp-search';
-import { CategorySearchStrategy } from '@fractalizer/mcp-search';
-import { FuzzySearchStrategy } from '@fractalizer/mcp-search';
-import type { ISearchStrategy } from '@fractalizer/mcp-search';
-import type { StrategyType } from '@fractalizer/mcp-search';
+import { ToolRegistry, ConfiguredToolAccessPolicy } from '@fractalizer/mcp-core';
 
 // Автоматически импортируемые определения
 import { TOOL_CLASSES, OPERATION_CLASSES, bindFacadeServices } from './definitions/index.js';
@@ -179,38 +169,6 @@ function bindFacade(container: Container): void {
 }
 
 /**
- * Регистрация поисковой системы tools
- *
- * ToolSearchEngine требует:
- * - ToolRegistry для динамической генерации индекса и lazy loading метаданных
- * - WeightedCombinedStrategy с набором стратегий
- *
- * ДИНАМИЧЕСКИЙ ИНДЕКС:
- * - Передаём null вместо статического индекса
- * - ToolSearchEngine автоматически генерирует индекс из ToolRegistry при первом поиске
- * - Всегда актуальные имена инструментов с правильными префиксами
- */
-function bindSearchEngine(container: Container): void {
-  container.bind<ToolSearchEngine>(TYPES.ToolSearchEngine).toDynamicValue(() => {
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    // Создаём все стратегии поиска
-    const strategies = new Map<StrategyType, ISearchStrategy>([
-      ['name', new NameSearchStrategy()],
-      ['description', new DescriptionSearchStrategy()],
-      ['category', new CategorySearchStrategy()],
-      ['fuzzy', new FuzzySearchStrategy(3)], // maxDistance = 3
-    ]);
-
-    // Комбинированная стратегия с весами
-    const combinedStrategy = new WeightedCombinedStrategy(strategies);
-
-    // ToolSearchEngine с динамическим индексом (null = генерация из ToolRegistry)
-    return new ToolSearchEngine(null, toolRegistry, combinedStrategy);
-  });
-}
-
-/**
  * Регистрация Tools
  *
  * АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ:
@@ -218,16 +176,11 @@ function bindSearchEngine(container: Container): void {
  * - Символы создаются из имени класса (ClassName → Symbol.for('ClassName'))
  * - Для добавления нового tool: добавь класс в definitions/tool-definitions.ts
  *
- * ОСОБЫЕ СЛУЧАИ:
- * - SearchToolsTool требует (searchEngine, logger) вместо (facade, logger)
- * - Регистрируется отдельно для корректной типизации
- *
  * VALIDATION:
  * - Проверяет наличие имени класса
  * - Проверяет, что класс является функцией-конструктором
  */
 function bindTools(container: Container): void {
-  // Стандартные tools: (facade, logger)
   for (const ToolClass of TOOL_CLASSES) {
     // Validate tool class - check type first
     if (typeof ToolClass !== 'function') {
@@ -248,15 +201,9 @@ function bindTools(container: Container): void {
 
     const symbol = Symbol.for(className);
 
-    // Пропускаем SearchToolsTool (регистрируется отдельно)
-    if (className === 'SearchToolsTool') {
-      continue;
-    }
-
     container.bind(symbol).toDynamicValue(() => {
       const facade = container.get<YandexTrackerFacade>(TYPES.YandexTrackerFacade);
       const loggerInstance = container.get<Logger>(TYPES.Logger);
-      // Type assertion: все tools кроме SearchToolsTool имеют конструктор (facade, logger)
       return new (ToolClass as new (facade: YandexTrackerFacade, logger: Logger) => unknown)(
         facade,
         loggerInstance
@@ -266,35 +213,19 @@ function bindTools(container: Container): void {
 }
 
 /**
- * Регистрация SearchToolsTool
- *
- * Отдельная функция для корректной типизации,
- * т.к. конструктор отличается от BaseTool: (searchEngine, logger)
- */
-async function bindSearchToolsTool(container: Container): Promise<void> {
-  const { SearchToolsTool } = await import('@fractalizer/mcp-search');
-
-  container.bind(Symbol.for('SearchToolsTool')).toDynamicValue(() => {
-    const searchEngine = container.get<ToolSearchEngine>(TYPES.ToolSearchEngine);
-    const loggerInstance = container.get<Logger>(TYPES.Logger);
-    return new SearchToolsTool(searchEngine, loggerInstance);
-  });
-}
-
-/**
  * Регистрация ToolRegistry
  *
- * ВАЖНО: ToolRegistry автоматически извлекает все tools из контейнера
- * SearchToolsTool добавляется отдельно через registerToolFromContainer()
- * после регистрации SearchEngine (разрывает циклическую зависимость)
+ * ACCESS POLICY: ToolAccessPolicy строится из той же конфигурации
+ * (disabledToolGroups), что определяет состав tools/list в server.ts —
+ * единый источник истины о доступности tool для tools/list (видимость)
+ * и tools/call (исполняемость).
  */
-function bindToolRegistry(container: Container): void {
+function bindToolRegistry(container: Container, config: ServerConfig): void {
   container.bind<ToolRegistry>(TYPES.ToolRegistry).toDynamicValue(() => {
     const loggerInstance = container.get<Logger>(TYPES.Logger);
-    // Передаём контейнер, logger и только стандартные tool классы
-    // SearchToolsTool будет добавлен позже через registerToolFromContainer
+    const accessPolicy = new ConfiguredToolAccessPolicy(config.disabledToolGroups);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any);
+    return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any, accessPolicy);
   });
 }
 
@@ -319,26 +250,11 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
   bindFacadeServices(container);
   bindFacade(container);
 
-  // 3. Стандартные tools (facade, logger)
+  // 3. Tools (facade, logger)
   bindTools(container);
 
-  // 4. ToolRegistry (БЕЗ SearchToolsTool - разрываем циклическую зависимость)
-  bindToolRegistry(container);
-
-  // 5-7. SearchEngine и SearchToolsTool ТОЛЬКО в lazy mode
-  // В eager mode Claude видит все инструменты, поэтому search_tools избыточен
-  if (config.toolDiscoveryMode === 'lazy') {
-    // 5. SearchEngine (требует ToolRegistry)
-    bindSearchEngine(container);
-
-    // 6. SearchToolsTool (требует SearchEngine)
-    await bindSearchToolsTool(container);
-
-    // 7. Добавляем SearchToolsTool в ToolRegistry (завершаем цепочку зависимостей)
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-    // Используем строку вместо класса, т.к. компилятор переименовывает класс в _SearchToolsTool
-    toolRegistry.registerToolFromContainer('SearchToolsTool');
-  }
+  // 4. ToolRegistry
+  bindToolRegistry(container, config);
 
   // Логирование зарегистрированных DI символов
   const logger = container.get<Logger>(TYPES.Logger);

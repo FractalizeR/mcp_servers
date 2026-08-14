@@ -18,14 +18,36 @@ import {
   DEFAULT_LOGS_DIR,
   DEFAULT_LOG_MAX_SIZE,
   DEFAULT_LOG_MAX_FILES,
-  DEFAULT_TOOL_DISCOVERY_MODE,
-  DEFAULT_ESSENTIAL_TOOLS,
   DEFAULT_RETRY_ATTEMPTS,
   DEFAULT_RETRY_MIN_DELAY,
   DEFAULT_RETRY_MAX_DELAY,
   ENV_VAR_NAMES,
   SERVER_NAME,
 } from './constants.js';
+
+/**
+ * Переменные окружения, оставшиеся от удалённого lazy discovery (этап 2.1.A
+ * плана модернизации). Молча игнорировать их хуже, чем не поддерживать вовсе:
+ * у пользователей они уже прописаны в конфигах MCP клиентов и выглядят
+ * работающими. Печатаем явное предупреждение в stderr и продолжаем запуск.
+ */
+const DEPRECATED_TOOL_DISCOVERY_ENV_VARS = ['TOOL_DISCOVERY_MODE', 'ESSENTIAL_TOOLS'] as const;
+
+/**
+ * Предупредить в stderr, если обнаружены устаревшие переменные окружения
+ * lazy discovery. Не влияет на итоговый ServerConfig — значения не читаются.
+ */
+function warnDeprecatedToolDiscoveryEnvVars(): void {
+  for (const name of DEPRECATED_TOOL_DISCOVERY_ENV_VARS) {
+    if (process.env[name] !== undefined) {
+      console.error(
+        `[WARN] Переменная окружения ${name} больше не поддерживается и игнорируется. ` +
+          'Lazy discovery убран: tools/list всегда возвращает полный список инструментов, ' +
+          'прошедший фильтр DISABLED_TOOL_GROUPS. Удалите переменную из конфигурации MCP клиента.'
+      );
+    }
+  }
+}
 
 // Путь к корню проекта (dist/ или src/)
 const __filename = fileURLToPath(import.meta.url);
@@ -89,101 +111,6 @@ function validateMaxConcurrentRequests(value: string | undefined, defaultValue: 
   }
 
   return parsed;
-}
-
-/**
- * Валидация режима tool discovery
- */
-function validateToolDiscoveryMode(mode: string | undefined): 'lazy' | 'eager' {
-  if (mode === 'eager' || mode === 'lazy') {
-    return mode;
-  }
-  return DEFAULT_TOOL_DISCOVERY_MODE;
-}
-
-/**
- * Парсинг списка essential tools из переменной окружения
- */
-function parseEssentialTools(value: string | undefined): readonly string[] {
-  if (!value || value.trim() === '') {
-    return DEFAULT_ESSENTIAL_TOOLS;
-  }
-
-  return value
-    .split(',')
-    .map((name) => name.trim())
-    .filter((name) => name.length > 0);
-}
-
-/**
- * Парсинг фильтра категорий инструментов из переменной окружения
- *
- * Формат: "issues,comments" или "issues:read,comments:write"
- *
- * Graceful degradation:
- * - Пустая строка или undefined → includeAll = true
- * - Невалидные категории → пропускаем (логирование будет на уровне выше)
- * - Невалидный формат элемента → пропускаем элемент
- *
- * @param value - значение переменной окружения ENABLED_TOOL_CATEGORIES
- * @returns Распарсенная структура фильтра
- */
-function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFilter {
-  // Default: все категории
-  if (!value || value.trim() === '') {
-    return {
-      categories: new Set(),
-      categoriesWithSubcategories: new Map(),
-      includeAll: true,
-    };
-  }
-
-  const categories = new Set<string>();
-  const categoriesWithSubcategories = new Map<string, Set<string>>();
-
-  const parts = value
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-
-  for (const part of parts) {
-    if (part.includes(':')) {
-      // Формат: "category:subcategory"
-      const segments = part.split(':');
-
-      // Валидация: должно быть ровно 2 сегмента
-      if (segments.length !== 2) {
-        // Пропускаем невалидный формат (например, "issues::read" или "issues:read:write")
-        continue;
-      }
-
-      const [cat, subcat] = segments.map((s) => s.trim().toLowerCase());
-
-      // Пропускаем пустые сегменты
-      if (!cat || !subcat) {
-        continue;
-      }
-
-      let subcategories = categoriesWithSubcategories.get(cat);
-      if (!subcategories) {
-        subcategories = new Set();
-        categoriesWithSubcategories.set(cat, subcategories);
-      }
-      subcategories.add(subcat);
-    } else {
-      // Формат: "category" (все подкатегории)
-      categories.add(part.toLowerCase());
-    }
-  }
-
-  // Если ничего не распарсилось, возвращаем includeAll=true
-  const includeAll = categories.size === 0 && categoriesWithSubcategories.size === 0;
-
-  return {
-    categories,
-    categoriesWithSubcategories,
-    includeAll,
-  };
 }
 
 /**
@@ -389,24 +316,11 @@ function buildLoggingConfig(): Pick<
 /**
  * Build tools configuration
  */
-function buildToolsConfig(): Pick<
-  ServerConfig,
-  'toolDiscoveryMode' | 'essentialTools' | 'enabledToolCategories' | 'disabledToolGroups'
-> {
-  const enabledToolCategoriesRaw = process.env[ENV_VAR_NAMES.ENABLED_TOOL_CATEGORIES];
+function buildToolsConfig(): Pick<ServerConfig, 'disabledToolGroups'> {
   const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
 
-  const config: Pick<
-    ServerConfig,
-    'toolDiscoveryMode' | 'essentialTools' | 'enabledToolCategories' | 'disabledToolGroups'
-  > = {
-    toolDiscoveryMode: validateToolDiscoveryMode(process.env[ENV_VAR_NAMES.TOOL_DISCOVERY_MODE]),
-    essentialTools: parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]),
-  };
+  const config: Pick<ServerConfig, 'disabledToolGroups'> = {};
 
-  if (enabledToolCategoriesRaw !== undefined) {
-    config.enabledToolCategories = parseEnabledToolCategories(enabledToolCategoriesRaw);
-  }
   const disabledToolGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
   if (disabledToolGroups) {
     config.disabledToolGroups = disabledToolGroups;
@@ -447,6 +361,8 @@ function buildRetryConfig(): Pick<
  * @throws {Error} если обязательные переменные не установлены
  */
 export function loadConfig(): ServerConfig {
+  warnDeprecatedToolDiscoveryEnvVars();
+
   const token = process.env[ENV_VAR_NAMES.YANDEX_TRACKER_TOKEN];
 
   if (!token || token.trim() === '') {

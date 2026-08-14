@@ -15,25 +15,23 @@ process.env.LOG_LEVEL = 'silent';
 
 // Импортируем код сервера
 const { createContainer, TYPES } = await import('../dist/composition-root/index.js');
-const { loadConfig } = await import('@mcp-framework/infrastructure');
-const { YANDEX_TRACKER_ESSENTIAL_TOOLS, MCP_SERVER_NAME } = await import('../dist/constants.js');
+const { loadConfig } = await import('../dist/config/index.js');
+const { MCP_SERVER_NAME } = await import('../dist/constants.js');
 
 console.log('\n=== Список зарегистрированных MCP инструментов ===\n');
 console.log('MCP Server Name:', MCP_SERVER_NAME);
-console.log('Essential Tools:', YANDEX_TRACKER_ESSENTIAL_TOOLS);
 console.log('');
 
 try {
   // Загрузка конфигурации
   const config = loadConfig();
-  const configWithEssentialTools = {
+  const configForListing = {
     ...config,
-    essentialTools: YANDEX_TRACKER_ESSENTIAL_TOOLS,
     logLevel: 'silent',
   };
 
   // Создание DI контейнера
-  const container = await createContainer(configWithEssentialTools);
+  const container = await createContainer(configForListing);
 
   // Получение ToolRegistry
   const toolRegistry = container.get(TYPES.ToolRegistry);
@@ -51,12 +49,10 @@ try {
     }
   );
 
-  // Обработчик списка инструментов
+  // Обработчик списка инструментов — tools/list всегда отдаёт полный набор,
+  // прошедший фильтр DISABLED_TOOL_GROUPS (lazy discovery убран)
   server.setRequestHandler(ListToolsRequestSchema, () => {
-    const definitions = toolRegistry.getDefinitionsByMode(
-      configWithEssentialTools.toolDiscoveryMode,
-      configWithEssentialTools.essentialTools
-    );
+    const definitions = toolRegistry.getDefinitions(configForListing.disabledToolGroups);
 
     return {
       tools: definitions.map((def) => ({

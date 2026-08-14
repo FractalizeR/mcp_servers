@@ -14,7 +14,7 @@ const TOOL_NAME_SEPARATOR = '_';
  * не пустой и не заканчивается на '_'. Это обеспечивает единообразие имён
  * инструментов во всех MCP серверах.
  *
- * @param name - Имя tool без префикса (например, 'ping', 'get_issues', 'search_tools')
+ * @param name - Имя tool без префикса (например, 'ping', 'get_issues')
  * @param prefix - Префикс для tool (опционально, по умолчанию '')
  * @returns Полное имя tool с нормализованным префиксом
  *

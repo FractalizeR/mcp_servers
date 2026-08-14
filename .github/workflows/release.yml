@@ -148,13 +148,12 @@ jobs:
           set -euo pipefail
 
           # Packages published in dependency order:
-          # framework (infrastructure → cli/core → search)
+          # framework (infrastructure → cli/core)
           #   → scoped servers → unscoped wrappers
           PACKAGES=(
             "@fractalizer/mcp-infrastructure"
             "@fractalizer/mcp-cli"
             "@fractalizer/mcp-core"
-            "@fractalizer/mcp-search"
             "@fractalizer/mcp-server-yandex-tracker"
             "@fractalizer/mcp-server-yandex-wiki"
             "@fractalizer/mcp-server-ticktick"

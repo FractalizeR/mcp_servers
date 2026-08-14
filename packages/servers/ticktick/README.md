@@ -8,7 +8,6 @@ MCP сервер для интеграции TickTick (todo-list приложе�
 - **Фильтрация полей** — экономия 80-90% контекста через `fields` параметр
 - **Параллельные запросы** — до 5 одновременных (ParallelExecutor)
 - **Отключение групп** — `DISABLED_TOOL_GROUPS`
-- **Lazy/Eager режимы** — `TOOL_DISCOVERY_MODE`
 - **Кеширование** — 5 минут TTL
 - **OAuth 2.0** с поддержкой refresh token
 - **Поддержка Dida365** (китайская версия TickTick)
@@ -117,23 +116,19 @@ MAX_CONCURRENT_REQUESTS=5
 # Cache
 CACHE_TTL_MS=300000
 
-# Tool Discovery
-TOOL_DISCOVERY_MODE=eager          # eager | lazy
-ENABLED_TOOL_CATEGORIES=           # tasks:read,projects:read
+# Tool Access
 DISABLED_TOOL_GROUPS=              # helpers:gtd,tasks:date
 ```
+
+`tools/list` всегда отдаёт полный набор инструментов (детерминированный порядок). Единственный
+рубильник состава — `DISABLED_TOOL_GROUPS`: отключённая группа не отдаётся в списке и не
+выполняется. Неизвестное имя группы — предупреждение в stderr с перечнем допустимых значений.
 
 ### Примеры конфигурации
 
 ```bash
-# Только чтение (безопасный режим)
-ENABLED_TOOL_CATEGORIES="tasks:read,projects:read,helpers"
-
 # Без GTD и date queries
 DISABLED_TOOL_GROUPS="helpers:gtd,tasks:date"
-
-# Lazy mode (только ping в tools/list, остальные через search)
-TOOL_DISCOVERY_MODE=lazy
 ```
 
 ### Для Dida365 (китайская версия)

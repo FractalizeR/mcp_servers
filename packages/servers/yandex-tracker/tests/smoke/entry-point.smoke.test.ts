@@ -21,17 +21,13 @@ describe('Entry Point Exports (Smoke)', () => {
   });
 
   it('должен экспортировать константы', async () => {
-    const { MCP_TOOL_PREFIX, MCP_SERVER_NAME, YANDEX_TRACKER_ESSENTIAL_TOOLS } =
-      await import('../../src/index.js');
+    const { MCP_TOOL_PREFIX, MCP_SERVER_NAME } = await import('../../src/index.js');
 
     expect(MCP_TOOL_PREFIX).toBeDefined();
     expect(typeof MCP_TOOL_PREFIX).toBe('string');
 
     expect(MCP_SERVER_NAME).toBeDefined();
     expect(typeof MCP_SERVER_NAME).toBe('string');
-
-    expect(YANDEX_TRACKER_ESSENTIAL_TOOLS).toBeDefined();
-    expect(Array.isArray(YANDEX_TRACKER_ESSENTIAL_TOOLS)).toBe(true);
   });
 
   it('должен экспортировать DI компоненты', async () => {
@@ -105,8 +101,6 @@ describe('Entry Point Exports (Smoke)', () => {
       maxConcurrentRequests: 10,
       logLevel: 'error' as const,
       prettyLogs: false,
-      toolDiscoveryMode: 'eager' as const,
-      essentialTools: ['fr_yandex_tracker_ping'],
     };
 
     // Создание контейнера должно работать

@@ -7,9 +7,6 @@
  * 1. Import the tool class
  * 2. Add it to TOOL_CLASSES array
  * 3. Container will automatically register it
- *
- * NOTE: SearchToolsTool is handled separately in container.ts
- * as it requires ToolSearchEngine instead of Facade.
  */
 
 // === System Tools (critical) ===

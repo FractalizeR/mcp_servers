@@ -46,8 +46,6 @@ describe('Container', () => {
       logMaxSize: 10485760,
       logMaxFiles: 10,
       prettyLogs: false,
-      toolDiscoveryMode: 'lazy', // По умолчанию lazy mode для обратной совместимости тестов
-      essentialTools: ['fr_yandex_tracker_ping', 'search_tools'],
     };
 
     container = await createContainer(mockConfig);
@@ -298,8 +296,6 @@ describe('Container', () => {
       expect(registry).toHaveProperty('getAllTools');
       expect(registry).toHaveProperty('execute');
     });
-
-    // SearchToolsTool и ToolSearchEngine тесты перенесены в "Tool Discovery Mode" секцию
   });
 
   describe('Singleton scope', () => {
@@ -382,8 +378,6 @@ describe('Container', () => {
         container.get<CacheManager>(TYPES.CacheManager);
         container.get<YandexTrackerFacade>(TYPES.YandexTrackerFacade);
         container.get<ToolRegistry>(TYPES.ToolRegistry);
-        // ToolSearchEngine доступен только в lazy mode (по умолчанию в beforeEach)
-        container.get(TYPES.ToolSearchEngine);
       }).not.toThrow();
     });
 
@@ -402,8 +396,6 @@ describe('Container', () => {
         container.get(Symbol.for('GetIssuesTool'));
         container.get(Symbol.for('FindIssuesTool'));
         container.get(Symbol.for('CreateIssueTool'));
-        // SearchToolsTool доступен только в lazy mode (по умолчанию в beforeEach)
-        container.get(Symbol.for('SearchToolsTool'));
       }).not.toThrow();
     });
 
@@ -441,118 +433,62 @@ describe('Container', () => {
     });
   });
 
-  describe('Tool Discovery Mode: eager', () => {
-    let eagerContainer: Container;
-    let eagerConfig: ServerConfig;
-
-    beforeEach(async () => {
-      eagerConfig = {
-        token: 'test-token',
-        orgId: 'test-org',
-        apiBase: 'https://api.tracker.yandex.net',
-        requestTimeout: 30000,
-        maxBatchSize: 50,
-        maxConcurrentRequests: 10,
-        logLevel: 'info',
-        logsDir: '/tmp/logs',
-        logMaxSize: 10485760,
-        logMaxFiles: 10,
-        prettyLogs: false,
-        toolDiscoveryMode: 'eager',
-        essentialTools: ['fr_yandex_tracker_ping'], // В eager mode только ping
-      };
-
-      eagerContainer = await createContainer(eagerConfig);
-    });
-
-    it('должен создать контейнер в eager mode', () => {
-      expect(eagerContainer).toBeDefined();
-    });
-
-    it('НЕ должен регистрировать SearchToolsTool в eager mode', () => {
-      // SearchToolsTool не должен быть в контейнере
+  describe('tools/list — полный набор (lazy discovery убран)', () => {
+    it('НЕ должен регистрировать SearchToolsTool (пакет удалён)', () => {
       expect(() => {
-        eagerContainer.get(Symbol.for('SearchToolsTool'));
+        container.get(Symbol.for('SearchToolsTool'));
       }).toThrow();
     });
 
-    it('НЕ должен регистрировать ToolSearchEngine в eager mode', () => {
-      // ToolSearchEngine не должен быть в контейнере
-      expect(() => {
-        eagerContainer.get(TYPES.ToolSearchEngine);
-      }).toThrow();
-    });
-
-    it('search_tools НЕ должен быть в ToolRegistry в eager mode', () => {
-      const registry = eagerContainer.get<ToolRegistry>(TYPES.ToolRegistry);
-      const definitions = registry.getDefinitions();
-
-      // Проверяем, что search_tools отсутствует
-      const searchToolDefinition = definitions.find((def) => def.name === 'search_tools');
-      expect(searchToolDefinition).toBeUndefined();
-
-      // Проверяем, что getTool возвращает undefined
-      const searchTool = registry.getTool('search_tools');
-      expect(searchTool).toBeUndefined();
-    });
-
-    it('должен иметь все остальные tools кроме search_tools в eager mode', () => {
-      const registry = eagerContainer.get<ToolRegistry>(TYPES.ToolRegistry);
-      const definitions = registry.getDefinitions();
-
-      // Проверяем, что есть другие инструменты
-      expect(definitions.length).toBeGreaterThan(0);
-
-      // Проверяем, что ping tool доступен
-      const pingTool = definitions.find((def) => def.name === 'fr_yandex_tracker_ping');
-      expect(pingTool).toBeDefined();
-
-      // Проверяем, что get_issues tool доступен
-      const getIssuesTool = definitions.find((def) => def.name === 'fr_yandex_tracker_get_issues');
-      expect(getIssuesTool).toBeDefined();
-    });
-
-    it('ToolRegistry должен возвращать все tools в eager mode через getDefinitionsByMode', () => {
-      const registry = eagerContainer.get<ToolRegistry>(TYPES.ToolRegistry);
-      const definitions = registry.getDefinitionsByMode('eager');
-
-      // В eager mode должны быть все инструменты кроме search_tools
-      expect(definitions.length).toBeGreaterThan(0);
-
-      // search_tools НЕ должен быть в списке
-      const searchToolDef = definitions.find((def) => def.name === 'search_tools');
-      expect(searchToolDef).toBeUndefined();
-    });
-  });
-
-  describe('Tool Discovery Mode: lazy', () => {
-    it('должен регистрировать SearchToolsTool в lazy mode', () => {
-      // В lazy mode (по умолчанию в beforeEach) SearchToolsTool должен быть доступен
-      const tool = container.get(Symbol.for('SearchToolsTool'));
-      expect(tool).toBeDefined();
-      expect(tool).toHaveProperty('execute');
-      expect(tool).toHaveProperty('getDefinition');
-    });
-
-    it('должен регистрировать ToolSearchEngine в lazy mode', () => {
-      const searchEngine = container.get(TYPES.ToolSearchEngine);
-      expect(searchEngine).toBeDefined();
-      expect(searchEngine).toHaveProperty('search');
-    });
-
-    it('search_tools должен быть в ToolRegistry в lazy mode', () => {
+    it('search_tools НЕ должен быть в ToolRegistry', () => {
       const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
       const definitions = registry.getDefinitions();
 
-      const searchToolDefinition = definitions.find((def) => def.name === 'search_tools');
-      expect(searchToolDefinition).toBeDefined();
-      expect(searchToolDefinition?.description).toContain(
-        'PRIMARY способ обнаружения инструментов'
-      );
+      expect(definitions.find((def) => def.name === 'search_tools')).toBeUndefined();
+      expect(registry.getTool('search_tools')).toBeUndefined();
+    });
 
-      const searchTool = registry.getTool('search_tools');
-      expect(searchTool).toBeDefined();
-      expect(searchTool?.getDefinition().name).toBe('search_tools');
+    it('tools/list возвращает полный набор инструментов без фильтра', () => {
+      const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+      const definitions = registry.getDefinitions();
+
+      expect(definitions.length).toBeGreaterThan(10);
+
+      const pingTool = definitions.find((def) => def.name === 'fr_yandex_tracker_ping');
+      const getIssuesTool = definitions.find((def) => def.name === 'fr_yandex_tracker_get_issues');
+      expect(pingTool).toBeDefined();
+      expect(getIssuesTool).toBeDefined();
+    });
+
+    it('два последовательных вызова getDefinitions() дают побайтово одинаковый список (DoD)', () => {
+      const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+      const first = registry.getDefinitions();
+      const second = registry.getDefinitions();
+
+      expect(JSON.stringify(second)).toBe(JSON.stringify(first));
+    });
+  });
+
+  describe('DISABLED_TOOL_GROUPS — единственный рубильник', () => {
+    it('отключённая категория скрывается из tools/list и не вызывается (execute)', async () => {
+      const disabledConfig: ServerConfig = {
+        ...mockConfig,
+        disabledToolGroups: {
+          includeAll: false,
+          categories: new Set(['issues']),
+          categoriesWithSubcategories: new Map(),
+        },
+      };
+      const disabledContainer = await createContainer(disabledConfig);
+      const registry = disabledContainer.get<ToolRegistry>(TYPES.ToolRegistry);
+
+      const definitions = registry.getDefinitions(disabledConfig.disabledToolGroups);
+      expect(
+        definitions.find((def) => def.name === 'fr_yandex_tracker_get_issues')
+      ).toBeUndefined();
+
+      const result = await registry.execute('fr_yandex_tracker_get_issues', {});
+      expect(result.isError).toBe(true);
     });
   });
 });

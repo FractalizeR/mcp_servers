@@ -29,8 +29,6 @@ export const DEFAULT_MAX_CONCURRENT_REQUESTS = 5 as const;
 export const DEFAULT_LOGS_DIR = 'logs' as const;
 export const DEFAULT_LOG_MAX_SIZE = 51200 as const; // 50KB in bytes
 export const DEFAULT_LOG_MAX_FILES = 20 as const;
-export const DEFAULT_TOOL_DISCOVERY_MODE = 'eager' as const;
-export const DEFAULT_ESSENTIAL_TOOLS = ['fr_ticktick_ping', 'search_tools'] as const;
 export const DEFAULT_RETRY_ATTEMPTS = 3 as const;
 export const DEFAULT_RETRY_MIN_DELAY = 1000 as const; // 1 second
 export const DEFAULT_RETRY_MAX_DELAY = 10000 as const; // 10 seconds
@@ -70,9 +68,6 @@ export const ENV_VAR_NAMES = {
   // Cache
   CACHE_TTL_MS: 'CACHE_TTL_MS',
 
-  // Tool Discovery
-  TOOL_DISCOVERY_MODE: 'TOOL_DISCOVERY_MODE',
-  ESSENTIAL_TOOLS: 'ESSENTIAL_TOOLS',
-  ENABLED_TOOL_CATEGORIES: 'ENABLED_TOOL_CATEGORIES',
+  // Tools
   DISABLED_TOOL_GROUPS: 'DISABLED_TOOL_GROUPS',
 } as const;

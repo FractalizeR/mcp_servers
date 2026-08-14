@@ -16,14 +16,7 @@ import {
   InMemoryCacheManager,
 } from '@fractalizer/mcp-infrastructure';
 import type { IHttpClient, RetryStrategy, CacheManager } from '@fractalizer/mcp-infrastructure';
-import { ToolRegistry } from '@fractalizer/mcp-core';
-import { ToolSearchEngine } from '@fractalizer/mcp-search';
-import { WeightedCombinedStrategy } from '@fractalizer/mcp-search';
-import { NameSearchStrategy } from '@fractalizer/mcp-search';
-import { DescriptionSearchStrategy } from '@fractalizer/mcp-search';
-import { CategorySearchStrategy } from '@fractalizer/mcp-search';
-import { FuzzySearchStrategy } from '@fractalizer/mcp-search';
-import type { ISearchStrategy, StrategyType } from '@fractalizer/mcp-search';
+import { ToolRegistry, ConfiguredToolAccessPolicy } from '@fractalizer/mcp-core';
 import { TYPES } from './types.js';
 import { OPERATION_DEFINITIONS } from './definitions/operation-definitions.js';
 import { TOOL_CLASSES } from './definitions/tool-definitions.js';
@@ -169,7 +162,6 @@ function bindFacade(container: Container): void {
  * Bind all MCP tools
  *
  * Uses TOOL_CLASSES for automatic registration.
- * SearchToolsTool is handled separately as it requires ToolSearchEngine.
  */
 function bindTools(container: Container): void {
   for (const ToolClass of TOOL_CLASSES) {
@@ -190,11 +182,6 @@ function bindTools(container: Container): void {
 
     const symbol = Symbol.for(className);
 
-    // Skip SearchToolsTool (registered separately)
-    if (className === 'SearchToolsTool') {
-      continue;
-    }
-
     container.bind(symbol).toDynamicValue(() => {
       const facade = container.get<TickTickFacade>(TYPES.TickTickFacade);
       const loggerInstance = container.get<Logger>(TYPES.Logger);
@@ -209,51 +196,17 @@ function bindTools(container: Container): void {
 /**
  * Bind ToolRegistry
  *
- * ToolRegistry automatically extracts all tools from container.
- * SearchToolsTool is added separately via registerToolFromContainer().
+ * ACCESS POLICY: ToolAccessPolicy is built from the same configuration
+ * (tools.disabledGroups) that determines the tools/list composition in
+ * server.ts — single source of truth for tool visibility (tools/list) and
+ * callability (tools/call).
  */
-function bindToolRegistry(container: Container): void {
+function bindToolRegistry(container: Container, config: ServerConfig): void {
   container.bind<ToolRegistry>(TYPES.ToolRegistry).toDynamicValue(() => {
     const loggerInstance = container.get<Logger>(TYPES.Logger);
+    const accessPolicy = new ConfiguredToolAccessPolicy(config.tools.disabledGroups);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any);
-  });
-}
-
-/**
- * Bind ToolSearchEngine
- *
- * ToolSearchEngine requires ToolRegistry for dynamic index generation.
- */
-function bindSearchEngine(container: Container): void {
-  container.bind<ToolSearchEngine>(TYPES.ToolSearchEngine).toDynamicValue(() => {
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    const strategies = new Map<StrategyType, ISearchStrategy>([
-      ['name', new NameSearchStrategy()],
-      ['description', new DescriptionSearchStrategy()],
-      ['category', new CategorySearchStrategy()],
-      ['fuzzy', new FuzzySearchStrategy(3)],
-    ]);
-
-    const combinedStrategy = new WeightedCombinedStrategy(strategies);
-
-    return new ToolSearchEngine(null, toolRegistry, combinedStrategy);
-  });
-}
-
-/**
- * Bind SearchToolsTool
- *
- * Separate function for correct typing as constructor differs from BaseTool.
- */
-async function bindSearchToolsTool(container: Container): Promise<void> {
-  const { SearchToolsTool } = await import('@fractalizer/mcp-search');
-
-  container.bind(Symbol.for('SearchToolsTool')).toDynamicValue(() => {
-    const searchEngine = container.get<ToolSearchEngine>(TYPES.ToolSearchEngine);
-    const loggerInstance = container.get<Logger>(TYPES.Logger);
-    return new SearchToolsTool(searchEngine, loggerInstance);
+    return new ToolRegistry(container, loggerInstance, TOOL_CLASSES as any, accessPolicy);
   });
 }
 
@@ -296,20 +249,7 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
   bindTools(container);
 
   // 9. ToolRegistry (uses tool classes)
-  bindToolRegistry(container);
-
-  // 10-12. SearchEngine and SearchToolsTool only in lazy mode
-  if (config.tools.discoveryMode === 'lazy') {
-    // 10. SearchEngine (requires ToolRegistry)
-    bindSearchEngine(container);
-
-    // 11. SearchToolsTool (requires SearchEngine)
-    await bindSearchToolsTool(container);
-
-    // 12. Register SearchToolsTool in ToolRegistry
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-    toolRegistry.registerToolFromContainer('SearchToolsTool');
-  }
+  bindToolRegistry(container, config);
 
   // Log initialization
   const logger = container.get<Logger>(TYPES.Logger);

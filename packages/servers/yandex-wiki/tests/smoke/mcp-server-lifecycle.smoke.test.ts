@@ -20,8 +20,6 @@ describe('MCP Server Lifecycle (Smoke)', () => {
     requestTimeout: 30000,
     logLevel: 'error', // Минимум логов для smoke теста
     prettyLogs: false,
-    toolDiscoveryMode: 'lazy',
-    essentialTools: ['yw_ping'], // С подчеркиванием (автонормализация)
   };
 
   it('должен создать MCP server instance', () => {
@@ -104,41 +102,31 @@ describe('MCP Server Lifecycle (Smoke)', () => {
       requestTimeout: 30000,
       logLevel: 'error',
       prettyLogs: false,
-      toolDiscoveryMode: 'lazy',
-      essentialTools: ['yw_ping'], // С подчеркиванием (автонормализация)
     };
 
     // Act & Assert
     await expect(createContainer(minimalConfig)).resolves.toBeDefined();
   });
 
-  it('должен поддерживать lazy и eager режимы discovery', async () => {
-    // Arrange
-    const lazyConfig = {
-      ...fakeConfig,
-      toolDiscoveryMode: 'lazy' as const,
-      essentialTools: ['yw_ping'], // С подчеркиванием (автонормализация)
-    };
-    const eagerConfig = { ...fakeConfig, toolDiscoveryMode: 'eager' as const };
-
+  it('tools/list всегда возвращает полный набор инструментов (lazy discovery убран)', async () => {
     // Act
-    const lazyContainer = await createContainer(lazyConfig);
-    const eagerContainer = await createContainer(eagerConfig);
-
-    const lazyRegistry = lazyContainer.get<ToolRegistry>(TYPES.ToolRegistry);
-    const eagerRegistry = eagerContainer.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    // В обоих режимах регистрируются все tools (getAllTools)
-    // Разница только в том, какие tools экспортируются через getDefinitionsByMode
-    const lazyDefinitions = lazyRegistry.getEssentialDefinitions(lazyConfig.essentialTools);
-    const eagerDefinitions = eagerRegistry.getDefinitions();
+    const container = await createContainer(fakeConfig);
+    const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+    const definitions = registry.getDefinitions();
 
     // Assert
-    expect(lazyRegistry).toBeDefined();
-    expect(eagerRegistry).toBeDefined();
-    // В lazy mode только essential tools
-    expect(lazyDefinitions.length).toBe(1);
-    // В eager mode все tools
-    expect(eagerDefinitions.length).toBeGreaterThan(5);
+    expect(registry).toBeDefined();
+    expect(definitions.length).toBeGreaterThan(5);
+  });
+
+  it('DoD: два последовательных tools/list дают побайтово одинаковый список', async () => {
+    // Act
+    const container = await createContainer(fakeConfig);
+    const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+    const first = registry.getDefinitions();
+    const second = registry.getDefinitions();
+
+    // Assert
+    expect(JSON.stringify(second)).toBe(JSON.stringify(first));
   });
 });

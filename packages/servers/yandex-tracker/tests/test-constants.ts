@@ -29,6 +29,5 @@ export const TEST_TOOL_NAMES = {
   GET_ISSUES: `${TEST_TOOL_PREFIX}get_issues`,
   FIND_ISSUES: `${TEST_TOOL_PREFIX}find_issues`,
   ISSUE_GET_URL: `${TEST_TOOL_PREFIX}issue_get_url`,
-  SEARCH_TOOLS: `${TEST_TOOL_PREFIX}search_tools`,
   DEMO: `${TEST_TOOL_PREFIX}demo`,
 } as const;

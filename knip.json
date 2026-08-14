@@ -20,11 +20,6 @@
         "inversify"
       ]
     },
-    "packages/framework/search": {
-      "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@fractalizer/mcp-infrastructure"]
-    },
     "packages/framework/cli": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"],
@@ -37,7 +32,6 @@
       "entry": ["src/index.ts", "src/cli/bin/*.ts"],
       "project": ["src/**/*.ts"],
       "ignoreDependencies": [
-        "@fractalizer/mcp-search",
         "@iarna/toml",
         "axios",
         "chalk",
@@ -51,7 +45,6 @@
       "entry": ["src/index.ts", "src/cli/bin/*.ts"],
       "project": ["src/**/*.ts"],
       "ignoreDependencies": [
-        "@fractalizer/mcp-search",
         "axios",
         "chalk",
         "inquirer",
@@ -62,7 +55,6 @@
       "entry": ["src/index.ts", "src/cli/bin/*.ts"],
       "project": ["src/**/*.ts"],
       "ignoreDependencies": [
-        "@fractalizer/mcp-search",
         "axios",
         "chalk",
         "inquirer",

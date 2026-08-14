@@ -28,7 +28,6 @@
 - **[Infrastructure](./packages/framework/infrastructure/README.md)** — HTTP, cache, logging, async utilities
 - **[CLI](./packages/framework/cli/README.md)** — Generic CLI для MCP подключений
 - **[Core](./packages/framework/core/README.md)** — BaseTool, registry, type system, utilities
-- **[Search](./packages/framework/search/README.md)** — Tool Search Engine с compile-time индексацией
 
 ---
 

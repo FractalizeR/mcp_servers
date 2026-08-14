@@ -12,7 +12,7 @@ export { loadConfig } from '#config';
 export type { ServerConfig } from '#config';
 
 // Constants
-export { MCP_TOOL_PREFIX, MCP_SERVER_NAME, TICKTICK_ESSENTIAL_TOOLS } from './constants.js';
+export { MCP_TOOL_PREFIX, MCP_SERVER_NAME } from './constants.js';
 
 // DI Container
 export { createContainer } from '#composition-root/container.js';

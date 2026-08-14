@@ -89,7 +89,7 @@ cd packages/servers/yandex-tracker
 npm run build
 ```
 
-**Подключение к Claude Desktop:** см. [../../.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
+**Подключение к Claude Desktop:** см. [../../../.github/CONTRIBUTING.md](../../../.github/CONTRIBUTING.md)
 
 ---
 
@@ -143,27 +143,9 @@ npm run build
 - `get_checklist` — Получить чек-листы из нескольких задач
 - `get_attachments` — Получить вложения из нескольких задач
 
-**Пример:**
-```json
-{
-  "issueIds": ["PROJ-1", "PROJ-2", "PROJ-3"],
-  "fields": ["id", "text", "createdAt"]
-}
-```
+**Пример:** `{ "issueIds": ["PROJ-1", "PROJ-2", "PROJ-3"], "fields": ["id", "text", "createdAt"] }`
 
-**Формат ответа (унифицированный):**
-```json
-{
-  "total": 3,
-  "successful": [
-    { "issueId": "PROJ-1", "comments": [...], "count": 5 },
-    { "issueId": "PROJ-2", "comments": [...], "count": 3 }
-  ],
-  "failed": [
-    { "issueId": "PROJ-3", "error": "Задача не найдена" }
-  ]
-}
-```
+**Формат ответа (унифицированный):** `{ total, successful: [{ issueId, ...data }], failed: [{ issueId, error }] }`
 
 ### Групповые POST/DELETE операции
 
@@ -180,20 +162,11 @@ npm run build
 
 **Пример (индивидуальные параметры для каждой задачи):**
 ```json
-{
-  "comments": [
-    { "issueId": "PROJ-1", "text": "Комментарий для задачи 1" },
-    { "issueId": "PROJ-2", "text": "Комментарий для задачи 2", "attachmentIds": ["att1"] }
-  ],
-  "fields": ["id", "text", "createdAt"]
-}
+{ "comments": [{ "issueId": "PROJ-1", "text": "..." }, { "issueId": "PROJ-2", "text": "...", "attachmentIds": ["att1"] }], "fields": ["id", "text", "createdAt"] }
 ```
 
-**Преимущества групповых операций:**
-- Выполнение N операций за один вызов MCP инструмента
-- Автоматическая параллелизация (с учетом rate limits)
-- Частичная обработка ошибок (некоторые могут успешно выполниться, другие — нет)
-- Единообразный формат ответа
+**Преимущества:** N операций за один вызов MCP инструмента, автоматическая параллелизация (с учётом
+rate limits), частичная обработка ошибок, единообразный формат ответа.
 
 ---
 
@@ -341,8 +314,7 @@ npm run build
 | `YANDEX_TRACKER_RETRY_MAX_DELAY` | Макс. задержка между попытками (мс), 1000-60000 | `10000` |
 | `MAX_BATCH_SIZE` | Макс. задач в одном запросе, 1-1000 | `200` |
 | `MAX_CONCURRENT_REQUESTS` | Одновременных запросов к API, 1-20 | `5` |
-| `TOOL_DISCOVERY_MODE` | Режим обнаружения: `lazy` или `eager` | `lazy` |
-| `ENABLED_TOOL_CATEGORIES` | Фильтр категорий (через запятую, case-insensitive) | Все категории |
+| `DISABLED_TOOL_GROUPS` | Отключённые группы инструментов (через запятую) | Пусто (ничего не отключено) |
 
 ### Настройка Retry (повтор запросов)
 
@@ -366,29 +338,20 @@ YANDEX_TRACKER_RETRY_MIN_DELAY=500
 YANDEX_TRACKER_RETRY_MAX_DELAY=30000
 ```
 
-**Пример для высоконагруженного окружения:**
-
-```json
-{
-  "env": {
-    "YANDEX_TRACKER_RETRY_ATTEMPTS": "5",
-    "YANDEX_TRACKER_RETRY_MIN_DELAY": "2000",
-    "YANDEX_TRACKER_RETRY_MAX_DELAY": "20000"
-  }
-}
-```
-
-Это даст более устойчивое поведение при частых ошибках 429 и нестабильной сети.
+**Для высоконагруженного окружения** (устойчивее к частым 429 и нестабильной сети): увеличь
+`YANDEX_TRACKER_RETRY_ATTEMPTS=5`, `YANDEX_TRACKER_RETRY_MIN_DELAY=2000`,
+`YANDEX_TRACKER_RETRY_MAX_DELAY=20000` — так же, через `env` в конфигурации клиента.
 
 ### Управление инструментами
 
-**Tool Discovery Mode:**
-- `lazy` — Claude видит только essential инструменты (ping, search_tools), остальные находит через search_tools
-- `eager` — Claude видит все инструменты сразу (рекомендуется для большинства случаев)
+`tools/list` всегда отдаёт полный набор инструментов в детерминированном порядке — два
+последовательных вызова дают побайтово одинаковый список.
 
-**Фильтрация по категориям** (работает в `eager` режиме):
+**Единственный рубильник состава** — `DISABLED_TOOL_GROUPS`. По умолчанию пуст (ничего не
+отключено). Отключённая группа не только скрывается из `tools/list`, но и не вызывается через
+`tools/call`.
 
-Формат `ENABLED_TOOL_CATEGORIES`:
+Формат `DISABLED_TOOL_GROUPS`:
 - `issues,comments` — все подкатегории issues и comments
 - `issues:read,comments:write` — только конкретные подкатегории
 - `issues,comments:write,queues` — смешанный формат
@@ -397,16 +360,18 @@ YANDEX_TRACKER_RETRY_MAX_DELAY=30000
 
 Доступные подкатегории: `read`, `write`, `delete`, `workflow`, `links`, `attachments`, `bulk`, `worklog`
 
+Неизвестное имя группы — предупреждение в stderr с перечнем допустимых значений, не молчание и не падение.
+
 **Примеры использования:**
 ```bash
-# Только чтение задач и комментариев
-ENABLED_TOOL_CATEGORIES="issues:read,comments:read"
+# Без изменяющих операций над задачами и комментариями
+DISABLED_TOOL_GROUPS="issues:write,comments:write"
 
-# Работа с задачами и очередями
-ENABLED_TOOL_CATEGORIES="issues,queues"
+# Без работы с очередями
+DISABLED_TOOL_GROUPS="queues"
 
-# Все категории (по умолчанию)
-ENABLED_TOOL_CATEGORIES=""
+# Ничего не отключено (по умолчанию)
+DISABLED_TOOL_GROUPS=""
 ```
 
 ### Пример полной конфигурации
@@ -425,8 +390,7 @@ ENABLED_TOOL_CATEGORIES=""
         "YANDEX_TRACKER_RETRY_ATTEMPTS": "3",
         "YANDEX_TRACKER_RETRY_MIN_DELAY": "1000",
         "YANDEX_TRACKER_RETRY_MAX_DELAY": "10000",
-        "TOOL_DISCOVERY_MODE": "eager",
-        "ENABLED_TOOL_CATEGORIES": "issues,comments:read,queues"
+        "DISABLED_TOOL_GROUPS": ""
       }
     }
   }
@@ -442,7 +406,7 @@ ENABLED_TOOL_CATEGORIES=""
 | Claude не видит инструменты | Проверь токен/org ID, перезапусти Claude, проверь логи |
 | Invalid token | Проверь токен (начинается с `y0_`), права (`tracker:read`, `tracker:write`) |
 | Organization not found | Проверь ID организации и доступ к ней |
-| Инструментов меньше, чем ожидалось | Проверь `ENABLED_TOOL_CATEGORIES`, посмотри логи с `LOG_LEVEL=debug` |
+| Инструментов меньше, чем ожидалось | Проверь `DISABLED_TOOL_GROUPS`, посмотри логи с `LOG_LEVEL=debug` |
 
 ---
 
@@ -504,7 +468,6 @@ npm run mcp:status
 Этот пакет построен на **MCP Framework** — переиспользуемых компонентах:
 - **[@fractalizer/mcp-infrastructure](../../framework/infrastructure/README.md)** — HTTP, кэш, логирование
 - **[@fractalizer/mcp-core](../../framework/core/README.md)** — BaseTool, реестр, утилиты
-- **[@fractalizer/mcp-search](../../framework/search/README.md)** — Поисковый движок
 
 ### Структура пакета
 
@@ -531,64 +494,22 @@ src/
 ### Команды для разработки
 
 ```bash
-# Сборка
-npm run build              # Полная сборка: TypeScript -> JavaScript -> bundle
-                           # (auto: generate index, increment build number)
-npm run build:bundle       # Только бандл с инкрементом build number
-npm run build:mcpb         # Создать .mcpb архив для публикации
-
-# Тестирование
-npm run test               # Все unit тесты
-npm run test:smoke         # Дымовой тест (запуск сервера)
-npm run test:coverage      # Тесты с покрытием кода
-npm run test:watch         # Watch режим
-npm run test:quiet         # Для ИИ агентов (минимум вывода)
-
-# Валидация
-npm run validate           # Полная проверка (lint + typecheck + test +
-                           # test:smoke + cpd + validate:docs)
-npm run validate:quiet     # Для ИИ агентов (минимум вывода)
-npm run lint               # ESLint проверка
-npm run lint:quiet         # Только ошибки
-npm run typecheck          # TypeScript проверка типов
-npm run cpd                # Проверка дублирования кода (<=5%)
-npm run validate:tools     # Проверка регистрации tools/operations
-npm run validate:docs      # Проверка лимитов размеров документации
+# Сборка / тесты / валидация
+npm run build               # TypeScript -> JS -> bundle (+ increment build number)
+npm run test                # Unit тесты; test:coverage / test:watch / test:quiet
+npm run validate            # lint + typecheck + test + test:smoke + cpd + validate:docs
+npm run validate:quiet      # То же, для ИИ агентов (минимум вывода)
 
 # CLI утилиты
-npm run mcp:connect        # Подключить сервер к MCP клиенту
-npm run mcp:disconnect     # Отключить сервер
-npm run mcp:list           # Список доступных клиентов
-npm run mcp:status         # Статус подключения
+npm run mcp:connect         # Подключить сервер к MCP клиенту
+npm run mcp:disconnect      # Отключить / npm run mcp:status — статус
 ```
 
 ### Добавление нового инструмента
 
-**Пример:** добавим инструмент для получения спринтов.
-
-1. **Создай структуру файлов:**
-   ```
-   src/tools/api/sprints/get/
-   ├── get-sprints.schema.ts      # Zod схемы валидации
-   ├── get-sprints.metadata.ts    # Метаданные (имя, категория, теги)
-   ├── get-sprints.tool.ts        # Основной класс
-   └── index.ts                   # Реэкспорт
-   ```
-
-2. **Добавь 1 строку регистрации:**
-   ```typescript
-   // src/composition-root/definitions/tool-definitions.ts
-   import { GetSprintsTool } from '#tools/api/sprints/get/index.js';
-
-   export const TOOL_CLASSES = [
-     // ... существующие
-     GetSprintsTool,  // <- ОДНА СТРОКА
-   ] as const;
-   ```
-
-3. **Готово!** DI контейнер автоматически зарегистрирует инструмент.
-
-**Подробнее:** [src/tools/README.md](src/tools/README.md)
+Новый tool = 3-4 файла (`schema.ts`, `metadata.ts`, `tool.ts`, `index.ts`) + одна строка
+регистрации в `src/composition-root/definitions/tool-definitions.ts` — DI контейнер зарегистрирует
+инструмент автоматически. Пошагово: [src/tools/README.md](src/tools/README.md).
 
 ### Технологический стек
 
@@ -617,9 +538,9 @@ npm run mcp:status         # Статус подключения
 
 ### Monorepo
 
-- **[Корневой README](../../README.md)** — обзор monorepo
-- **[ARCHITECTURE.md](../../ARCHITECTURE.md)** — архитектура
-- **[.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md)** — вклад в проект
+- **[Корневой README](../../../README.md)** — обзор monorepo
+- **[ARCHITECTURE.md](../../../ARCHITECTURE.md)** — архитектура
+- **[.github/CONTRIBUTING.md](../../../.github/CONTRIBUTING.md)** — вклад в проект
 
 ---
 
@@ -636,7 +557,7 @@ npm run mcp:status         # Статус подключения
 
 PolyForm Shield License 1.0.0 — свободное использование, модификация и распространение, за исключением создания конкурирующих продуктов.
 
-См. [../../LICENSE](../../LICENSE)
+См. [../../../LICENSE](../../../LICENSE)
 
 ---
 
@@ -648,7 +569,6 @@ PolyForm Shield License 1.0.0 — свободное использование,
 - **MCP Framework пакеты:**
   - [Infrastructure](../../framework/infrastructure/README.md)
   - [Core](../../framework/core/README.md)
-  - [Search](../../framework/search/README.md)
 - **API Яндекс.Трекера:** https://cloud.yandex.ru/docs/tracker/about-api
 - **OAuth Яндекс:** https://yandex.ru/dev/oauth/
 

@@ -28,13 +28,3 @@ export const MCP_SERVER_DISPLAY_NAME = "FractalizeR's Yandex Wiki MCP" as const;
  * Уровень логирования по умолчанию
  */
 export const DEFAULT_LOG_LEVEL = 'info';
-
-/**
- * Essential tools для Yandex Wiki MCP сервера
- * - yw_ping: проверка работоспособности сервера (с префиксом)
- * - search_tools: поиск инструментов из @fractalizer/mcp-search (БЕЗ префикса — это framework tool)
- *
- * Имена формируются через buildToolName(name, MCP_TOOL_PREFIX) с автонормализацией:
- * buildToolName('ping', 'yw') => 'yw_ping'
- */
-export const YANDEX_WIKI_ESSENTIAL_TOOLS = ['yw_ping', 'search_tools'] as const;

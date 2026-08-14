@@ -15,8 +15,6 @@ import {
   DEFAULT_LOGS_DIR,
   DEFAULT_LOG_MAX_SIZE,
   DEFAULT_LOG_MAX_FILES,
-  DEFAULT_TOOL_DISCOVERY_MODE,
-  DEFAULT_ESSENTIAL_TOOLS,
   DEFAULT_RETRY_ATTEMPTS,
   DEFAULT_RETRY_MIN_DELAY,
   DEFAULT_RETRY_MAX_DELAY,
@@ -27,6 +25,30 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = resolve(__dirname, '../..');
+
+/**
+ * Переменные окружения, оставшиеся от удалённого lazy discovery (этап 2.1.A
+ * плана модернизации). Молча игнорировать их хуже, чем не поддерживать вовсе:
+ * у пользователей они уже прописаны в конфигах MCP клиентов и выглядят
+ * работающими. Печатаем явное предупреждение в stderr и продолжаем запуск.
+ */
+const DEPRECATED_TOOL_DISCOVERY_ENV_VARS = ['TOOL_DISCOVERY_MODE', 'ESSENTIAL_TOOLS'] as const;
+
+/**
+ * Предупредить в stderr, если обнаружены устаревшие переменные окружения
+ * lazy discovery. Не влияет на итоговый ServerConfig — значения не читаются.
+ */
+function warnDeprecatedToolDiscoveryEnvVars(): void {
+  for (const name of DEPRECATED_TOOL_DISCOVERY_ENV_VARS) {
+    if (process.env[name] !== undefined) {
+      console.error(
+        `[WARN] Переменная окружения ${name} больше не поддерживается и игнорируется. ` +
+          'Lazy discovery убран: tools/list всегда возвращает полный список инструментов, ' +
+          'прошедший фильтр DISABLED_TOOL_GROUPS. Удалите переменную из конфигурации MCP клиента.'
+      );
+    }
+  }
+}
 
 /**
  * Валидация уровня логирования
@@ -51,29 +73,6 @@ function validateTimeout(timeout: string | undefined, defaultValue: number): num
     return defaultValue;
   }
   return parsed;
-}
-
-/**
- * Валидация режима tool discovery
- */
-function validateToolDiscoveryMode(mode: string | undefined): 'lazy' | 'eager' {
-  if (mode === 'eager' || mode === 'lazy') {
-    return mode;
-  }
-  return DEFAULT_TOOL_DISCOVERY_MODE;
-}
-
-/**
- * Парсинг списка essential tools из переменной окружения
- */
-function parseEssentialTools(value: string | undefined): readonly string[] {
-  if (!value || value.trim() === '') {
-    return DEFAULT_ESSENTIAL_TOOLS;
-  }
-  return value
-    .split(',')
-    .map((name) => name.trim())
-    .filter((name) => name.length > 0);
 }
 
 /**
@@ -254,6 +253,8 @@ function validateOrgIds(
  * @throws {Error} если обязательные переменные не установлены
  */
 export function loadConfig(): ServerConfig {
+  warnDeprecatedToolDiscoveryEnvVars();
+
   const token = process.env[ENV_VAR_NAMES.YANDEX_WIKI_TOKEN];
 
   if (!token || token.trim() === '') {
@@ -303,11 +304,6 @@ export function loadConfig(): ServerConfig {
     10
   );
 
-  const toolDiscoveryMode = validateToolDiscoveryMode(
-    process.env[ENV_VAR_NAMES.TOOL_DISCOVERY_MODE]
-  );
-  const essentialTools = parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]);
-
   // Парсинг отключенных групп инструментов (негативный фильтр)
   const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
   const disabledToolGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
@@ -343,8 +339,6 @@ export function loadConfig(): ServerConfig {
     prettyLogs,
     logMaxSize,
     logMaxFiles,
-    toolDiscoveryMode,
-    essentialTools,
     retryAttempts,
     retryMinDelay,
     retryMaxDelay,

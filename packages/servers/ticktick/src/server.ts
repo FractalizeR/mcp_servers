@@ -25,7 +25,7 @@ import { loadConfig } from '#config';
 import type { ServerConfig } from '#config';
 import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { ToolRegistry } from '@fractalizer/mcp-core';
-import { MCP_SERVER_NAME, TICKTICK_ESSENTIAL_TOOLS } from './constants.js';
+import { MCP_SERVER_NAME } from './constants.js';
 
 // DI Container (Composition Root)
 import { createContainer } from '#composition-root/container.js';
@@ -75,16 +75,11 @@ function setupServer(
   server.setRequestHandler(ListToolsRequestSchema, () => {
     logger.info(`📋 tools/list request from client`);
 
-    const definitions = toolRegistry.getDefinitionsByMode(
-      config.tools.discoveryMode,
-      config.tools.essentialTools,
-      config.tools.enabledCategories,
-      config.tools.disabledGroups
-    );
+    const definitions = toolRegistry.getDefinitions(config.tools.disabledGroups);
 
     const metrics = calculateToolsMetrics(definitions);
     logToolsMetrics(logger, config, definitions, metrics);
-    logToolsWarnings(logger, config, metrics);
+    logToolsWarnings(logger, metrics);
 
     return {
       tools: definitions.map((def) => ({
@@ -185,22 +180,8 @@ async function main(): Promise<void> {
     // Load configuration
     const config = loadConfig();
 
-    // Override essentialTools based on discovery mode
-    // - eager: only ping (search_tools is redundant as Claude sees all tools)
-    // - lazy: ping + search_tools (search_tools needed for discovery)
-    const essentialTools =
-      config.tools.discoveryMode === 'eager' ? ['fr_ticktick_ping'] : TICKTICK_ESSENTIAL_TOOLS;
-
-    const configWithEssentialTools: ServerConfig = {
-      ...config,
-      tools: {
-        ...config.tools,
-        essentialTools,
-      },
-    };
-
     // Create DI container (Logger created inside)
-    const container = await createContainer(configWithEssentialTools);
+    const container = await createContainer(config);
 
     // Get Logger from container
     logger = container.get<Logger>(TYPES.Logger);
@@ -230,7 +211,7 @@ async function main(): Promise<void> {
     );
 
     // Setup server handlers
-    setupServer(server, toolRegistry, configWithEssentialTools, logger);
+    setupServer(server, toolRegistry, config, logger);
 
     // Setup signal handlers
     setupSignalHandlers(server, logger);

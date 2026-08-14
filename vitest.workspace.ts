@@ -13,7 +13,6 @@ export default defineWorkspace([
   'packages/framework/infrastructure',
   'packages/framework/cli',
   'packages/framework/core',
-  'packages/framework/search',
 
   // Server packages
   'packages/servers/yandex-tracker',

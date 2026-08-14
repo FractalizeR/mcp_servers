@@ -30,16 +30,13 @@ packages/
 │   │   └── 0 dependencies
 │   ├── cli/               → @fractalizer/mcp-cli
 │   │   └── depends on: infrastructure
-│   ├── core/              → @fractalizer/mcp-core
-│   │   ├── tools/base/, utils/, tool-registry
-│   │   └── depends on: infrastructure
-│   └── search/            → @fractalizer/mcp-search
-│       ├── engine/, strategies/, tools/
-│       └── depends on: core
+│   └── core/              → @fractalizer/mcp-core
+│       ├── tools/base/, utils/, tool-registry
+│       └── depends on: infrastructure
 └── servers/
     └── yandex-tracker/    → mcp-server-yandex-tracker
         ├── api_operations/, entities/, tools/, composition-root/
-        └── depends on: infrastructure, cli, core, search
+        └── depends on: infrastructure, cli, core
 ```
 
 ---
@@ -54,11 +51,6 @@ packages/
          ↓
 ┌─────────────────┐
 │      core       │ ← Framework core (BaseTool, registry, utilities)
-└────────┬────────┘
-         │
-         ↓
-┌─────────────────┐
-│     search      │ ← Tool discovery (search engine, strategies)
 └────────┬────────┘
          │
          ↓
@@ -110,20 +102,6 @@ npm run depcruise  # Validates dependency graph
 
 **Details:** [packages/framework/core/README.md](packages/framework/core/README.md)
 
-### @fractalizer/mcp-search
-
-**Purpose:** Advanced tool discovery with compile-time indexing
-
-**Components:**
-- **Engine:** ToolSearchEngine (LRU cache)
-- **Strategies:** Name, Description, Category, Fuzzy, WeightedCombined
-- **Tools:** SearchToolsTool (MCP tool for Claude)
-- **Index:** generated-index.ts (auto-generated at build)
-
-**Key Principle:** Compile-time indexing (zero runtime overhead)
-
-**Details:** [packages/framework/search/README.md](packages/framework/search/README.md)
-
 ### mcp-server-yandex-tracker
 
 **Purpose:** Complete MCP server for Yandex.Tracker API v3
@@ -135,7 +113,7 @@ npm run depcruise  # Validates dependency graph
 - **MCP Tools:** API tools + helpers
 - **DI:** InversifyJS composition root
 
-**Key Principle:** Built on framework packages (infrastructure, core, search)
+**Key Principle:** Built on framework packages (infrastructure, cli, core)
 
 **Details:** [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md), [packages/servers/yandex-tracker/CLAUDE.md](packages/servers/yandex-tracker/CLAUDE.md)
 
@@ -257,31 +235,10 @@ import { createFixture } from '#helpers/queue.fixture.js';
 
 ## 🔄 Data Flow (Yandex Tracker Server)
 
-**Request Chain:**
-
-```
-1. Claude Desktop (MCP Client)
-   ↓ JSON-RPC via stdio
-2. MCP Server (index.ts)
-   ↓ tools/call
-3. ToolRegistry
-   ↓ route to tool
-4. Concrete Tool (e.g., GetIssuesTool)
-   ↓ validate params (Zod)
-5. YandexTrackerFacade
-   ↓ delegate to operation
-6. Operation (e.g., GetIssuesOperation)
-   ↓ business logic
-7. HttpClient (with retry)
-   ↓ HTTPS request
-8. Yandex.Tracker API v3
-   ↓ response
-9. IssueWithUnknownFields (preserves unknown fields)
-   ↓ filter fields
-10. ResponseFieldFilter
-   ↓ format for Claude
-11. Tool returns result
-```
+**Request Chain:** Claude Desktop (JSON-RPC/stdio) → MCP Server (`tools/call`) → ToolRegistry →
+Tool (validate params, Zod) → YandexTrackerFacade → Operation (business logic) → HttpClient
+(with retry) → Yandex.Tracker API v3 → `*WithUnknownFields` (preserves unknown fields) →
+ResponseFieldFilter → Tool returns result.
 
 **Layer Responsibilities:**
 - **Tools** — validation, formatting for Claude
@@ -386,7 +343,7 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
 ### Incoming (from API): *WithUnknownFields
 
 ```typescript
-// packages/servers/yandex-tracker/src/entities/issue.entity.ts
+// packages/servers/yandex-tracker/src/tracker_api/entities/issue.entity.ts
 export interface Issue { /* known fields */ }
 export type IssueWithUnknownFields = WithUnknownFields<Issue>;
 ```
@@ -396,7 +353,7 @@ export type IssueWithUnknownFields = WithUnknownFields<Issue>;
 ### Outgoing (to API): Strict DTO
 
 ```typescript
-// packages/servers/yandex-tracker/src/dto/issue/update-issue.dto.ts
+// packages/servers/yandex-tracker/src/tracker_api/dto/issue/update-issue.dto.ts
 export interface UpdateIssueDto {
   summary?: string;
   description?: string;
@@ -406,7 +363,7 @@ export interface UpdateIssueDto {
 
 **Purpose:** Type-safe requests
 
-**Details:** [packages/servers/yandex-tracker/src/entities/README.md](packages/servers/yandex-tracker/src/entities/README.md), [packages/servers/yandex-tracker/src/dto/README.md](packages/servers/yandex-tracker/src/dto/README.md)
+**Details:** [packages/servers/yandex-tracker/src/tracker_api/entities/README.md](packages/servers/yandex-tracker/src/tracker_api/entities/README.md), [packages/servers/yandex-tracker/src/tracker_api/dto/README.md](packages/servers/yandex-tracker/src/tracker_api/dto/README.md)
 
 ---
 
@@ -468,35 +425,25 @@ packages/servers/yandex-tracker/src/composition-root/
 
 ---
 
-## 🔍 Tool Search System
+## 🔍 Tool Registry & Discovery
 
-**Architecture:**
+**Принцип:** `tools/list` всегда отдаёт полный набор инструментов, прошедший access policy
+(см. раздел Architecture Validation ниже) — progressive disclosure на стороне сервера не
+реализуется, клиент (Claude Code, Claude Desktop, Codex) решает эту задачу сам.
 
-1. **Compile-time Indexing:**
-   ```bash
-   npm run build
-   # → runs scripts/generate-tool-index.ts
-   # → generates packages/search/src/generated-index.ts
-   ```
+**Единственный рубильник состава:** `DISABLED_TOOL_GROUPS` (env, по умолчанию пустой — ничего
+не отключено). Отключённая группа не только скрывается из `tools/list`, но и не вызывается через
+`tools/call` — та же policy, что применяется к списку. Неизвестное имя группы — предупреждение
+в stderr с перечнем допустимых значений, не молчание и не падение.
 
-2. **Runtime Search:**
-   ```typescript
-   const engine = new ToolSearchEngine(TOOL_INDEX);
-   const results = engine.search('find issues');
-   ```
+**Устаревшие переменные:** env-переменные прежнего режима discovery удалены целиком (не оставлены
+no-op). Если в конфиге клиента такая переменная всё ещё выставлена, сервер печатает предупреждение
+в stderr при старте и продолжает работу с полным набором инструментов.
 
-3. **5 Search Strategies:**
-   - NameSearchStrategy (exact/partial match)
-   - DescriptionSearchStrategy (word matching)
-   - CategorySearchStrategy (category filter)
-   - FuzzySearchStrategy (Levenshtein distance)
-   - WeightedCombinedStrategy (combine all)
-
-4. **LRU Cache:**
-   - Max 100 entries
-   - Key: `${query}_${strategy}`
-
-**Details:** [packages/framework/search/README.md](packages/framework/search/README.md)
+**Детерминированный порядок:** сортировка `tools/list` — контракт, а не побочный эффект: приоритет
+как первый ключ, имя как обязательный tie-breaker. При неизменном наборе инструментов два
+последовательных вызова `tools/list` дают побайтово одинаковый список (важно для client-side и
+prompt-кэша модели).
 
 ---
 
@@ -574,12 +521,13 @@ npm run test --workspace=@fractalizer/mcp-core  # Single package
 
 1. Create structure:
    ```
-   packages/servers/yandex-tracker/src/mcp/tools/{api|helpers}/{feature}/{action}/
+   packages/servers/yandex-tracker/src/tools/{api|helpers}/{feature}/{action}/
    ├── {name}.schema.ts
-   ├── {name}.definition.ts
+   ├── {name}.metadata.ts
    ├── {name}.tool.ts
    └── index.ts
    ```
+   (`getDefinition()` uses `generateDefinitionFromSchema()` — no separate `*.definition.ts` file)
 
 2. Add to registry:
    ```typescript
@@ -592,17 +540,17 @@ npm run test --workspace=@fractalizer/mcp-core  # Single package
 
 3. Tests + `npm run validate`
 
-**Details:** [packages/servers/yandex-tracker/src/mcp/README.md](packages/servers/yandex-tracker/src/mcp/README.md)
+**Details:** [packages/servers/yandex-tracker/src/tools/README.md](packages/servers/yandex-tracker/src/tools/README.md)
 
 ### Adding API Operation (in yandex-tracker)
 
-1. Create `packages/servers/yandex-tracker/src/api_operations/{feature}/{action}/{name}.operation.ts`
+1. Create `packages/servers/yandex-tracker/src/tracker_api/api_operations/{feature}/{action}/{name}.operation.ts`
 2. Extend `BaseOperation`
 3. Add facade method
 4. Register in `packages/servers/yandex-tracker/src/composition-root/definitions/operation-definitions.ts`
 5. Tests + `npm run validate`
 
-**Details:** [packages/servers/yandex-tracker/src/api_operations/README.md](packages/servers/yandex-tracker/src/api_operations/README.md)
+**Details:** [packages/servers/yandex-tracker/src/tracker_api/api_operations/README.md](packages/servers/yandex-tracker/src/tracker_api/api_operations/README.md)
 
 ---
 
@@ -615,8 +563,7 @@ npm run build
 # Builds in order:
 # 1. infrastructure
 # 2. core (depends on infrastructure)
-# 3. search (depends on core)
-# 4. yandex-tracker (depends on all)
+# 3. yandex-tracker (depends on all)
 ```
 
 ### Version Management
@@ -672,17 +619,16 @@ npm run validate
 
 - **[packages/framework/infrastructure/README.md](packages/framework/infrastructure/README.md)** — Infrastructure API
 - **[packages/framework/core/README.md](packages/framework/core/README.md)** — Core API
-- **[packages/framework/search/README.md](packages/framework/search/README.md)** — Search system
 
 ### Yandex Tracker
 
 - **[packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)** — User guide
 - **[packages/servers/yandex-tracker/CLAUDE.md](packages/servers/yandex-tracker/CLAUDE.md)** — Developer rules
 - **Module READMEs:**
-  - [src/mcp/README.md](packages/servers/yandex-tracker/src/mcp/README.md)
-  - [src/api_operations/README.md](packages/servers/yandex-tracker/src/api_operations/README.md)
-  - [src/entities/README.md](packages/servers/yandex-tracker/src/entities/README.md)
-  - [src/dto/README.md](packages/servers/yandex-tracker/src/dto/README.md)
+  - [src/tools/README.md](packages/servers/yandex-tracker/src/tools/README.md)
+  - [src/tracker_api/api_operations/README.md](packages/servers/yandex-tracker/src/tracker_api/api_operations/README.md)
+  - [src/tracker_api/entities/README.md](packages/servers/yandex-tracker/src/tracker_api/entities/README.md)
+  - [src/tracker_api/dto/README.md](packages/servers/yandex-tracker/src/tracker_api/dto/README.md)
   - [src/composition-root/README.md](packages/servers/yandex-tracker/src/composition-root/README.md)
   - [tests/README.md](packages/servers/yandex-tracker/tests/README.md)
 
@@ -691,7 +637,7 @@ npm run validate
 ## 🎯 Design Patterns Used
 
 ### Framework Level
-- **Strategy Pattern** — Search strategies, retry strategies
+- **Strategy Pattern** — retry strategies
 - **Null Object** — NoOpCache
 - **Factory Pattern** — Tool creation in registry
 - **Template Method** — BaseTool, BaseDefinition
@@ -707,13 +653,11 @@ npm run validate
 ## 📊 Performance Considerations
 
 ### Compile-time Optimization
-- Tool index generated at build (not runtime)
 - TypeScript compilation with project references
 - Incremental builds
 
 ### Runtime Optimization
-- Lazy tool initialization (ToolRegistry)
-- LRU cache (tool search)
+- Lazy tool initialization (ToolRegistry creates tools on-demand via DI)
 - Batch operations (parallel execution)
 - Field filtering (80-90% response size reduction)
 

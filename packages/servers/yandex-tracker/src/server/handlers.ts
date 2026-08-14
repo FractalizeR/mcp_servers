@@ -88,21 +88,17 @@ export function logToolsMetrics(
   definitions: ToolDefinition[],
   metrics: ToolsMetrics
 ): void {
-  logger.info(
-    `✅ Возвращаем ${metrics.totalTools} инструментов (режим: ${config.toolDiscoveryMode})`,
-    {
-      totalTools: metrics.totalTools,
-      mode: config.toolDiscoveryMode,
-      descriptionLength: metrics.descriptionLength,
-      estimatedTokens: metrics.estimatedTokens,
-    }
-  );
+  logger.info(`✅ Возвращаем ${metrics.totalTools} инструментов`, {
+    totalTools: metrics.totalTools,
+    descriptionLength: metrics.descriptionLength,
+    estimatedTokens: metrics.estimatedTokens,
+  });
 
-  if (config.enabledToolCategories && !config.enabledToolCategories.includeAll) {
-    logger.info('✂️  Применена фильтрация по категориям', {
-      categories: Array.from(config.enabledToolCategories.categories),
-      categoriesWithSubcategories: Array.from(
-        config.enabledToolCategories.categoriesWithSubcategories.entries()
+  if (config.disabledToolGroups) {
+    logger.info('✂️  Применён фильтр отключённых групп инструментов', {
+      disabledCategories: Array.from(config.disabledToolGroups.categories),
+      disabledCategoriesWithSubcategories: Array.from(
+        config.disabledToolGroups.categoriesWithSubcategories.entries()
       ).map(([cat, subcats]) => ({
         category: cat,
         subcategories: Array.from(subcats),
@@ -128,27 +124,7 @@ export function logToolsMetrics(
 /**
  * Логирование предупреждений для ListTools
  */
-export function logToolsWarnings(
-  logger: Logger,
-  config: ServerConfig,
-  metrics: ToolsMetrics
-): void {
-  if (config.toolDiscoveryMode === 'lazy') {
-    logger.warn(`⚠️  ВНИМАНИЕ: Используется lazy режим discovery!`, {
-      message: 'Lazy режим может не работать с некоторыми MCP клиентами',
-      essentialTools: config.essentialTools,
-      recommendation: 'Используйте TOOL_DISCOVERY_MODE=eager для совместимости',
-    });
-  }
-
-  if (config.toolDiscoveryMode === 'eager' && metrics.totalTools > 30) {
-    logger.warn('⚠️  Рекомендация: много инструментов в eager mode', {
-      totalTools: metrics.totalTools,
-      estimatedTokens: metrics.estimatedTokens,
-      recommendation: 'Рассмотрите TOOL_DISCOVERY_MODE=lazy для экономии контекста',
-    });
-  }
-
+export function logToolsWarnings(logger: Logger, metrics: ToolsMetrics): void {
   if (metrics.estimatedTokens > 200) {
     logger.warn('⚠️  Descriptions занимают много токенов', {
       estimatedTokens: metrics.estimatedTokens,

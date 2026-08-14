@@ -54,7 +54,6 @@ cd packages/servers/{server-name}
   "dependencies": {
     "@fractalizer/mcp-core": "*",
     "@fractalizer/mcp-infrastructure": "*",
-    "@fractalizer/mcp-search": "*",
     "@modelcontextprotocol/sdk": "^1.22.0"
   },
   "devDependencies": {
@@ -112,8 +111,7 @@ export default defineConfig([
   "include": ["src/**/*"],
   "references": [
     { "path": "../framework/infrastructure" },
-    { "path": "../framework/core" },
-    { "path": "../framework/search" }
+    { "path": "../framework/core" }
   ]
 }
 ```
@@ -248,7 +246,6 @@ mcp-server-{server-name}
 - **MCP Protocol:** https://github.com/anthropics/mcp
 - **Framework Core:** [../framework/core/README.md](../framework/core/README.md)
 - **Framework Infrastructure:** [../framework/infrastructure/README.md](../framework/infrastructure/README.md)
-- **Framework Search:** [../framework/search/README.md](../framework/search/README.md)
 - **Пример (Yandex Tracker):** [./yandex-tracker/README.md](./yandex-tracker/README.md)
 
 ---

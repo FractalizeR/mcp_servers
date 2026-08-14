@@ -74,7 +74,6 @@ CLI проведёт через настройку и автоматически
 | [@fractalizer/mcp-infrastructure](packages/framework/infrastructure) | HTTP клиент, кэш, логирование, async утилиты |
 | [@fractalizer/mcp-cli](packages/framework/cli) | Универсальный CLI для MCP подключений |
 | [@fractalizer/mcp-core](packages/framework/core) | Базовые классы, система типов, реестр инструментов |
-| [@fractalizer/mcp-search](packages/framework/search) | Поисковый движок с compile-time индексацией |
 
 ---
 
@@ -85,8 +84,7 @@ packages/
 ├── framework/
 │   ├── infrastructure/     → @fractalizer/mcp-infrastructure
 │   ├── cli/               → @fractalizer/mcp-cli
-│   ├── core/              → @fractalizer/mcp-core
-│   └── search/            → @fractalizer/mcp-search
+│   └── core/              → @fractalizer/mcp-core
 └── servers/
     ├── yandex-tracker/    → @fractalizer/mcp-server-yandex-tracker
     ├── yandex-wiki/       → @fractalizer/mcp-server-yandex-wiki
@@ -100,8 +98,6 @@ infrastructure (0 зависимостей)
 cli (зависит от infrastructure)
     ↓
 core (зависит от infrastructure)
-    ↓
-search (зависит от core)
     ↓
 yandex-tracker (зависит от всех framework пакетов)
 ```
@@ -130,7 +126,6 @@ npm run test
 ```bash
 npm install @fractalizer/mcp-infrastructure
 npm install @fractalizer/mcp-core
-npm install @fractalizer/mcp-search
 ```
 
 **Примеры использования:** см. README.md в каждом пакете.
@@ -194,7 +189,6 @@ npm install @fractalizer/mcp-core
 - **Infrastructure:** [packages/framework/infrastructure/README.md](packages/framework/infrastructure/README.md)
 - **CLI:** [packages/framework/cli/README.md](packages/framework/cli/README.md)
 - **Core:** [packages/framework/core/README.md](packages/framework/core/README.md)
-- **Search:** [packages/framework/search/README.md](packages/framework/search/README.md)
 - **Yandex Tracker:** [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
 
 ---

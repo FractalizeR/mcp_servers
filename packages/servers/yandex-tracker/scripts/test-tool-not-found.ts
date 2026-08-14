@@ -39,7 +39,7 @@ async function testToolNotFound(): Promise<void> {
   console.log('');
 
   // Получаем список доступных инструментов
-  const availableTools = toolRegistry.getDefinitionsByMode('all', []);
+  const availableTools = toolRegistry.getDefinitions();
   console.log('🔧 Доступные инструменты:');
   availableTools.forEach((tool, index) => {
     console.log(`  ${index + 1}. ${tool.name}`);

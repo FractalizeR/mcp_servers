@@ -18,8 +18,6 @@ export default mergeConfig(
     },
     resolve: {
       alias: {
-        '@fractalizer/mcp-search': path.resolve(__dirname, '../../framework/search/src'),
-        '@fractalizer/mcp-search/*': path.resolve(__dirname, '../../framework/search/src/*'),
         '@fractalizer/mcp-core': path.resolve(__dirname, '../../framework/core/src'),
         '@fractalizer/mcp-core/*': path.resolve(__dirname, '../../framework/core/src/*'),
         '@fractalizer/mcp-infrastructure': path.resolve(

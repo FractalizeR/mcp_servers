@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ToolRegistry, buildToolName } from '@fractalizer/mcp-core';
+import { ToolRegistry, buildToolName, redactParams } from '@fractalizer/mcp-core';
 import type { Container } from 'inversify';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
@@ -77,20 +77,6 @@ describe('ToolRegistry', () => {
         }
         if (symbolStr.includes('DemoTool')) {
           return new DemoTool(mockFacade, mockLogger);
-        }
-        if (symbolStr.includes('SearchToolsTool')) {
-          // Mock SearchToolsTool (имеет другой конструктор)
-          return {
-            getDefinition: () => ({
-              name: buildToolName('search_tools', MCP_TOOL_PREFIX),
-              description: 'Search tools',
-              inputSchema: { type: 'object', properties: {}, required: [] },
-            }),
-            execute: vi.fn(async () => ({
-              content: [{ type: 'text', text: '{"success":true}' }],
-              isError: false,
-            })),
-          };
         }
         throw new Error(`Unknown symbol: ${symbolStr}`);
       }),
@@ -223,7 +209,12 @@ describe('ToolRegistry', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(`🔍 Поиск инструмента: ${toolName}`);
       expect(mockLogger.info).toHaveBeenCalledWith(`✅ Инструмент ${toolName} выполнен успешно`);
-      expect(mockLogger.debug).toHaveBeenCalledWith('Параметры вызова:', params);
+      // Пакет 1.1.B: params в лог попадают редактированными (форма, а не
+      // содержимое) — см. packages/framework/core/src/tool-registry/params-redactor.ts
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Параметры вызова (redacted):',
+        redactParams(params)
+      );
     });
 
     it('должна успешно выполнить get_issues инструмент', async () => {
@@ -363,70 +354,12 @@ describe('ToolRegistry', () => {
       await registry.execute(toolName, params);
 
       // Assert
-      expect(mockLogger.debug).toHaveBeenCalledWith('Параметры вызова:', params);
-    });
-  });
-
-  describe('getEssentialDefinitions (regression: prefixed tool names)', () => {
-    it('должна корректно находить essential tools с префиксами', () => {
-      // Regression test для бага, где essentialTools содержал ['ping', 'search_tools']
-      // без префиксов, но реальные имена инструментов были 'fr_yandex_tracker_ping', 'search_tools'
-
-      // Arrange
-      const essentialToolsWithPrefixes = [
-        buildToolName('ping', MCP_TOOL_PREFIX), // 'fr_yandex_tracker_ping'
-        'search_tools', // без префикса (framework-level tool)
-      ];
-
-      // Act
-      const essentialDefs = registry.getEssentialDefinitions(essentialToolsWithPrefixes);
-
-      // Assert
-      expect(essentialDefs).toHaveLength(1); // Только ping, т.к. search_tools не зарегистрирован в этом тесте
-      expect(essentialDefs[0]?.name).toBe(buildToolName('ping', MCP_TOOL_PREFIX));
-    });
-
-    it('НЕ должна находить tools если имена без префиксов', () => {
-      // Демонстрация баги: если передать имена БЕЗ префиксов
-      // Arrange
-      const essentialToolsWithoutPrefixes = [
-        'ping', // БЕЗ префикса (как было в DEFAULT_ESSENTIAL_TOOLS)
-        'search_tools',
-      ];
-
-      // Act
-      const essentialDefs = registry.getEssentialDefinitions(essentialToolsWithoutPrefixes);
-
-      // Assert
-      expect(essentialDefs).toHaveLength(0); // НЕ находит 'ping', потому что в registry он как 'fr_yandex_tracker_ping'
-      // Это именно тот баг, который был исправлен!
-    });
-
-    it('должна находить tools в getDefinitionsByMode (lazy) с правильными префиксами', () => {
-      // Arrange
-      const essentialToolsWithPrefixes = [
-        buildToolName('ping', MCP_TOOL_PREFIX),
-        buildToolName('get_issues', MCP_TOOL_PREFIX),
-      ];
-
-      // Act
-      const definitions = registry.getDefinitionsByMode('lazy', essentialToolsWithPrefixes);
-
-      // Assert
-      expect(definitions).toHaveLength(2);
-      expect(definitions.map((d) => d.name)).toContain(buildToolName('ping', MCP_TOOL_PREFIX));
-      expect(definitions.map((d) => d.name)).toContain(
-        buildToolName('get_issues', MCP_TOOL_PREFIX)
+      // Пакет 1.1.B: params в лог попадают редактированными (форма, а не
+      // содержимое) — см. packages/framework/core/src/tool-registry/params-redactor.ts
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Параметры вызова (redacted):',
+        redactParams(params)
       );
-    });
-
-    it('должна возвращать все tools в getDefinitionsByMode (eager)', () => {
-      // Act
-      const definitions = registry.getDefinitionsByMode('eager');
-
-      // Assert
-      expect(definitions).toHaveLength(10);
-      expect(definitions.map((d) => d.name)).toContain(buildToolName('ping', MCP_TOOL_PREFIX));
     });
   });
 
@@ -516,9 +449,9 @@ describe('ToolRegistry', () => {
       expect(normalTools.length).toBeGreaterThanOrEqual(0);
     });
 
-    it('сортировка должна работать в eager mode', () => {
+    it('сортировка должна работать для полного набора (getDefinitions())', () => {
       // Act
-      const definitions = registry.getDefinitionsByMode('eager');
+      const definitions = registry.getDefinitions();
 
       // Assert - должна быть сортировка по priority
       expect(definitions.length).toBeGreaterThan(0);
@@ -528,22 +461,20 @@ describe('ToolRegistry', () => {
       expect(['critical', 'high', 'normal']).toContain(firstPriority);
     });
 
-    it('сортировка должна работать в lazy mode', () => {
-      // Arrange
-      const essentialTools = [
-        buildToolName('ping', MCP_TOOL_PREFIX),
-        buildToolName('get_issues', MCP_TOOL_PREFIX),
-        buildToolName('demo', MCP_TOOL_PREFIX),
-      ];
+    it('сортировка сохраняется при применении disabledFilter (getDefinitions(disabledFilter))', () => {
+      // Arrange - отключаем helpers, оставляя issues/system tools с разными приоритетами
+      const disabledFilter = {
+        includeAll: false,
+        categories: new Set(['helpers']),
+        categoriesWithSubcategories: new Map<string, Set<string>>(),
+      };
 
       // Act
-      const definitions = registry.getDefinitionsByMode('lazy', essentialTools);
+      const definitions = registry.getDefinitions(disabledFilter);
 
       // Assert - должна быть сортировка по priority
       expect(definitions.length).toBeGreaterThan(0);
 
-      // Если среди essential есть инструменты с разными приоритетами,
-      // они должны быть отсортированы
       if (definitions.length > 1) {
         const priorities = definitions.map((d) => getToolPriority(d.name));
 
@@ -580,19 +511,24 @@ describe('ToolRegistry', () => {
     });
   });
 
-  describe('Category-based filtering', () => {
-    it('должна фильтровать по категориям без подкатегорий', () => {
-      // Arrange
-      const categoryFilter = {
-        categories: new Set(['issues', 'system']),
-        categoriesWithSubcategories: new Map(),
+  describe('Disabled groups filtering (негативный фильтр, DISABLED_TOOL_GROUPS)', () => {
+    it('без disabledFilter getDefinitions() возвращает все инструменты', () => {
+      const definitions = registry.getDefinitions();
+      expect(definitions.length).toBe(10);
+    });
+
+    it('disabledFilter исключает целую категорию', () => {
+      // Arrange - отключаем helpers (IssueUrlTool, DemoTool)
+      const disabledFilter = {
+        categories: new Set(['helpers']),
+        categoriesWithSubcategories: new Map<string, Set<string>>(),
         includeAll: false,
       };
 
       // Act
-      const definitions = registry.getDefinitionsByCategories(categoryFilter);
+      const definitions = registry.getDefinitions(disabledFilter);
 
-      // Assert - должны остаться только issues и system инструменты
+      // Assert - остались issues (7) + system (1) = 8
       const categories = definitions.map((d) => {
         const tool = registry.getTool(d.name);
         const toolClass = tool?.constructor as any;
@@ -600,45 +536,50 @@ describe('ToolRegistry', () => {
       });
 
       expect(categories.every((c) => c === 'issues' || c === 'system')).toBe(true);
-      expect(definitions.length).toBeGreaterThan(0);
-      expect(definitions.length).toBeLessThan(10); // меньше чем все инструменты
+      expect(definitions.length).toBe(8);
     });
 
-    it('должна фильтровать по подкатегориям', () => {
-      // Arrange - только issues/read
-      const categoryFilter = {
+    it('disabledFilter исключает подкатегорию', () => {
+      // Arrange - отключаем issues/read (GetIssues, FindIssues, GetIssueChangelog)
+      const disabledFilter = {
         categories: new Set<string>(),
         categoriesWithSubcategories: new Map([['issues', new Set(['read'])]]),
         includeAll: false,
       };
 
       // Act
-      const definitions = registry.getDefinitionsByCategories(categoryFilter);
+      const definitions = registry.getDefinitions(disabledFilter);
 
-      // Assert - должны остаться только issues/read инструменты
-      const subcategories = definitions.map((d) => {
-        const tool = registry.getTool(d.name);
-        const toolClass = tool?.constructor as any;
-        return toolClass?.METADATA?.subcategory;
-      });
+      // Assert - остались 10 - 3 = 7, ни одного issues/read
+      const subcategories = definitions
+        .map((d) => {
+          const tool = registry.getTool(d.name);
+          const toolClass = tool?.constructor as any;
+          return {
+            category: toolClass?.METADATA?.category,
+            subcategory: toolClass?.METADATA?.subcategory,
+          };
+        })
+        .filter((t) => t.category === 'issues');
 
-      expect(subcategories.every((s) => s === 'read')).toBe(true);
-      // GetIssuesTool, FindIssuesTool, GetIssueChangelogTool = 3 tools
-      expect(definitions.length).toBe(3);
+      expect(subcategories.every((t) => t.subcategory !== 'read')).toBe(true);
+      expect(definitions.length).toBe(7);
     });
 
-    it('должна фильтровать смешанный формат (категории + подкатегории)', () => {
-      // Arrange - helpers (все подкатегории) + issues/workflow
-      const categoryFilter = {
+    it('disabledFilter поддерживает смешанный формат (категория + подкатегория)', () => {
+      // Arrange - helpers целиком + issues/workflow
+      const disabledFilter = {
         categories: new Set(['helpers']),
         categoriesWithSubcategories: new Map([['issues', new Set(['workflow'])]]),
         includeAll: false,
       };
 
       // Act
-      const definitions = registry.getDefinitionsByCategories(categoryFilter);
+      const definitions = registry.getDefinitions(disabledFilter);
 
-      // Assert
+      // Assert - остались issues/read(3) + issues/write(2) + system(1) = 6
+      expect(definitions.length).toBe(6);
+
       const toolData = definitions.map((d) => {
         const tool = registry.getTool(d.name);
         const toolClass = tool?.constructor as any;
@@ -648,173 +589,68 @@ describe('ToolRegistry', () => {
         };
       });
 
-      // Проверяем что есть helpers инструменты (IssueUrl, Demo)
-      const helpersTools = toolData.filter((t) => t.category === 'helpers');
-      expect(helpersTools.length).toBe(2);
-
-      // Проверяем что есть issues/workflow инструменты
-      const workflowTools = toolData.filter(
-        (t) => t.category === 'issues' && t.subcategory === 'workflow'
+      expect(toolData.some((t) => t.category === 'helpers')).toBe(false);
+      expect(toolData.some((t) => t.category === 'issues' && t.subcategory === 'workflow')).toBe(
+        false
       );
-      expect(workflowTools.length).toBe(2); // GetIssueTransitions, TransitionIssue
-
-      // Проверяем что нет других issues подкатегорий
-      const otherIssuesTools = toolData.filter(
-        (t) => t.category === 'issues' && t.subcategory !== 'workflow'
-      );
-      expect(otherIssuesTools.length).toBe(0);
     });
 
-    it('должна вернуть все инструменты при includeAll=true', () => {
-      // Arrange
-      const categoryFilter = {
-        categories: new Set<string>(),
-        categoriesWithSubcategories: new Map(),
-        includeAll: true,
-      };
-
-      // Act
-      const definitions = registry.getDefinitionsByCategories(categoryFilter);
-
-      // Assert
-      expect(definitions.length).toBe(10); // все инструменты
-      expect(definitions.map((d) => d.name)).toContain(buildToolName('ping', MCP_TOOL_PREFIX));
-      expect(definitions.map((d) => d.name)).toContain(buildToolName('demo', MCP_TOOL_PREFIX));
-    });
-
-    it('должна поддерживать несколько подкатегорий для одной категории', () => {
-      // Arrange - issues/read + issues/write
-      const categoryFilter = {
+    it('disabledFilter поддерживает несколько подкатегорий для одной категории', () => {
+      // Arrange - issues/read + issues/write отключены
+      const disabledFilter = {
         categories: new Set<string>(),
         categoriesWithSubcategories: new Map([['issues', new Set(['read', 'write'])]]),
         includeAll: false,
       };
 
       // Act
-      const definitions = registry.getDefinitionsByCategories(categoryFilter);
+      const definitions = registry.getDefinitions(disabledFilter);
 
-      // Assert
-      const subcategories = definitions.map((d) => {
-        const tool = registry.getTool(d.name);
-        const toolClass = tool?.constructor as any;
-        return toolClass?.METADATA?.subcategory;
-      });
-
-      expect(subcategories.every((s) => s === 'read' || s === 'write')).toBe(true);
-      // read: GetIssues, FindIssues, GetIssueChangelog = 3
-      // write: CreateIssue, UpdateIssue = 2
-      // Total = 5
+      // Assert - остались issues/workflow(2) + helpers(2) + system(1) = 5
       expect(definitions.length).toBe(5);
     });
 
-    it('должна применять фильтрацию вместе с сортировкой по приоритетам', () => {
-      // Arrange - только issues/read (будет 3 инструмента с разными приоритетами)
-      const categoryFilter = {
-        categories: new Set<string>(),
-        categoriesWithSubcategories: new Map([['issues', new Set(['read'])]]),
-        includeAll: false,
-      };
-
-      // Act
-      const definitions = registry.getDefinitionsByCategories(categoryFilter);
-
-      // Assert - проверяем что есть сортировка
-      expect(definitions.length).toBe(3);
-
-      // GetIssuesTool (critical), FindIssuesTool (critical), GetIssueChangelogTool (high)
-      // Должны идти в порядке: critical → critical → high
-      const priorities = definitions.map((d) => {
-        const tool = registry.getTool(d.name);
-        const toolClass = tool?.constructor as any;
-        return toolClass?.METADATA?.priority || 'normal';
-      });
-
-      // Первые два должны быть critical (GetIssues, FindIssues)
-      expect(priorities[0]).toBe('critical');
-      expect(priorities[1]).toBe('critical');
-      // Третий должен быть high (GetIssueChangelog)
-      expect(priorities[2]).toBe('high');
-    });
-
-    it('должна работать фильтрация в getDefinitionsByMode (eager + categoryFilter)', () => {
-      // Arrange
-      const categoryFilter = {
-        categories: new Set(['issues']),
-        categoriesWithSubcategories: new Map(),
-        includeAll: false,
-      };
-
-      // Act
-      const definitions = registry.getDefinitionsByMode('eager', undefined, categoryFilter);
-
-      // Assert - должны остаться только issues инструменты
-      expect(definitions.length).toBeGreaterThan(0);
-      expect(definitions.length).toBeLessThan(10);
-
-      const categories = definitions.map((d) => {
-        const tool = registry.getTool(d.name);
-        const toolClass = tool?.constructor as any;
-        return toolClass?.METADATA?.category;
-      });
-
-      expect(categories.every((c) => c === 'issues')).toBe(true);
-    });
-
-    it('должна игнорировать categoryFilter в lazy режиме', () => {
-      // Arrange
-      const categoryFilter = {
-        categories: new Set(['issues']),
-        categoriesWithSubcategories: new Map(),
-        includeAll: false,
-      };
-      const essentialTools = [
-        buildToolName('ping', MCP_TOOL_PREFIX),
-        buildToolName('demo', MCP_TOOL_PREFIX),
-      ];
-
-      // Act
-      const definitions = registry.getDefinitionsByMode('lazy', essentialTools, categoryFilter);
-
-      // Assert - в lazy режиме возвращаются только essential tools, фильтр игнорируется
-      expect(definitions.length).toBe(2);
-      expect(definitions.map((d) => d.name)).toContain(buildToolName('ping', MCP_TOOL_PREFIX));
-      expect(definitions.map((d) => d.name)).toContain(buildToolName('demo', MCP_TOOL_PREFIX));
-    });
-
-    it('должна вернуть пустой массив если ни один инструмент не соответствует фильтру', () => {
-      // Arrange - фильтр по несуществующей категории
-      const categoryFilter = {
+    it('неизвестная категория в disabledFilter → warning в лог с перечнем известных категорий, без падения', () => {
+      // Arrange - опечатка/несуществующая категория не должна ничего скрывать молча
+      const disabledFilter = {
         categories: new Set(['NONEXISTENT_CATEGORY']),
-        categoriesWithSubcategories: new Map(),
+        categoriesWithSubcategories: new Map<string, Set<string>>(),
         includeAll: false,
       };
 
       // Act
-      const definitions = registry.getDefinitionsByCategories(categoryFilter);
+      const definitions = registry.getDefinitions(disabledFilter);
+
+      // Assert - ничего не отфильтровано (неизвестная категория не матчит ни один tool)
+      expect(definitions.length).toBe(10);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '⚠️  Unknown categories in filter',
+        expect.objectContaining({
+          unknownCategories: ['NONEXISTENT_CATEGORY'],
+          knownCategories: expect.any(Array),
+        })
+      );
+    });
+
+    it('логирует применённый фильтр отключённых групп', () => {
+      // Arrange
+      const disabledFilter = {
+        categories: new Set(['helpers']),
+        categoriesWithSubcategories: new Map<string, Set<string>>(),
+        includeAll: false,
+      };
+
+      // Act
+      registry.getDefinitions(disabledFilter);
 
       // Assert
-      expect(definitions).toEqual([]);
-    });
-
-    it('должна логировать информацию о фильтрации', () => {
-      // Arrange
-      const categoryFilter = {
-        categories: new Set(['issues', 'system']),
-        categoriesWithSubcategories: new Map([['helpers', new Set(['url'])]]),
-        includeAll: false,
-      };
-
-      // Act
-      registry.getDefinitionsByCategories(categoryFilter);
-
-      // Assert - проверяем что логируется информация о фильтрации
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Tools filtered by categories',
+        '✂️  Применён фильтр отключенных групп',
         expect.objectContaining({
-          totalTools: 10,
-          filteredTools: expect.any(Number),
-          categories: expect.any(Array),
-          categoriesWithSubcategories: expect.any(Array),
+          disabledCategories: expect.any(Array),
+          disabledCategoriesWithSubcategories: expect.any(Array),
+          totalToolsAfterFilter: expect.any(Number),
         })
       );
     });

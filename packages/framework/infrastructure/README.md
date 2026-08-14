@@ -263,9 +263,9 @@ npm run test:watch
 
 ## 🤝 Contributing
 
-See [../../.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
+See [../../../.github/CONTRIBUTING.md](../../../.github/CONTRIBUTING.md)
 
-**Architecture rules:** [../../CLAUDE.md](../../CLAUDE.md)
+**Architecture rules:** [../../../CLAUDE.md](../../../CLAUDE.md)
 
 ---
 
@@ -277,5 +277,5 @@ PolyForm Shield License 1.0.0
 
 ## 🔗 Links
 
-- **Monorepo root:** [../../README.md](../../README.md)
-- **Architecture:** [../../ARCHITECTURE.md](../../ARCHITECTURE.md)
+- **Monorepo root:** [../../../README.md](../../../README.md)
+- **Architecture:** [../../../ARCHITECTURE.md](../../../ARCHITECTURE.md)

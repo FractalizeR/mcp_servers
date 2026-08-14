@@ -21,8 +21,6 @@ infrastructure (база)
     ↓
 core (BaseTool, types)
     ↓
-search (ToolSearchEngine)
-    ↓
 ticktick (этот пакет)
 ```
 

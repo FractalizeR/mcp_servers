@@ -15,8 +15,6 @@ import {
   DEFAULT_LOGS_DIR,
   DEFAULT_LOG_MAX_SIZE,
   DEFAULT_LOG_MAX_FILES,
-  DEFAULT_TOOL_DISCOVERY_MODE,
-  DEFAULT_ESSENTIAL_TOOLS,
   DEFAULT_RETRY_ATTEMPTS,
   DEFAULT_RETRY_MIN_DELAY,
   DEFAULT_RETRY_MAX_DELAY,
@@ -29,6 +27,31 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = resolve(__dirname, '../..');
+
+/**
+ * Environment variables left over from the removed lazy discovery (stage 2.1.A
+ * of the modernization plan). Silently ignoring them is worse than not
+ * supporting them at all: users already have them set in MCP client configs
+ * and they'd look like they're still working. Print an explicit stderr
+ * warning and keep starting.
+ */
+const DEPRECATED_TOOL_DISCOVERY_ENV_VARS = ['TOOL_DISCOVERY_MODE', 'ESSENTIAL_TOOLS'] as const;
+
+/**
+ * Warn on stderr if deprecated lazy discovery environment variables are
+ * present. Does not affect the resulting ServerConfig — values are not read.
+ */
+function warnDeprecatedToolDiscoveryEnvVars(): void {
+  for (const name of DEPRECATED_TOOL_DISCOVERY_ENV_VARS) {
+    if (process.env[name] !== undefined) {
+      console.error(
+        `[WARN] Environment variable ${name} is no longer supported and is ignored. ` +
+          'Lazy discovery has been removed: tools/list always returns the full list of ' +
+          'tools, filtered by DISABLED_TOOL_GROUPS. Remove the variable from your MCP client config.'
+      );
+    }
+  }
+}
 
 /**
  * Validate log level
@@ -87,101 +110,6 @@ function validateMaxConcurrentRequests(value: string | undefined, defaultValue: 
   }
 
   return parsed;
-}
-
-/**
- * Validate tool discovery mode
- */
-function validateToolDiscoveryMode(mode: string | undefined): 'lazy' | 'eager' {
-  if (mode === 'eager' || mode === 'lazy') {
-    return mode;
-  }
-  return DEFAULT_TOOL_DISCOVERY_MODE;
-}
-
-/**
- * Parse list of essential tools from environment variable
- */
-function parseEssentialTools(value: string | undefined): readonly string[] {
-  if (!value || value.trim() === '') {
-    return DEFAULT_ESSENTIAL_TOOLS;
-  }
-
-  return value
-    .split(',')
-    .map((name) => name.trim())
-    .filter((name) => name.length > 0);
-}
-
-/**
- * Parse tool category filter from environment variable
- *
- * Format: "tasks,projects" or "tasks:read,projects:write"
- *
- * Graceful degradation:
- * - Empty string or undefined → includeAll = true
- * - Invalid categories → skip (logging at higher level)
- * - Invalid format element → skip element
- *
- * @param value - value of ENABLED_TOOL_CATEGORIES env var
- * @returns Parsed filter structure
- */
-function parseEnabledToolCategories(value: string | undefined): ParsedCategoryFilter {
-  // Default: all categories
-  if (!value || value.trim() === '') {
-    return {
-      categories: new Set(),
-      categoriesWithSubcategories: new Map(),
-      includeAll: true,
-    };
-  }
-
-  const categories = new Set<string>();
-  const categoriesWithSubcategories = new Map<string, Set<string>>();
-
-  const parts = value
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-
-  for (const part of parts) {
-    if (part.includes(':')) {
-      // Format: "category:subcategory"
-      const segments = part.split(':');
-
-      // Validation: must be exactly 2 segments
-      if (segments.length !== 2) {
-        // Skip invalid format (e.g., "tasks::read" or "tasks:read:write")
-        continue;
-      }
-
-      const [cat, subcat] = segments.map((s) => s.trim().toLowerCase());
-
-      // Skip empty segments
-      if (!cat || !subcat) {
-        continue;
-      }
-
-      let subcategories = categoriesWithSubcategories.get(cat);
-      if (!subcategories) {
-        subcategories = new Set();
-        categoriesWithSubcategories.set(cat, subcategories);
-      }
-      subcategories.add(subcat);
-    } else {
-      // Format: "category" (all subcategories)
-      categories.add(part.toLowerCase());
-    }
-  }
-
-  // If nothing was parsed, return includeAll=true
-  const includeAll = categories.size === 0 && categoriesWithSubcategories.size === 0;
-
-  return {
-    categories,
-    categoriesWithSubcategories,
-    includeAll,
-  };
 }
 
 /**
@@ -369,17 +297,10 @@ function buildLoggingConfig(): ServerConfig['logging'] {
  * Build tools configuration
  */
 function buildToolsConfig(): ServerConfig['tools'] {
-  const enabledToolCategoriesRaw = process.env[ENV_VAR_NAMES.ENABLED_TOOL_CATEGORIES];
   const disabledToolGroupsRaw = process.env[ENV_VAR_NAMES.DISABLED_TOOL_GROUPS];
 
-  const config: ServerConfig['tools'] = {
-    discoveryMode: validateToolDiscoveryMode(process.env[ENV_VAR_NAMES.TOOL_DISCOVERY_MODE]),
-    essentialTools: parseEssentialTools(process.env[ENV_VAR_NAMES.ESSENTIAL_TOOLS]),
-  };
+  const config: ServerConfig['tools'] = {};
 
-  if (enabledToolCategoriesRaw !== undefined) {
-    config.enabledCategories = parseEnabledToolCategories(enabledToolCategoriesRaw);
-  }
   const disabledGroups = parseDisabledToolGroups(disabledToolGroupsRaw);
   if (disabledGroups) {
     config.disabledGroups = disabledGroups;
@@ -417,6 +338,8 @@ function buildRetryConfig(): ServerConfig['retry'] {
  * @throws {Error} if required variables are not set
  */
 export function loadConfig(): ServerConfig {
+  warnDeprecatedToolDiscoveryEnvVars();
+
   return {
     oauth: buildOAuthConfig(),
     api: {

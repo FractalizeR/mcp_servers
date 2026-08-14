@@ -22,15 +22,6 @@ export const MCP_SERVER_NAME = PROJECT_BASE_NAME;
 export const MCP_TOOL_PREFIX = 'fr_ticktick_' as const;
 
 /**
- * Essential tools for TickTick (with correct prefixes)
- *
- * ✅ Names include prefixes where needed:
- * - 'fr_ticktick_ping' - ticktick tool (with prefix)
- * - 'search_tools' - framework tool (WITHOUT prefix)
- */
-export const TICKTICK_ESSENTIAL_TOOLS = ['fr_ticktick_ping', 'search_tools'] as const;
-
-/**
  * Display name of the MCP server
  */
 export const MCP_SERVER_DISPLAY_NAME = "FractalizeR's TickTick MCP" as const;
@@ -73,8 +64,6 @@ export {
   DEFAULT_LOGS_DIR,
   DEFAULT_LOG_MAX_SIZE,
   DEFAULT_LOG_MAX_FILES,
-  DEFAULT_TOOL_DISCOVERY_MODE,
-  DEFAULT_ESSENTIAL_TOOLS,
   DEFAULT_CACHE_TTL_MS,
   ENV_VAR_NAMES,
 } from '#config';

@@ -38,10 +38,7 @@ describe('DI Container (Smoke)', () => {
     cache: {
       ttlMs: 300000,
     },
-    tools: {
-      discoveryMode: 'eager',
-      essentialTools: ['fr_ticktick_ping'],
-    },
+    tools: {},
     logging: {
       level: 'error', // Minimal logs for smoke test
       dir: '/tmp/ticktick-mcp-test-logs',
@@ -133,38 +130,16 @@ describe('DI Container (Smoke)', () => {
     expect(toolRegistry).toHaveProperty('getAllTools');
   });
 
-  it('should work in lazy mode', async () => {
-    // Arrange
-    const lazyConfig = {
-      ...fakeConfig,
-      tools: { ...fakeConfig.tools, discoveryMode: 'lazy' as const },
-    };
-
+  it('should register the full set of tools (lazy discovery removed)', async () => {
     // Act
-    const container = await createContainer(lazyConfig);
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    // Assert
-    expect(container).toBeDefined();
-    expect(toolRegistry).toBeDefined();
-  });
-
-  it('should work in eager mode', async () => {
-    // Arrange
-    const eagerConfig = {
-      ...fakeConfig,
-      tools: { ...fakeConfig.tools, discoveryMode: 'eager' as const },
-    };
-
-    // Act
-    const container = await createContainer(eagerConfig);
+    const container = await createContainer(fakeConfig);
     const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
     const allTools = toolRegistry.getAllTools();
 
     // Assert
     expect(container).toBeDefined();
     expect(toolRegistry).toBeDefined();
-    expect(allTools.length).toBeGreaterThan(0); // In eager mode all tools are loaded
+    expect(allTools.length).toBeGreaterThan(0);
   });
 
   it('should create Singleton instances', async () => {

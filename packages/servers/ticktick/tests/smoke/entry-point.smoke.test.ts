@@ -21,17 +21,13 @@ describe('Entry Point Exports (Smoke)', () => {
   });
 
   it('должен экспортировать константы', async () => {
-    const { MCP_TOOL_PREFIX, MCP_SERVER_NAME, TICKTICK_ESSENTIAL_TOOLS } =
-      await import('../../src/index.js');
+    const { MCP_TOOL_PREFIX, MCP_SERVER_NAME } = await import('../../src/index.js');
 
     expect(MCP_TOOL_PREFIX).toBeDefined();
     expect(typeof MCP_TOOL_PREFIX).toBe('string');
 
     expect(MCP_SERVER_NAME).toBeDefined();
     expect(typeof MCP_SERVER_NAME).toBe('string');
-
-    expect(TICKTICK_ESSENTIAL_TOOLS).toBeDefined();
-    expect(Array.isArray(TICKTICK_ESSENTIAL_TOOLS)).toBe(true);
   });
 
   it('должен экспортировать DI компоненты', async () => {
@@ -100,9 +96,6 @@ describe('Entry Point Exports (Smoke)', () => {
       maxBatchSize: 50,
       maxConcurrentRequests: 10,
       tools: {
-        discoveryMode: 'eager' as const,
-        essentialTools: ['fr_ticktick_ping'],
-        enabledCategories: undefined,
         disabledGroups: undefined,
       },
       logging: {

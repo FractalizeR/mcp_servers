@@ -25,7 +25,7 @@
 |-------------------|---------------------|
 | `BaseTool` и связанные типы | HTTP клиенты → `@fractalizer/mcp-infrastructure` |
 | `ToolRegistry` и фильтрация | CLI логика → `@fractalizer/mcp-cli` |
-| Schema → Definition генерация | Поиск tools → `@fractalizer/mcp-search` |
+| Schema → Definition генерация | Discovery инструментов — на стороне MCP клиента |
 | Утилиты для результатов tools | Бизнес-логика серверов → `packages/servers/*` |
 | Общие Zod-схемы для tools | Logging, caching → `@fractalizer/mcp-infrastructure` |
 
@@ -127,7 +127,7 @@ function generateDefinitionFromSchema(
 
 **Benefits:** DRY principle, type-safe, no separate `*.definition.ts` files
 
-**Migration guide:** [../../ARCHITECTURE.md](../../ARCHITECTURE.md) → "Schema-to-Definition Generator"
+**Migration guide:** [../../../ARCHITECTURE.md](../../../ARCHITECTURE.md) → "Schema-to-Definition Generator"
 
 ---
 
@@ -276,7 +276,7 @@ static readonly METADATA: ToolMetadata = {
   category: 'api',              // REQUIRED
   subcategory: 'read',          // Optional (read/write/workflow)
   priority: 'critical',         // Optional (critical/high/normal/low)
-  tags: ['tag1', 'tag2'],       // Optional (for search)
+  tags: ['tag1', 'tag2'],       // Optional (for categorization)
   requiresExplicitUserConsent: false, // or true for write operations
   inputSchema: {...}
 };
@@ -379,9 +379,9 @@ npm run test:watch
 
 ## 🤝 Contributing
 
-See [../../.github/CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
+See [../../../.github/CONTRIBUTING.md](../../../.github/CONTRIBUTING.md)
 
-**Architecture rules:** [../../CLAUDE.md](../../CLAUDE.md)
+**Architecture rules:** [../../../CLAUDE.md](../../../CLAUDE.md)
 
 ---
 
@@ -393,6 +393,6 @@ PolyForm Shield License 1.0.0
 
 ## 🔗 Links
 
-- **Monorepo root:** [../../README.md](../../README.md)
-- **Architecture:** [../../ARCHITECTURE.md](../../ARCHITECTURE.md)
+- **Monorepo root:** [../../../README.md](../../../README.md)
+- **Architecture:** [../../../ARCHITECTURE.md](../../../ARCHITECTURE.md)
 - **Infrastructure package:** [../infrastructure/README.md](../infrastructure/README.md)

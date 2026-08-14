@@ -41,10 +41,8 @@ main().catch((error) => {
     "mcp-connect": "./dist/cli/bin/mcp-connect.js"
   },
   "scripts": {
-    "prebuild": "npm run generate:index",
     "build": "tsc -b && tsc-alias && npm run build:bundle",
     "build:bundle": "tsx ../scripts/increment-build.ts && tsup",
-    "generate:index": "tsx scripts/generate-tool-index.ts",
     "test:smoke": "vitest run tests/smoke",
     "test:smoke:server": "tsx scripts/smoke-test-server.ts",
     "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke && npm run test:smoke:server && npm run cpd && npm run depcruise && npm run validate:docs",
@@ -75,19 +73,7 @@ export const MCP_TOOL_PREFIX = 'fr_ticktick_' as const;
 export const MCP_TOOL_PREFIX = 'yw_' as const;
 ```
 
-### 2.2 Essential Tools
-```typescript
-// Framework tools (search_tools) указываются БЕЗ префикса!
-export const ESSENTIAL_TOOLS = [
-  'prefix_ping',     // ✅ Серверный tool — с префиксом
-  'search_tools',    // ✅ Framework tool — БЕЗ префикса!
-] as const;
-
-// ❌ ОШИБКА: framework tool с серверным префиксом
-export const ESSENTIAL_TOOLS = ['prefix_ping', 'prefix_search_tools'];
-```
-
-### 2.3 Ping tool (обязательно для каждого сервера)
+### 2.2 Ping tool (обязательно для каждого сервера)
 **Расположение:** `src/tools/ping.{metadata,schema,tool}.ts` (в корне tools/, НЕ в helpers/)
 
 **Metadata (консистентная структура):**
@@ -191,10 +177,13 @@ return this.formatSuccess({
 function parseDisabledToolGroups(value: string | undefined): ParsedCategoryFilter | undefined
 ```
 
-### 5.3 ENV переменные для фильтрации
+### 5.3 ENV переменная для фильтрации
+`DISABLED_TOOL_GROUPS` — единственный рубильник состава инструментов, по умолчанию пустой
+(ничего не отключено). Отключённая группа не отдаётся в `tools/list` и не вызывается через
+`tools/call` — та же policy. Неизвестное имя группы — предупреждение в stderr с перечнем
+допустимых значений, не молчание и не падение.
 ```bash
 DISABLED_TOOL_GROUPS="helpers:gtd,tasks:date"
-TOOL_DISCOVERY_MODE="eager"  # или "lazy"
 ```
 
 ---
@@ -231,12 +220,11 @@ export const TOOL_SYMBOLS = TOOL_CLASSES.reduce((acc, ToolClass) => {
 
 ## 7. Smoke тесты (КРИТИЧНО!)
 
-### 7.1 Обязательный набор (ВСЕ 5 тестов!)
+### 7.1 Обязательный набор (ВСЕ 4 теста!)
 - [ ] `mcp-server-lifecycle.smoke.test.ts` — сервер создаётся без ошибок
 - [ ] `di-container.smoke.test.ts` — DI контейнер инициализируется
 - [ ] `definition-generation.smoke.test.ts` — все tools генерируют валидный definition
 - [ ] `e2e-tool-execution.smoke.test.ts` — tool выполняется end-to-end с mock
-- [ ] `tool-search.smoke.test.ts` — поиск инструментов работает
 
 ### 7.2 Обязательный скрипт
 - [ ] `scripts/smoke-test-server.ts` — запуск реального процесса + JSON-RPC
@@ -247,7 +235,7 @@ export const TOOL_SYMBOLS = TOOL_CLASSES.reduce((acc, ToolClass) => {
 - [ ] Создание Server instance без ошибок
 - [ ] Инициализация DI контейнера
 - [ ] Получение ToolRegistry
-- [ ] Режимы: lazy и eager discovery
+- [ ] `tools/list` отдаёт полный набор, прошедший access policy; два подряд вызова — побайтово одинаковый список
 
 **DI Container:**
 - [ ] Logger резолвится
@@ -290,23 +278,13 @@ export const TOOL_SYMBOLS = TOOL_CLASSES.reduce((acc, ToolClass) => {
 
 ### 8.1 Минимальный набор скриптов
 - [ ] `scripts/smoke-test-server.ts` — JSON-RPC smoke тест
-- [ ] `scripts/generate-tool-index.ts` — автогенерация `generated-index.ts`
 - [ ] `scripts/validate-tool-registration.ts` — проверка регистрации tools
 
 ### 8.2 Тестовые хелперы
 - [ ] `tests/helpers/mock-factories.ts` — фабрики моков
 - [ ] `tests/helpers/schema-definition-matcher.ts` — валидация схем
 
-### 8.3 generate-tool-index.ts
-Автоматически сканирует `src/tools/` и генерирует:
-```typescript
-// generated-index.ts
-export { GetIssueTool } from './api/issues/get/get-issue.tool.js';
-export { CreateIssueTool } from './api/issues/create/create-issue.tool.js';
-// ... все tools автоматически
-```
-
-### 8.4 validate-tool-registration.ts
+### 8.3 validate-tool-registration.ts
 Проверяет что все tools:
 - Добавлены в `TOOL_CLASSES`
 - Имеют корректный `METADATA`
@@ -429,7 +407,7 @@ npm run validate  # lint + typecheck + test + test:smoke + cpd + depcruise + val
 ### 12.2 Чеклист перед коммитом
 - [ ] `npm run build` — успешная сборка
 - [ ] `npm run validate` — все проверки пройдены
-- [ ] `npm run test:smoke` — все 5 smoke тестов проходят
+- [ ] `npm run test:smoke` — все 4 smoke теста проходят
 - [ ] `npm run test:smoke:server` — JSON-RPC тест проходит
 - [ ] `npm run test:coverage` — покрытие достигает порогов
 - [ ] Новые tools добавлены в `tool-definitions.ts`

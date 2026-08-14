@@ -22,8 +22,6 @@ describe('E2E Tool Execution (Smoke)', () => {
     maxConcurrentRequests: 10,
     logLevel: 'error',
     prettyLogs: false,
-    toolDiscoveryMode: 'lazy',
-    essentialTools: ['yw_ping'],
     logsDir: '/tmp/logs',
     logMaxSize: 10485760,
     logMaxFiles: 5,
@@ -117,33 +115,9 @@ describe('E2E Tool Execution (Smoke)', () => {
     expect(typeof responseText).toBe('string');
   });
 
-  it('должен загрузить все essential tools в lazy mode', async () => {
-    // Arrange
-    const config = {
-      ...fakeConfig,
-      toolDiscoveryMode: 'lazy' as const,
-      essentialTools: ['yw_ping'],
-    };
-
+  it('должен загрузить полный набор tools (lazy discovery убран)', async () => {
     // Act
-    const container = await createContainer(config);
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    // Assert
-    const pingTool = toolRegistry.getTool('yw_ping');
-
-    expect(pingTool).toBeDefined();
-  });
-
-  it('должен загрузить все tools в eager mode', async () => {
-    // Arrange
-    const config = {
-      ...fakeConfig,
-      toolDiscoveryMode: 'eager' as const,
-    };
-
-    // Act
-    const container = await createContainer(config);
+    const container = await createContainer(fakeConfig);
     const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
     const allTools = toolRegistry.getAllTools();
 

@@ -25,8 +25,6 @@ describe('DI Container (Smoke)', () => {
     maxConcurrentRequests: 10,
     logLevel: 'error', // Минимум логов
     prettyLogs: false,
-    toolDiscoveryMode: 'lazy',
-    essentialTools: ['fr_yandex_tracker_ping'],
   };
 
   it('должен создать DI container', async () => {
@@ -109,32 +107,16 @@ describe('DI Container (Smoke)', () => {
     expect(toolRegistry).toHaveProperty('getAllTools');
   });
 
-  it('должен работать в lazy mode', async () => {
-    // Arrange
-    const lazyConfig = { ...fakeConfig, toolDiscoveryMode: 'lazy' as const };
-
+  it('должен регистрировать полный набор tools (lazy discovery убран)', async () => {
     // Act
-    const container = await createContainer(lazyConfig);
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    // Assert
-    expect(container).toBeDefined();
-    expect(toolRegistry).toBeDefined();
-  });
-
-  it('должен работать в eager mode', async () => {
-    // Arrange
-    const eagerConfig = { ...fakeConfig, toolDiscoveryMode: 'eager' as const };
-
-    // Act
-    const container = await createContainer(eagerConfig);
+    const container = await createContainer(fakeConfig);
     const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
     const allTools = toolRegistry.getAllTools();
 
     // Assert
     expect(container).toBeDefined();
     expect(toolRegistry).toBeDefined();
-    expect(allTools.length).toBeGreaterThan(0); // В eager mode все tools загружены
+    expect(allTools.length).toBeGreaterThan(0);
   });
 
   it('должен поддерживать cloudOrgId конфигурацию', async () => {

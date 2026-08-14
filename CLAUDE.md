@@ -95,10 +95,8 @@ packages/
 │   │   └── HTTP, cache, logging, async utilities
 │   ├── cli/               → @fractalizer/mcp-cli
 │   │   └── Generic CLI для MCP подключений
-│   ├── core/              → @fractalizer/mcp-core
-│   │   └── BaseTool, registry, type system
-│   └── search/            → @fractalizer/mcp-search
-│       └── Tool Search Engine (compile-time indexing)
+│   └── core/              → @fractalizer/mcp-core
+│       └── BaseTool, registry, type system
 └── servers/
     └── yandex-tracker/    → mcp-server-yandex-tracker
         └── Yandex API, tools, operations, DI
@@ -108,7 +106,6 @@ packages/
 - **Infrastructure** — [packages/framework/infrastructure/README.md](packages/framework/infrastructure/README.md)
 - **CLI** — [packages/framework/cli/README.md](packages/framework/cli/README.md)
 - **Core** — [packages/framework/core/README.md](packages/framework/core/README.md)
-- **Search** — [packages/framework/search/README.md](packages/framework/search/README.md)
 - **Yandex Tracker** — [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
 
 ---
@@ -123,8 +120,6 @@ infrastructure (база для всех, 0 зависимостей)
 cli (зависит от infrastructure)
     ↓
 core (зависит от infrastructure)
-    ↓
-search (зависит от core)
     ↓
 yandex-tracker (зависит от всех framework пакетов)
 ```
@@ -143,7 +138,6 @@ yandex-tracker (зависит от всех framework пакетов)
 ```typescript
 import { BaseTool } from '@fractalizer/mcp-core';
 import { HttpClient } from '@fractalizer/mcp-infrastructure';
-import { ToolSearchEngine } from '@fractalizer/mcp-search';
 ```
 
 **❌ НЕ используй:**
@@ -351,7 +345,7 @@ npm run cpd:report
 
 ## 📖 Работа с конкретными компонентами
 
-**Framework пакеты (infrastructure, core, search):**
+**Framework пакеты (infrastructure, core):**
 - Универсальные, переиспользуемые компоненты
 - НЕ должны зависеть от доменной логики (Yandex Tracker)
 - См. README.md в каждом пакете для API и примеров
@@ -393,7 +387,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>
   - [Infrastructure API](packages/framework/infrastructure/README.md)
   - [CLI Framework](packages/framework/cli/README.md)
   - [Core API](packages/framework/core/README.md)
-  - [Search System](packages/framework/search/README.md)
 - **Yandex Tracker:**
   - [Yandex Tracker CLAUDE.md](packages/servers/yandex-tracker/CLAUDE.md)
   - [Yandex Tracker README.md](packages/servers/yandex-tracker/README.md)

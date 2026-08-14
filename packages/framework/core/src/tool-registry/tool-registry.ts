@@ -19,6 +19,9 @@ import type { BaseTool, ToolDefinition } from '../tools/base/index.js';
 import type { ToolConstructor, ParsedCategoryFilter } from './types.js';
 import { ToolFilterService } from './tool-filter.service.js';
 import { ToolSorter } from './tool-sorter.js';
+import type { ToolAccessPolicy } from './tool-access-policy.js';
+import { AllowAllToolAccessPolicy } from './tool-access-policy.js';
+import { redactParams } from './params-redactor.js';
 
 /**
  * Реестр инструментов
@@ -32,18 +35,29 @@ export class ToolRegistry {
   private readonly toolClasses: readonly ToolConstructor[];
   private readonly filterService: ToolFilterService;
   private readonly sorter: ToolSorter;
+  private readonly accessPolicy: ToolAccessPolicy;
 
   /**
    * @param container - DI контейнер с зарегистрированными tools
    * @param logger - Logger для логирования
    * @param toolClasses - Список классов tools для регистрации
+   * @param accessPolicy - Единый источник истины о доступности tool, спрашивается
+   *   и при построении tools/list (косвенно, через ту же фильтрующую логику), и
+   *   при исполнении в execute(). По умолчанию — разрешает всё (для тестов и
+   *   серверов без конфигурации access control).
    */
-  constructor(container: Container, logger: Logger, toolClasses: readonly ToolConstructor[]) {
+  constructor(
+    container: Container,
+    logger: Logger,
+    toolClasses: readonly ToolConstructor[],
+    accessPolicy: ToolAccessPolicy = new AllowAllToolAccessPolicy()
+  ) {
     this.container = container;
     this.logger = logger;
     this.toolClasses = toolClasses;
     this.filterService = new ToolFilterService(logger);
     this.sorter = new ToolSorter(logger);
+    this.accessPolicy = accessPolicy;
     // Не инициализируем tools сразу — делаем это lazy
   }
 
@@ -82,7 +96,7 @@ export class ToolRegistry {
    * Добавить дополнительный инструмент из контейнера
    *
    * Используется для регистрации инструментов с нестандартными зависимостями
-   * (например, SearchToolsTool с зависимостью от SearchEngine)
+   * (конструктор которых отличается от стандартного (facade, logger))
    *
    * @param symbolKey - Строковый ключ для Symbol.for() или Symbol
    */
@@ -98,19 +112,36 @@ export class ToolRegistry {
   }
 
   /**
-   * Получить определения всех зарегистрированных инструментов
+   * Получить определения инструментов для tools/list
    *
-   * Инструменты отсортированы по приоритету: critical → high → normal → low
+   * Контракт: возвращает ПОЛНЫЙ набор зарегистрированных инструментов, прошедший
+   * единственный оставшийся фильтр — `disabledFilter` (см. `DISABLED_TOOL_GROUPS`).
+   * Прогрессивное раскрытие (essential/lazy tools, позитивный фильтр категорий)
+   * упразднено: основной потребитель — готовые клиенты (Claude Code, Claude
+   * Desktop, Codex), где поиск инструментов уже реализован на их стороне.
+   *
+   * Порядок — часть контракта (см. ToolSorter.sortByPriority): приоритет —
+   * первый ключ сортировки, имя — обязательный tie-breaker. При неизменном
+   * наборе инструментов два последовательных вызова возвращают побайтово
+   * одинаковый список.
+   *
+   * @param disabledFilter - негативный фильтр (отключённые группы инструментов).
+   *   Тот же фильтр обязан использоваться для построения `ToolAccessPolicy`
+   *   (см. tool-access-policy.ts), иначе видимость в tools/list и исполняемость
+   *   в tools/call могут разойтись.
    */
-  getDefinitions(): ToolDefinition[] {
+  getDefinitions(disabledFilter?: ParsedCategoryFilter): ToolDefinition[] {
     this.ensureInitialized();
     if (!this.tools) {
       return [];
     }
 
-    const tools = Array.from(this.tools.values());
-    const sorted = this.sorter.sortByPriority(tools);
+    let tools = Array.from(this.tools.values());
+    if (disabledFilter) {
+      tools = this.filterService.applyDisabledFilter(tools, disabledFilter);
+    }
 
+    const sorted = this.sorter.sortByPriority(tools);
     return sorted.map((tool) => tool.getDefinition());
   }
 
@@ -134,104 +165,6 @@ export class ToolRegistry {
   }
 
   /**
-   * Получить essential инструменты (для lazy discovery)
-   *
-   * Инструменты отсортированы по приоритету: critical → high → normal → low
-   *
-   * @param essentialNames - список имен essential инструментов
-   * @returns Определения только essential инструментов
-   */
-  getEssentialDefinitions(essentialNames: readonly string[]): ToolDefinition[] {
-    this.ensureInitialized();
-    if (!this.tools) {
-      return [];
-    }
-
-    const essentialSet = new Set(essentialNames);
-    const tools = Array.from(this.tools.values()).filter((tool) =>
-      essentialSet.has(tool.getDefinition().name)
-    );
-
-    const sorted = this.sorter.sortByPriority(tools);
-    return sorted.map((tool) => tool.getDefinition());
-  }
-
-  /**
-   * Получить инструменты, отфильтрованные по категориям
-   *
-   * @param filter - Фильтр категорий из конфигурации
-   * @returns Определения инструментов, соответствующих фильтру
-   */
-  getDefinitionsByCategories(filter: ParsedCategoryFilter): ToolDefinition[] {
-    this.ensureInitialized();
-
-    if (!this.tools) {
-      return [];
-    }
-
-    // Если includeAll = true, возвращаем все инструменты
-    if (filter.includeAll) {
-      return this.getDefinitions();
-    }
-
-    const allTools = Array.from(this.tools.values());
-    const filtered = this.filterService.filterByCategories(allTools, filter);
-    const sorted = this.sorter.sortByPriority(filtered);
-
-    return sorted.map((tool) => tool.getDefinition());
-  }
-
-  /**
-   * Получить определения в зависимости от режима discovery
-   *
-   * @param mode - режим обнаружения ('lazy' или 'eager')
-   * @param essentialNames - список essential инструментов (для lazy режима)
-   * @param categoryFilter - фильтр категорий (для eager режима с фильтрацией)
-   * @param disabledFilter - негативный фильтр (отключенные группы, приоритет над categoryFilter)
-   * @returns Определения инструментов
-   */
-  getDefinitionsByMode(
-    mode: 'lazy' | 'eager',
-    essentialNames?: readonly string[],
-    categoryFilter?: ParsedCategoryFilter,
-    disabledFilter?: ParsedCategoryFilter
-  ): ToolDefinition[] {
-    if (mode === 'lazy') {
-      // Lazy mode: только essential tools
-      const names = essentialNames ?? ['ping', 'search_tools'];
-      return this.getEssentialDefinitions(names);
-    }
-
-    // Eager mode
-    this.ensureInitialized();
-    if (!this.tools) {
-      return [];
-    }
-
-    let tools: BaseTool[];
-
-    // Шаг 1: позитивный фильтр (если указан)
-    if (categoryFilter && !categoryFilter.includeAll) {
-      tools = this.filterService.filterByCategories(
-        Array.from(this.tools.values()),
-        categoryFilter
-      );
-    } else {
-      // Все инструменты
-      tools = Array.from(this.tools.values());
-    }
-
-    // Шаг 2: негативный фильтр (если указан, имеет приоритет)
-    if (disabledFilter) {
-      tools = this.filterService.applyDisabledFilter(tools, disabledFilter);
-    }
-
-    // Сортировка по приоритету
-    const sorted = this.sorter.sortByPriority(tools);
-    return sorted.map((tool) => tool.getDefinition());
-  }
-
-  /**
    * Выполнить инструмент по имени
    */
   // eslint-disable-next-line max-lines-per-function
@@ -239,12 +172,19 @@ export class ToolRegistry {
     this.ensureInitialized();
 
     this.logger.info(`🔍 Поиск инструмента: ${name}`);
-    this.logger.debug('Параметры вызова:', params);
+    // ВАЖНО: не логировать params «как есть» — значения могут содержать
+    // тексты комментариев, содержимое страниц Wiki и другие произвольные
+    // пользовательские данные. В лог попадает только ФОРМА вызова (имена
+    // ключей, типы, размеры); allow-list для точечного раскрытия значений
+    // (например, идентификаторов задач/очередей) — см. redactParams().
+    // Сейчас allow-list не подключён ни у одного tool (см. README пакета
+    // tool-registry): подключение per-tool allow-list из метаданных
+    // инструмента отложено отдельным пакетом.
+    this.logger.debug('Параметры вызова (redacted):', redactParams(params));
 
     const tool = this.tools?.get(name);
 
     if (!tool) {
-       
       const allTools = Array.from(this.tools?.keys() || []);
 
       // Fuzzy поиск похожих имен
@@ -269,7 +209,35 @@ export class ToolRegistry {
                 hint:
                   similarTools.length > 0
                     ? `Возможно вы имели в виду: ${similarTools.join(', ')}`
-                    : 'Используйте search_tools для поиска доступных инструментов',
+                    : 'Полный список доступных инструментов — в поле availableTools этого ответа',
+              },
+              null,
+              2
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    if (!this.accessPolicy.isCallable(tool)) {
+      // ВАЖНО: отказ на исполнении — tool execution error (isError: true),
+      // а не протокольная ошибка "не найден": модель должна суметь себя
+      // поправить, но текст НЕ должен раскрывать список доступных или
+      // похожих инструментов (см. ветку "не найден" выше) — это утечка
+      // карты сервера тому, кто перебирает скрытые/отключённые имена.
+      this.logger.warn(`⛔ Инструмент "${name}" найден, но недоступен по политике доступа`, {
+        toolName: name,
+      });
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                success: false,
+                message: this.accessPolicy.denialReason(name),
               },
               null,
               2

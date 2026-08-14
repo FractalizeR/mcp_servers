@@ -78,46 +78,24 @@ export interface CacheConfig {
 }
 
 /**
- * Tool discovery configuration
+ * Tool visibility/callability configuration
  */
 export interface ToolsConfig {
   /**
-   * Tool discovery mode for MCP tools/list endpoint
+   * Disabled tool groups (единственный рубильник, negative filter)
    *
-   * - 'lazy': tools/list returns only essential tools (ping, search_tools)
-   *   Claude must use search_tools to discover other tools
-   *   Recommended for 30+ tools (context savings, scalability)
-   *
-   * - 'eager': tools/list returns all tools (standard MCP behavior)
-   *   Recommended for <20 tools or debugging
-   *
-   * @default 'eager'
-   */
-  discoveryMode: 'lazy' | 'eager';
-
-  /**
-   * List of essential tools for lazy mode
-   *
-   * These tools are ALWAYS returned in tools/list regardless of mode.
-   *
-   * @default ['fr_ticktick_ping', 'search_tools']
-   */
-  essentialTools: readonly string[];
-
-  /**
-   * Enabled tool categories filter (positive filter)
-   * @deprecated Use disabledGroups instead (more intuitive negative filter)
-   */
-  enabledCategories?: ParsedCategoryFilter;
-
-  /**
-   * Disabled tool groups (negative filter)
-   *
-   * Allows disabling specific categories/subcategories of tools.
+   * `tools/list` always returns the full set of tools, filtered only by this —
+   * progressive disclosure (essential tools, lazy discovery, positive category
+   * filter) has been removed: the primary consumers are finished MCP clients
+   * (Claude Code, Claude Desktop, Codex) that already implement tool discovery
+   * on their side.
    *
    * Format: "category" or "category:subcategory" comma-separated
    * Examples:
    * - "helpers:gtd,tasks:date" - disable GTD and date query tools
+   *
+   * A disabled group is not only hidden from tools/list but also not callable —
+   * see `ConfiguredToolAccessPolicy`.
    */
   disabledGroups?: ParsedCategoryFilter;
 }

@@ -124,7 +124,6 @@ export interface StaticToolMetadata {
    *
    * Если true:
    * - В description автоматически добавляется предупреждение для ИИ агента
-   * - SearchToolsTool помечает такие tools в результатах
    * - npm run validate:tools проверяет корректность флага
    *
    * Используй для:

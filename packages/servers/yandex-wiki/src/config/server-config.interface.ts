@@ -52,19 +52,6 @@ export interface ServerConfig {
   /** Количество ротируемых лог-файлов */
   logMaxFiles: number;
   /**
-   * Режим обнаружения инструментов для MCP tools/list endpoint
-   *
-   * - 'lazy': tools/list возвращает только essential tools
-   * - 'eager': tools/list возвращает все инструменты
-   *
-   * @default 'eager'
-   */
-  toolDiscoveryMode: 'lazy' | 'eager';
-  /**
-   * Список essential инструментов для lazy режима
-   */
-  essentialTools: readonly string[];
-  /**
    * Количество повторных попыток HTTP запроса
    * @default 3
    */
@@ -80,9 +67,11 @@ export interface ServerConfig {
    */
   retryMaxDelay: number;
   /**
-   * Отключенные группы инструментов (негативный фильтр)
+   * Отключенные группы инструментов (единственный рубильник видимости/исполняемости)
    *
    * Позволяет отключить определенные категории/подкатегории инструментов.
+   * `tools/list` всегда отдаёт полный набор инструментов, прошедший этот фильтр —
+   * progressive disclosure (essential tools, lazy discovery) убран.
    *
    * Формат переменной окружения DISABLED_TOOL_GROUPS:
    * - Пустая строка или undefined: все инструменты включены (по умолчанию)
@@ -90,10 +79,11 @@ export interface ServerConfig {
    * - "pages:delete,grids:update": отключить подкатегории delete и update
    *
    * Graceful degradation:
-   * - Неизвестные категории: warning в лог, пропускаются
+   * - Неизвестные категории: warning в лог (stderr), пропускаются
    * - Неверный формат: warning, игнорируется
    *
-   * Работает в обоих режимах (lazy и eager).
+   * Отключённая группа не только скрывается из tools/list, но и не вызывается —
+   * см. `ConfiguredToolAccessPolicy`.
    *
    * @default undefined (все инструменты включены)
    */

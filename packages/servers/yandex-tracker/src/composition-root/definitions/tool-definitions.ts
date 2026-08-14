@@ -82,9 +82,6 @@ import { RawApiRequestTool } from '#tools/api/raw/index.js';
  * 1. Импортируй класс
  * 2. Добавь в массив TOOL_CLASSES
  * 3. ВСЁ! (DI регистрация, ToolRegistry, TYPES — автоматически)
- *
- * ПРИМЕЧАНИЕ: SearchToolsTool регистрируется отдельно через container.ts,
- * так как имеет другой конструктор: (searchEngine, logger) вместо (facade, logger)
  */
 export const TOOL_CLASSES = [
   PingTool,

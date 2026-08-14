@@ -10,7 +10,7 @@ MCP Tools — инструменты для Claude для работы с Yandex
 
 **Текущая структура:**
 - **API Tools** — работа с Wiki (страницы, гриды)
-- **Helper Tools** — утилиты (ping, search_tools)
+- **Helper Tools** — утилиты (ping)
 - **Shared** — общие утилиты (filter-fields)
 
 **Слоистая архитектура:**
@@ -56,7 +56,7 @@ execute() {
 ### 2. Обязательные компоненты Tool
 
 Каждый tool ДОЛЖЕН иметь:
-1. **Static METADATA** — для Tool Search Engine
+1. **Static METADATA** — категоризация и сортировка в `tools/list`
 2. **Zod Schema** — валидация параметров
 3. **execute()** — логика выполнения
 

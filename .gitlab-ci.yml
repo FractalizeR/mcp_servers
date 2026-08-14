@@ -120,10 +120,7 @@ publish-packages:
     # 3. Core (зависит от infrastructure)
     - publish_if_needed "packages/framework/core"
 
-    # 4. Search (зависит от core)
-    - publish_if_needed "packages/framework/search"
-
-    # 5. Серверы (зависят от всех framework пакетов)
+    # 4. Серверы (зависят от всех framework пакетов)
     - publish_if_needed "packages/servers/yandex-tracker"
     - publish_if_needed "packages/servers/yandex-wiki"
 

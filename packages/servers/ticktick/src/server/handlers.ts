@@ -88,16 +88,21 @@ export function logToolsMetrics(
   definitions: ToolDefinition[],
   metrics: ToolsMetrics
 ): void {
-  logger.info(`✅ Returning ${metrics.totalTools} tools (mode: ${config.tools.discoveryMode})`, {
+  logger.info(`✅ Returning ${metrics.totalTools} tools`, {
     totalTools: metrics.totalTools,
-    mode: config.tools.discoveryMode,
     descriptionLength: metrics.descriptionLength,
     estimatedTokens: metrics.estimatedTokens,
   });
 
-  if (config.tools.enabledCategories && !config.tools.enabledCategories.includeAll) {
-    logger.info('✂️  Category filter applied', {
-      categories: Array.from(config.tools.enabledCategories.categories),
+  if (config.tools.disabledGroups) {
+    logger.info('✂️  Disabled groups filter applied', {
+      disabledCategories: Array.from(config.tools.disabledGroups.categories),
+      disabledCategoriesWithSubcategories: Array.from(
+        config.tools.disabledGroups.categoriesWithSubcategories.entries()
+      ).map(([cat, subcats]) => ({
+        category: cat,
+        subcategories: Array.from(subcats),
+      })),
     });
   }
 
@@ -119,27 +124,7 @@ export function logToolsMetrics(
 /**
  * Log warnings for ListTools
  */
-export function logToolsWarnings(
-  logger: Logger,
-  config: ServerConfig,
-  metrics: ToolsMetrics
-): void {
-  if (config.tools.discoveryMode === 'lazy') {
-    logger.warn(`⚠️  WARNING: Using lazy discovery mode!`, {
-      message: 'Lazy mode may not work with some MCP clients',
-      essentialTools: config.tools.essentialTools,
-      recommendation: 'Use TOOL_DISCOVERY_MODE=eager for compatibility',
-    });
-  }
-
-  if (config.tools.discoveryMode === 'eager' && metrics.totalTools > 30) {
-    logger.warn('⚠️  Recommendation: many tools in eager mode', {
-      totalTools: metrics.totalTools,
-      estimatedTokens: metrics.estimatedTokens,
-      recommendation: 'Consider TOOL_DISCOVERY_MODE=lazy to save context',
-    });
-  }
-
+export function logToolsWarnings(logger: Logger, metrics: ToolsMetrics): void {
   if (metrics.estimatedTokens > 200) {
     logger.warn('⚠️  Descriptions consume many tokens', {
       estimatedTokens: metrics.estimatedTokens,

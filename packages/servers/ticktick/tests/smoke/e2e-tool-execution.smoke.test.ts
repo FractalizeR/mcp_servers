@@ -34,10 +34,7 @@ describe('E2E Tool Execution (Smoke)', () => {
     cache: {
       ttlMs: 300000,
     },
-    tools: {
-      discoveryMode: 'lazy',
-      essentialTools: ['fr_ticktick_ping'],
-    },
+    tools: {},
     logging: {
       level: 'error',
       dir: './logs',
@@ -133,46 +130,17 @@ describe('E2E Tool Execution (Smoke)', () => {
     expect(typeof responseText).toBe('string');
   });
 
-  it('должен загрузить все essential tools в lazy mode', async () => {
-    // Arrange
-    const config = {
-      ...fakeConfig,
-      tools: {
-        discoveryMode: 'lazy' as const,
-        essentialTools: ['fr_ticktick_ping', 'search_tools'],
-      },
-    };
-
+  it('должен загрузить полный набор tools (lazy discovery убран)', async () => {
     // Act
-    const container = await createContainer(config);
-    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
-
-    // Assert
-    const pingTool = toolRegistry.getTool('fr_ticktick_ping');
-    const searchTool = toolRegistry.getTool('search_tools');
-
-    expect(pingTool).toBeDefined();
-    expect(searchTool).toBeDefined();
-  });
-
-  it('должен загрузить все tools в eager mode', async () => {
-    // Arrange
-    const config = {
-      ...fakeConfig,
-      tools: {
-        discoveryMode: 'eager' as const,
-        essentialTools: ['fr_ticktick_ping'],
-      },
-    };
-
-    // Act
-    const container = await createContainer(config);
+    const container = await createContainer(fakeConfig);
     const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
     const allTools = toolRegistry.getAllTools();
 
     // Assert
     expect(allTools.length).toBeGreaterThan(5); // Должно быть больше 5 tools
     expect(allTools.some((t) => t.getMetadata().definition.name === 'fr_ticktick_ping')).toBe(true);
+    // search_tools больше не существует как отдельный tool (пакет mcp-search удалён)
+    expect(toolRegistry.getTool('search_tools')).toBeUndefined();
   });
 
   it('должен корректно обрабатывать tool metadata', async () => {

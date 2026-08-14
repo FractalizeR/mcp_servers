@@ -18,9 +18,9 @@ module.exports = {
     {
       name: 'no-reverse-dependencies',
       severity: 'error',
-      comment: 'Запрет обратных зависимостей в графе пакетов (infrastructure <- core <- search <- servers)',
+      comment: 'Запрет обратных зависимостей в графе пакетов (infrastructure <- core <- servers)',
       from: {
-        path: '^packages/(infrastructure|core|search|framework/(infrastructure|core|search))/',
+        path: '^packages/(infrastructure|core|framework/(infrastructure|core))/',
       },
       to: {
         path: '^packages/(yandex-tracker|servers/)/',
@@ -35,7 +35,7 @@ module.exports = {
         path: '^packages/(infrastructure|framework/infrastructure)/',
       },
       to: {
-        path: '^packages/(core|search|cli|yandex-tracker|framework/(core|search)|servers/)/',
+        path: '^packages/(core|cli|yandex-tracker|framework/core|servers/)/',
       },
     },
 
@@ -45,18 +45,6 @@ module.exports = {
       comment: 'Core может зависеть только от infrastructure',
       from: {
         path: '^packages/(core|framework/core)/',
-      },
-      to: {
-        path: '^packages/(search|cli|yandex-tracker|framework/search|servers/)/',
-      },
-    },
-
-    {
-      name: 'search-depends-only-on-core-and-infrastructure',
-      severity: 'error',
-      comment: 'Search может зависеть только от core и infrastructure',
-      from: {
-        path: '^packages/(search|framework/search)/',
       },
       to: {
         path: '^packages/(cli|yandex-tracker|servers/)/',
@@ -84,7 +72,7 @@ module.exports = {
       severity: 'error',
       comment: 'Framework пакеты не должны зависеть от CLI',
       from: {
-        path: '^packages/framework/(infrastructure|core|search)/',
+        path: '^packages/framework/(infrastructure|core)/',
       },
       to: {
         path: '^packages/framework/cli/',
@@ -177,9 +165,6 @@ module.exports = {
           // BaseDefinition → ToolMetadata → BaseDefinition (framework pattern)
           '^packages/framework/core/src/tools/base/base-definition\\.ts$',
           '^packages/framework/core/src/tools/base/tool-metadata\\.ts$',
-          // SearchToolsDefinition ↔ SearchToolsTool (pairing pattern)
-          '^packages/framework/search/src/tools/search-tools\\.definition\\.ts$',
-          '^packages/framework/search/src/tools/search-tools\\.tool\\.ts$',
           // Server tools Definition ↔ Tool pairing patterns (all servers)
           '^packages/servers/[^/]+/src/tools/.*/[^/]+\\.definition\\.ts$',
           '^packages/servers/[^/]+/src/tools/.*/[^/]+\\.tool\\.ts$',
