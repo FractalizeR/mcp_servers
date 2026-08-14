@@ -1,0 +1,57 @@
+{
+  "fr-tight": {
+    "label": "Плотная связка",
+    "svg_bytes": 1533,
+    "svg_data_uri_bytes": 2070,
+    "png_bytes": {
+      "48": 1210,
+      "96": 2561,
+      "256": 7313
+    },
+    "png48_data_uri_bytes": 1638
+  },
+  "fr-metric": {
+    "label": "По метрике шрифта",
+    "svg_bytes": 1541,
+    "svg_data_uri_bytes": 2082,
+    "png_bytes": {
+      "48": 1159,
+      "96": 2530,
+      "256": 7208
+    },
+    "png48_data_uri_bytes": 1570
+  },
+  "fr-loose": {
+    "label": "Разреженная",
+    "svg_bytes": 1533,
+    "svg_data_uri_bytes": 2070,
+    "png_bytes": {
+      "48": 1083,
+      "96": 2373,
+      "256": 6834
+    },
+    "png48_data_uri_bytes": 1466
+  },
+  "fr-circle": {
+    "label": "По метрике, в круге",
+    "svg_bytes": 1628,
+    "svg_data_uri_bytes": 2198,
+    "png_bytes": {
+      "48": 1841,
+      "96": 3945,
+      "256": 11545
+    },
+    "png48_data_uri_bytes": 2478
+  },
+  "fr-square": {
+    "label": "По метрике, в квадрате",
+    "svg_bytes": 1644,
+    "svg_data_uri_bytes": 2218,
+    "png_bytes": {
+      "48": 1721,
+      "96": 3414,
+      "256": 10064
+    },
+    "png48_data_uri_bytes": 2318
+  }
+}
