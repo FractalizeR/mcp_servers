@@ -45,8 +45,14 @@ turbo run $TURBO_TASKS $TURBO_FLAGS
 # ---------------------------------------------------------------------------
 # Root-only tasks (not managed by turbo)
 # ---------------------------------------------------------------------------
+# validate:docs:root: turbo run validate:docs (above) runs per-package with
+# cwd = package dir, so it can never check root-level docs (CLAUDE.md,
+# ARCHITECTURE.md, tracker README.md, tests/README.md) — validate-docs-size.ts
+# only checks those when cwd === monorepoRoot. Must run once, from here.
 if $QUIET; then
   npm run knip:root --silent 2>&1 | tail -1
+  npm run validate:docs:root --silent 2>/dev/null | grep -v '^$' | tail -1
 else
   npm run knip:root
+  npm run validate:docs:root
 fi

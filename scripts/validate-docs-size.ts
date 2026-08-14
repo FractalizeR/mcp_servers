@@ -115,14 +115,14 @@ function validateDoc(doc: DocLimit, projectRoot: string): ValidationResult {
     };
   }
 
-  // Превышение лимита: warning
+  // Превышение жёсткого лимита (MUST): error, а не warning — это блокирующее нарушение
   if (lines > doc.maxLines) {
     return {
       path: doc.path,
       lines,
       maxLines: doc.maxLines,
       targetLines: doc.targetLines,
-      status: 'warning',
+      status: 'error',
       message: `Превышен лимит: ${lines}/${doc.maxLines} строк (+${lines - doc.maxLines})`,
     };
   }
@@ -172,14 +172,14 @@ function validateModuleReadmes(projectRoot: string): ValidationResult[] {
       };
     }
 
-    // Превышение лимита: warning
+    // Превышение жёсткого лимита (MUST): error, а не warning — это блокирующее нарушение
     if (lines > maxLines) {
       return {
         path: relativePath,
         lines,
         maxLines,
         targetLines,
-        status: 'warning',
+        status: 'error',
         message: `Превышен лимит: ${lines}/${maxLines} строк (+${lines - maxLines})`,
       };
     }
