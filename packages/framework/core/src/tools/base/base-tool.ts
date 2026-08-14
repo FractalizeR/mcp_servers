@@ -22,6 +22,13 @@ import { generateDefinitionFromSchema } from '../../definition/index.js';
 import { formatZodErrorsToString } from '../../utils/zod-error-formatter.js';
 import { ApiErrorClass } from '@fractalizer/mcp-infrastructure';
 import type { ApiErrorDetails } from '@fractalizer/mcp-infrastructure';
+import { buildResourceLinkContentBlock } from '../../resources/resource-link-content.js';
+import type { ResourceLinkDescriptor } from '../../resources/resource-link-content.js';
+import {
+  DEFAULT_COLLECTION_LINKS_THRESHOLD,
+  resolveCollectionResponseMode,
+} from '../common/collection-result/collection-response-mode.js';
+import type { CollectionResponseMode } from '../common/collection-result/collection-response-mode.js';
 
 /**
  * Единый success envelope — форма и content[0].text, и structuredContent
@@ -232,6 +239,80 @@ export abstract class BaseTool<TFacade = unknown> {
         },
       ],
       structuredContent: payload,
+    };
+  }
+
+  /**
+   * Форматирование результата инструмента, возвращающего КОЛЛЕКЦИЮ (пакет
+   * 5.1.B плана модернизации MCP 2026-07-28).
+   *
+   * Решает проблему «`find_issues` на 200 задач вываливает 200 объектов в
+   * контекст модели»: в режиме `links` инструмент отдаёт компактную сводку
+   * плюс массив `resource_link` вместо полных тел, и агент подтягивает тело
+   * каждого элемента выборочно через `resources/read` (кешируется по
+   * `ttlMs`). В режиме `full` — как обычно, полные тела инлайном.
+   *
+   * СОГЛАСОВАНО с существующим envelope: `structuredContent`/текстовый
+   * дубль строятся через `formatSuccess()` (тот же success envelope
+   * `{ success: true, data }`), поэтому `outputSchema`, собранный
+   * `buildCollectionOutputSchema()` (см. `tools/common/collection-result/`),
+   * описывает именно эту форму. В режиме `links` `content` ДОПОЛНИТЕЛЬНО
+   * содержит по одному content-блоку `resource_link` на каждый элемент —
+   * это то, что спека называет «resource_link в результатах инструментов»:
+   * ссылки видны клиенту не только внутри JSON, но и как отдельные
+   * content-блоки протокола.
+   *
+   * `mode: 'auto'` (по умолчанию) решает по количеству элементов и порогу
+   * (`threshold`, по умолчанию {@link DEFAULT_COLLECTION_LINKS_THRESHOLD}) —
+   * см. `resolveCollectionResponseMode()`. Инструмент передаёт `mode` из
+   * СВОЕГО параметра (не глобальная настройка — вызывающий агент явно
+   * решает, нужны ли ему тела).
+   *
+   * @param options.items - полный набор элементов коллекции (уже
+   *   постранично отфильтрованный вызывающим кодом, если применимо)
+   * @param options.mode - режим ответа, обычно — значение параметра
+   *   инструмента, построенного `collectionResponseModeParamSchema()`
+   * @param options.toResourceLink - строит `resource_link` дескриптор
+   *   (uri/name/title/…) для ОДНОГО элемента; вызывается только в режиме
+   *   `links` (в `full` тела возвращаются как есть, без обращения к URI)
+   * @param options.threshold - порог режима `auto`; ОБЯЗАН совпадать с тем,
+   *   что видно в описании параметра `responseMode` этого инструмента
+   * @param options.summary - опциональные агрегаты коллекции (счётчики,
+   *   применённые фильтры и т.п.), не зависящие от режима
+   */
+  protected formatCollectionResult<TItem, TSummary = undefined>(options: {
+    items: readonly TItem[];
+    mode: CollectionResponseMode;
+    toResourceLink: (item: TItem) => ResourceLinkDescriptor;
+    threshold?: number;
+    summary?: TSummary;
+  }): ToolResult {
+    const threshold = options.threshold ?? DEFAULT_COLLECTION_LINKS_THRESHOLD;
+    const resolvedMode = resolveCollectionResponseMode(
+      options.mode,
+      options.items.length,
+      threshold
+    );
+
+    const base = {
+      totalCount: options.items.length,
+      threshold,
+      ...(options.summary !== undefined ? { summary: options.summary } : {}),
+    };
+
+    if (resolvedMode === 'full') {
+      return this.formatSuccess({ ...base, mode: 'full', items: options.items });
+    }
+
+    const resourceLinks = options.items.map(options.toResourceLink);
+    const result = this.formatSuccess({ ...base, mode: 'links', resourceLinks });
+
+    return {
+      ...result,
+      content: [
+        ...result.content,
+        ...resourceLinks.map((link) => buildResourceLinkContentBlock(link)),
+      ],
     };
   }
 

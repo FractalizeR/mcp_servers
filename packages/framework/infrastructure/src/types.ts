@@ -120,15 +120,46 @@ export interface ToolCallParams {
 }
 
 /**
+ * Текстовый блок содержимого результата инструмента.
+ */
+export interface ToolTextContentBlock {
+  type: 'text';
+  text: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Блок содержимого `resource_link` (спека MCP 2026-07-28) — облегчённая
+ * ссылка на ресурс внутри `content`, без встраивания самого содержимого
+ * (в отличие от полноценного content-блока `resource`). Инструменты,
+ * возвращающие коллекции (пакет 5.1.B плана модернизации MCP 2026-07-28),
+ * используют его вместо полных тел элементов — тело читается отдельно через
+ * `resources/read`. Каноническое определение с документацией контракта —
+ * `ResourceLinkContentBlock` в `@fractalizer/mcp-core` (`resources/`); здесь —
+ * только структурная форма, необходимая для типа `ToolResult.content`
+ * (infrastructure ниже core по графу зависимостей монорепо, импортировать
+ * оттуда нельзя — см. CLAUDE.md).
+ */
+export interface ToolResourceLinkContentBlock {
+  type: 'resource_link';
+  uri: string;
+  name: string;
+  title?: string;
+  description?: string;
+  mimeType?: string;
+  size?: number;
+  [key: string]: unknown;
+}
+
+/** Один блок содержимого результата инструмента — текст либо ссылка на ресурс. */
+export type ToolResultContentBlock = ToolTextContentBlock | ToolResourceLinkContentBlock;
+
+/**
  * Результат выполнения инструмента
  * Соответствует CallToolResult из MCP SDK
  */
 export interface ToolResult {
-  content: Array<{
-    type: 'text';
-    text: string;
-    [key: string]: unknown;
-  }>;
+  content: Array<ToolResultContentBlock>;
   isError?: boolean;
   [key: string]: unknown;
 }

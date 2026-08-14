@@ -1,33 +1,27 @@
 /**
  * Smoke Test (пакет 7.1.A плана .agentic-planning/plan_mcp_2026_modernization/
- * 7.1_api_defects_parallel.md): "ни один инструмент Трекера не принимает параметр,
+ * 7.1_api_defects_parallel.md; сведено во framework пакетом 7.1.E — см.
+ * `.agentic-planning/plan_mcp_2026_modernization/7.1_api_defects_parallel.md`,
+ * раздел "Пакет 7.1.E"): "ни один инструмент Трекера не принимает параметр,
  * который не доезжает до API".
  *
- * КОНТЕКСТ: три из четырёх дефектов пакета 7.1.A — это ровно этот класс бага
- * (параметр объявлен в Zod-схеме инструмента, но операция его никуда не отправляет).
- * Wiki-сервер (пакет 7.1.B) независимо наткнулся на тот же класс дефекта в
- * `create_page` (is_silent/fields). Разовая починка четырёх находок не защищает от
- * пятой — этот тест обходит РЕЕСТР инструментов (TOOL_CLASSES), а не список из
- * четырёх известных имён, и для каждого write-инструмента:
+ * Генератор образцов и проверка достижимости — теперь ЕДИНЫЙ механизм во
+ * framework (`@fractalizer/mcp-core/testing/schema-reachability`), общий с
+ * Wiki и TickTick (см. заголовки файлов там за деталями сведения двух
+ * прежних параллельных реализаций). Этот файл — только ТОНКАЯ обвязка:
+ * DI-контейнер Трекера, обход `TOOL_CLASSES`, и список исключений СВОИХ,
+ * специфичных для Трекера дефектов формата (каждое — с причиной).
  *
- * 1. Генерирует полностью заполненный набор параметров (см.
- *    tests/helpers/schema-sample-generator.ts) — уникальный маркер на каждое
- *    строковое/числовое/enum/literal поле схемы, включая вложенные (batch-элементы,
- *    объекты вроде `values`).
- * 2. Вызывает инструмент через РЕАЛЬНУЮ DI-цепочку (tool -> facade -> service ->
- *    operation), со шпионами на все методы IHttpClient.
- * 3. Проверяет, что маркер каждого поля НАЙДЕН в сериализованном виде
- *    исходящих HTTP-вызовов (path + body) — то есть поле реально ушло на сервер,
- *    а не было потеряно на одном из промежуточных слоёв.
+ * МЕТОД: для каждого инструмента реестра генерируется полностью заполненный
+ * набор параметров (обязательные и опциональные, включая вложенные), tool
+ * выполняется через РЕАЛЬНУЮ DI-цепочку (tool -> facade -> service ->
+ * operation) со спаями на все 6 методов `IHttpClient`, и каждый лист образца
+ * проверяется на присутствие в сериализованном виде исходящих вызовов.
  *
- * Инструмент может бросить исключение ПОСЛЕ похода в HttpClient (например, при
- * обработке фиктивного ответа mock'а) — это игнорируется: нас интересует только
- * факт исходящего вызова, а не корректная обработка ответа.
- *
- * ИСКЛЮЧЕНИЯ (документированы, не расширять без причины):
+ * ИСКЛЮЧЕНИЯ ЦЕЛЫХ ИНСТРУМЕНТОВ (документированы, не расширять без причины):
  * - upload_attachment: загрузка идёт через BaseOperation.uploadFile(), который
  *   берёт axios instance напрямую (getAxiosInstance()) и отправляет multipart
- *   FormData в обход стандартных методов IHttpClient — шпионы на get/post/patch/
+ *   FormData в обход стандартных методов IHttpClient — спаи на get/post/patch/
  *   delete этот вызов не видят. Нужна отдельная, специализированная проверка
  *   (не обходом реестра); вне рамок этого пакета.
  * - download_attachment / get_thumbnail: `attachmentId` используется ТОЛЬКО клиентской
@@ -37,26 +31,72 @@
  *   axios). Реальная отправка attachmentId на сервер физически не проходит через
  *   инструментированные методы, поэтому инструмент исключён целиком, а не помечен
  *   точечным исключением параметра.
+ * - raw_api_request: generic escape-hatch фабрики @fractalizer/mcp-core
+ *   (createRawApiRequestSchema) — путь запроса ЯВЛЯЕТСЯ HTTP-запросом как есть,
+ *   а не доменной DTO-моделью, у которой поле может "потеряться" между операцией
+ *   и httpClient; сам фреймворк вне набора файлов этого пакета (framework
+ *   исполнителям сервера запрещён). Кроме того, схема накладывает `.refine()`
+ *   ограничения на путь (запрет `//`, `..`) поверх regex — генератор образцов
+ *   их не видит (публичный `z.toJSONSchema` не выражает произвольный `.refine`),
+ *   так что синтетический образец рисковал бы не пройти собственную валидацию
+ *   инструмента ДО похода в HTTP, что дало бы ложный "недостижимый" вердикт.
+ *
+ * `PingTool` НЕ исключён явно: его схема параметров пуста (`z.object({})`),
+ * генератор не производит ни одного листа, поэтому проверка для него
+ * тривиально проходит без специального случая.
+ *
+ * ОБЛАСТЬ ПРОВЕРКИ — только WRITE-инструменты (`readOnlyHint === false`), как
+ * и в исходной версии пакета 7.1.A. НЕ расширено на все инструменты (в
+ * отличие от Wiki/TickTick — см. их тесты этого же пакета 7.1.E): у Трекера
+ * ~10 list-эндпоинтов пагинируются единообразно через `.refine(noCursorWithBulkParams)`
+ * (см. `#common/schemas/index.js`, корневой CLAUDE.md раздел "Пагинация
+ * list-эндпоинтов") — `cursor` взаимоисключим с `perPage`/`fetchAll`/
+ * `maxItems`/`maxTotalItems` на уровне СХЕМЫ, а не одного поля. Генератор
+ * образцов (как прежний, так и сведённый) заполняет ВСЕ поля одновременно и
+ * не моделирует межпольные `.refine()` — на такой схеме `validateParams()`
+ * отклонил бы образец ДО похода в HTTP, дав десяток ложных "недостижимо" для
+ * КАЖДОГО list-эндпоинта. Это не дефект пагинации (она инвариантно
+ * протестирована отдельно — `tests/README.md`, раздел про cursor), а
+ * несовместимость подхода "заполнить всё" с ЭТИМ конкретным паттерном схемы.
+ * Проверено эмпирически: на полном наборе инструментов `find_issues` дал
+ * ровно такую картину (11 "недостижимых" полей, включая `cursor` и `perPage`
+ * одновременно) — сужение обратно до write-инструментов подтверждено как
+ * причина, а не гипотеза.
  */
 
-import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
-import type { MockInstance } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 import { TOOL_CLASSES } from '#composition-root/definitions/tool-definitions.js';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
 import type { ToolRegistry, BaseTool } from '@fractalizer/mcp-core';
+import {
+  generateReachabilitySample,
+  findUnreachableLeaves,
+  describeUnreachableLeaf,
+  createHttpClientCallRecorder,
+} from '@fractalizer/mcp-core/testing/schema-reachability/index.js';
+import type {
+  ReachabilityException,
+  HttpClientCallRecorder,
+} from '@fractalizer/mcp-core/testing/schema-reachability/index.js';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { ServerConfig } from '#config';
-import { generateSample } from '../helpers/schema-sample-generator.js';
 
 /**
- * Инструменты, которые физически не могут быть покрыты обходом IHttpClient —
- * см. блок "ИСКЛЮЧЕНИЯ" в шапке файла. Ключ — METADATA.name (без префикса).
+ * Инструменты, физически не покрываемые обходом IHttpClient — см. шапку
+ * файла. `raw_api_request` тоже здесь (не отдельной проверкой имени): и
+ * `EXCLUDED_TOOLS`, и весь фильтр `checkedToolClasses` ниже сравнивают
+ * `METADATA.name`, который включает префикс сервера (`buildToolName()`) —
+ * `metadata.name !== 'raw_api_request'` был бы всегда true и НИКОГДА не
+ * сработал бы. На практике это было безвредно (raw_api_request — read-only,
+ * readOnlyHint исключает его раньше), но исправлено на верный
+ * suffix-паттерн, чтобы не полагаться на побочный эффект другого фильтра.
  */
 const EXCLUDED_TOOLS = new Set<string>([
   'upload_attachment',
   'download_attachment',
   'get_thumbnail',
+  'raw_api_request',
 ]);
 
 function isExcludedTool(metadataName: string): boolean {
@@ -64,49 +104,34 @@ function isExcludedTool(metadataName: string): boolean {
 }
 
 /**
- * Пути полей (в нотации генератора: `key`, `key[]`, `key.nested`), которые
- * заведомо НЕ должны доезжать до API 1:1 — это client-side control параметры:
- * `fields`/`fields[]` — фильтрация ответа на нашей стороне (ResponseFieldFilter),
- * в API не отправляется никогда, по контракту всего сервера (см. корневой
- * CLAUDE.md, "Фильтрация полей").
+ * Поля, которые заведомо НЕ должны доезжать до API 1:1 — client-side control
+ * параметры. `fields`/`fields[]` — фильтрация ответа на нашей стороне
+ * (ResponseFieldFilter), в API не отправляется никогда, по контракту всего
+ * сервера (см. корневой CLAUDE.md, "Фильтрация полей"). Путь `fields[]`, а не
+ * `fields` — `FieldsSchema` (`#common/schemas/fields.schema.ts`) это
+ * `z.array(z.string())`, листья генератора — элементы массива.
  */
-const GLOBALLY_EXCLUDED_LEAF_PREFIXES = ['fields'];
+const GLOBAL_EXCEPTIONS: readonly ReachabilityException[] = [
+  {
+    path: 'fields[]',
+    reason: 'клиентская фильтрация ответа (ResponseFieldFilter), в API не отправляется',
+  },
+];
 
-function isExcludedLeaf(path: string): boolean {
-  return GLOBALLY_EXCLUDED_LEAF_PREFIXES.some(
-    (prefix) => path === prefix || path.startsWith(`${prefix}.`) || path.startsWith(`${prefix}[`)
-  );
-}
+/**
+ * `duration` (add_worklog/update_worklog): `AddWorklogOperation`/
+ * `UpdateWorklogOperation` пропускают уже-ISO8601 значения без изменений, но
+ * человекочитаемые конвертируют перед отправкой — произвольный маркер не
+ * совпал бы с отправленным значением. Нужен ЗАВЕДОМО валидный ISO8601-формат.
+ */
+const KNOWN_FIELD_SAMPLES = new Map<string, string>([['duration', 'PT1H30M']]);
 
-interface HttpSpies {
-  readonly get: MockInstance;
-  readonly post: MockInstance;
-  readonly patch: MockInstance;
-  readonly delete: MockInstance;
-  readonly getWithResponse: MockInstance;
-  readonly postWithResponse: MockInstance;
-}
-
-function collectHaystack(spies: HttpSpies): string {
-  const allCalls = [
-    ...spies.get.mock.calls,
-    ...spies.post.mock.calls,
-    ...spies.patch.mock.calls,
-    ...spies.delete.mock.calls,
-    ...spies.getWithResponse.mock.calls,
-    ...spies.postWithResponse.mock.calls,
-  ];
-  return JSON.stringify(allCalls);
-}
-
-function clearSpies(spies: HttpSpies): void {
-  spies.get.mockClear();
-  spies.post.mockClear();
-  spies.patch.mockClear();
-  spies.delete.mockClear();
-  spies.getWithResponse.mockClear();
-  spies.postWithResponse.mockClear();
-}
+/** Regex-паттерны схем Трекера, для которых генератору нужен явный образец. */
+const KNOWN_REGEX_SAMPLES = new Map<string, string>([
+  [/^[A-Z][A-Z0-9]+-\d+$/.source, 'TEST-1'], // IssueKeySchema и локальные копии
+  [/^[A-Z][A-Z0-9]+$/.source, 'TESTQ'], // ключ очереди (bulk-move/bulk-update)
+  [/^[A-Z]{2,10}$/.source, 'TESTQ'], // ключ очереди (create-queue)
+]);
 
 describe('Tool Params Reach API (Smoke) — обход реестра инструментов', () => {
   const fakeConfig: ServerConfig = {
@@ -122,32 +147,20 @@ describe('Tool Params Reach API (Smoke) — обход реестра инстр
 
   let toolRegistry: ToolRegistry;
   let httpClient: IHttpClient;
-  let spies: HttpSpies;
+  let recorder: HttpClientCallRecorder;
 
   beforeAll(async () => {
     const container = await createContainer(fakeConfig);
     toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
     httpClient = container.get<IHttpClient>(TYPES.HttpClient);
-
-    spies = {
-      get: vi.spyOn(httpClient, 'get').mockResolvedValue({}),
-      post: vi.spyOn(httpClient, 'post').mockResolvedValue({}),
-      patch: vi.spyOn(httpClient, 'patch').mockResolvedValue({}),
-      delete: vi.spyOn(httpClient, 'delete').mockResolvedValue(undefined),
-      getWithResponse: vi
-        .spyOn(httpClient, 'getWithResponse')
-        .mockResolvedValue({ data: {}, headers: {} }),
-      postWithResponse: vi
-        .spyOn(httpClient, 'postWithResponse')
-        .mockResolvedValue({ data: {}, headers: {} }),
-    };
+    recorder = createHttpClientCallRecorder(httpClient);
   });
 
   afterEach(() => {
-    clearSpies(spies);
+    recorder.clear();
   });
 
-  const writeToolClasses = TOOL_CLASSES.filter((ToolClass) => {
+  const checkedToolClasses = TOOL_CLASSES.filter((ToolClass) => {
     const metadata = ToolClass.METADATA;
     return metadata.annotations?.readOnlyHint === false && !isExcludedTool(metadata.name);
   });
@@ -155,10 +168,10 @@ describe('Tool Params Reach API (Smoke) — обход реестра инстр
   // Граничное условие: список write-инструментов не должен внезапно опустеть
   // (например, из-за опечатки в фильтре) — тест сам себя проверяет.
   it('находит хотя бы один write-инструмент для проверки', () => {
-    expect(writeToolClasses.length).toBeGreaterThan(10);
+    expect(checkedToolClasses.length).toBeGreaterThan(10);
   });
 
-  writeToolClasses.forEach((ToolClass) => {
+  checkedToolClasses.forEach((ToolClass) => {
     const toolName = ToolClass.METADATA.name;
 
     it(`${ToolClass.name} (${toolName}): каждое поле схемы доезжает до HTTP-запроса`, async () => {
@@ -167,41 +180,31 @@ describe('Tool Params Reach API (Smoke) — обход реестра инстр
 
       // getParamsSchema() объявлен protected на BaseTool — обходим TS-барьер намеренно,
       // это тестовая рефлексия, а не продовый код (protected не существует в рантайме JS).
-      const schema = (tool as unknown as { getParamsSchema: () => unknown }).getParamsSchema();
+      const schema = (
+        tool as unknown as {
+          getParamsSchema: () => Parameters<typeof generateReachabilitySample>[0];
+        }
+      ).getParamsSchema();
 
-      const { value, leaves } = generateSample(schema);
+      const { value, leaves } = generateReachabilitySample(schema, {
+        knownFieldSamples: KNOWN_FIELD_SAMPLES,
+        knownRegexSamples: KNOWN_REGEX_SAMPLES,
+      });
 
-      clearSpies(spies);
+      recorder.clear();
       try {
         await (tool as BaseTool).execute(value as Record<string, unknown>);
       } catch {
-        // Инструмент мог упасть при обработке фиктивного ответа mock'а — не важно,
-        // нас интересует только факт исходящего HTTP-вызова (записан спаями ДО throw).
+        // Инструмент мог упасть при обработке фиктивного ответа мока — не важно,
+        // нас интересует только факт исходящего HTTP-вызова (записан ДО throw).
       }
 
-      const haystack = collectHaystack(spies);
+      const unreachable = findUnreachableLeaves(recorder.haystack(), leaves, GLOBAL_EXCEPTIONS);
 
-      for (const [path, leaf] of leaves) {
-        if (isExcludedLeaf(path)) continue;
-
-        const found =
-          leaf.kind === 'boolean'
-            ? haystack.includes(`"${leaf.fieldName}":true`) ||
-              haystack.includes(`${leaf.fieldName}=true`)
-            : haystack.includes(leaf.value);
-
-        const leafDescription =
-          leaf.kind === 'boolean' ? `boolean, имя "${leaf.fieldName}"` : `значение "${leaf.value}"`;
-
-        expect(
-          found,
-          `Поле "${path}" (${leafDescription}) ` +
-            `инструмента "${toolName}" не найдено ни в одном исходящем HTTP-вызове (path/body/query) — ` +
-            'похоже, схема объявляет параметр, который операция не отправляет в API. Если это ложное ' +
-            'срабатывание (поле легитимно не форвардится 1:1), добавь путь в ' +
-            'GLOBALLY_EXCLUDED_LEAF_PREFIXES с обоснованием.'
-        ).toBe(true);
-      }
+      expect(
+        unreachable,
+        unreachable.map((u) => describeUnreachableLeaf(toolName, u)).join('\n')
+      ).toHaveLength(0);
     });
   });
 });
