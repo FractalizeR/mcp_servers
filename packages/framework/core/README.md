@@ -177,10 +177,13 @@ class ToolRegistry {
 ### createMcpServerAdapter()
 
 **MCP server lifecycle + transport**, shared by all three servers (yandex-tracker, yandex-wiki,
-ticktick) instead of near-identical `server.ts` code. Registers `initialize`/`tools/list`/`tools/call`
-handlers, connects stdio, wires SIGINT/SIGTERM shutdown. `tools/list` visibility is filtered through
+ticktick) instead of near-identical `server.ts` code. Serves **both** protocol eras over stdio
+(`serveStdio`, legacy 2025-06-18 `initialize` handshake and 2026-07-28 `server/discover`) from the
+same `tools/list`/`tools/call` handlers — no `initialize` handler of our own: the SDK's built-in one
+negotiates `protocolVersion` and stamps `serverInfo`/`resultType`/`_meta`/cache hints, so there is no
+hardcoded version anywhere in this repo. `tools/list` visibility is filtered through
 `ToolRegistry.getVisibleDefinitions()` — the same `ToolAccessPolicy` instance `execute()` checks for
-`tools/call`, so the two can never disagree.
+`tools/call`, so the two can never disagree, in either era.
 
 **Implementation:** [src/mcp-server-adapter/create-mcp-server-adapter.ts](src/mcp-server-adapter/create-mcp-server-adapter.ts)
 
