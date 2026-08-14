@@ -25,9 +25,18 @@ export const ADD_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['comment', 'add', 'create', 'write', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: true,
-  // issueId/attachmentIds — идентификаторы (безопасны); fields — имена API-полей
-  // (структурные, не пользовательский текст). text (тело комментария) НЕ включён.
-  redactionAllowlist: ['issueId', 'attachmentIds', 'fields'],
+  // issueId/attachmentIds/summonees/maillistSummonees — идентификаторы (логины/ID/email,
+  // безопасны); markupType/isAddToFollowers — структурные флаги; fields — имена API-полей.
+  // text (тело комментария) НЕ включён.
+  redactionAllowlist: [
+    'issueId',
+    'attachmentIds',
+    'summonees',
+    'maillistSummonees',
+    'markupType',
+    'isAddToFollowers',
+    'fields',
+  ],
   title: 'Добавить комментарии',
   outputSchema: AddCommentOutputSchema,
   annotations: {

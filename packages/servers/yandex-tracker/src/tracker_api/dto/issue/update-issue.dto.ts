@@ -20,9 +20,6 @@ export interface UpdateIssueDto {
   /** Тип задачи (ключ типа) */
   type?: string | undefined;
 
-  /** Статус (ключ статуса) */
-  status?: string | undefined;
-
   /** Дополнительные поля (для кастомных полей Трекера) */
   [key: string]: unknown;
 }

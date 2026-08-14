@@ -114,6 +114,67 @@ describe('AddCommentOperation', () => {
       await expect(operation.execute('TEST-1', input)).rejects.toThrow('API Error');
     });
 
+    it('should send summonees/maillistSummonees/markupType in the request body', async () => {
+      const input: AddCommentInput = {
+        text: 'Please take a look',
+        summonees: ['jdoe', 'asmith'],
+        maillistSummonees: ['team@example.com'],
+        markupType: 'md',
+      };
+
+      const mockComment: CommentWithUnknownFields = {
+        id: '999',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/comments/999',
+        text: 'Please take a look',
+        createdBy: {
+          self: 'https://api.tracker.yandex.net/v3/users/1',
+          id: '1',
+          display: 'Test User',
+        },
+        createdAt: '2025-01-18T10:00:00.000+0000',
+      };
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue(mockComment);
+
+      await operation.execute('TEST-1', input);
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/TEST-1/comments', {
+        text: 'Please take a look',
+        summonees: ['jdoe', 'asmith'],
+        maillistSummonees: ['team@example.com'],
+        markupType: 'md',
+      });
+    });
+
+    it('should send isAddToFollowers as a query param, NOT in the request body', async () => {
+      const input: AddCommentInput = {
+        text: 'Silent mention',
+        summonees: ['jdoe'],
+        isAddToFollowers: false,
+      };
+
+      const mockComment: CommentWithUnknownFields = {
+        id: '1000',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/comments/1000',
+        text: 'Silent mention',
+        createdBy: {
+          self: 'https://api.tracker.yandex.net/v3/users/1',
+          id: '1',
+          display: 'Test User',
+        },
+        createdAt: '2025-01-18T10:00:00.000+0000',
+      };
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue(mockComment);
+
+      await operation.execute('TEST-1', input);
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v3/issues/TEST-1/comments?isAddToFollowers=false',
+        { text: 'Silent mention', summonees: ['jdoe'] }
+      );
+    });
+
     it('should log info messages', async () => {
       const input: AddCommentInput = {
         text: 'Test comment',

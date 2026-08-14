@@ -178,8 +178,24 @@ describe('IssueService', () => {
 
       const result = await service.updateIssue(issueKey, updateData);
 
-      expect(mockOpsContainer.updateIssue.execute).toHaveBeenCalledWith(issueKey, updateData);
+      expect(mockOpsContainer.updateIssue.execute).toHaveBeenCalledWith(
+        issueKey,
+        updateData,
+        undefined
+      );
       expect(result).toBe(mockResult);
+    });
+
+    it('должен передавать version в ops.updateIssue.execute (optimistic locking)', async () => {
+      const issueKey = 'TEST-1';
+      const updateData = { summary: 'Updated Summary' };
+      const mockResult = createIssueFixture({ summary: 'Updated Summary' });
+
+      vi.mocked(mockOpsContainer.updateIssue.execute).mockResolvedValue(mockResult);
+
+      await service.updateIssue(issueKey, updateData, 7);
+
+      expect(mockOpsContainer.updateIssue.execute).toHaveBeenCalledWith(issueKey, updateData, 7);
     });
   });
 

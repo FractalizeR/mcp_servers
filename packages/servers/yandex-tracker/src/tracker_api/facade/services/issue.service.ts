@@ -67,10 +67,15 @@ export class IssueService {
    * Обновляет существующую задачу
    * @param issueKey - ключ задачи
    * @param updateData - данные для обновления
+   * @param version - версия задачи для optimistic locking (см. UpdateIssueOperation)
    * @returns обновлённая задача
    */
-  async updateIssue(issueKey: string, updateData: UpdateIssueDto): Promise<IssueWithUnknownFields> {
-    return this.ops.updateIssue.execute(issueKey, updateData);
+  async updateIssue(
+    issueKey: string,
+    updateData: UpdateIssueDto,
+    version?: number
+  ): Promise<IssueWithUnknownFields> {
+    return this.ops.updateIssue.execute(issueKey, updateData, version);
   }
 
   /**

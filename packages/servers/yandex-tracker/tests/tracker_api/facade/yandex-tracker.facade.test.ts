@@ -436,8 +436,33 @@ describe('YandexTrackerFacade', () => {
 
       const result = await facade.updateIssue(issueKey, updateData);
 
-      expect(mockIssuesContainer.issue.updateIssue).toHaveBeenCalledWith(issueKey, updateData);
+      expect(mockIssuesContainer.issue.updateIssue).toHaveBeenCalledWith(
+        issueKey,
+        updateData,
+        undefined
+      );
       expect(result).toEqual(mockResult);
+    });
+
+    it('должна передавать version в IssueService.updateIssue (optimistic locking)', async () => {
+      const issueKey = 'TEST-123';
+      const updateData: UpdateIssueDto = { summary: 'Updated' };
+      const mockResult: IssueWithUnknownFields = {
+        id: '1',
+        key: 'TEST-123',
+        summary: 'Updated',
+        queue: { id: '1', key: 'TEST', name: 'Test' },
+        status: { id: '1', key: 'open', display: 'Open' },
+        createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-02',
+      };
+
+      vi.mocked(mockIssuesContainer.issue.updateIssue).mockResolvedValue(mockResult);
+
+      await facade.updateIssue(issueKey, updateData, 5);
+
+      expect(mockIssuesContainer.issue.updateIssue).toHaveBeenCalledWith(issueKey, updateData, 5);
     });
 
     it('должна обрабатывать ошибки от IssueService.updateIssue', async () => {

@@ -24,6 +24,7 @@ import { EditCommentOperation } from '#tracker_api/api_operations/comment/edit-c
 import { DeleteCommentOperation } from '#tracker_api/api_operations/comment/delete-comment.operation.js';
 import type {
   AddCommentInput,
+  AddCommentBatchItem,
   EditCommentInput,
   GetCommentsInput,
 } from '#tracker_api/dto/index.js';
@@ -56,7 +57,7 @@ export class CommentService {
    * @returns массив результатов в формате BatchResult
    */
   async addCommentsMany(
-    comments: Array<{ issueId: string; text: string; attachmentIds?: string[] | undefined }>
+    comments: AddCommentBatchItem[]
   ): Promise<BatchResult<string, CommentWithUnknownFields>> {
     return this.addCommentOp.executeMany(comments);
   }

@@ -14,52 +14,69 @@ import {
 /**
  * Схема параметров для обновления задачи
  */
-export const UpdateIssueParamsSchema = z.object({
-  /**
-   * Ключ задачи для обновления
-   */
-  issueKey: IssueKeySchema,
+export const UpdateIssueParamsSchema = z
+  .object({
+    /**
+     * Ключ задачи для обновления
+     */
+    issueKey: IssueKeySchema,
 
-  /**
-   * Краткое описание задачи
-   */
-  summary: z.string().min(1).optional().describe('Краткое описание задачи'),
+    /**
+     * Краткое описание задачи
+     */
+    summary: z.string().min(1).optional().describe('Краткое описание задачи'),
 
-  /**
-   * Подробное описание задачи
-   */
-  description: z.string().optional().describe('Подробное описание задачи'),
+    /**
+     * Подробное описание задачи
+     */
+    description: z.string().optional().describe('Подробное описание задачи'),
 
-  /**
-   * Исполнитель (логин или UID)
-   */
-  assignee: z.string().min(1).optional().describe('Исполнитель (логин или UID)'),
+    /**
+     * Исполнитель (логин или UID)
+     */
+    assignee: z.string().min(1).optional().describe('Исполнитель (логин или UID)'),
 
-  /**
-   * Приоритет (ключ приоритета)
-   */
-  priority: z.string().min(1).optional().describe('Приоритет (ключ приоритета)'),
+    /**
+     * Приоритет (ключ приоритета)
+     */
+    priority: z.string().min(1).optional().describe('Приоритет (ключ приоритета)'),
 
-  /**
-   * Тип задачи (ключ типа)
-   */
-  type: z.string().min(1).optional().describe('Тип задачи (ключ типа)'),
+    /**
+     * Тип задачи (ключ типа)
+     */
+    type: z.string().min(1).optional().describe('Тип задачи (ключ типа)'),
 
-  /**
-   * Статус (ключ статуса)
-   */
-  status: z.string().min(1).optional().describe('Статус (ключ статуса)'),
+    /**
+     * Кастомные поля для дополнительных полей Трекера
+     */
+    customFields: z.record(z.string(), z.unknown()).optional().describe('Кастомные поля'),
 
-  /**
-   * Кастомные поля для дополнительных полей Трекера
-   */
-  customFields: z.record(z.string(), z.unknown()).optional().describe('Кастомные поля'),
+    /**
+     * Версия задачи для optimistic locking (защита от параллельных перезаписей)
+     */
+    version: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        'Версия задачи для optimistic locking. Передаётся как query-параметр version в PATCH; ' +
+          'если версия задачи на сервере уже другая (параллельное изменение), API вернёт ошибку ' +
+          'конфликта вместо молчаливой перезаписи чужих изменений. Значение бери из поля version ' +
+          'задачи, полученного через get_issues/find_issues.'
+      ),
 
-  /**
-   * Опциональный массив полей для фильтрации ответа
-   */
-  fields: FieldsSchema,
-});
+    /**
+     * Опциональный массив полей для фильтрации ответа
+     */
+    fields: FieldsSchema,
+  })
+  .describe(
+    'Обновляет summary/description/assignee/priority/type/customFields существующей задачи ' +
+      '(PATCH /v3/issues/{issueKey}). Статус НЕ входит в параметры: API отклоняет прямое ' +
+      'изменение статуса через этот эндпоинт (поле только для чтения) — используй ' +
+      'transition_issue для смены статуса по workflow.'
+  );
 
 /**
  * Вывод типа из схемы

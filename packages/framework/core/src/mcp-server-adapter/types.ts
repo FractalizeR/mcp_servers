@@ -4,6 +4,7 @@
 
 import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { ToolRegistry } from '../tool-registry/index.js';
+import type { ResourceRegistry } from '../resources/index.js';
 
 /**
  * Параметры создания адаптера. Идентичность сервера (имя/версия) и
@@ -27,6 +28,16 @@ export interface McpServerAdapterOptions {
   version: string;
   /** Реестр инструментов — источник tools/list и исполнитель tools/call. */
   toolRegistry: ToolRegistry;
+  /**
+   * Реестр провайдеров ресурсов — источник `resources/list`/`resources/read`/
+   * `resources/templates/list` (пакет 5.1.A). Опционален: composition root
+   * сервера, ещё не зарегистрировавший ни одного `ResourceProvider`
+   * (следующая волна — пакет 5.1.C), получает пустой реестр по умолчанию —
+   * капабилити `resources` при этом всё равно объявлена и отвечает на все
+   * три метода (пустым списком/`ResourceNotFoundError`), а не "Method not
+   * found" — так требует спека для объявленной капабилити.
+   */
+  resourceRegistry?: ResourceRegistry;
   /** Logger сервера (Pino-обёртка из @fractalizer/mcp-infrastructure). */
   logger: Logger;
 }

@@ -11,7 +11,7 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
-import type { AddCommentInput } from '#tracker_api/dto/index.js';
+import type { AddCommentInput, AddCommentBatchItem } from '#tracker_api/dto/index.js';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
@@ -44,14 +44,23 @@ export class AddCommentOperation extends BaseOperation {
    * ВАЖНО:
    * - Retry делается автоматически в HttpClient.post
    * - API возвращает полный объект комментария
+   * - `isAddToFollowers` — единственное поле input, которое API принимает как query-параметр,
+   *   а не в теле запроса (см. api-ref/issues/add-comment.md); остальные поля (включая
+   *   summonees/maillistSummonees/markupType) уходят в тело как есть
    */
   async execute(issueId: string, input: AddCommentInput): Promise<CommentWithUnknownFields> {
     this.logger.info(`Добавление комментария к задаче ${issueId}`);
 
-    const comment = await this.httpClient.post<CommentWithUnknownFields>(
-      `/v3/issues/${issueId}/comments`,
-      input
-    );
+    const { isAddToFollowers, ...body } = input;
+    const queryParams = new URLSearchParams();
+    if (isAddToFollowers !== undefined) {
+      queryParams.append('isAddToFollowers', String(isAddToFollowers));
+    }
+    const endpoint = `/v3/issues/${issueId}/comments${
+      queryParams.toString() ? `?${queryParams.toString()}` : ''
+    }`;
+
+    const comment = await this.httpClient.post<CommentWithUnknownFields>(endpoint, body);
 
     this.logger.info(`Комментарий успешно добавлен к задаче ${issueId}: ${comment.id}`);
 
@@ -71,7 +80,7 @@ export class AddCommentOperation extends BaseOperation {
    * - Retry делается автоматически в HttpClient.post
    */
   async executeMany(
-    comments: Array<{ issueId: string; text: string; attachmentIds?: string[] | undefined }>
+    comments: AddCommentBatchItem[]
   ): Promise<BatchResult<string, CommentWithUnknownFields>> {
     // Проверка на пустой массив
     if (comments.length === 0) {
@@ -84,13 +93,30 @@ export class AddCommentOperation extends BaseOperation {
     );
 
     // Создаём операции для каждой задачи
-    const operations = comments.map(({ issueId, text, attachmentIds }) => ({
-      key: issueId,
-      fn: async (): Promise<CommentWithUnknownFields> => {
-        // Вызываем существующий метод execute() для каждой задачи с индивидуальными параметрами
-        return this.execute(issueId, { text, attachmentIds });
-      },
-    }));
+    const operations = comments.map(
+      ({
+        issueId,
+        text,
+        attachmentIds,
+        summonees,
+        maillistSummonees,
+        markupType,
+        isAddToFollowers,
+      }) => ({
+        key: issueId,
+        fn: async (): Promise<CommentWithUnknownFields> => {
+          // Вызываем существующий метод execute() для каждой задачи с индивидуальными параметрами
+          return this.execute(issueId, {
+            text,
+            attachmentIds,
+            summonees,
+            maillistSummonees,
+            markupType,
+            isAddToFollowers,
+          });
+        },
+      })
+    );
 
     // Выполняем через ParallelExecutor (централизованный throttling)
     return this.parallelExecutor.executeParallel(operations, 'add comments');

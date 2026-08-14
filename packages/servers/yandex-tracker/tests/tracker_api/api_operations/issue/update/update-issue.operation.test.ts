@@ -175,5 +175,41 @@ describe('UpdateIssueOperation', () => {
       });
       expect(mockLogger.info).toHaveBeenCalledWith(`Задача ${issueKey} успешно обновлена`);
     });
+
+    it('should append version as query param for optimistic locking when provided', async () => {
+      const issueKey = 'TEST-123';
+      const updateData: UpdateIssueDto = { summary: 'Updated Summary' };
+
+      const mockUpdatedIssue: IssueWithUnknownFields = {
+        id: '1',
+        key: 'TEST-123',
+        summary: 'Updated Summary',
+        queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+        status: { id: '1', key: 'open', display: 'Open' },
+        createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+        createdAt: '2024-01-01T10:00:00.000Z',
+        updatedAt: '2024-01-02T10:00:00.000Z',
+      };
+
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockUpdatedIssue);
+
+      await operation.execute(issueKey, updateData, 5);
+
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v3/issues/TEST-123?version=5',
+        updateData
+      );
+    });
+
+    it('should NOT append a query string when version is not provided', async () => {
+      const issueKey = 'TEST-123';
+      const updateData: UpdateIssueDto = { summary: 'Updated Summary' };
+
+      vi.mocked(mockHttpClient.patch).mockResolvedValue({} as IssueWithUnknownFields);
+
+      await operation.execute(issueKey, updateData);
+
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/issues/TEST-123', updateData);
+    });
   });
 });

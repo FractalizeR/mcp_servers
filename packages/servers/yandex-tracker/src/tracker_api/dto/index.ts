@@ -53,6 +53,7 @@ export type {
 // Comment DTO
 export type {
   AddCommentInput,
+  AddCommentBatchItem,
   EditCommentInput,
   GetCommentsInput,
   CommentOutput,

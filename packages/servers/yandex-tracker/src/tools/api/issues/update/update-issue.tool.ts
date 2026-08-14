@@ -59,8 +59,8 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
       assignee,
       priority,
       type,
-      status,
       customFields,
+      version,
       fields,
     } = validation.data;
 
@@ -72,7 +72,6 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
         ...(assignee !== undefined && { assignee }),
         ...(priority !== undefined && { priority }),
         ...(type !== undefined && { type }),
-        ...(status !== undefined && { status }),
         ...(customFields && customFields),
       };
 
@@ -84,8 +83,8 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
         fields
       );
 
-      // 4. API v3: обновление задачи
-      const updatedIssue = await this.facade.updateIssue(issueKey, updateData);
+      // 4. API v3: обновление задачи (version — optimistic locking, query-параметр PATCH)
+      const updatedIssue = await this.facade.updateIssue(issueKey, updateData, version);
 
       // 5. Фильтрация полей
       const filteredIssue = ResponseFieldFilter.filter<IssueWithUnknownFields>(

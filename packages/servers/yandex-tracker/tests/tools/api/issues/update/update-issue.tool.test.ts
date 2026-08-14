@@ -93,9 +93,13 @@ describe('UpdateIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith('QUEUE-123', {
-        summary: 'New Summary',
-      });
+      expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith(
+        'QUEUE-123',
+        {
+          summary: 'New Summary',
+        },
+        undefined
+      );
     });
   });
 
@@ -109,9 +113,13 @@ describe('UpdateIssueTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith('QUEUE-123', {
-        summary: 'New Summary',
-      });
+      expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith(
+        'QUEUE-123',
+        {
+          summary: 'New Summary',
+        },
+        undefined
+      );
     });
 
     it('должен вызвать updateIssue с несколькими полями', async () => {
@@ -126,12 +134,16 @@ describe('UpdateIssueTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith('QUEUE-123', {
-        summary: 'New Summary',
-        description: 'New Description',
-        assignee: 'user1',
-        priority: 'high',
-      });
+      expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith(
+        'QUEUE-123',
+        {
+          summary: 'New Summary',
+          description: 'New Description',
+          assignee: 'user1',
+          priority: 'high',
+        },
+        undefined
+      );
     });
 
     it('должен передать customFields в operation', async () => {
@@ -145,9 +157,37 @@ describe('UpdateIssueTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith('QUEUE-123', {
-        customField1: 'value1',
+      expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith(
+        'QUEUE-123',
+        {
+          customField1: 'value1',
+        },
+        undefined
+      );
+    });
+
+    it('должен передать version для optimistic locking', async () => {
+      vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
+
+      await tool.execute({
+        issueKey: 'QUEUE-123',
+        summary: 'New Summary',
+        version: 5,
+        fields: STANDARD_ISSUE_FIELDS,
       });
+
+      expect(mockTrackerFacade.updateIssue).toHaveBeenCalledWith(
+        'QUEUE-123',
+        {
+          summary: 'New Summary',
+        },
+        5
+      );
+    });
+
+    it('не должен принимать параметр status (только для чтения при PATCH)', () => {
+      const definition = tool.getDefinition();
+      expect(definition.inputSchema.properties?.['status']).toBeUndefined();
     });
 
     it('должен вернуть обновленную задачу', async () => {

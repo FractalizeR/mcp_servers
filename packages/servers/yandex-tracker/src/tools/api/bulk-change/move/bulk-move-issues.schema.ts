@@ -48,6 +48,19 @@ export const BulkMoveIssuesParamsSchema = z.object({
     ),
 
   /**
+   * Сбросить статус задачи при перемещении в очередь с другим workflow
+   */
+  initialStatus: z
+    .boolean()
+    .optional()
+    .describe(
+      'Сбросить статус на начальный статус workflow целевой очереди (true) или сохранить ' +
+        'текущий статус как есть (false, по умолчанию). Важно указать true при перемещении в ' +
+        'очередь с другим workflow — иначе задача может остаться в статусе, которого в новом ' +
+        'workflow не существует.'
+    ),
+
+  /**
    * Опциональные поля для обновления при перемещении
    */
   values: BulkMoveValuesSchema,
@@ -71,6 +84,7 @@ export const BulkMoveIssuesOutputDataSchema = z.object({
   totalIssues: z.number(),
   targetQueue: z.string(),
   moveAllFields: z.boolean(),
+  initialStatus: z.boolean(),
   additionalFields: z.array(z.string()),
   note: z.string(),
 });

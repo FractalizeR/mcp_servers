@@ -18,14 +18,14 @@ import { UpdateIssueOutputSchema } from '#tools/api/issues/update/update-issue.s
  */
 export const UPDATE_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_issue', MCP_TOOL_PREFIX),
-  description: '[Issues/Write] Обновить поля задачи',
+  description: '[Issues/Write] Обновить поля задачи. Смена статуса — только transition_issue',
   category: ToolCategory.ISSUES,
   subcategory: 'write',
   priority: ToolPriority.CRITICAL,
   tags: ['update', 'edit', 'modify', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: true,
-  redactionAllowlist: ['issueKey', 'assignee', 'priority', 'type', 'status', 'fields'],
+  redactionAllowlist: ['issueKey', 'assignee', 'priority', 'type', 'version', 'fields'],
   title: 'Обновить задачу',
   outputSchema: UpdateIssueOutputSchema,
   annotations: {

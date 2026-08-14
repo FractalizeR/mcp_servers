@@ -14,3 +14,6 @@ export * from './tool-registry/index.js';
 
 // MCP Server Adapter (lifecycle + transport, пакет 4.1.B)
 export * from './mcp-server-adapter/index.js';
+
+// MCP Resources (пакет 5.1.A)
+export * from './resources/index.js';

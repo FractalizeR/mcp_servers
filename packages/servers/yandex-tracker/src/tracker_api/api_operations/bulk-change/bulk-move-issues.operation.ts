@@ -65,6 +65,12 @@ export class BulkMoveIssuesOperation extends BaseOperation {
       requestBody['moveAllFields'] = true;
     }
 
+    // Добавляем initialStatus, только если вызывающий явно его задал (true или false) —
+    // по умолчанию API сохраняет текущий статус, отправка не нужна
+    if (params.initialStatus !== undefined) {
+      requestBody['initialStatus'] = params.initialStatus;
+    }
+
     // Добавляем values только если они переданы
     const values = params.values;
     if (values) {

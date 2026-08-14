@@ -54,6 +54,7 @@ import type {
   ComponentOutput,
   CreateLinkDto,
   AddCommentInput,
+  AddCommentBatchItem,
   EditCommentInput,
   GetCommentsInput,
   AddWorklogInput,
@@ -179,10 +180,15 @@ export class YandexTrackerFacade implements RawApiCapable {
    * Обновляет существующую задачу
    * @param issueKey - ключ задачи
    * @param updateData - данные для обновления
+   * @param version - версия задачи для optimistic locking (см. UpdateIssueOperation)
    * @returns обновлённая задача
    */
-  async updateIssue(issueKey: string, updateData: UpdateIssueDto): Promise<IssueWithUnknownFields> {
-    return this.issues.issue.updateIssue(issueKey, updateData);
+  async updateIssue(
+    issueKey: string,
+    updateData: UpdateIssueDto,
+    version?: number
+  ): Promise<IssueWithUnknownFields> {
+    return this.issues.issue.updateIssue(issueKey, updateData, version);
   }
 
   // === Issue Methods - Changelog ===
@@ -454,7 +460,7 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @returns массив результатов в формате BatchResult
    */
   async addCommentsMany(
-    comments: Array<{ issueId: string; text: string; attachmentIds?: string[] | undefined }>
+    comments: AddCommentBatchItem[]
   ): Promise<BatchResult<string, CommentWithUnknownFields>> {
     return this.issues.comment.addCommentsMany(comments);
   }

@@ -50,7 +50,7 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issues, queue, moveAllFields, values } = validation.data;
+    const { issues, queue, moveAllFields, initialStatus, values } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -63,6 +63,7 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
       this.logger.info(`Целевая очередь: ${queue}`);
       this.logger.info(`Задачи: ${issues.join(', ')}`);
       this.logger.info(`Переместить все поля: ${moveAllFields ?? false}`);
+      this.logger.info(`Сбросить статус на начальный: ${initialStatus ?? false}`);
       if (values) {
         this.logger.info(`Дополнительные поля: ${Object.keys(values).join(', ')}`);
       }
@@ -72,6 +73,7 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
         issues,
         queue,
         ...(moveAllFields !== undefined && { moveAllFields }),
+        ...(initialStatus !== undefined && { initialStatus }),
         ...(values && { values: values as Record<string, unknown> }),
       });
 
@@ -88,6 +90,7 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
         totalIssues: operation.totalIssues ?? issues.length,
         targetQueue: queue,
         moveAllFields: moveAllFields ?? false,
+        initialStatus: initialStatus ?? false,
         additionalFields: values ? Object.keys(values) : [],
         note: 'Операция выполняется асинхронно. Используй get_bulk_change_status для проверки статуса.',
       });
