@@ -71,6 +71,9 @@ export const TYPES = {
   // Tool Registry
   ToolRegistry: Symbol.for('ToolRegistry'),
 
+  // Resource Registry (пакет 5.1.C.wiki)
+  ResourceRegistry: Symbol.for('ResourceRegistry'),
+
   // Operations (автоматически сгенерированы)
   ...OPERATION_SYMBOLS,
 

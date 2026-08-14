@@ -50,4 +50,9 @@ export const TYPES = {
 
   // === Tool Registry ===
   ToolRegistry: Symbol.for('ToolRegistry'),
+
+  // === MCP Resources (пакет 5.1.C.ticktick) ===
+  TaskResourceProvider: Symbol.for('TaskResourceProvider'),
+  ProjectResourceProvider: Symbol.for('ProjectResourceProvider'),
+  ResourceRegistry: Symbol.for('ResourceRegistry'),
 } as const;

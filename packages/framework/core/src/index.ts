@@ -17,3 +17,6 @@ export * from './mcp-server-adapter/index.js';
 
 // MCP Resources (пакет 5.1.A)
 export * from './resources/index.js';
+
+// MCP Prompts (пакет 5.1.A)
+export * from './prompts/index.js';

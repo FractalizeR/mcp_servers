@@ -5,7 +5,10 @@
 import { z } from 'zod';
 import { TaskEntityOutputSchema } from '#tools/shared/index.js';
 import { FieldsSchema } from '#common/schemas/index.js';
-import { buildOutputSchema } from '@fractalizer/mcp-core';
+import {
+  buildCollectionOutputSchema,
+  collectionResponseModeParamSchema,
+} from '@fractalizer/mcp-core';
 
 /**
  * Parameters schema for searching tasks
@@ -16,6 +19,7 @@ export const SearchTasksParamsSchema = z.object({
     .min(1, 'Search query is required')
     .describe('Search query (searches in title and content)'),
   fields: FieldsSchema,
+  responseMode: collectionResponseModeParamSchema({ itemsNoun: 'задач' }),
 });
 
 /**
@@ -24,12 +28,10 @@ export const SearchTasksParamsSchema = z.object({
 export type SearchTasksParams = z.infer<typeof SearchTasksParamsSchema>;
 
 /**
- * Shape of `data` in the success envelope (`{ success: true, data }`)
+ * Сводка коллекции (пакет 5.1.C.ticktick).
  */
-export const SearchTasksOutputDataSchema = z.object({
+export const SearchTasksSummarySchema = z.object({
   query: z.string(),
-  total: z.number(),
-  tasks: z.array(TaskEntityOutputSchema),
   fieldsReturned: z.array(z.string()),
 });
 
@@ -37,4 +39,7 @@ export const SearchTasksOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope).
  */
-export const SEARCH_TASKS_OUTPUT_SCHEMA = buildOutputSchema(SearchTasksOutputDataSchema);
+export const SEARCH_TASKS_OUTPUT_SCHEMA = buildCollectionOutputSchema(
+  TaskEntityOutputSchema,
+  SearchTasksSummarySchema
+);

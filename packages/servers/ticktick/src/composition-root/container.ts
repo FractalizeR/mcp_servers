@@ -16,7 +16,7 @@ import {
   InMemoryCacheManager,
 } from '@fractalizer/mcp-infrastructure';
 import type { IHttpClient, RetryStrategy, CacheManager } from '@fractalizer/mcp-infrastructure';
-import { ToolRegistry, ConfiguredToolAccessPolicy } from '@fractalizer/mcp-core';
+import { ToolRegistry, ConfiguredToolAccessPolicy, ResourceRegistry } from '@fractalizer/mcp-core';
 import { TYPES } from './types.js';
 import { OPERATION_DEFINITIONS } from './definitions/operation-definitions.js';
 import { TOOL_CLASSES } from './definitions/tool-definitions.js';
@@ -28,6 +28,7 @@ import {
   ProjectOperationsContainer,
   TaskOperationsContainer,
 } from '#ticktick_api/facade/containers/index.js';
+import { TaskResourceProvider, ProjectResourceProvider } from '#resources/index.js';
 
 /**
  * Bind infrastructure dependencies (config, logger)
@@ -211,6 +212,31 @@ function bindToolRegistry(container: Container, config: ServerConfig): void {
 }
 
 /**
+ * Bind MCP Resources: провайдеры (пакет 5.1.C.ticktick) и `ResourceRegistry`
+ * framework, зарегистрированный тем же паттерном, что и `ToolRegistry` выше —
+ * composition root регистрирует провайдеров, `server.ts` передаёт готовый
+ * реестр в `createMcpServerAdapter`.
+ */
+function bindResources(container: Container): void {
+  container.bind<TaskResourceProvider>(TYPES.TaskResourceProvider).toDynamicValue(() => {
+    const facade = container.get<TickTickFacade>(TYPES.TickTickFacade);
+    return new TaskResourceProvider(facade);
+  });
+
+  container.bind<ProjectResourceProvider>(TYPES.ProjectResourceProvider).toDynamicValue(() => {
+    const facade = container.get<TickTickFacade>(TYPES.TickTickFacade);
+    return new ProjectResourceProvider(facade);
+  });
+
+  container.bind<ResourceRegistry>(TYPES.ResourceRegistry).toDynamicValue(() => {
+    const registry = new ResourceRegistry();
+    registry.register(container.get<TaskResourceProvider>(TYPES.TaskResourceProvider));
+    registry.register(container.get<ProjectResourceProvider>(TYPES.ProjectResourceProvider));
+    return registry;
+  });
+}
+
+/**
  * Create and configure DI container
  *
  * @param config - Server configuration
@@ -250,6 +276,9 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
 
   // 9. ToolRegistry (uses tool classes)
   bindToolRegistry(container, config);
+
+  // 10. MCP Resources (providers + registry, depend on Facade)
+  bindResources(container);
 
   // Log initialization
   const logger = container.get<Logger>(TYPES.Logger);

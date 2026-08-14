@@ -4,12 +4,12 @@
  * Retrieves all tasks with due date set to tomorrow.
  */
 
-import { BaseTool } from '@fractalizer/mcp-core';
+import { BaseTool, resolveCollectionResponseMode } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { GetTasksDueTomorrowParamsSchema } from './get-tasks-due-tomorrow.schema.js';
 import { GET_TASKS_DUE_TOMORROW_TOOL_METADATA } from './get-tasks-due-tomorrow.metadata.js';
-import { filterFieldsArray } from '#tools/shared/index.js';
+import { filterFieldsArray, buildTaskResourceLink } from '#tools/shared/index.js';
 
 export class GetTasksDueTomorrowTool extends BaseTool<TickTickFacade> {
   static override readonly METADATA = GET_TASKS_DUE_TOMORROW_TOOL_METADATA;
@@ -22,21 +22,23 @@ export class GetTasksDueTomorrowTool extends BaseTool<TickTickFacade> {
     const validation = this.validateParams(params, GetTasksDueTomorrowParamsSchema);
     if (!validation.success) return validation.error;
 
-    const { fields } = validation.data;
+    const { fields, responseMode } = validation.data;
 
     try {
       const tasks = await this.facade.getTasksDueTomorrow();
-      const filtered = filterFieldsArray(tasks, fields);
+
+      const resolvedMode = resolveCollectionResponseMode(responseMode, tasks.length);
+      const items = resolvedMode === 'full' ? filterFieldsArray(tasks, fields) : tasks;
 
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const dateStr = tomorrow.toISOString().split('T')[0];
 
-      return this.formatSuccess({
-        date: dateStr,
-        total: filtered.length,
-        tasks: filtered,
-        fieldsReturned: fields.length > 0 ? fields : 'all',
+      return this.formatCollectionResult({
+        items,
+        mode: resolvedMode,
+        toResourceLink: buildTaskResourceLink,
+        summary: { date: dateStr, fieldsReturned: fields.length > 0 ? fields : 'all' },
       });
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении задач на завтра', error);

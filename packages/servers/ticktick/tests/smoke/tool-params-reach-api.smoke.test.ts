@@ -82,11 +82,23 @@ const KNOWN_FIELD_SAMPLES = new Map<string, string | number>([['priority', 3]]);
  * Глобальные исключения полей — клиентские, не отправляются в API ни одним
  * инструментом. `fields[]` — путь листа: `FieldsSchema` (#tools/shared) —
  * `z.array(z.string())`, листья генератора — элементы массива.
+ *
+ * `responseMode` (пакет 5.1.C.ticktick, `collectionResponseModeParamSchema`
+ * из `@fractalizer/mcp-core`) — режим `resources_link`/`full`
+ * `BaseTool.formatCollectionResult()`, чисто клиентское форматирование
+ * ответа коллекционных инструментов; в HTTP-запрос к TickTick никогда не
+ * попадает ни у одного инструмента, поэтому исключение — глобальное, а не
+ * по инструментам (симметрично `fields[]` выше).
  */
 const GLOBAL_EXCEPTIONS: readonly ReachabilityException[] = [
   {
     path: 'fields[]',
     reason: 'клиентская фильтрация ответа (ResponseFieldFilter), в API не отправляется',
+  },
+  {
+    path: 'responseMode',
+    reason:
+      'клиентский режим ответа (BaseTool.formatCollectionResult: links/full), в API не отправляется',
   },
 ];
 
@@ -101,8 +113,9 @@ const GLOBAL_EXCEPTIONS: readonly ReachabilityException[] = [
  * `GetAllTasksTool.execute()`). Параметр валиден и используется, просто не
  * долетает до API 1:1 — не тот класс дефекта, который ищет этот тест.
  *
- * ОДНА ЗАПИСЬ — ПОДТВЕРЖДЁННЫЙ ДЕФЕКТ (НЕ чинится в этом пакете, см. отчёт
- * пакета 7.1.E, раздел "Находки у TickTick"): `fr_ticktick_complete_task`.
+ * Пятая запись, отмечавшая `fr_ticktick_complete_task`/`projectId` как
+ * подтверждённый дефект (пакет 7.1.E), снята в пакете 7.1.F вместе с
+ * починкой `CompleteTaskOperation` — см. `complete-task.operation.ts`.
  */
 const EXCEPTIONS_BY_TOOL: Record<string, readonly ReachabilityException[]> = {
   fr_ticktick_get_all_tasks: [
@@ -131,16 +144,6 @@ const EXCEPTIONS_BY_TOOL: Record<string, readonly ReachabilityException[]> = {
       path: 'days',
       reason:
         'клиентский фильтр: days только вычисляет диапазон дат локально (facade.getTasksDueInDays → getTasksDueInRange), API его не видит',
-    },
-  ],
-  fr_ticktick_complete_task: [
-    {
-      path: 'projectId',
-      reason:
-        'ДЕФЕКТ (не чинится в этом пакете — предметная область TickTick, см. отчёт 7.1.E "Находки у TickTick"): ' +
-        'CompleteTaskOperation шлёт POST /task/{taskId}/complete БЕЗ projectId в пути, в отличие от ' +
-        'GetTaskOperation/UpdateTaskOperation (оба используют /project/{projectId}/task/{taskId}...) — ' +
-        'complete-task.operation.ts, метод execute().',
     },
   ],
 };

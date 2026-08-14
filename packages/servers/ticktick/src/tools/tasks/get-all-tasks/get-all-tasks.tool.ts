@@ -4,11 +4,16 @@
  * Fetches tasks from all projects with optional status filtering.
  */
 
-import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import {
+  BaseTool,
+  ResponseFieldFilter,
+  resolveCollectionResponseMode,
+} from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import { TaskStatusValues } from '#common/schemas/index.js';
+import { buildTaskResourceLink } from '#tools/shared/index.js';
 import { GetAllTasksParamsSchema } from './get-all-tasks.schema.js';
 import { GET_ALL_TASKS_TOOL_METADATA } from './get-all-tasks.metadata.js';
 
@@ -35,7 +40,7 @@ export class GetAllTasksTool extends BaseTool<TickTickFacade> {
       return validation.error;
     }
 
-    const { fields, status } = validation.data;
+    const { fields, status, responseMode } = validation.data;
 
     try {
       // 2. Get all tasks from facade
@@ -48,19 +53,26 @@ export class GetAllTasksTool extends BaseTool<TickTickFacade> {
         tasks = tasks.filter((t) => t.status === TaskStatusValues.COMPLETED);
       }
 
-      // 4. Apply field filtering
-      const filtered = tasks.map((task) =>
-        ResponseFieldFilter.filter<TaskWithUnknownFields>(task, fields)
-      );
+      // 4. Resolve links/full mode BEFORE field-filtering: `links` mode needs
+      // raw tasks (id/title for resource_link), `full` needs them filtered —
+      // см. `formatCollectionResult()` (framework), toResourceLink вызывается
+      // только в 'links'.
+      const resolvedMode = resolveCollectionResponseMode(responseMode, tasks.length);
+      const items =
+        resolvedMode === 'full'
+          ? tasks.map((task) => ResponseFieldFilter.filter<TaskWithUnknownFields>(task, fields))
+          : tasks;
 
       // 5. Log success
-      this.logger.info(`All tasks retrieved: ${filtered.length} tasks (${status})`);
+      this.logger.info(
+        `All tasks retrieved: ${tasks.length} tasks (${status}), mode=${resolvedMode}`
+      );
 
-      return this.formatSuccess({
-        total: filtered.length,
-        status,
-        tasks: filtered,
-        fieldsReturned: fields,
+      return this.formatCollectionResult({
+        items,
+        mode: resolvedMode,
+        toResourceLink: buildTaskResourceLink,
+        summary: { status, fieldsReturned: fields },
       });
     } catch (error: unknown) {
       return this.formatError('Failed to get all tasks', error);

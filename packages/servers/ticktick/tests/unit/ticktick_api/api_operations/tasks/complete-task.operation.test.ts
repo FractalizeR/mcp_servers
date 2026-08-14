@@ -25,7 +25,7 @@ describe('CompleteTaskOperation', () => {
 
     await operation.execute('proj-1', 'task-1');
 
-    expect(mockHttpClient.post).toHaveBeenCalledWith('/task/task-1/complete');
+    expect(mockHttpClient.post).toHaveBeenCalledWith('/project/proj-1/task/task-1/complete');
   });
 
   it('should log task completion', async () => {

@@ -92,7 +92,10 @@ export class WorkflowClient {
     }
 
     const response = JSON.parse(result.content[0]!.text);
-    return response.data.issues;
+    // find_issues (пакет 5.1.C.tracker): формат коллекции — data.items в
+    // режиме full (результаты воркфлоу-тестов малы, ниже порога — mode='auto'
+    // всегда резолвится в 'full').
+    return response.data.items;
   }
 
   /**

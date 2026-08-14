@@ -303,17 +303,19 @@ describe('FindIssuesTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          issues: Array<Partial<IssueWithUnknownFields>>;
-          fieldsReturned: string[];
+          items: Array<Partial<IssueWithUnknownFields>>;
+          summary: { fieldsReturned: string[] };
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.issues[0]).toEqual({
+      expect(parsed.data.items[0]).toEqual({
         key: 'QUEUE-123',
         summary: 'Test Issue 1',
       });
-      expect(parsed.data.issues[0]).not.toHaveProperty('description');
-      expect(parsed.data.fieldsReturned).toEqual(['key', 'summary']);
+      expect(parsed.data.items[0]).not.toHaveProperty('description');
+      // 'key'/'summary' уже были в запросе — гарантия идентичности (см.
+      // RESOURCE_LINK_IDENTITY_FIELDS) здесь ничего не добавляет.
+      expect(parsed.data.summary.fieldsReturned).toEqual(['key', 'summary']);
     });
 
     it('должен вернуть поля с фильтрацией', async () => {
@@ -325,13 +327,13 @@ describe('FindIssuesTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          issues: IssueWithUnknownFields[];
-          fieldsReturned: string[];
+          items: IssueWithUnknownFields[];
+          summary: { fieldsReturned: string[] };
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.issues[0]).toHaveProperty('description');
-      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
+      expect(parsed.data.items[0]).toHaveProperty('description');
+      expect(parsed.data.summary.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
 
     it('должен правильно фильтровать вложенные поля', async () => {
@@ -345,13 +347,36 @@ describe('FindIssuesTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          issues: Array<Partial<IssueWithUnknownFields>>;
+          items: Array<Partial<IssueWithUnknownFields>>;
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.issues[0]).toHaveProperty('key');
-      expect(parsed.data.issues[0]).toHaveProperty('queue');
-      expect(parsed.data.issues[0]?.queue).toHaveProperty('key');
+      expect(parsed.data.items[0]).toHaveProperty('key');
+      expect(parsed.data.items[0]).toHaveProperty('queue');
+      expect(parsed.data.items[0]?.queue).toHaveProperty('key');
+    });
+
+    it('должен добавлять key/summary в fieldsReturned, даже если агент их не запросил (resource_link identity)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        query: 'Author: me()',
+        fields: ['status'],
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          items: Array<Partial<IssueWithUnknownFields>>;
+          summary: { fieldsReturned: string[] };
+        };
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.data.summary.fieldsReturned).toEqual(
+        expect.arrayContaining(['status', 'key', 'summary'])
+      );
+      expect(parsed.data.items[0]).toHaveProperty('key', 'QUEUE-123');
+      expect(parsed.data.items[0]).toHaveProperty('summary', 'Test Issue 1');
     });
   });
 
@@ -364,11 +389,11 @@ describe('FindIssuesTool', () => {
       expect(result.isError).not.toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
-        data: { count: number; issues: IssueWithUnknownFields[] };
+        data: { totalCount: number; items: IssueWithUnknownFields[] };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.count).toBe(0);
-      expect(parsed.data.issues).toHaveLength(0);
+      expect(parsed.data.totalCount).toBe(0);
+      expect(parsed.data.items).toHaveLength(0);
     });
 
     it('должен обработать ошибки operation', async () => {
@@ -457,45 +482,51 @@ describe('FindIssuesTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          count: number;
-          issues: IssueWithUnknownFields[];
-          fieldsReturned: string[];
-          searchCriteria: {
-            hasQuery: boolean;
-            hasFilter: boolean;
-            keysCount: number;
-            hasQueue: boolean;
-            perPage?: number;
+          totalCount: number;
+          items: IssueWithUnknownFields[];
+          summary: {
+            fieldsReturned: string[];
+            searchCriteria: {
+              hasQuery: boolean;
+              hasFilter: boolean;
+              keysCount: number;
+              hasQueue: boolean;
+              perPage?: number;
+            };
           };
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.count).toBe(2);
-      expect(parsed.data.issues).toHaveLength(2);
-      expect(parsed.data.searchCriteria).toBeDefined();
-      expect(parsed.data.searchCriteria.hasQuery).toBe(true);
+      expect(parsed.data.totalCount).toBe(2);
+      expect(parsed.data.items).toHaveLength(2);
+      expect(parsed.data.summary.searchCriteria).toBeDefined();
+      expect(parsed.data.summary.searchCriteria.hasQuery).toBe(true);
       // perPage не задан в запросе → не подделываем дефолтом, поле опущено
-      expect(parsed.data.searchCriteria.perPage).toBeUndefined();
+      expect(parsed.data.summary.searchCriteria.perPage).toBeUndefined();
     });
   });
 
   describe('Pagination', () => {
-    it('должен добавлять поле pagination в ответ (регрессия формата: issues/count на месте)', async () => {
+    it('должен добавлять поле pagination в ответ (регрессия формата: items/totalCount на месте)', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
-        data: { count: number; issues: unknown[]; pagination: { hasNextPage: boolean } };
+        data: {
+          totalCount: number;
+          items: unknown[];
+          summary: { pagination: { hasNextPage: boolean } };
+        };
       };
       expect(parsed.success).toBe(true);
-      // прежние ключи сохранены
-      expect(parsed.data.count).toBe(1);
-      expect(parsed.data.issues).toHaveLength(1);
+      // прежние ключи сохранены (переименованы формально, форма — та же)
+      expect(parsed.data.totalCount).toBe(1);
+      expect(parsed.data.items).toHaveLength(1);
       // новое поле
-      expect(parsed.data.pagination).toBeDefined();
-      expect(parsed.data.pagination.hasNextPage).toBe(false);
+      expect(parsed.data.summary.pagination).toBeDefined();
+      expect(parsed.data.summary.pagination.hasNextPage).toBe(false);
     });
 
     it('не должен возвращать top-level page в ответе (R14)', async () => {
@@ -504,11 +535,11 @@ describe('FindIssuesTool', () => {
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        data: Record<string, unknown> & { searchCriteria: Record<string, unknown> };
+        data: Record<string, unknown> & { summary: { searchCriteria: Record<string, unknown> } };
       };
       expect(parsed.data).not.toHaveProperty('page');
-      expect(parsed.data.searchCriteria).not.toHaveProperty('page');
-      expect(parsed.data.searchCriteria).not.toHaveProperty('perPage');
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('page');
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('perPage');
     });
 
     it('должен передавать fetchAll и maxItems в фасад', async () => {
@@ -537,6 +568,163 @@ describe('FindIssuesTool', () => {
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as { success: boolean };
       expect(parsed.success).toBe(false);
+    });
+  });
+
+  describe('Collection response mode (resource_link, пакет 5.1.C.tracker)', () => {
+    /**
+     * Задача с текстом покрупнее (~длинное description) — приближает объём к
+     * реальному API-ответу, чтобы сравнение размера full/links (DoD 5) не
+     * было накручено искусственно короткими фикстурами.
+     */
+    function makeIssue(index: number): IssueWithUnknownFields {
+      return {
+        id: String(index),
+        key: `QUEUE-${index}`,
+        summary: `Задача №${index}: обработать входящий запрос пользователя`,
+        description:
+          'Подробное описание задачи с достаточным объёмом текста, чтобы объём тела ' +
+          'элемента был сопоставим с реальным ответом API Яндекс.Трекера (типичная ' +
+          'сводка одной сущности — примерно 150–400 токенов), а не тривиальной ' +
+          `строкой-заглушкой. Итерация ${index}.`.repeat(6),
+        queue: { id: '1', key: 'QUEUE', name: 'Test Queue' },
+        status: { id: '1', key: 'open', display: 'Open' },
+        createdBy: {
+          uid: `uid-${index}`,
+          display: `User ${index}`,
+          login: `user${index}`,
+          isActive: true,
+        },
+        createdAt: '2025-01-01T10:00:00Z',
+        updatedAt: '2025-01-02T12:00:00Z',
+      };
+    }
+
+    it('responseMode="links" отдаёт resource_link вместо тел (mode="links", items отсутствует)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1, mockIssue2]));
+
+      const result = await tool.execute({
+        query: 'Author: me()',
+        fields: STANDARD_ISSUE_FIELDS,
+        responseMode: 'links',
+      });
+
+      expect(result.isError).not.toBe(true);
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: {
+          mode: string;
+          items?: unknown[];
+          resourceLinks?: Array<{ uri: string; name: string; title?: string }>;
+        };
+      };
+      expect(parsed.data.mode).toBe('links');
+      expect(parsed.data.items).toBeUndefined();
+      expect(parsed.data.resourceLinks).toHaveLength(2);
+      expect(parsed.data.resourceLinks?.[0]).toMatchObject({
+        uri: 'tracker://issue/QUEUE-123',
+        name: 'QUEUE-123',
+        title: 'Test Issue 1',
+      });
+
+      // resource_link виден и как отдельный content-блок протокола, не
+      // только внутри JSON structuredContent (см. BaseTool.formatCollectionResult).
+      const linkBlocks = result.content.filter(
+        (block): block is typeof block & { type: 'resource_link' } =>
+          block.type === 'resource_link'
+      );
+      expect(linkBlocks).toHaveLength(2);
+      expect(linkBlocks[0]).toMatchObject({ uri: 'tracker://issue/QUEUE-123' });
+    });
+
+    it('responseMode="full" отдаёт тела даже выше порога (принудительный full побеждает threshold)', async () => {
+      const issues = Array.from({ length: 25 }, (_, i) => makeIssue(i + 1));
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page(issues));
+
+      const result = await tool.execute({
+        query: 'Author: me()',
+        fields: STANDARD_ISSUE_FIELDS,
+        responseMode: 'full',
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { mode: string; items?: unknown[]; resourceLinks?: unknown[] };
+      };
+      expect(parsed.data.mode).toBe('full');
+      expect(parsed.data.items).toHaveLength(25);
+      expect(parsed.data.resourceLinks).toBeUndefined();
+    });
+
+    it('responseMode по умолчанию — "auto": ≤20 элементов → full', async () => {
+      const issues = Array.from({ length: 20 }, (_, i) => makeIssue(i + 1));
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page(issues));
+
+      // responseMode не передан — проверяем именно значение по умолчанию схемы.
+      const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { mode: string; totalCount: number; threshold: number };
+      };
+      expect(parsed.data.mode).toBe('full');
+      expect(parsed.data.totalCount).toBe(20);
+      expect(parsed.data.threshold).toBe(20);
+    });
+
+    it('responseMode по умолчанию — "auto": >20 элементов → links (мотивирующий случай плана)', async () => {
+      const issues = Array.from({ length: 21 }, (_, i) => makeIssue(i + 1));
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page(issues));
+
+      const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { mode: string; totalCount: number; resourceLinks?: unknown[] };
+      };
+      expect(parsed.data.mode).toBe('links');
+      expect(parsed.data.totalCount).toBe(21);
+      expect(parsed.data.resourceLinks).toHaveLength(21);
+    });
+
+    it('порог виден в описании параметра responseMode (DoD плана: "дефолт должен быть виден в описании")', () => {
+      const definition = tool.getDefinition();
+      const responseModeSchema = definition.inputSchema.properties?.['responseMode'] as {
+        description?: string;
+      };
+      expect(responseModeSchema?.description).toMatch(/20/);
+    });
+
+    it('DoD 5: объём ответа в режиме links СУЩЕСТВЕННО меньше, чем в full (измеренное сравнение)', async () => {
+      const issues = Array.from({ length: 200 }, (_, i) => makeIssue(i + 1));
+
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page(issues));
+      const fullResult = await tool.execute({
+        query: 'Author: me()',
+        fields: STANDARD_ISSUE_FIELDS,
+        responseMode: 'full',
+      });
+
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page(issues));
+      const linksResult = await tool.execute({
+        query: 'Author: me()',
+        fields: STANDARD_ISSUE_FIELDS,
+        responseMode: 'links',
+      });
+
+      const fullSize = fullResult.content[0]?.text.length ?? 0;
+      const linksSize = linksResult.content[0]?.text.length ?? 0;
+
+      expect(fullSize).toBeGreaterThan(0);
+      expect(linksSize).toBeGreaterThan(0);
+      // На 200 задачах экономия должна быть на порядок величины, а не на
+      // проценты — это ровно мотивирующий случай плана ("find_issues на 200
+      // задач вываливает 200 объектов в контекст"). Порог 5x — консервативный
+      // (фактическая экономия на этой фикстуре — на порядок больше), чтобы
+      // тест не был хрупким к мелким изменениям формата сводки/ссылки.
+      expect(linksSize).toBeLessThan(fullSize / 5);
+
+       
+      console.log(
+        `[DoD 5] find_issues(200 issues): full=${fullSize} bytes, links=${linksSize} bytes, ` +
+          `экономия ${(100 * (1 - linksSize / fullSize)).toFixed(1)}%`
+      );
     });
   });
 });

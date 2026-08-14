@@ -11,10 +11,21 @@ import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ResponseFieldFilter, ResultLogger } from '@fractalizer/mcp-core';
+import type { ResourceLinkDescriptor } from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { FindIssuesParamsSchema } from '#tools/api/issues/find/find-issues.schema.js';
+import { buildIssueResourceUri } from '#resources/tracker-resource-uri.js';
 
 import { FIND_ISSUES_TOOL_METADATA } from './find-issues.metadata.js';
+
+/**
+ * Поля, гарантированно присутствующие в отфильтрованном issue независимо от
+ * запрошенного агентом `fields` (пакет 5.1.C.tracker) — нужны, чтобы построить
+ * `resource_link` (uri/name/title) даже если агент их не запрашивал явно.
+ * Дешёвая добавка (два коротких поля), которая делает КАЖДЫЙ элемент
+ * коллекции самоидентифицируемым в обоих режимах ответа (`full`/`links`).
+ */
+const RESOURCE_LINK_IDENTITY_FIELDS = ['key', 'summary'] as const;
 /**
  * Инструмент для поиска задач
  *
@@ -50,7 +61,12 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { fields, ...searchParams } = validation.data;
+    const { fields, responseMode, ...searchParams } = validation.data;
+
+    // Гарантируем 'key'/'summary' в наборе полей фильтрации — иначе в режиме
+    // links resource_link для элементов, где агент их не запросил, лишился
+    // бы адреса/заголовка (см. комментарий RESOURCE_LINK_IDENTITY_FIELDS).
+    const fieldsForFilter = Array.from(new Set([...fields, ...RESOURCE_LINK_IDENTITY_FIELDS]));
 
     try {
       // 2. Логирование начала операции
@@ -85,10 +101,9 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
         ...(searchParams.maxItems !== undefined && { maxItems: searchParams.maxItems }),
       });
 
-      // 4. Фильтрация полей (DP-6: не оборачиваем — сохраняем ключи issues/count,
-      //    pagination добавляем соседним полем)
+      // 4. Фильтрация полей (всегда включает 'key'/'summary' — см. fieldsForFilter выше)
       const filteredIssues = result.items.map((issue) =>
-        ResponseFieldFilter.filter<IssueWithUnknownFields>(issue, fields)
+        ResponseFieldFilter.filter<IssueWithUnknownFields>(issue, fieldsForFilter)
       );
 
       // 5. Логирование результатов
@@ -97,16 +112,27 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
         fieldsCount: fields.length,
       });
 
-      return this.formatSuccess({
-        count: result.items.length,
-        issues: filteredIssues,
-        pagination: result.pagination,
-        fieldsReturned: fields,
-        searchCriteria: {
-          hasQuery: !!searchParams.query,
-          hasFilter: !!searchParams.filter,
-          keysCount: searchParams.keys?.length ?? 0,
-          hasQueue: !!searchParams.queue,
+      // 6. Коллекция: полные тела (full) либо resource_link + сводка (links) —
+      //    пакет 5.1.B/5.1.C.tracker. Режим — параметр запроса (responseMode),
+      //    порог по умолчанию — DEFAULT_COLLECTION_LINKS_THRESHOLD (см. схему).
+      return this.formatCollectionResult<IssueWithUnknownFields>({
+        items: filteredIssues,
+        mode: responseMode,
+        toResourceLink: (issue): ResourceLinkDescriptor => ({
+          uri: buildIssueResourceUri(issue.key),
+          name: issue.key,
+          title: issue.summary,
+          mimeType: 'application/json',
+        }),
+        summary: {
+          pagination: result.pagination,
+          fieldsReturned: fieldsForFilter,
+          searchCriteria: {
+            hasQuery: !!searchParams.query,
+            hasFilter: !!searchParams.filter,
+            keysCount: searchParams.keys?.length ?? 0,
+            hasQueue: !!searchParams.queue,
+          },
         },
       });
     } catch (error: unknown) {

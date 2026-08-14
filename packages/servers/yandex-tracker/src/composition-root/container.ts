@@ -25,6 +25,10 @@ import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.j
 // Tool Registry
 import { ToolRegistry, ConfiguredToolAccessPolicy } from '@fractalizer/mcp-core';
 
+// Resource Registry (пакет 5.1.C.tracker) — provider'ы issue/queue/project
+import type { ResourceRegistry } from '@fractalizer/mcp-core';
+import { createTrackerResourceRegistry } from '#resources/index.js';
+
 // Автоматически импортируемые определения
 import { TOOL_CLASSES, OPERATION_CLASSES, bindFacadeServices } from './definitions/index.js';
 
@@ -230,6 +234,20 @@ function bindToolRegistry(container: Container, config: ServerConfig): void {
 }
 
 /**
+ * Регистрация ResourceRegistry (пакет 5.1.C.tracker)
+ *
+ * Провайдеры (issue/queue/project) строятся из того же YandexTrackerFacade,
+ * что и Tools — единый источник данных, разные протокольные проекции
+ * (tools/call vs resources/read).
+ */
+function bindResourceRegistry(container: Container): void {
+  container.bind<ResourceRegistry>(TYPES.ResourceRegistry).toDynamicValue(() => {
+    const facade = container.get<YandexTrackerFacade>(TYPES.YandexTrackerFacade);
+    return createTrackerResourceRegistry(facade);
+  });
+}
+
+/**
  * Создание и конфигурация DI контейнера
  */
 export async function createContainer(config: ServerConfig): Promise<Container> {
@@ -255,6 +273,9 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
 
   // 4. ToolRegistry
   bindToolRegistry(container, config);
+
+  // 5. ResourceRegistry (пакет 5.1.C.tracker)
+  bindResourceRegistry(container);
 
   // Логирование зарегистрированных DI символов
   const logger = container.get<Logger>(TYPES.Logger);

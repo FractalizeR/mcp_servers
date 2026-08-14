@@ -5,7 +5,10 @@
 import { z } from 'zod';
 import { TaskEntityOutputSchema } from '#tools/shared/index.js';
 import { FieldsSchema, StatusFilterSchema } from '#common/schemas/index.js';
-import { buildOutputSchema } from '@fractalizer/mcp-core';
+import {
+  buildCollectionOutputSchema,
+  collectionResponseModeParamSchema,
+} from '@fractalizer/mcp-core';
 
 /**
  * Parameters schema for getting all tasks
@@ -13,6 +16,7 @@ import { buildOutputSchema } from '@fractalizer/mcp-core';
 export const GetAllTasksParamsSchema = z.object({
   fields: FieldsSchema,
   status: StatusFilterSchema,
+  responseMode: collectionResponseModeParamSchema({ itemsNoun: 'задач' }),
 });
 
 /**
@@ -21,17 +25,21 @@ export const GetAllTasksParamsSchema = z.object({
 export type GetAllTasksParams = z.infer<typeof GetAllTasksParamsSchema>;
 
 /**
- * Shape of `data` in the success envelope (`{ success: true, data }`)
+ * Сводка коллекции (пакет 5.1.C.ticktick) — присутствует в обоих режимах
+ * (`links`/`full`), в отличие от `items`/`resourceLinks`.
  */
-export const GetAllTasksOutputDataSchema = z.object({
-  total: z.number(),
+export const GetAllTasksSummarySchema = z.object({
   status: z.enum(['all', 'uncompleted', 'completed']),
-  tasks: z.array(TaskEntityOutputSchema),
   fieldsReturned: z.array(z.string()),
 });
 
 /**
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
- * not just `data` (see base-tool.ts SuccessEnvelope).
+ * not just `data` (see base-tool.ts SuccessEnvelope). Форма `data` —
+ * `{ mode, totalCount, threshold, summary, items?, resourceLinks? }`, см.
+ * `buildCollectionOutputSchema` (пакет 5.1.B).
  */
-export const GET_ALL_TASKS_OUTPUT_SCHEMA = buildOutputSchema(GetAllTasksOutputDataSchema);
+export const GET_ALL_TASKS_OUTPUT_SCHEMA = buildCollectionOutputSchema(
+  TaskEntityOutputSchema,
+  GetAllTasksSummarySchema
+);

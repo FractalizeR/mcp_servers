@@ -4,20 +4,22 @@
 
 import { z } from 'zod';
 import { FieldsSchema, TaskEntityOutputSchema } from '#tools/shared/index.js';
-import { buildOutputSchema } from '@fractalizer/mcp-core';
+import {
+  buildCollectionOutputSchema,
+  collectionResponseModeParamSchema,
+} from '@fractalizer/mcp-core';
 export const GetOverdueTasksParamsSchema = z.object({
   fields: FieldsSchema.describe('Поля для возврата'),
+  responseMode: collectionResponseModeParamSchema({ itemsNoun: 'задач' }),
 });
 
 export type GetOverdueTasksParams = z.infer<typeof GetOverdueTasksParamsSchema>;
 
 /**
- * Shape of `data` in the success envelope (`{ success: true, data }`)
+ * Сводка коллекции (пакет 5.1.C.ticktick).
  */
-export const GetOverdueTasksOutputDataSchema = z.object({
+export const GetOverdueTasksSummarySchema = z.object({
   asOf: z.string(),
-  total: z.number(),
-  tasks: z.array(TaskEntityOutputSchema),
   fieldsReturned: z.union([z.array(z.string()), z.literal('all')]),
   note: z.string(),
 });
@@ -26,4 +28,7 @@ export const GetOverdueTasksOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope).
  */
-export const GET_OVERDUE_TASKS_OUTPUT_SCHEMA = buildOutputSchema(GetOverdueTasksOutputDataSchema);
+export const GET_OVERDUE_TASKS_OUTPUT_SCHEMA = buildCollectionOutputSchema(
+  TaskEntityOutputSchema,
+  GetOverdueTasksSummarySchema
+);

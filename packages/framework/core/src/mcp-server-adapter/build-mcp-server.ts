@@ -15,7 +15,7 @@
  * не код этого файла (см. заголовок create-mcp-server-adapter.ts).
  */
 
-import { Server, ResourceNotFoundError } from '@modelcontextprotocol/server';
+import { Server, ResourceNotFoundError, ProtocolError } from '@modelcontextprotocol/server';
 import type {
   ListToolsResult,
   CallToolResult,
@@ -24,10 +24,15 @@ import type {
   ReadResourceResult,
   ReadResourceRequestParams,
   ListResourceTemplatesResult,
+  ListPromptsResult,
+  GetPromptResult,
+  GetPromptRequestParams,
+  ServerOptions,
 } from '@modelcontextprotocol/server';
 
 import { projectToolDefinitionsForList } from '../tool-registry/tools-list-projection.js';
 import { ResourceRegistry } from '../resources/index.js';
+import { PromptRegistry } from '../prompts/index.js';
 import { normalizeToolName } from './normalize-tool-name.js';
 import { calculateToolsMetrics, logToolsMetrics, logToolsWarnings } from './tools-metrics.js';
 import { createToolCallErrorResponse } from './tool-call-error-response.js';
@@ -51,6 +56,39 @@ const RESOURCES_LIST_CACHE_TTL_MS = 30_000;
  * списочных ответов. */
 const RESOURCES_READ_CACHE_TTL_MS = 10_000;
 
+/** prompts/list зависит от состава зарегистрированных PromptProvider
+ * конкретной установки — тот же консервативный `private`/короткий TTL, что
+ * и у tools/list и resources/list (владелец cache-полей — adapter, пакет 5.1.A). */
+const PROMPTS_LIST_CACHE_TTL_MS = 30_000;
+
+/**
+ * Капабилити и `cacheHints` конструктора `Server` — вынесено отдельной
+ * функцией, чтобы `buildMcpServer` (ниже) оставался читаемым по мере
+ * роста числа капабилити (4.1.B → 5.1.A: tools → +resources → +prompts).
+ * Значения одинаковы для КАЖДОГО вызова (не зависят от `options`), поэтому
+ * функция без параметров.
+ */
+function buildServerOptions(): ServerOptions {
+  return {
+    capabilities: { tools: {}, resources: {}, prompts: {} },
+    cacheHints: {
+      'tools/list': { ttlMs: TOOLS_LIST_CACHE_TTL_MS, cacheScope: 'private' },
+      'resources/list': { ttlMs: RESOURCES_LIST_CACHE_TTL_MS, cacheScope: 'private' },
+      'resources/templates/list': { ttlMs: RESOURCES_LIST_CACHE_TTL_MS, cacheScope: 'private' },
+      'resources/read': { ttlMs: RESOURCES_READ_CACHE_TTL_MS, cacheScope: 'private' },
+      'prompts/list': { ttlMs: PROMPTS_LIST_CACHE_TTL_MS, cacheScope: 'private' },
+      // 'prompts/get' сюда сознательно НЕ входит: спека 2026-07-28 исключила
+      // его из кешируемых результатов (GetPromptResult не наследует
+      // CacheableResult, SEP-2549), потому что результат prompts/get
+      // зависит от аргументов вызова — кешировать его посреднику нельзя.
+      // Это решение спеки, не ограничение SDK: сам SDK лишь честно отражает
+      // его закрытым списком `CacheableResultMethod` (TS2353 при попытке
+      // добавить 'prompts/get' в cacheHints). См. registerPromptHandlers —
+      // результат prompts/get НЕ несёт ttlMs/cacheScope вообще.
+    },
+  };
+}
+
 /**
  * Строит инстанс `Server` — вызывается `serveStdio` один раз на соединение;
  * тот же код регистрации handlers обслуживает обе эпохи (2025 и 2026-07-28).
@@ -65,6 +103,13 @@ export function buildMcpServer(options: McpServerAdapterOptions): Server {
   // безусловно (см. ниже), и спека требует хендлер на каждую объявленную
   // капабилити.
   const resourceRegistry = options.resourceRegistry ?? new ResourceRegistry();
+  // Пустой реестр по умолчанию (пакет 5.1.A), тот же контракт, что и у
+  // resourceRegistry выше: composition root сервера ещё может не
+  // зарегистрировать ни одного PromptProvider (следующая волна — пакет
+  // 5.1.C) — prompts/list тогда честно отвечает пустым списком,
+  // prompts/get — ProtocolError(-32602) на любое имя, а НЕ "Method not
+  // found": капабилити prompts объявлена безусловно (см. ниже).
+  const promptRegistry = options.promptRegistry ?? new PromptRegistry();
 
   const serverPrefixes = [
     `${serverName}:`,
@@ -73,18 +118,7 @@ export function buildMcpServer(options: McpServerAdapterOptions): Server {
 
   // Идентичность БЕЗ icons: это то, что SDK штампует в `_meta.serverInfo`
   // каждого обычного результата (см. discover-server-info.ts, шапка).
-  const server = new Server(
-    { name: serverName, version },
-    {
-      capabilities: { tools: {}, resources: {} },
-      cacheHints: {
-        'tools/list': { ttlMs: TOOLS_LIST_CACHE_TTL_MS, cacheScope: 'private' },
-        'resources/list': { ttlMs: RESOURCES_LIST_CACHE_TTL_MS, cacheScope: 'private' },
-        'resources/templates/list': { ttlMs: RESOURCES_LIST_CACHE_TTL_MS, cacheScope: 'private' },
-        'resources/read': { ttlMs: RESOURCES_READ_CACHE_TTL_MS, cacheScope: 'private' },
-      },
-    }
-  );
+  const server = new Server({ name: serverName, version }, buildServerOptions());
 
   // Идентичность С icons — только для `server/discover` (пакет 3.1.D).
   // Патчит приватный `_ondiscover()` инстанса; обоснование — в
@@ -94,6 +128,7 @@ export function buildMcpServer(options: McpServerAdapterOptions): Server {
 
   registerToolHandlers(server, toolRegistry, serverPrefixes, logger);
   registerResourceHandlers(server, resourceRegistry, logger);
+  registerPromptHandlers(server, promptRegistry, logger);
 
   // Логирование факта завершения legacy-рукопожатия (notifications/initialized).
   // На 2026-07-28 аналога этому событию нет (server/discover — однократный
@@ -239,5 +274,60 @@ function registerResourceHandlers(
     const resourceTemplates = await resourceRegistry.listTemplates();
 
     return { resourceTemplates } as ListResourceTemplatesResult;
+  });
+}
+
+/**
+ * Регистрирует `prompts/list`/`prompts/get` (пакет 5.1.A, механизм под
+ * промпты пакета 5.1.C). Тот же принцип, что и у resources-хендлеров:
+ * ошибки — протокольные JSON-RPC ошибки (`ProtocolError(-32602)` на
+ * несуществующий промпт, см. `PromptRegistry.getPrompt`), не `isError:true`
+ * — хендлер их пробрасывает, а не перехватывает молча.
+ *
+ * `ttlMs`/`cacheScope` несёт ТОЛЬКО `prompts/list` (через `cacheHints` в
+ * `buildServerOptions()`). `prompts/get` их не несёт — так решает спека
+ * 2026-07-28, не эта функция: см. комментарий у `'prompts/get'` в
+ * `buildServerOptions()`.
+ */
+function registerPromptHandlers(
+  server: Server,
+  promptRegistry: PromptRegistry,
+  logger: McpServerAdapterOptions['logger']
+): void {
+  server.setRequestHandler('prompts/list', async () => {
+    logger.info(`💬 Запрос prompts/list от клиента`);
+
+    const prompts = await promptRegistry.listPrompts();
+
+    return { prompts } as ListPromptsResult;
+  });
+
+  server.setRequestHandler('prompts/get', async (request) => {
+    const { name, arguments: args } = request.params as GetPromptRequestParams;
+    logger.info(`💬 Запрос prompts/get: ${name}`);
+
+    try {
+      const result = await promptRegistry.getPrompt(name, args);
+      logger.info(`✅ prompts/get успешно: ${name}`);
+      // БЕЗ ttlMs/cacheScope — намеренно, не пропуск. Спека 2026-07-28
+      // исключила GetPromptResult из кешируемых результатов (SEP-2549,
+      // GetPromptResult не наследует CacheableResult): результат зависит от
+      // аргументов конкретного вызова, и подсказка о кешировании тут может
+      // заставить посредника закешировать ответ, который кешировать нельзя.
+      // Тот же принцип уже отражён в `buildServerOptions()` — 'prompts/get'
+      // сознательно не входит в `cacheHints`.
+      return result as GetPromptResult;
+    } catch (error) {
+      if (error instanceof ProtocolError) {
+        logger.warn(`⚠️ prompts/get: промпт не найден: ${name}`);
+      } else {
+        logger.error(`💥 prompts/get: ошибка провайдера: ${name}`, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      // Проброс наверх — тот же принцип, что и у resources/read выше:
+      // отказ обязан быть протокольной ошибкой, а не текстовым результатом.
+      throw error;
+    }
   });
 }

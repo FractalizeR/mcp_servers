@@ -28,6 +28,7 @@
     "#ticktick_api/*": "./src/ticktick_api/*",
     "#tools/*": "./src/tools/*",
     "#composition-root/*": "./src/composition-root/*",
+    "#resources/*": "./src/resources/*",
     "#cli/*": "./src/cli/*",
     "#constants": "./src/constants.ts",
     "#common/*": "./src/common/*",

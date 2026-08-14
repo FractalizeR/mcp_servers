@@ -4,7 +4,11 @@
 
 import { z } from 'zod';
 import { TaskEntityOutputSchema } from '#tools/shared/index.js';
-import { FieldsSchema, buildOutputSchema } from '@fractalizer/mcp-core';
+import {
+  FieldsSchema,
+  buildCollectionOutputSchema,
+  collectionResponseModeParamSchema,
+} from '@fractalizer/mcp-core';
 /**
  * Parameters schema for getting all tasks of a project
  */
@@ -18,6 +22,8 @@ export const GetProjectTasksParamsSchema = z.object({
    * Fields to return for tasks (required for context economy)
    */
   fields: FieldsSchema.describe('Поля задач для возврата'),
+
+  responseMode: collectionResponseModeParamSchema({ itemsNoun: 'задач' }),
 });
 
 /**
@@ -26,13 +32,11 @@ export const GetProjectTasksParamsSchema = z.object({
 export type GetProjectTasksParams = z.infer<typeof GetProjectTasksParamsSchema>;
 
 /**
- * Shape of `data` in the success envelope (`{ success: true, data }`)
+ * Сводка коллекции (пакет 5.1.C.ticktick).
  */
-export const GetProjectTasksOutputDataSchema = z.object({
+export const GetProjectTasksSummarySchema = z.object({
   projectId: z.string(),
   projectName: z.string(),
-  total: z.number(),
-  tasks: z.array(TaskEntityOutputSchema),
   fieldsReturned: z.array(z.string()),
 });
 
@@ -40,4 +44,7 @@ export const GetProjectTasksOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope).
  */
-export const GET_PROJECT_TASKS_OUTPUT_SCHEMA = buildOutputSchema(GetProjectTasksOutputDataSchema);
+export const GET_PROJECT_TASKS_OUTPUT_SCHEMA = buildCollectionOutputSchema(
+  TaskEntityOutputSchema,
+  GetProjectTasksSummarySchema
+);

@@ -16,6 +16,7 @@ import {
   PaginationMetaSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
+import { collectionResponseModeParamSchema, ResourceLinkDataSchema } from '@fractalizer/mcp-core';
 
 /**
  * Схема параметров для поиска задач
@@ -90,6 +91,13 @@ export const FindIssuesParamsSchema = z
     maxItems: MaxItemsSchema,
 
     /**
+     * Режим ответа коллекции (пакет 5.1.C.tracker): тела задач инлайном или
+     * компактные resource_link (см. `collectionResponseModeParamSchema` —
+     * описание параметра, видимое агенту, само называет порог).
+     */
+    responseMode: collectionResponseModeParamSchema({ itemsNoun: 'задач' }),
+
+    /**
      * Опциональный массив полей для фильтрации ответа
      */
     fields: FieldsSchema,
@@ -121,11 +129,13 @@ export const FindIssuesParamsSchema = z
 export type FindIssuesParams = z.infer<typeof FindIssuesParamsSchema>;
 
 /**
- * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ * Агрегаты поиска, не зависящие от режима ответа (`links`/`full`) — пагинация
+ * Трекера, эхо `fields` и флаги примененных критериев поиска. Раньше эти три
+ * поля лежали на верхнем уровне `data` вместе с `issues`/`count`; теперь они
+ * под `summary` — форма, заданная `BaseTool.formatCollectionResult()` (пакет
+ * 5.1.B): `{ mode, totalCount, threshold, summary?, items? | resourceLinks? }`.
  */
-export const FindIssuesOutputDataSchema = z.object({
-  count: z.number(),
-  issues: z.array(FilteredEntitySchema),
+export const FindIssuesSummarySchema = z.object({
   pagination: PaginationMetaSchema,
   fieldsReturned: FieldsReturnedSchema,
   searchCriteria: z.object({
@@ -134,6 +144,25 @@ export const FindIssuesOutputDataSchema = z.object({
     keysCount: z.number(),
     hasQueue: z.boolean(),
   }),
+});
+
+/**
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`).
+ *
+ * НЕ через `buildCollectionOutputSchema()` (framework, пакет 5.1.B): тот хелпер
+ * требует `z.ZodObject` для схемы элемента, а `FilteredEntitySchema` — это
+ * `z.record(...)` (форма отфильтрованной сущности принципиально произвольна,
+ * см. output.schema.ts) — типы несовместимы. Форма ниже — та же самая, что
+ * строит `buildCollectionOutputSchema`, просто собрана вручную под
+ * `FilteredEntitySchema`.
+ */
+export const FindIssuesOutputDataSchema = z.object({
+  mode: z.enum(['links', 'full']),
+  totalCount: z.number(),
+  threshold: z.number(),
+  summary: FindIssuesSummarySchema,
+  items: z.array(FilteredEntitySchema).optional(),
+  resourceLinks: z.array(ResourceLinkDataSchema).optional(),
 });
 
 /**

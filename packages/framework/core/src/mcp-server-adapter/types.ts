@@ -5,6 +5,7 @@
 import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { ToolRegistry } from '../tool-registry/index.js';
 import type { ResourceRegistry } from '../resources/index.js';
+import type { PromptRegistry } from '../prompts/index.js';
 
 /**
  * Параметры создания адаптера. Идентичность сервера (имя/версия) и
@@ -38,6 +39,16 @@ export interface McpServerAdapterOptions {
    * found" — так требует спека для объявленной капабилити.
    */
   resourceRegistry?: ResourceRegistry;
+  /**
+   * Реестр провайдеров промптов — источник `prompts/list`/`prompts/get`
+   * (пакет 5.1.A). Опционален по тому же контракту, что и
+   * `resourceRegistry`: composition root сервера, ещё не зарегистрировавший
+   * ни одного `PromptProvider` (следующая волна — пакет 5.1.C), получает
+   * пустой реестр по умолчанию — капабилити `prompts` при этом всё равно
+   * объявлена и отвечает пустым списком/`ProtocolError(-32602)`, а не
+   * "Method not found".
+   */
+  promptRegistry?: PromptRegistry;
   /** Logger сервера (Pino-обёртка из @fractalizer/mcp-infrastructure). */
   logger: Logger;
 }

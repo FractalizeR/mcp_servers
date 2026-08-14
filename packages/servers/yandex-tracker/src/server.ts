@@ -21,7 +21,7 @@ import { dirname, join } from 'node:path';
 
 import { loadConfig } from '#config';
 import type { Logger } from '@fractalizer/mcp-infrastructure';
-import type { ToolRegistry } from '@fractalizer/mcp-core';
+import type { ToolRegistry, ResourceRegistry } from '@fractalizer/mcp-core';
 import { createMcpServerAdapter } from '@fractalizer/mcp-core';
 import { MCP_SERVER_NAME, MCP_SERVER_DISPLAY_NAME } from './constants.js';
 
@@ -71,11 +71,16 @@ async function main(): Promise<void> {
     // единый источник истины для tools/list и tools/call, см. tool-registry.ts)
     const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
 
+    // ResourceRegistry — провайдеры resources/* (issue/queue/project), пакет
+    // 5.1.C.tracker; опция adapter опциональна, но Трекер её всегда заполняет.
+    const resourceRegistry = container.get<ResourceRegistry>(TYPES.ResourceRegistry);
+
     const adapter = createMcpServerAdapter({
       serverName: MCP_SERVER_NAME,
       serverDisplayName: MCP_SERVER_DISPLAY_NAME,
       version: getPackageVersion(),
       toolRegistry,
+      resourceRegistry,
       logger,
     });
 

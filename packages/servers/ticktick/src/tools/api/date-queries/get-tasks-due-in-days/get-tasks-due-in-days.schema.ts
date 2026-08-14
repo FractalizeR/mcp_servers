@@ -4,23 +4,25 @@
 
 import { z } from 'zod';
 import { FieldsSchema, TaskEntityOutputSchema } from '#tools/shared/index.js';
-import { buildOutputSchema } from '@fractalizer/mcp-core';
+import {
+  buildCollectionOutputSchema,
+  collectionResponseModeParamSchema,
+} from '@fractalizer/mcp-core';
 export const GetTasksDueInDaysParamsSchema = z.object({
   days: z.number().int().min(1).max(365).describe('Количество дней от сегодня (1-365)'),
   fields: FieldsSchema.describe('Поля для возврата'),
+  responseMode: collectionResponseModeParamSchema({ itemsNoun: 'задач' }),
 });
 
 export type GetTasksDueInDaysParams = z.infer<typeof GetTasksDueInDaysParamsSchema>;
 
 /**
- * Shape of `data` in the success envelope (`{ success: true, data }`)
+ * Сводка коллекции (пакет 5.1.C.ticktick).
  */
-export const GetTasksDueInDaysOutputDataSchema = z.object({
+export const GetTasksDueInDaysSummarySchema = z.object({
   fromDate: z.string(),
   toDate: z.string(),
   daysRange: z.number(),
-  total: z.number(),
-  tasks: z.array(TaskEntityOutputSchema),
   fieldsReturned: z.union([z.array(z.string()), z.literal('all')]),
 });
 
@@ -28,6 +30,7 @@ export const GetTasksDueInDaysOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope).
  */
-export const GET_TASKS_DUE_IN_DAYS_OUTPUT_SCHEMA = buildOutputSchema(
-  GetTasksDueInDaysOutputDataSchema
+export const GET_TASKS_DUE_IN_DAYS_OUTPUT_SCHEMA = buildCollectionOutputSchema(
+  TaskEntityOutputSchema,
+  GetTasksDueInDaysSummarySchema
 );

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { collectionResponseModeParamSchema } from '@fractalizer/mcp-core';
 import { PageIdSchema, ResourceOutputSchema } from '#common/schemas/index.js';
 
 const ResourceTypeSchema = z.enum(['attachment', 'grid', 'sharepoint_resource']);
@@ -18,13 +19,23 @@ export const GetResourcesParamsSchema = z.object({
     .describe('Размер страницы (default: 25, max: 50)'),
   q: z.string().optional().describe('Поиск по названию'),
   types: z.array(ResourceTypeSchema).optional().describe('Типы ресурсов'),
+  responseMode: collectionResponseModeParamSchema({ itemsNoun: 'ресурсов' }),
 });
 
 export type GetResourcesParams = z.infer<typeof GetResourcesParamsSchema>;
 
-export const GetResourcesOutputDataSchema = z.object({
-  message: z.string(),
-  results: z.array(ResourceOutputSchema),
+/**
+ * Схема поля `summary` результата (пакет 5.1.C.wiki).
+ *
+ * `gridItems` — таблицы (grid) страницы, ВСЕГДА полностью инлайн, вне
+ * механизма `responseMode`/ResourceLink: динамические таблицы заморожены
+ * решением этапа 7.1, план прямо запрещает расширять на них Resources —
+ * см. `#resources/wiki-page-item-resource.provider.ts`.
+ */
+export const GetResourcesSummarySchema = z.object({
+  gridItems: z.array(ResourceOutputSchema),
   next_cursor: z.string().optional(),
   prev_cursor: z.string().optional(),
 });
+
+export type GetResourcesSummary = z.infer<typeof GetResourcesSummarySchema>;

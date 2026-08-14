@@ -8,13 +8,13 @@
  * Duplicates are removed.
  */
 
-import { BaseTool } from '@fractalizer/mcp-core';
+import { BaseTool, resolveCollectionResponseMode } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import { GetNextTasksParamsSchema } from './get-next-tasks.schema.js';
 import { GET_NEXT_TASKS_TOOL_METADATA } from './get-next-tasks.metadata.js';
-import { filterFieldsArray } from '#tools/shared/index.js';
+import { filterFieldsArray, buildTaskResourceLink } from '#tools/shared/index.js';
 
 export class GetNextTasksTool extends BaseTool<TickTickFacade> {
   static override readonly METADATA = GET_NEXT_TASKS_TOOL_METADATA;
@@ -27,7 +27,7 @@ export class GetNextTasksTool extends BaseTool<TickTickFacade> {
     const validation = this.validateParams(params, GetNextTasksParamsSchema);
     if (!validation.success) return validation.error;
 
-    const { fields } = validation.data;
+    const { fields, responseMode } = validation.data;
 
     try {
       // Fetch both sets in parallel
@@ -43,19 +43,24 @@ export class GetNextTasksTool extends BaseTool<TickTickFacade> {
       }
 
       const tasks = Array.from(taskMap.values());
-      const filtered = filterFieldsArray(tasks, fields);
+
+      const resolvedMode = resolveCollectionResponseMode(responseMode, tasks.length);
+      const items = resolvedMode === 'full' ? filterFieldsArray(tasks, fields) : tasks;
 
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      return this.formatSuccess({
-        description: 'Средний приоритет ИЛИ срок завтра',
-        mediumPriorityCount: mediumPriority.length,
-        dueTomorrowCount: dueTomorrow.length,
-        tomorrowDate: tomorrow.toISOString().split('T')[0],
-        total: filtered.length,
-        tasks: filtered,
-        fieldsReturned: fields.length > 0 ? fields : 'all',
+      return this.formatCollectionResult({
+        items,
+        mode: resolvedMode,
+        toResourceLink: buildTaskResourceLink,
+        summary: {
+          description: 'Средний приоритет ИЛИ срок завтра',
+          mediumPriorityCount: mediumPriority.length,
+          dueTomorrowCount: dueTomorrow.length,
+          tomorrowDate: tomorrow.toISOString().split('T')[0],
+          fieldsReturned: fields.length > 0 ? fields : 'all',
+        },
       });
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении "следующих" задач', error);

@@ -20,7 +20,10 @@ import { InMemoryCacheManager } from '@fractalizer/mcp-infrastructure';
 import { YandexWikiFacade } from '#wiki_api/facade/yandex-wiki.facade.js';
 
 // Tool Registry
-import { ToolRegistry, ConfiguredToolAccessPolicy } from '@fractalizer/mcp-core';
+import { ToolRegistry, ConfiguredToolAccessPolicy, ResourceRegistry } from '@fractalizer/mcp-core';
+
+// Resource Registry (пакет 5.1.C.wiki)
+import { WikiPageResourceProvider, WikiPageItemResourceProvider } from '#resources/index.js';
 
 // Автоматически импортируемые определения
 import { TOOL_CLASSES, OPERATION_CLASSES, bindFacadeServices } from './definitions/index.js';
@@ -183,6 +186,23 @@ function bindToolRegistry(container: Container, config: ServerConfig): void {
 }
 
 /**
+ * Регистрация ResourceRegistry (пакет 5.1.C.wiki)
+ *
+ * Провайдеры получают уже собранный `YandexWikiFacade` — тот же паттерн, что
+ * у `bindTools`: composition root регистрирует, adapter (framework) обходит
+ * реестр в обработчиках `resources/list`/`resources/read`/`resources/templates/list`.
+ */
+function bindResourceRegistry(container: Container): void {
+  container.bind<ResourceRegistry>(TYPES.ResourceRegistry).toDynamicValue(() => {
+    const facade = container.get<YandexWikiFacade>(TYPES.YandexWikiFacade);
+    const registry = new ResourceRegistry();
+    registry.register(new WikiPageResourceProvider(facade));
+    registry.register(new WikiPageItemResourceProvider(facade));
+    return registry;
+  });
+}
+
+/**
  * Создание и конфигурация DI контейнера
  */
 export async function createContainer(config: ServerConfig): Promise<Container> {
@@ -207,6 +227,9 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
 
   // 4. ToolRegistry
   bindToolRegistry(container, config);
+
+  // 5. ResourceRegistry
+  bindResourceRegistry(container);
 
   // Логирование
   const logger = container.get<Logger>(TYPES.Logger);

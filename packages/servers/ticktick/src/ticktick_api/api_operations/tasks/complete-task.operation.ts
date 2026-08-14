@@ -6,7 +6,7 @@
  * - Invalidating task and project caches after completion
  * - NO create/read/update/delete
  *
- * API: POST /task/{taskId}/complete
+ * API: POST /project/{projectId}/task/{taskId}/complete
  */
 
 import { BaseOperation } from '#ticktick_api/api_operations/base-operation.js';
@@ -46,7 +46,7 @@ export class CompleteTaskOperation extends BaseOperation {
   async execute(projectId: string, taskId: string): Promise<void> {
     this.logger.info(`Completing task: ${taskId}`);
 
-    await this.httpClient.post(`/task/${taskId}/complete`);
+    await this.httpClient.post(`/project/${projectId}/task/${taskId}/complete`);
 
     // Invalidate caches
     const taskCacheKey = createTaskCacheKey(projectId, taskId);

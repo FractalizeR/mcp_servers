@@ -53,17 +53,17 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.count).toBe(2);
-      expect(response.issues).toHaveLength(2);
-      expect(response.fieldsReturned).toEqual(STANDARD_ISSUE_FIELDS);
-      expect(response.searchCriteria).toMatchObject({
+      expect(response.totalCount).toBe(2);
+      expect(response.items).toHaveLength(2);
+      expect(response.summary.fieldsReturned).toEqual(STANDARD_ISSUE_FIELDS);
+      expect(response.summary.searchCriteria).toMatchObject({
         hasQuery: false,
         hasFilter: false,
         keysCount: 2,
         hasQueue: false,
       });
       // perPage не задавали → не подделываем дефолтом
-      expect(response.searchCriteria.perPage).toBeUndefined();
+      expect(response.summary.searchCriteria.perPage).toBeUndefined();
 
       mockServer.assertAllRequestsDone();
     });
@@ -89,9 +89,9 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.count).toBe(3);
-      expect(response.issues).toHaveLength(3);
-      expect(response.searchCriteria.hasQuery).toBe(true);
+      expect(response.totalCount).toBe(3);
+      expect(response.items).toHaveLength(3);
+      expect(response.summary.searchCriteria.hasQuery).toBe(true);
 
       mockServer.assertAllRequestsDone();
     });
@@ -117,8 +117,8 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.count).toBe(2);
-      expect(response.searchCriteria.hasQueue).toBe(true);
+      expect(response.totalCount).toBe(2);
+      expect(response.summary.searchCriteria.hasQueue).toBe(true);
 
       mockServer.assertAllRequestsDone();
     });
@@ -149,8 +149,8 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.count).toBe(1);
-      expect(response.searchCriteria.hasFilter).toBe(true);
+      expect(response.totalCount).toBe(1);
+      expect(response.summary.searchCriteria.hasFilter).toBe(true);
 
       mockServer.assertAllRequestsDone();
     });
@@ -177,9 +177,9 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.count).toBe(2);
+      expect(response.totalCount).toBe(2);
       // R14: perPage больше не эхуется в searchCriteria
-      expect(response.searchCriteria).not.toHaveProperty('perPage');
+      expect(response.summary.searchCriteria).not.toHaveProperty('perPage');
 
       mockServer.assertAllRequestsDone();
     });
@@ -207,7 +207,7 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.count).toBe(2);
+      expect(response.totalCount).toBe(2);
 
       mockServer.assertAllRequestsDone();
     });
@@ -233,10 +233,10 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.fieldsReturned).toEqual(fields);
-      expect(response.issues).toHaveLength(1);
+      expect(response.summary.fieldsReturned).toEqual(fields);
+      expect(response.items).toHaveLength(1);
 
-      const issue = response.issues[0];
+      const issue = response.items[0];
 
       // Должны быть только запрошенные поля
       expect(issue).toHaveProperty('key');
@@ -269,7 +269,7 @@ describe('find-issues integration tests', () => {
 
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
-      const issue = response.issues[0];
+      const issue = response.items[0];
 
       expect(issue).toHaveProperty('key');
       expect(issue).toHaveProperty('status');
@@ -320,8 +320,8 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.count).toBe(0);
-      expect(response.issues).toHaveLength(0);
+      expect(response.totalCount).toBe(0);
+      expect(response.items).toHaveLength(0);
 
       mockServer.assertAllRequestsDone();
     });

@@ -2,10 +2,15 @@
  * MCP Tool for getting tasks by priority in TickTick
  */
 
-import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import {
+  BaseTool,
+  ResponseFieldFilter,
+  resolveCollectionResponseMode,
+} from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
+import { buildTaskResourceLink } from '#tools/shared/index.js';
 import { GetTasksByPriorityParamsSchema } from './get-tasks-by-priority.schema.js';
 import { GET_TASKS_BY_PRIORITY_TOOL_METADATA } from './get-tasks-by-priority.metadata.js';
 
@@ -42,27 +47,30 @@ export class GetTasksByPriorityTool extends BaseTool<TickTickFacade> {
       return validation.error;
     }
 
-    const { priority, fields } = validation.data;
+    const { priority, fields, responseMode } = validation.data;
 
     try {
       // 2. Get tasks by priority via facade
       const tasks = await this.facade.getTasksByPriority(priority);
 
-      // 3. Apply field filtering
-      const filtered = tasks.map((task) =>
-        ResponseFieldFilter.filter<TaskWithUnknownFields>(task, fields)
-      );
+      // 3. Resolve links/full mode BEFORE field-filtering (см. get-all-tasks.tool.ts)
+      const resolvedMode = resolveCollectionResponseMode(responseMode, tasks.length);
+      const items =
+        resolvedMode === 'full'
+          ? tasks.map((task) => ResponseFieldFilter.filter<TaskWithUnknownFields>(task, fields))
+          : tasks;
 
       // 4. Log success
       const priorityLabel = PRIORITY_LABELS[priority] ?? String(priority);
-      this.logger.info(`Tasks with priority ${priorityLabel}: ${filtered.length} found`);
+      this.logger.info(
+        `Tasks with priority ${priorityLabel}: ${tasks.length} found, mode=${resolvedMode}`
+      );
 
-      return this.formatSuccess({
-        priority,
-        priorityLabel,
-        total: filtered.length,
-        tasks: filtered,
-        fieldsReturned: fields,
+      return this.formatCollectionResult({
+        items,
+        mode: resolvedMode,
+        toResourceLink: buildTaskResourceLink,
+        summary: { priority, priorityLabel, fieldsReturned: fields },
       });
     } catch (error: unknown) {
       return this.formatError(`Failed to get tasks with priority ${priority}`, error);

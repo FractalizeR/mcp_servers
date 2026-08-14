@@ -8,13 +8,13 @@
  * Duplicates are removed.
  */
 
-import { BaseTool } from '@fractalizer/mcp-core';
+import { BaseTool, resolveCollectionResponseMode } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import { GetEngagedTasksParamsSchema } from './get-engaged-tasks.schema.js';
 import { GET_ENGAGED_TASKS_TOOL_METADATA } from './get-engaged-tasks.metadata.js';
-import { filterFieldsArray } from '#tools/shared/index.js';
+import { filterFieldsArray, buildTaskResourceLink } from '#tools/shared/index.js';
 
 export class GetEngagedTasksTool extends BaseTool<TickTickFacade> {
   static override readonly METADATA = GET_ENGAGED_TASKS_TOOL_METADATA;
@@ -27,7 +27,7 @@ export class GetEngagedTasksTool extends BaseTool<TickTickFacade> {
     const validation = this.validateParams(params, GetEngagedTasksParamsSchema);
     if (!validation.success) return validation.error;
 
-    const { fields } = validation.data;
+    const { fields, responseMode } = validation.data;
 
     try {
       // Fetch both sets in parallel
@@ -43,15 +43,20 @@ export class GetEngagedTasksTool extends BaseTool<TickTickFacade> {
       }
 
       const tasks = Array.from(taskMap.values());
-      const filtered = filterFieldsArray(tasks, fields);
 
-      return this.formatSuccess({
-        description: 'Высокий приоритет ИЛИ просроченные',
-        highPriorityCount: highPriority.length,
-        overdueCount: overdue.length,
-        total: filtered.length,
-        tasks: filtered,
-        fieldsReturned: fields.length > 0 ? fields : 'all',
+      const resolvedMode = resolveCollectionResponseMode(responseMode, tasks.length);
+      const items = resolvedMode === 'full' ? filterFieldsArray(tasks, fields) : tasks;
+
+      return this.formatCollectionResult({
+        items,
+        mode: resolvedMode,
+        toResourceLink: buildTaskResourceLink,
+        summary: {
+          description: 'Высокий приоритет ИЛИ просроченные',
+          highPriorityCount: highPriority.length,
+          overdueCount: overdue.length,
+          fieldsReturned: fields.length > 0 ? fields : 'all',
+        },
       });
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении "горящих" задач', error);

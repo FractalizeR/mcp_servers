@@ -83,6 +83,14 @@ const EXCEPTIONS_BY_TOOL: Record<string, readonly ReachabilityException[]> = {
       reason: 'сравнивается локально с уже прочитанным содержимым, в API не отправляется',
     },
   ],
+  yw_get_resources: [
+    {
+      path: 'responseMode',
+      reason:
+        'управляет ТОЛЬКО формой ответа инструмента (BaseTool.formatCollectionResult) — ' +
+        'links/full/auto, к запросу Wiki API отношения не имеет (пакет 5.1.C.wiki)',
+    },
+  ],
   // Boolean-листья форвардятся 1:1 по значению, но под ДРУГИМ именем ключа
   // (append-content.tool.ts: `data.anchor = { fallback: anchor_fallback,
   // regex: anchor_regex }`) — см. заголовок файла про wireFieldName.
