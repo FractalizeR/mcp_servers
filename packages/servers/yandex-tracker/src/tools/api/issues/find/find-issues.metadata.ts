@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { FindIssuesOutputSchema } from '#tools/api/issues/find/find-issues.schema.js';
 
 /**
  * Статические метаданные для FindIssuesTool
@@ -27,4 +28,12 @@ export const FIND_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   // query/filter НЕ включены: поисковые запросы/фильтры могут нести произвольный
   // пользовательский текст.
   redactionAllowlist: ['queue', 'keys', 'filterId', 'perPage', 'cursor', 'fields'],
+  title: 'Поиск задач',
+  outputSchema: FindIssuesOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { buildSuccessOutputSchema } from '#tools/shared/index.js';
+import { buildOutputSchema } from '@fractalizer/mcp-core';
 
 /**
  * Parameters schema for deleting a task
@@ -31,4 +31,4 @@ export const DeleteTaskOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope).
  */
-export const DELETE_TASK_OUTPUT_SCHEMA = buildSuccessOutputSchema(DeleteTaskOutputDataSchema);
+export const DELETE_TASK_OUTPUT_SCHEMA = buildOutputSchema(DeleteTaskOutputDataSchema);

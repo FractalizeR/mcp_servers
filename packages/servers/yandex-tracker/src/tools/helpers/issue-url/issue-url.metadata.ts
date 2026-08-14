@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { IssueUrlOutputSchema } from '#tools/helpers/issue-url/issue-url.schema.js';
 
 /**
  * Статические метаданные для IssueUrlTool
@@ -25,4 +26,12 @@ export const ISSUE_URL_TOOL_METADATA: StaticToolMetadata = {
   isHelper: true,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueKeys'],
+  title: 'URL задачи',
+  outputSchema: IssueUrlOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  },
 } as const;

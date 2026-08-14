@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { CreateProjectOutputSchema } from './create-project.schema.js';
 
 /**
  * Статические метаданные для CreateProjectTool
@@ -34,4 +35,12 @@ export const CREATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
     'teamUserIds',
     'fields',
   ],
+  title: 'Создать проект',
+  outputSchema: CreateProjectOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

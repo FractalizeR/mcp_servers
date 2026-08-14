@@ -10,6 +10,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { RAW_API_REQUEST_OUTPUT_SCHEMA } from './raw-api-request.schema.js';
 
 /**
  * Статические метаданные для RawApiRequestTool
@@ -27,4 +28,12 @@ export const RAW_API_REQUEST_TOOL_METADATA: StaticToolMetadata = {
   // path — произвольный маршрут (может нести встроенные ID, но не сам ID),
   // query — открытый набор пар ключ-значение, потенциально с текстом.
   redactionAllowlist: [],
+  title: 'Raw API Request',
+  outputSchema: RAW_API_REQUEST_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

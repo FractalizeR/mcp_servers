@@ -5,13 +5,9 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import {
-  GetTasksDueInDaysParamsSchema,
-  GET_TASKS_DUE_IN_DAYS_OUTPUT_SCHEMA,
-} from './get-tasks-due-in-days.schema.js';
+import { GetTasksDueInDaysParamsSchema } from './get-tasks-due-in-days.schema.js';
 import { GET_TASKS_DUE_IN_DAYS_TOOL_METADATA } from './get-tasks-due-in-days.metadata.js';
 import { filterFieldsArray } from '#tools/shared/index.js';
 
@@ -20,25 +16,6 @@ export class GetTasksDueInDaysTool extends BaseTool<TickTickFacade> {
 
   protected override getParamsSchema(): typeof GetTasksDueInDaysParamsSchema {
     return GetTasksDueInDaysParamsSchema;
-  }
-
-  /**
-   * Extend auto-generated definition with title/outputSchema/annotations
-   * (пакет 3.1.C.ticktick — не выводятся автоматически из METADATA, см.
-   * base-tool.ts getDefinition()).
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Get Tasks Due In N Days',
-      outputSchema: GET_TASKS_DUE_IN_DAYS_OUTPUT_SCHEMA,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

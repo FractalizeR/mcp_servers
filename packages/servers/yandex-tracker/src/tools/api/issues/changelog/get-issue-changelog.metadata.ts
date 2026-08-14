@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetIssueChangelogOutputSchema } from '#tools/api/issues/changelog/get-issue-changelog.schema.js';
 
 /**
  * Статические метаданные для GetIssueChangelogTool
@@ -25,4 +26,12 @@ export const GET_ISSUE_CHANGELOG_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueKeys', 'fields', 'cursor', 'perPage'],
+  title: 'История изменений задач',
+  outputSchema: GetIssueChangelogOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

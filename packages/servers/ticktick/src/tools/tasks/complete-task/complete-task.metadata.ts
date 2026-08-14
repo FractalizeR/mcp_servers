@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { COMPLETE_TASK_OUTPUT_SCHEMA } from './complete-task.schema.js';
 
 /**
  * Static metadata for CompleteTaskTool
@@ -19,4 +20,12 @@ export const COMPLETE_TASK_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['projectId', 'taskId'],
+  title: 'Complete Task',
+  outputSchema: COMPLETE_TASK_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

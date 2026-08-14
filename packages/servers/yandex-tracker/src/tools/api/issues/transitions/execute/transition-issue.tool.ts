@@ -8,16 +8,12 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ExecuteTransitionDto } from '#tracker_api/dto/index.js';
-import {
-  TransitionIssueParamsSchema,
-  TransitionIssueOutputSchema,
-} from '#tools/api/issues/transitions/execute/transition-issue.schema.js';
+import { TransitionIssueParamsSchema } from '#tools/api/issues/transitions/execute/transition-issue.schema.js';
 
 import { TRANSITION_ISSUE_TOOL_METADATA } from './transition-issue.metadata.js';
 
@@ -48,26 +44,6 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof TransitionIssueParamsSchema {
     return TransitionIssueParamsSchema;
-  }
-
-  /**
-   * Не idempotent: конкретный workflow-переход, как правило, доступен только
-   * из своего исходного статуса — повторный вызов с теми же аргументами после
-   * первого успешного перехода обычно завершится ошибкой (переход недоступен
-   * из нового статуса), а не тем же результатом.
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Выполнить переход задачи',
-      outputSchema: TransitionIssueOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

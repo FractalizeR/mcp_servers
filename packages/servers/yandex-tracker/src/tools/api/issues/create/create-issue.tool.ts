@@ -8,16 +8,12 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { CreateIssueDto } from '#tracker_api/dto/index.js';
-import {
-  CreateIssueParamsSchema,
-  CreateIssueOutputSchema,
-} from '#tools/api/issues/create/create-issue.schema.js';
+import { CreateIssueParamsSchema } from '#tools/api/issues/create/create-issue.schema.js';
 
 import { CREATE_ISSUE_TOOL_METADATA } from './create-issue.metadata.js';
 
@@ -45,20 +41,6 @@ export class CreateIssueTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof CreateIssueParamsSchema {
     return CreateIssueParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Создать задачу',
-      outputSchema: CreateIssueOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: true,
-      },
-    };
   }
 
   /**

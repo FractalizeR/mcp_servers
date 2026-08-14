@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetBulkChangeStatusOutputSchema } from './get-bulk-change-status.schema.js';
 
 /**
  * Статические метаданные для GetBulkChangeStatusTool
@@ -25,4 +26,12 @@ export const GET_BULK_CHANGE_STATUS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['operationId'],
+  title: 'Статус bulk-операции',
+  outputSchema: GetBulkChangeStatusOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

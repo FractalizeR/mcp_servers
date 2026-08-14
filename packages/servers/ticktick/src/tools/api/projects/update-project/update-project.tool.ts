@@ -3,16 +3,12 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TickTickFacade } from '#ticktick_api/facade/ticktick.facade.js';
 import type { ProjectWithUnknownFields } from '#ticktick_api/entities/project.entity.js';
 import type { UpdateProjectDto } from '#ticktick_api/dto/project.dto.js';
 import { UPDATE_PROJECT_TOOL_METADATA } from './update-project.metadata.js';
-import {
-  UpdateProjectParamsSchema,
-  UPDATE_PROJECT_OUTPUT_SCHEMA,
-} from './update-project.schema.js';
+import { UpdateProjectParamsSchema } from './update-project.schema.js';
 
 export class UpdateProjectTool extends BaseTool<TickTickFacade> {
   static override readonly METADATA = UPDATE_PROJECT_TOOL_METADATA;
@@ -22,25 +18,6 @@ export class UpdateProjectTool extends BaseTool<TickTickFacade> {
    */
   protected override getParamsSchema(): typeof UpdateProjectParamsSchema {
     return UpdateProjectParamsSchema;
-  }
-
-  /**
-   * Extend auto-generated definition with title/outputSchema/annotations
-   * (пакет 3.1.C.ticktick — не выводятся автоматически из METADATA, см.
-   * base-tool.ts getDefinition()).
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Update Project',
-      outputSchema: UPDATE_PROJECT_OUTPUT_SCHEMA,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: true,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

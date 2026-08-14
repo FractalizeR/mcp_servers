@@ -1,29 +1,13 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
-import { GetResourcesParamsSchema, GetResourcesOutputDataSchema } from './get-resources.schema.js';
+import { GetResourcesParamsSchema } from './get-resources.schema.js';
 import { GET_RESOURCES_TOOL_METADATA } from './get-resources.metadata.js';
-import { withDefinitionExtras, buildOutputSchema } from '../../../shared/tool-definition-extras.js';
-
 export class GetResourcesTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = GET_RESOURCES_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof GetResourcesParamsSchema {
     return GetResourcesParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return withDefinitionExtras(super.getDefinition(), {
-      title: 'Получить ресурсы страницы',
-      outputSchema: buildOutputSchema(GetResourcesOutputDataSchema),
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

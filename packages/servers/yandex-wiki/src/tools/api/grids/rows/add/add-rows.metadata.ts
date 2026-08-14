@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { AddRowsOutputDataSchema } from './add-rows.schema.js';
 
 export const ADD_ROWS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('add_rows', MCP_TOOL_PREFIX),
@@ -12,4 +18,12 @@ export const ADD_ROWS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['idx', 'revision', 'position', 'after_row_id'],
+  title: 'Добавить строки в таблицу',
+  outputSchema: buildOutputSchema(AddRowsOutputDataSchema),
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

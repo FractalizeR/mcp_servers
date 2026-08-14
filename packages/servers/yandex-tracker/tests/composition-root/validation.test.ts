@@ -82,9 +82,8 @@ describe('DI Validation', () => {
     });
 
     it('should have no duplicate operation names in OPERATION_CLASSES', async () => {
-      const { OPERATION_CLASSES } = await import(
-        '#composition-root/definitions/operation-definitions.js'
-      );
+      const { OPERATION_CLASSES } =
+        await import('#composition-root/definitions/operation-definitions.js');
 
       expect(() => {
         validateUniqueClassNames(OPERATION_CLASSES, 'Operation');

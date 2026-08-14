@@ -4,11 +4,6 @@
 
 export { filterFields, filterFieldsArray } from './filter-fields.js';
 export {
-  withDefinitionExtras,
-  buildOutputSchema,
-  type ToolDefinitionExtras,
-} from './tool-definition-extras.js';
-export {
   computeLineDiff,
   summarizeLineDiff,
   type LineDiffOp,

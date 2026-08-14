@@ -22,8 +22,12 @@
  * хендлер Server (SDK) автоматически негоциирует protocolVersion из
  * SUPPORTED_PROTOCOL_VERSIONS и штампует serverInfo/capabilities — именно
  * поэтому хардкод `protocolVersion: '2025-06-18'` пакета 4.1.B здесь
- * исчезает. 'server/discover' (2026-07-28) — тоже целиком встроенный
- * хендлер Server, отдельная регистрация не нужна.
+ * исчезает. 'server/discover' (2026-07-28) регистрирует SDK сам —
+ * отдельного `setRequestHandler` для него нет; adapter лишь патчит
+ * приватный `_ondiscover()` инстанса, чтобы вложить `icons` в `_meta`
+ * ТОЛЬКО этого ответа (пакет 3.1.D, см. discover-server-info.ts — там же
+ * обоснование, почему `icons` нельзя просто добавить в идентичность
+ * конструктора Server).
  *
  * Владелец протокольных полей на 2026-07-28 — SDK, не мы: `resultType` и
  * `_meta['io.modelcontextprotocol/serverInfo']` на каждом результате,
@@ -45,13 +49,15 @@
  */
 
 import { Server } from '@modelcontextprotocol/server';
-import type { ListToolsResult, CallToolResult } from '@modelcontextprotocol/server';
+import type { ListToolsResult, CallToolResult, Implementation } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 
 import { projectToolDefinitionsForList } from '../tool-registry/tools-list-projection.js';
 import { normalizeToolName } from './normalize-tool-name.js';
 import { calculateToolsMetrics, logToolsMetrics, logToolsWarnings } from './tools-metrics.js';
 import { createToolCallErrorResponse } from './tool-call-error-response.js';
+import { patchDiscoverServerInfo, type DiscoverableServer } from './discover-server-info.js';
+import { SERVER_ICONS } from './server-icons.js';
 import type { McpServerAdapterOptions, McpServerAdapterHandle } from './types.js';
 
 /** TTL консервативно короткий: набор инструментов зависит от конфигурации
@@ -78,6 +84,8 @@ export function createMcpServerAdapter(options: McpServerAdapterOptions): McpSer
    * известно.
    */
   function buildServer(): Server {
+    // Идентичность БЕЗ icons: это то, что SDK штампует в `_meta.serverInfo`
+    // каждого обычного результата (см. discover-server-info.ts, шапка).
     const server = new Server(
       { name: serverName, version },
       {
@@ -87,6 +95,12 @@ export function createMcpServerAdapter(options: McpServerAdapterOptions): McpSer
         },
       }
     );
+
+    // Идентичность С icons — только для `server/discover` (пакет 3.1.D).
+    // Патчит приватный `_ondiscover()` инстанса; обоснование — в
+    // discover-server-info.ts.
+    const discoverIdentity: Implementation = { name: serverName, version, icons: SERVER_ICONS };
+    patchDiscoverServerInfo(server as unknown as DiscoverableServer, discoverIdentity);
 
     // Обработчик запроса списка инструментов.
     server.setRequestHandler('tools/list', () => {

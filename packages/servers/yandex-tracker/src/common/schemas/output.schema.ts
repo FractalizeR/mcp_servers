@@ -13,11 +13,18 @@
  * типом entity. Поэтому их форма в outputSchema принципиально не может быть строже,
  * чем "объект с произвольными полями" — `FilteredEntitySchema`. Это не недосмотр, а
  * точное отражение реального поведения фильтра.
+ *
+ * `successEnvelopeSchema`/`buildOutputSchema` САМИ здесь больше не реализуются —
+ * пакет 3.1.G свёл три параллельно изобретённых копии (Трекер/Вики/TickTick) в
+ * одну, во framework (`@fractalizer/mcp-core`). Реэкспорт ниже сохраняет прежний
+ * путь импорта (`#common/schemas/index.js`) для ~50 `*.schema.ts` файлов и для
+ * контрактного теста `tool-output-schema-representatives.test.ts`, который
+ * волна 3.1.C зафиксировала как неприкасаемый.
  */
 
 import { z } from 'zod';
-import { generateDefinitionFromSchema } from '@fractalizer/mcp-core';
-import type { JsonObjectSchema } from '@fractalizer/mcp-core';
+
+export { successEnvelopeSchema, buildOutputSchema } from '@fractalizer/mcp-core';
 
 /**
  * Отфильтрованная по `fields` сущность API (issue/project/queue/component/...).
@@ -66,31 +73,4 @@ export function makeBatchErrorItemSchema<TKey extends string>(
     [keyField]: z.string(),
     error: z.string(),
   }) as unknown as z.ZodObject<{ [K in TKey]: z.ZodString } & { error: z.ZodString }>;
-}
-
-/**
- * Обернуть Zod-схему данных инструмента в единый success envelope
- * `{ success: true, data }` — форма, в которой `BaseTool.formatSuccess()`
- * отдаёт и `structuredContent`, и текстовый дубль (см. base-tool.ts).
- */
-export function successEnvelopeSchema<T extends z.ZodRawShape>(
-  dataSchema: z.ZodObject<T>
-): z.ZodObject<{ success: z.ZodLiteral<true>; data: z.ZodObject<T> }> {
-  return z.object({
-    success: z.literal(true),
-    data: dataSchema,
-  });
-}
-
-/**
- * Собрать `outputSchema` (JSON Schema 2020-12) инструмента из Zod-схемы данных.
- *
- * Оборачивает `dataSchema` в success envelope и прогоняет через тот же генератор,
- * что и `inputSchema` (`generateDefinitionFromSchema`) — гарантирует одинаковый
- * диалект/структуру ($defs, additionalProperties и т.д.) для input и output.
- */
-export function buildOutputSchema<T extends z.ZodRawShape>(
-  dataSchema: z.ZodObject<T>
-): JsonObjectSchema {
-  return generateDefinitionFromSchema(successEnvelopeSchema(dataSchema)) as JsonObjectSchema;
 }

@@ -11,13 +11,9 @@
  */
 
 import { BaseRawApiRequestTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { z } from 'zod';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
-import {
-  RawApiRequestParamsSchema,
-  RAW_API_REQUEST_OUTPUT_SCHEMA,
-} from './raw-api-request.schema.js';
+import { RawApiRequestParamsSchema } from './raw-api-request.schema.js';
 import { RAW_API_REQUEST_TOOL_METADATA } from './raw-api-request.metadata.js';
 
 /**
@@ -34,23 +30,5 @@ export class RawApiRequestTool extends BaseRawApiRequestTool<TickTickFacade> {
    */
   protected override getParamsSchema(): z.ZodObject<z.ZodRawShape> {
     return RawApiRequestParamsSchema;
-  }
-
-  /**
-   * Extend auto-generated definition with title/outputSchema/annotations
-   * (пакет 3.1.C.ticktick).
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Raw API Request',
-      outputSchema: RAW_API_REQUEST_OUTPUT_SCHEMA,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 }

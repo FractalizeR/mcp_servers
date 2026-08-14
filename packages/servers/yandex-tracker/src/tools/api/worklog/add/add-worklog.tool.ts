@@ -14,14 +14,10 @@ import {
   BatchResultProcessor,
   ResultLogger,
 } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
-import {
-  AddWorklogParamsSchema,
-  AddWorklogOutputSchema,
-} from '#tools/api/worklog/add/add-worklog.schema.js';
+import { AddWorklogParamsSchema } from '#tools/api/worklog/add/add-worklog.schema.js';
 
 import { ADD_WORKLOG_TOOL_METADATA } from './add-worklog.metadata.js';
 
@@ -47,20 +43,6 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof AddWorklogParamsSchema {
     return AddWorklogParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Добавить записи времени',
-      outputSchema: AddWorklogOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

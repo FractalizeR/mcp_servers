@@ -8,14 +8,10 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js';
-import {
-  UploadAttachmentParamsSchema,
-  UploadAttachmentOutputSchema,
-} from './upload-attachment.schema.js';
+import { UploadAttachmentParamsSchema } from './upload-attachment.schema.js';
 import { readFile } from 'node:fs/promises';
 
 import { UPLOAD_ATTACHMENT_TOOL_METADATA } from './upload-attachment.metadata.js';
@@ -46,20 +42,6 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof UploadAttachmentParamsSchema {
     return UploadAttachmentParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Загрузить файл в задачу',
-      outputSchema: UploadAttachmentOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

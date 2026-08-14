@@ -3,10 +3,9 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { CompleteTaskParamsSchema, COMPLETE_TASK_OUTPUT_SCHEMA } from './complete-task.schema.js';
+import { CompleteTaskParamsSchema } from './complete-task.schema.js';
 import { COMPLETE_TASK_TOOL_METADATA } from './complete-task.metadata.js';
 
 /**
@@ -23,25 +22,6 @@ export class CompleteTaskTool extends BaseTool<TickTickFacade> {
    */
   protected override getParamsSchema(): typeof CompleteTaskParamsSchema {
     return CompleteTaskParamsSchema;
-  }
-
-  /**
-   * Extend auto-generated definition with title/outputSchema/annotations
-   * (пакет 3.1.C.ticktick — не выводятся автоматически из METADATA, см.
-   * base-tool.ts getDefinition()).
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Complete Task',
-      outputSchema: COMPLETE_TASK_OUTPUT_SCHEMA,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

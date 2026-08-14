@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { CreateIssueOutputSchema } from '#tools/api/issues/create/create-issue.schema.js';
 
 /**
  * Статические метаданные для CreateIssueTool
@@ -25,4 +26,12 @@ export const CREATE_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['queue', 'assignee', 'priority', 'type', 'fields'],
+  title: 'Создать задачу',
+  outputSchema: CreateIssueOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

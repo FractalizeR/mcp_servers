@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetResourcesOutputDataSchema } from './get-resources.schema.js';
 
 export const GET_RESOURCES_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_resources', MCP_TOOL_PREFIX),
@@ -20,4 +26,12 @@ export const GET_RESOURCES_TOOL_METADATA: StaticToolMetadata = {
     'page_size',
     'types',
   ],
+  title: 'Получить ресурсы страницы',
+  outputSchema: buildOutputSchema(GetResourcesOutputDataSchema),
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

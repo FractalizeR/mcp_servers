@@ -3,8 +3,9 @@
  */
 
 import { z } from 'zod';
-import { TaskEntityOutputSchema, buildSuccessOutputSchema } from '#tools/shared/index.js';
+import { TaskEntityOutputSchema } from '#tools/shared/index.js';
 import { FieldsSchema, StatusFilterSchema } from '#common/schemas/index.js';
+import { buildOutputSchema } from '@fractalizer/mcp-core';
 
 /**
  * Parameters schema for getting all tasks
@@ -33,4 +34,4 @@ export const GetAllTasksOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope).
  */
-export const GET_ALL_TASKS_OUTPUT_SCHEMA = buildSuccessOutputSchema(GetAllTasksOutputDataSchema);
+export const GET_ALL_TASKS_OUTPUT_SCHEMA = buildOutputSchema(GetAllTasksOutputDataSchema);

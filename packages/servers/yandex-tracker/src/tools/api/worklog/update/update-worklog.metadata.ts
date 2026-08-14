@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { UpdateWorklogOutputSchema } from '#tools/api/worklog/update/update-worklog.schema.js';
 
 /**
  * Статические метаданные для UpdateWorklogTool
@@ -25,4 +26,12 @@ export const UPDATE_WORKLOG_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['issueId', 'worklogId', 'start', 'duration', 'fields'],
+  title: 'Обновить запись времени',
+  outputSchema: UpdateWorklogOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

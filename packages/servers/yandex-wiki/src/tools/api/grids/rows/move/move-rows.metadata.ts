@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { MoveRowsOutputDataSchema } from './move-rows.schema.js';
 
 export const MOVE_ROWS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('move_rows', MCP_TOOL_PREFIX),
@@ -12,4 +18,12 @@ export const MOVE_ROWS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['idx', 'revision', 'row_id', 'after_row_id', 'position', 'rows_count'],
+  title: 'Переместить строки в таблице',
+  outputSchema: buildOutputSchema(MoveRowsOutputDataSchema),
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

@@ -3,14 +3,10 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { ComponentWithUnknownFields } from '#tracker_api/entities/index.js';
-import {
-  UpdateComponentParamsSchema,
-  UpdateComponentOutputSchema,
-} from './update-component.schema.js';
+import { UpdateComponentParamsSchema } from './update-component.schema.js';
 
 import { UPDATE_COMPONENT_TOOL_METADATA } from './update-component.metadata.js';
 
@@ -26,20 +22,6 @@ export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof UpdateComponentParamsSchema {
     return UpdateComponentParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Обновить компонент',
-      outputSchema: UpdateComponentOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

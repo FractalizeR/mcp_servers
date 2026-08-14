@@ -12,7 +12,12 @@
 
 import { BaseOperation } from '#ticktick_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
-import type { BatchResult, IHttpClient, CacheManager, Logger } from '@fractalizer/mcp-infrastructure';
+import type {
+  BatchResult,
+  IHttpClient,
+  CacheManager,
+  Logger,
+} from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/task.entity.js';
 import type { ServerConfig } from '#config';
 

@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '../constants.js';
+import { PingOutputSchema } from './ping.schema.js';
 
 /**
  * Статические метаданные для Ping Tool
@@ -24,4 +25,12 @@ export const PING_TOOL_METADATA: StaticToolMetadata = {
   tags: ['ping', 'health', 'status', 'system'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  title: 'Проверка доступности сервера',
+  outputSchema: PingOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

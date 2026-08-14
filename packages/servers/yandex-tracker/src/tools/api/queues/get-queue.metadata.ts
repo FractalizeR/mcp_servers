@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetQueueOutputSchema } from './get-queue.schema.js';
 
 /**
  * Статические метаданные для GetQueueTool
@@ -25,4 +26,12 @@ export const GET_QUEUE_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['queueId', 'expand', 'fields'],
+  title: 'Параметры очереди',
+  outputSchema: GetQueueOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { AddWorklogOutputSchema } from '#tools/api/worklog/add/add-worklog.schema.js';
 
 /**
  * Статические метаданные для AddWorklogTool
@@ -25,4 +26,12 @@ export const ADD_WORKLOG_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueId', 'start', 'duration', 'fields'],
+  title: 'Добавить записи времени',
+  outputSchema: AddWorklogOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

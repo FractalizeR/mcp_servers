@@ -5,10 +5,9 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { CreateQueueParamsSchema, CreateQueueOutputSchema } from './create-queue.schema.js';
+import { CreateQueueParamsSchema } from './create-queue.schema.js';
 
 import type { CreateQueueDto } from '#tracker_api/dto/index.js';
 import type { QueueWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -23,20 +22,6 @@ export class CreateQueueTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof CreateQueueParamsSchema {
     return CreateQueueParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Создать очередь',
-      outputSchema: CreateQueueOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

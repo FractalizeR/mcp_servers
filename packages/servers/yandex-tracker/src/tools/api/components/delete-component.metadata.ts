@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DeleteComponentOutputSchema } from './delete-component.schema.js';
 
 /**
  * Статические метаданные для DeleteComponentTool
@@ -25,4 +26,12 @@ export const DELETE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['componentId'],
+  title: 'Удалить компонент',
+  outputSchema: DeleteComponentOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

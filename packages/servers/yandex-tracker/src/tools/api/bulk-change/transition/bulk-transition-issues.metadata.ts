@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { BulkTransitionIssuesOutputSchema } from './bulk-transition-issues.schema.js';
 
 /**
  * Статические метаданные для BulkTransitionIssuesTool
@@ -25,4 +26,12 @@ export const BULK_TRANSITION_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['transition'],
+  title: 'Массовая смена статусов задач',
+  outputSchema: BulkTransitionIssuesOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

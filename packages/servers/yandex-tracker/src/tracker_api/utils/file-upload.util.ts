@@ -141,7 +141,7 @@ export class FileUploadUtil {
     }
 
     // Проверка на недопустимые символы (включая control characters 0x00-0x1F)
-     
+
     const invalidChars = /[<>:"|?*\x00-\x1F]/;
     if (invalidChars.test(filename)) {
       return false;

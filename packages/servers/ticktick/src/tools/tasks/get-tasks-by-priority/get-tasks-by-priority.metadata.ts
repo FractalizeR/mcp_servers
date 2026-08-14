@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GET_TASKS_BY_PRIORITY_OUTPUT_SCHEMA } from './get-tasks-by-priority.schema.js';
 
 /**
  * Static metadata for GetTasksByPriorityTool
@@ -19,4 +20,12 @@ export const GET_TASKS_BY_PRIORITY_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
+  title: 'Get Tasks by Priority',
+  outputSchema: GET_TASKS_BY_PRIORITY_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

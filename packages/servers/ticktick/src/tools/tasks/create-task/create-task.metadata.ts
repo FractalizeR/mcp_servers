@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { CREATE_TASK_OUTPUT_SCHEMA } from './create-task.schema.js';
 
 /**
  * Static metadata for CreateTaskTool
@@ -19,4 +20,12 @@ export const CREATE_TASK_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['projectId'],
+  title: 'Create Task',
+  outputSchema: CREATE_TASK_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

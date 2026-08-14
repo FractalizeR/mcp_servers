@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GET_TASKS_OUTPUT_SCHEMA } from './get-tasks.schema.js';
 
 /**
  * Static metadata for GetTasksTool
@@ -19,4 +20,12 @@ export const GET_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['projectId', 'taskId'],
+  title: 'Get Tasks (Batch)',
+  outputSchema: GET_TASKS_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

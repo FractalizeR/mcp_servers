@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { UPDATE_PROJECT_OUTPUT_SCHEMA } from './update-project.schema.js';
 
 /**
  * Static metadata for UpdateProjectTool
@@ -19,4 +20,12 @@ export const UPDATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['projectId'],
+  title: 'Update Project',
+  outputSchema: UPDATE_PROJECT_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

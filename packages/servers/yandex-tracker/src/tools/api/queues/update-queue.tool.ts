@@ -3,10 +3,9 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { UpdateQueueParamsSchema, UpdateQueueOutputSchema } from './update-queue.schema.js';
+import { UpdateQueueParamsSchema } from './update-queue.schema.js';
 
 import type { UpdateQueueDto } from '#tracker_api/dto/index.js';
 import type { QueueWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -21,20 +20,6 @@ export class UpdateQueueTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof UpdateQueueParamsSchema {
     return UpdateQueueParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Обновить очередь',
-      outputSchema: UpdateQueueOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

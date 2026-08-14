@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetAttachmentsOutputSchema } from './get-attachments.schema.js';
 
 /**
  * Статические метаданные для GetAttachmentsTool
@@ -25,4 +26,12 @@ export const GET_ATTACHMENTS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueIds', 'fields'],
+  title: 'Файлы задач',
+  outputSchema: GetAttachmentsOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

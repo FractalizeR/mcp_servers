@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { UploadAttachmentOutputSchema } from './upload-attachment.schema.js';
 
 /**
  * Статические метаданные для UploadAttachmentTool
@@ -25,4 +26,12 @@ export const UPLOAD_ATTACHMENT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueId', 'mimetype', 'fields'],
+  title: 'Загрузить файл в задачу',
+  outputSchema: UploadAttachmentOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

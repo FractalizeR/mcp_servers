@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { AddCommentOutputSchema } from '#tools/api/comments/add/add-comment.schema.js';
 
 /**
  * Статические метаданные для AddCommentTool
@@ -27,4 +28,12 @@ export const ADD_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   // issueId/attachmentIds — идентификаторы (безопасны); fields — имена API-полей
   // (структурные, не пользовательский текст). text (тело комментария) НЕ включён.
   redactionAllowlist: ['issueId', 'attachmentIds', 'fields'],
+  title: 'Добавить комментарии',
+  outputSchema: AddCommentOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

@@ -5,10 +5,9 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { CreateProjectParamsSchema, CreateProjectOutputSchema } from './create-project.schema.js';
+import { CreateProjectParamsSchema } from './create-project.schema.js';
 
 import type { CreateProjectDto } from '#tracker_api/dto/index.js';
 import type { ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -23,20 +22,6 @@ export class CreateProjectTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof CreateProjectParamsSchema {
     return CreateProjectParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Создать проект',
-      outputSchema: CreateProjectOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

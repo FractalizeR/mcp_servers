@@ -6,4 +6,3 @@ export { FieldsSchema, DEFAULT_TASK_FIELDS, type Fields } from './fields.schema.
 export { filterFields, filterFieldsArray } from './filter-fields.js';
 export { TaskEntityOutputSchema, type TaskEntityOutput } from './task-entity.schema.js';
 export { ProjectEntityOutputSchema, type ProjectEntityOutput } from './project-entity.schema.js';
-export { buildSuccessOutputSchema } from './output-envelope.schema.js';

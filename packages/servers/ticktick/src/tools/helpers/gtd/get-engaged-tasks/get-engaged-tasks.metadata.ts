@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GET_ENGAGED_TASKS_OUTPUT_SCHEMA } from './get-engaged-tasks.schema.js';
 
 export const GET_ENGAGED_TASKS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_engaged_tasks', MCP_TOOL_PREFIX),
@@ -16,4 +17,12 @@ export const GET_ENGAGED_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: true,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
+  title: 'Get Engaged Tasks (GTD)',
+  outputSchema: GET_ENGAGED_TASKS_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

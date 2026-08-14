@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { SEARCH_TASKS_OUTPUT_SCHEMA } from './search-tasks.schema.js';
 
 /**
  * Static metadata for SearchTasksTool
@@ -19,4 +20,12 @@ export const SEARCH_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
+  title: 'Search Tasks',
+  outputSchema: SEARCH_TASKS_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

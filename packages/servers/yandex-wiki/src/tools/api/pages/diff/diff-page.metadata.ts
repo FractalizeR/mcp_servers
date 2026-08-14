@@ -7,9 +7,15 @@
  * закрывает риск незаметной порчи страницы агентом перед вызовом update_page.
  */
 
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DiffPageOutputDataSchema } from './diff-page.schema.js';
 
 export const DIFF_PAGE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('diff_page', MCP_TOOL_PREFIX),
@@ -21,4 +27,12 @@ export const DIFF_PAGE_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx'],
+  title: 'Сравнить страницу с новым содержимым',
+  outputSchema: buildOutputSchema(DiffPageOutputDataSchema),
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

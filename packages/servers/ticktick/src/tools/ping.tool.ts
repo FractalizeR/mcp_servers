@@ -6,10 +6,9 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { PingParamsSchema, PING_OUTPUT_SCHEMA } from './ping.schema.js';
+import { PingParamsSchema } from './ping.schema.js';
 import { PING_TOOL_METADATA } from './ping.metadata.js';
 
 export class PingTool extends BaseTool<TickTickFacade> {
@@ -17,24 +16,6 @@ export class PingTool extends BaseTool<TickTickFacade> {
 
   protected override getParamsSchema(): typeof PingParamsSchema {
     return PingParamsSchema;
-  }
-
-  /**
-   * Extend auto-generated definition with title/outputSchema/annotations
-   * (пакет 3.1.C.ticktick).
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Ping',
-      outputSchema: PING_OUTPUT_SCHEMA,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(_params: ToolCallParams): Promise<ToolResult> {

@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DELETE_TASK_OUTPUT_SCHEMA } from './delete-task.schema.js';
 
 /**
  * Static metadata for DeleteTaskTool
@@ -19,4 +20,12 @@ export const DELETE_TASK_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['projectId', 'taskId'],
+  title: 'Delete Task',
+  outputSchema: DELETE_TASK_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

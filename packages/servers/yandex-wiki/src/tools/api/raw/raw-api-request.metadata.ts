@@ -5,9 +5,15 @@
  * (разрыв возможных циклов schema/tool/metadata).
  */
 
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { RawApiRequestOutputDataSchema } from './raw-api-request.schema.js';
 
 /**
  * Статические метаданные для RawApiRequestTool.
@@ -25,4 +31,12 @@ export const RAW_API_REQUEST_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['method', 'path', 'fields'],
+  title: 'Прямой запрос к API Вики (raw)',
+  outputSchema: buildOutputSchema(RawApiRequestOutputDataSchema),
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

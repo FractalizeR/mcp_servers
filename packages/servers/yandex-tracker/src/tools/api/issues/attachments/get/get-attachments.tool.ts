@@ -11,14 +11,10 @@
  */
 
 import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
-import {
-  GetAttachmentsParamsSchema,
-  GetAttachmentsOutputSchema,
-} from './get-attachments.schema.js';
+import { GetAttachmentsParamsSchema } from './get-attachments.schema.js';
 
 import { GET_ATTACHMENTS_TOOL_METADATA } from './get-attachments.metadata.js';
 
@@ -44,20 +40,6 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof GetAttachmentsParamsSchema {
     return GetAttachmentsParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Файлы задач',
-      outputSchema: GetAttachmentsOutputSchema,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

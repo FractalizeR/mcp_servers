@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DeleteProjectOutputSchema } from './delete-project.schema.js';
 
 /**
  * Статические метаданные для DeleteProjectTool
@@ -25,4 +26,12 @@ export const DELETE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['projectId'],
+  title: 'Удалить проект',
+  outputSchema: DeleteProjectOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

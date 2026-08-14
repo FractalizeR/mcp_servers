@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { CreateComponentOutputSchema } from './create-component.schema.js';
 
 /**
  * Статические метаданные для CreateComponentTool
@@ -25,4 +26,12 @@ export const CREATE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['queueId', 'assignAuto', 'fields'],
+  title: 'Создать компонент',
+  outputSchema: CreateComponentOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

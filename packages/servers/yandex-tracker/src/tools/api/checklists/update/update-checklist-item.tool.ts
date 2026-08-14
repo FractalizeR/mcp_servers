@@ -13,14 +13,10 @@ import {
   BatchResultProcessor,
   ResultLogger,
 } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
-import {
-  UpdateChecklistItemParamsSchema,
-  UpdateChecklistItemOutputSchema,
-} from '#tools/api/checklists/update/update-checklist-item.schema.js';
+import { UpdateChecklistItemParamsSchema } from '#tools/api/checklists/update/update-checklist-item.schema.js';
 
 import { UPDATE_CHECKLIST_ITEM_TOOL_METADATA } from './update-checklist-item.metadata.js';
 
@@ -46,20 +42,6 @@ export class UpdateChecklistItemTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof UpdateChecklistItemParamsSchema {
     return UpdateChecklistItemParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Обновить элементы чеклиста',
-      outputSchema: UpdateChecklistItemOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

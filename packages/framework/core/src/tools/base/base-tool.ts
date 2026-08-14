@@ -80,7 +80,10 @@ export abstract class BaseTool<TFacade = unknown> {
    * Исключает возможность несоответствия schema ↔ definition — DRY принцип,
    * schema является единственным источником истины.
    *
-   * Автоматически добавляет category, subcategory, priority из METADATA
+   * Автоматически добавляет category, subcategory, priority, title, outputSchema,
+   * annotations из METADATA (пакет 3.1.G — раньше эти три поля должен был
+   * проецировать каждый инструмент сам, переопределяя getDefinition() целиком;
+   * теперь единственная проекция живёт здесь).
    */
   getDefinition(): ToolDefinition {
     const ToolClass = this.constructor as typeof BaseTool;
@@ -120,6 +123,18 @@ export abstract class BaseTool<TFacade = unknown> {
 
     if (metadata.priority !== undefined) {
       result.priority = metadata.priority;
+    }
+
+    if (metadata.title !== undefined) {
+      result.title = metadata.title;
+    }
+
+    if (metadata.outputSchema !== undefined) {
+      result.outputSchema = metadata.outputSchema;
+    }
+
+    if (metadata.annotations !== undefined) {
+      result.annotations = metadata.annotations;
     }
 
     return result;

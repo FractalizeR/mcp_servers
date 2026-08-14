@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetProjectOutputSchema } from './get-project.schema.js';
 
 /**
  * Статические метаданные для GetProjectTool
@@ -25,4 +26,12 @@ export const GET_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['projectId', 'expand', 'fields'],
+  title: 'Параметры проекта',
+  outputSchema: GetProjectOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

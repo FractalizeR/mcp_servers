@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { UpdatePageOutputDataSchema } from './update-page.schema.js';
 
 export const UPDATE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_page', MCP_TOOL_PREFIX),
@@ -12,4 +18,12 @@ export const UPDATE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['idx', 'allow_merge', 'fields', 'is_silent'],
+  title: 'Обновить страницу',
+  outputSchema: buildOutputSchema(UpdatePageOutputDataSchema),
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

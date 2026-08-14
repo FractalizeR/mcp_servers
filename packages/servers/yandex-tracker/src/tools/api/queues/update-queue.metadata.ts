@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { UpdateQueueOutputSchema } from './update-queue.schema.js';
 
 /**
  * Статические метаданные для UpdateQueueTool
@@ -25,4 +26,12 @@ export const UPDATE_QUEUE_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['queueId', 'lead', 'defaultType', 'defaultPriority', 'issueTypes', 'fields'],
+  title: 'Обновить очередь',
+  outputSchema: UpdateQueueOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

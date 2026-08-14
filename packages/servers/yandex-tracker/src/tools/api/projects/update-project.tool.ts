@@ -5,10 +5,9 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { UpdateProjectParamsSchema, UpdateProjectOutputSchema } from './update-project.schema.js';
+import { UpdateProjectParamsSchema } from './update-project.schema.js';
 
 import type { UpdateProjectDto } from '#tracker_api/dto/index.js';
 import type { ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -23,20 +22,6 @@ export class UpdateProjectTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof UpdateProjectParamsSchema {
     return UpdateProjectParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Обновить проект',
-      outputSchema: UpdateProjectOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

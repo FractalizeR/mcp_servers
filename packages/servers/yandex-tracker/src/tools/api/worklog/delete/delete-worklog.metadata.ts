@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DeleteWorklogOutputSchema } from '#tools/api/worklog/delete/delete-worklog.schema.js';
 
 /**
  * Статические метаданные для DeleteWorklogTool
@@ -25,4 +26,12 @@ export const DELETE_WORKLOG_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['issueId', 'worklogId'],
+  title: 'Удалить запись времени',
+  outputSchema: DeleteWorklogOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

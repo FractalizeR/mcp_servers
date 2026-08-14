@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { ManageQueueAccessOutputSchema } from './manage-queue-access.schema.js';
 
 /**
  * Статические метаданные для ManageQueueAccessTool
@@ -25,4 +26,12 @@ export const MANAGE_QUEUE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['queueId', 'role', 'subjects', 'action', 'fields'],
+  title: 'Управление доступом к очереди',
+  outputSchema: ManageQueueAccessOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

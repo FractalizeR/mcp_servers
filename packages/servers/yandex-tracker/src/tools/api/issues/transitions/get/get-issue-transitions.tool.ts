@@ -8,15 +8,11 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ResponseFieldFilter, ResultLogger } from '@fractalizer/mcp-core';
 import type { TransitionWithUnknownFields } from '#tracker_api/entities/index.js';
-import {
-  GetIssueTransitionsParamsSchema,
-  GetIssueTransitionsOutputSchema,
-} from '#tools/api/issues/transitions/get/get-issue-transitions.schema.js';
+import { GetIssueTransitionsParamsSchema } from '#tools/api/issues/transitions/get/get-issue-transitions.schema.js';
 
 import { GET_ISSUE_TRANSITIONS_TOOL_METADATA } from './get-issue-transitions.metadata.js';
 
@@ -47,20 +43,6 @@ export class GetIssueTransitionsTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof GetIssueTransitionsParamsSchema {
     return GetIssueTransitionsParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Доступные переходы задачи',
-      outputSchema: GetIssueTransitionsOutputSchema,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

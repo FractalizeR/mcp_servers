@@ -8,13 +8,9 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import {
-  GetBulkChangeStatusParamsSchema,
-  GetBulkChangeStatusOutputSchema,
-} from './get-bulk-change-status.schema.js';
+import { GetBulkChangeStatusParamsSchema } from './get-bulk-change-status.schema.js';
 
 import { GET_BULK_CHANGE_STATUS_TOOL_METADATA } from './get-bulk-change-status.metadata.js';
 
@@ -42,20 +38,6 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof GetBulkChangeStatusParamsSchema {
     return GetBulkChangeStatusParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Статус bulk-операции',
-      outputSchema: GetBulkChangeStatusOutputSchema,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

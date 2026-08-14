@@ -8,10 +8,9 @@
  */
 
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { DeleteLinkParamsSchema, DeleteLinkOutputSchema } from './delete-link.schema.js';
+import { DeleteLinkParamsSchema } from './delete-link.schema.js';
 
 import { DELETE_LINK_TOOL_METADATA } from './delete-link.metadata.js';
 
@@ -37,20 +36,6 @@ export class DeleteLinkTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof DeleteLinkParamsSchema {
     return DeleteLinkParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Удалить связь между задачами',
-      outputSchema: DeleteLinkOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: true,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

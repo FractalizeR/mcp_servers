@@ -1,10 +1,8 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
-import { DiffPageParamsSchema, DiffPageOutputDataSchema } from './diff-page.schema.js';
+import { DiffPageParamsSchema } from './diff-page.schema.js';
 import { DIFF_PAGE_TOOL_METADATA } from './diff-page.metadata.js';
-import { withDefinitionExtras, buildOutputSchema } from '../../../shared/tool-definition-extras.js';
 import { computeLineDiff, summarizeLineDiff } from '../../../shared/line-diff.js';
 
 /**
@@ -19,19 +17,6 @@ export class DiffPageTool extends BaseTool<YandexWikiFacade> {
 
   protected override getParamsSchema(): typeof DiffPageParamsSchema {
     return DiffPageParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return withDefinitionExtras(super.getDefinition(), {
-      title: 'Сравнить страницу с новым содержимым',
-      outputSchema: buildOutputSchema(DiffPageOutputDataSchema),
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

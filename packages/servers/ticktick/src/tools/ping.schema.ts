@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { buildSuccessOutputSchema } from '#tools/shared/index.js';
+import { buildOutputSchema } from '@fractalizer/mcp-core';
 
 export const PingParamsSchema = z.object({}).describe('Параметры ping (без параметров)');
 
@@ -30,4 +30,4 @@ export const PingOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — описывает весь success envelope, не
  * только `data` (см. base-tool.ts SuccessEnvelope).
  */
-export const PING_OUTPUT_SCHEMA = buildSuccessOutputSchema(PingOutputDataSchema);
+export const PING_OUTPUT_SCHEMA = buildOutputSchema(PingOutputDataSchema);

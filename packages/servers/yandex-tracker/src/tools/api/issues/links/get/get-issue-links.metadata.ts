@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetIssueLinksOutputSchema } from './get-issue-links.schema.js';
 
 /**
  * Статические метаданные для GetIssueLinksTool
@@ -25,4 +26,12 @@ export const GET_ISSUE_LINKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueIds', 'fields', 'cursor', 'perPage'],
+  title: 'Связи задач',
+  outputSchema: GetIssueLinksOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

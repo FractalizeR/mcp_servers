@@ -7,6 +7,7 @@
 
 import { ToolCategory, ToolPriority, buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DeleteAttachmentOutputSchema } from './delete-attachment.schema.js';
 
 /**
  * Статические метаданные для compile-time индексации
@@ -21,4 +22,12 @@ export const DELETE_ATTACHMENT_TOOL_METADATA = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['issueId', 'attachmentId'],
+  title: 'Удалить файл из задачи',
+  outputSchema: DeleteAttachmentOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { UpdateComponentOutputSchema } from './update-component.schema.js';
 
 /**
  * Статические метаданные для UpdateComponentTool
@@ -25,4 +26,12 @@ export const UPDATE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['componentId', 'assignAuto', 'fields'],
+  title: 'Обновить компонент',
+  outputSchema: UpdateComponentOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

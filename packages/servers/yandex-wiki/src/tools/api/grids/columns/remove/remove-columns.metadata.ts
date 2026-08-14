@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { RemoveColumnsOutputDataSchema } from './remove-columns.schema.js';
 
 export const REMOVE_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('remove_columns', MCP_TOOL_PREFIX),
@@ -12,4 +18,12 @@ export const REMOVE_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['idx', 'revision', 'column_slugs'],
+  title: 'Удалить колонки из таблицы',
+  outputSchema: buildOutputSchema(RemoveColumnsOutputDataSchema),
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

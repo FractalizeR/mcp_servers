@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { MoveColumnsOutputDataSchema } from './move-columns.schema.js';
 
 export const MOVE_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('move_columns', MCP_TOOL_PREFIX),
@@ -12,4 +18,12 @@ export const MOVE_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['idx', 'revision', 'column_slug', 'position', 'columns_count'],
+  title: 'Переместить колонки в таблице',
+  outputSchema: buildOutputSchema(MoveColumnsOutputDataSchema),
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

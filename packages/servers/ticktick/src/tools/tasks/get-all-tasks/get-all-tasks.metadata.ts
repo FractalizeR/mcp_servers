@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GET_ALL_TASKS_OUTPUT_SCHEMA } from './get-all-tasks.schema.js';
 
 /**
  * Static metadata for GetAllTasksTool
@@ -19,4 +20,12 @@ export const GET_ALL_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
+  title: 'Get All Tasks',
+  outputSchema: GET_ALL_TASKS_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

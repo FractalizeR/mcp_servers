@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { ClonePageOutputDataSchema } from './clone-page.schema.js';
 
 export const CLONE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('clone_page', MCP_TOOL_PREFIX),
@@ -12,4 +18,12 @@ export const CLONE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx', 'target', 'subscribe_me'],
+  title: 'Клонировать страницу',
+  outputSchema: buildOutputSchema(ClonePageOutputDataSchema),
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

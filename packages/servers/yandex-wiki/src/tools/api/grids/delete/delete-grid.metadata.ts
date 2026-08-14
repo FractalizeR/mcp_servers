@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DeleteGridOutputDataSchema } from './delete-grid.schema.js';
 
 export const DELETE_GRID_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_grid', MCP_TOOL_PREFIX),
@@ -12,4 +18,12 @@ export const DELETE_GRID_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['idx'],
+  title: 'Удалить таблицу',
+  outputSchema: buildOutputSchema(DeleteGridOutputDataSchema),
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

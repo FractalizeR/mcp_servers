@@ -8,14 +8,10 @@
  */
 
 import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
-import {
-  GetChecklistParamsSchema,
-  GetChecklistOutputSchema,
-} from '#tools/api/checklists/get/get-checklist.schema.js';
+import { GetChecklistParamsSchema } from '#tools/api/checklists/get/get-checklist.schema.js';
 
 import { GET_CHECKLIST_TOOL_METADATA } from './get-checklist.metadata.js';
 
@@ -41,20 +37,6 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof GetChecklistParamsSchema {
     return GetChecklistParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Чеклисты задач',
-      outputSchema: GetChecklistOutputSchema,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

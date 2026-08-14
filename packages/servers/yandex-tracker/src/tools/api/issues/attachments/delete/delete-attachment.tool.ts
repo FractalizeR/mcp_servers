@@ -8,13 +8,9 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import {
-  DeleteAttachmentParamsSchema,
-  DeleteAttachmentOutputSchema,
-} from './delete-attachment.schema.js';
+import { DeleteAttachmentParamsSchema } from './delete-attachment.schema.js';
 import { DELETE_ATTACHMENT_TOOL_METADATA } from './delete-attachment.metadata.js';
 
 /**
@@ -42,20 +38,6 @@ export class DeleteAttachmentTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof DeleteAttachmentParamsSchema {
     return DeleteAttachmentParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Удалить файл из задачи',
-      outputSchema: DeleteAttachmentOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: true,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { BulkMoveIssuesOutputSchema } from './bulk-move-issues.schema.js';
 
 /**
  * Статические метаданные для BulkMoveIssuesTool
@@ -25,4 +26,12 @@ export const BULK_MOVE_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['queue', 'moveAllFields'],
+  title: 'Массовое перемещение задач между очередями',
+  outputSchema: BulkMoveIssuesOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

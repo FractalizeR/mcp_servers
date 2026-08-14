@@ -53,43 +53,43 @@ const ALIAS_PATTERNS: MigrationPattern[] = [
   {
     name: 'tracker_api',
     regex: /from ['"]@tracker_api\/([^'"]+)['"]/g,
-    replacement: 'from \'#tracker_api/$1\'',
+    replacement: "from '#tracker_api/$1'",
     description: 'Tracker API слой',
   },
   {
     name: 'integration',
     regex: /from ['"]@integration\/([^'"]+)['"]/g,
-    replacement: 'from \'#integration/$1\'',
+    replacement: "from '#integration/$1'",
     description: 'Интеграционные тесты',
   },
   {
     name: 'tools',
     regex: /from ['"]@tools\/([^'"]+)['"]/g,
-    replacement: 'from \'#tools/$1\'',
+    replacement: "from '#tools/$1'",
     description: 'MCP Tools',
   },
   {
     name: 'constants_alias',
     regex: /from ['"]@constants['"]/g,
-    replacement: 'from \'#constants\'',
+    replacement: "from '#constants'",
     description: 'Константы проекта (@ alias)',
   },
   {
     name: 'helpers',
     regex: /from ['"]@helpers\/([^'"]+)['"]/g,
-    replacement: 'from \'#helpers/$1\'',
+    replacement: "from '#helpers/$1'",
     description: 'Тестовые helpers',
   },
   {
     name: 'cli',
     regex: /from ['"]@cli\/([^'"]+)['"]/g,
-    replacement: 'from \'#cli/$1\'',
+    replacement: "from '#cli/$1'",
     description: 'CLI модули',
   },
   {
     name: 'composition-root',
     regex: /from ['"]@composition-root\/([^'"]+)['"]/g,
-    replacement: 'from \'#composition-root/$1\'',
+    replacement: "from '#composition-root/$1'",
     description: 'DI Composition Root',
   },
 ];
@@ -99,19 +99,19 @@ const RELATIVE_PATTERNS: MigrationPattern[] = [
   {
     name: 'constants_relative',
     regex: /from ['"](?:\.\.\/){3,}constants\.js['"]/g,
-    replacement: 'from \'#constants\'',
+    replacement: "from '#constants'",
     description: 'Константы (относительные пути ≥3 уровня)',
   },
   {
     name: 'common_relative',
     regex: /from ['"](?:\.\.\/){3,}common\/([^'"]+)['"]/g,
-    replacement: 'from \'#common/$1\'',
+    replacement: "from '#common/$1'",
     description: 'Общие модули (относительные пути ≥3 уровня)',
   },
   {
     name: 'helpers_relative',
     regex: /from ['"](?:\.\.\/){3,}helpers\/([^'"]+)['"]/g,
-    replacement: 'from \'#helpers/$1\'',
+    replacement: "from '#helpers/$1'",
     description: 'Test helpers (относительные пути ≥3 уровня)',
   },
 ];
@@ -121,13 +121,13 @@ const DYNAMIC_PATTERNS: MigrationPattern[] = [
   {
     name: 'tracker_api_dynamic',
     regex: /import\(['"]@tracker_api\/([^'"]+)['"]\)/g,
-    replacement: 'import(\'#tracker_api/$1\')',
+    replacement: "import('#tracker_api/$1')",
     description: 'Dynamic imports для Tracker API',
   },
   {
     name: 'tools_dynamic',
     regex: /import\(['"]@tools\/([^'"]+)['"]\)/g,
-    replacement: 'import(\'#tools/$1\')',
+    replacement: "import('#tools/$1')",
     description: 'Dynamic imports для Tools',
   },
 ];
@@ -157,10 +157,7 @@ function isExcludedImport(line: string): boolean {
 /**
  * Находит все TypeScript файлы для миграции
  */
-async function findFilesToMigrate(
-  srcOnly: boolean,
-  testsOnly: boolean
-): Promise<string[]> {
+async function findFilesToMigrate(srcOnly: boolean, testsOnly: boolean): Promise<string[]> {
   const patterns: string[] = [];
 
   if (!testsOnly) patterns.push('src/**/*.ts');
@@ -181,11 +178,7 @@ async function findFilesToMigrate(
 /**
  * Мигрирует один файл
  */
-function migrateFile(
-  filePath: string,
-  dryRun: boolean,
-  verbose: boolean
-): MigrationResult {
+function migrateFile(filePath: string, dryRun: boolean, verbose: boolean): MigrationResult {
   try {
     const originalContent = fs.readFileSync(filePath, 'utf8');
     let modifiedContent = originalContent;
@@ -290,7 +283,9 @@ async function migrate(options: {
   const { dryRun, verbose, srcOnly, testsOnly } = options;
 
   console.log('🚀 Миграция TypeScript path aliases → Node.js Subpath Imports\n');
-  console.log(`Режим: ${dryRun ? '🔍 DRY RUN (без изменений)' : '✏️  APPLY (применение изменений)'}`);
+  console.log(
+    `Режим: ${dryRun ? '🔍 DRY RUN (без изменений)' : '✏️  APPLY (применение изменений)'}`
+  );
   console.log(`Verbose: ${verbose ? 'ДА' : 'НЕТ'}`);
   console.log('');
 

@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { AppendContentOutputDataSchema } from './append-content.schema.js';
 
 export const APPEND_CONTENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('append_content', MCP_TOOL_PREFIX),
@@ -21,4 +27,12 @@ export const APPEND_CONTENT_TOOL_METADATA: StaticToolMetadata = {
     'is_silent',
     'fields',
   ],
+  title: 'Добавить контент к странице',
+  outputSchema: buildOutputSchema(AppendContentOutputDataSchema),
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

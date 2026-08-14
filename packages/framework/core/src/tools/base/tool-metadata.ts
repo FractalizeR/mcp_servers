@@ -7,7 +7,7 @@
  * - Структура метаданных для поиска
  */
 
-import type { ToolDefinition } from './base.types.js';
+import type { JsonObjectSchema, ToolAnnotations, ToolDefinition } from './base.types.js';
 
 /**
  * Категории инструментов
@@ -138,6 +138,38 @@ export interface StaticToolMetadata {
    * @default false
    */
   requiresExplicitUserConsent?: boolean;
+
+  /**
+   * Человекочитаемое имя для UI клиента (опционально, отдельно от `name`).
+   *
+   * Пакет 3.1.G: поле переехало сюда из 97 ручных переопределений
+   * `getDefinition()` — `BaseTool.getDefinition()` проецирует его в
+   * `ToolDefinition.title` сам, как только оно заполнено.
+   */
+  title?: string;
+
+  /**
+   * JSON Schema (2020-12), описывающая `structuredContent` успешного
+   * результата — единый envelope `{ success: true, data }`
+   * (`BaseTool.formatSuccess()`). Строится хелпером `buildOutputSchema()`
+   * (`@fractalizer/mcp-core`) из Zod-схемы поля `data`.
+   *
+   * Пакет 3.1.G: поле переехало сюда из 97 ручных переопределений
+   * `getDefinition()` — `BaseTool.getDefinition()` проецирует его в
+   * `ToolDefinition.outputSchema` сам, как только оно заполнено.
+   */
+  outputSchema?: JsonObjectSchema;
+
+  /**
+   * Хинты поведения инструмента для клиента MCP (readOnly/destructive/
+   * idempotent/openWorld). Классификация — пакет 3.1.C, по смыслу операции,
+   * не выводится из `requiresExplicitUserConsent`.
+   *
+   * Пакет 3.1.G: поле переехало сюда из 97 ручных переопределений
+   * `getDefinition()` — `BaseTool.getDefinition()` проецирует его в
+   * `ToolDefinition.annotations` сам, как только оно заполнено.
+   */
+  annotations?: ToolAnnotations;
 
   /**
    * Allow-list имён параметров, чьё значение безопасно логировать как есть.

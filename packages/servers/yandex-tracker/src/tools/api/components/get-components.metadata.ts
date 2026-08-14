@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetComponentsOutputSchema } from './get-components.schema.js';
 
 /**
  * Статические метаданные для GetComponentsTool
@@ -25,4 +26,12 @@ export const GET_COMPONENTS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['queueId', 'fields'],
+  title: 'Компоненты очереди',
+  outputSchema: GetComponentsOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

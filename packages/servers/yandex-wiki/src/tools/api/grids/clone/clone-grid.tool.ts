@@ -1,29 +1,13 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
-import { CloneGridParamsSchema, CloneGridOutputDataSchema } from './clone-grid.schema.js';
+import { CloneGridParamsSchema } from './clone-grid.schema.js';
 import { CLONE_GRID_TOOL_METADATA } from './clone-grid.metadata.js';
-import { withDefinitionExtras, buildOutputSchema } from '../../../shared/tool-definition-extras.js';
-
 export class CloneGridTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = CLONE_GRID_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof CloneGridParamsSchema {
     return CloneGridParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return withDefinitionExtras(super.getDefinition(), {
-      title: 'Клонировать таблицу',
-      outputSchema: buildOutputSchema(CloneGridOutputDataSchema),
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: true,
-      },
-    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

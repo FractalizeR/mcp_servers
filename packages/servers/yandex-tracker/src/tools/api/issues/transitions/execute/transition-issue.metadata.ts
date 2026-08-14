@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { TransitionIssueOutputSchema } from '#tools/api/issues/transitions/execute/transition-issue.schema.js';
 
 /**
  * Статические метаданные для TransitionIssueTool
@@ -25,4 +26,12 @@ export const TRANSITION_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['issueKey', 'transitionId', 'fields'],
+  title: 'Выполнить переход задачи',
+  outputSchema: TransitionIssueOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

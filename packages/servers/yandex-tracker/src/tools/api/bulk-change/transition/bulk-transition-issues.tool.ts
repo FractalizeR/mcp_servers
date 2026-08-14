@@ -9,14 +9,10 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ResultLogger } from '@fractalizer/mcp-core';
-import {
-  BulkTransitionIssuesParamsSchema,
-  BulkTransitionIssuesOutputSchema,
-} from './bulk-transition-issues.schema.js';
+import { BulkTransitionIssuesParamsSchema } from './bulk-transition-issues.schema.js';
 
 import { BULK_TRANSITION_ISSUES_TOOL_METADATA } from './bulk-transition-issues.metadata.js';
 
@@ -45,25 +41,6 @@ export class BulkTransitionIssuesTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof BulkTransitionIssuesParamsSchema {
     return BulkTransitionIssuesParamsSchema;
-  }
-
-  /**
-   * Не idempotent: как и точечный transition_issue, workflow-переход обычно
-   * доступен только из исходного статуса — повтор после первого успешного
-   * запуска, скорее всего, завершится ошибкой для уже перешедших задач.
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Массовая смена статусов задач',
-      outputSchema: BulkTransitionIssuesOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

@@ -110,14 +110,13 @@ export abstract class BaseOperation {
     }
 
     // Выполняем POST запрос с FormData
-     
+
     const response = await axiosInstance.post(endpoint, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
 
-     
     return response.data;
   }
 
@@ -151,13 +150,13 @@ export abstract class BaseOperation {
     }
 
     // Выполняем GET запрос с responseType: 'arraybuffer'
-     
+
     const response = await axiosInstance.get(endpoint, {
       responseType: 'arraybuffer',
     });
 
     // Преобразуем ArrayBuffer в Buffer
-     
+
     return Buffer.from(response.data);
   }
 }

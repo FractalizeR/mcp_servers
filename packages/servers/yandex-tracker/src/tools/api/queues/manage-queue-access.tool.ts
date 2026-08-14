@@ -3,43 +3,15 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import {
-  ManageQueueAccessParamsSchema,
-  ManageQueueAccessOutputSchema,
-} from './manage-queue-access.schema.js';
+import { ManageQueueAccessParamsSchema } from './manage-queue-access.schema.js';
 
 import type { QueuePermissionWithUnknownFields } from '#tracker_api/entities/index.js';
 import { MANAGE_QUEUE_ACCESS_TOOL_METADATA } from './manage-queue-access.metadata.js';
 
 export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
   static override readonly METADATA = MANAGE_QUEUE_ACCESS_TOOL_METADATA;
-
-  /**
-   * Автоматическая генерация definition из Zod schema
-   * Это исключает возможность несоответствия schema ↔ definition
-   */
-  /**
-   * Спорная классификация (см. отчёт пакета 3.1.C.tracker): не destructive —
-   * это управление доступом (add/remove роли), а не удаление данных задач/
-   * проектов; idempotent — установка одного и того же набора (role, subjects,
-   * action) повторно приводит к тому же конечному состоянию доступа.
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Управление доступом к очереди',
-      outputSchema: ManageQueueAccessOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
-  }
 
   protected override getParamsSchema(): typeof ManageQueueAccessParamsSchema {
     return ManageQueueAccessParamsSchema;

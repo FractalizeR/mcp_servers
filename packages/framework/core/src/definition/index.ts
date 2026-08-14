@@ -36,3 +36,7 @@ export {
 
 // Детектор циклических $ref (JSON Schema 2020-12)
 export { detectCircularRefs, type CircularRefCheckResult } from './detect-circular-refs.js';
+
+// Единый хелпер success envelope / outputSchema (пакет 3.1.G — свод трёх
+// параллельно изобретённых серверных хелперов в один, во framework)
+export { successEnvelopeSchema, buildOutputSchema } from './output-schema.js';

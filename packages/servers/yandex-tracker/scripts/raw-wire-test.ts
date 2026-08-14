@@ -238,6 +238,28 @@ async function main(): Promise<void> {
         discover.result._meta?.['io.modelcontextprotocol/serverInfo']?.name,
         '_meta["io.modelcontextprotocol/serverInfo"].name (идентичность сервера) должен присутствовать'
       );
+
+      // Пакет 3.1.D: иконка сервера едет ИМЕННО в server/discover — PNG
+      // обязателен, SVG рядом, обе как data: URI.
+      const icons = discover.result._meta?.['io.modelcontextprotocol/serverInfo']?.icons;
+      assert(
+        Array.isArray(icons) && icons.length >= 2,
+        `icons (пакет 3.1.D) должен содержать минимум 2 записи, получено ${JSON.stringify(icons)}`
+      );
+      assert(
+        icons.some(
+          (icon: { mimeType?: string; src?: string }) =>
+            icon.mimeType === 'image/png' && icon.src?.startsWith('data:image/png;base64,')
+        ),
+        `icons должен содержать PNG как data: URI, получено ${JSON.stringify(icons)}`
+      );
+      assert(
+        icons.some(
+          (icon: { mimeType?: string; src?: string }) =>
+            icon.mimeType === 'image/svg+xml' && icon.src?.startsWith('data:image/svg+xml;base64,')
+        ),
+        `icons должен содержать SVG как data: URI, получено ${JSON.stringify(icons)}`
+      );
     })
   );
 
@@ -274,31 +296,49 @@ async function main(): Promise<void> {
     })
   );
 
-  await scenario('5. Каждый успешный результат содержит resultType и serverInfo в _meta', () =>
-    withServer(async (harness) => {
-      const discover = await harness.request(1, 'server/discover', { _meta: modernMeta() });
-      const list = await harness.request(2, 'tools/list', { _meta: modernMeta() });
-      const call = await harness.request(3, 'tools/call', {
-        name: PING_TOOL,
-        arguments: {},
-        _meta: modernMeta(),
-      });
+  await scenario(
+    '5. Каждый успешный результат содержит resultType и serverInfo в _meta; icons (3.1.D) — только на discover',
+    () =>
+      withServer(async (harness) => {
+        const discover = await harness.request(1, 'server/discover', { _meta: modernMeta() });
+        const list = await harness.request(2, 'tools/list', { _meta: modernMeta() });
+        const call = await harness.request(3, 'tools/call', {
+          name: PING_TOOL,
+          arguments: {},
+          _meta: modernMeta(),
+        });
 
-      for (const [label, msg] of [
-        ['server/discover', discover],
-        ['tools/list', list],
-        ['tools/call', call],
-      ] as const) {
-        assert(
-          msg.result?.resultType === 'complete',
-          `${label}: resultType должен быть 'complete', получено ${JSON.stringify(msg.result?.resultType)}`
-        );
-        assert(
-          msg.result?._meta?.['io.modelcontextprotocol/serverInfo']?.name,
-          `${label}: _meta["io.modelcontextprotocol/serverInfo"] должен присутствовать`
-        );
-      }
-    })
+        for (const [label, msg, expectIcons] of [
+          ['server/discover', discover, true],
+          ['tools/list', list, false],
+          ['tools/call', call, false],
+        ] as const) {
+          assert(
+            msg.result?.resultType === 'complete',
+            `${label}: resultType должен быть 'complete', получено ${JSON.stringify(msg.result?.resultType)}`
+          );
+          const serverInfo = msg.result?._meta?.['io.modelcontextprotocol/serverInfo'];
+          assert(
+            serverInfo?.name,
+            `${label}: _meta["io.modelcontextprotocol/serverInfo"] должен присутствовать`
+          );
+
+          // Пакет 3.1.D: иконка едет один раз, в server/discover — per-response
+          // serverInfo обычных результатов её НЕ несёт (иначе она осядет в
+          // клиентском mcp.log и в нашем Pino на каждый вызов).
+          if (expectIcons) {
+            assert(
+              Array.isArray(serverInfo.icons) && serverInfo.icons.length > 0,
+              `${label}: _meta["io.modelcontextprotocol/serverInfo"].icons должен присутствовать, получено ${JSON.stringify(serverInfo.icons)}`
+            );
+          } else {
+            assert(
+              serverInfo.icons === undefined,
+              `${label}: _meta["io.modelcontextprotocol/serverInfo"].icons НЕ должен присутствовать (пакет 3.1.D), получено ${JSON.stringify(serverInfo.icons)}`
+            );
+          }
+        }
+      })
   );
 
   await scenario('6. tools/list содержит ttlMs и cacheScope', () =>

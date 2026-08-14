@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GET_OVERDUE_TASKS_OUTPUT_SCHEMA } from './get-overdue-tasks.schema.js';
 
 export const GET_OVERDUE_TASKS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_overdue_tasks', MCP_TOOL_PREFIX),
@@ -16,4 +17,12 @@ export const GET_OVERDUE_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
+  title: 'Get Overdue Tasks',
+  outputSchema: GET_OVERDUE_TASKS_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

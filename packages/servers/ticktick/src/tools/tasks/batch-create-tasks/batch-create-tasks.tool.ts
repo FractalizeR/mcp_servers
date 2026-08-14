@@ -3,15 +3,11 @@
  */
 
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { TickTickFacade } from '#ticktick_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { TaskWithUnknownFields } from '#ticktick_api/entities/index.js';
 import type { CreateTaskDto } from '#ticktick_api/dto/index.js';
-import {
-  BatchCreateTasksParamsSchema,
-  BATCH_CREATE_TASKS_OUTPUT_SCHEMA,
-} from './batch-create-tasks.schema.js';
+import { BatchCreateTasksParamsSchema } from './batch-create-tasks.schema.js';
 import { BATCH_CREATE_TASKS_TOOL_METADATA } from './batch-create-tasks.metadata.js';
 
 /**
@@ -28,25 +24,6 @@ export class BatchCreateTasksTool extends BaseTool<TickTickFacade> {
    */
   protected override getParamsSchema(): typeof BatchCreateTasksParamsSchema {
     return BatchCreateTasksParamsSchema;
-  }
-
-  /**
-   * Extend auto-generated definition with title/outputSchema/annotations
-   * (пакет 3.1.C.ticktick — не выводятся автоматически из METADATA, см.
-   * base-tool.ts getDefinition()).
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Batch Create Tasks',
-      outputSchema: BATCH_CREATE_TASKS_OUTPUT_SCHEMA,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: false,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

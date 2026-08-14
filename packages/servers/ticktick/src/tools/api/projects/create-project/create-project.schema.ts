@@ -3,9 +3,8 @@
  */
 
 import { z } from 'zod';
-import { ProjectEntityOutputSchema, buildSuccessOutputSchema } from '#tools/shared/index.js';
-import { FieldsSchema } from '@fractalizer/mcp-core';
-
+import { ProjectEntityOutputSchema } from '#tools/shared/index.js';
+import { FieldsSchema, buildOutputSchema } from '@fractalizer/mcp-core';
 /**
  * Parameters schema for creating a new project
  */
@@ -61,4 +60,4 @@ export const CreateProjectOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope).
  */
-export const CREATE_PROJECT_OUTPUT_SCHEMA = buildSuccessOutputSchema(CreateProjectOutputDataSchema);
+export const CREATE_PROJECT_OUTPUT_SCHEMA = buildOutputSchema(CreateProjectOutputDataSchema);

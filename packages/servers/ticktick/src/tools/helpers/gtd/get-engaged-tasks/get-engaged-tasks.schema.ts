@@ -3,12 +3,8 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  TaskEntityOutputSchema,
-  buildSuccessOutputSchema,
-} from '#tools/shared/index.js';
-
+import { FieldsSchema, TaskEntityOutputSchema } from '#tools/shared/index.js';
+import { buildOutputSchema } from '@fractalizer/mcp-core';
 export const GetEngagedTasksParamsSchema = z.object({
   fields: FieldsSchema.describe('Поля для возврата'),
 });
@@ -31,6 +27,4 @@ export const GetEngagedTasksOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope).
  */
-export const GET_ENGAGED_TASKS_OUTPUT_SCHEMA = buildSuccessOutputSchema(
-  GetEngagedTasksOutputDataSchema
-);
+export const GET_ENGAGED_TASKS_OUTPUT_SCHEMA = buildOutputSchema(GetEngagedTasksOutputDataSchema);

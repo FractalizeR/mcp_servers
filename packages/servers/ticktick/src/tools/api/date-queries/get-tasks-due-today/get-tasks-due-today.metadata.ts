@@ -5,6 +5,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GET_TASKS_DUE_TODAY_OUTPUT_SCHEMA } from './get-tasks-due-today.schema.js';
 
 export const GET_TASKS_DUE_TODAY_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_tasks_due_today', MCP_TOOL_PREFIX),
@@ -16,4 +17,12 @@ export const GET_TASKS_DUE_TODAY_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
+  title: 'Get Tasks Due Today',
+  outputSchema: GET_TASKS_DUE_TODAY_OUTPUT_SCHEMA,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

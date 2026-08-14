@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { CreateLinkOutputSchema } from './create-link.schema.js';
 
 /**
  * Статические метаданные для CreateLinkTool
@@ -25,4 +26,12 @@ export const CREATE_LINK_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['issueId', 'relationship', 'targetIssue', 'fields'],
+  title: 'Создать связи между задачами',
+  outputSchema: CreateLinkOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

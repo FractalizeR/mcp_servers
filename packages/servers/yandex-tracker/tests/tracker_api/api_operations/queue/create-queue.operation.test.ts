@@ -5,10 +5,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { QueueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { CreateQueueOperation } from '#tracker_api/api_operations/queue/create-queue.operation.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
-import {
-  createCreateQueueDto,
-  createInvalidCreateQueueDto,
-} from '#helpers/queue-dto.fixture.js';
+import { createCreateQueueDto, createInvalidCreateQueueDto } from '#helpers/queue-dto.fixture.js';
 import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 
 describe('CreateQueueOperation', () => {

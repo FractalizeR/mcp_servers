@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { buildSuccessOutputSchema } from '#tools/shared/index.js';
+import { buildOutputSchema } from '@fractalizer/mcp-core';
 
 /**
  * Parameters schema for completing a task
@@ -31,4 +31,4 @@ export const CompleteTaskOutputDataSchema = z.object({
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope).
  */
-export const COMPLETE_TASK_OUTPUT_SCHEMA = buildSuccessOutputSchema(CompleteTaskOutputDataSchema);
+export const COMPLETE_TASK_OUTPUT_SCHEMA = buildOutputSchema(CompleteTaskOutputDataSchema);

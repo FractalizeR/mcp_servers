@@ -17,7 +17,10 @@ export function assertHasFields(obj: unknown, expectedFields: readonly string[] 
  * @param issue - Задача для проверки
  * @param requestedFields - Опциональный массив запрошенных полей
  */
-export function assertIssueStructure(issue: unknown, requestedFields?: readonly string[] | string[]): void {
+export function assertIssueStructure(
+  issue: unknown,
+  requestedFields?: readonly string[] | string[]
+): void {
   if (!requestedFields) {
     // Дефолтная проверка для обратной совместимости
     expect(issue).toHaveProperty('key');

@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DemoOutputSchema } from './demo.schema.js';
 
 /**
  * Статические метаданные для DemoTool
@@ -24,6 +25,14 @@ export const DEMO_TOOL_METADATA: StaticToolMetadata = {
   tags: ['demo', 'example', 'test'],
   isHelper: true,
   requiresExplicitUserConsent: false,
+  title: 'Демонстрационный инструмент',
+  outputSchema: DemoOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  },
   // message — единственный параметр, и это произвольный пользовательский текст
   // (демонстрационное сообщение) — allow-list оставлен пустым намеренно.
 } as const;

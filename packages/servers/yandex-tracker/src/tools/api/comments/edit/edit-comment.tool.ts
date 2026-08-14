@@ -13,14 +13,10 @@ import {
   BatchResultProcessor,
   ResultLogger,
 } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
-import {
-  EditCommentParamsSchema,
-  EditCommentOutputSchema,
-} from '#tools/api/comments/edit/edit-comment.schema.js';
+import { EditCommentParamsSchema } from '#tools/api/comments/edit/edit-comment.schema.js';
 
 import { EDIT_COMMENT_TOOL_METADATA } from './edit-comment.metadata.js';
 
@@ -45,29 +41,6 @@ export class EditCommentTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof EditCommentParamsSchema {
     return EditCommentParamsSchema;
-  }
-
-  /**
-   * Спорная классификация (см. отчёт пакета 3.1.C.tracker): edit перезаписывает
-   * текст комментария необратимо через API (без версии для conflict-detection в
-   * этом tool), но классифицирован НЕ как destructive — по аналогии с прочими
-   * update-операциями (update_issue, update_project, ...), где overwrite не
-   * считается "разрушением" в терминах MCP annotations (сохраняется способность
-   * повторно отредактировать/восстановить текст). idempotent: true — тот же
-   * набор аргументов даёт тот же конечный текст комментария.
-   */
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'Редактировать комментарии',
-      outputSchema: EditCommentOutputSchema,
-      annotations: {
-        readOnlyHint: false,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

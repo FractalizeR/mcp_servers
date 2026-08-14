@@ -10,10 +10,7 @@ import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js
 import type { UploadAttachmentInput } from '#tracker_api/dto/index.js';
 import { UploadAttachmentOperation } from '#tracker_api/api_operations/attachment/upload-attachment.operation.js';
 import { createAttachmentFixture } from '#helpers/attachment.fixture.js';
-import {
-  createMockFileBuffer,
-  createMockBinaryBuffer,
-} from '#helpers/file-upload.helper.js';
+import { createMockFileBuffer, createMockBinaryBuffer } from '#helpers/file-upload.helper.js';
 
 describe('UploadAttachmentOperation', () => {
   let operation: UploadAttachmentOperation;

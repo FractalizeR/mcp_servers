@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { CreateQueueOutputSchema } from './create-queue.schema.js';
 
 /**
  * Статические метаданные для CreateQueueTool
@@ -25,4 +26,12 @@ export const CREATE_QUEUE_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['key', 'lead', 'defaultType', 'defaultPriority', 'issueTypes', 'fields'],
+  title: 'Создать очередь',
+  outputSchema: CreateQueueOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 } as const;

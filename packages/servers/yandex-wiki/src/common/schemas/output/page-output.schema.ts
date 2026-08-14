@@ -7,7 +7,7 @@
  * ответы API несут произвольные дополнительные поля
  * (`WithUnknownFields<Page>`), а без `additionalProperties: false` на этом
  * вложенном уровне JSON Schema их не отвергает — см. `buildOutputSchema()`
- * в `#tools/shared/tool-definition-extras.js`.
+ * (`@fractalizer/mcp-core`, пакет 3.1.G).
  */
 
 import { z } from 'zod';

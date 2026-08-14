@@ -1,6 +1,12 @@
-import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
+import {
+  buildToolName,
+  ToolCategory,
+  ToolPriority,
+  buildOutputSchema,
+} from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetPageByIdOutputDataSchema } from './get-page-by-id.schema.js';
 
 export const GET_PAGE_BY_ID_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_page_by_id', MCP_TOOL_PREFIX),
@@ -12,4 +18,12 @@ export const GET_PAGE_BY_ID_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx', 'fields', 'raise_on_redirect', 'revision_id'],
+  title: 'Получить страницу по ID',
+  outputSchema: buildOutputSchema(GetPageByIdOutputDataSchema),
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

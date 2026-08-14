@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DeleteCommentOutputSchema } from '#tools/api/comments/delete/delete-comment.schema.js';
 
 /**
  * Статические метаданные для DeleteCommentTool
@@ -25,4 +26,12 @@ export const DELETE_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['issueId', 'commentId'],
+  title: 'Удалить комментарии',
+  outputSchema: DeleteCommentOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { DeleteChecklistItemOutputSchema } from '#tools/api/checklists/delete/delete-checklist-item.schema.js';
 
 /**
  * Статические метаданные для DeleteChecklistItemTool
@@ -25,4 +26,12 @@ export const DELETE_CHECKLIST_ITEM_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['issueId', 'itemId'],
+  title: 'Удалить элементы чеклиста',
+  outputSchema: DeleteChecklistItemOutputSchema,
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

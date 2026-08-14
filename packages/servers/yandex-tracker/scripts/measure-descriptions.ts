@@ -49,10 +49,7 @@ interface FullDescriptionsMetrics {
 function calculateMetrics(): FullDescriptionsMetrics {
   let shortDescriptionLength = 0;
   let fullDescriptionLength = 0;
-  const byCategory: Record<
-    string,
-    { count: number; shortChars: number; fullChars: number }
-  > = {};
+  const byCategory: Record<string, { count: number; shortChars: number; fullChars: number }> = {};
   const allTools: Array<{
     name: string;
     shortLength: number;
@@ -105,9 +102,7 @@ function calculateMetrics(): FullDescriptionsMetrics {
   }
 
   // Сортировать по длине полных descriptions
-  const longest = allTools
-    .sort((a, b) => b.fullLength - a.fullLength)
-    .slice(0, 10);
+  const longest = allTools.sort((a, b) => b.fullLength - a.fullLength).slice(0, 10);
 
   return {
     totalTools: TOOL_CLASSES.length,
@@ -148,7 +143,9 @@ function printMetrics(metrics: FullDescriptionsMetrics): void {
     const diffChars = stats.fullChars - stats.shortChars;
     const diffTokens = Math.ceil(diffChars / 4);
     console.log(`   ${category}: ${stats.count} tools`);
-    console.log(`   - Short: ${stats.shortChars} chars (~${Math.ceil(stats.shortChars / 4)} tokens)`);
+    console.log(
+      `   - Short: ${stats.shortChars} chars (~${Math.ceil(stats.shortChars / 4)} tokens)`
+    );
     console.log(`   - Full: ${stats.fullChars} chars (~${Math.ceil(stats.fullChars / 4)} tokens)`);
     console.log(`   - Diff: +${diffChars} chars (+${diffTokens} tokens)\n`);
   }
@@ -160,29 +157,25 @@ function printMetrics(metrics: FullDescriptionsMetrics): void {
     console.log(`   ${i + 1}. ${tool.name} (${tool.category})`);
     console.log(`      - Short: ${tool.shortLength} chars`);
     console.log(`      - Full: ${tool.fullLength} chars (+${diff})`);
-    console.log(`      - Description: "${tool.fullDescription.substring(0, 100)}${tool.fullDescription.length > 100 ? '...' : ''}"`);
+    console.log(
+      `      - Description: "${tool.fullDescription.substring(0, 100)}${tool.fullDescription.length > 100 ? '...' : ''}"`
+    );
     console.log('');
   }
 
   // Рекомендации
   const avgFullLength = metrics.fullDescriptionLength / metrics.totalTools;
   console.log('💡 Analysis:');
-  console.log(`   Average full description length: ${Math.ceil(avgFullLength)} chars (~${Math.ceil(avgFullLength / 4)} tokens)\n`);
+  console.log(
+    `   Average full description length: ${Math.ceil(avgFullLength)} chars (~${Math.ceil(avgFullLength / 4)} tokens)\n`
+  );
 
   if (metrics.fullEstimatedTokens > 3000) {
-    console.log(
-      '⚠️  Warning: Full descriptions занимают много токенов (>3000)'
-    );
-    console.log(
-      '   Рекомендация: рассмотрите возможность дальнейшей оптимизации\n'
-    );
+    console.log('⚠️  Warning: Full descriptions занимают много токенов (>3000)');
+    console.log('   Рекомендация: рассмотрите возможность дальнейшей оптимизации\n');
   } else if (metrics.fullEstimatedTokens > 2000) {
-    console.log(
-      '⚡ Notice: Full descriptions занимают умеренное количество токенов (>2000)'
-    );
-    console.log(
-      '   Рекомендация: текущий размер приемлем, но есть место для оптимизации\n'
-    );
+    console.log('⚡ Notice: Full descriptions занимают умеренное количество токенов (>2000)');
+    console.log('   Рекомендация: текущий размер приемлем, но есть место для оптимизации\n');
   } else {
     console.log(
       '✅ Great! Full descriptions оптимизированы для минимального использования токенов\n'

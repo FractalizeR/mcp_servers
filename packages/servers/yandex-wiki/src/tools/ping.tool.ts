@@ -1,29 +1,13 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
-import { PingParamsSchema, PingOutputDataSchema } from './ping.schema.js';
+import { PingParamsSchema } from './ping.schema.js';
 import { PING_TOOL_METADATA } from './ping.metadata.js';
-import { withDefinitionExtras, buildOutputSchema } from './shared/tool-definition-extras.js';
-
 export class PingTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = PING_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof PingParamsSchema {
     return PingParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return withDefinitionExtras(super.getDefinition(), {
-      title: 'Проверить подключение',
-      outputSchema: buildOutputSchema(PingOutputDataSchema),
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    });
   }
 
   async execute(_params: ToolCallParams): Promise<ToolResult> {

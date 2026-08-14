@@ -1,29 +1,13 @@
 import { BaseTool, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexWikiFacade } from '#wiki_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
-import { GetGridParamsSchema, GetGridOutputDataSchema } from './get-grid.schema.js';
+import { GetGridParamsSchema } from './get-grid.schema.js';
 import { GET_GRID_TOOL_METADATA } from './get-grid.metadata.js';
-import { withDefinitionExtras, buildOutputSchema } from '../../../shared/tool-definition-extras.js';
-
 export class GetGridTool extends BaseTool<YandexWikiFacade> {
   static override readonly METADATA = GET_GRID_TOOL_METADATA;
 
   protected override getParamsSchema(): typeof GetGridParamsSchema {
     return GetGridParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return withDefinitionExtras(super.getDefinition(), {
-      title: 'Получить таблицу',
-      outputSchema: buildOutputSchema(GetGridOutputDataSchema),
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    });
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {

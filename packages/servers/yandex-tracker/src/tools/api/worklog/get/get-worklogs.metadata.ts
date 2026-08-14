@@ -11,6 +11,7 @@
 import { buildToolName, ToolCategory, ToolPriority } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { GetWorklogsOutputSchema } from '#tools/api/worklog/get/get-worklogs.schema.js';
 
 /**
  * Статические метаданные для GetWorklogsTool
@@ -25,4 +26,12 @@ export const GET_WORKLOGS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueIds', 'fields', 'cursor', 'perPage'],
+  title: 'Записи времени задач',
+  outputSchema: GetWorklogsOutputSchema,
+  annotations: {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
 } as const;

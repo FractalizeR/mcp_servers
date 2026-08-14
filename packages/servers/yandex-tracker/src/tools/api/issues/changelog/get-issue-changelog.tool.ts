@@ -8,16 +8,12 @@
  */
 
 import { BaseTool } from '@fractalizer/mcp-core';
-import type { ToolDefinition } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
 import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
 import type { ChangelogEntryWithUnknownFields } from '#tracker_api/entities/index.js';
-import {
-  GetIssueChangelogParamsSchema,
-  GetIssueChangelogOutputSchema,
-} from '#tools/api/issues/changelog/get-issue-changelog.schema.js';
+import { GetIssueChangelogParamsSchema } from '#tools/api/issues/changelog/get-issue-changelog.schema.js';
 
 import { GET_ISSUE_CHANGELOG_TOOL_METADATA } from './get-issue-changelog.metadata.js';
 
@@ -48,20 +44,6 @@ export class GetIssueChangelogTool extends BaseTool<YandexTrackerFacade> {
    */
   protected override getParamsSchema(): typeof GetIssueChangelogParamsSchema {
     return GetIssueChangelogParamsSchema;
-  }
-
-  override getDefinition(): ToolDefinition {
-    return {
-      ...super.getDefinition(),
-      title: 'История изменений задач',
-      outputSchema: GetIssueChangelogOutputSchema,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    };
   }
 
   async execute(params: ToolCallParams): Promise<ToolResult> {
