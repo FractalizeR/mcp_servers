@@ -74,6 +74,9 @@ export const TYPES = {
   // Resource Registry (пакет 5.1.C.wiki)
   ResourceRegistry: Symbol.for('ResourceRegistry'),
 
+  // Prompt Registry (пакет 5.1.C.wiki, промпты)
+  PromptRegistry: Symbol.for('PromptRegistry'),
+
   // Operations (автоматически сгенерированы)
   ...OPERATION_SYMBOLS,
 

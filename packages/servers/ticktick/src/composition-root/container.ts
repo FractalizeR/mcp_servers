@@ -16,7 +16,12 @@ import {
   InMemoryCacheManager,
 } from '@fractalizer/mcp-infrastructure';
 import type { IHttpClient, RetryStrategy, CacheManager } from '@fractalizer/mcp-infrastructure';
-import { ToolRegistry, ConfiguredToolAccessPolicy, ResourceRegistry } from '@fractalizer/mcp-core';
+import {
+  ToolRegistry,
+  ConfiguredToolAccessPolicy,
+  ResourceRegistry,
+  PromptRegistry,
+} from '@fractalizer/mcp-core';
 import { TYPES } from './types.js';
 import { OPERATION_DEFINITIONS } from './definitions/operation-definitions.js';
 import { TOOL_CLASSES } from './definitions/tool-definitions.js';
@@ -29,6 +34,7 @@ import {
   TaskOperationsContainer,
 } from '#ticktick_api/facade/containers/index.js';
 import { TaskResourceProvider, ProjectResourceProvider } from '#resources/index.js';
+import { TickTickPromptProvider } from '#prompts/index.js';
 
 /**
  * Bind infrastructure dependencies (config, logger)
@@ -237,6 +243,25 @@ function bindResources(container: Container): void {
 }
 
 /**
+ * Bind MCP Prompts: провайдер слэш-команд (дневной/недельный обзор,
+ * GTD-разбор входящих — оставшаяся часть пакета 5.1.C.ticktick) и
+ * `PromptRegistry` framework, тот же паттерн, что и у `bindResources` выше.
+ * `TickTickPromptProvider` не зависит от facade — `getPrompt()` строит
+ * только текст сообщений, без обращения к API (см. заголовок провайдера).
+ */
+function bindPrompts(container: Container): void {
+  container.bind<TickTickPromptProvider>(TYPES.TickTickPromptProvider).toDynamicValue(() => {
+    return new TickTickPromptProvider();
+  });
+
+  container.bind<PromptRegistry>(TYPES.PromptRegistry).toDynamicValue(() => {
+    const registry = new PromptRegistry();
+    registry.register(container.get<TickTickPromptProvider>(TYPES.TickTickPromptProvider));
+    return registry;
+  });
+}
+
+/**
  * Create and configure DI container
  *
  * @param config - Server configuration
@@ -279,6 +304,9 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
 
   // 10. MCP Resources (providers + registry, depend on Facade)
   bindResources(container);
+
+  // 11. MCP Prompts (не зависят от facade, но регистрируются той же волной)
+  bindPrompts(container);
 
   // Log initialization
   const logger = container.get<Logger>(TYPES.Logger);

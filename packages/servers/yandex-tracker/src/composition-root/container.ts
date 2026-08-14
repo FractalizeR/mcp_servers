@@ -29,6 +29,10 @@ import { ToolRegistry, ConfiguredToolAccessPolicy } from '@fractalizer/mcp-core'
 import type { ResourceRegistry } from '@fractalizer/mcp-core';
 import { createTrackerResourceRegistry } from '#resources/index.js';
 
+// Prompt Registry (пакет 5.1.C.tracker) — слэш-команды triage/daily/project/epic
+import type { PromptRegistry } from '@fractalizer/mcp-core';
+import { createTrackerPromptRegistry } from '#prompts/index.js';
+
 // Автоматически импортируемые определения
 import { TOOL_CLASSES, OPERATION_CLASSES, bindFacadeServices } from './definitions/index.js';
 
@@ -248,6 +252,19 @@ function bindResourceRegistry(container: Container): void {
 }
 
 /**
+ * Регистрация PromptRegistry (пакет 5.1.C.tracker)
+ *
+ * Промпты этой волны — чистые построители текста инструкции, без обращения
+ * к facade/API (см. PromptProvider.getPrompt — сервер промпт не исполняет),
+ * поэтому фабрика не нуждается в зависимостях контейнера.
+ */
+function bindPromptRegistry(container: Container): void {
+  container.bind<PromptRegistry>(TYPES.PromptRegistry).toDynamicValue(() => {
+    return createTrackerPromptRegistry();
+  });
+}
+
+/**
  * Создание и конфигурация DI контейнера
  */
 export async function createContainer(config: ServerConfig): Promise<Container> {
@@ -276,6 +293,9 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
 
   // 5. ResourceRegistry (пакет 5.1.C.tracker)
   bindResourceRegistry(container);
+
+  // 6. PromptRegistry (пакет 5.1.C.tracker)
+  bindPromptRegistry(container);
 
   // Логирование зарегистрированных DI символов
   const logger = container.get<Logger>(TYPES.Logger);

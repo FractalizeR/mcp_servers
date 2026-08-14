@@ -21,7 +21,7 @@ import { dirname, join } from 'node:path';
 
 import { loadConfig } from '#config';
 import type { Logger } from '@fractalizer/mcp-infrastructure';
-import type { ToolRegistry, ResourceRegistry } from '@fractalizer/mcp-core';
+import type { ToolRegistry, ResourceRegistry, PromptRegistry } from '@fractalizer/mcp-core';
 import { createMcpServerAdapter } from '@fractalizer/mcp-core';
 import { MCP_SERVER_NAME, MCP_SERVER_DISPLAY_NAME } from './constants.js';
 
@@ -75,12 +75,17 @@ async function main(): Promise<void> {
     // wiki://page/{slug} и не-табличные ресурсы страницы (вложения/SharePoint).
     const resourceRegistry = container.get<ResourceRegistry>(TYPES.ResourceRegistry);
 
+    // PromptRegistry (пакет 5.1.C.wiki, промпты) — слэш-команды: сводка
+    // раздела и подготовка обновления документа.
+    const promptRegistry = container.get<PromptRegistry>(TYPES.PromptRegistry);
+
     const adapter = createMcpServerAdapter({
       serverName: MCP_SERVER_NAME,
       serverDisplayName: MCP_SERVER_DISPLAY_NAME,
       version: getPackageVersion(),
       toolRegistry,
       resourceRegistry,
+      promptRegistry,
       logger,
     });
 

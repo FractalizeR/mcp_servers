@@ -115,7 +115,17 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
       // 6. Коллекция: полные тела (full) либо resource_link + сводка (links) —
       //    пакет 5.1.B/5.1.C.tracker. Режим — параметр запроса (responseMode),
       //    порог по умолчанию — DEFAULT_COLLECTION_LINKS_THRESHOLD (см. схему).
-      return this.formatCollectionResult<IssueWithUnknownFields>({
+      //
+      //    БЕЗ явного type argument: `formatCollectionResult<TItem, TSummary =
+      //    undefined>` — при частичном списке явных type argument'ов
+      //    (`<IssueWithUnknownFields>`, без второго) TS контекстно типизирует
+      //    `summary` ПО ДЕФОЛТУ (`undefined`) до вывода типа из аргументов, а
+      //    не выводит TSummary из фактически переданного объекта — сборка
+      //    падала на TS2322 ровно на этом (summary был объектом, контекстный
+      //    тип — `undefined`). Без explicit type argument TS выводит и TItem,
+      //    и TSummary из формы аргументов (`items`/`toResourceLink`/`summary`)
+      //    целиком, без участия дефолта — типобезопасно и без `as`.
+      return this.formatCollectionResult({
         items: filteredIssues,
         mode: responseMode,
         toResourceLink: (issue): ResourceLinkDescriptor => ({

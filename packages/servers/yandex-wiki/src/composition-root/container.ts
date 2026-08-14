@@ -20,10 +20,18 @@ import { InMemoryCacheManager } from '@fractalizer/mcp-infrastructure';
 import { YandexWikiFacade } from '#wiki_api/facade/yandex-wiki.facade.js';
 
 // Tool Registry
-import { ToolRegistry, ConfiguredToolAccessPolicy, ResourceRegistry } from '@fractalizer/mcp-core';
+import {
+  ToolRegistry,
+  ConfiguredToolAccessPolicy,
+  ResourceRegistry,
+  PromptRegistry,
+} from '@fractalizer/mcp-core';
 
 // Resource Registry (пакет 5.1.C.wiki)
 import { WikiPageResourceProvider, WikiPageItemResourceProvider } from '#resources/index.js';
+
+// Prompt Registry (пакет 5.1.C.wiki, промпты)
+import { WikiPromptProvider } from '#prompts/index.js';
 
 // Автоматически импортируемые определения
 import { TOOL_CLASSES, OPERATION_CLASSES, bindFacadeServices } from './definitions/index.js';
@@ -203,6 +211,21 @@ function bindResourceRegistry(container: Container): void {
 }
 
 /**
+ * Регистрация PromptRegistry (пакет 5.1.C.wiki, промпты)
+ *
+ * `WikiPromptProvider` не зависит от facade (промпты строят ТЕКСТ инструкции
+ * агенту, а не вызывают API сами — см. заголовок prompt-provider.ts во
+ * framework: сервер промпт не исполняет) — конструктор без параметров.
+ */
+function bindPromptRegistry(container: Container): void {
+  container.bind<PromptRegistry>(TYPES.PromptRegistry).toDynamicValue(() => {
+    const registry = new PromptRegistry();
+    registry.register(new WikiPromptProvider());
+    return registry;
+  });
+}
+
+/**
  * Создание и конфигурация DI контейнера
  */
 export async function createContainer(config: ServerConfig): Promise<Container> {
@@ -230,6 +253,9 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
 
   // 5. ResourceRegistry
   bindResourceRegistry(container);
+
+  // 6. PromptRegistry
+  bindPromptRegistry(container);
 
   // Логирование
   const logger = container.get<Logger>(TYPES.Logger);

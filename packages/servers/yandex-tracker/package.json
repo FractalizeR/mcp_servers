@@ -28,6 +28,7 @@
     "#tools/*": "./src/tools/*",
     "#composition-root/*": "./src/composition-root/*",
     "#resources/*": "./src/resources/*",
+    "#prompts/*": "./src/prompts/*",
     "#cli/*": "./src/cli/*",
     "#constants": "./src/constants.ts",
     "#common/*": "./src/common/*",

@@ -27,6 +27,7 @@
     "#wiki_api/*": "./src/wiki_api/*",
     "#tools/*": "./src/tools/*",
     "#resources/*": "./src/resources/*",
+    "#prompts/*": "./src/prompts/*",
     "#composition-root/*": "./src/composition-root/*",
     "#cli/*": "./src/cli/*",
     "#constants": "./src/constants.ts",

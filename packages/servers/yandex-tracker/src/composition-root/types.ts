@@ -85,6 +85,9 @@ export const TYPES = {
   // === Resource Registry (пакет 5.1.C.tracker) ===
   ResourceRegistry: Symbol.for('ResourceRegistry'),
 
+  // === Prompt Registry (пакет 5.1.C.tracker) ===
+  PromptRegistry: Symbol.for('PromptRegistry'),
+
   // === Operations (автоматически сгенерированы) ===
   ...OPERATION_SYMBOLS,
 

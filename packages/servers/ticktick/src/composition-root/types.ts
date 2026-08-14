@@ -55,4 +55,8 @@ export const TYPES = {
   TaskResourceProvider: Symbol.for('TaskResourceProvider'),
   ProjectResourceProvider: Symbol.for('ProjectResourceProvider'),
   ResourceRegistry: Symbol.for('ResourceRegistry'),
+
+  // === MCP Prompts (пакет 5.1.C.ticktick) ===
+  TickTickPromptProvider: Symbol.for('TickTickPromptProvider'),
+  PromptRegistry: Symbol.for('PromptRegistry'),
 } as const;
