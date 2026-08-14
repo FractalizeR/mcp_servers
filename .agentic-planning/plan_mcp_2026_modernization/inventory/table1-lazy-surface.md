@@ -479,3 +479,45 @@ packages/servers/ticktick/src/config/server-config.interface.ts:94:   * @default
 packages/servers/ticktick/src/config/server-config.interface.ts:96:  discoveryMode: 'lazy' | 'eager';
 packages/servers/ticktick/src/server/handlers.ts:135:  if (config.tools.discoveryMode === 'eager' && metrics.totalTools > 30) {
 
+
+---
+
+## Дополнение от 2026-08-14: перечисление было неполным
+
+Пересборка перед стартом этапа 2 (`grep -rIinE`, тот же набор идентификаторов, исключены
+`node_modules`, `dist`, `.turbo`, `.git`, `.agentic-planning`) дала **102 файла** против 82 в таблице
+выше. Старый список оказался строгим подмножеством нового: ничего не исчезло, но 20 файлов не были
+учтены. Причина расхождения не в изменениях кода, а в способе сбора: исходный grep был
+регистрозависимым и/или собирался только по Трекеру — у Вики и TickTick пропущены ровно те же по
+смыслу файлы, что у Трекера учтены.
+
+Пропущено было (все 20; два последних — артефакты этапа 1, появились после планирования):
+
+- `.github/workflows/release.yml` — **`@fractalizer/mcp-search` в списке публикуемых пакетов.**
+  Самая важная из пропаж: без правки этого файла релизный пайплайн после удаления пакета сломается.
+- `.serena/project.yml` — **ложный хит**, слово «essential» в комментарии. К поверхности не относится.
+- `packages/servers/yandex-wiki/package.json`, `packages/servers/ticktick/package.json` — зависимость
+  `@fractalizer/mcp-search` (у Трекера была учтена, у этих двух — нет).
+- `packages/servers/yandex-wiki/vitest.config.ts`, `packages/servers/ticktick/vitest.config.ts` —
+  алиасы `@fractalizer/mcp-search` и `@fractalizer/mcp-search/*` на исходники пакета.
+- `packages/servers/yandex-wiki/src/tools/generated-index.ts`,
+  `packages/servers/ticktick/src/tools/generated-index.ts` — сгенерированные индексы.
+- `packages/servers/yandex-wiki/scripts/generate-tool-index.ts`,
+  `packages/servers/ticktick/scripts/generate-tool-index.ts` — генераторы этих индексов.
+- `packages/servers/yandex-wiki/tests/smoke/tool-search.smoke.test.ts`,
+  `packages/servers/ticktick/tests/smoke/tool-search.smoke.test.ts` — smoke-тесты поиска.
+- `packages/servers/ticktick/scripts/smoke-test-server.ts`.
+- `packages/servers/yandex-tracker/src/composition-root/definitions/tool-definitions.ts`,
+  `packages/servers/ticktick/src/composition-root/definitions/tool-definitions.ts`.
+- `packages/servers/yandex-tracker/src/tools/README.md`, `packages/servers/yandex-wiki/src/tools/README.md`.
+- `packages/framework/core/src/tool-registry/tool-access-policy.ts`,
+  `packages/framework/core/tests/tool-access-policy.test.ts` — созданы этапом 1, упоминают lazy в
+  комментариях и тестах. Правятся вместе с остальным.
+
+**Актуальный полный список — команда, а не файл** (артефакт снова протухнет):
+
+```
+grep -rIinE "toolDiscoveryMode|essentialTools|TOOL_DISCOVERY_MODE|essential|'lazy'|'eager'|search_tools|SearchToolsTool|mcp-search" \
+  --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.turbo --exclude-dir=.git --exclude-dir=.agentic-planning . \
+  | cut -d: -f1 | sed 's|^\./||' | sort -u
+```
