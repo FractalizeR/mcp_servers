@@ -61,8 +61,10 @@ export interface SchemaToDefinitionOptions extends ZodToJsonSchemaOptions {
  * которая полностью исключает возможность несоответствия schema ↔ definition.
  *
  * **Принцип работы:**
- * 1. Конвертирует Zod схему в JSON Schema через zod-to-json-schema
- * 2. Адаптирует результат для MCP протокола (убирает $ref, $schema)
+ * 1. Конвертирует Zod схему в JSON Schema (draft 2020-12) через нативный z.toJSONSchema
+ * 2. Адаптирует результат для MCP протокола ($ref и $defs сохраняются как есть —
+ *    2020-12 их поддерживает, и без $defs рекурсивные схемы (z.lazy) превращались
+ *    бы в схему с битой ссылкой)
  * 3. Применяет кастомные трансформации и descriptions (если указаны)
  * 4. Возвращает готовый inputSchema для MCP definition
  *

@@ -380,6 +380,47 @@ describe('zodToMcpInputSchema', () => {
   });
 });
 
+describe('JSON Schema draft 2020-12 (пакет 3.1.A)', () => {
+  it('не добавляет $defs для обычных (нерекурсивных) схем', () => {
+    const result = zodToMcpInputSchema(BasicSchema);
+
+    expect(result.$defs).toBeUndefined();
+  });
+
+  it('сохраняет $ref и $defs для рекурсивной (self-referencing) схемы', () => {
+    const Category: z.ZodObject<{
+      name: z.ZodString;
+      children: z.ZodOptional<z.ZodArray<z.ZodType>>;
+    }> = z.object({
+      name: z.string(),
+      get children() {
+        return z.array(Category).optional();
+      },
+    });
+
+    // Рекурсия не в корне (root ссылается на себя изнутри вложенного поля,
+    // а не как ZodObject верхнего уровня) — Zod выносит определение в $defs.
+    const Params = z.object({ root: Category });
+    const result = zodToMcpInputSchema(Params);
+
+    expect(result.$defs).toBeDefined();
+    expect(Object.keys(result.$defs ?? {}).length).toBeGreaterThan(0);
+  });
+
+  it('для схемы без параметров выдаёт валидную форму без параметров, а не {}', () => {
+    const Empty = z.object({});
+    const result = zodToMcpInputSchema(Empty);
+
+    // Граничное условие MCP-спеки: inputSchema обязан быть валидным объектом
+    // JSON Schema, для tool без параметров рекомендуется
+    // { type: 'object', additionalProperties: false } — не пустой {}.
+    expect(result).not.toEqual({});
+    expect(result.type).toBe('object');
+    expect(result.additionalProperties).toBe(false);
+    expect(result.properties).toEqual({});
+  });
+});
+
 describe('extractRequiredFields', () => {
   it('должен извлекать required поля', () => {
     const required = extractRequiredFields(BasicSchema);

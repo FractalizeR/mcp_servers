@@ -8,15 +8,24 @@
 import { z } from 'zod';
 
 /**
- * JSON Schema для MCP inputSchema
+ * JSON Schema (draft 2020-12) для MCP inputSchema/outputSchema
  *
- * Упрощенный формат без $schema и $ref (MCP не поддерживает)
+ * $ref сохраняется как есть (в т.ч. внутри properties/items — Zod генерирует его
+ * "как часть" properties и адаптер это не трогает). $defs сохраняется тоже —
+ * без него $ref, указывающий на "#/$defs/...", был бы битой ссылкой; это
+ * единственный способ корректно описать рекурсивные схемы (self-referencing
+ * z.lazy) в JSON Schema. $schema (URI диалекта) сознательно не добавляется:
+ * Zod остаётся единственным валидатором входа, этот объект используется только
+ * как описание контракта для клиента, отдельного JSON-Schema-валидатора с
+ * выбором диалекта по URI в проекте нет.
  */
 export interface ToolInputSchema {
   type: 'object';
   properties: Record<string, unknown>;
   required?: string[];
   additionalProperties?: boolean;
+  /** $defs для разрешения $ref (нужен только рекурсивным/переиспользуемым схемам) */
+  $defs?: Record<string, unknown>;
 }
 
 /**
@@ -78,18 +87,19 @@ export function zodToMcpInputSchema<T extends z.ZodRawShape>(
 ): ToolInputSchema {
   const { includeExamples = true, strict = true } = options ?? {};
 
-  // 1. Конвертируем через нативный Zod v4 toJSONSchema
+  // 1. Конвертируем через нативный Zod v4 toJSONSchema (JSON Schema draft 2020-12)
   const jsonSchema = z.toJSONSchema(schema, {
-    target: 'draft-7', // MCP использует JSON Schema draft-7
+    target: 'draft-2020-12',
     io: 'input', // Как в MCP SDK pipeStrategy: 'input'
   });
 
-  // 2. Извлекаем только нужные поля для MCP
+  // 2. Извлекаем нужные поля для MCP (включая $defs — нужен для разрешения $ref)
   const result = jsonSchema as {
     type?: string;
     properties?: Record<string, unknown>;
     required?: string[];
     additionalProperties?: boolean;
+    $defs?: Record<string, unknown>;
   };
 
   // 3. Валидация результата
@@ -104,6 +114,9 @@ export function zodToMcpInputSchema<T extends z.ZodRawShape>(
   // 4. Очистка от лишних полей (если нужно)
   if (!includeExamples) {
     removeExamplesFromSchema(result.properties);
+    if (result.$defs) {
+      removeExamplesFromSchema(result.$defs);
+    }
   }
 
   // 5. Формируем финальный результат
@@ -120,6 +133,11 @@ export function zodToMcpInputSchema<T extends z.ZodRawShape>(
   // Добавляем additionalProperties только если strict режим
   if (strict) {
     inputSchema.additionalProperties = false;
+  }
+
+  // $defs — только если реально есть определения (рекурсивные/переиспользуемые схемы)
+  if (result.$defs && Object.keys(result.$defs).length > 0) {
+    inputSchema.$defs = result.$defs;
   }
 
   return inputSchema;
@@ -172,7 +190,7 @@ function removeExamplesFromSchema(properties: Record<string, unknown>): void {
 export function extractRequiredFields<T extends z.ZodRawShape>(schema: z.ZodObject<T>): string[] {
   // В Zod v4 используем toJSONSchema для получения required полей
   const jsonSchema = z.toJSONSchema(schema, {
-    target: 'draft-7',
+    target: 'draft-2020-12',
     io: 'input',
   }) as { required?: string[] };
 

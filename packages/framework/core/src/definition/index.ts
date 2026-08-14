@@ -33,3 +33,6 @@ export {
   type ValidationError,
   type ValidationResult,
 } from './definition-validator.js';
+
+// Детектор циклических $ref (JSON Schema 2020-12)
+export { detectCircularRefs, type CircularRefCheckResult } from './detect-circular-refs.js';

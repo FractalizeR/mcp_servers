@@ -11,3 +11,5 @@ export type { ToolAccessPolicy } from './tool-access-policy.js';
 export { ConfiguredToolAccessPolicy, AllowAllToolAccessPolicy } from './tool-access-policy.js';
 export { redactParams } from './params-redactor.js';
 export type { RedactorOptions } from './params-redactor.js';
+export { projectToolDefinitionsForList } from './tools-list-projection.js';
+export type { McpToolListEntry } from './tools-list-projection.js';

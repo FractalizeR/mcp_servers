@@ -47,19 +47,17 @@ describe('Tool Metadata Validation', () => {
       }
     });
 
-    it('все инструменты должны иметь inputSchema (в METADATA или через definition)', () => {
+    it('все инструменты должны генерировать inputSchema через getParamsSchema()', () => {
+      // Единственный поддерживаемый путь (пакет 3.1.B плана модернизации):
+      // buildDefinition() (legacy) удалён из BaseTool — ни один из 97
+      // инструментов его не переопределял (подтверждено грепом перед удалением).
       for (const ToolClass of TOOL_CLASSES) {
         const metadata = (ToolClass as any).METADATA;
-
-        // inputSchema может быть либо в METADATA (новый стиль),
-        // либо генерироваться через buildDefinition() (старый стиль)
-        // Проверяем что хотя бы одно из двух есть
-        const hasInputSchemaInMetadata = metadata.inputSchema !== undefined;
-        const hasBuildDefinitionMethod = ToolClass.prototype.buildDefinition !== undefined;
+        const hasGetParamsSchemaMethod = typeof ToolClass.prototype.getParamsSchema === 'function';
 
         expect(
-          hasInputSchemaInMetadata || hasBuildDefinitionMethod,
-          `Tool ${metadata.name} должен иметь inputSchema в METADATA или метод buildDefinition()`
+          hasGetParamsSchemaMethod,
+          `Tool ${metadata.name} должен переопределять getParamsSchema()`
         ).toBe(true);
       }
     });

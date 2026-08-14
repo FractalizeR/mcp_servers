@@ -7,8 +7,9 @@
  * - Валидация делегирована в Zod schemas
  *
  * Поддержка автоматической генерации definition из schema:
- * - Если определен getParamsSchema(), definition генерируется автоматически
- * - В противном случае используется ручной buildDefinition() (legacy)
+ * - definition генерируется автоматически из getParamsSchema() (единственный путь;
+ *   legacy-путь buildDefinition() удалён в пакете 3.1.B — ни один из 97 инструментов
+ *   его не переопределял)
  */
 
 import type { Logger } from '@fractalizer/mcp-infrastructure';
@@ -21,6 +22,26 @@ import { generateDefinitionFromSchema } from '../../definition/index.js';
 import { formatZodErrorsToString } from '../../utils/zod-error-formatter.js';
 import { ApiErrorClass } from '@fractalizer/mcp-infrastructure';
 import type { ApiErrorDetails } from '@fractalizer/mcp-infrastructure';
+
+/**
+ * Единый success envelope — форма и content[0].text, и structuredContent
+ * результата formatSuccess(). Контракт для следующей волны (outputSchema
+ * пакета 3.1.C должен описывать именно эту форму).
+ */
+interface SuccessEnvelope {
+  success: true;
+  data: unknown;
+}
+
+/**
+ * Единый error envelope — форма и content[0].text, и structuredContent
+ * результата formatError().
+ */
+interface ErrorEnvelope {
+  success: false;
+  message: string;
+  error?: string | ApiErrorDetails;
+}
 
 /**
  * Абстрактный базовый класс для всех инструментов
@@ -55,15 +76,9 @@ export abstract class BaseTool<TFacade = unknown> {
   /**
    * Получить определение инструмента
    *
-   * Поддерживает два режима:
-   * 1. **Автоматическая генерация (рекомендуется):**
-   *    - Если определен getParamsSchema(), definition генерируется из schema
-   *    - Исключает возможность несоответствия schema ↔ definition
-   *    - DRY принцип: schema является единственным источником истины
-   *
-   * 2. **Ручное определение (legacy):**
-   *    - Если getParamsSchema() не определен, используется buildDefinition()
-   *    - Сохранено для обратной совместимости
+   * **Автоматическая генерация:** definition генерируется из getParamsSchema().
+   * Исключает возможность несоответствия schema ↔ definition — DRY принцип,
+   * schema является единственным источником истины.
    *
    * Автоматически добавляет category, subcategory, priority из METADATA
    */
@@ -71,27 +86,27 @@ export abstract class BaseTool<TFacade = unknown> {
     const ToolClass = this.constructor as typeof BaseTool;
     const metadata = ToolClass.METADATA;
 
-    // Приоритет 1: Автоматическая генерация из schema (NEW)
     const schema = this.getParamsSchema?.();
-    let definition: ToolDefinition;
-
-    if (schema) {
-      // Генерируем inputSchema автоматически из Zod schema
-      const inputSchema = generateDefinitionFromSchema(schema, {
-        includeDescriptions: true,
-        includeExamples: true,
-        strict: true,
-      });
-
-      definition = {
-        name: metadata.name,
-        description: metadata.description,
-        inputSchema,
-      };
-    } else {
-      // Приоритет 2: Ручное определение (legacy)
-      definition = this.buildDefinition();
+    if (!schema) {
+      throw new Error(
+        `${this.constructor.name}: getParamsSchema() не определён. ` +
+          `Переопределите getParamsSchema() (buildDefinition() удалён — legacy-путь ` +
+          `без переопределений во всех 97 инструментах проекта) либо getDefinition() целиком.`
+      );
     }
+
+    // Генерируем inputSchema автоматически из Zod schema
+    const inputSchema = generateDefinitionFromSchema(schema, {
+      includeDescriptions: true,
+      includeExamples: true,
+      strict: true,
+    });
+
+    const definition: ToolDefinition = {
+      name: metadata.name,
+      description: metadata.description,
+      inputSchema,
+    };
 
     // Добавляем метаданные из METADATA
     const result: ToolDefinition = {
@@ -113,11 +128,13 @@ export abstract class BaseTool<TFacade = unknown> {
   /**
    * Получить Zod схему параметров для автогенерации definition
    *
-   * **NEW (рекомендуемый подход):**
    * Переопределите этот метод для автоматической генерации definition из schema.
-   * Это исключает возможность несоответствия schema ↔ definition.
+   * Это исключает возможность несоответствия schema ↔ definition. Объявлен
+   * опциональным на уровне типа (не abstract), чтобы не ломать тестовые
+   * дублёры, переопределяющие getDefinition() целиком и никогда не вызывающие
+   * getParamsSchema() — в проде переопределён во всех 97 инструментах.
    *
-   * @returns Zod схема параметров или undefined (для legacy режима)
+   * @returns Zod схема параметров
    *
    * @example
    * ```typescript
@@ -127,25 +144,6 @@ export abstract class BaseTool<TFacade = unknown> {
    * ```
    */
   protected getParamsSchema?(): z.ZodObject<z.ZodRawShape>;
-
-  /**
-   * Построить базовое определение инструмента (LEGACY)
-   *
-   * **УСТАРЕВШИЙ ПОДХОД:**
-   * Используйте getParamsSchema() вместо этого метода для автогенерации definition.
-   *
-   * Этот метод сохранен для обратной совместимости с существующими инструментами.
-   * Переопределите этот метод в наследнике для предоставления
-   * name, description и inputSchema вручную.
-   *
-   * @deprecated Используйте getParamsSchema() для автоматической генерации
-   */
-  protected buildDefinition(): ToolDefinition {
-    throw new Error(
-      `${this.constructor.name}: Не определен ни getParamsSchema(), ни buildDefinition(). ` +
-        `Реализуйте хотя бы один из этих методов.`
-    );
-  }
 
   /**
    * Получить метаданные (runtime)
@@ -201,22 +199,24 @@ export abstract class BaseTool<TFacade = unknown> {
 
   /**
    * Форматирование успешного результата
+   *
+   * Единый success envelope: `{ success: true, data }`. Отдаётся ДВАЖДЫ — как
+   * `structuredContent` (машиночитаемо, описывается опциональным outputSchema
+   * инструмента) и как сериализованный JSON в `content[0].text` (текстовый
+   * дубль для обратной совместимости с клиентами без поддержки
+   * structuredContent — спека MCP 2025-06-18 требует именно это дублирование).
    */
   protected formatSuccess(data: unknown): ToolResult {
+    const payload: SuccessEnvelope = { success: true, data };
+
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(
-            {
-              success: true,
-              data,
-            },
-            null,
-            2
-          ),
+          text: JSON.stringify(payload, null, 2),
         },
       ],
+      structuredContent: payload,
     };
   }
 
@@ -227,6 +227,10 @@ export abstract class BaseTool<TFacade = unknown> {
    * - Передает полную информацию об ApiErrorClass (statusCode, errors, retryAfter)
    * - Для обычных Error передает только message
    * - Решает проблему потери деталей ошибки при передаче в MCP client
+   *
+   * Единый error envelope: `{ success: false, message, error? }`, отдаётся тем
+   * же способом, что и formatSuccess() — structuredContent + текстовый дубль
+   * (см. комментарий там).
    */
   protected formatError(message: string, error?: unknown): ToolResult {
     this.logger.error(message, error);
@@ -243,21 +247,22 @@ export abstract class BaseTool<TFacade = unknown> {
     }
 
     // Создаем объект результата с условным добавлением error поля
-    const result: { success: false; message: string; error?: string | ApiErrorDetails } = {
+    const payload: ErrorEnvelope = {
       success: false,
       message,
     };
     if (errorDetails !== undefined) {
-      result.error = errorDetails;
+      payload.error = errorDetails;
     }
 
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(result, null, 2),
+          text: JSON.stringify(payload, null, 2),
         },
       ],
+      structuredContent: payload,
       isError: true,
     };
   }

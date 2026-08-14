@@ -25,6 +25,7 @@ import { loadConfig } from '#config';
 import type { ServerConfig } from '#config';
 import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { ToolRegistry } from '@fractalizer/mcp-core';
+import { projectToolDefinitionsForList } from '@fractalizer/mcp-core';
 import { MCP_SERVER_NAME } from './constants.js';
 
 // DI Container (Composition Root)
@@ -81,11 +82,7 @@ function setupServer(
     logToolsWarnings(logger, metrics);
 
     return {
-      tools: definitions.map((def) => ({
-        name: def.name,
-        description: def.description,
-        inputSchema: def.inputSchema,
-      })),
+      tools: projectToolDefinitionsForList(definitions),
     };
   });
 
