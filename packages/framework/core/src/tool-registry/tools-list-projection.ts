@@ -19,6 +19,13 @@ import type { ToolDefinition } from '../tools/base/index.js';
  * Контракт для следующей волны (3.1.C/D): поля title/outputSchema/annotations
  * опциональны и пропускаются наружу только когда заданы в ToolDefinition —
  * пока (до 3.1.C) их нет ни у одного из 97 инструментов.
+ *
+ * `_meta` добавлено пакетом 6.2 (снятие ограничения пилота MCP Apps): хост
+ * узнаёт о `_meta.ui.resourceUri` инструмента именно из `tools/list` (SEP-1865,
+ * «hosts can prefetch templates before tool execution») — до этого поле
+ * терялось на границе адаптера, т.к. в whitelist не входило. Явное поле в
+ * whitelist, не копирование всего объекта — тот же принцип, что и у
+ * title/outputSchema/annotations выше.
  */
 export interface McpToolListEntry {
   name: string;
@@ -27,6 +34,7 @@ export interface McpToolListEntry {
   title?: string;
   outputSchema?: ToolDefinition['outputSchema'];
   annotations?: ToolDefinition['annotations'];
+  _meta?: ToolDefinition['_meta'];
 }
 
 /**
@@ -47,6 +55,9 @@ function projectToolDefinitionForList(definition: ToolDefinition): McpToolListEn
   }
   if (definition.annotations !== undefined) {
     entry.annotations = definition.annotations;
+  }
+  if (definition._meta !== undefined) {
+    entry._meta = definition._meta;
   }
 
   return entry;

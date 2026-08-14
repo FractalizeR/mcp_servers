@@ -232,15 +232,19 @@ describe('Трекер: resources/* через реальный Server (wire-у�
     return all;
   }
 
-  it('DoD 1: resources/list (по всем страницам) агрегирует очереди и проекты (задачи не перечисляются)', async () => {
+  it('DoD 1: resources/list (по всем страницам) агрегирует очереди, проекты и виджет MCP Apps (задачи не перечисляются)', async () => {
     const h = await withConnectedHarness();
 
     const resources = await collectAllResources(h);
 
-    expect(resources).toHaveLength(2);
+    // 3: queue + project + ui://tracker/issue-description-editor (пилот MCP
+    // Apps №1, пакет 6.1) — статический виджет, тоже единственный в своём
+    // роде, поэтому тоже перечислим (в отличие от issues, см. ниже).
+    expect(resources).toHaveLength(3);
     expect(resources.some((r) => r.uri.startsWith('tracker://queue/'))).toBe(true);
     expect(resources.some((r) => r.uri.startsWith('tracker://project/'))).toBe(true);
     expect(resources.some((r) => r.uri.startsWith('tracker://issue/'))).toBe(false);
+    expect(resources.some((r) => r.uri === 'ui://tracker/issue-description-editor')).toBe(true);
   });
 
   it('DoD 1: первая страница resources/list несёт ttlMs/cacheScope (даже если пуста)', async () => {

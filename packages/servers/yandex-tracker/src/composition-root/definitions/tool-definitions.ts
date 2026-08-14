@@ -12,6 +12,7 @@ import { GetIssuesTool } from '#tools/api/issues/get/index.js';
 import { CreateIssueTool } from '#tools/api/issues/create/index.js';
 import { FindIssuesTool } from '#tools/api/issues/find/index.js';
 import { UpdateIssueTool } from '#tools/api/issues/update/index.js';
+import { AnalyzeIssueDescriptionTool } from '#tools/api/issues/analyze/index.js';
 import { GetIssueChangelogTool } from '#tools/api/issues/changelog/index.js';
 import { GetIssueTransitionsTool } from '#tools/api/issues/transitions/get/index.js';
 import { TransitionIssueTool } from '#tools/api/issues/transitions/execute/index.js';
@@ -139,6 +140,7 @@ export const TOOL_CLASSES = [
   CreateIssueTool,
   FindIssuesTool,
   UpdateIssueTool,
+  AnalyzeIssueDescriptionTool,
   GetIssueChangelogTool,
   GetIssueTransitionsTool,
   TransitionIssueTool,

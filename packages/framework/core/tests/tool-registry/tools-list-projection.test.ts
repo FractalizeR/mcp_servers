@@ -31,12 +31,25 @@ describe('projectToolDefinitionsForList', () => {
     });
   });
 
-  it('НЕ добавляет title/outputSchema/annotations, если их нет в ToolDefinition', () => {
+  it('НЕ добавляет title/outputSchema/annotations/_meta, если их нет в ToolDefinition', () => {
     const [entry] = projectToolDefinitionsForList([makeDefinition()]);
 
     expect(entry).not.toHaveProperty('title');
     expect(entry).not.toHaveProperty('outputSchema');
     expect(entry).not.toHaveProperty('annotations');
+    expect(entry).not.toHaveProperty('_meta');
+  });
+
+  it('пропускает _meta наружу, когда задан на ToolDefinition (пакет 6.2 — MCP Apps _meta.ui.resourceUri)', () => {
+    const [entry] = projectToolDefinitionsForList([
+      makeDefinition({
+        _meta: { ui: { resourceUri: 'ui://tracker/widget', visibility: ['model', 'app'] } },
+      }),
+    ]);
+
+    expect(entry?._meta).toEqual({
+      ui: { resourceUri: 'ui://tracker/widget', visibility: ['model', 'app'] },
+    });
   });
 
   it('пропускает title, outputSchema и annotations наружу, когда они заданы', () => {

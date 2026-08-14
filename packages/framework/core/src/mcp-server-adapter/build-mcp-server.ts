@@ -70,7 +70,27 @@ const PROMPTS_LIST_CACHE_TTL_MS = 30_000;
  */
 function buildServerOptions(): ServerOptions {
   return {
-    capabilities: { tools: {}, resources: {}, prompts: {} },
+    capabilities: {
+      tools: {},
+      resources: {},
+      prompts: {},
+      extensions: { 'io.modelcontextprotocol/ui': {} },
+      // Расширение MCP Apps (SEP-1865, реестр расширений SEP-1724). Общий
+      // механизм: `ServerCapabilitiesSchema.extensions` — открытая карта
+      // `{ [extensionId]: settings }`, идентификатор фиксирован спекой
+      // (`https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/draft/apps.mdx`,
+      // раздел «Reservations in MCP» — «The label `io.modelcontextprotocol/ui`
+      // is reserved»; тот же идентификатор — `EXTENSION_ID` в
+      // `@modelcontextprotocol/ext-apps/server`). Для клиента спека определяет
+      // обязательное поле настроек `mimeTypes`; для СЕРВЕРА форма настроек
+      // спекой не определена (референсный сервер `ext-apps` объявляет
+      // расширение вовсе без записи в `ServerCapabilities` — эта часть
+      // SEP-1724 в самом ext-apps ещё не подключена). Общий пример SEP-1724
+      // для расширений без собственных настроек — пустой объект (там же:
+      // `"io.modelcontextprotocol/oauth-client-credentials": {}`), поэтому
+      // здесь тот же паттерн: сам факт ключа в `extensions` — декларация
+      // поддержки, без придуманных сверх спеки полей.
+    },
     cacheHints: {
       'tools/list': { ttlMs: TOOLS_LIST_CACHE_TTL_MS, cacheScope: 'private' },
       'resources/list': { ttlMs: RESOURCES_LIST_CACHE_TTL_MS, cacheScope: 'private' },

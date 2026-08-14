@@ -65,4 +65,14 @@ export interface ToolDefinition {
   subcategory?: string;
   /** Приоритет инструмента для сортировки */
   priority?: 'critical' | 'high' | 'normal' | 'low';
+  /**
+   * Протокольный `_meta` определения инструмента (MCP `Tool._meta`) — открытая
+   * структура по спеке (например `_meta.ui.resourceUri`/`visibility` из
+   * расширения MCP Apps, SEP-1865). Явное поле, а не индексная сигнатура по
+   * всему `ToolDefinition`: `_meta` — единственное место контракта, где
+   * значения намеренно не типизированы (сама спека не ограничивает форму
+   * расширений внутри `_meta`), остальные поля `ToolDefinition` остаются
+   * строго типизированными.
+   */
+  _meta?: Record<string, unknown>;
 }
