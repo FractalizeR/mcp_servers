@@ -5,155 +5,28 @@
  *
  * Реализует MCP-сервер для интеграции с API Яндекс.Трекера,
  * позволяя LLM-моделям взаимодействовать с задачами и проектами.
+ *
+ * Вся протокольная логика (lifecycle, transport, tools/list, tools/call)
+ * живёт в @fractalizer/mcp-core (createMcpServerAdapter, пакет 4.1.B плана
+ * модернизации MCP) — этот файл только собирает DI-контейнер и запускает
+ * adapter.
  */
 
 // IMPORTANT: Must be imported before any inversify decorators are used
 import 'reflect-metadata';
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  InitializeRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { loadConfig } from '#config';
-import type { ServerConfig } from '#config';
 import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { ToolRegistry } from '@fractalizer/mcp-core';
-import { projectToolDefinitionsForList } from '@fractalizer/mcp-core';
-import { MCP_SERVER_NAME } from './constants.js';
+import { createMcpServerAdapter } from '@fractalizer/mcp-core';
+import { MCP_SERVER_NAME, MCP_SERVER_DISPLAY_NAME } from './constants.js';
 
 // DI Container (Composition Root)
 import { createContainer, TYPES } from '#composition-root/index.js';
-
-// Handler helpers (вынесены для уменьшения размера setupServer)
-import {
-  calculateToolsMetrics,
-  normalizeToolName,
-  logToolsMetrics,
-  logToolsWarnings,
-  createErrorResponse,
-} from './server/handlers.js';
-
-/**
- * Настройка обработчиков запросов MCP сервера
- */
-function setupServer(
-  server: Server,
-  toolRegistry: ToolRegistry,
-  config: ServerConfig,
-  logger: Logger
-): void {
-  // Обработчик инициализации соединения
-  server.setRequestHandler(InitializeRequestSchema, (request) => {
-    const { clientInfo, protocolVersion } = request.params;
-
-    logger.info(`🤝 Подключение MCP клиента`, {
-      clientName: clientInfo.name,
-      clientVersion: clientInfo.version,
-      protocolVersion,
-    });
-
-    return {
-      protocolVersion: '2025-06-18',
-      capabilities: {
-        tools: {},
-      },
-      serverInfo: {
-        name: MCP_SERVER_NAME,
-        version: getPackageVersion(),
-      },
-    };
-  });
-
-  // Обработчик запроса списка инструментов
-  server.setRequestHandler(ListToolsRequestSchema, () => {
-    logger.info(`📋 Запрос tools/list от клиента`);
-
-    const definitions = toolRegistry.getDefinitions(config.disabledToolGroups);
-
-    const metrics = calculateToolsMetrics(definitions);
-    logToolsMetrics(logger, config, definitions, metrics);
-    logToolsWarnings(logger, metrics);
-
-    return {
-      tools: projectToolDefinitionsForList(definitions),
-    };
-  });
-
-  // Обработчик вызова инструмента
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const originalName = request.params.name;
-    const { arguments: args } = request.params;
-
-    logger.info(`🔧 Запрос инструмента: ${originalName}`);
-
-    // Нормализация имени: удаление префикса сервера (добавляется MCP клиентами)
-    const { name, removedPrefix } = normalizeToolName(originalName, logger);
-
-    try {
-      const result = await toolRegistry.execute(name, args as Record<string, unknown>);
-
-      if (result.isError) {
-        logger.error(`❌ Инструмент ${name} вернул ошибку`, {
-          originalName,
-          normalizedName: name,
-          removedPrefix,
-          hasContent: result.content.length > 0,
-          contentPreview:
-            result.content[0]?.type === 'text'
-              ? result.content[0].text.substring(0, 200)
-              : undefined,
-        });
-      } else {
-        logger.info(`✅ Инструмент ${name} выполнен успешно`);
-      }
-
-      return result;
-    } catch (error) {
-      logger.error(`💥 Необработанное исключение при выполнении инструмента ${name}:`, {
-        originalName,
-        normalizedName: name,
-        removedPrefix,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-
-      return createErrorResponse(error, name, originalName);
-    }
-  });
-
-  // Обработка ошибок сервера
-  server.onerror = (error): void => {
-    logger.error('Ошибка MCP сервера:', error);
-  };
-}
-
-/**
- * Настройка обработчиков сигналов завершения
- */
-function setupSignalHandlers(server: Server, logger: Logger): void {
-  const handleShutdown = (signal: string): void => {
-    logger.info(`Получен сигнал ${signal}, завершение работы...`);
-    void server
-      .close()
-      .then(() => {
-        process.exit(0);
-      })
-      .catch((error) => {
-        logger.error('Ошибка при закрытии сервера:', error);
-        process.exit(1);
-      });
-  };
-
-  process.on('SIGINT', () => handleShutdown('SIGINT'));
-  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
-}
 
 /**
  * Получение версии из package.json
@@ -194,31 +67,19 @@ async function main(): Promise<void> {
       prettyLogs: config.prettyLogs,
     });
 
-    // Получение ToolRegistry из контейнера
+    // Получение ToolRegistry из контейнера (уже несёт свою ToolAccessPolicy —
+    // единый источник истины для tools/list и tools/call, см. tool-registry.ts)
     const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
 
-    // Создание MCP сервера
-    const server = new Server(
-      {
-        name: MCP_SERVER_NAME,
-        version: getPackageVersion(),
-      },
-      {
-        capabilities: {
-          tools: {},
-        },
-      }
-    );
+    const adapter = createMcpServerAdapter({
+      serverName: MCP_SERVER_NAME,
+      serverDisplayName: MCP_SERVER_DISPLAY_NAME,
+      version: getPackageVersion(),
+      toolRegistry,
+      logger,
+    });
 
-    // Настройка обработчиков сервера
-    setupServer(server, toolRegistry, config, logger);
-
-    // Настройка обработчиков сигналов
-    setupSignalHandlers(server, logger);
-
-    // Запуск сервера с stdio транспортом
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
+    await adapter.start();
 
     logger.info('Яндекс.Трекер MCP сервер успешно запущен');
     logger.info('Ожидание запросов от MCP клиента...');

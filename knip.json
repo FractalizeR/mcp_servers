@@ -13,12 +13,7 @@
     "packages/framework/core": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"],
-      "ignoreDependencies": [
-        "@modelcontextprotocol/sdk",
-        "pino",
-        "zod-to-json-schema",
-        "inversify"
-      ]
+      "ignoreDependencies": ["pino", "zod-to-json-schema", "inversify"]
     },
     "packages/framework/cli": {
       "entry": ["src/index.ts"],
@@ -33,33 +28,39 @@
       "project": ["src/**/*.ts"],
       "ignoreDependencies": [
         "@iarna/toml",
+        "@modelcontextprotocol/server",
         "axios",
         "chalk",
         "inquirer",
         "mime-types",
         "ora",
-        "pino"
+        "pino",
+        "zod"
       ]
     },
     "packages/servers/yandex-wiki": {
       "entry": ["src/index.ts", "src/cli/bin/*.ts"],
       "project": ["src/**/*.ts"],
       "ignoreDependencies": [
+        "@modelcontextprotocol/server",
         "axios",
         "chalk",
         "inquirer",
-        "pino"
+        "pino",
+        "zod"
       ]
     },
     "packages/servers/ticktick": {
       "entry": ["src/index.ts", "src/cli/bin/*.ts"],
       "project": ["src/**/*.ts"],
       "ignoreDependencies": [
+        "@modelcontextprotocol/server",
         "axios",
         "chalk",
         "inquirer",
         "ora",
-        "pino"
+        "pino",
+        "zod"
       ]
     },
     "packages/wrappers/mcp-server-yandex-tracker": {

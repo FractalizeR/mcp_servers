@@ -49,6 +49,10 @@
       "dependsOn": ["build"],
       "cache": false
     },
+    "test:raw-wire": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
     "lint": {
       "cache": true,
       "inputs": ["src/**/*.ts", "eslint.config.js", "package.json"]

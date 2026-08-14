@@ -7,7 +7,7 @@ import type { Options } from 'tsup';
  * - Именованные бандлы для каждого сервера
  * - Единые настройки bundling
  * - Правильный shebang для executable файлов
- * - Внешние зависимости (@modelcontextprotocol/sdk)
+ * - Внешние зависимости (@modelcontextprotocol/server, @modelcontextprotocol/core)
  * - Bundled framework пакеты
  */
 export function defineServerConfig(
@@ -29,8 +29,11 @@ export function defineServerConfig(
     outExtension: () => ({ js: '.cjs' }), // .cjs расширение для CommonJS
     shims: true, // Для корректной работы __dirname и __filename
     external: [
-      // MCP SDK (peer dependency)
-      '@modelcontextprotocol/sdk',
+      // MCP SDK v2 (peer dependency). @modelcontextprotocol/core НЕ указан:
+      // мы его нигде не импортируем напрямую (только через реэкспорты
+      // @modelcontextprotocol/server) — сам server пакет разрешит свою
+      // зависимость на core через обычную резолюцию node_modules.
+      '@modelcontextprotocol/server',
       // Node.js встроенные модули (всегда external)
       'node:*',
     ],
