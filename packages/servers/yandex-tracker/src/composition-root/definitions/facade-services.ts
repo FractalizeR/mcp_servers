@@ -39,6 +39,11 @@ import {
   BulkChangeService,
   IssueService,
   RawApiService,
+  EntityApiService,
+  AdministrationService,
+  FilterService,
+  QueueLocalFieldService,
+  BoardColumnService,
 } from '#tracker_api/facade/services/index.js';
 import {
   IssueOperationsContainer,
@@ -47,6 +52,7 @@ import {
   IssueServicesContainer,
   QueueServicesContainer,
   ProjectAgileServicesContainer,
+  EntityAdminServicesContainer,
 } from '#tracker_api/facade/services/containers/index.js';
 
 export function bindFacadeServices(container: Container): void {
@@ -102,9 +108,25 @@ export function bindFacadeServices(container: Container): void {
   // Raw API Service
   container.bind(RawApiService).toSelf();
 
+  // Entity API Service (Goal/Project/Portfolio + Key Results) — пакет 7.2.A
+  container.bind(EntityApiService).toSelf();
+
+  // Administration Service (справочники) — пакет 7.2.B
+  container.bind(AdministrationService).toSelf();
+
+  // Filter Service (сохранённые фильтры) — пакет 7.2.B
+  container.bind(FilterService).toSelf();
+
+  // Queue Local Field Service — пакет 7.2.B
+  container.bind(QueueLocalFieldService).toSelf();
+
+  // Board Column Service — пакет 7.2.B
+  container.bind(BoardColumnService).toSelf();
+
   // Services Containers (для YandexTrackerFacade - группируют сервисы)
   container.bind(CoreServicesContainer).toSelf();
   container.bind(IssueServicesContainer).toSelf();
   container.bind(QueueServicesContainer).toSelf();
   container.bind(ProjectAgileServicesContainer).toSelf();
+  container.bind(EntityAdminServicesContainer).toSelf();
 }

@@ -22,7 +22,12 @@ import { GetWorklogsOperation } from '#tracker_api/api_operations/worklog/get-wo
 import { AddWorklogOperation } from '#tracker_api/api_operations/worklog/add-worklog.operation.js';
 import { UpdateWorklogOperation } from '#tracker_api/api_operations/worklog/update-worklog.operation.js';
 import { DeleteWorklogOperation } from '#tracker_api/api_operations/worklog/delete-worklog.operation.js';
-import type { AddWorklogInput, UpdateWorklogInput } from '#tracker_api/dto/index.js';
+import { SearchWorklogOperation } from '#tracker_api/api_operations/worklog/search-worklog.operation.js';
+import type {
+  AddWorklogInput,
+  UpdateWorklogInput,
+  SearchWorklogDto,
+} from '#tracker_api/dto/index.js';
 import type { GetWorklogsInput } from '#tracker_api/dto/worklog/get-worklogs.input.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/index.js';
@@ -38,7 +43,9 @@ export class WorklogService {
     @inject(UpdateWorklogOperation)
     private readonly updateWorklogOp: UpdateWorklogOperation,
     @inject(DeleteWorklogOperation)
-    private readonly deleteWorklogOp: DeleteWorklogOperation
+    private readonly deleteWorklogOp: DeleteWorklogOperation,
+    @inject(SearchWorklogOperation)
+    private readonly searchWorklogOp: SearchWorklogOperation
   ) {}
 
   /**
@@ -116,5 +123,16 @@ export class WorklogService {
    */
   async deleteWorklog(issueId: string, worklogId: string): Promise<void> {
     return this.deleteWorklogOp.execute(issueId, worklogId);
+  }
+
+  /**
+   * Ищет записи времени по всей организации (фильтр по автору/диапазону дат)
+   * @param params - критерии поиска + пагинация
+   * @returns пагинированный результат с метаданными
+   */
+  async searchWorklog(
+    params: SearchWorklogDto
+  ): Promise<PaginatedResult<WorklogWithUnknownFields>> {
+    return this.searchWorklogOp.execute(params);
   }
 }

@@ -1,0 +1,31 @@
+/**
+ * Zod схема для валидации параметров GetBoardColumnsTool
+ */
+
+import { z } from 'zod';
+import {
+  FieldsSchema,
+  FilteredEntitySchema,
+  FieldsReturnedSchema,
+  buildOutputSchema,
+} from '#common/schemas/index.js';
+
+/** ВАЖНО: эндпоинт не пагинируется (небольшой набор колонок доски). */
+export const GetBoardColumnsParamsSchema = z.object({
+  /** Идентификатор доски (обязательно) */
+  boardId: z.string().min(1, 'Board ID не может быть пустым'),
+
+  /** Список полей для возврата (обязательно) */
+  fields: FieldsSchema,
+});
+
+export type GetBoardColumnsParams = z.infer<typeof GetBoardColumnsParamsSchema>;
+
+export const GetBoardColumnsOutputDataSchema = z.object({
+  columns: z.array(FilteredEntitySchema),
+  count: z.number(),
+  boardId: z.string(),
+  fieldsReturned: FieldsReturnedSchema,
+});
+
+export const GetBoardColumnsOutputSchema = buildOutputSchema(GetBoardColumnsOutputDataSchema);

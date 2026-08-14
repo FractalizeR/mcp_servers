@@ -82,6 +82,7 @@ export type {
   UpdateWorklogInput,
   WorklogOutput,
   WorklogsListOutput,
+  SearchWorklogDto,
 } from './worklog/index.js';
 
 // Project DTO
@@ -122,7 +123,45 @@ export type {
   UpdateSprintDto,
   SprintOutput,
   SprintsListOutput,
+  ManageSprintLifecycleDto,
+  SprintLifecycleAction,
 } from './sprint/index.js';
+
+// User DTO — пакет 7.2.A
+export type { FindUsersDto } from './user/index.js';
+
+// Filter DTO — пакет 7.2.B
+export type { FilterSortDto, CreateFilterDto, UpdateFilterDto } from './filter/index.js';
+
+// Board Column DTO — пакет 7.2.B
+export type {
+  GetBoardColumnsDto,
+  CreateStandaloneBoardColumnDto,
+  UpdateBoardColumnDto,
+  DeleteBoardColumnDto,
+} from './board-column/index.js';
+
+// Queue Local Field DTO — пакет 7.2.B
+export type {
+  GetQueueLocalFieldsDto,
+  CreateQueueLocalFieldDto,
+  UpdateQueueLocalFieldDto,
+} from './queue-local-field/index.js';
+
+// Entity API DTO (Goal/Project/Portfolio) — пакет 7.2.A
+export type {
+  FindEntitiesDto,
+  GetEntityDto,
+  CreateEntityDto,
+  UpdateEntityDto,
+  DeleteEntityDto,
+  KeyResultItemInputDto,
+  GetGoalKeyResultsDto,
+  AddGoalKeyResultDto,
+  SetGoalKeyResultsDto,
+  ClearGoalKeyResultsDto,
+  EntityApiOutput,
+} from './entity-api/index.js';
 
 // DTO Factories (runtime code for coverage)
 export {

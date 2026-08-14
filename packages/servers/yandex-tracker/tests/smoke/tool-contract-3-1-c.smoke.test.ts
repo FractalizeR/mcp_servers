@@ -6,7 +6,9 @@
  * зашитым в тест. Так тест ловит забытый инструмент при добавлении нового.
  *
  * DoD пакета 3.1.C.tracker:
- * 1. Все 50 инструментов имеют annotations и outputSchema.
+ * 1. Все инструменты имеют annotations и outputSchema (число инструментов
+ *    выросло с 50 до 86 пакетом 7.2.A/7.2.B — см. .agentic-planning/
+ *    plan_mcp_2026_modernization/7.2_api_coverage_parallel.md).
  * 2. tools/list (`projectToolDefinitionsForList`) отдаёт title, outputSchema,
  *    annotations.
  */
@@ -41,9 +43,9 @@ describe('Пакет 3.1.C.tracker — annotations/outputSchema/tools-list contr
     });
   });
 
-  it('реестр содержит ровно 50 инструментов (перечисление зафиксировано планом этапа)', () => {
-    expect(TOOL_CLASSES.length).toBe(50);
-    expect(definitions.length).toBe(50);
+  it('реестр содержит ровно 86 инструментов (перечисление зафиксировано планом этапа)', () => {
+    expect(TOOL_CLASSES.length).toBe(86);
+    expect(definitions.length).toBe(86);
   });
 
   describe('DoD 1: каждый инструмент реестра имеет annotations и outputSchema', () => {
@@ -80,7 +82,7 @@ describe('Пакет 3.1.C.tracker — annotations/outputSchema/tools-list contr
     it('projectToolDefinitionsForList прокидывает все три поля для каждого инструмента', () => {
       const listEntries = projectToolDefinitionsForList(definitions);
 
-      expect(listEntries.length).toBe(50);
+      expect(listEntries.length).toBe(86);
 
       const missingTitle = listEntries.filter((e) => !e.title).map((e) => e.name);
       const missingOutputSchema = listEntries.filter((e) => !e.outputSchema).map((e) => e.name);

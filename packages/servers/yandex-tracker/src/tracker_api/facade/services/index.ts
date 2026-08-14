@@ -29,3 +29,8 @@ export { IssueAttachmentService } from './issue-attachment.service.js';
 export { BulkChangeService } from './bulk-change.service.js';
 export { IssueService } from './issue.service.js';
 export { RawApiService } from './raw-api.service.js';
+export { EntityApiService } from './entity-api.service.js';
+export { AdministrationService } from './administration.service.js';
+export { FilterService } from './filter.service.js';
+export { QueueLocalFieldService } from './queue-local-field.service.js';
+export { BoardColumnService } from './board-column.service.js';

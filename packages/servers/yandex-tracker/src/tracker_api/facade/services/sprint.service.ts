@@ -22,11 +22,13 @@ import { GetSprintsOperation } from '#tracker_api/api_operations/sprint/get-spri
 import { GetSprintOperation } from '#tracker_api/api_operations/sprint/get-sprint.operation.js';
 import { CreateSprintOperation } from '#tracker_api/api_operations/sprint/create-sprint.operation.js';
 import { UpdateSprintOperation } from '#tracker_api/api_operations/sprint/update-sprint.operation.js';
+import { ManageSprintLifecycleOperation } from '#tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.js';
 import type {
   CreateSprintDto,
   UpdateSprintDto,
   SprintOutput,
   SprintsListOutput,
+  ManageSprintLifecycleDto,
 } from '#tracker_api/dto/index.js';
 
 @injectable()
@@ -39,7 +41,9 @@ export class SprintService {
     @inject(CreateSprintOperation)
     private readonly createSprintOp: CreateSprintOperation,
     @inject(UpdateSprintOperation)
-    private readonly updateSprintOp: UpdateSprintOperation
+    private readonly updateSprintOp: UpdateSprintOperation,
+    @inject(ManageSprintLifecycleOperation)
+    private readonly manageLifecycleOp: ManageSprintLifecycleOperation
   ) {}
 
   /**
@@ -80,5 +84,14 @@ export class SprintService {
     input: Omit<UpdateSprintDto, 'sprintId'>
   ): Promise<SprintOutput> {
     return this.updateSprintOp.execute({ sprintId, ...input });
+  }
+
+  /**
+   * Управляет жизненным циклом спринта (старт/архивация/удаление)
+   * @param dto - идентификатор спринта и действие
+   * @returns обновлённый спринт для start/archive; `null` для delete
+   */
+  async manageSprintLifecycle(dto: ManageSprintLifecycleDto): Promise<SprintOutput | null> {
+    return this.manageLifecycleOp.execute(dto);
   }
 }

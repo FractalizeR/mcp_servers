@@ -61,6 +61,11 @@ export const CURSOR_TAGS = {
   queues: 'q',
   projects: 'proj',
   findIssues: 'find',
+  // Пакет 7.2.A/7.2.B (.agentic-planning/plan_mcp_2026_modernization/
+  // 7.2_api_coverage_parallel.md): новые пагинируемые эндпоинты.
+  findEntities: 'fent',
+  users: 'usr',
+  worklogSearch: 'wlogs',
 } as const;
 
 /**

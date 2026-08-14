@@ -17,3 +17,4 @@ export { CoreServicesContainer } from './core-services.container.js';
 export { IssueServicesContainer } from './issue-services.container.js';
 export { QueueServicesContainer } from './queue-services.container.js';
 export { ProjectAgileServicesContainer } from './project-agile-services.container.js';
+export { EntityAdminServicesContainer } from './entity-admin-services.container.js';

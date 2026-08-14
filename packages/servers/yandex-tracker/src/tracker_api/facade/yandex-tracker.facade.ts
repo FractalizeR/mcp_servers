@@ -25,6 +25,7 @@ import {
   IssueServicesContainer,
   QueueServicesContainer,
   ProjectAgileServicesContainer,
+  EntityAdminServicesContainer,
 } from './services/containers/index.js';
 
 // Types
@@ -84,7 +85,31 @@ import type {
   UpdateSprintDto,
   SprintOutput,
   SprintsListOutput,
+  ManageSprintLifecycleDto,
+  FindUsersDto,
+  CreateFilterDto,
+  UpdateFilterDto,
+  GetQueueLocalFieldsDto,
+  CreateQueueLocalFieldDto,
+  UpdateQueueLocalFieldDto,
+  GetBoardColumnsDto,
+  CreateStandaloneBoardColumnDto,
+  UpdateBoardColumnDto,
+  DeleteBoardColumnDto,
+  SearchWorklogDto,
+  FindEntitiesDto,
+  GetEntityDto,
+  CreateEntityDto,
+  UpdateEntityDto,
+  DeleteEntityDto,
+  GetGoalKeyResultsDto,
+  AddGoalKeyResultDto,
+  SetGoalKeyResultsDto,
+  ClearGoalKeyResultsDto,
+  EntityApiOutput,
 } from '#tracker_api/dto/index.js';
+import type { FindEntitiesResult } from '#tracker_api/api_operations/entity-api/index.js';
+import type { BatchUserResult } from '#tracker_api/api_operations/user/index.js';
 import type { RawApiCapable, RawApiRequestInput } from '@fractalizer/mcp-core';
 import type {
   IssueWithUnknownFields,
@@ -100,7 +125,17 @@ import type {
   QueueWithUnknownFields,
   PaginatedResult,
   BulkChangeOperationWithUnknownFields,
+  UserWithUnknownFields,
+  IssueTypeWithUnknownFields,
+  StatusWithUnknownFields,
+  ResolutionWithUnknownFields,
+  PriorityWithUnknownFields,
+  SavedFilterWithUnknownFields,
+  QueueLocalFieldWithUnknownFields,
+  BoardColumn,
+  KeyResultItemWithUnknownFields,
 } from '#tracker_api/entities/index.js';
+import type { WithUnknownFields } from '#tracker_api/entities/types.js';
 import type {
   UpdateQueueParams,
   ManageQueueAccessParams,
@@ -117,7 +152,9 @@ export class YandexTrackerFacade implements RawApiCapable {
     @inject(IssueServicesContainer) private readonly issues: IssueServicesContainer,
     @inject(QueueServicesContainer) private readonly queues: QueueServicesContainer,
     @inject(ProjectAgileServicesContainer)
-    private readonly projectAgile: ProjectAgileServicesContainer
+    private readonly projectAgile: ProjectAgileServicesContainer,
+    @inject(EntityAdminServicesContainer)
+    private readonly entityAdmin: EntityAdminServicesContainer
   ) {}
 
   // === User Methods ===
@@ -1064,5 +1101,156 @@ export class YandexTrackerFacade implements RawApiCapable {
     input: Omit<UpdateSprintDto, 'sprintId'>
   ): Promise<SprintOutput> {
     return this.projectAgile.sprint.updateSprint(sprintId, input);
+  }
+
+  /**
+   * Управляет жизненным циклом спринта (старт/архивация/удаление)
+   * @param dto - идентификатор спринта и действие
+   * @returns обновлённый спринт для start/archive; `null` для delete
+   */
+  async manageSprintLifecycle(dto: ManageSprintLifecycleDto): Promise<SprintOutput | null> {
+    return this.projectAgile.sprint.manageSprintLifecycle(dto);
+  }
+
+  // === Board Column Methods (пакет 7.2.B) ===
+
+  async getBoardColumns(
+    dto: GetBoardColumnsDto
+  ): Promise<PaginatedResult<WithUnknownFields<BoardColumn>>> {
+    return this.projectAgile.boardColumn.getBoardColumns(dto);
+  }
+
+  async createBoardColumn(
+    dto: CreateStandaloneBoardColumnDto
+  ): Promise<WithUnknownFields<BoardColumn>> {
+    return this.projectAgile.boardColumn.createBoardColumn(dto);
+  }
+
+  async updateBoardColumn(dto: UpdateBoardColumnDto): Promise<WithUnknownFields<BoardColumn>> {
+    return this.projectAgile.boardColumn.updateBoardColumn(dto);
+  }
+
+  async deleteBoardColumn(dto: DeleteBoardColumnDto): Promise<void> {
+    return this.projectAgile.boardColumn.deleteBoardColumn(dto);
+  }
+
+  // === Worklog Search Methods (org-wide, пакет 7.2.B) ===
+
+  async searchWorklog(
+    params: SearchWorklogDto
+  ): Promise<PaginatedResult<WorklogWithUnknownFields>> {
+    return this.issues.worklog.searchWorklog(params);
+  }
+
+  // === User Methods (find/get, пакет 7.2.A) ===
+
+  async findUsers(params?: FindUsersDto): Promise<PaginatedResult<UserWithUnknownFields>> {
+    return this.core.user.findUsers(params);
+  }
+
+  async getUsers(userIds: string[]): Promise<BatchUserResult[]> {
+    return this.core.user.getUsers(userIds);
+  }
+
+  // === Entity API Methods (Goal/Project/Portfolio, пакет 7.2.A) ===
+  //
+  // ВАЖНО: НЕ путать с legacy `getProject(s)`/`createProject`/... выше —
+  // это ДРУГАЯ коллекция (`/v3/entities/{entityType}/...`), см.
+  // `entities/entity-api.entity.ts`.
+
+  async findEntities(dto: FindEntitiesDto): Promise<FindEntitiesResult> {
+    return this.entityAdmin.entityApi.findEntities(dto);
+  }
+
+  async getEntity(dto: GetEntityDto): Promise<EntityApiOutput> {
+    return this.entityAdmin.entityApi.getEntity(dto);
+  }
+
+  async createEntity(dto: CreateEntityDto): Promise<EntityApiOutput> {
+    return this.entityAdmin.entityApi.createEntity(dto);
+  }
+
+  async updateEntity(dto: UpdateEntityDto): Promise<EntityApiOutput> {
+    return this.entityAdmin.entityApi.updateEntity(dto);
+  }
+
+  async deleteEntity(dto: DeleteEntityDto): Promise<void> {
+    return this.entityAdmin.entityApi.deleteEntity(dto);
+  }
+
+  // === Goal Key Results Methods (пакет 7.2.A) ===
+
+  async getGoalKeyResults(
+    dto: GetGoalKeyResultsDto
+  ): Promise<readonly KeyResultItemWithUnknownFields[]> {
+    return this.entityAdmin.entityApi.getGoalKeyResults(dto);
+  }
+
+  async addGoalKeyResult(
+    dto: AddGoalKeyResultDto
+  ): Promise<readonly KeyResultItemWithUnknownFields[]> {
+    return this.entityAdmin.entityApi.addGoalKeyResult(dto);
+  }
+
+  async setGoalKeyResults(
+    dto: SetGoalKeyResultsDto
+  ): Promise<readonly KeyResultItemWithUnknownFields[]> {
+    return this.entityAdmin.entityApi.setGoalKeyResults(dto);
+  }
+
+  async clearGoalKeyResults(dto: ClearGoalKeyResultsDto): Promise<void> {
+    return this.entityAdmin.entityApi.clearGoalKeyResults(dto);
+  }
+
+  // === Administration Methods (справочники, пакет 7.2.B) ===
+
+  async getIssueTypes(): Promise<PaginatedResult<IssueTypeWithUnknownFields>> {
+    return this.entityAdmin.administration.getIssueTypes();
+  }
+
+  async getStatuses(): Promise<PaginatedResult<StatusWithUnknownFields>> {
+    return this.entityAdmin.administration.getStatuses();
+  }
+
+  async getResolutions(): Promise<PaginatedResult<ResolutionWithUnknownFields>> {
+    return this.entityAdmin.administration.getResolutions();
+  }
+
+  async getPriorities(): Promise<PaginatedResult<PriorityWithUnknownFields>> {
+    return this.entityAdmin.administration.getPriorities();
+  }
+
+  // === Filter Methods (сохранённые фильтры, пакет 7.2.B) ===
+
+  async getFilters(): Promise<PaginatedResult<SavedFilterWithUnknownFields>> {
+    return this.entityAdmin.filter.getFilters();
+  }
+
+  async createFilter(dto: CreateFilterDto): Promise<SavedFilterWithUnknownFields> {
+    return this.entityAdmin.filter.createFilter(dto);
+  }
+
+  async updateFilter(dto: UpdateFilterDto): Promise<SavedFilterWithUnknownFields> {
+    return this.entityAdmin.filter.updateFilter(dto);
+  }
+
+  // === Queue Local Field Methods (пакет 7.2.B) ===
+
+  async getQueueLocalFields(
+    dto: GetQueueLocalFieldsDto
+  ): Promise<PaginatedResult<QueueLocalFieldWithUnknownFields>> {
+    return this.entityAdmin.queueLocalField.getQueueLocalFields(dto);
+  }
+
+  async createQueueLocalField(
+    dto: CreateQueueLocalFieldDto
+  ): Promise<QueueLocalFieldWithUnknownFields> {
+    return this.entityAdmin.queueLocalField.createQueueLocalField(dto);
+  }
+
+  async updateQueueLocalField(
+    dto: UpdateQueueLocalFieldDto
+  ): Promise<QueueLocalFieldWithUnknownFields> {
+    return this.entityAdmin.queueLocalField.updateQueueLocalField(dto);
   }
 }

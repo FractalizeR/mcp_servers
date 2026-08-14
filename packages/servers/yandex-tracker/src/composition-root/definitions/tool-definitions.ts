@@ -69,6 +69,49 @@ import {
 import { IssueUrlTool } from '#tools/helpers/issue-url/index.js';
 import { DemoTool } from '#tools/helpers/demo/index.js';
 import { RawApiRequestTool } from '#tools/api/raw/index.js';
+import {
+  GetBoardsTool,
+  GetBoardTool,
+  CreateBoardTool,
+  UpdateBoardTool,
+  DeleteBoardTool,
+  GetBoardColumnsTool,
+  CreateBoardColumnTool,
+  UpdateBoardColumnTool,
+  DeleteBoardColumnTool,
+} from '#tools/api/boards/index.js';
+import {
+  GetSprintsTool,
+  GetSprintTool,
+  CreateSprintTool,
+  UpdateSprintTool,
+  ManageSprintLifecycleTool,
+} from '#tools/api/sprints/index.js';
+import {
+  FindEntitiesTool,
+  GetEntityTool,
+  CreateEntityTool,
+  UpdateEntityTool,
+  DeleteEntityTool,
+  GetGoalKeyResultsTool,
+  AddGoalKeyResultTool,
+  SetGoalKeyResultsTool,
+  ClearGoalKeyResultsTool,
+} from '#tools/api/entities/index.js';
+import { FindUsersTool, GetUsersTool } from '#tools/api/users/index.js';
+import {
+  GetIssueTypesTool,
+  GetStatusesTool,
+  GetResolutionsTool,
+  GetPrioritiesTool,
+} from '#tools/api/administration/index.js';
+import { GetFiltersTool, CreateFilterTool, UpdateFilterTool } from '#tools/api/filters/index.js';
+import {
+  GetQueueLocalFieldsTool,
+  CreateQueueLocalFieldTool,
+  UpdateQueueLocalFieldTool,
+} from '#tools/api/queue-local-fields/index.js';
+import { SearchWorklogTool } from '#tools/api/worklog/index.js';
 
 /**
  * Массив всех Tool классов в проекте
@@ -134,6 +177,47 @@ export const TOOL_CLASSES = [
   IssueUrlTool,
   DemoTool,
   RawApiRequestTool,
+  // Пакет 7.2.A/7.2.B (.agentic-planning/plan_mcp_2026_modernization/7.2_api_coverage_parallel.md):
+  // основание Boards/Sprints (Tool-層 отсутствовал целиком, хотя Operations/Facade уже были),
+  // Entity API (Goal/Project/Portfolio) + Key Results, Users, справочники Administration,
+  // сохранённые фильтры, локальные поля очереди, колонки доски, жизненный цикл спринта,
+  // поиск по worklog в масштабе организации.
+  GetBoardsTool,
+  GetBoardTool,
+  CreateBoardTool,
+  UpdateBoardTool,
+  DeleteBoardTool,
+  GetSprintsTool,
+  GetSprintTool,
+  CreateSprintTool,
+  UpdateSprintTool,
+  FindEntitiesTool,
+  GetEntityTool,
+  CreateEntityTool,
+  UpdateEntityTool,
+  DeleteEntityTool,
+  GetGoalKeyResultsTool,
+  AddGoalKeyResultTool,
+  SetGoalKeyResultsTool,
+  ClearGoalKeyResultsTool,
+  FindUsersTool,
+  GetUsersTool,
+  GetIssueTypesTool,
+  GetStatusesTool,
+  GetResolutionsTool,
+  GetPrioritiesTool,
+  GetFiltersTool,
+  CreateFilterTool,
+  UpdateFilterTool,
+  GetQueueLocalFieldsTool,
+  CreateQueueLocalFieldTool,
+  UpdateQueueLocalFieldTool,
+  GetBoardColumnsTool,
+  CreateBoardColumnTool,
+  UpdateBoardColumnTool,
+  DeleteBoardColumnTool,
+  ManageSprintLifecycleTool,
+  SearchWorklogTool,
 ] as const;
 
 /**

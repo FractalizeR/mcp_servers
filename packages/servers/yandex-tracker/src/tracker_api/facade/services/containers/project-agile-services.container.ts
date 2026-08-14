@@ -15,6 +15,7 @@ import { ProjectService } from '../project.service.js';
 import { BoardService } from '../board.service.js';
 import { SprintService } from '../sprint.service.js';
 import { BulkChangeService } from '../bulk-change.service.js';
+import { BoardColumnService } from '../board-column.service.js';
 
 @injectable()
 export class ProjectAgileServicesContainer {
@@ -22,6 +23,7 @@ export class ProjectAgileServicesContainer {
     @inject(ProjectService) readonly project: ProjectService,
     @inject(BoardService) readonly board: BoardService,
     @inject(SprintService) readonly sprint: SprintService,
-    @inject(BulkChangeService) readonly bulkChange: BulkChangeService
+    @inject(BulkChangeService) readonly bulkChange: BulkChangeService,
+    @inject(BoardColumnService) readonly boardColumn: BoardColumnService
   ) {}
 }

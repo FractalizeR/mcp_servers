@@ -6,6 +6,7 @@ export { GetSprintsOperation } from './get-sprints.operation.js';
 export { GetSprintOperation } from './get-sprint.operation.js';
 export { CreateSprintOperation } from './create-sprint.operation.js';
 export { UpdateSprintOperation } from './update-sprint.operation.js';
+export { ManageSprintLifecycleOperation } from './manage-sprint-lifecycle.operation.js';
 
 export type { GetSprintsParams } from './get-sprints.operation.js';
 export type { GetSprintParams } from './get-sprint.operation.js';

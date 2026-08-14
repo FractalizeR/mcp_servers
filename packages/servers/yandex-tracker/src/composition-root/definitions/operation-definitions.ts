@@ -93,8 +93,44 @@ import {
   GetSprintOperation,
   CreateSprintOperation,
   UpdateSprintOperation,
+  ManageSprintLifecycleOperation,
 } from '#tracker_api/api_operations/sprint/index.js';
 import { RawApiRequestOperation } from '#tracker_api/api_operations/raw/index.js';
+import {
+  FindEntitiesOperation,
+  GetEntityOperation,
+  CreateEntityOperation,
+  UpdateEntityOperation,
+  DeleteEntityOperation,
+  GetGoalKeyResultsOperation,
+  AddGoalKeyResultOperation,
+  SetGoalKeyResultsOperation,
+  ClearGoalKeyResultsOperation,
+} from '#tracker_api/api_operations/entity-api/index.js';
+import { FindUsersOperation, GetUsersOperation } from '#tracker_api/api_operations/user/index.js';
+import {
+  GetIssueTypesOperation,
+  GetStatusesOperation,
+  GetResolutionsOperation,
+  GetPrioritiesOperation,
+} from '#tracker_api/api_operations/administration/index.js';
+import {
+  GetFiltersOperation,
+  CreateFilterOperation,
+  UpdateFilterOperation,
+} from '#tracker_api/api_operations/filter/index.js';
+import {
+  GetQueueLocalFieldsOperation,
+  CreateQueueLocalFieldOperation,
+  UpdateQueueLocalFieldOperation,
+} from '#tracker_api/api_operations/queue-local-field/index.js';
+import {
+  GetBoardColumnsOperation,
+  CreateBoardColumnOperation,
+  UpdateBoardColumnOperation,
+  DeleteBoardColumnOperation,
+} from '#tracker_api/api_operations/board-column/index.js';
+import { SearchWorklogOperation } from '#tracker_api/api_operations/worklog/search-worklog.operation.js';
 
 /**
  * Массив всех Operation классов в проекте
@@ -167,6 +203,34 @@ export const OPERATION_CLASSES = [
   CreateSprintOperation,
   UpdateSprintOperation,
   RawApiRequestOperation,
+  // Пакет 7.2.A/7.2.B — см. комментарий в tool-definitions.ts
+  ManageSprintLifecycleOperation,
+  FindEntitiesOperation,
+  GetEntityOperation,
+  CreateEntityOperation,
+  UpdateEntityOperation,
+  DeleteEntityOperation,
+  GetGoalKeyResultsOperation,
+  AddGoalKeyResultOperation,
+  SetGoalKeyResultsOperation,
+  ClearGoalKeyResultsOperation,
+  FindUsersOperation,
+  GetUsersOperation,
+  GetIssueTypesOperation,
+  GetStatusesOperation,
+  GetResolutionsOperation,
+  GetPrioritiesOperation,
+  GetFiltersOperation,
+  CreateFilterOperation,
+  UpdateFilterOperation,
+  GetQueueLocalFieldsOperation,
+  CreateQueueLocalFieldOperation,
+  UpdateQueueLocalFieldOperation,
+  GetBoardColumnsOperation,
+  CreateBoardColumnOperation,
+  UpdateBoardColumnOperation,
+  DeleteBoardColumnOperation,
+  SearchWorklogOperation,
 ] as const;
 
 /**

@@ -120,6 +120,33 @@ export type {
 // Sprint
 export type { Sprint, SprintWithUnknownFields, SprintStatus, BoardRef } from './sprint.entity.js';
 
+// Entity API (Goal/Project/Portfolio) — пакет 7.2.A
+export type {
+  EntityApiType,
+  EntityApiRecord,
+  EntityApiRecordWithUnknownFields,
+  KeyResultItem,
+  KeyResultItemWithUnknownFields,
+  KeyResultDeadline,
+  KeyResultProgress,
+} from './entity-api.entity.js';
+
+// Resolution (Administration) — пакет 7.2.B
+export type { Resolution, ResolutionWithUnknownFields } from './resolution.entity.js';
+
+// Saved Filter — пакет 7.2.B
+export type {
+  SavedFilter,
+  SavedFilterWithUnknownFields,
+  FilterSort,
+} from './saved-filter.entity.js';
+
+// Queue Local Field — пакет 7.2.B
+export type {
+  QueueLocalField,
+  QueueLocalFieldWithUnknownFields,
+} from './queue-local-field.entity.js';
+
 // Entity Factories (runtime code for coverage)
 export {
   createUser,
