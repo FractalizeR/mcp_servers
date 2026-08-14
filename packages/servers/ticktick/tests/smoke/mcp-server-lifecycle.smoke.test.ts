@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { Server } from '@modelcontextprotocol/server';
 import { createContainer } from '../../src/composition-root/container.js';
 import { TYPES } from '../../src/composition-root/types.js';
 import type { ServerConfig } from '../../src/config/server-config.interface.js';

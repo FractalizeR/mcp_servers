@@ -10,13 +10,9 @@
 // IMPORTANT: Must be imported before any inversify decorators are used
 import 'reflect-metadata';
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  InitializeRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { Server } from '@modelcontextprotocol/server';
+import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
+import type { ListToolsResult } from '@modelcontextprotocol/server';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -51,7 +47,7 @@ function setupServer(
   logger: Logger
 ): void {
   // Initialize connection handler
-  server.setRequestHandler(InitializeRequestSchema, (request) => {
+  server.setRequestHandler('initialize', (request) => {
     const { clientInfo, protocolVersion } = request.params;
 
     logger.info(`🤝 MCP client connected`, {
@@ -73,7 +69,7 @@ function setupServer(
   });
 
   // List tools handler
-  server.setRequestHandler(ListToolsRequestSchema, () => {
+  server.setRequestHandler('tools/list', () => {
     logger.info(`📋 tools/list request from client`);
 
     const definitions = toolRegistry.getDefinitions(config.tools.disabledGroups);
@@ -82,13 +78,16 @@ function setupServer(
     logToolsMetrics(logger, config, definitions, metrics);
     logToolsWarnings(logger, metrics);
 
+    // Наш JSON Schema 2020-12 генератор даёт валидный на wire объект, но его TS-тип
+    // (Record<string, unknown> в properties) шире строгого рекурсивного типа SDK —
+    // приведение на границе framework/SDK, безопасное, т.к. форма проверена в рантайме.
     return {
       tools: projectToolDefinitionsForList(definitions),
-    };
+    } as ListToolsResult;
   });
 
   // Call tool handler
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler('tools/call', async (request) => {
     const originalName = request.params.name;
     const { arguments: args } = request.params;
 
