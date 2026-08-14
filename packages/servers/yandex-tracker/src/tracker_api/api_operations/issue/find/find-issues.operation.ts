@@ -98,9 +98,13 @@ export class FindIssuesOperation extends BaseOperation {
       ...(params.expand !== undefined ? { expand: params.expand } : {}),
     });
 
+    // idempotencyDeclared: true — POST `_search` только читает (см. пакет 1.1.E),
+    // побочных эффектов нет, повтор на 5xx/сеть/таймаут безопасен и полезен.
     const first = await this.httpClient.postWithResponse<IssueWithUnknownFields[]>(
       endpoint,
-      requestBody
+      requestBody,
+      undefined,
+      true
     );
 
     if (params.fetchAll !== true) {
@@ -141,9 +145,12 @@ export class FindIssuesOperation extends BaseOperation {
     const finalPath = this.appendExpand(path, params.expand);
     const requestBody = this.buildRequestBody(params);
 
+    // idempotencyDeclared: true — читающий POST, см. комментарий выше в execute().
     const resp = await this.httpClient.postWithResponse<IssueWithUnknownFields[]>(
       finalPath,
-      requestBody
+      requestBody,
+      undefined,
+      true
     );
 
     const single = TrackerPaginator.singlePage(resp, {
@@ -175,8 +182,14 @@ export class FindIssuesOperation extends BaseOperation {
       // Cursor-режим: next известен из заголовка; тело сохраняем тем же.
       return TrackerPaginator.fetchAllPages({
         firstResponse: first,
+        // idempotencyDeclared: true — читающий POST, см. комментарий выше в execute().
         requestNext: (path) =>
-          this.httpClient.postWithResponse<IssueWithUnknownFields[]>(path, requestBody),
+          this.httpClient.postWithResponse<IssueWithUnknownFields[]>(
+            path,
+            requestBody,
+            undefined,
+            true
+          ),
         tag: CURSOR_TAGS.findIssues,
         cursorExtra: bodyHash,
         ...(params.maxItems !== undefined ? { maxItems: params.maxItems } : {}),
@@ -233,9 +246,12 @@ export class FindIssuesOperation extends BaseOperation {
       });
 
       try {
+        // idempotencyDeclared: true — читающий POST, см. комментарий выше в execute().
         const response = await this.httpClient.postWithResponse<IssueWithUnknownFields[]>(
           endpoint,
-          requestBody
+          requestBody,
+          undefined,
+          true
         );
         items.push(...response.data);
         pagesFetched += 1;

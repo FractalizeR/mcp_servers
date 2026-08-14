@@ -21,6 +21,17 @@
 import type { HttpStatusCode } from '../../types.js';
 
 /**
+ * JSON-совместимое значение без `any`/`unknown`.
+ *
+ * Используется для полей ответа API, чья внутренняя форма не документирована
+ * (например `errorsData` Яндекс.Трекера — референсный клиент сохраняет его как
+ * непрозрачный JSON-объект, см. yandex_tracker_client/exceptions.py:76).
+ * Тип консервативно описывает "что угодно, что могло прийти из JSON.parse".
+ */
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+
+/**
  * Расширенная информация об ошибке API
  *
  * Используется в toJSON() для передачи всех деталей клиенту
@@ -34,6 +45,12 @@ export interface ApiErrorDetails {
   errors?: Record<string, string[]> | undefined;
   /** Время ожидания перед повторной попыткой (в секундах, для 429 ошибок) */
   retryAfter?: number | undefined;
+  /**
+   * Недокументированные структурированные детали ошибки из поля `errorsData` ответа API.
+   * Форма не гарантирована API — потребитель обязан относиться к значению как к диагностике,
+   * не как к контракту.
+   */
+  errorsData?: JsonValue | undefined;
 }
 
 /**
@@ -79,11 +96,21 @@ export class ApiErrorClass extends Error {
    */
   readonly retryAfter?: number | undefined;
 
+  /**
+   * Недокументированные структурированные детали ошибки (поле `errorsData` ответа API).
+   *
+   * ВАЖНО: не логировать значение целиком дампом (может содержать пользовательские данные) —
+   * логировать только факт наличия и форму (ключи/типы), см. redaction из пакета 1.1.B.
+   * Полное значение доступно только через это поле объекта ошибки.
+   */
+  readonly errorsData?: JsonValue | undefined;
+
   constructor(
     statusCode: HttpStatusCode,
     message: string,
     errors?: Record<string, string[]>,
-    retryAfter?: number
+    retryAfter?: number,
+    errorsData?: JsonValue
   ) {
     super(message);
 
@@ -94,9 +121,10 @@ export class ApiErrorClass extends Error {
     this.statusCode = statusCode;
     this.errors = errors;
     this.retryAfter = retryAfter;
+    this.errorsData = errorsData;
 
     // Сохраняем правильный stack trace (для Node.js)
-     
+
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, ApiErrorClass);
     }
@@ -123,6 +151,7 @@ export class ApiErrorClass extends Error {
       message: this.message,
       ...(this.errors !== undefined && { errors: this.errors }),
       ...(this.retryAfter !== undefined && { retryAfter: this.retryAfter }),
+      ...(this.errorsData !== undefined && { errorsData: this.errorsData }),
     };
   }
 

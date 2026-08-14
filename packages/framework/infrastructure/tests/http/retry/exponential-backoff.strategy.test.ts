@@ -5,6 +5,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ExponentialBackoffStrategy } from '@fractalizer/mcp-infrastructure/http/retry/exponential-backoff.strategy.js';
 import type { ApiError } from '@fractalizer/mcp-infrastructure/types.js';
+import type { RetryContext } from '@fractalizer/mcp-infrastructure/http/retry/retry-strategy.interface.js';
+
+/** Контекст GET-запроса — используется в тестах, унаследованных от политики "метод не важен". */
+const GET_CONTEXT: RetryContext = { method: 'get' };
 
 describe('ExponentialBackoffStrategy', () => {
   describe('constructor', () => {
@@ -32,16 +36,16 @@ describe('ExponentialBackoffStrategy', () => {
       it('должен разрешить retry при попытке < maxRetries', () => {
         const error: ApiError = { statusCode: 500, message: 'Internal Server Error' };
 
-        expect(strategy.shouldRetry(error, 0)).toBe(true);
-        expect(strategy.shouldRetry(error, 1)).toBe(true);
-        expect(strategy.shouldRetry(error, 2)).toBe(true);
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 0)).toBe(true);
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 1)).toBe(true);
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 2)).toBe(true);
       });
 
       it('должен запретить retry при попытке >= maxRetries', () => {
         const error: ApiError = { statusCode: 500, message: 'Internal Server Error' };
 
-        expect(strategy.shouldRetry(error, 3)).toBe(false);
-        expect(strategy.shouldRetry(error, 4)).toBe(false);
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 3)).toBe(false);
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 4)).toBe(false);
       });
     });
 
@@ -52,7 +56,7 @@ describe('ExponentialBackoffStrategy', () => {
         it(`должен разрешить retry для статуса ${statusCode}`, () => {
           const error: ApiError = { statusCode, message: 'Error' };
 
-          expect(strategy.shouldRetry(error, 0)).toBe(true);
+          expect(strategy.shouldRetry(GET_CONTEXT, error, 0)).toBe(true);
         });
       });
     });
@@ -64,7 +68,7 @@ describe('ExponentialBackoffStrategy', () => {
         it(`должен запретить retry для статуса ${statusCode}`, () => {
           const error: ApiError = { statusCode, message: 'Error' };
 
-          expect(strategy.shouldRetry(error, 0)).toBe(false);
+          expect(strategy.shouldRetry(GET_CONTEXT, error, 0)).toBe(false);
         });
       });
     });
@@ -73,7 +77,7 @@ describe('ExponentialBackoffStrategy', () => {
       it('должен разрешить retry для сетевой ошибки (statusCode = 0)', () => {
         const error: ApiError = { statusCode: 0, message: 'Network Error' };
 
-        expect(strategy.shouldRetry(error, 0)).toBe(true);
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 0)).toBe(true);
       });
 
       it('должен разрешить retry для rate limiting (429)', () => {
@@ -83,20 +87,88 @@ describe('ExponentialBackoffStrategy', () => {
           retryAfter: 60,
         };
 
-        expect(strategy.shouldRetry(error, 0)).toBe(true);
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 0)).toBe(true);
       });
 
       it('должен разрешить retry для таймаута (408)', () => {
         const error: ApiError = { statusCode: 408, message: 'Request Timeout' };
 
-        expect(strategy.shouldRetry(error, 0)).toBe(true);
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 0)).toBe(true);
       });
 
       it('должен запретить retry для клиентской ошибки (400)', () => {
         const error: ApiError = { statusCode: 400, message: 'Bad Request' };
 
-        expect(strategy.shouldRetry(error, 0)).toBe(false);
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 0)).toBe(false);
       });
+    });
+
+    describe('Пакет 1.1.C — политика для неидемпотентного POST', () => {
+      const POST_CONTEXT: RetryContext = { method: 'post' };
+      const POST_IDEMPOTENT_CONTEXT: RetryContext = { method: 'post', idempotencyDeclared: true };
+
+      it('НЕ должен повторять POST на 504 (Gateway Timeout) без объявленной идемпотентности', () => {
+        const error: ApiError = { statusCode: 504, message: 'Gateway Timeout' };
+
+        expect(strategy.shouldRetry(POST_CONTEXT, error, 0)).toBe(false);
+      });
+
+      it('НЕ должен повторять POST на сетевой ошибке/таймауте/5xx без объявленной идемпотентности', () => {
+        const ambiguousStatusCodes = [0, 408, 500, 502, 503, 504];
+
+        for (const statusCode of ambiguousStatusCodes) {
+          const error: ApiError = { statusCode, message: 'Ambiguous outcome' };
+          expect(strategy.shouldRetry(POST_CONTEXT, error, 0)).toBe(false);
+        }
+      });
+
+      it('должен повторять GET на 504 как прежде (метод не ограничивает повтор)', () => {
+        const error: ApiError = { statusCode: 504, message: 'Gateway Timeout' };
+
+        expect(strategy.shouldRetry(GET_CONTEXT, error, 0)).toBe(true);
+      });
+
+      it('должен повторять POST на 429 даже без объявленной идемпотентности', () => {
+        const error: ApiError = { statusCode: 429, message: 'Too Many Requests', retryAfter: 30 };
+
+        expect(strategy.shouldRetry(POST_CONTEXT, error, 0)).toBe(true);
+      });
+
+      it('должен повторять POST на 504, если вызывающий явно объявил идемпотентность', () => {
+        const error: ApiError = { statusCode: 504, message: 'Gateway Timeout' };
+
+        expect(strategy.shouldRetry(POST_IDEMPOTENT_CONTEXT, error, 0)).toBe(true);
+      });
+
+      it('НЕ должен повторять POST на изначально неповторяемом статусе (400) независимо от идемпотентности', () => {
+        const error: ApiError = { statusCode: 400, message: 'Bad Request' };
+
+        expect(strategy.shouldRetry(POST_CONTEXT, error, 0)).toBe(false);
+        expect(strategy.shouldRetry(POST_IDEMPOTENT_CONTEXT, error, 0)).toBe(false);
+      });
+
+      it('НЕ должен повторять PATCH/DELETE иначе, чем раньше (идемпотентность не проверяется)', () => {
+        const error: ApiError = { statusCode: 504, message: 'Gateway Timeout' };
+
+        expect(strategy.shouldRetry({ method: 'patch' }, error, 0)).toBe(true);
+        expect(strategy.shouldRetry({ method: 'delete' }, error, 0)).toBe(true);
+      });
+    });
+  });
+
+  describe('isOutcomeAmbiguous', () => {
+    const strategy = new ExponentialBackoffStrategy();
+
+    it('должен считать неопределёнными сеть/таймаут/429/5xx', () => {
+      for (const statusCode of [0, 408, 429, 500, 502, 503, 504]) {
+        expect(strategy.isOutcomeAmbiguous({ statusCode, message: 'x' } as ApiError)).toBe(true);
+      }
+    });
+
+    it('должен считать определёнными явные клиентские ошибки', () => {
+      for (const statusCode of [400, 401, 403, 404, 409, 422]) {
+        expect(strategy.isOutcomeAmbiguous({ statusCode, message: 'x' } as ApiError)).toBe(false);
+      }
     });
   });
 
@@ -242,19 +314,19 @@ describe('ExponentialBackoffStrategy', () => {
       const error: ApiError = { statusCode: 500, message: 'Server Error' };
 
       // Попытка 0
-      expect(strategy.shouldRetry(error, 0)).toBe(true);
+      expect(strategy.shouldRetry(GET_CONTEXT, error, 0)).toBe(true);
       expect(strategy.getDelay(0)).toBe(1000);
 
       // Попытка 1
-      expect(strategy.shouldRetry(error, 1)).toBe(true);
+      expect(strategy.shouldRetry(GET_CONTEXT, error, 1)).toBe(true);
       expect(strategy.getDelay(1)).toBe(2000);
 
       // Попытка 2
-      expect(strategy.shouldRetry(error, 2)).toBe(true);
+      expect(strategy.shouldRetry(GET_CONTEXT, error, 2)).toBe(true);
       expect(strategy.getDelay(2)).toBe(4000);
 
       // Попытка 3 - лимит достигнут
-      expect(strategy.shouldRetry(error, 3)).toBe(false);
+      expect(strategy.shouldRetry(GET_CONTEXT, error, 3)).toBe(false);
     });
 
     it('должен правильно обрабатывать rate limiting через несколько попыток', () => {
@@ -266,11 +338,11 @@ describe('ExponentialBackoffStrategy', () => {
       };
 
       // Попытка 0
-      expect(strategy.shouldRetry(rateLimitError, 0)).toBe(true);
+      expect(strategy.shouldRetry(GET_CONTEXT, rateLimitError, 0)).toBe(true);
       expect(strategy.getDelay(0, rateLimitError)).toBe(60000); // Используется retryAfter
 
       // Попытка 1
-      expect(strategy.shouldRetry(rateLimitError, 1)).toBe(true);
+      expect(strategy.shouldRetry(GET_CONTEXT, rateLimitError, 1)).toBe(true);
       expect(strategy.getDelay(1, rateLimitError)).toBe(60000);
     });
   });

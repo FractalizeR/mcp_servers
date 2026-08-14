@@ -113,25 +113,40 @@ export class AuthenticatedHttpClient implements IHttpClient {
    * Единый приватный запрос с retry, возвращающий данные + заголовки.
    * На нём построены get/post (берут только .data) и
    * getWithResponse/postWithResponse (возвращают конверт целиком).
+   *
+   * ВАЖНО (пакет 1.1.E): метод и признак объявленной идемпотентности
+   * прокидываются в `RetryHandler` явно. До фикса вызов шёл без `context`,
+   * что для `RetryHandler.executeWithRetry` означало дефолт `{ method: 'get' }`
+   * независимо от фактического метода — POST-запросы этого клиента повторялись
+   * вслепую на 5xx/сеть/таймаут, как до пакета 1.1.C. Та же политика повтора,
+   * что и в `AxiosHttpClient` (см. `IHttpClient.post` JSDoc).
    */
   private async requestWithResponse<T>(
     method: EnvelopeMethod,
     path: string,
     data?: unknown,
-    params?: QueryParams
+    params?: QueryParams,
+    idempotencyDeclared?: boolean
   ): Promise<HttpResponseEnvelope<T>> {
-    return this.retryHandler.executeWithRetry(async () => {
-      const config: AxiosRequestConfig | undefined = params !== undefined ? { params } : undefined;
+    return this.retryHandler.executeWithRetry(
+      async () => {
+        const config: AxiosRequestConfig | undefined =
+          params !== undefined ? { params } : undefined;
 
-      const response =
-        method === 'get'
-          ? await this.client.get<T>(path, { params })
-          : config
-            ? await this.client.post<T>(path, data, config)
-            : await this.client.post<T>(path, data);
+        const response =
+          method === 'get'
+            ? await this.client.get<T>(path, { params })
+            : config
+              ? await this.client.post<T>(path, data, config)
+              : await this.client.post<T>(path, data);
 
-      return { data: response.data, headers: normalizeHeaders(response.headers) };
-    });
+        return { data: response.data, headers: normalizeHeaders(response.headers) };
+      },
+      {
+        method,
+        ...(idempotencyDeclared !== undefined && { idempotencyDeclared }),
+      }
+    );
   }
 
   /**
@@ -148,11 +163,22 @@ export class AuthenticatedHttpClient implements IHttpClient {
   /**
    * Execute POST request with retry logic
    *
+   * ВНИМАНИЕ (retry, пакет 1.1.E): та же политика, что и в `AxiosHttpClient` —
+   * POST повторяется на 5xx/сеть/таймаут только если `idempotencyDeclared: true`.
+   * 429 повторяется всегда.
+   *
    * @param path - API endpoint path
    * @param data - Request body data
+   * @param idempotencyDeclared - объявить запрос идемпотентным для целей retry
    */
-  async post<T = unknown>(path: string, data?: unknown): Promise<T> {
-    const { data: result } = await this.requestWithResponse<T>('post', path, data);
+  async post<T = unknown>(path: string, data?: unknown, idempotencyDeclared?: boolean): Promise<T> {
+    const { data: result } = await this.requestWithResponse<T>(
+      'post',
+      path,
+      data,
+      undefined,
+      idempotencyDeclared
+    );
     return result;
   }
 
@@ -165,13 +191,16 @@ export class AuthenticatedHttpClient implements IHttpClient {
 
   /**
    * POST с возвратом данных и заголовков ответа (для пагинации).
+   *
+   * См. предупреждение про `idempotencyDeclared` в `post()` — та же retry-политика.
    */
   async postWithResponse<T = unknown>(
     path: string,
     data?: unknown,
-    params?: QueryParams
+    params?: QueryParams,
+    idempotencyDeclared?: boolean
   ): Promise<HttpResponseEnvelope<T>> {
-    return this.requestWithResponse<T>('post', path, data, params);
+    return this.requestWithResponse<T>('post', path, data, params, idempotencyDeclared);
   }
 
   /**
@@ -181,10 +210,13 @@ export class AuthenticatedHttpClient implements IHttpClient {
    * @param data - Request body data
    */
   async patch<T = unknown>(path: string, data?: unknown): Promise<T> {
-    return this.retryHandler.executeWithRetry(async () => {
-      const response = await this.client.patch<T>(path, data);
-      return response.data;
-    });
+    return this.retryHandler.executeWithRetry(
+      async () => {
+        const response = await this.client.patch<T>(path, data);
+        return response.data;
+      },
+      { method: 'patch' }
+    );
   }
 
   /**
@@ -194,10 +226,13 @@ export class AuthenticatedHttpClient implements IHttpClient {
    * @param data - Optional request body data
    */
   async delete<T = unknown>(path: string, data?: unknown): Promise<T> {
-    return this.retryHandler.executeWithRetry(async () => {
-      const response = await this.client.delete<T>(path, { data });
-      return response.data;
-    });
+    return this.retryHandler.executeWithRetry(
+      async () => {
+        const response = await this.client.delete<T>(path, { data });
+        return response.data;
+      },
+      { method: 'delete' }
+    );
   }
 
   /**

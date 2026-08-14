@@ -29,6 +29,7 @@ export class MockHttpClient implements IHttpClient {
     path: string;
     data?: unknown;
     params?: QueryParams;
+    idempotencyDeclared?: boolean;
   }> = [];
 
   /**
@@ -71,6 +72,7 @@ export class MockHttpClient implements IHttpClient {
     path: string;
     data?: unknown;
     params?: QueryParams;
+    idempotencyDeclared?: boolean;
   }> {
     return [...this.requestHistory];
   }
@@ -94,8 +96,13 @@ export class MockHttpClient implements IHttpClient {
     return this.resolve('GET', path).then((entry) => entry.data as T);
   }
 
-  post<T = unknown>(path: string, data?: unknown): Promise<T> {
-    this.requestHistory.push({ method: 'POST', path, data });
+  post<T = unknown>(path: string, data?: unknown, idempotencyDeclared?: boolean): Promise<T> {
+    this.requestHistory.push({
+      method: 'POST',
+      path,
+      data,
+      ...(idempotencyDeclared !== undefined && { idempotencyDeclared }),
+    });
     return this.resolve('POST', path).then((entry) => entry.data as T);
   }
 
@@ -120,9 +127,16 @@ export class MockHttpClient implements IHttpClient {
   postWithResponse<T = unknown>(
     path: string,
     data?: unknown,
-    params?: QueryParams
+    params?: QueryParams,
+    idempotencyDeclared?: boolean
   ): Promise<HttpResponseEnvelope<T>> {
-    this.requestHistory.push({ method: 'POST', path, data, ...(params && { params }) });
+    this.requestHistory.push({
+      method: 'POST',
+      path,
+      data,
+      ...(params && { params }),
+      ...(idempotencyDeclared !== undefined && { idempotencyDeclared }),
+    });
     return this.resolve('POST', path).then((entry) => ({
       data: entry.data as T,
       headers: entry.headers,

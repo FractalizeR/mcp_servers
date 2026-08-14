@@ -18,6 +18,7 @@
 import type { AxiosError } from 'axios';
 import { HttpStatusCode } from '../../types.js';
 import { ApiErrorClass } from './api-error.class.js';
+import type { JsonValue } from './api-error.class.js';
 
 export class ErrorMapper {
   /**
@@ -54,7 +55,7 @@ export class ErrorMapper {
     }
 
     // Специальная обработка rate limiting (429 ошибка)
-     
+
     if (error.response.status === HttpStatusCode.TOO_MANY_REQUESTS) {
       return this.mapRateLimitError(error);
     }
@@ -62,10 +63,13 @@ export class ErrorMapper {
     // Извлекаем сообщение об ошибке из различных форматов ответа
     const errorMessages = data['errorMessages'] as string[] | undefined;
     const dataMessage = data['message'] as string | undefined;
-    const message = (errorMessages?.[0]) ?? dataMessage ?? error.message;
+    const message = errorMessages?.[0] ?? dataMessage ?? error.message;
     const errors = data['errors'] as Record<string, string[]> | undefined;
+    // Недокументированное поле Трекера (референсный клиент сохраняет его как есть,
+    // см. yandex_tracker_client/exceptions.py:76) — форма не гарантирована API.
+    const errorsData = data['errorsData'] as JsonValue | undefined;
 
-    return new ApiErrorClass(error.response.status, message, errors);
+    return new ApiErrorClass(error.response.status, message, errors, undefined, errorsData);
   }
 
   /**
@@ -86,11 +90,15 @@ export class ErrorMapper {
       }
     }
 
+    const data = error.response?.data as Record<string, unknown> | undefined;
+    const errorsData = data?.['errorsData'] as JsonValue | undefined;
+
     return new ApiErrorClass(
       HttpStatusCode.TOO_MANY_REQUESTS,
       `Rate limit exceeded. Retry after ${retryAfter} seconds.`,
       undefined,
-      retryAfter
+      retryAfter,
+      errorsData
     );
   }
 }

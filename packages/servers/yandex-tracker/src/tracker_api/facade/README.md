@@ -199,9 +199,8 @@ npm test -- tests/tracker_api/facade/yandex-tracker.facade.test.ts
 
 - **Services**: [./services/](./services/)
 - **Facade код**: [./yandex-tracker.facade.ts](./yandex-tracker.facade.ts)
-- **DI регистрация**: [../../composition-root/facade-services.ts](../../composition-root/facade-services.ts)
+- **DI регистрация**: [../../composition-root/definitions/facade-services.ts](../../composition-root/definitions/facade-services.ts)
 - **Тесты**: [../../../tests/tracker_api/facade/yandex-tracker.facade.test.ts](../../../tests/tracker_api/facade/yandex-tracker.facade.test.ts)
-- **План рефакторинга**: [../../../../.agentic-planning/plan_architecture_execution/FACADE_REFACTORING_PLAN.md](../../../../.agentic-planning/plan_architecture_execution/FACADE_REFACTORING_PLAN.md)
 
 ---
 

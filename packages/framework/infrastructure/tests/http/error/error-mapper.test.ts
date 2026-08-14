@@ -113,6 +113,37 @@ describe('ErrorMapper', () => {
         });
       });
 
+      it('должен пробросить errorsData из тела ответа в ApiErrorClass без потерь', () => {
+        const errorsData = { securityLevel: 'protect_sensitive_data' };
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(403, {
+            errorMessages: ["You don't have permissions in DUMMY queue."],
+            errors: {},
+            errorsData,
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        expect(result.statusCode).toBe(403);
+        expect(result.errorsData).toEqual(errorsData);
+        expect(result.toJSON().errorsData).toEqual(errorsData);
+      });
+
+      it('должен оставлять errorsData неопределённым, если поле отсутствует в ответе', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(403, {
+            errorMessages: ["You don't have permissions in DUMMY queue."],
+            errors: {},
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        expect(result.errorsData).toBeUndefined();
+        expect('errorsData' in result.toJSON()).toBe(false);
+      });
+
       it('должен обработать ошибку без response.data', () => {
         const axiosError = createAxiosError({
           message: 'Generic error',
@@ -155,6 +186,22 @@ describe('ErrorMapper', () => {
     });
 
     describe('Случай 2: Специальная обработка rate limiting (429)', () => {
+      it('должен пробросить errorsData и для 429-ошибки', () => {
+        const errorsData = { limit: 'per-org' };
+        const response = createAxiosResponse(429, {
+          message: 'Too Many Requests',
+          errorsData,
+        });
+        response.headers = { 'retry-after': '60' };
+
+        const axiosError = createAxiosError({ response });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        expect(result.statusCode).toBe(429);
+        expect(result.errorsData).toEqual(errorsData);
+      });
+
       it('должен обработать 429 с заголовком Retry-After', () => {
         const response = createAxiosResponse(429, {
           message: 'Too Many Requests',
@@ -364,7 +411,6 @@ describe('ErrorMapper', () => {
 
         try {
           await Promise.reject(error);
-           
         } catch (caught) {
           // КРИТИЧЕСКАЯ ПРОВЕРКА: все детали должны сохраниться
           expect(caught).toBeInstanceOf(ApiErrorClass);

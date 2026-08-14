@@ -18,11 +18,19 @@ export interface IHttpClient {
 
   /**
    * Выполняет POST запрос
+   *
+   * ВНИМАНИЕ (retry): по умолчанию неидемпотентный POST при ошибке с
+   * неопределённым исходом (сеть, таймаут, 5xx) НЕ повторяется — сервер мог
+   * успеть выполнить запрос, повтор создал бы дубль. 429 повторяется всегда.
+   * Если операция идемпотентна на уровне API (например, снабжена ключом
+   * идемпотентности) — передайте `idempotencyDeclared: true`.
+   *
    * @param path - путь к ресурсу
    * @param data - данные для отправки
+   * @param idempotencyDeclared - объявить запрос идемпотентным для целей retry
    * @returns данные ответа
    */
-  post<T = unknown>(path: string, data?: unknown): Promise<T>;
+  post<T = unknown>(path: string, data?: unknown, idempotencyDeclared?: boolean): Promise<T>;
 
   /**
    * Выполняет GET запрос и возвращает данные ВМЕСТЕ с заголовками ответа.
@@ -41,15 +49,19 @@ export interface IHttpClient {
    *
    * Нужен для пагинации POST `_search` (seek: `Link`/`X-Total-*`).
    *
+   * См. предупреждение про `idempotencyDeclared` в `post()` — та же retry-политика.
+   *
    * @param path - путь к ресурсу
    * @param data - данные для отправки
    * @param params - опциональные query параметры
+   * @param idempotencyDeclared - объявить запрос идемпотентным для целей retry
    * @returns конверт `{ data, headers }`
    */
   postWithResponse<T = unknown>(
     path: string,
     data?: unknown,
-    params?: QueryParams
+    params?: QueryParams,
+    idempotencyDeclared?: boolean
   ): Promise<HttpResponseEnvelope<T>>;
 
   /**

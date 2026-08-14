@@ -7,6 +7,7 @@ import { AxiosHttpClient } from '@fractalizer/mcp-infrastructure/http/client/axi
 import type { HttpConfig } from '@fractalizer/mcp-infrastructure/http/client/http-config.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { RetryStrategy } from '@fractalizer/mcp-infrastructure/http/retry/retry-strategy.interface.js';
+import { ExponentialBackoffStrategy } from '@fractalizer/mcp-infrastructure/http/retry/exponential-backoff.strategy.js';
 import axios from 'axios';
 
 // Mock axios
@@ -33,6 +34,7 @@ function createMockRetryStrategy(): RetryStrategy {
     maxRetries: 0, // Без повторов для упрощения тестов
     shouldRetry: (): boolean => false,
     getDelay: (): number => 0,
+    isOutcomeAmbiguous: (): boolean => false,
   };
 }
 
@@ -456,6 +458,87 @@ describe('AxiosHttpClient', () => {
       // Assert
       expect(res.data).toEqual({ ok: true });
       expect(res.headers).toEqual({});
+    });
+  });
+
+  describe('retry policy для неидемпотентных POST (пакет 1.1.C)', () => {
+    /**
+     * Отдельный клиент с РЕАЛЬНОЙ стратегией (не мок из createMockRetryStrategy,
+     * которая всегда запрещает retry) — нужен, чтобы проверить фактическое
+     * поведение транспорта, а не только решение стратегии в изоляции.
+     * Малые задержки (baseDelayMs=1) — чтобы тест был быстрым.
+     */
+    let realStrategyClient: AxiosHttpClient;
+
+    beforeEach(() => {
+      const realStrategy = new ExponentialBackoffStrategy(2, 1, 5);
+      realStrategyClient = new AxiosHttpClient(config, logger, realStrategy);
+    });
+
+    it('DoD: POST на 504 без idempotencyDeclared НЕ повторяется', async () => {
+      const error504 = { statusCode: 504, message: 'Gateway Timeout' };
+      mockAxiosInstance.post.mockRejectedValue(error504);
+
+      await expect(
+        realStrategyClient.post('/v3/issues', { queue: 'TEST', summary: 'x' })
+      ).rejects.toEqual(error504);
+
+      // Только первоначальная попытка — повтора не было.
+      expect(mockAxiosInstance.post).toHaveBeenCalledTimes(1);
+    });
+
+    it('DoD: GET на 504 повторяется как прежде', async () => {
+      const error504 = { statusCode: 504, message: 'Gateway Timeout' };
+      mockAxiosInstance.get.mockRejectedValue(error504);
+
+      await expect(realStrategyClient.get('/v3/issues/TEST-1')).rejects.toEqual(error504);
+
+      // Первоначальная попытка + 2 retry (maxRetries=2).
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(3);
+    });
+
+    it('DoD: POST на 429 повторяется', async () => {
+      const error429 = { statusCode: 429, message: 'Too Many Requests', retryAfter: 0 };
+      mockAxiosInstance.post.mockRejectedValue(error429);
+
+      await expect(
+        realStrategyClient.post('/v3/issues', { queue: 'TEST', summary: 'x' })
+      ).rejects.toEqual(error429);
+
+      expect(mockAxiosInstance.post).toHaveBeenCalledTimes(3);
+    });
+
+    it('POST на 504 повторяется, если вызывающий явно объявил идемпотентность', async () => {
+      const error504 = { statusCode: 504, message: 'Gateway Timeout' };
+      mockAxiosInstance.post.mockRejectedValue(error504);
+
+      await expect(
+        realStrategyClient.post('/v3/issues', { queue: 'TEST', summary: 'x' }, true)
+      ).rejects.toEqual(error504);
+
+      expect(mockAxiosInstance.post).toHaveBeenCalledTimes(3);
+    });
+
+    it('текст ошибки при отказе от повтора POST подсказывает проверить состояние ресурса', async () => {
+      const error504 = { statusCode: 504, message: 'Gateway Timeout' };
+      mockAxiosInstance.post.mockRejectedValue(error504);
+
+      await expect(
+        realStrategyClient.post('/v3/issues', { queue: 'TEST', summary: 'x' })
+      ).rejects.toMatchObject({
+        message: expect.stringContaining('Проверьте состояние ресурса'),
+      });
+    });
+
+    it('POST на 400 (изначально неповторяемый статус) не повторяется и без предупреждения о дубле', async () => {
+      const error400 = { statusCode: 400, message: 'Bad Request' };
+      mockAxiosInstance.post.mockRejectedValue(error400);
+
+      await expect(
+        realStrategyClient.post('/v3/issues', { queue: 'TEST', summary: 'x' })
+      ).rejects.toMatchObject({ statusCode: 400, message: 'Bad Request' });
+
+      expect(mockAxiosInstance.post).toHaveBeenCalledTimes(1);
     });
   });
 

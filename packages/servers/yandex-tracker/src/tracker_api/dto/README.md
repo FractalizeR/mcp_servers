@@ -304,6 +304,6 @@ export interface UpdateIssueDto {
 
 ## 🔗 См. также
 
-- **Entities:** [src/tracker_api/entities/CONVENTIONS.md](../entities/CONVENTIONS.md)
-- **Operations:** [src/tracker_api/api_operations/CONVENTIONS.md](../api_operations/CONVENTIONS.md)
-- **Общие правила:** [CLAUDE.md](../../CLAUDE.md)
+- **Entities:** [src/tracker_api/entities/README.md](../entities/README.md)
+- **Operations:** [src/tracker_api/api_operations/README.md](../api_operations/README.md)
+- **Общие правила:** [CLAUDE.md](../../../CLAUDE.md)

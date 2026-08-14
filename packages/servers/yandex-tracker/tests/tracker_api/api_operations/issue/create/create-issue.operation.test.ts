@@ -9,6 +9,7 @@ import {
   EntityCacheKey,
   EntityType,
 } from '@fractalizer/mcp-infrastructure/cache/entity-cache-key.js';
+import { ApiErrorClass } from '@fractalizer/mcp-infrastructure/http/error/api-error.class.js';
 
 describe('CreateIssueOperation', () => {
   let operation: CreateIssueOperation;
@@ -20,6 +21,7 @@ describe('CreateIssueOperation', () => {
     mockHttpClient = {
       get: vi.fn().mockResolvedValue(null),
       post: vi.fn(),
+      postWithResponse: vi.fn(),
       patch: vi.fn(),
       put: vi.fn(),
       delete: vi.fn().mockResolvedValue(undefined),
@@ -68,7 +70,13 @@ describe('CreateIssueOperation', () => {
 
       const result = await operation.execute(issueData);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues', issueData);
+      // Пакет 1.1.C: payload дополняется ключом идемпотентности `unique`,
+      // а POST объявляется идемпотентным для транспортного retry (3-й аргумент).
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v3/issues',
+        { ...issueData, unique: expect.any(String) },
+        true
+      );
       expect(result).toEqual(mockCreatedIssue);
     });
 
@@ -159,6 +167,106 @@ describe('CreateIssueOperation', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith('Создание задачи в очереди TEST: "Test Issue"');
       expect(mockLogger.info).toHaveBeenCalledWith('Задача успешно создана: TEST-123');
+    });
+  });
+
+  describe('идемпотентность создания (пакет 1.1.C)', () => {
+    const mockCreatedIssue: IssueWithUnknownFields = {
+      id: '1',
+      key: 'TEST-123',
+      summary: 'Test Issue',
+      queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+      status: { id: '1', key: 'open', display: 'Open' },
+      createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+      createdAt: '2024-01-01T10:00:00.000Z',
+      updatedAt: '2024-01-01T10:00:00.000Z',
+    };
+
+    it('DoD: отправляет unique, сгенерированный автоматически, если не передан', async () => {
+      const issueData: CreateIssueDto = { queue: 'TEST', summary: 'Test Issue' };
+      vi.mocked(mockHttpClient.post).mockResolvedValue(mockCreatedIssue);
+
+      await operation.execute(issueData);
+
+      const [, sentPayload] = vi.mocked(mockHttpClient.post).mock.calls[0] as [
+        string,
+        CreateIssueDto,
+        boolean,
+      ];
+      expect(typeof sentPayload.unique).toBe('string');
+      expect(sentPayload.unique).not.toHaveLength(0);
+    });
+
+    it('DoD: использует unique, явно переданный вызывающим (не перегенерирует)', async () => {
+      const issueData: CreateIssueDto = {
+        queue: 'TEST',
+        summary: 'Test Issue',
+        unique: 'caller-provided-unique-key',
+      };
+      vi.mocked(mockHttpClient.post).mockResolvedValue(mockCreatedIssue);
+
+      await operation.execute(issueData);
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v3/issues',
+        expect.objectContaining({ unique: 'caller-provided-unique-key' }),
+        true
+      );
+    });
+
+    it('DoD: повтор с тем же unique (409 Conflict) не создаёт вторую задачу — возвращает существующую', async () => {
+      const issueData: CreateIssueDto = {
+        queue: 'TEST',
+        summary: 'Test Issue',
+        unique: 'retry-unique-key',
+      };
+
+      // Первая (эмулируемая транспортом) попытка "потерялась" на стороне
+      // клиента, но фактически создала задачу — повторный POST с тем же
+      // unique получает от API конфликт.
+      vi.mocked(mockHttpClient.post).mockRejectedValue(
+        new ApiErrorClass(409, 'Issue with this unique already exists')
+      );
+      // POST /v3/issues/_findByUnique находит уже созданную задачу.
+      vi.mocked(mockHttpClient.postWithResponse).mockResolvedValue({
+        data: mockCreatedIssue,
+        headers: {},
+      });
+
+      const result = await operation.execute(issueData);
+
+      expect(result).toEqual(mockCreatedIssue);
+      expect(mockHttpClient.postWithResponse).toHaveBeenCalledWith(
+        '/v3/issues/_findByUnique',
+        undefined,
+        { unique: 'retry-unique-key' }
+      );
+      // Только ОДИН вызов post (создание) — второй задачи не создано.
+      expect(mockHttpClient.post).toHaveBeenCalledTimes(1);
+    });
+
+    it('пробрасывает исходный 409, если задача по unique не находится (findByUnique провалился)', async () => {
+      const issueData: CreateIssueDto = {
+        queue: 'TEST',
+        summary: 'Test Issue',
+        unique: 'unmatched-unique-key',
+      };
+      const conflictError = new ApiErrorClass(409, 'Conflict');
+
+      vi.mocked(mockHttpClient.post).mockRejectedValue(conflictError);
+      vi.mocked(mockHttpClient.postWithResponse).mockRejectedValue(
+        new ApiErrorClass(404, 'Not found by unique')
+      );
+
+      await expect(operation.execute(issueData)).rejects.toBe(conflictError);
+    });
+
+    it('не обращается к _findByUnique для ошибок, отличных от 409', async () => {
+      const issueData: CreateIssueDto = { queue: 'TEST', summary: 'Test Issue' };
+      vi.mocked(mockHttpClient.post).mockRejectedValue(new ApiErrorClass(400, 'Bad Request'));
+
+      await expect(operation.execute(issueData)).rejects.toMatchObject({ statusCode: 400 });
+      expect(mockHttpClient.postWithResponse).not.toHaveBeenCalled();
     });
   });
 });

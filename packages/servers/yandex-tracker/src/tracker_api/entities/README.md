@@ -467,6 +467,6 @@ export type ChecklistItemWithUnknownFields = WithUnknownFields<ChecklistItem>;
 
 ## 🔗 См. также
 
-- **Operations:** [src/tracker_api/api_operations/CONVENTIONS.md](../api_operations/CONVENTIONS.md)
-- **DTO:** [src/tracker_api/dto/CONVENTIONS.md](../dto/CONVENTIONS.md)
+- **Operations:** [src/tracker_api/api_operations/README.md](../api_operations/README.md)
+- **DTO:** [src/tracker_api/dto/README.md](../dto/README.md)
 - **Общие правила:** [CLAUDE.md](../../../CLAUDE.md)

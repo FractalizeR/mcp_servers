@@ -56,6 +56,20 @@ describe('ApiErrorClass', () => {
       expect(error.errors).toEqual(errors);
       expect(error.retryAfter).toBe(120);
     });
+
+    it('должен создать экземпляр с errorsData', () => {
+      const errorsData = { securityLevel: 'protect_sensitive_data' };
+      const error = new ApiErrorClass(403, 'Forbidden', undefined, undefined, errorsData);
+
+      expect(error.statusCode).toBe(403);
+      expect(error.errorsData).toEqual(errorsData);
+    });
+
+    it('errorsData не задан по умолчанию', () => {
+      const error = new ApiErrorClass(404, 'Not Found');
+
+      expect(error.errorsData).toBeUndefined();
+    });
   });
 
   describe('instanceof Error', () => {
@@ -144,6 +158,25 @@ describe('ApiErrorClass', () => {
         message: 'Not Found',
       });
     });
+
+    it('должен сериализовать errorsData без потерь', () => {
+      const errorsData = { securityLevel: 'protect_sensitive_data', nested: { a: [1, 2, 'x'] } };
+      const error = new ApiErrorClass(403, 'Forbidden', undefined, undefined, errorsData);
+      const json = error.toJSON();
+
+      expect(json).toEqual({
+        statusCode: 403,
+        message: 'Forbidden',
+        errorsData,
+      });
+    });
+
+    it('не должен добавлять поле errorsData, если оно не задано', () => {
+      const error = new ApiErrorClass(404, 'Not Found');
+      const json = error.toJSON();
+
+      expect('errorsData' in json).toBe(false);
+    });
   });
 
   describe('toString()', () => {
@@ -182,7 +215,6 @@ describe('ApiErrorClass', () => {
 
       try {
         await Promise.reject(originalError);
-         
       } catch (error) {
         expect(error).toBeInstanceOf(ApiErrorClass);
         expect((error as ApiErrorClass).statusCode).toBe(404);

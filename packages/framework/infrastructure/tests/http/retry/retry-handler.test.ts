@@ -5,9 +5,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { RetryHandler } from '@fractalizer/mcp-infrastructure/http/retry/retry-handler.js';
-import type { RetryStrategy } from '@fractalizer/mcp-infrastructure/http/retry/retry-strategy.interface.js';
+import type {
+  RetryStrategy,
+  RetryContext,
+} from '@fractalizer/mcp-infrastructure/http/retry/retry-strategy.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { ApiError } from '@fractalizer/mcp-infrastructure/types.js';
+
+/** Контекст GET-запроса по умолчанию для тестов, которым метод не важен. */
+const GET_CONTEXT: RetryContext = { method: 'get' };
 
 /**
  * Создание мок стратегии
@@ -17,6 +23,7 @@ function createMockStrategy(overrides: Partial<RetryStrategy> = {}): RetryStrate
     maxRetries: 3,
     shouldRetry: vi.fn(() => true),
     getDelay: vi.fn(() => 100),
+    isOutcomeAmbiguous: vi.fn(() => true),
     ...overrides,
   } as RetryStrategy;
 }
@@ -52,7 +59,7 @@ describe('RetryHandler', () => {
       it('должен вернуть результат при успешном выполнении с первой попытки', async () => {
         const fn = vi.fn(async () => 'success');
 
-        const result = await retryHandler.executeWithRetry(fn);
+        const result = await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
         expect(result).toBe('success');
         expect(fn).toHaveBeenCalledTimes(1);
@@ -64,9 +71,9 @@ describe('RetryHandler', () => {
         const numberFn = vi.fn(async () => 42);
         const arrayFn = vi.fn(async () => [1, 2, 3]);
 
-        const objectResult = await retryHandler.executeWithRetry(objectFn);
-        const numberResult = await retryHandler.executeWithRetry(numberFn);
-        const arrayResult = await retryHandler.executeWithRetry(arrayFn);
+        const objectResult = await retryHandler.executeWithRetry(objectFn, GET_CONTEXT);
+        const numberResult = await retryHandler.executeWithRetry(numberFn, GET_CONTEXT);
+        const arrayResult = await retryHandler.executeWithRetry(arrayFn, GET_CONTEXT);
 
         expect(objectResult).toEqual({ data: 'test' });
         expect(numberResult).toBe(42);
@@ -82,11 +89,11 @@ describe('RetryHandler', () => {
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
-        const result = await retryHandler.executeWithRetry(fn);
+        const result = await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
         expect(result).toBe('success');
         expect(fn).toHaveBeenCalledTimes(2);
-        expect(mockStrategy.shouldRetry).toHaveBeenCalledWith(error, 0);
+        expect(mockStrategy.shouldRetry).toHaveBeenCalledWith(GET_CONTEXT, error, 0);
         expect(mockStrategy.getDelay).toHaveBeenCalledWith(0, error);
         expect(mockLogger.warn).toHaveBeenCalled();
       });
@@ -99,7 +106,7 @@ describe('RetryHandler', () => {
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
-        const result = await retryHandler.executeWithRetry(fn);
+        const result = await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
         expect(result).toBe('success');
         expect(fn).toHaveBeenCalledTimes(3);
@@ -118,7 +125,7 @@ describe('RetryHandler', () => {
           .mockResolvedValueOnce('success');
 
         const startTime = Date.now();
-        await retryHandler.executeWithRetry(fn);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT);
         const duration = Date.now() - startTime;
 
         // Проверяем, что прошло не менее customDelay миллисекунд
@@ -132,11 +139,13 @@ describe('RetryHandler', () => {
         const error: ApiError = { statusCode: 500, message: 'Server Error' };
 
         // Настраиваем стратегию: разрешаем retry только для попыток 0, 1, 2
-        vi.mocked(mockStrategy.shouldRetry).mockImplementation((_, attempt) => attempt < 3);
+        vi.mocked(mockStrategy.shouldRetry).mockImplementation(
+          (_context, _error, attempt) => attempt < 3
+        );
 
         const fn = vi.fn<() => Promise<string>>().mockRejectedValue(error);
 
-        await expect(retryHandler.executeWithRetry(fn)).rejects.toEqual(error);
+        await expect(retryHandler.executeWithRetry(fn, GET_CONTEXT)).rejects.toEqual(error);
 
         expect(fn).toHaveBeenCalledTimes(4); // Первоначальная + 3 retry
         expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -150,7 +159,7 @@ describe('RetryHandler', () => {
         vi.mocked(mockStrategy.shouldRetry).mockImplementation(() => false);
         const fn = vi.fn<() => Promise<string>>().mockRejectedValue(error);
 
-        await expect(retryHandler.executeWithRetry(fn)).rejects.toEqual(error);
+        await expect(retryHandler.executeWithRetry(fn, GET_CONTEXT)).rejects.toEqual(error);
 
         // При attempt=0 и shouldRetry=false вызывается debug (не повторяемая ошибка)
         expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -166,10 +175,10 @@ describe('RetryHandler', () => {
         vi.mocked(mockStrategy.shouldRetry).mockImplementation(() => false);
         const fn = vi.fn<() => Promise<string>>().mockRejectedValue(error);
 
-        await expect(retryHandler.executeWithRetry(fn)).rejects.toEqual(error);
+        await expect(retryHandler.executeWithRetry(fn, GET_CONTEXT)).rejects.toEqual(error);
 
         expect(fn).toHaveBeenCalledTimes(1); // Только первая попытка
-        expect(mockStrategy.shouldRetry).toHaveBeenCalledWith(error, 0);
+        expect(mockStrategy.shouldRetry).toHaveBeenCalledWith(GET_CONTEXT, error, 0);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining('не является повторяемой')
         );
@@ -181,7 +190,7 @@ describe('RetryHandler', () => {
         vi.mocked(mockStrategy.shouldRetry).mockImplementation(() => false);
         const fn = vi.fn<() => Promise<string>>().mockRejectedValue(error);
 
-        await expect(retryHandler.executeWithRetry(fn)).rejects.toEqual(error);
+        await expect(retryHandler.executeWithRetry(fn, GET_CONTEXT)).rejects.toEqual(error);
 
         expect(fn).toHaveBeenCalledTimes(1);
       });
@@ -195,7 +204,7 @@ describe('RetryHandler', () => {
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
-        await retryHandler.executeWithRetry(fn);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Попытка 1/'));
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Server Error'));
@@ -209,7 +218,7 @@ describe('RetryHandler', () => {
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
-        await retryHandler.executeWithRetry(fn);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('код: 503'));
       });
@@ -224,7 +233,7 @@ describe('RetryHandler', () => {
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
-        await retryHandler.executeWithRetry(fn);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Ожидание 2000ms'));
       });
@@ -244,7 +253,7 @@ describe('RetryHandler', () => {
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
-        await retryHandler.executeWithRetry(fn);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
         expect(mockStrategy.getDelay).toHaveBeenCalledWith(0, error);
         expect(fn).toHaveBeenCalledTimes(2);
@@ -257,10 +266,10 @@ describe('RetryHandler', () => {
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
-        await retryHandler.executeWithRetry(fn);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
         expect(fn).toHaveBeenCalledTimes(2);
-        expect(mockStrategy.shouldRetry).toHaveBeenCalledWith(error, 0);
+        expect(mockStrategy.shouldRetry).toHaveBeenCalledWith(GET_CONTEXT, error, 0);
       });
 
       it('должен обработать ошибки с дополнительными полями', async () => {
@@ -277,7 +286,7 @@ describe('RetryHandler', () => {
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
-        await retryHandler.executeWithRetry(fn);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
         expect(fn).toHaveBeenCalledTimes(2);
       });
@@ -294,7 +303,7 @@ describe('RetryHandler', () => {
           .mockResolvedValueOnce('success');
 
         const startTime = Date.now();
-        await retryHandler.executeWithRetry(fn);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT);
         const duration = Date.now() - startTime;
 
         expect(duration).toBeLessThan(100); // Минимальная задержка
@@ -309,10 +318,10 @@ describe('RetryHandler', () => {
           .mockRejectedValueOnce(error)
           .mockResolvedValueOnce('success');
 
-        await retryHandler.executeWithRetry(fn);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT);
 
-        expect(mockStrategy.shouldRetry).toHaveBeenNthCalledWith(1, error, 0);
-        expect(mockStrategy.shouldRetry).toHaveBeenNthCalledWith(2, error, 1);
+        expect(mockStrategy.shouldRetry).toHaveBeenNthCalledWith(1, GET_CONTEXT, error, 0);
+        expect(mockStrategy.shouldRetry).toHaveBeenNthCalledWith(2, GET_CONTEXT, error, 1);
       });
 
       it('должен обработать начальную попытку не с 0', async () => {
@@ -323,9 +332,9 @@ describe('RetryHandler', () => {
           .mockResolvedValueOnce('success');
 
         // Вызываем с attempt = 2
-        await retryHandler.executeWithRetry(fn, 2);
+        await retryHandler.executeWithRetry(fn, GET_CONTEXT, 2);
 
-        expect(mockStrategy.shouldRetry).toHaveBeenCalledWith(error, 2);
+        expect(mockStrategy.shouldRetry).toHaveBeenCalledWith(GET_CONTEXT, error, 2);
       });
     });
   });
@@ -334,11 +343,13 @@ describe('RetryHandler', () => {
     it('должен корректно работать с реальной ExponentialBackoffStrategy', async () => {
       const realStrategy: RetryStrategy = {
         maxRetries: 2,
-        shouldRetry: (error: ApiError, attempt: number) => {
+        shouldRetry: (_context: RetryContext, error: ApiError, attempt: number) => {
           if (attempt >= 2) return false;
           return [0, 408, 429, 500, 502, 503, 504].includes(error.statusCode);
         },
         getDelay: (attempt: number) => Math.min(100 * Math.pow(2, attempt), 1000),
+        isOutcomeAmbiguous: (error: ApiError) =>
+          [0, 408, 429, 500, 502, 503, 504].includes(error.statusCode),
       };
 
       const handler = new RetryHandler(realStrategy, mockLogger);
@@ -350,7 +361,7 @@ describe('RetryHandler', () => {
         .mockRejectedValueOnce(error)
         .mockResolvedValueOnce('success');
 
-      const result = await handler.executeWithRetry(fn);
+      const result = await handler.executeWithRetry(fn, GET_CONTEXT);
 
       expect(result).toBe('success');
       expect(fn).toHaveBeenCalledTimes(3);

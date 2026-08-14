@@ -13,9 +13,25 @@
  * - Специальная обработка 429 (rate limiting): используется retryAfter из заголовка
  */
 
-import type { RetryStrategy } from './retry-strategy.interface.js';
+import type { RetryStrategy, RetryContext } from './retry-strategy.interface.js';
 import type { ApiError } from '../../types.js';
 import { HttpStatusCode } from '../../types.js';
+
+/**
+ * Статус-коды с НЕОПРЕДЕЛЁННЫМ исходом запроса: сервер мог как не обработать
+ * запрос (сеть недоступна, таймаут), так и обработать его, но не успеть
+ * отдать ответ (5xx от шлюза, 429). Именно поэтому повтор POST при таких
+ * статусах небезопасен без явно объявленной идемпотентности.
+ */
+const AMBIGUOUS_OUTCOME_STATUS_CODES: ReadonlySet<HttpStatusCode> = new Set([
+  HttpStatusCode.NETWORK_ERROR, // 0: нет ответа от сервера
+  HttpStatusCode.REQUEST_TIMEOUT, // 408: Request Timeout
+  HttpStatusCode.TOO_MANY_REQUESTS, // 429: Rate Limiting
+  HttpStatusCode.INTERNAL_SERVER_ERROR, // 500: Internal Server Error
+  HttpStatusCode.BAD_GATEWAY, // 502: Bad Gateway
+  HttpStatusCode.SERVICE_UNAVAILABLE, // 503: Service Unavailable
+  HttpStatusCode.GATEWAY_TIMEOUT, // 504: Gateway Timeout
+]);
 
 export class ExponentialBackoffStrategy implements RetryStrategy {
   readonly maxRetries: number;
@@ -33,24 +49,34 @@ export class ExponentialBackoffStrategy implements RetryStrategy {
     this.maxDelay = maxDelayMs;
   }
 
-  shouldRetry(error: ApiError, attempt: number): boolean {
+  shouldRetry(context: RetryContext, error: ApiError, attempt: number): boolean {
     // Проверка лимита попыток
     if (attempt >= this.maxRetries) {
       return false;
     }
 
-    // Список повторяемых статус-кодов (используем enum для типобезопасности)
-    const retryableStatusCodes: HttpStatusCode[] = [
-      HttpStatusCode.NETWORK_ERROR, // 0: нет ответа от сервера
-      HttpStatusCode.REQUEST_TIMEOUT, // 408: Request Timeout
-      HttpStatusCode.TOO_MANY_REQUESTS, // 429: Rate Limiting
-      HttpStatusCode.INTERNAL_SERVER_ERROR, // 500: Internal Server Error
-      HttpStatusCode.BAD_GATEWAY, // 502: Bad Gateway
-      HttpStatusCode.SERVICE_UNAVAILABLE, // 503: Service Unavailable
-      HttpStatusCode.GATEWAY_TIMEOUT, // 504: Gateway Timeout
-    ];
+    if (!this.isOutcomeAmbiguous(error)) {
+      return false;
+    }
 
-    return retryableStatusCodes.includes(error.statusCode);
+    // POST небезопасно повторять вслепую: сервер мог успеть выполнить запрос,
+    // не успев отдать ответ — повтор создаст дубль (задача, комментарий,
+    // массовая операция). Исключения:
+    // - 429: сервер сам просит повторить, запрос заведомо не выполнялся;
+    // - вызывающий явно объявил запрос идемпотентным (например, отправил
+    //   ключ идемпотентности, который сервер учитывает при повторе).
+    if (context.method === 'post') {
+      return (
+        error.statusCode === HttpStatusCode.TOO_MANY_REQUESTS ||
+        context.idempotencyDeclared === true
+      );
+    }
+
+    return true;
+  }
+
+  isOutcomeAmbiguous(error: ApiError): boolean {
+    return AMBIGUOUS_OUTCOME_STATUS_CODES.has(error.statusCode);
   }
 
   getDelay(attempt: number, error?: ApiError): number {
