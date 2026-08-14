@@ -10,10 +10,15 @@ export interface CreatePageParams {
 
 export class CreatePageOperation extends BaseOperation {
   async execute(params: CreatePageParams): Promise<PageWithUnknownFields> {
+    const queryParts: string[] = [];
+
+    if (params.fields !== undefined) queryParts.push(`fields=${encodeURIComponent(params.fields)}`);
+    if (params.is_silent !== undefined) queryParts.push('is_silent=true');
+
+    const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+
     this.logger.info(`Creating page: ${params.data.slug}`);
 
-    // Note: fields and is_silent query params are not supported by basic httpClient.post
-    // For full implementation, extend httpClient or add query params to URL
-    return this.httpClient.post<PageWithUnknownFields>('/v1/pages', params.data);
+    return this.httpClient.post<PageWithUnknownFields>(`/v1/pages${queryString}`, params.data);
   }
 }

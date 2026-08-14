@@ -8,5 +8,4 @@ export type DeleteGridParams = z.infer<typeof DeleteGridParamsSchema>;
 
 export const DeleteGridOutputDataSchema = z.object({
   message: z.string(),
-  recovery_token: z.string(),
 });

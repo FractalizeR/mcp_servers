@@ -7,7 +7,7 @@ export interface UpdateCellsDto {
 
   /** Ячейки для обновления (обязательно) */
   cells: Array<{
-    row_id: number;
+    row_id: string;
     column_slug: string;
     value: unknown;
   }>;

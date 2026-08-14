@@ -32,8 +32,25 @@ describe('DeletePageTool', () => {
         idx: 123,
       });
 
-      expect(mockFacade.deletePage).toHaveBeenCalledWith(123);
+      expect(mockFacade.deletePage).toHaveBeenCalledWith({ idx: 123 });
       expect(result.isError).toBeFalsy();
+    });
+
+    it('должен передать allow_recursive и recursive в facade', async () => {
+      const expectedResult = createDeleteResultFixture();
+      vi.mocked(mockFacade.deletePage!).mockResolvedValue(expectedResult);
+
+      await tool.execute({
+        idx: 123,
+        allow_recursive: true,
+        recursive: true,
+      });
+
+      expect(mockFacade.deletePage).toHaveBeenCalledWith({
+        idx: 123,
+        allow_recursive: true,
+        recursive: true,
+      });
     });
 
     it('должен вернуть ошибку при невалидных параметрах', async () => {

@@ -74,4 +74,51 @@ describe('CreatePageOperation', () => {
 
     expect(mockLogger.info).toHaveBeenCalledWith('Creating page: users/new');
   });
+
+  // Дефект 7.1.B №1: is_silent и fields принимались операцией, но никогда не
+  // попадали в запрос — комментарий в старом коде прямо это объяснял
+  // ограничением httpClient.post, которого на самом деле не было (соседние
+  // update-page/append-content собирают query-строку тем же способом).
+  it('должен передать is_silent в query string (дефект 7.1.B №1)', async () => {
+    vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
+
+    await operation.execute({
+      data: { page_type: 'page', slug: 'users/silent', title: 'Silent' },
+      is_silent: true,
+    });
+
+    expect(mockHttpClient.post).toHaveBeenCalledWith(
+      '/v1/pages?is_silent=true',
+      expect.objectContaining({ slug: 'users/silent' })
+    );
+  });
+
+  it('должен передать fields в query string (дефект 7.1.B №1)', async () => {
+    vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
+
+    await operation.execute({
+      data: { page_type: 'page', slug: 'users/fields', title: 'Fields' },
+      fields: 'attributes,content',
+    });
+
+    expect(mockHttpClient.post).toHaveBeenCalledWith(
+      '/v1/pages?fields=attributes%2Ccontent',
+      expect.objectContaining({ slug: 'users/fields' })
+    );
+  });
+
+  it('должен передать оба query-параметра одновременно', async () => {
+    vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
+
+    await operation.execute({
+      data: { page_type: 'page', slug: 'users/both', title: 'Both' },
+      fields: 'content',
+      is_silent: true,
+    });
+
+    expect(mockHttpClient.post).toHaveBeenCalledWith(
+      '/v1/pages?fields=content&is_silent=true',
+      expect.objectContaining({ slug: 'users/both' })
+    );
+  });
 });

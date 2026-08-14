@@ -80,5 +80,75 @@ describe('UpdatePageTool', () => {
 
       expect(result.isError).toBe(true);
     });
+
+    // Дефект 7.1.B №5: redirect существовал в UpdatePageDto, но схема
+    // инструмента его не объявляла — параметр был физически недостижим.
+    it('должен передать redirect в data (дефект 7.1.B №5)', async () => {
+      const expectedPage = createPageFixture();
+      vi.mocked(mockFacade.updatePage!).mockResolvedValue(expectedPage);
+
+      await tool.execute({
+        idx: 321,
+        redirect: { page: { slug: 'users/target' } },
+      });
+
+      expect(mockFacade.updatePage).toHaveBeenCalledWith({
+        idx: 321,
+        data: {
+          redirect: { page: { slug: 'users/target' } },
+        },
+      });
+    });
+  });
+
+  // Пакет 7.1.D: перезапись content — единственная операция без
+  // recovery_token, поэтому update_page обязан заметить и сообщить о потере
+  // структурной разметки (таблиц YFM, блоков), а не молча записать.
+  describe('предупреждение о потере структурной разметки (пакет 7.1.D)', () => {
+    it('должен предупредить, если таблица #| ... |# исчезает из нового содержимого', async () => {
+      vi.mocked(mockFacade.getPageById!).mockResolvedValue(
+        createPageFixture({
+          content: 'Текст до\n#|\n|| a | b ||\n|#\nТекст после',
+        })
+      );
+      vi.mocked(mockFacade.updatePage!).mockResolvedValue(createPageFixture());
+
+      const result = await tool.execute({
+        idx: 111,
+        content: 'Текст до\nТекст после',
+      });
+
+      expect(result.isError).toBeFalsy();
+      const payload = result.structuredContent as { data: { warnings?: string[] } };
+      expect(payload.data.warnings).toBeDefined();
+      expect(payload.data.warnings?.length).toBeGreaterThan(0);
+      expect(payload.data.warnings?.[0]).toContain('yw_diff_page');
+    });
+
+    it('НЕ должен предупреждать, если правка не затрагивает разметку', async () => {
+      vi.mocked(mockFacade.getPageById!).mockResolvedValue(
+        createPageFixture({
+          content: 'Текст до\n#|\n|| a | b ||\n|#\nТекст после',
+        })
+      );
+      vi.mocked(mockFacade.updatePage!).mockResolvedValue(createPageFixture());
+
+      const result = await tool.execute({
+        idx: 112,
+        content: 'Изменённый текст до\n#|\n|| a | b ||\n|#\nТекст после',
+      });
+
+      expect(result.isError).toBeFalsy();
+      const payload = result.structuredContent as { data: { warnings?: string[] } };
+      expect(payload.data.warnings).toBeUndefined();
+    });
+
+    it('НЕ должен запрашивать текущее содержимое, если content не меняется', async () => {
+      vi.mocked(mockFacade.updatePage!).mockResolvedValue(createPageFixture());
+
+      await tool.execute({ idx: 113, title: 'Только заголовок' });
+
+      expect(mockFacade.getPageById).not.toHaveBeenCalled();
+    });
   });
 });

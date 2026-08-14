@@ -103,9 +103,9 @@ describe('YandexWikiFacade', () => {
       const expectedResult = createDeleteResultFixture();
       vi.mocked(mockPageService.deletePage!).mockResolvedValue(expectedResult);
 
-      const result = await facade.deletePage(123);
+      const result = await facade.deletePage({ idx: 123 });
 
-      expect(mockPageService.deletePage).toHaveBeenCalledWith(123);
+      expect(mockPageService.deletePage).toHaveBeenCalledWith({ idx: 123 });
       expect(result).toEqual(expectedResult);
     });
 

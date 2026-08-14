@@ -61,5 +61,49 @@ describe('AppendContentTool', () => {
 
       expect(result.isError).toBe(true);
     });
+
+    // Дефект 7.1.B №6: раньше `if (section_id !== undefined && section_location)`
+    // в tool.ts тихо не срабатывал при частичном заполнении пары —
+    // таргетинг терялся без единой ошибки валидации. Перенесено в схему.
+    it('должен отклонить section_id без section_location', async () => {
+      const result = await tool.execute({
+        idx: 123,
+        content: 'Text',
+        section_id: 5,
+      });
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('должен отклонить section_location без section_id', async () => {
+      const result = await tool.execute({
+        idx: 123,
+        content: 'Text',
+        section_location: 'top',
+      });
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('должен принять section_id и section_location вместе', async () => {
+      const expectedPage = createPageFixture();
+      vi.mocked(mockFacade.appendContent!).mockResolvedValue(expectedPage);
+
+      const result = await tool.execute({
+        idx: 123,
+        content: 'Text',
+        section_id: 5,
+        section_location: 'top',
+      });
+
+      expect(mockFacade.appendContent).toHaveBeenCalledWith({
+        idx: 123,
+        data: {
+          content: 'Text',
+          section: { id: 5, location: 'top' },
+        },
+      });
+      expect(result.isError).toBeFalsy();
+    });
   });
 });

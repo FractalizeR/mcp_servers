@@ -63,9 +63,12 @@ export function createGridFixture(overrides?: Partial<Grid>): GridWithUnknownFie
 
 /**
  * Создать фикстуру для DeleteGridResult
+ *
+ * Проверено живым запросом (2026-08-14): DELETE /v1/grids/{id} возвращает
+ * только `message`, без `recovery_token` — в отличие от удаления страницы.
  */
-export function createDeleteGridResultFixture(): { recovery_token: string } {
+export function createDeleteGridResultFixture(): { message?: string } {
   return {
-    recovery_token: 'grid-recovery-token-xyz789',
+    message: 'Grid deleted',
   };
 }

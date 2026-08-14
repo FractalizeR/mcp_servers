@@ -11,7 +11,7 @@ export { UpdatePageOperation } from './update-page.operation.js';
 export type { UpdatePageParams } from './update-page.operation.js';
 
 export { DeletePageOperation } from './delete-page.operation.js';
-export type { DeletePageResult } from './delete-page.operation.js';
+export type { DeletePageParams, DeletePageResult } from './delete-page.operation.js';
 
 export { ClonePageOperation } from './clone-page.operation.js';
 

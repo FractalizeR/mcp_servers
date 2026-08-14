@@ -7,6 +7,7 @@ import type {
   CreatePageParams,
   UpdatePageParams,
   AppendContentParams,
+  DeletePageParams,
   DeletePageResult,
   GetGridParams,
   DeleteGridResult,
@@ -82,8 +83,8 @@ export class YandexWikiFacade implements RawApiCapable {
    * Удаляет страницу
    * @returns recovery_token для восстановления
    */
-  async deletePage(idx: number): Promise<DeletePageResult> {
-    return this.pageService.deletePage(idx);
+  async deletePage(params: DeletePageParams): Promise<DeletePageResult> {
+    return this.pageService.deletePage(params);
   }
 
   /**

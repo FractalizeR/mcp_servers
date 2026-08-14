@@ -21,11 +21,10 @@ export class DeleteGridTool extends BaseTool<YandexWikiFacade> {
     try {
       ResultLogger.logOperationStart(this.logger, 'Удаление таблицы', 1);
 
-      const result = await this.facade.deleteGrid(idx);
+      await this.facade.deleteGrid(idx);
 
       return this.formatSuccess({
-        message: `Таблица ${idx} успешно удалена`,
-        recovery_token: result.recovery_token,
+        message: `Таблица ${idx} успешно удалена. Восстановление невозможно: в отличие от удаления страницы, API удаления таблицы не возвращает recovery_token.`,
       });
     } catch (error: unknown) {
       return this.formatError(`Ошибка при удалении таблицы: ${idx}`, error);

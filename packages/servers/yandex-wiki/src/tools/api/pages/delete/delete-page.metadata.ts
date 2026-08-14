@@ -17,7 +17,7 @@ export const DELETE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['delete', 'remove', 'page', 'wiki'],
   isHelper: false,
   requiresExplicitUserConsent: true,
-  redactionAllowlist: ['idx'],
+  redactionAllowlist: ['idx', 'allow_recursive', 'recursive'],
   title: 'Удалить страницу',
   outputSchema: buildOutputSchema(DeletePageOutputDataSchema),
   annotations: {

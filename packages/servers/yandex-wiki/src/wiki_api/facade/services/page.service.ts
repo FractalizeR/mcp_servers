@@ -6,6 +6,7 @@ import type {
   CreatePageParams,
   UpdatePageParams,
   AppendContentParams,
+  DeletePageParams,
   DeletePageResult,
 } from '#wiki_api/api_operations/index.js';
 import type { PageWithUnknownFields, AsyncOperation } from '#wiki_api/entities/index.js';
@@ -31,8 +32,8 @@ export class PageService {
     return this.ops.updatePage.execute(params);
   }
 
-  async deletePage(idx: number): Promise<DeletePageResult> {
-    return this.ops.deletePage.execute(idx);
+  async deletePage(params: DeletePageParams): Promise<DeletePageResult> {
+    return this.ops.deletePage.execute(params);
   }
 
   async clonePage(idx: number, data: ClonePageDto): Promise<AsyncOperation> {

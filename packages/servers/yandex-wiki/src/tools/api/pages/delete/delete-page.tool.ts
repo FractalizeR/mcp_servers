@@ -16,12 +16,16 @@ export class DeletePageTool extends BaseTool<YandexWikiFacade> {
       return validation.error;
     }
 
-    const { idx } = validation.data;
+    const { idx, allow_recursive, recursive } = validation.data;
 
     try {
       ResultLogger.logOperationStart(this.logger, 'Удаление страницы', 1);
 
-      const result = await this.facade.deletePage(idx);
+      const result = await this.facade.deletePage({
+        idx,
+        ...(allow_recursive !== undefined && { allow_recursive }),
+        ...(recursive !== undefined && { recursive }),
+      });
 
       return this.formatSuccess({
         message: `Страница ${idx} успешно удалена`,

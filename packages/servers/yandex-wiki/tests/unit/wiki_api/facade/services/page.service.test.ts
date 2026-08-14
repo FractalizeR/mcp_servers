@@ -79,9 +79,9 @@ describe('PageService', () => {
       const mockResult = { success: true };
       vi.mocked(mockOps.deletePage.execute).mockResolvedValue(mockResult);
 
-      const result = await pageService.deletePage(123);
+      const result = await pageService.deletePage({ idx: 123 });
 
-      expect(mockOps.deletePage.execute).toHaveBeenCalledWith(123);
+      expect(mockOps.deletePage.execute).toHaveBeenCalledWith({ idx: 123 });
       expect(result).toBe(mockResult);
     });
   });
