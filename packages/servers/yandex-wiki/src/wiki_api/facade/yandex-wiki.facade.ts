@@ -1,6 +1,15 @@
 import { injectable, inject } from 'inversify';
 import type { RawApiCapable, RawApiRequestInput } from '@fractalizer/mcp-core';
-import { PageService, GridService, ResourceService, RawApiService } from './services/index.js';
+import {
+  PageService,
+  GridService,
+  ResourceService,
+  RawApiService,
+  SearchService,
+  CommentService,
+  PageAccessService,
+  AttachmentService,
+} from './services/index.js';
 import type {
   GetPageParams,
   GetPageByIdParams,
@@ -12,12 +21,28 @@ import type {
   GetGridParams,
   DeleteGridResult,
   GetResourcesParams,
+  GetDescendantsByIdParams,
+  GetDescendantsBySlugParams,
+  GetCommentsParams,
+  GetCommentThreadParams,
+  UpdatePageAccessParams,
+  DeletePageAccessParams,
+  DeleteAllPageAccessesParams,
+  UploadAttachmentParams,
 } from '#wiki_api/api_operations/index.js';
 import type {
   PageWithUnknownFields,
   GridWithUnknownFields,
   AsyncOperation,
   ResourcesResponse,
+  PageDescendantsResponse,
+  SearchResponse,
+  Comment,
+  CommentsResponse,
+  DeleteCommentResult,
+  PageAccess,
+  Attachment,
+  DownloadedFile,
 } from '#wiki_api/entities/index.js';
 import type {
   ClonePageDto,
@@ -31,6 +56,9 @@ import type {
   MoveRowDto,
   MoveColumnDto,
   CloneGridDto,
+  SearchDto,
+  CreateCommentDto,
+  CreatePageAccessDto,
 } from '#wiki_api/dto/index.js';
 
 /**
@@ -46,7 +74,11 @@ export class YandexWikiFacade implements RawApiCapable {
     @inject(PageService) private readonly pageService: PageService,
     @inject(GridService) private readonly gridService: GridService,
     @inject(ResourceService) private readonly resourceService: ResourceService,
-    @inject(RawApiService) private readonly rawApiService: RawApiService
+    @inject(RawApiService) private readonly rawApiService: RawApiService,
+    @inject(SearchService) private readonly searchService: SearchService,
+    @inject(CommentService) private readonly commentService: CommentService,
+    @inject(PageAccessService) private readonly pageAccessService: PageAccessService,
+    @inject(AttachmentService) private readonly attachmentService: AttachmentService
   ) {}
 
   // === Page Methods ===
@@ -100,6 +132,20 @@ export class YandexWikiFacade implements RawApiCapable {
    */
   async appendContent(params: AppendContentParams): Promise<PageWithUnknownFields> {
     return this.pageService.appendContent(params);
+  }
+
+  /**
+   * Обходит поддерево раздела по ID родительской страницы (пакет 7.2.C).
+   */
+  async getDescendantsById(params: GetDescendantsByIdParams): Promise<PageDescendantsResponse> {
+    return this.pageService.getDescendantsById(params);
+  }
+
+  /**
+   * Обходит поддерево раздела по slug родительской страницы (пакет 7.2.C).
+   */
+  async getDescendantsBySlug(params: GetDescendantsBySlugParams): Promise<PageDescendantsResponse> {
+    return this.pageService.getDescendantsBySlug(params);
   }
 
   // === Grid Methods ===
@@ -197,6 +243,94 @@ export class YandexWikiFacade implements RawApiCapable {
    */
   async getResources(params: GetResourcesParams): Promise<ResourcesResponse> {
     return this.resourceService.getResources(params);
+  }
+
+  // === Search Methods ===
+
+  /**
+   * Полнотекстовый поиск по страницам/файлам Wiki (пакет 7.2.C).
+   */
+  async search(data: SearchDto): Promise<SearchResponse> {
+    return this.searchService.search(data);
+  }
+
+  // === Comment Methods ===
+
+  /**
+   * Список комментариев страницы (пакет 7.2.D).
+   */
+  async getComments(params: GetCommentsParams): Promise<CommentsResponse> {
+    return this.commentService.getComments(params);
+  }
+
+  /**
+   * Создаёт комментарий (или ответ в треде — при `parent_id`/`thread_id`).
+   */
+  async createComment(idx: number, data: CreateCommentDto): Promise<Comment> {
+    return this.commentService.createComment(idx, data);
+  }
+
+  /**
+   * Комментарии треда (ответы на конкретный комментарий).
+   */
+  async getCommentThread(params: GetCommentThreadParams): Promise<CommentsResponse> {
+    return this.commentService.getCommentThread(params);
+  }
+
+  /**
+   * Удаляет комментарий.
+   * @returns comments_count — актуальное число комментариев на странице
+   */
+  async deleteComment(idx: number, commentId: number): Promise<DeleteCommentResult> {
+    return this.commentService.deleteComment(idx, commentId);
+  }
+
+  // === Page Access Methods ===
+
+  /**
+   * Добавляет пользователю или группе доступ к странице (пакет 7.2.D).
+   */
+  async createPageAccess(idx: number, data: CreatePageAccessDto): Promise<PageAccess> {
+    return this.pageAccessService.createPageAccess(idx, data);
+  }
+
+  /**
+   * Меняет роль/наследование существующего доступа.
+   */
+  async updatePageAccess(params: UpdatePageAccessParams): Promise<PageAccess> {
+    return this.pageAccessService.updatePageAccess(params);
+  }
+
+  /**
+   * Удаляет один доступ по его id.
+   */
+  async deletePageAccess(params: DeletePageAccessParams): Promise<void> {
+    return this.pageAccessService.deletePageAccess(params);
+  }
+
+  /**
+   * Удаляет ВСЕ персональные доступы страницы (не групповые/наследуемые).
+   */
+  async deleteAllPageAccesses(params: DeleteAllPageAccessesParams): Promise<void> {
+    return this.pageAccessService.deleteAllPageAccesses(params);
+  }
+
+  // === Attachment Methods ===
+
+  /**
+   * Загружает файл и прикрепляет его к странице (пакет 7.2.D) — см.
+   * заголовок `upload-attachment.operation.ts` про внутренний Upload Session
+   * протокол, скрытый за одним вызовом.
+   */
+  async uploadAttachment(params: UploadAttachmentParams): Promise<Attachment> {
+    return this.attachmentService.uploadAttachment(params);
+  }
+
+  /**
+   * Скачивает содержимое вложения страницы.
+   */
+  async downloadAttachment(idx: number, fileId: number): Promise<DownloadedFile> {
+    return this.attachmentService.downloadAttachment(idx, fileId);
   }
 
   // === Raw API (escape hatch) ===

@@ -53,3 +53,21 @@ export interface Page {
 }
 
 export type PageWithUnknownFields = WithUnknownFields<Page>;
+
+/**
+ * Элемент поддерева раздела (`GET /pages/{id}/descendants`,
+ * `GET /pages/descendants` — пакет 7.2.C плана модернизации MCP 2026-07-28).
+ *
+ * Документация возвращает только `id`/`slug` для каждого потомка — не полный
+ * `Page` (в отличие от `redirect.redirect_target`). `title` в ответе НЕТ.
+ */
+export interface PageDescendant {
+  readonly id: number;
+  readonly slug: string;
+}
+
+export interface PageDescendantsResponse {
+  readonly results: PageDescendant[];
+  readonly next_cursor?: string;
+  readonly prev_cursor?: string;
+}

@@ -1,10 +1,11 @@
 // tests/unit/composition-root/resource-registry.test.ts
 /**
- * Проверка DI-провода ResourceRegistry (пакет 5.1.C.wiki): composition root
- * регистрирует ровно два провайдера (страницы + не-табличные ресурсы
- * страницы), реестр агрегирует их корректно, а несуществующий/чужой URI
- * даёт `ResourceNotFoundError` (SDK сериализует его как `-32602`, см.
- * `.code`, само сведение к JSON-RPC уже проверено на уровне framework —
+ * Проверка DI-провода ResourceRegistry (пакет 5.1.C.wiki, дополнено пакетом
+ * 7.2.D комментариями): composition root регистрирует ровно три провайдера
+ * (страницы + не-табличные ресурсы страницы + комментарии страницы), реестр
+ * агрегирует их корректно, а несуществующий/чужой URI даёт
+ * `ResourceNotFoundError` (SDK сериализует его как `-32602`, см. `.code`,
+ * само сведение к JSON-RPC уже проверено на уровне framework —
  * `resources.wire.test.ts`, здесь дублировать wire-уровень незачем).
  */
 import { describe, it, expect } from 'vitest';
@@ -32,13 +33,13 @@ const fakeConfig: ServerConfig = {
 };
 
 describe('composition-root: ResourceRegistry wiring', () => {
-  it('регистрирует ровно 2 провайдера (wiki-pages, wiki-page-resources)', async () => {
+  it('регистрирует ровно 3 провайдера (wiki-pages, wiki-page-resources, wiki-page-comments)', async () => {
     const container = await createContainer(fakeConfig);
     const registry = container.get<ResourceRegistry>(TYPES.ResourceRegistry);
 
     const templates = await registry.listTemplates();
     const names = templates.map((t) => t.name).sort();
-    expect(names).toEqual(['wiki-page', 'wiki-page-resource']);
+    expect(names).toEqual(['wiki-page', 'wiki-page-comment', 'wiki-page-resource']);
   });
 
   it('singleton: повторный get() возвращает тот же инстанс', async () => {
@@ -48,11 +49,11 @@ describe('composition-root: ResourceRegistry wiring', () => {
     expect(first).toBe(second);
   });
 
-  it('listResources() агрегата честно пуст (оба провайдера без глобального обзора)', async () => {
+  it('listResources() агрегата честно пуст (все провайдеры без глобального обзора)', async () => {
     const container = await createContainer(fakeConfig);
     const registry = container.get<ResourceRegistry>(TYPES.ResourceRegistry);
 
-    // 2 провайдера: реестр переключается на следующего, даже когда у
+    // 3 провайдера: реестр переключается на следующего, даже когда у
     // текущего resources пуст (см. ResourceRegistry.projectPage) — поэтому
     // честная проверка "пусто" — пройти агрегат до конца, а не одну страницу.
     const allResources: unknown[] = [];
@@ -67,7 +68,7 @@ describe('composition-root: ResourceRegistry wiring', () => {
     } while (cursor !== undefined);
 
     expect(allResources).toEqual([]);
-    expect(pages).toBe(2); // по одной "пустой" странице на каждого из 2 провайдеров
+    expect(pages).toBe(3); // по одной "пустой" странице на каждого из 3 провайдеров
   });
 
   it('несуществующий/чужой URI → ResourceNotFoundError с code -32602 (DoD п.3)', async () => {

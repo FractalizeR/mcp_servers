@@ -14,9 +14,12 @@ export class UpdatePageOperation extends BaseOperation {
   async execute(params: UpdatePageParams): Promise<PageWithUnknownFields> {
     const queryParts: string[] = [];
 
-    if (params.allow_merge !== undefined) queryParts.push('allow_merge=true');
+    // Сериализуем фактическое значение, а не факт присутствия ключа — тот же
+    // класс дефекта, что и `delete-page.operation.ts` (пакет 7.2.D):
+    // `allow_merge`/`is_silent: false` не должны уходить как `=true`.
+    if (params.allow_merge !== undefined) queryParts.push(`allow_merge=${params.allow_merge}`);
     if (params.fields !== undefined) queryParts.push(`fields=${encodeURIComponent(params.fields)}`);
-    if (params.is_silent !== undefined) queryParts.push('is_silent=true');
+    if (params.is_silent !== undefined) queryParts.push(`is_silent=${params.is_silent}`);
 
     const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
 

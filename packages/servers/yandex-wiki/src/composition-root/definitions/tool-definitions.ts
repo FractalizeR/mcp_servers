@@ -9,6 +9,8 @@ import { DeletePageTool } from '#tools/api/pages/delete/index.js';
 import { ClonePageTool } from '#tools/api/pages/clone/index.js';
 import { AppendContentTool } from '#tools/api/pages/append/index.js';
 import { DiffPageTool } from '#tools/api/pages/diff/index.js';
+import { GetDescendantsTool } from '#tools/api/pages/descendants/index.js';
+import { GetDescendantsByIdTool } from '#tools/api/pages/descendants-by-id/index.js';
 
 // Grids
 import { CreateGridTool } from '#tools/api/grids/create/index.js';
@@ -30,6 +32,25 @@ import { GetResourcesTool } from '#tools/api/resources/get/index.js';
 // Raw API (escape hatch)
 import { RawApiRequestTool } from '#tools/api/raw/index.js';
 
+// Search
+import { SearchTool } from '#tools/api/search/index.js';
+
+// Comments
+import { GetCommentsTool } from '#tools/api/comments/get/index.js';
+import { GetCommentThreadTool } from '#tools/api/comments/thread/index.js';
+import { CreateCommentTool } from '#tools/api/comments/create/index.js';
+import { DeleteCommentTool } from '#tools/api/comments/delete/index.js';
+
+// Page Access
+import { AddPageAccessTool } from '#tools/api/page-access/add/index.js';
+import { UpdatePageAccessTool } from '#tools/api/page-access/update/index.js';
+import { RemovePageAccessTool } from '#tools/api/page-access/remove/index.js';
+import { RemoveAllPageAccessTool } from '#tools/api/page-access/remove-all/index.js';
+
+// Attachments
+import { UploadAttachmentTool } from '#tools/api/attachments/upload/index.js';
+import { DownloadAttachmentTool } from '#tools/api/attachments/download/index.js';
+
 /**
  * Все Tool классы для автоматической регистрации в DI
  *
@@ -48,6 +69,8 @@ export const TOOL_CLASSES = [
   ClonePageTool,
   AppendContentTool,
   DiffPageTool,
+  GetDescendantsTool,
+  GetDescendantsByIdTool,
 
   // Grids
   CreateGridTool,
@@ -68,4 +91,23 @@ export const TOOL_CLASSES = [
 
   // Raw API (escape hatch)
   RawApiRequestTool,
+
+  // Search
+  SearchTool,
+
+  // Comments
+  GetCommentsTool,
+  GetCommentThreadTool,
+  CreateCommentTool,
+  DeleteCommentTool,
+
+  // Page Access
+  AddPageAccessTool,
+  UpdatePageAccessTool,
+  RemovePageAccessTool,
+  RemoveAllPageAccessTool,
+
+  // Attachments
+  UploadAttachmentTool,
+  DownloadAttachmentTool,
 ] as const;

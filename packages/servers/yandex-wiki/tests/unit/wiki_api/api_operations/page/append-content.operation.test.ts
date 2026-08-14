@@ -72,6 +72,26 @@ describe('AppendContentOperation', () => {
     );
   });
 
+  // Регрессия (тот же класс дефекта, что и delete-page.operation.ts,
+  // найден и исправлен пакетом 7.2.D): `is_silent` сериализовался как
+  // "=true" по факту присутствия ключа, независимо от значения.
+  it('должен передать is_silent: false как есть, а не как "=true" (регрессия)', async () => {
+    vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
+
+    await operation.execute({
+      idx: 789,
+      data: { content: 'Not silent append' },
+      is_silent: false,
+    });
+
+    expect(mockHttpClient.post).toHaveBeenCalledWith(
+      '/v1/pages/789/append-content?is_silent=false',
+      {
+        content: 'Not silent append',
+      }
+    );
+  });
+
   it('должен добавить контент со всеми параметрами', async () => {
     vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
 

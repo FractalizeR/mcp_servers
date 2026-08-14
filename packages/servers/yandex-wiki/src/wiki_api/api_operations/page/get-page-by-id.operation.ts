@@ -13,7 +13,11 @@ export class GetPageByIdOperation extends BaseOperation {
     const queryParams: Record<string, string | number | boolean> = {};
 
     if (params.fields !== undefined) queryParams['fields'] = params.fields;
-    if (params.raise_on_redirect !== undefined) queryParams['raise_on_redirect'] = true;
+    // Сериализуем фактическое значение, а не факт присутствия ключа — тот же
+    // класс дефекта, что и `delete-page.operation.ts` (пакет 7.2.D):
+    // `raise_on_redirect: false` не должен уходить как `true`.
+    if (params.raise_on_redirect !== undefined)
+      queryParams['raise_on_redirect'] = params.raise_on_redirect;
     if (params.revision_id !== undefined) queryParams['revision_id'] = params.revision_id;
 
     this.logger.info(`Getting page by id: ${params.idx}`);

@@ -27,8 +27,12 @@ import {
   PromptRegistry,
 } from '@fractalizer/mcp-core';
 
-// Resource Registry (пакет 5.1.C.wiki)
-import { WikiPageResourceProvider, WikiPageItemResourceProvider } from '#resources/index.js';
+// Resource Registry (пакет 5.1.C.wiki; WikiPageCommentResourceProvider — пакет 7.2.D)
+import {
+  WikiPageResourceProvider,
+  WikiPageItemResourceProvider,
+  WikiPageCommentResourceProvider,
+} from '#resources/index.js';
 
 // Prompt Registry (пакет 5.1.C.wiki, промпты)
 import { WikiPromptProvider } from '#prompts/index.js';
@@ -206,6 +210,7 @@ function bindResourceRegistry(container: Container): void {
     const registry = new ResourceRegistry();
     registry.register(new WikiPageResourceProvider(facade));
     registry.register(new WikiPageItemResourceProvider(facade));
+    registry.register(new WikiPageCommentResourceProvider(facade));
     return registry;
   });
 }

@@ -16,6 +16,8 @@ import {
   DeletePageOperation,
   ClonePageOperation,
   AppendContentOperation,
+  GetDescendantsByIdOperation,
+  GetDescendantsBySlugOperation,
 } from '#wiki_api/api_operations/index.js';
 
 @injectable()
@@ -27,6 +29,9 @@ export class PageOperationsContainer {
     @inject(UpdatePageOperation) readonly updatePage: UpdatePageOperation,
     @inject(DeletePageOperation) readonly deletePage: DeletePageOperation,
     @inject(ClonePageOperation) readonly clonePage: ClonePageOperation,
-    @inject(AppendContentOperation) readonly appendContent: AppendContentOperation
+    @inject(AppendContentOperation) readonly appendContent: AppendContentOperation,
+    @inject(GetDescendantsByIdOperation) readonly getDescendantsById: GetDescendantsByIdOperation,
+    @inject(GetDescendantsBySlugOperation)
+    readonly getDescendantsBySlug: GetDescendantsBySlugOperation
   ) {}
 }

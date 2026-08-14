@@ -17,3 +17,9 @@ export { ClonePageOperation } from './clone-page.operation.js';
 
 export { AppendContentOperation } from './append-content.operation.js';
 export type { AppendContentParams } from './append-content.operation.js';
+
+export { GetDescendantsByIdOperation } from './get-descendants-by-id.operation.js';
+export type { GetDescendantsByIdParams } from './get-descendants-by-id.operation.js';
+
+export { GetDescendantsBySlugOperation } from './get-descendants-by-slug.operation.js';
+export type { GetDescendantsBySlugParams } from './get-descendants-by-slug.operation.js';

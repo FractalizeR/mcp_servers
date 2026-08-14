@@ -52,6 +52,24 @@ describe('UpdatePageOperation', () => {
     });
   });
 
+  // Регрессия (тот же класс дефекта, что и delete-page.operation.ts,
+  // найден и исправлен пакетом 7.2.D): `allow_merge`/`is_silent`
+  // сериализовались как "=true" по факту присутствия ключа, независимо от
+  // значения.
+  it('должен передать allow_merge: false как есть, а не как "=true" (регрессия)', async () => {
+    vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
+
+    await operation.execute({
+      idx: 456,
+      data: { title: 'Test' },
+      allow_merge: false,
+    });
+
+    expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/pages/456?allow_merge=false', {
+      title: 'Test',
+    });
+  });
+
   it('должен обновить страницу с fields', async () => {
     vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
 
@@ -80,6 +98,20 @@ describe('UpdatePageOperation', () => {
 
     expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/pages/111?is_silent=true', {
       title: 'Silent Update',
+    });
+  });
+
+  it('должен передать is_silent: false как есть, а не как "=true" (регрессия)', async () => {
+    vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
+
+    await operation.execute({
+      idx: 111,
+      data: { title: 'Not Silent Update' },
+      is_silent: false,
+    });
+
+    expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/pages/111?is_silent=false', {
+      title: 'Not Silent Update',
     });
   });
 

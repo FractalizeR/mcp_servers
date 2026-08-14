@@ -60,8 +60,24 @@ import type { ServerConfig } from '#config';
  *   DTO-модель; фреймворк вне набора файлов этого пакета; схема накладывает
  *   `.refine()`-ограничения на путь поверх regex, которые публичный
  *   `z.toJSONSchema` не выражает.
+ * - UploadAttachmentTool (пакет 7.2.D) — как и у Трекера
+ *   (`tool-params-reach-api.smoke.test.ts`, тот же паттерн): фактическая
+ *   передача байт файла идёт через `BaseOperation.putBinary()`, который берёт
+ *   axios instance напрямую (`getAxiosInstance()`) в обход типизированных
+ *   методов `IHttpClient` — спай на get/post/patch/delete этот вызов не
+ *   видит, а сам вызов ушёл бы В РЕАЛЬНУЮ СЕТЬ на необмоканном
+ *   `getAxiosInstance()`. Нужна отдельная, специализированная проверка (не
+ *   обходом реестра); вне рамок этого пакета.
+ * - DownloadAttachmentTool (пакет 7.2.D) — та же причина: `downloadFile()`
+ *   идёт в обход `IHttpClient` напрямую через axios, реальный HTTP-вызов не
+ *   виден спаю и ушёл бы в реальную сеть.
  */
-const EXCLUDED_TOOLS = new Set(['PingTool', 'RawApiRequestTool']);
+const EXCLUDED_TOOLS = new Set([
+  'PingTool',
+  'RawApiRequestTool',
+  'UploadAttachmentTool',
+  'DownloadAttachmentTool',
+]);
 
 /**
  * Поля, которые НЕ обязаны достигать HTTP-запроса — осознанно клиентские:
@@ -89,6 +105,46 @@ const EXCEPTIONS_BY_TOOL: Record<string, readonly ReachabilityException[]> = {
       reason:
         'управляет ТОЛЬКО формой ответа инструмента (BaseTool.formatCollectionResult) — ' +
         'links/full/auto, к запросу Wiki API отношения не имеет (пакет 5.1.C.wiki)',
+    },
+  ],
+  yw_search: [
+    {
+      path: 'responseMode',
+      reason:
+        'управляет ТОЛЬКО формой ответа инструмента (BaseTool.formatCollectionResult) — ' +
+        'links/full/auto, к запросу Wiki API отношения не имеет (пакет 7.2.C)',
+    },
+  ],
+  yw_get_descendants: [
+    {
+      path: 'responseMode',
+      reason:
+        'управляет ТОЛЬКО формой ответа инструмента (BaseTool.formatCollectionResult) — ' +
+        'links/full/auto, к запросу Wiki API отношения не имеет (пакет 7.2.C)',
+    },
+  ],
+  yw_get_descendants_by_id: [
+    {
+      path: 'responseMode',
+      reason:
+        'управляет ТОЛЬКО формой ответа инструмента (BaseTool.formatCollectionResult) — ' +
+        'links/full/auto, к запросу Wiki API отношения не имеет (пакет 7.2.C)',
+    },
+  ],
+  yw_get_comments: [
+    {
+      path: 'responseMode',
+      reason:
+        'управляет ТОЛЬКО формой ответа инструмента (BaseTool.formatCollectionResult) — ' +
+        'links/full/auto, к запросу Wiki API отношения не имеет (пакет 7.2.D)',
+    },
+  ],
+  yw_get_comment_thread: [
+    {
+      path: 'responseMode',
+      reason:
+        'управляет ТОЛЬКО формой ответа инструмента (BaseTool.formatCollectionResult) — ' +
+        'links/full/auto, к запросу Wiki API отношения не имеет (пакет 7.2.D)',
     },
   ],
   // Boolean-листья форвардятся 1:1 по значению, но под ДРУГИМ именем ключа

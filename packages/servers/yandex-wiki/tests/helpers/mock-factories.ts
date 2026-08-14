@@ -35,6 +35,7 @@ export function createMockHttpClient(): IHttpClient {
     patch: vi.fn(),
     delete: vi.fn(),
     put: vi.fn(),
+    getAxiosInstance: vi.fn(),
   } as unknown as IHttpClient;
 }
 
@@ -64,7 +65,20 @@ export function createMockFacade(): Partial<YandexWikiFacade> {
     deletePage: vi.fn(),
     clonePage: vi.fn(),
     appendContent: vi.fn(),
+    getDescendantsById: vi.fn(),
+    getDescendantsBySlug: vi.fn(),
     getResources: vi.fn(),
+    search: vi.fn(),
+    getComments: vi.fn(),
+    createComment: vi.fn(),
+    getCommentThread: vi.fn(),
+    deleteComment: vi.fn(),
+    createPageAccess: vi.fn(),
+    updatePageAccess: vi.fn(),
+    deletePageAccess: vi.fn(),
+    deleteAllPageAccesses: vi.fn(),
+    uploadAttachment: vi.fn(),
+    downloadAttachment: vi.fn(),
     getGrid: vi.fn(),
     createGrid: vi.fn(),
     updateGrid: vi.fn(),

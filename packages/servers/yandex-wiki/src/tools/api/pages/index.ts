@@ -5,3 +5,5 @@ export * from './update/index.js';
 export * from './delete/index.js';
 export * from './clone/index.js';
 export * from './append/index.js';
+export * from './descendants/index.js';
+export * from './descendants-by-id/index.js';

@@ -7,6 +7,8 @@ import {
   DeletePageOperation,
   ClonePageOperation,
   AppendContentOperation,
+  GetDescendantsByIdOperation,
+  GetDescendantsBySlugOperation,
   // Grid Operations
   CreateGridOperation,
   GetGridOperation,
@@ -22,6 +24,21 @@ import {
   CloneGridOperation,
   // Resource Operations
   GetResourcesOperation,
+  // Search Operations
+  SearchOperation,
+  // Comment Operations
+  GetCommentsOperation,
+  CreateCommentOperation,
+  GetCommentThreadOperation,
+  DeleteCommentOperation,
+  // Page Access Operations
+  CreatePageAccessOperation,
+  UpdatePageAccessOperation,
+  DeletePageAccessOperation,
+  DeleteAllPageAccessesOperation,
+  // Attachment Operations
+  UploadAttachmentOperation,
+  DownloadAttachmentOperation,
   // Raw Operations
   RawApiRequestOperation,
 } from '#wiki_api/api_operations/index.js';
@@ -38,6 +55,8 @@ export const OPERATION_CLASSES = [
   DeletePageOperation,
   ClonePageOperation,
   AppendContentOperation,
+  GetDescendantsByIdOperation,
+  GetDescendantsBySlugOperation,
   // Grid Operations
   CreateGridOperation,
   GetGridOperation,
@@ -53,6 +72,21 @@ export const OPERATION_CLASSES = [
   CloneGridOperation,
   // Resource Operations
   GetResourcesOperation,
+  // Search Operations
+  SearchOperation,
+  // Comment Operations
+  GetCommentsOperation,
+  CreateCommentOperation,
+  GetCommentThreadOperation,
+  DeleteCommentOperation,
+  // Page Access Operations
+  CreatePageAccessOperation,
+  UpdatePageAccessOperation,
+  DeletePageAccessOperation,
+  DeleteAllPageAccessesOperation,
+  // Attachment Operations
+  UploadAttachmentOperation,
+  DownloadAttachmentOperation,
   // Raw Operations
   RawApiRequestOperation,
 ] as const;

@@ -13,7 +13,10 @@ export class CreatePageOperation extends BaseOperation {
     const queryParts: string[] = [];
 
     if (params.fields !== undefined) queryParts.push(`fields=${encodeURIComponent(params.fields)}`);
-    if (params.is_silent !== undefined) queryParts.push('is_silent=true');
+    // Сериализуем фактическое значение, а не факт присутствия ключа — тот же
+    // класс дефекта, что и `delete-page.operation.ts` (пакет 7.2.D):
+    // `is_silent: false` не должен уходить как `is_silent=true`.
+    if (params.is_silent !== undefined) queryParts.push(`is_silent=${params.is_silent}`);
 
     const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
 

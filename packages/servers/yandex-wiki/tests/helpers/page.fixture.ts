@@ -3,6 +3,7 @@ import type {
   Page,
   PageWithUnknownFields,
   AsyncOperation,
+  PageDescendantsResponse,
 } from '../../src/wiki_api/entities/index.js';
 
 /**
@@ -50,5 +51,22 @@ export function createAsyncOperationFixture(overrides?: Partial<AsyncOperation>)
 export function createDeleteResultFixture(): { recovery_token: string } {
   return {
     recovery_token: 'recovery-token-abc123',
+  };
+}
+
+/**
+ * Создать фикстуру для PageDescendantsResponse (пакет 7.2.C)
+ */
+export function createDescendantsResponseFixture(
+  overrides?: Partial<PageDescendantsResponse>
+): PageDescendantsResponse {
+  return {
+    results: [
+      { id: 1001, slug: 'users/testuser/section/child-1' },
+      { id: 1002, slug: 'users/testuser/section/child-2' },
+    ],
+    next_cursor: 'next-cursor-abc',
+    prev_cursor: 'prev-cursor-xyz',
+    ...overrides,
   };
 }

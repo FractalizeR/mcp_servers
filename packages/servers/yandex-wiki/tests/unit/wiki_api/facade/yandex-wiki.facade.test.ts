@@ -1,7 +1,16 @@
 // tests/unit/wiki_api/facade/yandex-wiki.facade.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { YandexWikiFacade } from '#wiki_api/facade/yandex-wiki.facade.js';
-import type { PageService, GridService, ResourceService } from '#wiki_api/facade/services/index.js';
+import type {
+  PageService,
+  GridService,
+  ResourceService,
+  RawApiService,
+  SearchService,
+  CommentService,
+  PageAccessService,
+  AttachmentService,
+} from '#wiki_api/facade/services/index.js';
 import {
   createPageFixture,
   createGridFixture,
@@ -9,6 +18,11 @@ import {
   createDeleteGridResultFixture,
   createAsyncOperationFixture,
   createResourcesResponseFixture,
+  createDescendantsResponseFixture,
+  createSearchResponseFixture,
+  createCommentFixture,
+  createCommentsResponseFixture,
+  createPageAccessFixture,
 } from '#helpers/index.js';
 
 describe('YandexWikiFacade', () => {
@@ -16,6 +30,11 @@ describe('YandexWikiFacade', () => {
   let mockPageService: Partial<PageService>;
   let mockGridService: Partial<GridService>;
   let mockResourceService: Partial<ResourceService>;
+  let mockRawApiService: Partial<RawApiService>;
+  let mockSearchService: Partial<SearchService>;
+  let mockCommentService: Partial<CommentService>;
+  let mockPageAccessService: Partial<PageAccessService>;
+  let mockAttachmentService: Partial<AttachmentService>;
 
   beforeEach(() => {
     mockPageService = {
@@ -26,6 +45,8 @@ describe('YandexWikiFacade', () => {
       deletePage: vi.fn(),
       clonePage: vi.fn(),
       appendContent: vi.fn(),
+      getDescendantsById: vi.fn(),
+      getDescendantsBySlug: vi.fn(),
     };
 
     mockGridService = {
@@ -47,10 +68,42 @@ describe('YandexWikiFacade', () => {
       getResources: vi.fn(),
     };
 
+    mockRawApiService = {
+      request: vi.fn(),
+    };
+
+    mockSearchService = {
+      search: vi.fn(),
+    };
+
+    mockCommentService = {
+      getComments: vi.fn(),
+      createComment: vi.fn(),
+      getCommentThread: vi.fn(),
+      deleteComment: vi.fn(),
+    };
+
+    mockPageAccessService = {
+      createPageAccess: vi.fn(),
+      updatePageAccess: vi.fn(),
+      deletePageAccess: vi.fn(),
+      deleteAllPageAccesses: vi.fn(),
+    };
+
+    mockAttachmentService = {
+      uploadAttachment: vi.fn(),
+      downloadAttachment: vi.fn(),
+    };
+
     facade = new YandexWikiFacade(
       mockPageService as PageService,
       mockGridService as GridService,
-      mockResourceService as ResourceService
+      mockResourceService as ResourceService,
+      mockRawApiService as RawApiService,
+      mockSearchService as SearchService,
+      mockCommentService as CommentService,
+      mockPageAccessService as PageAccessService,
+      mockAttachmentService as AttachmentService
     );
   });
 
@@ -128,6 +181,28 @@ describe('YandexWikiFacade', () => {
 
       expect(mockPageService.appendContent).toHaveBeenCalledWith(params);
       expect(result).toEqual(expectedPage);
+    });
+
+    it('должен вызвать pageService.getDescendantsById', async () => {
+      const expectedResponse = createDescendantsResponseFixture();
+      vi.mocked(mockPageService.getDescendantsById!).mockResolvedValue(expectedResponse);
+
+      const result = await facade.getDescendantsById({ idx: 123 });
+
+      expect(mockPageService.getDescendantsById).toHaveBeenCalledWith({ idx: 123 });
+      expect(result).toEqual(expectedResponse);
+    });
+
+    it('должен вызвать pageService.getDescendantsBySlug', async () => {
+      const expectedResponse = createDescendantsResponseFixture();
+      vi.mocked(mockPageService.getDescendantsBySlug!).mockResolvedValue(expectedResponse);
+
+      const result = await facade.getDescendantsBySlug({ slug: 'users/test/section' });
+
+      expect(mockPageService.getDescendantsBySlug).toHaveBeenCalledWith({
+        slug: 'users/test/section',
+      });
+      expect(result).toEqual(expectedResponse);
     });
   });
 
@@ -280,6 +355,128 @@ describe('YandexWikiFacade', () => {
 
       expect(mockResourceService.getResources).toHaveBeenCalledWith({ idx: 123 });
       expect(result).toEqual(expectedResponse);
+    });
+  });
+
+  describe('Search Methods', () => {
+    it('должен вызвать searchService.search', async () => {
+      const expectedResponse = createSearchResponseFixture();
+      vi.mocked(mockSearchService.search!).mockResolvedValue(expectedResponse);
+
+      const result = await facade.search({ query: 'test' });
+
+      expect(mockSearchService.search).toHaveBeenCalledWith({ query: 'test' });
+      expect(result).toEqual(expectedResponse);
+    });
+  });
+
+  describe('Comment Methods', () => {
+    it('должен вызвать commentService.getComments', async () => {
+      const expected = createCommentsResponseFixture();
+      vi.mocked(mockCommentService.getComments!).mockResolvedValue(expected);
+
+      const result = await facade.getComments({ idx: 123 });
+
+      expect(mockCommentService.getComments).toHaveBeenCalledWith({ idx: 123 });
+      expect(result).toEqual(expected);
+    });
+
+    it('должен вызвать commentService.createComment', async () => {
+      const expected = createCommentFixture();
+      vi.mocked(mockCommentService.createComment!).mockResolvedValue(expected);
+
+      const result = await facade.createComment(123, { body: 'Hi' });
+
+      expect(mockCommentService.createComment).toHaveBeenCalledWith(123, { body: 'Hi' });
+      expect(result).toEqual(expected);
+    });
+
+    it('должен вызвать commentService.getCommentThread', async () => {
+      const expected = createCommentsResponseFixture();
+      vi.mocked(mockCommentService.getCommentThread!).mockResolvedValue(expected);
+
+      const result = await facade.getCommentThread({ idx: 123, comment_id: 501 });
+
+      expect(mockCommentService.getCommentThread).toHaveBeenCalledWith({
+        idx: 123,
+        comment_id: 501,
+      });
+      expect(result).toEqual(expected);
+    });
+
+    it('должен вызвать commentService.deleteComment', async () => {
+      const expected = { comments_count: 3 };
+      vi.mocked(mockCommentService.deleteComment!).mockResolvedValue(expected);
+
+      const result = await facade.deleteComment(123, 501);
+
+      expect(mockCommentService.deleteComment).toHaveBeenCalledWith(123, 501);
+      expect(result).toEqual(expected);
+    });
+  });
+
+  describe('Page Access Methods', () => {
+    it('должен вызвать pageAccessService.createPageAccess', async () => {
+      const expected = createPageAccessFixture();
+      vi.mocked(mockPageAccessService.createPageAccess!).mockResolvedValue(expected);
+
+      const data = { role: 'reader' as const, user: { uid: 'u1' } };
+      const result = await facade.createPageAccess(123, data);
+
+      expect(mockPageAccessService.createPageAccess).toHaveBeenCalledWith(123, data);
+      expect(result).toEqual(expected);
+    });
+
+    it('должен вызвать pageAccessService.updatePageAccess', async () => {
+      const expected = createPageAccessFixture();
+      vi.mocked(mockPageAccessService.updatePageAccess!).mockResolvedValue(expected);
+
+      const params = { idx: 123, access_id: 'a1', data: { role: 'editor' as const } };
+      const result = await facade.updatePageAccess(params);
+
+      expect(mockPageAccessService.updatePageAccess).toHaveBeenCalledWith(params);
+      expect(result).toEqual(expected);
+    });
+
+    it('должен вызвать pageAccessService.deletePageAccess', async () => {
+      vi.mocked(mockPageAccessService.deletePageAccess!).mockResolvedValue(undefined);
+
+      const params = { idx: 123, access_id: 'a1' };
+      await facade.deletePageAccess(params);
+
+      expect(mockPageAccessService.deletePageAccess).toHaveBeenCalledWith(params);
+    });
+
+    it('должен вызвать pageAccessService.deleteAllPageAccesses', async () => {
+      vi.mocked(mockPageAccessService.deleteAllPageAccesses!).mockResolvedValue(undefined);
+
+      const params = { idx: 123 };
+      await facade.deleteAllPageAccesses(params);
+
+      expect(mockPageAccessService.deleteAllPageAccesses).toHaveBeenCalledWith(params);
+    });
+  });
+
+  describe('Attachment Methods', () => {
+    it('должен вызвать attachmentService.uploadAttachment', async () => {
+      const expected = { id: 1, name: 'x.txt' };
+      vi.mocked(mockAttachmentService.uploadAttachment!).mockResolvedValue(expected);
+
+      const params = { idx: 123, filename: 'x.txt', file: Buffer.from('x') };
+      const result = await facade.uploadAttachment(params);
+
+      expect(mockAttachmentService.uploadAttachment).toHaveBeenCalledWith(params);
+      expect(result).toEqual(expected);
+    });
+
+    it('должен вызвать attachmentService.downloadAttachment', async () => {
+      const expected = { content: Buffer.from('x') };
+      vi.mocked(mockAttachmentService.downloadAttachment!).mockResolvedValue(expected);
+
+      const result = await facade.downloadAttachment(123, 456);
+
+      expect(mockAttachmentService.downloadAttachment).toHaveBeenCalledWith(123, 456);
+      expect(result).toEqual(expected);
     });
   });
 });

@@ -8,8 +8,14 @@ import type {
   AppendContentParams,
   DeletePageParams,
   DeletePageResult,
+  GetDescendantsByIdParams,
+  GetDescendantsBySlugParams,
 } from '#wiki_api/api_operations/index.js';
-import type { PageWithUnknownFields, AsyncOperation } from '#wiki_api/entities/index.js';
+import type {
+  PageWithUnknownFields,
+  AsyncOperation,
+  PageDescendantsResponse,
+} from '#wiki_api/entities/index.js';
 import type { ClonePageDto } from '#wiki_api/dto/index.js';
 
 @injectable()
@@ -42,5 +48,13 @@ export class PageService {
 
   async appendContent(params: AppendContentParams): Promise<PageWithUnknownFields> {
     return this.ops.appendContent.execute(params);
+  }
+
+  async getDescendantsById(params: GetDescendantsByIdParams): Promise<PageDescendantsResponse> {
+    return this.ops.getDescendantsById.execute(params);
+  }
+
+  async getDescendantsBySlug(params: GetDescendantsBySlugParams): Promise<PageDescendantsResponse> {
+    return this.ops.getDescendantsBySlug.execute(params);
   }
 }

@@ -17,6 +17,8 @@ describe('PageService', () => {
       deletePage: { execute: vi.fn() },
       clonePage: { execute: vi.fn() },
       appendContent: { execute: vi.fn() },
+      getDescendantsById: { execute: vi.fn() },
+      getDescendantsBySlug: { execute: vi.fn() },
     } as unknown as PageOperationsContainer;
 
     pageService = new PageService(mockOps);
@@ -109,6 +111,32 @@ describe('PageService', () => {
 
       expect(mockOps.appendContent.execute).toHaveBeenCalledWith(params);
       expect(result).toBe(mockPage);
+    });
+  });
+
+  describe('getDescendantsById', () => {
+    it('должен делегировать вызов GetDescendantsByIdOperation', async () => {
+      const mockResponse = { results: [{ id: 1, slug: 'a/b' }] };
+      vi.mocked(mockOps.getDescendantsById.execute).mockResolvedValue(mockResponse);
+
+      const params = { idx: 123 };
+      const result = await pageService.getDescendantsById(params);
+
+      expect(mockOps.getDescendantsById.execute).toHaveBeenCalledWith(params);
+      expect(result).toBe(mockResponse);
+    });
+  });
+
+  describe('getDescendantsBySlug', () => {
+    it('должен делегировать вызов GetDescendantsBySlugOperation', async () => {
+      const mockResponse = { results: [{ id: 1, slug: 'a/b' }] };
+      vi.mocked(mockOps.getDescendantsBySlug.execute).mockResolvedValue(mockResponse);
+
+      const params = { slug: 'a' };
+      const result = await pageService.getDescendantsBySlug(params);
+
+      expect(mockOps.getDescendantsBySlug.execute).toHaveBeenCalledWith(params);
+      expect(result).toBe(mockResponse);
     });
   });
 });

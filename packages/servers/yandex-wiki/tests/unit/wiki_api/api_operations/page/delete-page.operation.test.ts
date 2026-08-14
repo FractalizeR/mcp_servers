@@ -67,4 +67,35 @@ describe('DeletePageOperation', () => {
       '/v1/pages/12345?allow_recursive=true&recursive=true'
     );
   });
+
+  // Регрессия (найдена и исправлена пакетом 7.2.D): `allow_recursive`/
+  // `recursive` сериализовались как "=true" по ФАКТУ присутствия ключа,
+  // независимо от переданного значения — явный `false` тоже уходил как
+  // `=true`. Агент, просивший удалить страницу БЕЗ дочерних, получал
+  // удаление всего раздела — потеря данных, recovery_token покрывает только
+  // одну страницу. Проверено точечным откатом фикса (см. коммит/diff этого
+  // пакета): без фикса эти два теста падают на `=true` вместо `=false`.
+  it('должен передать allow_recursive: false как есть, а не как "=true" (регрессия)', async () => {
+    vi.mocked(mockHttpClient.delete).mockResolvedValue(createDeleteResultFixture());
+
+    await operation.execute({ idx: 12345, allow_recursive: false });
+
+    expect(mockHttpClient.delete).toHaveBeenCalledWith('/v1/pages/12345?allow_recursive=false');
+  });
+
+  it('должен передать recursive: false как есть, а не как "=true" (регрессия)', async () => {
+    vi.mocked(mockHttpClient.delete).mockResolvedValue(createDeleteResultFixture());
+
+    await operation.execute({ idx: 12345, recursive: false });
+
+    expect(mockHttpClient.delete).toHaveBeenCalledWith('/v1/pages/12345?recursive=false');
+  });
+
+  it('не должен передавать флаги вовсе, если они не указаны (undefined ≠ false)', async () => {
+    vi.mocked(mockHttpClient.delete).mockResolvedValue(createDeleteResultFixture());
+
+    await operation.execute({ idx: 12345 });
+
+    expect(mockHttpClient.delete).toHaveBeenCalledWith('/v1/pages/12345');
+  });
 });

@@ -13,6 +13,16 @@ class TestOperation extends BaseOperation {
   async testDeleteRequest<T>(endpoint: string): Promise<T> {
     return this.deleteRequest<T>(endpoint);
   }
+
+  async testPutBinary<T>(endpoint: string, buffer: Buffer, contentType?: string): Promise<T> {
+    return contentType !== undefined
+      ? this.putBinary<T>(endpoint, buffer, contentType)
+      : this.putBinary<T>(endpoint, buffer);
+  }
+
+  async testDownloadFile(endpoint: string) {
+    return this.downloadFile(endpoint);
+  }
 }
 
 describe('BaseOperation', () => {
@@ -118,6 +128,77 @@ describe('BaseOperation', () => {
       vi.mocked(mockHttpClient.delete).mockRejectedValue(error);
 
       await expect(operation.testDeleteRequest(endpoint)).rejects.toThrow('Network error');
+    });
+  });
+
+  describe('putBinary (пакет 7.2.D)', () => {
+    it('должен отправить PUT через getAxiosInstance() с бинарным телом и default content-type', async () => {
+      const axiosPut = vi.fn().mockResolvedValue({ data: { ok: true } });
+      vi.mocked(mockHttpClient.getAxiosInstance!).mockReturnValue({ put: axiosPut } as never);
+
+      const buffer = Buffer.from('binary payload');
+      const result = await operation.testPutBinary('/v1/upload_sessions/s1/upload_part', buffer);
+
+      expect(axiosPut).toHaveBeenCalledWith('/v1/upload_sessions/s1/upload_part', buffer, {
+        headers: { 'Content-Type': 'application/octet-stream' },
+      });
+      expect(result).toEqual({ ok: true });
+    });
+
+    it('должен использовать переданный content-type вместо default', async () => {
+      const axiosPut = vi.fn().mockResolvedValue({ data: {} });
+      vi.mocked(mockHttpClient.getAxiosInstance!).mockReturnValue({ put: axiosPut } as never);
+
+      await operation.testPutBinary('/x', Buffer.from('y'), 'text/plain');
+
+      expect(axiosPut).toHaveBeenCalledWith(
+        '/x',
+        Buffer.from('y'),
+        expect.objectContaining({ headers: { 'Content-Type': 'text/plain' } })
+      );
+    });
+
+    it('должен бросить понятную ошибку, если getAxiosInstance недоступен', async () => {
+      vi.mocked(mockHttpClient.getAxiosInstance!).mockReturnValue(undefined as never);
+
+      await expect(operation.testPutBinary('/x', Buffer.from('y'))).rejects.toThrow(
+        'HTTP client does not support getAxiosInstance'
+      );
+    });
+  });
+
+  describe('downloadFile (пакет 7.2.D)', () => {
+    it('должен вернуть content как Buffer и contentType из заголовков ответа', async () => {
+      const axiosGet = vi.fn().mockResolvedValue({
+        data: Buffer.from('file bytes'),
+        headers: { 'content-type': 'application/pdf' },
+      });
+      vi.mocked(mockHttpClient.getAxiosInstance!).mockReturnValue({ get: axiosGet } as never);
+
+      const result = await operation.testDownloadFile('/v1/pages/1/attachments/2/download');
+
+      expect(axiosGet).toHaveBeenCalledWith('/v1/pages/1/attachments/2/download', {
+        responseType: 'arraybuffer',
+      });
+      expect(result.content).toEqual(Buffer.from('file bytes'));
+      expect(result.contentType).toBe('application/pdf');
+    });
+
+    it('должен опустить contentType, если заголовок отсутствует', async () => {
+      const axiosGet = vi.fn().mockResolvedValue({ data: Buffer.from('x'), headers: {} });
+      vi.mocked(mockHttpClient.getAxiosInstance!).mockReturnValue({ get: axiosGet } as never);
+
+      const result = await operation.testDownloadFile('/x');
+
+      expect(result.contentType).toBeUndefined();
+    });
+
+    it('должен бросить понятную ошибку, если getAxiosInstance недоступен', async () => {
+      vi.mocked(mockHttpClient.getAxiosInstance!).mockReturnValue(undefined as never);
+
+      await expect(operation.testDownloadFile('/x')).rejects.toThrow(
+        'HTTP client does not support getAxiosInstance'
+      );
     });
   });
 });

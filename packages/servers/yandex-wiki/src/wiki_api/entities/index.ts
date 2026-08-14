@@ -7,6 +7,8 @@ export type {
   PageRedirect,
   Page,
   PageWithUnknownFields,
+  PageDescendant,
+  PageDescendantsResponse,
 } from './page.entity.js';
 
 export type {
@@ -31,3 +33,38 @@ export type {
 } from './resource.entity.js';
 
 export type { OperationType, AsyncOperation } from './operation.entity.js';
+
+export type {
+  SearchResult,
+  SearchResponse,
+  SearchResultWithUnknownFields,
+} from './search.entity.js';
+
+export type {
+  AttachmentCheckStatus,
+  Attachment,
+  AttachFileResponse,
+  AttachmentWithUnknownFields,
+  DownloadedFile,
+} from './attachment.entity.js';
+
+export type {
+  PageAccessRole,
+  PageAccessInheritance,
+  PageAccessGroupSource,
+  PageAccessUserIdentity,
+  PageAccessGroupIdentity,
+  PageAccess,
+  PageAccessWithUnknownFields,
+} from './page-access.entity.js';
+
+export type {
+  CommentAuthor,
+  CommentReaction,
+  CommentThreadInfo,
+  CommentResolveStatus,
+  Comment,
+  CommentsResponse,
+  DeleteCommentResult,
+  CommentWithUnknownFields,
+} from './comment.entity.js';

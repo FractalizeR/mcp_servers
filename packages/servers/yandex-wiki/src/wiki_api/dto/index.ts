@@ -4,6 +4,25 @@ export type { UpdatePageDto } from './page/update-page.dto.js';
 export type { ClonePageDto } from './page/clone-page.dto.js';
 export type { AppendContentDto, InsertLocation } from './page/append-content.dto.js';
 
+// Search DTOs
+export type {
+  SearchDto,
+  SearchFiltersDto,
+  SearchAuthorDto,
+  SearchDateIntervalDto,
+} from './search/search.dto.js';
+
+// Comment DTOs
+export type { CreateCommentDto } from './comment/create-comment.dto.js';
+
+// Page Access DTOs
+export type {
+  CreatePageAccessDto,
+  CreatePageAccessUserDto,
+  CreatePageAccessGroupDto,
+  UpdatePageAccessDto,
+} from './page-access/page-access.dto.js';
+
 // Grid DTOs
 export type { CreateGridDto } from './grid/create-grid.dto.js';
 export type { UpdateGridDto } from './grid/update-grid.dto.js';

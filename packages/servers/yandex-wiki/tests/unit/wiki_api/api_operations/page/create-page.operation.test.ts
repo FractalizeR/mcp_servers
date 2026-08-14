@@ -93,6 +93,23 @@ describe('CreatePageOperation', () => {
     );
   });
 
+  // Регрессия (тот же класс дефекта, что и delete-page.operation.ts,
+  // найден и исправлен пакетом 7.2.D): `is_silent` сериализовался как
+  // "=true" по факту присутствия ключа, независимо от значения.
+  it('должен передать is_silent: false как есть, а не как "=true" (регрессия)', async () => {
+    vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
+
+    await operation.execute({
+      data: { page_type: 'page', slug: 'users/not-silent', title: 'Not Silent' },
+      is_silent: false,
+    });
+
+    expect(mockHttpClient.post).toHaveBeenCalledWith(
+      '/v1/pages?is_silent=false',
+      expect.objectContaining({ slug: 'users/not-silent' })
+    );
+  });
+
   it('должен передать fields в query string (дефект 7.1.B №1)', async () => {
     vi.mocked(mockHttpClient.post).mockResolvedValue(createPageFixture());
 

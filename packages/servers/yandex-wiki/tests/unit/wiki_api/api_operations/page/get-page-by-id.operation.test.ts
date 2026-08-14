@@ -48,6 +48,19 @@ describe('GetPageByIdOperation', () => {
     });
   });
 
+  // Регрессия (тот же класс дефекта, что и delete-page.operation.ts,
+  // найден и исправлен пакетом 7.2.D): `raise_on_redirect` сериализовался
+  // как `true` по факту присутствия ключа, независимо от значения.
+  it('должен передать raise_on_redirect: false как есть, а не как true (регрессия)', async () => {
+    vi.mocked(mockHttpClient.get).mockResolvedValue(createPageFixture());
+
+    await operation.execute({ idx: 12345, raise_on_redirect: false });
+
+    expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/pages/12345', {
+      raise_on_redirect: false,
+    });
+  });
+
   it('должен логировать операцию', async () => {
     vi.mocked(mockHttpClient.get).mockResolvedValue(createPageFixture());
 

@@ -11,11 +11,18 @@ export {
   createPageFixture,
   createAsyncOperationFixture,
   createDeleteResultFixture,
+  createDescendantsResponseFixture,
 } from './page.fixture.js';
 
 export { createGridFixture, createDeleteGridResultFixture } from './grid.fixture.js';
 
 export { createResourcesResponseFixture } from './resource.fixture.js';
+
+export { createSearchResponseFixture } from './search.fixture.js';
+
+export { createCommentFixture, createCommentsResponseFixture } from './comment.fixture.js';
+
+export { createPageAccessFixture } from './page-access.fixture.js';
 
 export {
   expectDefinitionMatchesSchema,
