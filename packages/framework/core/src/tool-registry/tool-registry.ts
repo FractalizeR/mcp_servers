@@ -15,7 +15,8 @@
 
 import type { Container } from 'inversify';
 import type { Logger, ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { BaseTool, ToolDefinition } from '../tools/base/index.js';
+import { BaseTool } from '../tools/base/index.js';
+import type { ToolDefinition } from '../tools/base/index.js';
 import type { ToolConstructor, ParsedCategoryFilter } from './types.js';
 import { ToolFilterService } from './tool-filter.service.js';
 import { ToolSorter } from './tool-sorter.js';
@@ -172,17 +173,21 @@ export class ToolRegistry {
     this.ensureInitialized();
 
     this.logger.info(`🔍 Поиск инструмента: ${name}`);
+
+    const tool = this.tools?.get(name);
+
     // ВАЖНО: не логировать params «как есть» — значения могут содержать
     // тексты комментариев, содержимое страниц Wiki и другие произвольные
     // пользовательские данные. В лог попадает только ФОРМА вызова (имена
     // ключей, типы, размеры); allow-list для точечного раскрытия значений
-    // (например, идентификаторов задач/очередей) — см. redactParams().
-    // Сейчас allow-list не подключён ни у одного tool (см. README пакета
-    // tool-registry): подключение per-tool allow-list из метаданных
-    // инструмента отложено отдельным пакетом.
-    this.logger.debug('Параметры вызова (redacted):', redactParams(params));
-
-    const tool = this.tools?.get(name);
+    // (например, идентификаторов задач/очередей) берётся из
+    // `StaticToolMetadata.redactionAllowlist` найденного tool (пакет 3.1.F) —
+    // см. redactParams(). Пока конкретный tool его не заполняет, allow-list
+    // пуст и поведение не меняется: раскрывается только форма вызова.
+    this.logger.debug(
+      'Параметры вызова (redacted):',
+      redactParams(params, { allowedKeys: this.getRedactionAllowlist(tool) })
+    );
 
     if (!tool) {
       const allTools = Array.from(this.tools?.keys() || []);
@@ -277,5 +282,21 @@ export class ToolRegistry {
         isError: true,
       };
     }
+  }
+
+  /**
+   * Allow-list имён параметров, безопасных для лога, для конкретного tool.
+   *
+   * Источник — `StaticToolMetadata.redactionAllowlist` найденного класса tool
+   * (пакет 3.1.F). Если tool не найден или поле не заполнено — возвращает
+   * пустой массив, и `redactParams()` работает с пустым allow-list (текущее
+   * поведение, ничего не раскрывается).
+   */
+  private getRedactionAllowlist(tool: BaseTool | undefined): readonly string[] {
+    if (!tool) {
+      return [];
+    }
+    const ToolClass = tool.constructor as typeof BaseTool;
+    return ToolClass.METADATA?.redactionAllowlist ?? [];
   }
 }
