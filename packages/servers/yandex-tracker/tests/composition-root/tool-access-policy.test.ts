@@ -11,6 +11,10 @@
  * Расширено в пакете 2.1.B плана модернизации (удаление lazy discovery): позитивный
  * фильтр (enabledToolCategories) и режимы discovery убраны, DISABLED_TOOL_GROUPS —
  * единственный рубильник.
+ *
+ * Расширено в пакете 4.1.B (общий adapter): normalizeToolName переехал в
+ * @fractalizer/mcp-core (mcp-server-adapter) вместе с остальной протокольной
+ * логикой, тесты обновлены на новый импорт и getVisibleDefinitions().
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -21,7 +25,7 @@ import { TYPES } from '#composition-root/types.js';
 import { MCP_SERVER_NAME } from '#constants';
 import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
-import { normalizeToolName } from '../../src/server/handlers.js';
+import { normalizeToolName } from '@fractalizer/mcp-core';
 
 /**
  * Категория 'issues' полностью отключена через disabledToolGroups —
@@ -64,8 +68,8 @@ describe('ToolAccessPolicy — граница доступа между tools/li
     logger = container.get<Logger>(TYPES.Logger);
   });
 
-  it('disabled tool отсутствует в tools/list (getDefinitions)', () => {
-    const definitions = registry.getDefinitions(config.disabledToolGroups);
+  it('disabled tool отсутствует в tools/list (getVisibleDefinitions — путь adapter/server.ts)', () => {
+    const definitions = registry.getVisibleDefinitions();
 
     expect(definitions.find((d) => d.name === DISABLED_TOOL_NAME)).toBeUndefined();
   });
@@ -101,11 +105,20 @@ describe('ToolAccessPolicy — граница доступа между tools/li
 
   it('DoD 1.1.A#2: имя с префиксом сервера и без него дают одинаковый вердикт policy', async () => {
     const prefixedName = `${MCP_SERVER_NAME}:${DISABLED_TOOL_NAME}`;
+    const serverPrefixes = [`${MCP_SERVER_NAME}:`];
 
-    // Нормализация — до проверки policy (как в server.ts: normalizeToolName вызывается
+    // Нормализация — до проверки policy (как в adapter'е: normalizeToolName вызывается
     // перед toolRegistry.execute)
-    const { name: normalizedFromPrefixed } = normalizeToolName(prefixedName, logger);
-    const { name: normalizedFromBare } = normalizeToolName(DISABLED_TOOL_NAME, logger);
+    const { name: normalizedFromPrefixed } = normalizeToolName(
+      prefixedName,
+      serverPrefixes,
+      logger
+    );
+    const { name: normalizedFromBare } = normalizeToolName(
+      DISABLED_TOOL_NAME,
+      serverPrefixes,
+      logger
+    );
 
     expect(normalizedFromPrefixed).toBe(DISABLED_TOOL_NAME);
     expect(normalizedFromBare).toBe(DISABLED_TOOL_NAME);
@@ -134,7 +147,7 @@ describe('ToolAccessPolicy — граница доступа между tools/li
   });
 
   it('tool вне отключённой категории остаётся видимым в tools/list', () => {
-    const definitions = registry.getDefinitions(config.disabledToolGroups);
+    const definitions = registry.getVisibleDefinitions();
 
     expect(definitions.find((d) => d.name === 'fr_yandex_tracker_ping')).toBeDefined();
   });

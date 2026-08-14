@@ -253,3 +253,54 @@ describe('ToolRegistry.execute() — граница доступа (единый
     expect(text).not.toContain('similarTools');
   });
 });
+
+describe('ToolRegistry.getVisibleDefinitions() — единый объект accessPolicy с execute() (пакет 4.1.B)', () => {
+  let container: Container;
+
+  beforeEach(() => {
+    container = buildMockContainer();
+  });
+
+  it('фильтрует ТЕМ ЖЕ accessPolicy, что использует execute() — disabled_tool отсутствует', () => {
+    const registry = makeRegistryWithBothTools(container);
+
+    const visible = registry.getVisibleDefinitions();
+
+    expect(visible.find((d) => d.name === 'disabled_tool')).toBeUndefined();
+    expect(visible.find((d) => d.name === 'allowed_tool')).toBeDefined();
+  });
+
+  it('не принимает disabledFilter параметром — единственный источник видимости это accessPolicy конструктора', () => {
+    const registry = makeRegistryWithBothTools(container);
+
+    // Сигнатура метода не берёт фильтр: видимость целиком определяется
+    // accessPolicy, переданной в конструктор ToolRegistry, а не параметром
+    // вызова — это и есть устранение разделения (см. tool-registry.ts).
+    expect(registry.getVisibleDefinitions.length).toBe(0);
+  });
+
+  it('без accessPolicy (AllowAllToolAccessPolicy по умолчанию) возвращает все tools', () => {
+    const accessPolicy = new AllowAllToolAccessPolicy();
+    const registry = new ToolRegistry(
+      container,
+      mockLoggerForRegistry,
+      [
+        DisabledCategoryMockTool as unknown as ToolConstructor,
+        AllowedCategoryMockTool as unknown as ToolConstructor,
+      ],
+      accessPolicy
+    );
+
+    const visible = registry.getVisibleDefinitions();
+    expect(visible.map((d) => d.name).sort()).toEqual(['allowed_tool', 'disabled_tool']);
+  });
+
+  it('два последовательных вызова дают побайтово одинаковый список (тот же контракт порядка, что у getDefinitions)', () => {
+    const registry = makeRegistryWithBothTools(container);
+
+    const first = registry.getVisibleDefinitions();
+    const second = registry.getVisibleDefinitions();
+
+    expect(JSON.stringify(second)).toBe(JSON.stringify(first));
+  });
+});

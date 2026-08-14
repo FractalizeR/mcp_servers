@@ -146,6 +146,35 @@ export class ToolRegistry {
   }
 
   /**
+   * Получить определения инструментов для tools/list, отфильтрованные ЧЕРЕЗ
+   * ТОТ ЖЕ объект accessPolicy, который спрашивает execute() при tools/call.
+   *
+   * Контекст (пакет 4.1.B плана модернизации, долг пакета 1.1.A): раньше
+   * видимость в tools/list (getDefinitions(disabledFilter)) и исполняемость в
+   * tools/call (execute() → this.accessPolicy) были согласованы только тем,
+   * что оба пути используют один и тот же СТАТИЧЕСКИЙ предикат
+   * (ToolFilterService.isDisabledByFilter) — т.е. единство держалось на
+   * совпадении конфигурации в двух разных вызовах, а не на общем объекте.
+   * Этот метод убирает разделение окончательно: единственный источник
+   * истины о видимости tool — `this.accessPolicy`, тот же экземпляр, что
+   * хранит и использует execute().
+   *
+   * Порядок — тот же контракт, что и у getDefinitions() (см. ToolSorter).
+   */
+  getVisibleDefinitions(): ToolDefinition[] {
+    this.ensureInitialized();
+    if (!this.tools) {
+      return [];
+    }
+
+    const visible = Array.from(this.tools.values()).filter((tool) =>
+      this.accessPolicy.isVisible(tool)
+    );
+    const sorted = this.sorter.sortByPriority(visible);
+    return sorted.map((tool) => tool.getDefinition());
+  }
+
+  /**
    * Получить tool по имени
    */
   getTool(name: string): BaseTool | undefined {

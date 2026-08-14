@@ -58,7 +58,14 @@ src/
 │   ├── tool-registry.ts             # Tool registration and routing
 │   ├── tool-filter.service.ts       # Category/subcategory filtering
 │   ├── tool-sorter.ts               # Priority-based sorting
+│   ├── tool-access-policy.ts        # Single source of truth: tools/list visibility == tools/call callability
+│   ├── tools-list-projection.ts     # ToolDefinition[] → wire shape of tools/list
 │   └── types.ts                     # Registry types
+├── mcp-server-adapter/               # MCP server lifecycle + transport (createMcpServerAdapter)
+│   ├── create-mcp-server-adapter.ts # Server instance, request handlers, stdio transport, signal handlers
+│   ├── normalize-tool-name.ts       # Strip server-name prefix some MCP clients add to tool calls
+│   ├── tools-metrics.ts             # tools/list size/token metrics + logging
+│   └── tool-call-error-response.ts  # Uniform tools/call error envelope
 ├── tools/
 │   ├── base/                         # Base classes for tools
 │   │   ├── base-tool.ts             # Generic BaseTool<TSchema>
@@ -165,6 +172,30 @@ class ToolRegistry {
   getDefinitions(): ToolDefinition[];  // Filtered & sorted
   executeToolByName(name: string, params: ToolCallParams): Promise<ToolResult>;
 }
+```
+
+### createMcpServerAdapter()
+
+**MCP server lifecycle + transport**, shared by all three servers (yandex-tracker, yandex-wiki,
+ticktick) instead of near-identical `server.ts` code. Registers `initialize`/`tools/list`/`tools/call`
+handlers, connects stdio, wires SIGINT/SIGTERM shutdown. `tools/list` visibility is filtered through
+`ToolRegistry.getVisibleDefinitions()` — the same `ToolAccessPolicy` instance `execute()` checks for
+`tools/call`, so the two can never disagree.
+
+**Implementation:** [src/mcp-server-adapter/create-mcp-server-adapter.ts](src/mcp-server-adapter/create-mcp-server-adapter.ts)
+
+```typescript
+import { createMcpServerAdapter } from '@fractalizer/mcp-core';
+
+const adapter = createMcpServerAdapter({
+  serverName: MCP_SERVER_NAME,
+  serverDisplayName: MCP_SERVER_DISPLAY_NAME, // optional
+  version: getPackageVersion(),
+  toolRegistry,                                // already carries its own ToolAccessPolicy
+  logger,
+});
+
+await adapter.start();
 ```
 
 ---

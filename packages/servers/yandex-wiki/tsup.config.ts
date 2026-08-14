@@ -27,7 +27,6 @@ export default defineConfig([
     external: [
       // CLI зависимости должны быть установлены как npm пакеты
       '@modelcontextprotocol/server',
-      '@modelcontextprotocol/core',
       'axios',
       'inversify',
       'pino',

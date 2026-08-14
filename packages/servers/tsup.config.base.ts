@@ -29,9 +29,11 @@ export function defineServerConfig(
     outExtension: () => ({ js: '.cjs' }), // .cjs расширение для CommonJS
     shims: true, // Для корректной работы __dirname и __filename
     external: [
-      // MCP SDK v2 (модульные пакеты, peer dependency)
+      // MCP SDK v2 (peer dependency). @modelcontextprotocol/core НЕ указан:
+      // мы его нигде не импортируем напрямую (только через реэкспорты
+      // @modelcontextprotocol/server) — сам server пакет разрешит свою
+      // зависимость на core через обычную резолюцию node_modules.
       '@modelcontextprotocol/server',
-      '@modelcontextprotocol/core',
       // Node.js встроенные модули (всегда external)
       'node:*',
     ],
