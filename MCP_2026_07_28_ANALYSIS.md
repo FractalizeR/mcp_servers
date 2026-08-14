@@ -1,10 +1,13 @@
 # Анализ MCP 2026-07-28 применительно к нашим MCP-серверам
 
 Дата анализа: 2026-08-14.
-База: `main@3866fc5b` (2026-06-19), последний тег `v1.6.0`, версии всех трёх серверных пакетов — `1.6.0`.
+База: `origin/main@4e36bd6` (`v1.7.0`, 2026-06-19), версии всех трёх серверных пакетов — `1.7.0`.
 
-> Предыдущая редакция ссылалась на `origin/main@4e36bd6` / `v1.7.0`. Ни такого коммита, ни такого тега в
-> репозитории нет — ссылка удалена, весь фактический материал перепроверён по указанной выше базе.
+> **Поправка к ревью этого документа.** Промежуточная редакция утверждала, что коммита `4e36bd6` и
+> тега `v1.7.0` не существует, и объявляла исходную привязку выдуманной. Это была ошибка ревью:
+> локальный клон просто не фетчил `origin` с 19 июня, поэтому release-коммит от `semantic-release-bot`
+> в нём отсутствовал. Исходная редакция была права — и в SHA, и в том, что локальный checkout отставал
+> ровно на один release commit. Привязка восстановлена.
 
 ## Что поменялось в MCP
 
@@ -64,7 +67,7 @@
 | Yandex Wiki | 22 | то же |
 | TickTick | 25 | то же |
 
-Проверенные разрывы (все ссылки перепроверены по `main@3866fc5b`):
+Проверенные разрывы (все ссылки перепроверены по коду):
 
 - SDK `@modelcontextprotocol/sdk ^1.27.1`, старый `Server` + `StdioServerTransport` — core и 3 сервера.
 - Hardcoded `protocolVersion: '2025-06-18'`: [tracker `server.ts:62`](packages/servers/yandex-tracker/src/server.ts),
@@ -77,7 +80,9 @@
   [`schema-to-definition.ts:65`](packages/framework/core/src/definition/schema-to-definition.ts). Оба утверждения теперь неверны.
 - Нет Resources, Prompts, structured output, cancellation, progress, Tasks, MRTR, protocol conformance tests.
 - Нет `server.json`/`mcpName` → публикация в MCP Registry невозможна.
-- `manifest.template.json` во всех трёх серверах застрял на `0.1.0` при `package.json` `1.6.0`.
+- ~~`manifest.template.json` застрял на `0.1.0`~~ — **находка снята**. Это шаблон; реальный
+  `manifest.json` лежит в `.gitignore` и генерируется `scripts/update-versions.mjs`, который
+  подставляет актуальную версию с хешем сборки (`1.7.0+3866fc5`). Рассинхрона нет.
 
 ### Два дефекта текущей версии
 
@@ -315,7 +320,6 @@ secret env vars, валидировать в CI, после первой руч�
 - Оставить Pino/stderr — спека прямо рекомендует stderr как замену MCP Logging.
 - Привести в актуальное состояние `ARCHITECTURE.md`, `DOCS.md`, `MCP_SERVER_CHECKLIST.md`: они описывают
   преимущественно один Tracker и старый lifecycle.
-- Синхронизировать `manifest.template.json` с версиями пакетов.
 
 ## Вердикт
 
