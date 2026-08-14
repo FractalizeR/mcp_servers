@@ -7,7 +7,8 @@
  *
  * DoD пакета 3.1.C.tracker:
  * 1. Все инструменты имеют annotations и outputSchema (число инструментов
- *    выросло с 50 до 86 пакетом 7.2.A/7.2.B — см. .agentic-planning/
+ *    выросло с 50 до 86 пакетом 7.2.A/7.2.B, затем до 91 пакетом 7.2.E —
+ *    глобальные поля Трекера, см. .agentic-planning/
  *    plan_mcp_2026_modernization/7.2_api_coverage_parallel.md).
  * 2. tools/list (`projectToolDefinitionsForList`) отдаёт title, outputSchema,
  *    annotations.
@@ -43,9 +44,9 @@ describe('Пакет 3.1.C.tracker — annotations/outputSchema/tools-list contr
     });
   });
 
-  it('реестр содержит ровно 86 инструментов (перечисление зафиксировано планом этапа)', () => {
-    expect(TOOL_CLASSES.length).toBe(86);
-    expect(definitions.length).toBe(86);
+  it('реестр содержит ровно 91 инструмент (перечисление зафиксировано планом этапа)', () => {
+    expect(TOOL_CLASSES.length).toBe(91);
+    expect(definitions.length).toBe(91);
   });
 
   describe('DoD 1: каждый инструмент реестра имеет annotations и outputSchema', () => {
@@ -82,7 +83,7 @@ describe('Пакет 3.1.C.tracker — annotations/outputSchema/tools-list contr
     it('projectToolDefinitionsForList прокидывает все три поля для каждого инструмента', () => {
       const listEntries = projectToolDefinitionsForList(definitions);
 
-      expect(listEntries.length).toBe(86);
+      expect(listEntries.length).toBe(91);
 
       const missingTitle = listEntries.filter((e) => !e.title).map((e) => e.name);
       const missingOutputSchema = listEntries.filter((e) => !e.outputSchema).map((e) => e.name);

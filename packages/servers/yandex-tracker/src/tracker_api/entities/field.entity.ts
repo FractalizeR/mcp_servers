@@ -31,7 +31,7 @@ export interface FieldSchema {
    * Элементы массива (для type: "array")
    * @example "string" - массив строк
    */
-  readonly items?: string;
+  readonly items?: string | undefined;
 
   /**
    * Дополнительные параметры схемы
@@ -48,17 +48,17 @@ export interface FieldOption {
   /**
    * Идентификатор опции
    */
-  readonly id?: string;
+  readonly id?: string | undefined;
 
   /**
    * Ключ опции
    */
-  readonly key?: string;
+  readonly key?: string | undefined;
 
   /**
    * Отображаемое значение
    */
-  readonly display?: string;
+  readonly display?: string | undefined;
 
   /**
    * Дополнительные параметры опции
@@ -76,7 +76,7 @@ export interface FieldOptionsProvider {
    * Тип провайдера
    * @example "UserProvider", "QueueProvider"
    */
-  readonly type?: string;
+  readonly type?: string | undefined;
 
   /**
    * Дополнительные параметры провайдера
