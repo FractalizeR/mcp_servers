@@ -29,7 +29,7 @@ QUIET=false
 # Turbo tasks — run across all workspaces
 # ---------------------------------------------------------------------------
 # Tasks that are the same in both modes:
-TURBO_TASKS_COMMON="build typecheck test:smoke test:smoke:server depcruise validate:docs validate:tools"
+TURBO_TASKS_COMMON="build typecheck test:smoke test:smoke:server test:raw-wire depcruise validate:docs validate:tools"
 
 if $QUIET; then
   TURBO_TASKS="$TURBO_TASKS_COMMON lint:quiet test:quiet cpd:quiet"
