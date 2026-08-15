@@ -143,6 +143,9 @@ describe('Tool Params Reach API (Smoke) — обход реестра инстр
     maxConcurrentRequests: 10,
     logLevel: 'error',
     prettyLogs: false,
+    logsDir: '/tmp/logs',
+    logMaxSize: 10485760,
+    logMaxFiles: 10,
   };
 
   let toolRegistry: ToolRegistry;

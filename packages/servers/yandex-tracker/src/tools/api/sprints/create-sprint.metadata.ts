@@ -15,7 +15,7 @@ export const CREATE_SPRINT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['sprint', 'create', 'write', 'agile'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: [
     'board',
     'startDate',

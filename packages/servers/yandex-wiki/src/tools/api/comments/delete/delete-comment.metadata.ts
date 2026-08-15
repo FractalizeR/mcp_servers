@@ -11,7 +11,8 @@ import { DeleteCommentOutputDataSchema } from './delete-comment.schema.js';
 export const DELETE_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_comment', MCP_TOOL_PREFIX),
   description:
-    '[Comments/Delete] Удалить комментарий (DELETE /pages/{id}/comments/{comment_id}). ' +
+    '[Comments/Delete] Удалить комментарий ' +
+    '(DELETE /pages/{id}/comments/{comment_id}). ' +
     'Необратимо — документация не описывает recovery_token для комментариев (в отличие от ' +
     'удаления страницы/таблицы).',
   category: ToolCategory.COMMENTS,

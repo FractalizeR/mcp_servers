@@ -145,7 +145,9 @@ async function main() {
 
   console.log('\n');
   console.log('✅ OK: Both CLI versions run without memory errors');
-  console.log('\n⚠️  Note: Precise memory comparison requires external tools (valgrind, heaptrack)');
+  console.log(
+    '\n⚠️  Note: Precise memory comparison requires external tools (valgrind, heaptrack)'
+  );
   console.log('   Current implementation only checks for fatal memory errors.');
 
   process.exit(0);

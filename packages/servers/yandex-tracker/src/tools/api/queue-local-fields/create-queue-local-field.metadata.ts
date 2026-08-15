@@ -15,7 +15,7 @@ export const CREATE_QUEUE_LOCAL_FIELD_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['queue', 'local-fields', 'custom-fields', 'create', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['queueId', 'id', 'category', 'type', 'fields'],
   title: 'Создать локальное поле очереди',
   outputSchema: CreateQueueLocalFieldOutputSchema,

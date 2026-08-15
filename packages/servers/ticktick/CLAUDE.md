@@ -185,12 +185,19 @@ npm run validate:quiet --workspace=@fractalizer/mcp-server-ticktick
 | Category | Subcategory | Описание |
 |----------|-------------|----------|
 | `projects` | `read` | Чтение проектов |
-| `projects` | `write` | Изменение проектов |
+| `projects` | `write` | Изменение проектов (create/update — обратимо) |
+| `projects` | `delete` | Удаление проектов (необратимо) |
 | `tasks` | `read` | Чтение задач |
-| `tasks` | `write` | Изменение задач |
+| `tasks` | `write` | Изменение задач (create/update/complete/batch — обратимо) |
+| `tasks` | `delete` | Удаление задач (необратимо) |
 | `tasks` | `date` | Запросы по датам |
-| `helpers` | — | ping |
+| `system` | `health` | ping |
+| `system` | `read` | raw_api_request (escape hatch) |
 | `helpers` | `gtd` | GTD-методологии |
+
+`write` и `delete` разведены отдельно (M5 отчёта REVIEW_MCP_SDK_FINDINGS.md): это
+даёт рубильнику `DISABLED_TOOL_GROUPS` возможность отключить все удаляющие tools
+одним правилом (`projects:delete`, `tasks:delete`), не затрагивая create/update.
 
 ---
 

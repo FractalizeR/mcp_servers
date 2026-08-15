@@ -17,7 +17,7 @@ export const GET_TASKS_DUE_TOMORROW_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Get Tasks Due Tomorrow',
+  title: 'Задачи на завтра',
   outputSchema: GET_TASKS_DUE_TOMORROW_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

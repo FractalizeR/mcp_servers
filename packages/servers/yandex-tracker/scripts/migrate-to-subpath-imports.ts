@@ -14,7 +14,6 @@
  */
 
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { glob } from 'glob';
 
 // ========================================================================================
@@ -326,7 +325,7 @@ async function migrate(options: {
 
         // Обновляем статистику по паттернам
         for (const pattern of result.patterns) {
-          const name = pattern.split(' (')[0];
+          const name = pattern.split(' (')[0] ?? pattern;
           stats.patternStats[name] = (stats.patternStats[name] || 0) + 1;
         }
       }

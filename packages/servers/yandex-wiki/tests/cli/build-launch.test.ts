@@ -92,7 +92,7 @@ describe('buildYwServerLaunch', () => {
         token: 't',
         orgType: 'yandex360',
         orgId: 'org',
-        logLevel: '  info  ' as YandexWikiMCPConfig['logLevel'],
+        logLevel: '  info  ' as NonNullable<YandexWikiMCPConfig['logLevel']>,
       };
 
       const spec = buildYwServerLaunch(config, fakeResolver);

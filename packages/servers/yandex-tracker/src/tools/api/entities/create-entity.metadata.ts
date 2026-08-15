@@ -15,7 +15,7 @@ export const CREATE_ENTITY_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['entity', 'goal', 'portfolio', 'entity-project', 'create', 'write', 'okr'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['entityType', 'fields'],
   title: 'Создать запись Entity API',
   outputSchema: CreateEntityOutputSchema,

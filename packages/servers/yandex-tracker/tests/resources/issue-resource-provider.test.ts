@@ -62,16 +62,14 @@ describe('IssueResourceProvider', () => {
   });
 
   it('readResource() возвращает undefined на 404 (несуществующая задача)', async () => {
-    const getIssues = vi
-      .fn()
-      .mockResolvedValue([
-        {
-          status: 'rejected',
-          key: 'QUEUE-404',
-          index: 0,
-          reason: new ApiErrorClass(404, 'Not found'),
-        },
-      ]);
+    const getIssues = vi.fn().mockResolvedValue([
+      {
+        status: 'rejected',
+        key: 'QUEUE-404',
+        index: 0,
+        reason: new ApiErrorClass(404, 'Not found'),
+      },
+    ]);
     const provider = new IssueResourceProvider(makeFacade({ getIssues }));
 
     const contents = await provider.readResource(buildIssueResourceUri('QUEUE-404'));

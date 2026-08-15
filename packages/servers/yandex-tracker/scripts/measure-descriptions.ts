@@ -15,7 +15,8 @@
  */
 
 import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
-import { Logger } from '@fractalizer/mcp-infrastructure';
+import type { Logger } from '@fractalizer/mcp-infrastructure';
+import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 
 interface FullDescriptionsMetrics {
   totalTools: number;
@@ -43,6 +44,7 @@ interface FullDescriptionsMetrics {
     shortLength: number;
     fullLength: number;
     fullDescription: string;
+    category: string;
   }>;
 }
 
@@ -58,14 +60,16 @@ function calculateMetrics(): FullDescriptionsMetrics {
     category: string;
   }> = [];
 
-  // Создаем mock logger (без вывода)
-  const mockLogger: Logger = {
+  // Создаем mock logger (без вывода). Частичный mock — реальный Logger
+  // (pino/createPinoLogger/setAlertingTransport/setLevel/...) здесь не нужен,
+  // getDefinition() использует только debug/info/warn/error/child.
+  const mockLogger = {
     debug: () => {},
     info: () => {},
     warn: () => {},
     error: () => {},
-    child: () => mockLogger,
-  };
+    child: (): Logger => mockLogger as unknown as Logger,
+  } as unknown as Logger;
 
   for (const ToolClass of TOOL_CLASSES) {
     const metadata = (ToolClass as any).METADATA;
@@ -74,7 +78,7 @@ function calculateMetrics(): FullDescriptionsMetrics {
 
     // Создаем экземпляр tool для получения ToolDefinition
     // Передаем null как facade - для getDefinition() это не нужно
-    const toolInstance = new ToolClass(null, mockLogger);
+    const toolInstance = new ToolClass(null as unknown as YandexTrackerFacade, mockLogger);
     const definition = toolInstance.getDefinition();
     const fullDesc = definition.description;
     const fullLen = fullDesc.length;
@@ -153,6 +157,7 @@ function printMetrics(metrics: FullDescriptionsMetrics): void {
   console.log('📏 Top 10 Longest Full Descriptions:');
   for (let i = 0; i < metrics.longest.length; i++) {
     const tool = metrics.longest[i];
+    if (!tool) continue;
     const diff = tool.fullLength - tool.shortLength;
     console.log(`   ${i + 1}. ${tool.name} (${tool.category})`);
     console.log(`      - Short: ${tool.shortLength} chars`);

@@ -18,13 +18,19 @@ export const UPDATE_TASK_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['task', 'update', 'edit', 'modify'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  // Решение владельца (2026-08-14): requiresExplicitUserConsent обязан
+  // совпадать с annotations.destructiveHint. update_task переписывает
+  // отдельные поля (title/content/priority/dueDate/tags) — обратимо
+  // повторным вызовом с прежними значениями, данные не теряются
+  // безвозвратно, в отличие от удаления или полной перезаписи без пути
+  // отката. Поэтому НЕ разрушающая операция: оба флага false (было true/true).
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['projectId', 'taskId'],
-  title: 'Update Task',
+  title: 'Обновить задачу',
   outputSchema: UPDATE_TASK_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: false,
-    destructiveHint: true,
+    destructiveHint: false,
     idempotentHint: true,
     openWorldHint: true,
   },

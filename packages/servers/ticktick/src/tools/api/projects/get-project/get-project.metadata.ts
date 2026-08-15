@@ -20,7 +20,7 @@ export const GET_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['projectId'],
-  title: 'Get Project',
+  title: 'Проект по ID',
   outputSchema: GET_PROJECT_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

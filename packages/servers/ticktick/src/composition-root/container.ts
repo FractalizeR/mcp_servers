@@ -223,7 +223,7 @@ function bindToolRegistry(container: Container, config: ServerConfig): void {
  * composition root регистрирует провайдеров, `server.ts` передаёт готовый
  * реестр в `createMcpServerAdapter`.
  */
-function bindResources(container: Container): void {
+function bindResourceRegistry(container: Container): void {
   container.bind<TaskResourceProvider>(TYPES.TaskResourceProvider).toDynamicValue(() => {
     const facade = container.get<TickTickFacade>(TYPES.TickTickFacade);
     return new TaskResourceProvider(facade);
@@ -245,11 +245,11 @@ function bindResources(container: Container): void {
 /**
  * Bind MCP Prompts: провайдер слэш-команд (дневной/недельный обзор,
  * GTD-разбор входящих — оставшаяся часть пакета 5.1.C.ticktick) и
- * `PromptRegistry` framework, тот же паттерн, что и у `bindResources` выше.
+ * `PromptRegistry` framework, тот же паттерн, что и у `bindResourceRegistry` выше.
  * `TickTickPromptProvider` не зависит от facade — `getPrompt()` строит
  * только текст сообщений, без обращения к API (см. заголовок провайдера).
  */
-function bindPrompts(container: Container): void {
+function bindPromptRegistry(container: Container): void {
   container.bind<TickTickPromptProvider>(TYPES.TickTickPromptProvider).toDynamicValue(() => {
     return new TickTickPromptProvider();
   });
@@ -303,10 +303,10 @@ export async function createContainer(config: ServerConfig): Promise<Container> 
   bindToolRegistry(container, config);
 
   // 10. MCP Resources (providers + registry, depend on Facade)
-  bindResources(container);
+  bindResourceRegistry(container);
 
   // 11. MCP Prompts (не зависят от facade, но регистрируются той же волной)
-  bindPrompts(container);
+  bindPromptRegistry(container);
 
   // Log initialization
   const logger = container.get<Logger>(TYPES.Logger);

@@ -3,16 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GridService } from '../../../../../src/wiki_api/facade/services/grid.service.js';
 import type { GridCrudOperationsContainer } from '../../../../../src/wiki_api/facade/services/containers/grid-crud-operations.container.js';
 import type { GridDataOperationsContainer } from '../../../../../src/wiki_api/facade/services/containers/grid-data-operations.container.js';
-
-// Grid fixture
-function createGridFixture() {
-  return {
-    id: 'grid-123',
-    title: 'Test Grid',
-    columns: [],
-    rows: [],
-  };
-}
+import {
+  createGridFixture,
+  createDeleteGridResultFixture,
+  createAsyncOperationFixture,
+} from '#helpers/index.js';
 
 describe('GridService', () => {
   let gridService: GridService;
@@ -46,7 +41,7 @@ describe('GridService', () => {
       const mockGrid = createGridFixture();
       vi.mocked(mockCrudOps.create.execute).mockResolvedValue(mockGrid);
 
-      const data = { title: 'New Grid', columns: [] };
+      const data = { title: 'New Grid', page: { slug: 'users/testuser/new-grid' } };
       const result = await gridService.createGrid(data);
 
       expect(mockCrudOps.create.execute).toHaveBeenCalledWith(data);
@@ -72,7 +67,7 @@ describe('GridService', () => {
       const mockGrid = createGridFixture();
       vi.mocked(mockCrudOps.update.execute).mockResolvedValue(mockGrid);
 
-      const data = { title: 'Updated Grid' };
+      const data = { title: 'Updated Grid', revision: 'rev-123' };
       const result = await gridService.updateGrid('grid-123', data);
 
       expect(mockCrudOps.update.execute).toHaveBeenCalledWith('grid-123', data);
@@ -82,7 +77,7 @@ describe('GridService', () => {
 
   describe('deleteGrid', () => {
     it('должен делегировать вызов DeleteGridOperation', async () => {
-      const mockResult = { success: true };
+      const mockResult = createDeleteGridResultFixture();
       vi.mocked(mockCrudOps.remove.execute).mockResolvedValue(mockResult);
 
       const result = await gridService.deleteGrid('grid-123');
@@ -97,7 +92,7 @@ describe('GridService', () => {
       const mockGrid = createGridFixture();
       vi.mocked(mockDataOps.addRows.execute).mockResolvedValue(mockGrid);
 
-      const data = { rows: [{ cells: [] }] };
+      const data = { rows: [{ row: ['cell-value'] }] };
       const result = await gridService.addRows('grid-123', data);
 
       expect(mockDataOps.addRows.execute).toHaveBeenCalledWith('grid-123', data);
@@ -110,7 +105,7 @@ describe('GridService', () => {
       const mockGrid = createGridFixture();
       vi.mocked(mockDataOps.removeRows.execute).mockResolvedValue(mockGrid);
 
-      const data = { rowIds: ['row-1', 'row-2'] };
+      const data = { row_ids: ['row-1', 'row-2'] };
       const result = await gridService.removeRows('grid-123', data);
 
       expect(mockDataOps.removeRows.execute).toHaveBeenCalledWith('grid-123', data);
@@ -123,7 +118,11 @@ describe('GridService', () => {
       const mockGrid = createGridFixture();
       vi.mocked(mockDataOps.addColumns.execute).mockResolvedValue(mockGrid);
 
-      const data = { columns: [{ name: 'New Column' }] };
+      const data = {
+        columns: [
+          { title: 'New Column', slug: 'new-column', type: 'string' as const, required: false },
+        ],
+      };
       const result = await gridService.addColumns('grid-123', data);
 
       expect(mockDataOps.addColumns.execute).toHaveBeenCalledWith('grid-123', data);
@@ -136,7 +135,7 @@ describe('GridService', () => {
       const mockGrid = createGridFixture();
       vi.mocked(mockDataOps.removeColumns.execute).mockResolvedValue(mockGrid);
 
-      const data = { columnIds: ['col-1'] };
+      const data = { column_slugs: ['col-1'] };
       const result = await gridService.removeColumns('grid-123', data);
 
       expect(mockDataOps.removeColumns.execute).toHaveBeenCalledWith('grid-123', data);
@@ -149,7 +148,7 @@ describe('GridService', () => {
       const mockGrid = createGridFixture();
       vi.mocked(mockDataOps.updateCells.execute).mockResolvedValue(mockGrid);
 
-      const data = { cells: [{ rowId: 'row-1', columnId: 'col-1', value: 'new value' }] };
+      const data = { cells: [{ row_id: 'row-1', column_slug: 'col-1', value: 'new value' }] };
       const result = await gridService.updateCells('grid-123', data);
 
       expect(mockDataOps.updateCells.execute).toHaveBeenCalledWith('grid-123', data);
@@ -162,7 +161,7 @@ describe('GridService', () => {
       const mockGrid = createGridFixture();
       vi.mocked(mockDataOps.moveRows.execute).mockResolvedValue(mockGrid);
 
-      const data = { rowId: 'row-1', afterRowId: 'row-2' };
+      const data = { row_id: 'row-1', after_row_id: 'row-2' };
       const result = await gridService.moveRows('grid-123', data);
 
       expect(mockDataOps.moveRows.execute).toHaveBeenCalledWith('grid-123', data);
@@ -175,7 +174,7 @@ describe('GridService', () => {
       const mockGrid = createGridFixture();
       vi.mocked(mockDataOps.moveColumns.execute).mockResolvedValue(mockGrid);
 
-      const data = { columnId: 'col-1', afterColumnId: 'col-2' };
+      const data = { column_slug: 'col-1', position: 2 };
       const result = await gridService.moveColumns('grid-123', data);
 
       expect(mockDataOps.moveColumns.execute).toHaveBeenCalledWith('grid-123', data);
@@ -185,10 +184,10 @@ describe('GridService', () => {
 
   describe('cloneGrid', () => {
     it('должен делегировать вызов CloneGridOperation', async () => {
-      const mockAsyncOp = { status: 'in_progress', id: 'op-123' };
+      const mockAsyncOp = createAsyncOperationFixture();
       vi.mocked(mockDataOps.clone.execute).mockResolvedValue(mockAsyncOp);
 
-      const data = { targetSlug: 'cloned-grid' };
+      const data = { target: 'cloned-grid' };
       const result = await gridService.cloneGrid('grid-123', data);
 
       expect(mockDataOps.clone.execute).toHaveBeenCalledWith('grid-123', data);

@@ -24,7 +24,7 @@ export const BULK_MOVE_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['bulk', 'move', 'queue', 'transfer', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['queue', 'moveAllFields', 'initialStatus'],
   title: 'Массовое перемещение задач между очередями',
   outputSchema: BulkMoveIssuesOutputSchema,

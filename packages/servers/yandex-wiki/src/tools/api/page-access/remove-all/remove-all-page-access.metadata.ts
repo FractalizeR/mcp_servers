@@ -16,7 +16,7 @@ export const REMOVE_ALL_PAGE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
     'групповые/наследуемые доступы страница может получать не только отсюда. Для удаления ' +
     'одного конкретного доступа — yw_remove_page_access.',
   category: ToolCategory.PAGES,
-  subcategory: 'access',
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['delete', 'access', 'permissions', 'wiki', 'bulk'],
   isHelper: false,

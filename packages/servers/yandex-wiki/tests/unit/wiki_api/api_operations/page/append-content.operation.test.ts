@@ -22,7 +22,7 @@ describe('AppendContentOperation', () => {
   });
 
   it('должен добавить контент к странице', async () => {
-    const expectedPage = createPageFixture({ idx: 123 });
+    const expectedPage = createPageFixture({ id: 123 });
     vi.mocked(mockHttpClient.post).mockResolvedValue(expectedPage);
 
     const result = await operation.execute({

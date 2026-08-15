@@ -260,6 +260,20 @@ async function main(): Promise<void> {
         ),
         `icons должен содержать SVG как data: URI, получено ${JSON.stringify(icons)}`
       );
+
+      // Негативный ассерт (M1): иконки — особенность ИМЕННО server/discover,
+      // держится на патче приватного _ondiscover (см. discover-server-info.ts).
+      // Если SDK поменяет правило "handler — более специфичный автор _meta" —
+      // иконка либо пропадёт из discover, либо тихо просочится в обычные
+      // ответы. Проверяем оба конца: обычный tools/list той же сессии НЕ
+      // несёт icons в своём _meta.serverInfo.
+      const list = await harness.request(2, 'tools/list', { _meta: modernMeta() });
+      const listServerInfo = list.result?._meta?.['io.modelcontextprotocol/serverInfo'];
+      assert(
+        listServerInfo?.icons === undefined,
+        `tools/list: _meta["io.modelcontextprotocol/serverInfo"].icons НЕ должен ` +
+          `присутствовать (icons — только на server/discover), получено ${JSON.stringify(listServerInfo?.icons)}`
+      );
     })
   );
 
@@ -289,9 +303,13 @@ async function main(): Promise<void> {
         response.error?.code === -32022,
         `ожидался код -32022 (UnsupportedProtocolVersion), получено ${JSON.stringify(response)}`
       );
+      // response.error.data типизирован как unknown (JsonRpcError) — оптional
+      // chaining по unknown сужает промежуточный тип до '{}' (без индексной
+      // сигнатуры), поэтому явный каст перед доступом к 'supported'.
+      const errorData = response.error?.data as { supported?: unknown } | undefined;
       assert(
-        Array.isArray(response.error?.data?.supported),
-        `error.data.supported должен перечислять поддерживаемые версии, получено ${JSON.stringify(response.error?.data)}`
+        Array.isArray(errorData?.supported),
+        `error.data.supported должен перечислять поддерживаемые версии, получено ${JSON.stringify(errorData)}`
       );
     })
   );

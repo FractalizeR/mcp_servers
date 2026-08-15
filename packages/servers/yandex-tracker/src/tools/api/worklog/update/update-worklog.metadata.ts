@@ -24,7 +24,7 @@ export const UPDATE_WORKLOG_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['worklog', 'update', 'edit', 'modify', 'time'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueId', 'worklogId', 'start', 'duration', 'fields'],
   title: 'Обновить запись времени',
   outputSchema: UpdateWorklogOutputSchema,

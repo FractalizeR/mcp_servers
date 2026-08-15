@@ -53,7 +53,8 @@ describe('WikiPageResourceProvider', () => {
         fields: 'content',
       });
       expect(result).toHaveLength(1);
-      const [contents] = result!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const contents = result![0]!;
       expect(contents.uri).toBe('wiki://page/users/docs/readme');
       expect('text' in contents ? contents.text : '').toContain('Тело страницы.');
       expect('text' in contents ? contents.text : '').toContain('Readme');
@@ -74,7 +75,8 @@ describe('WikiPageResourceProvider', () => {
       vi.mocked(mockFacade.getPage!).mockResolvedValue(page);
 
       const result = await provider.readResource('wiki://page/empty');
-      const [contents] = result!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const contents = result![0]!;
       expect('text' in contents ? contents.text : '').toContain('пусто');
     });
 

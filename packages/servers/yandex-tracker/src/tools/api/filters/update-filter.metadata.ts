@@ -15,7 +15,7 @@ export const UPDATE_FILTER_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['filters', 'saved', 'update', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['filterId', 'groupBy', 'fields'],
   title: 'Обновить сохранённый фильтр',
   outputSchema: UpdateFilterOutputSchema,

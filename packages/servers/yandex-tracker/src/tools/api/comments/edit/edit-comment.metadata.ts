@@ -24,7 +24,7 @@ export const EDIT_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['comment', 'edit', 'update', 'write', 'batch'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueId', 'commentId', 'fields'],
   title: 'Редактировать комментарии',
   outputSchema: EditCommentOutputSchema,

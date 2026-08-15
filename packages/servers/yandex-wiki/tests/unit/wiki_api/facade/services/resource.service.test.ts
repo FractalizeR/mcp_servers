@@ -21,7 +21,7 @@ describe('ResourceService', () => {
       const mockResponse = createResourcesResponseFixture();
       vi.mocked(mockGetResourcesOp.execute).mockResolvedValue(mockResponse);
 
-      const params = { idx: 'page-123' };
+      const params = { idx: 123 };
       const result = await resourceService.getResources(params);
 
       expect(mockGetResourcesOp.execute).toHaveBeenCalledWith(params);
@@ -32,7 +32,7 @@ describe('ResourceService', () => {
       const mockResponse = createResourcesResponseFixture();
       vi.mocked(mockGetResourcesOp.execute).mockResolvedValue(mockResponse);
 
-      const params = { idx: 'page-456', fields: 'url,name' };
+      const params = { idx: 456, fields: 'url,name' };
       const result = await resourceService.getResources(params);
 
       expect(mockGetResourcesOp.execute).toHaveBeenCalledWith(params);
@@ -43,7 +43,7 @@ describe('ResourceService', () => {
       const error = new Error('API error');
       vi.mocked(mockGetResourcesOp.execute).mockRejectedValue(error);
 
-      const params = { idx: 'page-789' };
+      const params = { idx: 789 };
 
       await expect(resourceService.getResources(params)).rejects.toThrow('API error');
     });

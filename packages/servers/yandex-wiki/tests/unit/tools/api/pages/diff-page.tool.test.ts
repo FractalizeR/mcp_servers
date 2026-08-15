@@ -43,7 +43,7 @@ describe('DiffPageTool (пакет 3.1.E)', () => {
       });
 
       expect(result.isError).toBeFalsy();
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['hasChanges']).toBe(true);
 
       const summary = data['summary'] as { linesAdded: number; linesRemoved: number };
@@ -70,7 +70,7 @@ describe('DiffPageTool (пакет 3.1.E)', () => {
       });
 
       expect(result.isError).toBeFalsy();
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['hasChanges']).toBe(false);
 
       const summary = data['summary'] as { linesAdded: number; linesRemoved: number };

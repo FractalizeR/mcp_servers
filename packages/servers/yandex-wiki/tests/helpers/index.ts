@@ -24,6 +24,8 @@ export { createCommentFixture, createCommentsResponseFixture } from './comment.f
 
 export { createPageAccessFixture } from './page-access.fixture.js';
 
+export { createServerConfigFixture } from './server-config.fixture.js';
+
 export {
   expectDefinitionMatchesSchema,
   validateGeneratedDefinition,

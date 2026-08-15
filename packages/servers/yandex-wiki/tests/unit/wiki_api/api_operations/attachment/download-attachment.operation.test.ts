@@ -18,7 +18,7 @@ describe('DownloadAttachmentOperation', () => {
 
   it('должен скачать файл через downloadFile() и вернуть содержимое', async () => {
     const downloaded = { content: Buffer.from('binary content'), contentType: 'application/pdf' };
-     
+
     const downloadFileSpy = vi
       .spyOn(operation as any, 'downloadFile')
       .mockResolvedValue(downloaded);

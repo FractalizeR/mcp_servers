@@ -13,7 +13,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
-import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
 
 describe('DI Container (Smoke)', () => {
   const fakeConfig: ServerConfig = {
@@ -25,6 +25,9 @@ describe('DI Container (Smoke)', () => {
     maxConcurrentRequests: 10,
     logLevel: 'error', // Минимум логов
     prettyLogs: false,
+    logsDir: '/tmp/logs',
+    logMaxSize: 10485760,
+    logMaxFiles: 10,
   };
 
   it('должен создать DI container', async () => {
@@ -121,10 +124,11 @@ describe('DI Container (Smoke)', () => {
 
   it('должен поддерживать cloudOrgId конфигурацию', async () => {
     // Arrange
-    const cloudConfig = {
-      ...fakeConfig,
+    const { orgId, ...fakeConfigWithoutOrgId } = fakeConfig;
+    void orgId; // exactOptionalPropertyTypes: убираем ключ, а не присваиваем undefined
+    const cloudConfig: ServerConfig = {
+      ...fakeConfigWithoutOrgId,
       cloudOrgId: 'bpf3crucp1v2fake',
-      orgId: undefined,
     };
 
     // Act

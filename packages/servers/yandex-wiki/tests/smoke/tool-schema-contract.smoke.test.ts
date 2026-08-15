@@ -17,7 +17,10 @@
  */
 
 import { describe, it, expect, beforeAll, vi, afterEach } from 'vitest';
-import Ajv2020 from 'ajv/dist/2020.js';
+// Именованный импорт, не default — см. комментарий в
+// tool-annotations-output-schema.smoke.test.ts (та же нестыковка типов ajv
+// под moduleResolution NodeNext).
+import { Ajv2020 } from 'ajv/dist/2020.js';
 import { TOOL_CLASSES } from '#composition-root/definitions/tool-definitions.js';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
@@ -127,11 +130,17 @@ describe('Tool Schema Contract (Smoke) — JSON Schema 2020-12', () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const result = await pingTool!.execute({});
 
-      expect(result.structuredContent).toBeDefined();
+      expect(result['structuredContent']).toBeDefined();
       expect(result.content[0]?.type).toBe('text');
 
-      const textPayload = JSON.parse(result.content[0]?.text ?? 'null') as unknown;
-      expect(textPayload).toEqual(result.structuredContent);
+      // ToolResultContentBlock — union (text | resource_link); у второго
+      // варианта 'text' доступен только через index signature, из-за чего TS
+      // сужает `.text` в `{}` при доступе через union. Явный каст к
+      // string | undefined снимает эту неоднозначность.
+      const textPayload = JSON.parse(
+        ((result.content[0] as { text?: string } | undefined)?.text as string | undefined) ?? 'null'
+      ) as unknown;
+      expect(textPayload).toEqual(result['structuredContent']);
     });
   });
 });

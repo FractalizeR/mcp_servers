@@ -11,16 +11,10 @@ import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
 import type { ServerConfig } from '#config';
 import type { ToolRegistry } from '@fractalizer/mcp-core';
+import { createServerConfigFixture } from '#helpers/index.js';
 
 describe('MCP Server Lifecycle (Smoke)', () => {
-  const fakeConfig: ServerConfig = {
-    token: 'OAuth fake-token-for-testing',
-    orgId: 'fake-org-id',
-    apiBase: 'https://api.wiki.yandex.net',
-    requestTimeout: 30000,
-    logLevel: 'error', // Минимум логов для smoke теста
-    prettyLogs: false,
-  };
+  const fakeConfig: ServerConfig = createServerConfigFixture();
 
   it('должен создать MCP server instance', () => {
     // Act
@@ -84,10 +78,10 @@ describe('MCP Server Lifecycle (Smoke)', () => {
 
   it('должен принимать cloudOrgId вместо orgId', async () => {
     // Arrange
+    const { orgId: _orgId, ...fakeConfigWithoutOrgId } = fakeConfig;
     const cloudConfig: ServerConfig = {
-      ...fakeConfig,
+      ...fakeConfigWithoutOrgId,
       cloudOrgId: 'bpf3crucp1v2fake',
-      orgId: undefined,
     };
 
     // Act & Assert
@@ -96,13 +90,9 @@ describe('MCP Server Lifecycle (Smoke)', () => {
 
   it('должен создавать server с минимальной конфигурацией', async () => {
     // Arrange
-    const minimalConfig: ServerConfig = {
+    const minimalConfig: ServerConfig = createServerConfigFixture({
       token: 'OAuth minimal-fake-token',
-      apiBase: 'https://api.wiki.yandex.net',
-      requestTimeout: 30000,
-      logLevel: 'error',
-      prettyLogs: false,
-    };
+    });
 
     // Act & Assert
     await expect(createContainer(minimalConfig)).resolves.toBeDefined();

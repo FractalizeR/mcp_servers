@@ -31,9 +31,9 @@ export class ToolSorter {
       // Получаем priority из METADATA
       const aClass = a.constructor as typeof BaseTool;
       const bClass = b.constructor as typeof BaseTool;
-       
+
       const aPriority = aClass.METADATA?.priority ?? ToolPriority.NORMAL;
-       
+
       const bPriority = bClass.METADATA?.priority ?? ToolPriority.NORMAL;
 
       const aPrio = PRIORITY_ORDER[aPriority] ?? 2; // default: normal
@@ -80,7 +80,7 @@ export class ToolSorter {
   private countByPriority(tools: BaseTool[], priority: string): number {
     return tools.filter((t) => {
       const tClass = t.constructor as typeof BaseTool;
-       
+
       const toolPriority = tClass.METADATA?.priority ?? ToolPriority.NORMAL;
       return String(toolPriority) === priority;
     }).length;

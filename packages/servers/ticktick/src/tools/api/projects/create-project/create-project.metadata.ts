@@ -20,7 +20,7 @@ export const CREATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Create Project',
+  title: 'Создать проект',
   outputSchema: CREATE_PROJECT_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: false,

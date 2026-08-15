@@ -21,12 +21,6 @@ interface TestResult {
   status: 'passed' | 'failed' | 'skipped';
 }
 
-interface TestSuite {
-  name: string;
-  tests: TestResult[];
-  suites: TestSuite[];
-}
-
 interface VitestJsonOutput {
   testResults: Array<{
     name: string;
@@ -88,6 +82,7 @@ function analyzeTests() {
   console.log('-----|----------|-----');
   for (let i = 0; i < Math.min(TOP_N, allTests.length); i++) {
     const test = allTests[i];
+    if (!test) continue;
     const duration = test.duration.toFixed(0);
     const status = test.duration > SLOW_THRESHOLD ? '🐢' : '✅';
     console.log(

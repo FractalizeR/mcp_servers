@@ -12,7 +12,7 @@ import { GetResourcesSummarySchema } from './get-resources.schema.js';
 export const GET_RESOURCES_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_resources', MCP_TOOL_PREFIX),
   description:
-    '[Resources/Read] Получить ресурсы страницы (вложения, SharePoint-ресурсы, таблицы). ' +
+    '[Resources/Read] Получить ресурсы страницы (вложения, SharePoint, таблицы). ' +
     'Вложения и SharePoint-ресурсы отдаются в режиме ссылок/тел (см. responseMode) — тело ' +
     'каждого читается отдельно через resources/read (wiki://page-resource/{idx}/{type}/{name}). ' +
     'Таблицы (grid) — ВСЕГДА полными объектами в summary.gridItems, ResourceLink на них не строится.',

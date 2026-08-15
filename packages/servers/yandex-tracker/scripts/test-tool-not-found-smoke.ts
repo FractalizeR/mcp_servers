@@ -13,16 +13,6 @@ interface JSONRPCRequest {
   params?: Record<string, unknown>;
 }
 
-interface JSONRPCResponse {
-  jsonrpc: string;
-  id: number;
-  result?: unknown;
-  error?: {
-    code: number;
-    message: string;
-  };
-}
-
 async function main(): Promise<void> {
   console.log('🚀 Тест логирования "tool not found"\n');
 

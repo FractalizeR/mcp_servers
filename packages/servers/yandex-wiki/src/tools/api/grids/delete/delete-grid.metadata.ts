@@ -10,10 +10,9 @@ import { DeleteGridOutputDataSchema } from './delete-grid.schema.js';
 
 export const DELETE_GRID_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_grid', MCP_TOOL_PREFIX),
-  description:
-    '[Grids/Write] Удалить динамическую таблицу. Необратимо: в отличие от удаления страницы, recovery_token API не возвращает',
+  description: '[Grids/Delete] Удалить динамическую таблицу (необратимо, без recovery_token)',
   category: ToolCategory.GRIDS,
-  subcategory: 'write',
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['write', 'delete', 'grid', 'table'],
   isHelper: false,

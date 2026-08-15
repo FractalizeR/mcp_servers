@@ -20,7 +20,7 @@ export const GET_ALL_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Get All Tasks',
+  title: 'Все задачи',
   outputSchema: GET_ALL_TASKS_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

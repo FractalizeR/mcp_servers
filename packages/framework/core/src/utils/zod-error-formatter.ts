@@ -34,7 +34,6 @@ export const ValidationErrorCode = {
   UNKNOWN: 'UNKNOWN',
 } as const;
 
- 
 export type ValidationErrorCode = (typeof ValidationErrorCode)[keyof typeof ValidationErrorCode];
 
 /**

@@ -14,13 +14,16 @@ export const DELETE_TASK_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_task', MCP_TOOL_PREFIX),
   description: '[Tasks/Write] Delete a task',
   category: ToolCategory.TASKS,
-  subcategory: 'write',
+  // 'delete' отдельно от 'write' (M5 отчёта ревью): позволяет отключить все
+  // удаляющие tools рубильником DISABLED_TOOL_GROUPS=tasks:delete, не
+  // затрагивая create_task/update_task/complete_task.
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['task', 'delete', 'remove'],
   isHelper: false,
   requiresExplicitUserConsent: true,
   redactionAllowlist: ['projectId', 'taskId'],
-  title: 'Delete Task',
+  title: 'Удалить задачу',
   outputSchema: DELETE_TASK_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: false,

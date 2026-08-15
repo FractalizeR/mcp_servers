@@ -160,9 +160,7 @@ async function main() {
     console.error('Commands exceeding threshold:');
     failures.forEach((f) => {
       const threshold = f.name.includes('--help') ? STARTUP_THRESHOLD : COMMAND_THRESHOLD;
-      console.error(
-        `  - ${f.name}: +${f.diffPercent.toFixed(2)}% (threshold: ${threshold}%)`
-      );
+      console.error(`  - ${f.name}: +${f.diffPercent.toFixed(2)}% (threshold: ${threshold}%)`);
     });
     console.error('\n⚠️  Action required: Optimize before release!');
     process.exit(1);

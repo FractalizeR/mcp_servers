@@ -42,15 +42,13 @@ describe('ClonePageOperation', () => {
     await operation.execute(12345, {
       target: 'users/new/cloned-page',
       title: 'New Title',
-      recursive: true,
-      dry_run: true,
+      subscribe_me: true,
     });
 
     expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/pages/12345/clone', {
       target: 'users/new/cloned-page',
       title: 'New Title',
-      recursive: true,
-      dry_run: true,
+      subscribe_me: true,
     });
   });
 

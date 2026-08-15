@@ -11,7 +11,7 @@ export const DELETE_BOARD_COLUMN_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_board_column', MCP_TOOL_PREFIX),
   description: '[Boards/Write] Удалить колонку доски',
   category: ToolCategory.BOARDS,
-  subcategory: 'write',
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['board', 'columns', 'delete', 'write', 'remove', 'agile', 'kanban'],
   isHelper: false,

@@ -1,6 +1,6 @@
 /**
  * Smoke Test: пакет 3.1.C.ticktick (annotations/outputSchema/title/
- * redactionAllowlist для всех 25 инструментов TickTick)
+ * redactionAllowlist для всех инструментов TickTick)
  *
  * Обходит реестр инструментов через TOOL_CLASSES (не список имён в коде —
  * см. план .agentic-planning/plan_mcp_2026_modernization/3.1_tool_contracts_parallel.md,
@@ -8,13 +8,19 @@
  * будущие инструменты, забывшие про annotations/outputSchema.
  *
  * DoD пакета:
- * 1. Все 25 инструментов имеют annotations и outputSchema.
+ * 1. Все инструменты реестра имеют annotations и outputSchema.
  * 2. structuredContent валиден по outputSchema — представители каждой категории.
  * 3. tools/list (через projectToolDefinitionsForList) отдаёт title, outputSchema,
  *    annotations.
  * 4. redactionAllowlist заполнен осмысленно: пользовательский текст
  *    (заголовок/содержимое задачи, поисковый запрос, название проекта) в
  *    allow-list не попал.
+ *
+ * L10 отчёта REVIEW_MCP_SDK_FINDINGS.md: раньше здесь была жёсткая проверка
+ * "ровно 25 инструментов" — любое добавление/удаление tool валило тест не по
+ * делу, никак не проверяя реальный DoD пакета. Заменена на содержательную
+ * проверку (реестр не пуст, имена уникальны); текущее число инструментов —
+ * только в комментарии, не в assert.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -41,8 +47,6 @@ import { SEARCH_TASKS_TOOL_METADATA } from '#tools/tasks/search-tasks/search-tas
 
 const ajv = new Ajv2020({ strict: false });
 
-const EXPECTED_TOOL_COUNT = 25;
-
 describe('Tool Contracts 3.1.C (Smoke) — annotations / outputSchema / title / redactionAllowlist', () => {
   let mockFacade: TickTickFacade;
   let mockLogger: Logger;
@@ -58,8 +62,11 @@ describe('Tool Contracts 3.1.C (Smoke) — annotations / outputSchema / title / 
     } as unknown as Logger;
   });
 
-  it('в реестре ровно 25 инструментов TickTick (сверка с планом этапа 3.1.C)', () => {
-    expect(TOOL_CLASSES.length).toBe(EXPECTED_TOOL_COUNT);
+  it('реестр TickTick не пуст и не содержит дублирующихся имён инструментов', () => {
+    expect(TOOL_CLASSES.length).toBeGreaterThan(0);
+
+    const names = TOOL_CLASSES.map((ToolClass) => ToolClass.METADATA.name);
+    expect(new Set(names).size, `дублирующиеся имена: ${JSON.stringify(names)}`).toBe(names.length);
   });
 
   describe('DoD 1: каждый инструмент имеет annotations', () => {
@@ -97,7 +104,7 @@ describe('Tool Contracts 3.1.C (Smoke) — annotations / outputSchema / title / 
       );
       const listEntries = projectToolDefinitionsForList(definitions);
 
-      expect(listEntries).toHaveLength(EXPECTED_TOOL_COUNT);
+      expect(listEntries).toHaveLength(TOOL_CLASSES.length);
       listEntries.forEach((entry) => {
         expect(entry.title, `${entry.name}: отсутствует title`).toBeDefined();
         expect(entry.outputSchema, `${entry.name}: отсутствует outputSchema`).toBeDefined();
@@ -200,7 +207,7 @@ describe('Tool Contracts 3.1.C (Smoke) — annotations / outputSchema / title / 
       expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
     });
 
-    it('UpdateTaskTool (tasks/write, destructive+idempotent): ответ соответствует outputSchema', async () => {
+    it('UpdateTaskTool (tasks/write, idempotent): ответ соответствует outputSchema', async () => {
       const facade = {
         updateTask: async () => ({
           id: 't1',

@@ -11,6 +11,7 @@ export {
   runValidation,
   getScriptDir,
 } from './tool-registration-validator.js';
+export { getPackageVersion } from './get-package-version.js';
 export type { ProcessedBatchResult } from './batch-result-processor.js';
 export type { ResultLogConfig } from './result-logger.js';
 export type { FormattedValidationError, ZodIssueMinimal } from './zod-error-formatter.js';

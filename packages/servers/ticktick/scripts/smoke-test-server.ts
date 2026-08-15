@@ -12,7 +12,7 @@
  * 6. Server gracefully shuts down
  */
 
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 interface JSONRPCRequest {
@@ -43,7 +43,7 @@ const SERVER_STARTUP_DELAY_MS = 1000; // 1 second for server startup
 async function main(): Promise<void> {
   console.log('🚀 Starting TickTick MCP server smoke test...\n');
 
-  let serverProcess: ReturnType<typeof spawn> | null = null;
+  let serverProcess: ChildProcessWithoutNullStreams | null = null;
   let timeoutId: NodeJS.Timeout | null = null;
 
   try {
@@ -75,16 +75,22 @@ async function main(): Promise<void> {
     }
 
     // Kill server process if still running
-    if (serverProcess && !serverProcess.killed) {
+    //
+    // TS не отслеживает присваивание `serverProcess` внутри вложенной функции
+    // runSmokeTest() как часть control flow этого блока — без приведения типа
+    // здесь `serverProcess` сужается до `never` (TS2339), хотя рантайм-значение
+    // корректно (см. https://github.com/microsoft/TypeScript/issues/9998).
+    const proc = serverProcess as unknown as ChildProcessWithoutNullStreams | null;
+    if (proc && !proc.killed) {
       console.log('\n🛑 Stopping server...');
-      serverProcess.kill('SIGTERM');
+      proc.kill('SIGTERM');
 
       // Give 2 seconds for graceful shutdown
       await sleep(2000);
 
-      if (!serverProcess.killed) {
+      if (!proc.killed) {
         console.log('⚠️  Server did not respond to SIGTERM, sending SIGKILL...');
-        serverProcess.kill('SIGKILL');
+        proc.kill('SIGKILL');
       }
     }
   }

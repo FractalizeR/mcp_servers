@@ -38,7 +38,10 @@ describe('DeleteChecklistItemTool', () => {
 
     it('должен иметь корректную категорию', () => {
       expect(DeleteChecklistItemTool.METADATA.category).toBe('checklists');
-      expect(DeleteChecklistItemTool.METADATA.subcategory).toBe('write');
+      // M5 отчёта ревью: subcategory ЛЮБОГО delete_*-инструмента — 'delete',
+      // единообразно по всему серверу (единственный способ выключить все
+      // удаляющие инструменты одним правилом DISABLED_TOOL_GROUPS).
+      expect(DeleteChecklistItemTool.METADATA.subcategory).toBe('delete');
     });
 
     it('должен иметь корректное описание', () => {

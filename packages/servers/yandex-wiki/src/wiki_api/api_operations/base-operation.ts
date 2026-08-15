@@ -91,7 +91,7 @@ export abstract class BaseOperation {
     }
 
     const response = await axiosInstance.get(endpoint, { responseType: 'arraybuffer' });
-     
+
     const contentType: unknown = response.headers?.['content-type'];
 
     return {

@@ -102,17 +102,23 @@ async function main(): Promise<void> {
       clearTimeout(timeoutId);
     }
 
-    // Убиваем процесс сервера если он всё ещё работает
-    if (serverProcess && !serverProcess.killed) {
+    // Убиваем процесс сервера если он всё ещё работает.
+    // TS не умеет отследить присваивание `serverProcess = spawn(...)` внутри
+    // вложенной `runSmokeTest()` через границу `await runSmokeTest()` — без
+    // явного каста CFA считает переменную здесь всегда `null` (сужает `if`
+    // до `never`). Рантайм-поведение корректно (одна и та же переменная
+    // захвачена замыканием), это чисто сигнатурное ограничение компилятора.
+    const proc = serverProcess as ReturnType<typeof spawn> | null;
+    if (proc && !proc.killed) {
       console.log('\n🛑 Останавливаем сервер...');
-      serverProcess.kill('SIGTERM');
+      proc.kill('SIGTERM');
 
       // Даём 2 секунды на graceful shutdown
       await sleep(2000);
 
-      if (!serverProcess.killed) {
+      if (!proc.killed) {
         console.log('⚠️  Сервер не ответил на SIGTERM, отправляем SIGKILL...');
-        serverProcess.kill('SIGKILL');
+        proc.kill('SIGKILL');
       }
     }
   }

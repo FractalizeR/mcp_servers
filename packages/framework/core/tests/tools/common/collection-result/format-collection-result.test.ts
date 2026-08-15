@@ -71,7 +71,8 @@ class FakeCollectionTool extends BaseTool<void> {
 
   constructor(
     private readonly items: FakeItem[],
-    logger: Logger
+    logger: Logger,
+    private readonly summary?: Record<string, unknown>
   ) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     super(null as any, logger);
@@ -91,6 +92,7 @@ class FakeCollectionTool extends BaseTool<void> {
       items: this.items,
       mode,
       toResourceLink,
+      ...(this.summary !== undefined ? { summary: this.summary } : {}),
     });
   }
 }
@@ -155,6 +157,17 @@ describe('BaseTool.formatCollectionResult', () => {
   });
 
   describe('порог по умолчанию (mode="auto")', () => {
+    it('на единицу меньше порога отдаётся телами', async () => {
+      const items = buildFakeItems(DEFAULT_COLLECTION_LINKS_THRESHOLD - 1);
+      const tool = new FakeCollectionTool(items, buildLogger());
+
+      const result = await tool.execute({ responseMode: 'auto' });
+
+      const structured = result.structuredContent as { data: { mode: string } };
+      expect(structured.data.mode).toBe('full');
+      expect(result.content.filter((c) => c['type'] === 'resource_link')).toHaveLength(0);
+    });
+
     it('маленькая коллекция (<= порога) отдаётся телами', async () => {
       const items = buildFakeItems(DEFAULT_COLLECTION_LINKS_THRESHOLD);
       const tool = new FakeCollectionTool(items, buildLogger());
@@ -187,6 +200,35 @@ describe('BaseTool.formatCollectionResult', () => {
 
       const structured = result.structuredContent as { data: { mode: string } };
       expect(structured.data.mode).toBe('full');
+    });
+  });
+
+  describe('summary — опциональные агрегаты коллекции, не зависящие от режима', () => {
+    it('summary попадает в data и в режиме full, и в режиме links, когда передан', async () => {
+      const items = buildFakeItems(3);
+      const summary = { openCount: 2, closedCount: 1 };
+
+      const fullTool = new FakeCollectionTool(items, buildLogger(), summary);
+      const fullResult = await fullTool.execute({ responseMode: 'full' });
+      expect(
+        (fullResult.structuredContent as { data: { summary?: unknown } }).data.summary
+      ).toEqual(summary);
+
+      const linksTool = new FakeCollectionTool(items, buildLogger(), summary);
+      const linksResult = await linksTool.execute({ responseMode: 'links' });
+      expect(
+        (linksResult.structuredContent as { data: { summary?: unknown } }).data.summary
+      ).toEqual(summary);
+    });
+
+    it('без summary ключ summary в data отсутствует полностью', async () => {
+      const items = buildFakeItems(3);
+      const tool = new FakeCollectionTool(items, buildLogger());
+
+      const result = await tool.execute({ responseMode: 'full' });
+
+      const data = (result.structuredContent as { data: object }).data;
+      expect('summary' in data).toBe(false);
     });
   });
 

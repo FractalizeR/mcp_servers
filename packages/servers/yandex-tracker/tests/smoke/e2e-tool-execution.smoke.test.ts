@@ -9,7 +9,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
 import type { ServerConfig } from '#config';
-import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
+import type { ToolRegistry, BaseTool } from '@fractalizer/mcp-core';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 
 describe('E2E Tool Execution (Smoke)', () => {
@@ -22,6 +22,9 @@ describe('E2E Tool Execution (Smoke)', () => {
     maxConcurrentRequests: 10,
     logLevel: 'error',
     prettyLogs: false,
+    logsDir: '/tmp/logs',
+    logMaxSize: 10485760,
+    logMaxFiles: 10,
   };
 
   afterEach(() => {
@@ -115,9 +118,9 @@ describe('E2E Tool Execution (Smoke)', () => {
 
     // Assert
     expect(allTools.length).toBeGreaterThan(5); // Должно быть больше 5 tools
-    expect(allTools.some((t) => t.getMetadata().definition.name === 'fr_yandex_tracker_ping')).toBe(
-      true
-    );
+    expect(
+      allTools.some((t: BaseTool) => t.getMetadata().definition.name === 'fr_yandex_tracker_ping')
+    ).toBe(true);
     // search_tools больше не существует как отдельный tool (пакет mcp-search удалён)
     expect(toolRegistry.getTool('search_tools')).toBeUndefined();
   });

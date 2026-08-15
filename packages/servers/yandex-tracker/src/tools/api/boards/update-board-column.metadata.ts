@@ -15,7 +15,7 @@ export const UPDATE_BOARD_COLUMN_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['board', 'columns', 'update', 'write', 'agile', 'kanban'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['boardId', 'columnId', 'statuses', 'limit', 'fields'],
   title: 'Обновить колонку доски',
   outputSchema: UpdateBoardColumnOutputSchema,

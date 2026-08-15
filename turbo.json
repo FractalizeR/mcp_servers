@@ -51,6 +51,7 @@
     },
     "test:raw-wire": {
       "dependsOn": ["build"],
+      "inputs": ["dist/**/*.bundle.cjs", "scripts/raw-wire-test.ts"],
       "cache": false
     },
     "lint": {

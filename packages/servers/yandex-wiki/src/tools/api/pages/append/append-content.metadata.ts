@@ -16,7 +16,7 @@ export const APPEND_CONTENT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['write', 'append', 'add', 'content', 'page', 'wiki'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: [
     'idx',
     'body_location',

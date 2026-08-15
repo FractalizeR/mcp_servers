@@ -19,7 +19,7 @@ export const CREATE_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['write', 'create', 'comments', 'wiki'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx', 'parent_id', 'thread_id'],
   title: 'Создать комментарий',
   outputSchema: buildOutputSchema(CreateCommentOutputDataSchema),

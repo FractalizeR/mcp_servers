@@ -11,10 +11,11 @@ import { RemovePageAccessOutputDataSchema } from './remove-page-access.schema.js
 export const REMOVE_PAGE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('remove_page_access', MCP_TOOL_PREFIX),
   description:
-    '[PageAccess/Delete] Удалить один доступ по его id (DELETE /pages/{id}/access/{access_id}). ' +
-    'Для удаления ВСЕХ персональных доступов страницы разом — yw_remove_all_page_access.',
+    '[PageAccess/Delete] Удалить один доступ по access_id ' +
+    '(DELETE /pages/{id}/access/{access_id}). Для удаления ВСЕХ персональных доступов страницы ' +
+    'разом — yw_remove_all_page_access.',
   category: ToolCategory.PAGES,
-  subcategory: 'access',
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['delete', 'access', 'permissions', 'wiki'],
   isHelper: false,

@@ -16,7 +16,7 @@ export const MOVE_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.LOW,
   tags: ['write', 'move', 'columns', 'grid', 'table'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx', 'revision', 'column_slug', 'position', 'columns_count'],
   title: 'Переместить колонки в таблице',
   outputSchema: buildOutputSchema(MoveColumnsOutputDataSchema),

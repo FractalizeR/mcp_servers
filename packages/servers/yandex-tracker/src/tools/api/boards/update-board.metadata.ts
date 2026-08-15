@@ -18,7 +18,7 @@ export const UPDATE_BOARD_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['board', 'update', 'write', 'agile'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['boardId', 'version', 'orderAsc', 'useRanking', 'country', 'fields'],
   title: 'Обновить доску',
   outputSchema: UpdateBoardOutputSchema,

@@ -15,7 +15,7 @@ export const UPDATE_QUEUE_LOCAL_FIELD_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['queue', 'local-fields', 'custom-fields', 'update', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: [
     'queueId',
     'key',

@@ -20,7 +20,7 @@ export function defineServerConfig(
     outDir: 'dist',
     format: ['cjs'], // CommonJS для полной совместимости с dynamic require
     platform: 'node',
-    target: 'node18',
+    target: 'node22',
     sourcemap: true,
     clean: true,
     dts: false, // серверы не экспортируют типы

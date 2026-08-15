@@ -155,6 +155,18 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 /**
+ * Достаёт `supported` из `error.data` (тип `unknown` — форма зависит от кода
+ * ошибки, у -32022 это список версий, у остальных кодов поле может
+ * отсутствовать вовсе).
+ */
+function extractSupportedVersions(data: unknown): unknown {
+  if (data && typeof data === 'object' && 'supported' in data) {
+    return (data as { supported: unknown }).supported;
+  }
+  return undefined;
+}
+
+/**
  * Убирает волатильные ISO-8601 таймстампы из content перед сравнением между
  * эпохами (сценарий 8): некоторые tool включают текущее время выполнения в
  * payload (например, ping — метку последней попытки подключения), это
@@ -259,6 +271,21 @@ async function main(): Promise<void> {
         ),
         `icons должен содержать SVG как data: URI, получено ${JSON.stringify(icons)}`
       );
+
+      // M1 (REVIEW_MCP_SDK_FINDINGS.md): механизм иконок опирается на патч
+      // приватного метода SDK (_ondiscover) — если он тихо перестанет
+      // работать, единственный сигнал регрессии — этот негативный ассерт.
+      // Держим его именно в сценарии 2 (не только в сценарии 5), рядом с
+      // позитивной проверкой icons на discover, чтобы обе половины контракта
+      // ("иконка есть на discover" / "иконки нет на обычном ответе") были
+      // видны в одном месте и одной сессии соединения.
+      const list = await harness.request(2, 'tools/list', { _meta: modernMeta() });
+      const listServerInfo = list.result?._meta?.['io.modelcontextprotocol/serverInfo'];
+      assert(
+        listServerInfo?.icons === undefined,
+        `tools/list: _meta["io.modelcontextprotocol/serverInfo"].icons НЕ должен присутствовать ` +
+          `на обычном ответе (иконка едет только в server/discover), получено ${JSON.stringify(listServerInfo?.icons)}`
+      );
     })
   );
 
@@ -289,7 +316,7 @@ async function main(): Promise<void> {
         `ожидался код -32022 (UnsupportedProtocolVersion), получено ${JSON.stringify(response)}`
       );
       assert(
-        Array.isArray(response.error?.data?.supported),
+        Array.isArray(extractSupportedVersions(response.error?.data)),
         `error.data.supported должен перечислять поддерживаемые версии, получено ${JSON.stringify(response.error?.data)}`
       );
     })

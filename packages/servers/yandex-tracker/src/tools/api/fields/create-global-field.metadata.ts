@@ -15,7 +15,7 @@ export const CREATE_GLOBAL_FIELD_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['administration', 'fields', 'global-fields', 'create', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   // Только структурные/идентификаторные поля — 'name'/'description'/'options.display'
   // могут содержать произвольный бизнес-текст, поэтому НЕ в allowlist.
   redactionAllowlist: ['schema', 'readonly', 'suggest', 'optionsProvider', 'fields'],

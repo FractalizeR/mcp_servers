@@ -20,7 +20,7 @@ export const DELETE_CHECKLIST_ITEM_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_checklist_item', MCP_TOOL_PREFIX),
   description: '[Checklist/Write] Удалить элементы из чеклистов (batch)',
   category: ToolCategory.CHECKLISTS,
-  subcategory: 'write',
+  subcategory: 'delete',
   priority: ToolPriority.HIGH,
   tags: ['checklist', 'delete', 'remove', 'write', 'batch'],
   isHelper: false,

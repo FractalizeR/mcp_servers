@@ -15,7 +15,7 @@ export const ADD_GOAL_KEY_RESULT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['entity', 'goal', 'key-result', 'okr', 'write', 'create'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['goalId'],
   title: 'Добавить Key Result',
   outputSchema: AddGoalKeyResultOutputSchema,

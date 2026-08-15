@@ -20,7 +20,7 @@ export const DELETE_WORKLOG_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_worklog', MCP_TOOL_PREFIX),
   description: '[Worklog/Delete] Удалить запись времени задачи',
   category: ToolCategory.ISSUES,
-  subcategory: 'worklog',
+  subcategory: 'delete',
   priority: ToolPriority.HIGH,
   tags: ['worklog', 'delete', 'remove', 'time'],
   isHelper: false,

@@ -97,6 +97,9 @@ describe('Tool Schema Contract (Smoke) — JSON Schema 2020-12', () => {
       maxConcurrentRequests: 10,
       logLevel: 'error',
       prettyLogs: false,
+      logsDir: '/tmp/logs',
+      logMaxSize: 10485760,
+      logMaxFiles: 10,
     };
 
     afterEach(() => {

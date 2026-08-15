@@ -16,7 +16,7 @@ export const ADD_ROWS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['write', 'add', 'rows', 'grid', 'table'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx', 'revision', 'position', 'after_row_id'],
   title: 'Добавить строки в таблицу',
   outputSchema: buildOutputSchema(AddRowsOutputDataSchema),

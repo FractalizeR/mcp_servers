@@ -24,7 +24,7 @@ export const TRANSITION_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['transition', 'status', 'workflow', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueKey', 'transitionId', 'fields'],
   title: 'Выполнить переход задачи',
   outputSchema: TransitionIssueOutputSchema,

@@ -29,14 +29,24 @@ const BASE_ENV: Record<string, string> = {
   YANDEX_ORG_ID: '123456',
 };
 const PING_TOOL = 'fr_yandex_tracker_ping';
+// Единственный tool, который НЕ обращается к API Яндекс.Трекера (работает
+// локально, без токена) — нужен сценарию 8 для проверки УСПЕШНОГО пути
+// tools/call (ping с фиктивным токеном всегда падает по 401, поэтому
+// годится только для проверки пути ошибки).
+const SUCCESS_TOOL = 'fr_yandex_tracker_get_issue_urls';
 const DISABLED_CATEGORY = 'issues';
 const DISABLED_TOOL = 'fr_yandex_tracker_get_issues';
+// Текст отказа policy (ConfiguredToolAccessPolicy.denialReason в
+// @fractalizer/mcp-core/tool-registry/tool-access-policy.ts) — сценарий 9
+// сверяет ИМЕННО эту подстроку, чтобы доказать, что isError вызван отказом
+// policy, а не каким-то другим путём ошибки (например "tool не найден").
+const POLICY_DENIAL_SUBSTRING = `Инструмент "${DISABLED_TOOL}" недоступен в текущей конфигурации сервера`;
 // ---------------------------------------------------------------------------
 
 interface JsonRpcError {
   code: number;
   message: string;
-  data?: unknown;
+  data?: Record<string, unknown>;
 }
 
 interface JsonRpcResponse {
@@ -260,6 +270,19 @@ async function main(): Promise<void> {
         ),
         `icons должен содержать SVG как data: URI, получено ${JSON.stringify(icons)}`
       );
+
+      // НЕГАТИВНЫЙ ассерт (M1/M7 отчёта ревью): иконка едет ИСКЛЮЧИТЕЛЬНО в
+      // server/discover. Держится на патче приватного _ondiscover SDK — без
+      // этого теста регрессия (иконка тихо перестала осесть в discover ИЛИ
+      // тихо начала протекать в tools/list) не была бы поймана, только
+      // задокументирована чтением исходников SDK.
+      const list = await harness.request(2, 'tools/list', { _meta: modernMeta() });
+      const listServerInfo = list.result?._meta?.['io.modelcontextprotocol/serverInfo'];
+      assert(
+        listServerInfo?.icons === undefined,
+        `НЕГАТИВНЫЙ ассерт: tools/list._meta["io.modelcontextprotocol/serverInfo"].icons НЕ должен ` +
+          `присутствовать (иконка едет только в server/discover), получено ${JSON.stringify(listServerInfo?.icons)}`
+      );
     })
   );
 
@@ -290,7 +313,7 @@ async function main(): Promise<void> {
         `ожидался код -32022 (UnsupportedProtocolVersion), получено ${JSON.stringify(response)}`
       );
       assert(
-        Array.isArray(response.error?.data?.supported),
+        Array.isArray(response.error?.data?.['supported']),
         `error.data.supported должен перечислять поддерживаемые версии, получено ${JSON.stringify(response.error?.data)}`
       );
     })
@@ -369,15 +392,18 @@ async function main(): Promise<void> {
   );
 
   await scenario(
-    '8. Один и тот же tools/call в обеих эпохах даёт одинаковый результат',
+    '8. Один и тот же tools/call в обеих эпохах даёт одинаковый результат (ошибка И успех)',
     async () => {
-      const legacy = await withServer(async (harness) => {
+      // 8a. Путь ОШИБКИ: ping с фиктивным токеном падает по 401 одинаково в
+      // обеих эпохах — покрывает форму ошибки, но НЕ покрывает успешный путь
+      // и сериализацию нетривиальных аргументов (см. 8b).
+      const legacyError = await withServer(async (harness) => {
         await legacyInitialize(harness, 1);
         const call = await harness.request(2, 'tools/call', { name: PING_TOOL, arguments: {} });
         return call.result;
       });
 
-      const modern = await withServer(async (harness) => {
+      const modernError = await withServer(async (harness) => {
         await harness.request(1, 'server/discover', { _meta: modernMeta() });
         const call = await harness.request(2, 'tools/call', {
           name: PING_TOOL,
@@ -387,14 +413,59 @@ async function main(): Promise<void> {
         return call.result;
       });
 
-      assert(legacy && modern, 'оба вызова должны вернуть result');
+      assert(legacyError && modernError, '8a: оба вызова (путь ошибки) должны вернуть result');
       assert(
-        normalizeVolatileContent(legacy.content) === normalizeVolatileContent(modern.content),
-        `content должен совпадать между эпохами (после нормализации таймстампов):\n  legacy=${JSON.stringify(legacy.content)}\n  modern=${JSON.stringify(modern.content)}`
+        normalizeVolatileContent(legacyError.content) ===
+          normalizeVolatileContent(modernError.content),
+        `8a: content (путь ошибки) должен совпадать между эпохами (после нормализации таймстампов):\n  legacy=${JSON.stringify(legacyError.content)}\n  modern=${JSON.stringify(modernError.content)}`
       );
       assert(
-        Boolean(legacy.isError) === Boolean(modern.isError),
-        `isError должен совпадать между эпохами: legacy=${legacy.isError} modern=${modern.isError}`
+        Boolean(legacyError.isError) === Boolean(modernError.isError),
+        `8a: isError (путь ошибки) должен совпадать между эпохами: legacy=${legacyError.isError} modern=${modernError.isError}`
+      );
+
+      // 8b. Путь УСПЕХА: get_issue_urls — единственный tool, НЕ обращающийся
+      // к API (см. SUCCESS_TOOL), поэтому даёт настоящий успешный результат
+      // даже с фиктивным токеном. Аргументы — массив из двух ключей: доказывает,
+      // что НЕТРИВИАЛЬНЫЕ аргументы сериализуются и валидируются одинаково в
+      // обеих эпохах, а не только "пустой arguments: {}" из 8a.
+      const successArgs = { issueKeys: ['FRTEST-1', 'FRTEST-2'] };
+
+      const legacySuccess = await withServer(async (harness) => {
+        await legacyInitialize(harness, 1);
+        const call = await harness.request(2, 'tools/call', {
+          name: SUCCESS_TOOL,
+          arguments: successArgs,
+        });
+        return call.result;
+      });
+
+      const modernSuccess = await withServer(async (harness) => {
+        await harness.request(1, 'server/discover', { _meta: modernMeta() });
+        const call = await harness.request(2, 'tools/call', {
+          name: SUCCESS_TOOL,
+          arguments: successArgs,
+          _meta: modernMeta(),
+        });
+        return call.result;
+      });
+
+      assert(legacySuccess && modernSuccess, '8b: оба вызова (путь успеха) должны вернуть result');
+      assert(
+        legacySuccess.isError !== true && modernSuccess.isError !== true,
+        `8b: путь успеха НЕ должен быть isError: legacy=${JSON.stringify(legacySuccess)} modern=${JSON.stringify(modernSuccess)}`
+      );
+      assert(
+        JSON.stringify(legacySuccess.content) === JSON.stringify(modernSuccess.content),
+        `8b: content (путь успеха) должен побайтово совпадать между эпохами:\n  legacy=${JSON.stringify(legacySuccess.content)}\n  modern=${JSON.stringify(modernSuccess.content)}`
+      );
+
+      const successText = legacySuccess.content?.[0]?.text;
+      assert(
+        typeof successText === 'string' &&
+          successText.includes('FRTEST-1') &&
+          successText.includes('FRTEST-2'),
+        `8b: результат должен отражать ОБА переданных issueKeys (доказывает, что аргументы дошли до tool, а не что оба вызова случайно вернули одинаковую пустышку), получено ${JSON.stringify(successText)}`
       );
     }
   );
@@ -429,6 +500,25 @@ async function main(): Promise<void> {
     assert(
       JSON.stringify(legacy.content) === JSON.stringify(modern.content),
       `текст отказа должен совпадать между эпохами:\n  legacy=${JSON.stringify(legacy.content)}\n  modern=${JSON.stringify(modern.content)}`
+    );
+
+    // M7: isError:true сам по себе не доказывает, что причина — именно
+    // policy denial (а не, например, "tool не найден" или падение внутри
+    // execute()). Сверяем ТЕКСТ отказа с ConfiguredToolAccessPolicy.denialReason
+    // (@fractalizer/mcp-core/tool-registry/tool-access-policy.ts). content[0].text
+    // сам — JSON-текст envelope { success, message }, поэтому парсим его, а не
+    // ищем подстроку в сыром тексте (там кавычки вокруг имени tool экранированы).
+    const legacyMessage = JSON.parse(legacy.content?.[0]?.text ?? '{}') as { message?: string };
+    const modernMessage = JSON.parse(modern.content?.[0]?.text ?? '{}') as { message?: string };
+    assert(
+      typeof legacyMessage.message === 'string' &&
+        legacyMessage.message.includes(POLICY_DENIAL_SUBSTRING),
+      `legacy: message отказа должен содержать причину policy denial ("${POLICY_DENIAL_SUBSTRING}"), получено ${JSON.stringify(legacyMessage.message)}`
+    );
+    assert(
+      typeof modernMessage.message === 'string' &&
+        modernMessage.message.includes(POLICY_DENIAL_SUBSTRING),
+      `modern: message отказа должен содержать причину policy denial ("${POLICY_DENIAL_SUBSTRING}"), получено ${JSON.stringify(modernMessage.message)}`
     );
   });
 

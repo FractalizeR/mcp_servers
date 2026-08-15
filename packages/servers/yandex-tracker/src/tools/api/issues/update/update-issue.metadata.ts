@@ -24,7 +24,7 @@ export const UPDATE_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['update', 'edit', 'modify', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueKey', 'assignee', 'priority', 'type', 'version', 'fields'],
   title: 'Обновить задачу',
   outputSchema: UpdateIssueOutputSchema,

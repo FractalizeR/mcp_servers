@@ -14,7 +14,7 @@ export type OrgType = 'yandex360' | 'cloud';
  * Конфигурация MCP сервера Yandex Wiki.
  *
  * Доменная модель CLI: формируется в результате интерактивных промптов и
- * сохраняется в `~/.yandex-wiki/config.json` (без секретов — см.
+ * сохраняется в `~/.fractalizer_mcp_yandex_wiki/config.json` (без секретов — см.
  * `serializeYwConfig`).
  */
 export interface YandexWikiMCPConfig {

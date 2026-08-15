@@ -10,9 +10,9 @@ import { RemoveColumnsOutputDataSchema } from './remove-columns.schema.js';
 
 export const REMOVE_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('remove_columns', MCP_TOOL_PREFIX),
-  description: '[Grids/Write] Удалить колонки из таблицы',
+  description: '[Grids/Delete] Удалить колонки из таблицы',
   category: ToolCategory.GRIDS,
-  subcategory: 'write',
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['write', 'remove', 'delete', 'columns', 'grid', 'table'],
   isHelper: false,

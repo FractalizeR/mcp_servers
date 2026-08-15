@@ -24,11 +24,12 @@ export const RAW_API_REQUEST_TOOL_METADATA: StaticToolMetadata = {
   tags: ['raw', 'api', 'fallback', 'advanced', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  // Ни один параметр raw-запроса не является чистым идентификатором:
-  // path — произвольный маршрут (может нести встроенные ID, но не сам ID),
-  // query — открытый набор пар ключ-значение, потенциально с текстом.
-  redactionAllowlist: [],
-  title: 'Raw API Request',
+  // path/method — часть имени вызываемого API-эндпоинта, видны и без
+  // раскрытия (безопасны как projectId/taskId в других tools). query не
+  // раскрываем — открытый набор пар ключ-значение, потенциально с текстом
+  // (совпадает с tracker/wiki raw-api-request — L6 отчёта ревью).
+  redactionAllowlist: ['method', 'path', 'fields'],
+  title: 'Прямой запрос к API TickTick (GET)',
   outputSchema: RAW_API_REQUEST_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

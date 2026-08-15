@@ -17,7 +17,7 @@ export const GET_TASKS_DUE_THIS_WEEK_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Get Tasks Due This Week',
+  title: 'Задачи на этой неделе',
   outputSchema: GET_TASKS_DUE_THIS_WEEK_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

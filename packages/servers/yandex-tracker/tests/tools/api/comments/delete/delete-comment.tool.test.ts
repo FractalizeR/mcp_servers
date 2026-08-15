@@ -38,7 +38,10 @@ describe('DeleteCommentTool', () => {
 
     it('должен иметь корректную категорию', () => {
       expect(DeleteCommentTool.METADATA.category).toBe('comments');
-      expect(DeleteCommentTool.METADATA.subcategory).toBe('write');
+      // M5 отчёта ревью: subcategory ЛЮБОГО delete_*-инструмента — 'delete',
+      // единообразно по всему серверу (единственный способ выключить все
+      // удаляющие инструменты одним правилом DISABLED_TOOL_GROUPS).
+      expect(DeleteCommentTool.METADATA.subcategory).toBe('delete');
     });
 
     it('должен иметь корректное описание', () => {

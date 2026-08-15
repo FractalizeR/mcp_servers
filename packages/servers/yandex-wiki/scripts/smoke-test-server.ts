@@ -88,17 +88,23 @@ async function main(): Promise<void> {
       clearTimeout(timeoutId);
     }
 
-    // Убиваем процесс сервера если он всё ещё работает
-    if (serverProcess && !serverProcess.killed) {
+    // Убиваем процесс сервера если он всё ещё работает.
+    // Каст: serverProcess присваивается ТОЛЬКО внутри вложенных
+    // runSmokeTest()/runDeprecatedEnvVarSmokeTest() (замыкание) — TS не
+    // связывает это присваивание с внешней областью видимости и в finally
+    // сужает тип до `null` (истинностная проверка ниже даёт `never`), хотя
+    // рантайм-присваивание реально происходит до входа в finally.
+    const proc = serverProcess as ReturnType<typeof spawn> | null;
+    if (proc && !proc.killed) {
       console.log('\n🛑 Останавливаем сервер...');
-      serverProcess.kill('SIGTERM');
+      proc.kill('SIGTERM');
 
       // Даём 2 секунды на graceful shutdown
       await sleep(2000);
 
-      if (!serverProcess.killed) {
+      if (!proc.killed) {
         console.log('⚠️  Сервер не ответил на SIGTERM, отправляем SIGKILL...');
-        serverProcess.kill('SIGKILL');
+        proc.kill('SIGKILL');
       }
     }
   }

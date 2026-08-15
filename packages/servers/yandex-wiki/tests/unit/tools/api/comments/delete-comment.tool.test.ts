@@ -29,7 +29,7 @@ describe('DeleteCommentTool', () => {
 
       expect(mockFacade.deleteComment).toHaveBeenCalledWith(123, 501);
       expect(result.isError).toBeFalsy();
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['comments_count']).toBe(3);
     });
 

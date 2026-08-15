@@ -102,7 +102,7 @@ npm run mcp:list           # список поддерживаемых клие�
 ```json
 {
   "mcpServers": {
-    "yandex-wiki": {
+    "fractalizer_mcp_yandex_wiki": {
       "command": "npx",
       "args": ["-y", "@fractalizer/mcp-server-yandex-wiki"],
       "env": {

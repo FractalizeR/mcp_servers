@@ -29,13 +29,19 @@ QUIET=false
 # Turbo tasks — run across all workspaces
 # ---------------------------------------------------------------------------
 # Tasks that are the same in both modes:
-TURBO_TASKS_COMMON="build typecheck test:smoke test:smoke:server test:raw-wire depcruise validate:docs validate:tools"
+# test:coverage replaces plain `test` here: it runs the same test suite plus
+# coverage collection and enforces the thresholds declared per-package in
+# vitest.config.ts (extending vitest.shared.ts: lines/functions 80%,
+# branches 75%, statements 80%). Before this line was added, those
+# thresholds were declared but never checked by anything in the validation
+# pipeline — the gate looked enforced only because nothing measured it.
+TURBO_TASKS_COMMON="build typecheck test:coverage test:smoke test:smoke:server test:raw-wire depcruise validate:docs validate:tools"
 
 if $QUIET; then
-  TURBO_TASKS="$TURBO_TASKS_COMMON lint:quiet test:quiet cpd:quiet"
+  TURBO_TASKS="$TURBO_TASKS_COMMON lint:quiet cpd:quiet"
   TURBO_FLAGS="--output-logs=errors-only"
 else
-  TURBO_TASKS="$TURBO_TASKS_COMMON lint test cpd"
+  TURBO_TASKS="$TURBO_TASKS_COMMON lint cpd"
   TURBO_FLAGS=""
 fi
 
@@ -49,10 +55,18 @@ turbo run $TURBO_TASKS $TURBO_FLAGS
 # cwd = package dir, so it can never check root-level docs (CLAUDE.md,
 # ARCHITECTURE.md, tracker README.md, tests/README.md) — validate-docs-size.ts
 # only checks those when cwd === monorepoRoot. Must run once, from here.
+#
+# format:check: no turbo task exists for it (root `format`/`format:check`
+# run prettier directly over the whole monorepo glob, not per-workspace —
+# see root package.json), so it belongs here alongside knip:root /
+# validate:docs:root rather than in TURBO_TASKS above. Was missing entirely
+# before this fix, so `prettier --check` could fail while CI stayed green.
 if $QUIET; then
   npm run knip:root --silent 2>&1 | tail -1
   npm run validate:docs:root --silent 2>/dev/null | grep -v '^$' | tail -1
+  npm run format:check --silent
 else
   npm run knip:root
   npm run validate:docs:root
+  npm run format:check
 fi

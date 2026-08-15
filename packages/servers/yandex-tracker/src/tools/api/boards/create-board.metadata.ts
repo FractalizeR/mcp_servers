@@ -18,7 +18,7 @@ export const CREATE_BOARD_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['board', 'create', 'write', 'agile'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['queue', 'orderAsc', 'useRanking', 'country', 'fields'],
   title: 'Создать доску',
   outputSchema: CreateBoardOutputSchema,

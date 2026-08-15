@@ -10,9 +10,9 @@ import { RemoveRowsOutputDataSchema } from './remove-rows.schema.js';
 
 export const REMOVE_ROWS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('remove_rows', MCP_TOOL_PREFIX),
-  description: '[Grids/Write] Удалить строки из таблицы',
+  description: '[Grids/Delete] Удалить строки из таблицы',
   category: ToolCategory.GRIDS,
-  subcategory: 'write',
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['write', 'remove', 'delete', 'rows', 'grid', 'table'],
   isHelper: false,

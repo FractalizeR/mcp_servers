@@ -24,7 +24,7 @@ export const UPDATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['project', 'update', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: [
     'projectId',
     'lead',

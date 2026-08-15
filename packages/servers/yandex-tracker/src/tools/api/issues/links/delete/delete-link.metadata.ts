@@ -20,7 +20,7 @@ export const DELETE_LINK_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_link', MCP_TOOL_PREFIX),
   description: '[Issues/Links] Удалить связь между задачами',
   category: ToolCategory.ISSUES,
-  subcategory: 'links',
+  subcategory: 'delete',
   priority: ToolPriority.HIGH,
   tags: ['links', 'write', 'delete', 'remove', 'relationships'],
   isHelper: false,

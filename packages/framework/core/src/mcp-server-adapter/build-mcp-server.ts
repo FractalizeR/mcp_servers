@@ -22,11 +22,9 @@ import type {
   Implementation,
   ListResourcesResult,
   ReadResourceResult,
-  ReadResourceRequestParams,
   ListResourceTemplatesResult,
   ListPromptsResult,
   GetPromptResult,
-  GetPromptRequestParams,
   ServerOptions,
 } from '@modelcontextprotocol/server';
 
@@ -203,7 +201,8 @@ function registerToolHandlers(
     const { name, removedPrefix } = normalizeToolName(originalName, serverPrefixes, logger);
 
     try {
-      const result = await toolRegistry.execute(name, args as Record<string, unknown>);
+      // Не каст: `arguments` у SDK опционально (вызов tool без параметров), а `execute` требует объект без `undefined`.
+      const result = await toolRegistry.execute(name, args ?? {});
 
       if (result.isError) {
         logger.error(`❌ Инструмент ${name} вернул ошибку`, {
@@ -252,7 +251,7 @@ function registerResourceHandlers(
   logger: McpServerAdapterOptions['logger']
 ): void {
   server.setRequestHandler('resources/list', async (request) => {
-    const cursor = (request.params as { cursor?: string } | undefined)?.cursor;
+    const cursor = request.params?.cursor;
     logger.info(`📚 Запрос resources/list от клиента`, { hasCursor: cursor !== undefined });
 
     const page = await resourceRegistry.listResources(cursor);
@@ -264,7 +263,7 @@ function registerResourceHandlers(
   });
 
   server.setRequestHandler('resources/read', async (request) => {
-    const { uri } = request.params as ReadResourceRequestParams;
+    const { uri } = request.params;
     logger.info(`📄 Запрос resources/read: ${uri}`);
 
     try {
@@ -323,7 +322,7 @@ function registerPromptHandlers(
   });
 
   server.setRequestHandler('prompts/get', async (request) => {
-    const { name, arguments: args } = request.params as GetPromptRequestParams;
+    const { name, arguments: args } = request.params;
     logger.info(`💬 Запрос prompts/get: ${name}`);
 
     try {

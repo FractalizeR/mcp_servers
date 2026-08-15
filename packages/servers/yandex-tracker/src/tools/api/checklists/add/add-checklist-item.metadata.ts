@@ -24,7 +24,7 @@ export const ADD_CHECKLIST_ITEM_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['checklist', 'add', 'create', 'write', 'batch'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueId', 'checked', 'assignee', 'deadline', 'fields'],
   title: 'Добавить элементы чеклиста',
   outputSchema: AddChecklistItemOutputSchema,

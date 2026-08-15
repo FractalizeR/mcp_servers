@@ -101,6 +101,9 @@ describe('Entry Point Exports (Smoke)', () => {
       maxConcurrentRequests: 10,
       logLevel: 'error' as const,
       prettyLogs: false,
+      logsDir: '/tmp/logs',
+      logMaxSize: 10485760,
+      logMaxFiles: 10,
     };
 
     // Создание контейнера должно работать

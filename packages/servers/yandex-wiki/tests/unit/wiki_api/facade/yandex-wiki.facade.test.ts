@@ -213,8 +213,7 @@ describe('YandexWikiFacade', () => {
 
       const data = {
         title: 'New Grid',
-        page: 'users/test',
-        columns: [],
+        page: { slug: 'users/test' },
       };
       const result = await facade.createGrid(data);
 
@@ -236,9 +235,12 @@ describe('YandexWikiFacade', () => {
       const expectedGrid = createGridFixture();
       vi.mocked(mockGridService.updateGrid!).mockResolvedValue(expectedGrid);
 
-      const result = await facade.updateGrid('grid-123', { title: 'Updated' });
+      const result = await facade.updateGrid('grid-123', { title: 'Updated', revision: 'rev-1' });
 
-      expect(mockGridService.updateGrid).toHaveBeenCalledWith('grid-123', { title: 'Updated' });
+      expect(mockGridService.updateGrid).toHaveBeenCalledWith('grid-123', {
+        title: 'Updated',
+        revision: 'rev-1',
+      });
       expect(result).toEqual(expectedGrid);
     });
 
@@ -315,7 +317,7 @@ describe('YandexWikiFacade', () => {
       const expectedGrid = createGridFixture();
       vi.mocked(mockGridService.moveRows!).mockResolvedValue(expectedGrid);
 
-      const data = { row_ids: ['row-1'], after_row_id: 'row-5' };
+      const data = { row_id: 'row-1', after_row_id: 'row-5' };
       const result = await facade.moveRows('grid-123', data);
 
       expect(mockGridService.moveRows).toHaveBeenCalledWith('grid-123', data);
@@ -326,7 +328,7 @@ describe('YandexWikiFacade', () => {
       const expectedGrid = createGridFixture();
       vi.mocked(mockGridService.moveColumns!).mockResolvedValue(expectedGrid);
 
-      const data = { column_slugs: ['col1'], after_column_slug: 'col5' };
+      const data = { column_slug: 'col1', position: 5 };
       const result = await facade.moveColumns('grid-123', data);
 
       expect(mockGridService.moveColumns).toHaveBeenCalledWith('grid-123', data);

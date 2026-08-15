@@ -18,13 +18,19 @@ export const UPDATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['project', 'update', 'edit'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  // Решение владельца (2026-08-14): requiresExplicitUserConsent обязан
+  // совпадать с annotations.destructiveHint. update_project переписывает
+  // отдельные поля (name/color/viewMode/closed) — обратимо повторным
+  // вызовом с прежними значениями, данные не теряются безвозвратно, в
+  // отличие от удаления или полной перезаписи без пути отката. Поэтому
+  // НЕ разрушающая операция: оба флага false (было true/true).
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['projectId'],
-  title: 'Update Project',
+  title: 'Обновить проект',
   outputSchema: UPDATE_PROJECT_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: false,
-    destructiveHint: true,
+    destructiveHint: false,
     idempotentHint: true,
     openWorldHint: true,
   },

@@ -20,7 +20,7 @@ export const DELETE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_component', MCP_TOOL_PREFIX),
   description: '[Components/Write] Удалить компонент',
   category: ToolCategory.COMPONENTS,
-  subcategory: 'write',
+  subcategory: 'delete',
   priority: ToolPriority.HIGH,
   tags: ['components', 'delete', 'write', 'remove'],
   isHelper: false,

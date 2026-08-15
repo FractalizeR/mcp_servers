@@ -20,7 +20,7 @@ export const CREATE_TASK_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['projectId'],
-  title: 'Create Task',
+  title: 'Создать задачу',
   outputSchema: CREATE_TASK_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: false,

@@ -22,26 +22,20 @@ describe('MCP Server Lifecycle (Smoke)', () => {
     maxConcurrentRequests: 10,
     logLevel: 'error', // Минимум логов для smoke теста
     prettyLogs: false,
+    logsDir: '/tmp/logs',
+    logMaxSize: 10485760,
+    logMaxFiles: 10,
   };
 
-  it('должен создать MCP server instance', () => {
-    // Act
-    const server = new Server(
-      {
-        name: 'test-server',
-        version: '1.0.0',
-      },
-      {
-        capabilities: {
-          tools: {},
-        },
-      }
-    );
-
-    // Assert
-    expect(server).toBeDefined();
-    expect(server).toBeInstanceOf(Server);
-  });
+  // L10 (REVIEW_MCP_SDK_FINDINGS.md): здесь раньше был тест
+  // «должен создать MCP server instance», который создавал `new Server(...)`
+  // из SDK напрямую и проверял `toBeDefined()`/`toBeInstanceOf(Server)` —
+  // это проверка конструктора самого SDK, не нашего кода: всегда зелёный
+  // и ничего не доказывает про этот пакет. Удалён; `Server` из
+  // `@modelcontextprotocol/server` остаётся импортированным ниже — он
+  // используется в тесте «должен инициализироваться без ошибок», который
+  // ЭТО ЖЕ создание SDK-объекта комбинирует с реальным createContainer()
+  // нашего composition root, что уже даёт содержательную проверку.
 
   it('должен создать DI container и получить ToolRegistry', async () => {
     // Act
@@ -86,10 +80,11 @@ describe('MCP Server Lifecycle (Smoke)', () => {
 
   it('должен принимать cloudOrgId вместо orgId', async () => {
     // Arrange
+    const { orgId, ...fakeConfigWithoutOrgId } = fakeConfig;
+    void orgId; // exactOptionalPropertyTypes: убираем ключ, а не присваиваем undefined
     const cloudConfig: ServerConfig = {
-      ...fakeConfig,
+      ...fakeConfigWithoutOrgId,
       cloudOrgId: 'bpf3crucp1v2fake',
-      orgId: undefined,
     };
 
     // Act & Assert
@@ -106,6 +101,9 @@ describe('MCP Server Lifecycle (Smoke)', () => {
       maxConcurrentRequests: 10,
       logLevel: 'error',
       prettyLogs: false,
+      logsDir: '/tmp/logs',
+      logMaxSize: 10485760,
+      logMaxFiles: 10,
     };
 
     // Act & Assert

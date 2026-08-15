@@ -2,7 +2,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PageService } from '../../../../../src/wiki_api/facade/services/page.service.js';
 import type { PageOperationsContainer } from '../../../../../src/wiki_api/facade/services/containers/page-operations.container.js';
-import { createPageFixture } from '../../../../helpers/page.fixture.js';
+import {
+  createPageFixture,
+  createDeleteResultFixture,
+  createAsyncOperationFixture,
+} from '../../../../helpers/page.fixture.js';
 
 describe('PageService', () => {
   let pageService: PageService;
@@ -55,7 +59,14 @@ describe('PageService', () => {
       const mockPage = createPageFixture();
       vi.mocked(mockOps.createPage.execute).mockResolvedValue(mockPage);
 
-      const params = { slug: 'new-page', body: 'content', title: 'New Page' };
+      const params = {
+        data: {
+          page_type: 'page' as const,
+          slug: 'new-page',
+          title: 'New Page',
+          content: 'content',
+        },
+      };
       const result = await pageService.createPage(params);
 
       expect(mockOps.createPage.execute).toHaveBeenCalledWith(params);
@@ -68,7 +79,7 @@ describe('PageService', () => {
       const mockPage = createPageFixture();
       vi.mocked(mockOps.updatePage.execute).mockResolvedValue(mockPage);
 
-      const params = { idx: 123, body: 'updated content' };
+      const params = { idx: 123, data: { content: 'updated content' } };
       const result = await pageService.updatePage(params);
 
       expect(mockOps.updatePage.execute).toHaveBeenCalledWith(params);
@@ -78,7 +89,7 @@ describe('PageService', () => {
 
   describe('deletePage', () => {
     it('должен делегировать вызов DeletePageOperation', async () => {
-      const mockResult = { success: true };
+      const mockResult = createDeleteResultFixture();
       vi.mocked(mockOps.deletePage.execute).mockResolvedValue(mockResult);
 
       const result = await pageService.deletePage({ idx: 123 });
@@ -90,10 +101,10 @@ describe('PageService', () => {
 
   describe('clonePage', () => {
     it('должен делегировать вызов ClonePageOperation', async () => {
-      const mockAsyncOp = { status: 'in_progress', id: 'op-123' };
+      const mockAsyncOp = createAsyncOperationFixture();
       vi.mocked(mockOps.clonePage.execute).mockResolvedValue(mockAsyncOp);
 
-      const data = { targetSlug: 'cloned-page' };
+      const data = { target: 'cloned-page' };
       const result = await pageService.clonePage(123, data);
 
       expect(mockOps.clonePage.execute).toHaveBeenCalledWith(123, data);
@@ -106,7 +117,7 @@ describe('PageService', () => {
       const mockPage = createPageFixture();
       vi.mocked(mockOps.appendContent.execute).mockResolvedValue(mockPage);
 
-      const params = { idx: 123, content: 'appended content' };
+      const params = { idx: 123, data: { content: 'appended content' } };
       const result = await pageService.appendContent(params);
 
       expect(mockOps.appendContent.execute).toHaveBeenCalledWith(params);

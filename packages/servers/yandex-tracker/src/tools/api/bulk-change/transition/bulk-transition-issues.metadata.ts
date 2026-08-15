@@ -24,7 +24,7 @@ export const BULK_TRANSITION_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['bulk', 'transition', 'status', 'workflow', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['transition'],
   title: 'Массовая смена статусов задач',
   outputSchema: BulkTransitionIssuesOutputSchema,

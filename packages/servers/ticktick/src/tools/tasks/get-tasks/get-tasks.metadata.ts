@@ -20,7 +20,7 @@ export const GET_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['projectId', 'taskId'],
-  title: 'Get Tasks (Batch)',
+  title: 'Задачи по идентификаторам',
   outputSchema: GET_TASKS_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

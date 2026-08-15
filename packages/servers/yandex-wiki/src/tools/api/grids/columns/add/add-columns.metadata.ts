@@ -16,7 +16,7 @@ export const ADD_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['write', 'add', 'columns', 'grid', 'table'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx', 'revision', 'position'],
   title: 'Добавить колонки в таблицу',
   outputSchema: buildOutputSchema(AddColumnsOutputDataSchema),

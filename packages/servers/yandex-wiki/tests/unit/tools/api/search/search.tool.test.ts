@@ -66,7 +66,7 @@ describe('SearchTool', () => {
 
       const result = await tool.execute({ query: 'test', responseMode: 'full' });
 
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['mode']).toBe('full');
       expect(data['items']).toHaveLength(1);
     });

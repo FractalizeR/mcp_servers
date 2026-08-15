@@ -119,7 +119,7 @@ describe('UpdatePageTool', () => {
       });
 
       expect(result.isError).toBeFalsy();
-      const payload = result.structuredContent as { data: { warnings?: string[] } };
+      const payload = result['structuredContent'] as { data: { warnings?: string[] } };
       expect(payload.data.warnings).toBeDefined();
       expect(payload.data.warnings?.length).toBeGreaterThan(0);
       expect(payload.data.warnings?.[0]).toContain('yw_diff_page');
@@ -139,7 +139,7 @@ describe('UpdatePageTool', () => {
       });
 
       expect(result.isError).toBeFalsy();
-      const payload = result.structuredContent as { data: { warnings?: string[] } };
+      const payload = result['structuredContent'] as { data: { warnings?: string[] } };
       expect(payload.data.warnings).toBeUndefined();
     });
 

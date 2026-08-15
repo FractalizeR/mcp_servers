@@ -113,13 +113,19 @@ export class ToolRegistry {
   }
 
   /**
-   * Получить определения инструментов для tools/list
+   * @deprecated Второй, более старый путь построения видимости — adapter его
+   *   не вызывает (см. build-mcp-server.ts), для tools/list используется
+   *   `getVisibleDefinitions()`, построенная на общем `this.accessPolicy` с
+   *   `execute()`. Этот метод фильтрует НЕЗАВИСИМО, через тот же статический
+   *   предикат `ToolFilterService.isDisabledByFilter`, что и `accessPolicy` —
+   *   согласованность держится на совпадении конфигурации, а не на общем
+   *   объекте, и это ровно то расхождение, ради устранения которого
+   *   появилась `getVisibleDefinitions()`. Оставлен ради существующих тестов
+   *   (используется в tracker/wiki/ticktick test suites); новый код должен
+   *   звать `getVisibleDefinitions()`.
    *
-   * Контракт: возвращает ПОЛНЫЙ набор зарегистрированных инструментов, прошедший
-   * единственный оставшийся фильтр — `disabledFilter` (см. `DISABLED_TOOL_GROUPS`).
-   * Прогрессивное раскрытие (essential/lazy tools, позитивный фильтр категорий)
-   * упразднено: основной потребитель — готовые клиенты (Claude Code, Claude
-   * Desktop, Codex), где поиск инструментов уже реализован на их стороне.
+   * Возвращает ПОЛНЫЙ набор зарегистрированных инструментов, прошедший
+   * негативный фильтр — `disabledFilter` (см. `DISABLED_TOOL_GROUPS`).
    *
    * Порядок — часть контракта (см. ToolSorter.sortByPriority): приоритет —
    * первый ключ сортировки, имя — обязательный tie-breaker. При неизменном
@@ -127,9 +133,6 @@ export class ToolRegistry {
    * одинаковый список.
    *
    * @param disabledFilter - негативный фильтр (отключённые группы инструментов).
-   *   Тот же фильтр обязан использоваться для построения `ToolAccessPolicy`
-   *   (см. tool-access-policy.ts), иначе видимость в tools/list и исполняемость
-   *   в tools/call могут разойтись.
    */
   getDefinitions(disabledFilter?: ParsedCategoryFilter): ToolDefinition[] {
     this.ensureInitialized();

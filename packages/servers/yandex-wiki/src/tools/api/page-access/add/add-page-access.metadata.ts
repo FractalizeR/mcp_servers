@@ -20,7 +20,7 @@ export const ADD_PAGE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['write', 'create', 'access', 'permissions', 'wiki'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx', 'role', 'target', 'inheritance'],
   title: 'Добавить доступ к странице',
   outputSchema: buildOutputSchema(AddPageAccessOutputDataSchema),

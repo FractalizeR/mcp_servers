@@ -15,7 +15,7 @@ export const CREATE_FILTER_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['filters', 'saved', 'create', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['groupBy', 'fields'],
   title: 'Создать сохранённый фильтр',
   outputSchema: CreateFilterOutputSchema,

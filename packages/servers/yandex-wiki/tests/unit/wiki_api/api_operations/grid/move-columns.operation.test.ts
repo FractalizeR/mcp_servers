@@ -26,13 +26,13 @@ describe('MoveColumnsOperation', () => {
     vi.mocked(mockHttpClient.post).mockResolvedValue(expectedGrid);
 
     const result = await operation.execute('grid-123', {
-      column_slugs: ['col1', 'col2'],
-      after_column_slug: 'col5',
+      column_slug: 'col1',
+      position: 5,
     });
 
     expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/grids/grid-123/columns/move', {
-      column_slugs: ['col1', 'col2'],
-      after_column_slug: 'col5',
+      column_slug: 'col1',
+      position: 5,
     });
     expect(result).toEqual(expectedGrid);
   });
@@ -41,8 +41,8 @@ describe('MoveColumnsOperation', () => {
     vi.mocked(mockHttpClient.post).mockResolvedValue(createGridFixture());
 
     await operation.execute('grid-456', {
-      column_slugs: ['col3'],
-      after_column_slug: 'col7',
+      column_slug: 'col3',
+      position: 7,
     });
 
     expect(mockLogger.info).toHaveBeenCalledWith('Moving columns in grid: grid-456');

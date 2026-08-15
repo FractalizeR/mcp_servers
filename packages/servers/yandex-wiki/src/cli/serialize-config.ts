@@ -8,7 +8,7 @@
 import type { YandexWikiMCPConfig } from './types.js';
 
 /**
- * Собрать объект для записи в `~/.yandex-wiki/config.json`.
+ * Собрать объект для записи в `~/.fractalizer_mcp_yandex_wiki/config.json`.
  *
  * Сохраняются только non-secret поля: `orgType`, `orgId`, `requestTimeout`,
  * `logLevel`. `undefined`-значения опускаются, чтобы файл не засорялся пустыми

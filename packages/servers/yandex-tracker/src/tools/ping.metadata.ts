@@ -25,6 +25,10 @@ export const PING_TOOL_METADATA: StaticToolMetadata = {
   tags: ['ping', 'health', 'status', 'system'],
   isHelper: false,
   requiresExplicitUserConsent: false,
+  // PingParamsSchema пуста (без параметров) — allow-list пуст по той же
+  // причине, что и у остальных 91 tool: явное [] вместо пропуска поля
+  // (L6 отчёта ревью — пропуск и [] не должны означать одно и то же).
+  redactionAllowlist: [],
   title: 'Проверка доступности сервера',
   outputSchema: PingOutputSchema,
   annotations: {

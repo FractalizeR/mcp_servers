@@ -12,7 +12,7 @@
 import { createContainer, TYPES } from '../src/composition-root/index.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure';
 import type { ToolRegistry } from '@fractalizer/mcp-core';
-import { loadConfig } from '@fractalizer/mcp-infrastructure';
+import { loadConfig } from '../src/config/index.js';
 
 async function testToolNotFound(): Promise<void> {
   console.log('\n=== Тест: вызов несуществующего инструмента ===\n');

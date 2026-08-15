@@ -38,7 +38,7 @@ describe('DownloadAttachmentTool', () => {
 
       expect(mockFacade.downloadAttachment).toHaveBeenCalledWith(123, 456);
       expect(result.isError).toBeFalsy();
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['base64']).toBe(Buffer.from('hello').toString('base64'));
       expect(data['savedTo']).toBeUndefined();
       expect(data['size']).toBe(5);
@@ -59,7 +59,7 @@ describe('DownloadAttachmentTool', () => {
 
       expect(writeFile).toHaveBeenCalledWith('/tmp/out.txt', Buffer.from('hello'));
       expect(result.isError).toBeFalsy();
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['savedTo']).toBe('/tmp/out.txt');
       expect(data['base64']).toBeUndefined();
     });

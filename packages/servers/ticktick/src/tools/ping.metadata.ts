@@ -20,7 +20,7 @@ export const PING_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Ping',
+  title: 'Проверить подключение',
   outputSchema: PING_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

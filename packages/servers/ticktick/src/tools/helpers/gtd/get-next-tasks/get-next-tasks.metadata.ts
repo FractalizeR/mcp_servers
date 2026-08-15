@@ -17,7 +17,7 @@ export const GET_NEXT_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: true,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Get Next Tasks (GTD)',
+  title: 'Следующие задачи (GTD)',
   outputSchema: GET_NEXT_TASKS_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

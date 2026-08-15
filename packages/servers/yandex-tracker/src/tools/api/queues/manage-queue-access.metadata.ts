@@ -24,7 +24,7 @@ export const MANAGE_QUEUE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['queue', 'access', 'permissions', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['queueId', 'role', 'subjects', 'action', 'fields'],
   title: 'Управление доступом к очереди',
   outputSchema: ManageQueueAccessOutputSchema,

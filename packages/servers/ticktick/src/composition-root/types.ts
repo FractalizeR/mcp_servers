@@ -2,6 +2,22 @@
  * Dependency Injection tokens for TickTick MCP Server
  *
  * InversifyJS uses symbols as unique identifiers for binding dependencies.
+ *
+ * L5 отчёта REVIEW_MCP_SDK_FINDINGS.md — рассмотрено и сознательно оставлено
+ * как есть (не автогенерация, в отличие от tracker/wiki): у ticktick
+ * Operation-символы читаются через литеральный dot-access `TYPES.XxxOperation`
+ * в facade containers (`@inject(TYPES.GetTaskOperation)` и т.п., см.
+ * `ticktick_api/facade/containers/*.container.ts`, `ticktick.facade.ts`).
+ * Автогенерация символов через `Array.reduce` над списком классов даёт тип
+ * `Record<string, symbol>` — TypeScript не выводит из него литеральные имена
+ * свойств, поэтому `TYPES.GetTaskOperation` перестаёт тайпчекаться (проверено
+ * эмпирически). У tracker эта же проблема решена ДВОЙНОЙ регистрацией
+ * (symbol-based + class-based bind) и переводом потребителей на
+ * `@inject(GetIssuesOperation)` (класс, а не символ) — это отдельный, более
+ * широкий рефакторинг DI (переписать 13 сайтов инъекции + bindOperations),
+ * непропорциональный этой находке. Ручной список ниже — дороже поддерживать
+ * при росте числа операций, но безопаснее по типам без более крупного
+ * рефакторинга инъекции.
  */
 
 /**

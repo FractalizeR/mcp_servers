@@ -12,7 +12,7 @@ export const YANDEX_WIKI_API_BASE = 'https://api.wiki.yandex.net';
 /**
  * Базовое имя проекта для CLI
  */
-export const PROJECT_BASE_NAME = 'yandex-wiki';
+export const PROJECT_BASE_NAME = 'fractalizer_mcp_yandex_wiki';
 
 /**
  * Технический идентификатор MCP сервера (используется в конфигурации клиентов)

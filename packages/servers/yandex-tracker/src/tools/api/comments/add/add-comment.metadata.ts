@@ -24,7 +24,7 @@ export const ADD_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['comment', 'add', 'create', 'write', 'batch'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   // issueId/attachmentIds/summonees/maillistSummonees — идентификаторы (логины/ID/email,
   // безопасны); markupType/isAddToFollowers — структурные флаги; fields — имена API-полей.
   // text (тело комментария) НЕ включён.

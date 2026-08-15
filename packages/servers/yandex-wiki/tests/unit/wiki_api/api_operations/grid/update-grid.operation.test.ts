@@ -27,10 +27,12 @@ describe('UpdateGridOperation', () => {
 
     const result = await operation.execute('grid-123', {
       title: 'Updated Grid',
+      revision: 'rev-123',
     });
 
     expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/grids/grid-123', {
       title: 'Updated Grid',
+      revision: 'rev-123',
     });
     expect(result).toEqual(expectedGrid);
   });
@@ -40,6 +42,7 @@ describe('UpdateGridOperation', () => {
 
     await operation.execute('grid-456', {
       title: 'Test Update',
+      revision: 'rev-456',
     });
 
     expect(mockLogger.info).toHaveBeenCalledWith('Updating grid: grid-456');

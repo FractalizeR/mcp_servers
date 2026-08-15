@@ -17,7 +17,7 @@ export const GET_TASKS_DUE_IN_DAYS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Get Tasks Due In N Days',
+  title: 'Задачи со сроком через N дней',
   outputSchema: GET_TASKS_DUE_IN_DAYS_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

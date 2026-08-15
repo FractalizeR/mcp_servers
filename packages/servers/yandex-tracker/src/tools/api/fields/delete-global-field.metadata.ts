@@ -11,7 +11,7 @@ export const DELETE_GLOBAL_FIELD_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_global_field', MCP_TOOL_PREFIX),
   description: '[Administration/Write] Удалить глобальное поле трекера (необратимо)',
   category: ToolCategory.ISSUES,
-  subcategory: 'write',
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['administration', 'fields', 'global-fields', 'delete', 'write', 'remove'],
   isHelper: false,

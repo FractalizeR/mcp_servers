@@ -16,7 +16,7 @@ export const DELETE_ATTACHMENT_TOOL_METADATA = {
   name: buildToolName('delete_attachment', MCP_TOOL_PREFIX),
   description: '[Issues/Attachments] Удалить файл из задачи',
   category: ToolCategory.ISSUES,
-  subcategory: 'attachments',
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['attachments', 'write', 'delete', 'files'],
   isHelper: false,

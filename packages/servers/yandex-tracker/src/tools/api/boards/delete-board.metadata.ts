@@ -14,7 +14,7 @@ export const DELETE_BOARD_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_board', MCP_TOOL_PREFIX),
   description: '[Boards/Write] Удалить доску',
   category: ToolCategory.BOARDS,
-  subcategory: 'write',
+  subcategory: 'delete',
   priority: ToolPriority.NORMAL,
   tags: ['board', 'delete', 'write', 'remove', 'agile'],
   isHelper: false,

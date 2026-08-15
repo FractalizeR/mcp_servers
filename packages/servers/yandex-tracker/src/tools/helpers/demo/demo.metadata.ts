@@ -25,6 +25,10 @@ export const DEMO_TOOL_METADATA: StaticToolMetadata = {
   tags: ['demo', 'example', 'test'],
   isHelper: true,
   requiresExplicitUserConsent: false,
+  // message — единственный параметр, и это произвольный пользовательский текст
+  // (демонстрационное сообщение) — allow-list пуст намеренно, но объявлен явно
+  // (L6 отчёта ревью — пропуск поля и [] не должны означать одно и то же).
+  redactionAllowlist: [],
   title: 'Демонстрационный инструмент',
   outputSchema: DemoOutputSchema,
   annotations: {
@@ -33,6 +37,4 @@ export const DEMO_TOOL_METADATA: StaticToolMetadata = {
     idempotentHint: true,
     openWorldHint: false,
   },
-  // message — единственный параметр, и это произвольный пользовательский текст
-  // (демонстрационное сообщение) — allow-list оставлен пустым намеренно.
 } as const;

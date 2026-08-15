@@ -60,6 +60,20 @@ execute() {
 2. **Zod Schema** — валидация параметров
 3. **execute()** — логика выполнения
 
+### 3. Параметр `fields` — только у одиночных GET, не у списочных
+
+`fields` (`WikiFieldsSchema`, `src/common/schemas/fields.schema.ts`) — это
+sparse-fieldset параметр самого Wiki API (`?fields=content,...`), не общий
+клиентский механизм проекции. Он есть только у `yw_get_page`,
+`yw_get_page_by_id`, `yw_get_grid` — одиночных GET сущности, где API по
+умолчанию не отдаёт дорогие поля (`content`, `attributes`, `breadcrumbs`).
+
+У списочных инструментов (`yw_get_comments`, `yw_get_comment_thread`,
+`yw_get_descendants`, `yw_search`, `yw_get_resources`) параметра `fields`
+нет **осознанно** — соответствующие эндпоинты Wiki API sparse-fieldset не
+поддерживают, сервер всегда возвращает полный объект. Добавление `fields` в
+схему таких tools создавало бы у агента ложное ожидание серверной фильтрации.
+
 ---
 
 ## Дополнительная документация

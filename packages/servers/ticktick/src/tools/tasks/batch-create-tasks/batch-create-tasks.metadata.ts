@@ -18,9 +18,13 @@ export const BATCH_CREATE_TASKS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['tasks', 'batch', 'create', 'bulk'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  // Решение владельца (2026-08-14): requiresExplicitUserConsent обязан
+  // совпадать с annotations.destructiveHint. Создание — обратимо удалением
+  // (delete_task на каждую созданную задачу), не разрушающая операция.
+  // Оба флага false (было consent=true при destructiveHint=false — расхождение).
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['projectId'],
-  title: 'Batch Create Tasks',
+  title: 'Массовое создание задач',
   outputSchema: BATCH_CREATE_TASKS_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: false,

@@ -67,7 +67,7 @@ function projectToolDefinitionForList(definition: ToolDefinition): McpToolListEn
  * Спроецировать список ToolDefinition в массив `tools` ответа tools/list.
  *
  * @param definitions - определения инструментов (обычно результат
- *   `ToolRegistry.getDefinitions()`)
+ *   `ToolRegistry.getVisibleDefinitions()`)
  */
 export function projectToolDefinitionsForList(
   definitions: readonly ToolDefinition[]

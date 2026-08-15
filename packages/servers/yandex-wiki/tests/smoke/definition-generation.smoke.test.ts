@@ -72,6 +72,9 @@ describe('Definition Generation - Smoke Tests', () => {
           Object.entries(definition.inputSchema.properties).forEach(([_propName, propSchema]) => {
             expect(propSchema).toBeDefined();
             expect(typeof propSchema).toBe('object');
+            if (typeof propSchema !== 'object' || propSchema === null) {
+              throw new Error('propSchema должен быть объектом');
+            }
             // JSON Schema требует наличия type или anyOf/oneOf/allOf
             const hasType = 'type' in propSchema;
             const hasComposition =
@@ -188,13 +191,17 @@ describe('Definition Generation - Smoke Tests', () => {
     it('инструменты с getParamsSchema() должны возвращать Zod schema', () => {
       const toolsWithSchema = TOOL_CLASSES.filter((ToolClass) => {
         const tool = new ToolClass(mockFacade, mockLogger);
-        return 'getParamsSchema' in tool && typeof tool.getParamsSchema === 'function';
+        // getParamsSchema — protected на BaseTool; reflection-проверка через
+        // 'in' легитимна, но чтение самого метода требует каста мимо
+        // protection (TS запрещает прямой доступ извне иерархии классов).
+        const toolAsUnknown = tool as unknown as { getParamsSchema?: unknown };
+        return 'getParamsSchema' in tool && typeof toolAsUnknown.getParamsSchema === 'function';
       });
 
       // Проверяем только инструменты, у которых есть метод
       toolsWithSchema.forEach((ToolClass) => {
         const tool = new ToolClass(mockFacade, mockLogger);
-        const schema = (tool as { getParamsSchema: () => unknown }).getParamsSchema();
+        const schema = (tool as unknown as { getParamsSchema: () => unknown }).getParamsSchema();
 
         // Zod schema должен иметь метод _def
         expect(schema).toBeDefined();

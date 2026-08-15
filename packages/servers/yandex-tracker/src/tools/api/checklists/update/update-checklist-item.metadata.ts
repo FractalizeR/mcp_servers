@@ -24,7 +24,7 @@ export const UPDATE_CHECKLIST_ITEM_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['checklist', 'update', 'edit', 'write', 'batch'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['issueId', 'checklistItemId', 'checked', 'assignee', 'deadline', 'fields'],
   title: 'Обновить элементы чеклиста',
   outputSchema: UpdateChecklistItemOutputSchema,

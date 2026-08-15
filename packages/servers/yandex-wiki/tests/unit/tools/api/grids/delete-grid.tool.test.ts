@@ -48,7 +48,7 @@ describe('DeleteGridTool', () => {
 
       const result = await tool.execute({ idx: gridId });
 
-      const payload = result.structuredContent as { data: Record<string, unknown> };
+      const payload = result['structuredContent'] as { data: Record<string, unknown> };
       expect('recovery_token' in payload.data).toBe(false);
     });
 

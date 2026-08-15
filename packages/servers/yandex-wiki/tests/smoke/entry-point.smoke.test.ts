@@ -12,6 +12,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { createServerConfigFixture } from '#helpers/index.js';
 
 describe('Entry Point Exports (Smoke)', () => {
   it('должен экспортировать loadConfig', async () => {
@@ -99,17 +100,11 @@ describe('Entry Point Exports (Smoke)', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { ToolRegistry } = (await import('@fractalizer/mcp-core')) as any;
 
-    const fakeConfig = {
+    const fakeConfig = createServerConfigFixture({
       token: 'test-token',
       orgId: 'test-org',
-      cloudOrgId: undefined,
       apiBase: 'https://api.wiki.yandex.net/v1',
-      requestTimeout: 30000,
-      maxBatchSize: 50,
-      maxConcurrentRequests: 10,
-      logLevel: 'error' as const,
-      prettyLogs: false,
-    };
+    });
 
     // Создание контейнера должно работать
     const container = await createContainer(fakeConfig);

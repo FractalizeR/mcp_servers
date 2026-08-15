@@ -66,7 +66,7 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
       const result = await tool.execute({ idx: 1, responseMode: 'full' });
 
       expect(result.isError).toBeFalsy();
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['mode']).toBe('full');
       expect(data['items']).toHaveLength(3);
       expect(data['resourceLinks']).toBeUndefined();
@@ -81,7 +81,7 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
       const result = await tool.execute({ idx: 1, responseMode: 'links' });
 
       expect(result.isError).toBeFalsy();
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['mode']).toBe('links');
       expect(data['items']).toBeUndefined();
       expect(data['resourceLinks']).toHaveLength(3);
@@ -105,7 +105,7 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
       vi.mocked(mockFacade.getResources!).mockResolvedValue(attachmentsFixture(5));
 
       const result = await tool.execute({ idx: 1, responseMode: 'auto' });
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['mode']).toBe('full');
       expect(data['threshold']).toBe(20);
     });
@@ -114,7 +114,7 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
       vi.mocked(mockFacade.getResources!).mockResolvedValue(attachmentsFixture(25));
 
       const result = await tool.execute({ idx: 1, responseMode: 'auto' });
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['mode']).toBe('links');
       expect(data['totalCount']).toBe(25);
     });
@@ -123,7 +123,7 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
       vi.mocked(mockFacade.getResources!).mockResolvedValue(attachmentsFixture(25));
 
       const result = await tool.execute({ idx: 1 });
-      const data = (result.structuredContent as { data: Record<string, unknown> }).data;
+      const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['mode']).toBe('links');
     });
   });
@@ -157,7 +157,7 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
 
       const result = await tool.execute({ idx: 1, responseMode: 'links' });
       const data = (
-        result.structuredContent as {
+        result['structuredContent'] as {
           data: { summary: { gridItems: unknown[] }; resourceLinks: ResourceLinkBlock[] };
         }
       ).data;
@@ -183,7 +183,7 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
       const result = await tool.execute({ idx: 1, responseMode: 'links' });
       expect(result.content.filter(isResourceLinkBlock)).toHaveLength(0);
       const data = (
-        result.structuredContent as {
+        result['structuredContent'] as {
           data: { summary: { gridItems: unknown[] }; totalCount: number };
         }
       ).data;

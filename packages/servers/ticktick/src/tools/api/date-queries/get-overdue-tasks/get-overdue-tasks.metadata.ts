@@ -17,7 +17,7 @@ export const GET_OVERDUE_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Get Overdue Tasks',
+  title: 'Просроченные задачи',
   outputSchema: GET_OVERDUE_TASKS_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

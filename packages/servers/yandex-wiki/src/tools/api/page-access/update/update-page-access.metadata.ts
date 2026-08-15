@@ -18,7 +18,7 @@ export const UPDATE_PAGE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['write', 'update', 'access', 'permissions', 'wiki'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx', 'access_id', 'role', 'inheritance', 'prevent_selflock'],
   title: 'Изменить доступ к странице',
   outputSchema: buildOutputSchema(UpdatePageAccessOutputDataSchema),

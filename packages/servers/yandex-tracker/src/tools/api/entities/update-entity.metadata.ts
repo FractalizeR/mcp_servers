@@ -15,7 +15,7 @@ export const UPDATE_ENTITY_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['entity', 'goal', 'portfolio', 'entity-project', 'update', 'write', 'okr'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['entityType', 'entityId', 'version', 'fields'],
   title: 'Обновить запись Entity API',
   outputSchema: UpdateEntityOutputSchema,

@@ -12,8 +12,10 @@ import { GET_PROJECTS_OUTPUT_SCHEMA } from './get-projects.schema.js';
  */
 export const GET_PROJECTS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_projects', MCP_TOOL_PREFIX),
-  description:
-    '[Projects/Read] Получить все проекты пользователя. Возвращает список проектов с фильтрацией полей.',
+  // M9 отчёта ревью: было 98 символов (лимит — 80). Деталь про фильтрацию
+  // полей избыточна в description — она уже описана в .describe() параметра
+  // fields (см. схему), как и у остальных read-tools этого пакета.
+  description: '[Projects/Read] Получить все проекты пользователя.',
   category: ToolCategory.PROJECTS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,
@@ -21,7 +23,7 @@ export const GET_PROJECTS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Get Projects',
+  title: 'Список проектов',
   outputSchema: GET_PROJECTS_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

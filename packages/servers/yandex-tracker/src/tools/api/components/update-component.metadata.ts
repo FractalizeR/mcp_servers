@@ -24,7 +24,7 @@ export const UPDATE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.HIGH,
   tags: ['components', 'update', 'write', 'modify'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['componentId', 'assignAuto', 'fields'],
   title: 'Обновить компонент',
   outputSchema: UpdateComponentOutputSchema,

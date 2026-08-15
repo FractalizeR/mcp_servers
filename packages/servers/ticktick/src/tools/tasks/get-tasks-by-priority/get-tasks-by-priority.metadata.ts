@@ -20,7 +20,7 @@ export const GET_TASKS_BY_PRIORITY_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Get Tasks by Priority',
+  title: 'Задачи по приоритету',
   outputSchema: GET_TASKS_BY_PRIORITY_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

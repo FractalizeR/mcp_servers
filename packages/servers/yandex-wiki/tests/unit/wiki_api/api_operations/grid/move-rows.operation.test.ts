@@ -26,12 +26,12 @@ describe('MoveRowsOperation', () => {
     vi.mocked(mockHttpClient.post).mockResolvedValue(expectedGrid);
 
     const result = await operation.execute('grid-123', {
-      row_ids: ['row-1', 'row-2'],
+      row_id: 'row-1',
       after_row_id: 'row-5',
     });
 
     expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/grids/grid-123/rows/move', {
-      row_ids: ['row-1', 'row-2'],
+      row_id: 'row-1',
       after_row_id: 'row-5',
     });
     expect(result).toEqual(expectedGrid);
@@ -41,7 +41,7 @@ describe('MoveRowsOperation', () => {
     vi.mocked(mockHttpClient.post).mockResolvedValue(createGridFixture());
 
     await operation.execute('grid-456', {
-      row_ids: ['row-3'],
+      row_id: 'row-3',
       after_row_id: 'row-7',
     });
 

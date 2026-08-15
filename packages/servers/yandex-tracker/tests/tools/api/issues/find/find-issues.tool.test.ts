@@ -629,8 +629,7 @@ describe('FindIssuesTool', () => {
       // resource_link виден и как отдельный content-блок протокола, не
       // только внутри JSON structuredContent (см. BaseTool.formatCollectionResult).
       const linkBlocks = result.content.filter(
-        (block): block is typeof block & { type: 'resource_link' } =>
-          block.type === 'resource_link'
+        (block): block is typeof block & { type: 'resource_link' } => block.type === 'resource_link'
       );
       expect(linkBlocks).toHaveLength(2);
       expect(linkBlocks[0]).toMatchObject({ uri: 'tracker://issue/QUEUE-123' });
@@ -720,7 +719,6 @@ describe('FindIssuesTool', () => {
       // тест не был хрупким к мелким изменениям формата сводки/ссылки.
       expect(linksSize).toBeLessThan(fullSize / 5);
 
-       
       console.log(
         `[DoD 5] find_issues(200 issues): full=${fullSize} bytes, links=${linksSize} bytes, ` +
           `экономия ${(100 * (1 - linksSize / fullSize)).toFixed(1)}%`

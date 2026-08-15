@@ -17,7 +17,7 @@ export const GET_ENGAGED_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: true,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Get Engaged Tasks (GTD)',
+  title: 'Горящие задачи (GTD)',
   outputSchema: GET_ENGAGED_TASKS_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

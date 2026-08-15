@@ -15,7 +15,7 @@ export const UPDATE_SPRINT_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['sprint', 'update', 'write', 'agile'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: [
     'sprintId',
     'version',

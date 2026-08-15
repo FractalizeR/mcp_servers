@@ -15,7 +15,7 @@ export const CREATE_BOARD_COLUMN_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.NORMAL,
   tags: ['board', 'columns', 'create', 'write', 'agile', 'kanban'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['boardId', 'statuses', 'fields'],
   title: 'Создать колонку доски',
   outputSchema: CreateBoardColumnOutputSchema,

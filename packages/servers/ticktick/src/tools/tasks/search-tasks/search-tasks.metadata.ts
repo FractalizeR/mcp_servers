@@ -20,7 +20,7 @@ export const SEARCH_TASKS_TOOL_METADATA: StaticToolMetadata = {
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: [],
-  title: 'Search Tasks',
+  title: 'Поиск задач',
   outputSchema: SEARCH_TASKS_OUTPUT_SCHEMA,
   annotations: {
     readOnlyHint: true,

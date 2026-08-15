@@ -27,28 +27,12 @@ describe('CreateGridOperation', () => {
 
     const result = await operation.execute({
       title: 'New Grid',
-      page: 'users/test-page',
-      columns: [
-        {
-          title: 'Column 1',
-          slug: 'col1',
-          type: 'string',
-          required: true,
-        },
-      ],
+      page: { slug: 'users/test-page' },
     });
 
     expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/grids', {
       title: 'New Grid',
-      page: 'users/test-page',
-      columns: [
-        {
-          title: 'Column 1',
-          slug: 'col1',
-          type: 'string',
-          required: true,
-        },
-      ],
+      page: { slug: 'users/test-page' },
     });
     expect(result).toEqual(expectedGrid);
   });
@@ -58,8 +42,7 @@ describe('CreateGridOperation', () => {
 
     await operation.execute({
       title: 'Test Grid',
-      page: 'users/test',
-      columns: [],
+      page: { slug: 'users/test' },
     });
 
     expect(mockLogger.info).toHaveBeenCalledWith('Creating grid: Test Grid');

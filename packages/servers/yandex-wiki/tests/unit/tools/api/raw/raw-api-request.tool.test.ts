@@ -69,7 +69,7 @@ describe('RawApiRequestTool (wiki)', () => {
         query: { fields: 'content' },
       });
 
-      const parsed = parse(result.content[0]?.text);
+      const parsed = parse(result.content[0]?.text as string | undefined);
       expect(parsed.success).toBe(true);
       expect(parsed.data?.data).toEqual({ id: 123, title: 'Test' });
       expect(parsed.data?.fieldsReturned).toEqual(['id', 'title']);
@@ -103,7 +103,7 @@ describe('RawApiRequestTool (wiki)', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = parse(result.content[0]?.text);
+      const parsed = parse(result.content[0]?.text as string | undefined);
       expect(parsed.success).toBe(false);
       expect(parsed.message).toContain('Ошибка raw API запроса');
     });

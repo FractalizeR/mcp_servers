@@ -121,7 +121,11 @@ return this.formatSuccess({ issues: filtered });
 
 **Обязательные метаданные:**
 - `category` — основная категория (issues, helpers, system)
-- `subcategory` — read/write/workflow (опционально)
+- `subcategory` — read/write/workflow/… (опционально). **Правило:** у ЛЮБОГО инструмента,
+  удаляющего сущность (`delete_*`), `subcategory: 'delete'` — независимо от домена
+  (даже если соседние read/write-операции того же домена сгруппированы под другим
+  именем, напр. `attachments`/`worklog`/`links`). Это единственный способ выключить
+  все удаляющие инструменты одним правилом `DISABLED_TOOL_GROUPS`.
 - `priority` — critical/high/normal/low (опционально, default: normal); определяет порядок в `tools/list`
 - `tags` — для категоризации (опционально)
 

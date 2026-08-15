@@ -16,7 +16,7 @@ export const MOVE_ROWS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.LOW,
   tags: ['write', 'move', 'rows', 'grid', 'table'],
   isHelper: false,
-  requiresExplicitUserConsent: true,
+  requiresExplicitUserConsent: false,
   redactionAllowlist: ['idx', 'revision', 'row_id', 'after_row_id', 'position', 'rows_count'],
   title: 'Переместить строки в таблице',
   outputSchema: buildOutputSchema(MoveRowsOutputDataSchema),

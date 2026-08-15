@@ -21,7 +21,13 @@
  */
 
 import { describe, it, expect, beforeAll, vi, afterEach } from 'vitest';
-import Ajv2020 from 'ajv/dist/2020.js';
+// Именованный импорт, не default: под moduleResolution NodeNext TS типизирует
+// default-биндинг этого CJS-модуля как namespace object (без construct
+// signature) — известная нестыковка .d.ts (ESM export default) и рантайм-CJS
+// ajv (module.exports = Ajv2020). Именованный `Ajv2020` резолвится в тот же
+// класс (см. dist/2020.js: `module.exports.Ajv2020 = Ajv2020`), без этой
+// проблемы.
+import { Ajv2020 } from 'ajv/dist/2020.js';
 import { TOOL_CLASSES } from '#composition-root/definitions/tool-definitions.js';
 import { projectToolDefinitionsForList } from '@fractalizer/mcp-core';
 import type { JsonObjectSchema } from '@fractalizer/mcp-core';
@@ -167,7 +173,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       const result = await tool.execute({});
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('get_page (pages/read): structuredContent валиден по outputSchema', async () => {
@@ -181,7 +187,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       const result = await tool.execute({ slug: 'users/test' });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('create_page (pages/write): structuredContent валиден по outputSchema', async () => {
@@ -195,7 +201,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       const result = await tool.execute({ page_type: 'page', slug: 'users/new', title: 'New' });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('delete_page (pages/delete): structuredContent валиден по outputSchema', async () => {
@@ -209,7 +215,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       const result = await tool.execute({ idx: 1 });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('clone_page (pages/async): structuredContent валиден по outputSchema', async () => {
@@ -223,7 +229,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       const result = await tool.execute({ idx: 1, target: 'users/clone' });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('append_content (pages/append): structuredContent валиден по outputSchema', async () => {
@@ -237,7 +243,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       const result = await tool.execute({ idx: 1, content: 'hello' });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('get_grid (grids/read): structuredContent валиден по outputSchema', async () => {
@@ -251,7 +257,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       const result = await tool.execute({ idx: '550e8400-e29b-41d4-a716-446655440000' });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('add_rows (grids/write, позиционная семантика): structuredContent валиден по outputSchema', async () => {
@@ -268,7 +274,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('get_resources: structuredContent валиден по outputSchema', async () => {
@@ -282,7 +288,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       const result = await tool.execute({ idx: 1 });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('raw_api_request (system/raw): structuredContent валиден по outputSchema', async () => {
@@ -300,7 +306,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
 
     it('diff_page (пакет 3.1.E): structuredContent валиден по outputSchema', async () => {
@@ -314,7 +320,7 @@ describe('Tool annotations + outputSchema + redactionAllowlist (Smoke) — па�
       const result = await tool.execute({ idx: 1, newContent: 'a\nc' });
 
       expect(result.isError).toBeFalsy();
-      expect(validate(result.structuredContent), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(result['structuredContent']), JSON.stringify(validate.errors)).toBe(true);
     });
   });
 });

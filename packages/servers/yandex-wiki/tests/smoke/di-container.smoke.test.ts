@@ -13,7 +13,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { YandexWikiFacade } from '#wiki_api/facade/yandex-wiki.facade.js';
-import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
 
 describe('DI Container (Smoke)', () => {
   const fakeConfig: ServerConfig = {
@@ -127,10 +127,10 @@ describe('DI Container (Smoke)', () => {
 
   it('должен поддерживать cloudOrgId конфигурацию', async () => {
     // Arrange
-    const cloudConfig = {
-      ...fakeConfig,
+    const { orgId: _orgId, ...fakeConfigWithoutOrgId } = fakeConfig;
+    const cloudConfig: ServerConfig = {
+      ...fakeConfigWithoutOrgId,
       cloudOrgId: 'bpf3crucp1v2fake',
-      orgId: undefined,
     };
 
     // Act
