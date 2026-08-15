@@ -6,10 +6,13 @@
  * - НЕТ поиска/получения/создания/удаления
  *
  * API: PATCH /v3/entities/{entityType}/{id}
+ *
+ * ФОРМА ОТВЕТА: см. `get-entity.operation.ts` — та же оговорка и тот же guard.
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import type { UpdateEntityDto, EntityApiOutput } from '#tracker_api/dto/entity-api/index.js';
+import { assertEntityRecordShape } from './assert-entity-record-shape.util.js';
 
 export class UpdateEntityOperation extends BaseOperation {
   async execute(dto: UpdateEntityDto): Promise<EntityApiOutput> {
@@ -25,9 +28,13 @@ export class UpdateEntityOperation extends BaseOperation {
 
     const query = version !== undefined ? `?version=${encodeURIComponent(String(version))}` : '';
 
-    return this.httpClient.patch<EntityApiOutput>(
+    const data = await this.httpClient.patch<unknown>(
       `/v3/entities/${entityType}/${entityId}${query}`,
       body
+    );
+    return assertEntityRecordShape<EntityApiOutput>(
+      data,
+      `update_entity ${entityType}/${entityId}`
     );
   }
 }
