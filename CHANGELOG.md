@@ -1,3 +1,34 @@
+## [1.8.0](https://github.com/FractalizeR/mcp_servers/compare/v1.7.0...v1.8.0) (2026-08-15)
+
+### Features
+
+* **apps:** пилот MCP Apps — редактор описания задачи ([4848083](https://github.com/FractalizeR/mcp_servers/commit/48480839e09c9acb8ec39e10b3198127fb3581ce))
+* **http:** политика повторов по методу, ключ идемпотентности и errorsData ([6b4688d](https://github.com/FractalizeR/mcp_servers/commit/6b4688d2ed656ac7d595fba167d85dafbf23b98e))
+* **logging:** allow-list безопасных для лога параметров инструмента ([2146c1f](https://github.com/FractalizeR/mcp_servers/commit/2146c1fd7d2b5cbe89eea3275f31a57cc042bdb8))
+* **mcp:** dual-era транспорт — SDK v2, общий adapter, обе эпохи ([0a07010](https://github.com/FractalizeR/mcp_servers/commit/0a070101352c5870d89b5771dec7f33eedbb59b2))
+* **mcp:** иконка сервера и сведение проекции полей инструмента ([81d3126](https://github.com/FractalizeR/mcp_servers/commit/81d3126fac616136bf97025bcbc479b5d94a0b7b))
+* **mcp:** пакет 4.1.A — миграция на MCP SDK v2 ([402caa6](https://github.com/FractalizeR/mcp_servers/commit/402caa677df29560f1f2772267e1243d9e087a29))
+* **mcp:** пакет 4.1.B — общий adapter MCP-сервера ([336e7e6](https://github.com/FractalizeR/mcp_servers/commit/336e7e65639912ed6a686585e17b3aa55e50e4d6))
+* **mcp:** пакет 4.1.C — обе протокольные эпохи (2025 и 2026-07-28) ([6a07931](https://github.com/FractalizeR/mcp_servers/commit/6a0793101724829006a81532cfd17a76545f6ffb))
+* **prompts:** слэш-команды на трёх серверах ([491815d](https://github.com/FractalizeR/mcp_servers/commit/491815d0ceee8ac8c3a80befe7c2e70814bc83ca))
+* **resources:** механизм ResourceLink и общая проверка достижимости ([ef2befa](https://github.com/FractalizeR/mcp_servers/commit/ef2befad0b1c64b1887691463dc783b9e2e484a1))
+* **resources:** провайдеры ресурсов и ResourceLink на трёх серверах ([91f6fb7](https://github.com/FractalizeR/mcp_servers/commit/91f6fb73f338dba1e300d51c6b5d645e49dc8437))
+* **schema:** JSON Schema 2020-12 и расширенный контракт ToolDefinition ([df99500](https://github.com/FractalizeR/mcp_servers/commit/df99500fe8cafd9ae25d425b0e412f89fa47a449))
+* **tools:** annotations, outputSchema и allow-list для всех 97 инструментов ([de3b0b0](https://github.com/FractalizeR/mcp_servers/commit/de3b0b0d5286c41d4a6a5603f30fb0673ccb4772))
+* **tools:** граница доступа к инструментам и удаление lazy discovery ([3f4bb2a](https://github.com/FractalizeR/mcp_servers/commit/3f4bb2ac703a1c08bfac482359548b8b3c55897b))
+* **tracker:** инструменты глобальных полей ([be1845c](https://github.com/FractalizeR/mcp_servers/commit/be1845c897ba6091d395f2d25670d8317c2472bc))
+* **tracker:** покрытие Entity API, справочников и планирования итераций ([b49b8a4](https://github.com/FractalizeR/mcp_servers/commit/b49b8a42fb3db6f202213b78f8a9f9dbaf1603ce))
+* **wiki:** поиск, обход поддерева, комментарии, права и вложения ([ea946e9](https://github.com/FractalizeR/mcp_servers/commit/ea946e94e7aa9534a7e88266b791f23649545387))
+
+### Bug Fixes
+
+* **tests:** smoke-тест сервера ждал время вместо события ([39ef0db](https://github.com/FractalizeR/mcp_servers/commit/39ef0db31c362ade6677029b250598b987a4feab))
+* **tracker:** дефекты инструментов и механизм Resources во framework ([8aea374](https://github.com/FractalizeR/mcp_servers/commit/8aea3749f57e925ad3b273b98d7b6a9ece52b19e))
+* **tracker:** разбор ответа Entity API — конверт, а не голый массив ([13391b9](https://github.com/FractalizeR/mcp_servers/commit/13391b9298fdfa1b33d9d2968a1ae6e061319926))
+* **validate:** проверка размера корневой документации не выполнялась ([6876e46](https://github.com/FractalizeR/mcp_servers/commit/6876e46171b09de958042e20fe1862481a0320bc))
+* **wiki:** дефекты инструментов и защита YFM-разметки от молчаливой порчи ([53d0b71](https://github.com/FractalizeR/mcp_servers/commit/53d0b71ea323d08c8a81fdc72ca6375816b0f471))
+* правки по внешнему ревью и измерение покрытия ([30f9c8a](https://github.com/FractalizeR/mcp_servers/commit/30f9c8a568902d89793eaf3dbf020490bca47de7))
+
 ## [1.7.0](https://github.com/FractalizeR/mcp_servers/compare/v1.6.0...v1.7.0) (2026-06-19)
 
 ### Features
