@@ -31,6 +31,25 @@
  * многошаговых операций: сначала GET, потом на основе ответа — POST).
  * Тест интересует только факт исходящего вызова, содержимое ответа
  * безразлично.
+ *
+ * СЛЕПОЕ ПЯТНО (закрыто позже, тем же пакетом что и этот файл, отдельным
+ * коммитом-фиксом): изначально накопитель отдавал только ПЛОСКИЙ
+ * `haystack()` — сериализованный вид ВСЕХ вызовов слитый в одну строку.
+ * Проверка отвечала на вопрос "маркер долетел хоть куда-нибудь", а не "долетел
+ * в ЦЕЛЕВОЙ запрос". Живой пример дефекта, который это пропускало: TickTick
+ * `complete_task` сначала делает `GET .../task/{taskId}` (подготовительный —
+ * достать title для сообщения), потом `POST .../task/{taskId}/complete`
+ * (целевой — собственно завершение). Дефект был в том, что `projectId` не
+ * попадал в целевой POST — но попадал в предшествующий GET, и плоский
+ * haystack считал его достижимым.
+ *
+ * Поэтому `calls()` отдаёт СТРУКТУРИРОВАННЫЙ список (метод + сериализация)
+ * — `find-unreachable-leaves.ts` сам выбирает из него ЦЕЛЕВОЙ подмножество
+ * вызовов (см. `selectTargetCalls()` там же) вместо проверки по всему
+ * потоку. `haystack()` сохранён как есть — плоская склейка ВСЕХ вызовов,
+ * нужна только для диагностики ("маркер нашёлся где-то, но не в целевом
+ * запросе" — `describeUnreachableLeaf` использует это для более точного
+ * сообщения об ошибке).
  */
 
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure';
@@ -50,8 +69,13 @@ function createDeepStub(): unknown {
   return new Proxy({}, handler);
 }
 
-/** Имена методов `IHttpClient`, которые подменяются накопителем вызовов. */
-type HttpClientMethodName =
+/**
+ * Имена методов `IHttpClient`, которые подменяются накопителем вызовов.
+ * Экспортирован — `RecordedCall.method` и `selectTargetCalls()`
+ * (`find-unreachable-leaves.ts`) используют этот же тип для отбора
+ * мутирующих вызовов среди накопленных.
+ */
+export type HttpClientMethodName =
   | 'get'
   | 'post'
   | 'patch'
@@ -71,8 +95,28 @@ const HTTP_CLIENT_METHODS: readonly HttpClientMethodName[] = [
 /** Сигнатура, общая для всех 6 методов после стирания типов аргументов/результата — только для подмены/отката. */
 type AnyHttpClientMethod = (...args: unknown[]) => unknown;
 
+/**
+ * Один накопленный вызов: метод `IHttpClient` + сериализованные аргументы.
+ * `method` — то, по чему `selectTargetCalls()` (`find-unreachable-leaves.ts`)
+ * отличает целевой (мутирующий) запрос от подготовительного (чтение).
+ */
+export interface RecordedCall {
+  readonly method: HttpClientMethodName;
+  readonly serialized: string;
+}
+
 export interface HttpClientCallRecorder {
-  /** Сериализованный вид ВСЕХ накопленных с последнего `clear()` вызовов (для substring-поиска маркеров). */
+  /**
+   * Структурированный список ВСЕХ накопленных с последнего `clear()`
+   * вызовов, в порядке выполнения — по нему `findUnreachableLeaves()`
+   * выбирает целевой запрос (см. заголовок файла).
+   */
+  calls(): readonly RecordedCall[];
+  /**
+   * Сериализованный вид ВСЕХ накопленных вызовов, слитый в одну строку
+   * (для substring-поиска). Используется только для диагностики — сама
+   * проверка достижимости смотрит на `calls()`, не на этот плоский вид.
+   */
   haystack(): string;
   /** Забыть накопленные вызовы (обычно — перед следующим `tool.execute()`). */
   clear(): void;
@@ -82,24 +126,25 @@ export interface HttpClientCallRecorder {
 
 /**
  * Подменить все 6 методов `IHttpClient` накопителем: каждый вызов
- * сериализуется и складывается в общий журнал, а вызывающему возвращается
- * глубокий stub вместо реального ответа API.
+ * сериализуется и складывается в общий журнал (с именем метода), а
+ * вызывающему возвращается глубокий stub вместо реального ответа API.
  */
 export function createHttpClientCallRecorder(httpClient: IHttpClient): HttpClientCallRecorder {
-  const calls: string[] = [];
+  const calls: RecordedCall[] = [];
   const mutableClient = httpClient as unknown as Record<HttpClientMethodName, AnyHttpClientMethod>;
   const originals: Partial<Record<HttpClientMethodName, AnyHttpClientMethod>> = {};
 
   for (const method of HTTP_CLIENT_METHODS) {
     originals[method] = mutableClient[method];
     mutableClient[method] = (...args: unknown[]): Promise<unknown> => {
-      calls.push(JSON.stringify(args));
+      calls.push({ method, serialized: JSON.stringify(args) });
       return Promise.resolve(createDeepStub());
     };
   }
 
   return {
-    haystack: (): string => calls.join('\n'),
+    calls: (): readonly RecordedCall[] => calls,
+    haystack: (): string => calls.map((call) => call.serialized).join('\n'),
     clear: (): void => {
       calls.length = 0;
     },

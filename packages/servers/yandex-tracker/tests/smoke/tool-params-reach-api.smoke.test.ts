@@ -202,7 +202,7 @@ describe('Tool Params Reach API (Smoke) — обход реестра инстр
         // нас интересует только факт исходящего HTTP-вызова (записан ДО throw).
       }
 
-      const unreachable = findUnreachableLeaves(recorder.haystack(), leaves, GLOBAL_EXCEPTIONS);
+      const unreachable = findUnreachableLeaves(recorder.calls(), leaves, GLOBAL_EXCEPTIONS);
 
       expect(
         unreachable,

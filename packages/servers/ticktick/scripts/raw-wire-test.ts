@@ -1,9 +1,10 @@
 #!/usr/bin/env tsx
 /**
- * Raw-wire тесты MCP-протокола (пакет 4.1.D плана модернизации MCP 2026-07-28)
+ * Raw-wire тесты MCP-протокола (пакет 4.1.D плана модернизации MCP 2026-07-28
+ * + сценарии сбоев транспорта, добавлены отдельно)
  *
  * Говорит с РЕАЛЬНЫМ собранным бандлом байтами JSON-RPC по stdio (как
- * scripts/smoke-test-server.ts), а не через внутренние API. Девять
+ * scripts/smoke-test-server.ts), а не через внутренние API. Девять базовых
  * сценариев из плана — по одному набору на каждый из трёх серверов.
  * Не покрывает поведение, реализованное внутри самого SDK, кроме как
  * через наблюдаемый эффект на wire (это и есть цель этих тестов).
@@ -13,10 +14,26 @@
  * "no per-request era consult" (см. create-mcp-server-adapter.ts). Поэтому
  * неподдерживаемую версию нужно слать именно ПЕРВЫМ сообщением НОВОГО
  * соединения — на уже открытом modern-соединении она будет проигнорирована.
+ *
+ * СЦЕНАРИИ СБОЕВ ТРАНСПОРТА (10-12): единственный способ подсунуть сбой HTTP
+ * реальному собранному бандлу, говорящему по stdio отдельным процессом, —
+ * поднять локальный HTTP-сервер и направить процесс на него через
+ * TICKTICK_API_BASE_URL (см. src/config/constants.ts, ENV_VAR_NAMES).
+ *
+ * ЧЕГО ЗДЕСЬ НЕТ: сценария "читающий POST повторяется". В коде TickTick НЕТ
+ * ни одного POST, объявленного `idempotencyDeclared: true` (проверено:
+ * ни одного вызова `.post(..., true)` в src/ticktick_api/api_operations —
+ * search-tasks реализован как client-side фильтр над GET `getAllTasks()`,
+ * настоящего idempotent-POST-эндпоинта в этом API нет). В отличие от
+ * yandex-tracker (`_search`, `create_issue` с ключом `unique`), здесь нечего
+ * тестировать — сценарий не про непроверяемость на проводе, а про отсутствие
+ * самого кода.
  */
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
+import * as http from 'node:http';
+import type { Socket } from 'node:net';
 
 // ---------------------------------------------------------------------------
 // Конфигурация конкретного сервера (единственное, что отличается между
@@ -154,6 +171,86 @@ function assert(condition: unknown, message: string): asserts condition {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Подставной локальный HTTP API (сценарии 10-12): реальный бандл сервера
+// нельзя подменить моком (чужой процесс), поэтому вместо реального API
+// TickTick ему подсовывается локальный http.Server, на который сервер
+// направляется через TICKTICK_API_BASE_URL. Handler получает номер вызова
+// (с единицы) — в каждом сценарии подставной сервер обслуживает ровно один
+// вызываемый tool, поэтому различать пути не нужно.
+// ---------------------------------------------------------------------------
+interface FakeApiRequest {
+  method: string;
+  path: string;
+  bodyRaw: string;
+}
+
+class FakeApiServer {
+  private readonly server: http.Server;
+  private readonly sockets = new Set<Socket>();
+  readonly requests: FakeApiRequest[] = [];
+
+  constructor(
+    private readonly handler: (
+      request: FakeApiRequest,
+      res: http.ServerResponse,
+      callIndex: number
+    ) => void
+  ) {
+    this.server = http.createServer((req, res) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (chunk: Buffer) => chunks.push(chunk));
+      req.on('end', () => {
+        const request: FakeApiRequest = {
+          method: req.method ?? '',
+          path: (req.url ?? '').split('?')[0] ?? '',
+          bodyRaw: Buffer.concat(chunks).toString('utf8'),
+        };
+        this.requests.push(request);
+        this.handler(request, res, this.requests.length);
+      });
+    });
+    this.server.on('connection', (socket: Socket) => {
+      this.sockets.add(socket);
+      socket.on('close', () => this.sockets.delete(socket));
+    });
+  }
+
+  /** Запускает сервер на свободном порту, возвращает его базовый URL. */
+  async start(): Promise<string> {
+    await new Promise<void>((resolve) => this.server.listen(0, '127.0.0.1', resolve));
+    const address = this.server.address();
+    if (!address || typeof address === 'string') {
+      throw new Error('FakeApiServer: не удалось определить порт (server.address())');
+    }
+    return `http://127.0.0.1:${address.port}`;
+  }
+
+  /**
+   * Останавливает сервер. Форсированно рвёт зависшие сокеты (сценарий 12
+   * "таймаут" держит соединение открытым бесконечно — обычно к этому моменту
+   * клиент (axios) уже сам оборвал его по таймауту, но не полагаемся на это).
+   */
+  async stop(): Promise<void> {
+    for (const socket of this.sockets) {
+      socket.destroy();
+    }
+    await new Promise<void>((resolve, reject) => {
+      this.server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+}
+
+/** Отправляет JSON-ответ с корректным Content-Type/Content-Length. */
+function sendJson(res: http.ServerResponse, statusCode: number, body: unknown): void {
+  const payload = JSON.stringify(body);
+  res.writeHead(statusCode, {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(payload),
+  });
+  res.end(payload);
+}
+
 /**
  * Достаёт `supported` из `error.data` (тип `unknown` — форма зависит от кода
  * ошибки, у -32022 это список версий, у остальных кодов поле может
@@ -181,8 +278,10 @@ function normalizeVolatileContent(content: unknown): string {
 }
 
 let failures = 0;
+let scenarioCount = 0;
 
 async function scenario(name: string, fn: () => Promise<void>): Promise<void> {
+  scenarioCount += 1;
   try {
     await fn();
     console.log(`   ✓ ${name}`);
@@ -458,9 +557,155 @@ async function main(): Promise<void> {
     );
   });
 
+  await scenario(
+    '10. Мутирующий POST (create_task) не повторяется при 503 (неопределённый исход), ошибка несёт подсказку про возможное выполнение',
+    async () => {
+      const fake = new FakeApiServer((_request, res) => {
+        sendJson(res, 503, { message: 'Service temporarily unavailable' });
+      });
+      const apiBase = await fake.start();
+      try {
+        const call = await withServer(
+          async (harness) => {
+            await legacyInitialize(harness, 1);
+            return harness.request(2, 'tools/call', {
+              name: 'fr_ticktick_create_task',
+              arguments: { title: 'raw-wire test task' },
+            });
+          },
+          { TICKTICK_API_BASE_URL: apiBase }
+        );
+
+        assert(
+          fake.requests.length === 1,
+          `неидемпотентный POST не должен повторяться на 503: подставной API получил ${fake.requests.length} запрос(ов), ожидался 1`
+        );
+        assert(
+          call.result?.isError === true,
+          `ожидался isError:true, получено ${JSON.stringify(call.result)}`
+        );
+        const payload = JSON.parse(call.result.content?.[0]?.text ?? '{}') as {
+          error?: { statusCode?: number; message?: string };
+        };
+        assert(
+          payload.error?.statusCode === 503,
+          `error.statusCode должен быть 503, получено ${JSON.stringify(payload.error)}`
+        );
+        assert(
+          typeof payload.error?.message === 'string' &&
+            payload.error.message.includes('Повтор отключён') &&
+            payload.error.message.includes('дубль'),
+          `сообщение об ошибке должно подсказывать про возможное выполнение операции и отключённый повтор, получено ${JSON.stringify(payload.error?.message)}`
+        );
+      } finally {
+        await fake.stop();
+      }
+    }
+  );
+
+  await scenario(
+    '11. Ошибка API доходит до клиента как isError:true с message/statusCode/errorsData',
+    async () => {
+      const fakeErrorsData = { field: 'title', reason: 'duplicate task detected' };
+      const fake = new FakeApiServer((_request, res) => {
+        sendJson(res, 400, { message: 'Invalid task payload', errorsData: fakeErrorsData });
+      });
+      const apiBase = await fake.start();
+      try {
+        const call = await withServer(
+          async (harness) => {
+            await legacyInitialize(harness, 1);
+            return harness.request(2, 'tools/call', {
+              name: 'fr_ticktick_create_task',
+              arguments: { title: 'raw-wire test task' },
+            });
+          },
+          { TICKTICK_API_BASE_URL: apiBase }
+        );
+
+        assert(
+          fake.requests.length === 1,
+          `400 не является повторяемым статусом: подставной API получил ${fake.requests.length} запрос(ов), ожидался 1`
+        );
+        assert(
+          call.result?.isError === true,
+          `ожидался isError:true, получено ${JSON.stringify(call.result)}`
+        );
+        const payload = JSON.parse(call.result.content?.[0]?.text ?? '{}') as {
+          error?: { statusCode?: number; message?: string; errorsData?: unknown };
+        };
+        assert(
+          payload.error?.statusCode === 400,
+          `error.statusCode должен быть 400, получено ${JSON.stringify(payload.error)}`
+        );
+        assert(
+          typeof payload.error?.message === 'string' &&
+            payload.error.message.includes('Invalid task payload'),
+          `error.message должен сохранить текст ошибки API, получено ${JSON.stringify(payload.error?.message)}`
+        );
+        assert(
+          JSON.stringify(payload.error?.errorsData) === JSON.stringify(fakeErrorsData),
+          `error.errorsData должен дойти до клиента без потерь, получено ${JSON.stringify(payload.error?.errorsData)}`
+        );
+      } finally {
+        await fake.stop();
+      }
+    }
+  );
+
+  await scenario(
+    '12. Таймаут: API не отвечает — клиент получает понятную сетевую ошибку',
+    async () => {
+      const fake = new FakeApiServer(() => {
+        // Намеренно не отвечаем — сервер должен дождаться таймаута axios.
+      });
+      const apiBase = await fake.start();
+      try {
+        const call = await withServer(
+          async (harness) => {
+            await legacyInitialize(harness, 1);
+            return harness.request(2, 'tools/call', {
+              name: 'fr_ticktick_raw_api_request',
+              arguments: { method: 'GET', path: '/project', fields: ['id'] },
+            });
+          },
+          {
+            TICKTICK_API_BASE_URL: apiBase,
+            REQUEST_TIMEOUT: '5000',
+            TICKTICK_RETRY_ATTEMPTS: '0',
+          }
+        );
+
+        assert(
+          call.result?.isError === true,
+          `ожидался isError:true при таймауте, получено ${JSON.stringify(call.result)}`
+        );
+        const payload = JSON.parse(call.result.content?.[0]?.text ?? '{}') as {
+          error?: { statusCode?: number; message?: string };
+        };
+        assert(
+          payload.error?.statusCode === 0,
+          `таймаут должен маппиться в NETWORK_ERROR (statusCode 0), получено ${JSON.stringify(payload.error)}`
+        );
+        assert(
+          typeof payload.error?.message === 'string' && payload.error.message.length > 0,
+          `сообщение об ошибке таймаута должно быть непустым, получено ${JSON.stringify(payload.error?.message)}`
+        );
+        assert(
+          fake.requests.length === 1,
+          `при RETRY_ATTEMPTS=0 ожидался ровно 1 запрос к подставному API, получено ${fake.requests.length}`
+        );
+      } finally {
+        await fake.stop();
+      }
+    }
+  );
+
   console.log(
     `\n${failures === 0 ? '✅' : '❌'} Raw-wire тесты (${SERVER_LABEL}): ${
-      failures === 0 ? 'все 9 сценариев пройдены' : `${failures} сценариев провалено`
+      failures === 0
+        ? `все ${scenarioCount} сценариев пройдены`
+        : `${failures} из ${scenarioCount} сценариев провалено`
     }`
   );
   process.exit(failures === 0 ? 0 : 1);

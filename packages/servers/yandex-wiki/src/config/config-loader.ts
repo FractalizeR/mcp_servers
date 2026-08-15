@@ -327,10 +327,17 @@ export function loadConfig(): ServerConfig {
     60000
   );
 
+  // Переопределение базового адреса API (по образцу YANDEX_TRACKER_API_BASE) —
+  // прежде всего для raw-wire тестов сценариев сбоев (подставной локальный
+  // HTTP-сервер вместо реального API), но это продакшн-путь: пустая строка
+  // трактуется как "не задано" (используется DEFAULT_API_BASE), непустая —
+  // используется как есть после trim().
+  const apiBase = process.env[ENV_VAR_NAMES.YANDEX_WIKI_API_BASE]?.trim() || DEFAULT_API_BASE;
+
   return {
     token: token.trim(),
     ...validatedOrgIds,
-    apiBase: DEFAULT_API_BASE,
+    apiBase,
     logLevel,
     requestTimeout,
     maxBatchSize,

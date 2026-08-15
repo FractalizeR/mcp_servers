@@ -48,6 +48,7 @@ npm run mcp:connect
 | `LOG_LEVEL` | `info` | Уровень логирования |
 | `REQUEST_TIMEOUT` | `30000` | Таймаут запросов (мс) |
 | `YANDEX_WIKI_RETRY_ATTEMPTS` | `3` | Количество retry попыток |
+| `YANDEX_WIKI_API_BASE` | `https://api.wiki.yandex.net` | Базовый URL API Wiki (переопределение для тестов/прокси; пустое значение игнорируется) |
 | `DISABLED_TOOL_GROUPS` | - | Отключение групп инструментов |
 
 ### Фильтрация инструментов

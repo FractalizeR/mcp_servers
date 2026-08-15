@@ -5,7 +5,11 @@
 export const MCP_TOOL_PREFIX = 'yw_' as const;
 
 /**
- * Base URL API Yandex Wiki (hardcoded)
+ * Base URL API Yandex Wiki — публичный compile-time дефолт (часть публичного
+ * экспорта пакета, см. index.ts). Фактическое значение, используемое
+ * HTTP-клиентом, вычисляется в loadConfig() (src/config/config-loader.ts) и
+ * может быть переопределено переменной окружения YANDEX_WIKI_API_BASE —
+ * см. DEFAULT_API_BASE в src/config/constants.ts.
  */
 export const YANDEX_WIKI_API_BASE = 'https://api.wiki.yandex.net';
 

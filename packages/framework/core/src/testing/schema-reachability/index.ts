@@ -23,7 +23,15 @@ export type {
 export { generateReachabilitySample } from './generate-reachability-sample.js';
 
 export type { ReachabilityException, UnreachableLeaf } from './find-unreachable-leaves.js';
-export { findUnreachableLeaves, describeUnreachableLeaf } from './find-unreachable-leaves.js';
+export {
+  findUnreachableLeaves,
+  describeUnreachableLeaf,
+  selectTargetCalls,
+} from './find-unreachable-leaves.js';
 
-export type { HttpClientCallRecorder } from './http-client-call-recorder.js';
+export type {
+  HttpClientCallRecorder,
+  RecordedCall,
+  HttpClientMethodName,
+} from './http-client-call-recorder.js';
 export { createHttpClientCallRecorder } from './http-client-call-recorder.js';

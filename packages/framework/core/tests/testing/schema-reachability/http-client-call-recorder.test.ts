@@ -27,6 +27,30 @@ describe('createHttpClientCallRecorder', () => {
     expect(haystack).toContain('probe_filter');
   });
 
+  it('calls() отдаёт структурированный список вызовов с именем метода, в порядке выполнения (для отбора целевого запроса)', async () => {
+    const httpClient = new MockHttpClient();
+    const recorder = createHttpClientCallRecorder(httpClient);
+
+    await httpClient.get('/v3/issues/TEST-1');
+    await httpClient.post('/v3/issues', { summary: 'probe_summary' });
+    await httpClient.patch('/v3/issues/TEST-1', { assignee: 'probe_assignee' });
+    await httpClient.delete('/v3/issues/TEST-1');
+    await httpClient.getWithResponse('/v3/queues');
+    await httpClient.postWithResponse('/v3/issues/_search', { filter: 'probe_filter' });
+
+    const calls = recorder.calls();
+    expect(calls.map((c) => c.method)).toEqual([
+      'get',
+      'post',
+      'patch',
+      'delete',
+      'getWithResponse',
+      'postWithResponse',
+    ]);
+    expect(calls[0]?.serialized).toContain('/v3/issues/TEST-1');
+    expect(calls[5]?.serialized).toContain('probe_filter');
+  });
+
   it('возвращает вызывающему коду глубокий stub, а не бросает на доступе к вложенным полям ответа', async () => {
     const httpClient = new MockHttpClient();
     createHttpClientCallRecorder(httpClient);
@@ -46,9 +70,11 @@ describe('createHttpClientCallRecorder', () => {
 
     await httpClient.get('/v3/issues/TEST-1');
     expect(recorder.haystack()).toContain('TEST-1');
+    expect(recorder.calls()).toHaveLength(1);
 
     recorder.clear();
     expect(recorder.haystack()).toBe('');
+    expect(recorder.calls()).toHaveLength(0);
   });
 
   it('restore() возвращает httpClient к оригинальному поведению (реальный ответ MockHttpClient)', async () => {

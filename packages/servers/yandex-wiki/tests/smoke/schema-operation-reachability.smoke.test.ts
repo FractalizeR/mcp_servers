@@ -228,7 +228,7 @@ describe('Schema → Wire Reachability (Smoke) — пакет 7.1.B DoD п.2 / 7
       expect(result.isError, `Вызов упал: ${JSON.stringify(result)}`).toBeFalsy();
 
       const exceptions = EXCEPTIONS_BY_TOOL[ToolClass.METADATA.name] ?? [];
-      const unreachable = findUnreachableLeaves(recorder.haystack(), leaves, exceptions);
+      const unreachable = findUnreachableLeaves(recorder.calls(), leaves, exceptions);
 
       expect(
         unreachable,

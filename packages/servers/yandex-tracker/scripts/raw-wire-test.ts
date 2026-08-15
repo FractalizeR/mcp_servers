@@ -1,9 +1,10 @@
 #!/usr/bin/env tsx
 /**
- * Raw-wire тесты MCP-протокола (пакет 4.1.D плана модернизации MCP 2026-07-28)
+ * Raw-wire тесты MCP-протокола (пакет 4.1.D плана модернизации MCP 2026-07-28
+ * + сценарии сбоев транспорта, добавлены отдельно)
  *
  * Говорит с РЕАЛЬНЫМ собранным бандлом байтами JSON-RPC по stdio (как
- * scripts/smoke-test-server.ts), а не через внутренние API. Девять
+ * scripts/smoke-test-server.ts), а не через внутренние API. Девять базовых
  * сценариев из плана — по одному набору на каждый из трёх серверов.
  * Не покрывает поведение, реализованное внутри самого SDK, кроме как
  * через наблюдаемый эффект на wire (это и есть цель этих тестов).
@@ -13,10 +14,20 @@
  * "no per-request era consult" (см. create-mcp-server-adapter.ts). Поэтому
  * неподдерживаемую версию нужно слать именно ПЕРВЫМ сообщением НОВОГО
  * соединения — на уже открытом modern-соединении она будет проигнорирована.
+ *
+ * СЦЕНАРИИ СБОЕВ ТРАНСПОРТА (10-13): единственный способ подсунуть сбой HTTP
+ * реальному собранному бандлу, говорящему по stdio отдельным процессом, —
+ * поднять локальный HTTP-сервер и направить процесс на него через
+ * YANDEX_TRACKER_API_BASE (см. src/config/constants.ts, ENV_VAR_NAMES).
+ * Tracker и TickTick поддерживают такое переопределение; yandex-wiki — нет
+ * (apiBase захардкожен, см. src/constants.ts:10) — сценарии для wiki на
+ * проводе невоспроизводимы без правки продакшн-кода.
  */
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
+import * as http from 'node:http';
+import type { Socket } from 'node:net';
 
 // ---------------------------------------------------------------------------
 // Конфигурация конкретного сервера (единственное, что отличается между
@@ -165,6 +176,88 @@ function assert(condition: unknown, message: string): asserts condition {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Подставной локальный HTTP API (сценарии 10-13): реальный бандл сервера
+// нельзя подменить моком (чужой процесс), поэтому вместо реального API
+// Яндекс.Трекера ему подсовывается локальный http.Server, на который сервер
+// направляется через YANDEX_TRACKER_API_BASE. Handler получает номер вызова
+// (с единицы) — это позволяет сценарию 11 (retry читающего POST) ответить
+// по-разному на 1-ю и 2-ю попытку без сложной маршрутизации по путям (в
+// каждом сценарии подставной сервер обслуживает ровно один вызываемый tool,
+// поэтому различать пути не нужно).
+// ---------------------------------------------------------------------------
+interface FakeApiRequest {
+  method: string;
+  path: string;
+  bodyRaw: string;
+}
+
+class FakeApiServer {
+  private readonly server: http.Server;
+  private readonly sockets = new Set<Socket>();
+  readonly requests: FakeApiRequest[] = [];
+
+  constructor(
+    private readonly handler: (
+      request: FakeApiRequest,
+      res: http.ServerResponse,
+      callIndex: number
+    ) => void
+  ) {
+    this.server = http.createServer((req, res) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (chunk: Buffer) => chunks.push(chunk));
+      req.on('end', () => {
+        const request: FakeApiRequest = {
+          method: req.method ?? '',
+          path: (req.url ?? '').split('?')[0] ?? '',
+          bodyRaw: Buffer.concat(chunks).toString('utf8'),
+        };
+        this.requests.push(request);
+        this.handler(request, res, this.requests.length);
+      });
+    });
+    this.server.on('connection', (socket: Socket) => {
+      this.sockets.add(socket);
+      socket.on('close', () => this.sockets.delete(socket));
+    });
+  }
+
+  /** Запускает сервер на свободном порту, возвращает его базовый URL. */
+  async start(): Promise<string> {
+    await new Promise<void>((resolve) => this.server.listen(0, '127.0.0.1', resolve));
+    const address = this.server.address();
+    if (!address || typeof address === 'string') {
+      throw new Error('FakeApiServer: не удалось определить порт (server.address())');
+    }
+    return `http://127.0.0.1:${address.port}`;
+  }
+
+  /**
+   * Останавливает сервер. Форсированно рвёт зависшие сокеты (сценарий 13
+   * "таймаут" держит соединение открытым бесконечно — обычно к этому моменту
+   * клиент (axios) уже сам оборвал его по таймауту, но не полагаемся на это).
+   */
+  async stop(): Promise<void> {
+    for (const socket of this.sockets) {
+      socket.destroy();
+    }
+    await new Promise<void>((resolve, reject) => {
+      this.server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+}
+
+/** Отправляет JSON-ответ с корректным Content-Type/Content-Length. */
+function sendJson(res: http.ServerResponse, statusCode: number, body: unknown): void {
+  const payload = JSON.stringify(body);
+  res.writeHead(statusCode, {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(payload),
+  });
+  res.end(payload);
+}
+
 /**
  * Убирает волатильные ISO-8601 таймстампы из content перед сравнением между
  * эпохами (сценарий 8): некоторые tool включают текущее время выполнения в
@@ -180,8 +273,10 @@ function normalizeVolatileContent(content: unknown): string {
 }
 
 let failures = 0;
+let scenarioCount = 0;
 
 async function scenario(name: string, fn: () => Promise<void>): Promise<void> {
+  scenarioCount += 1;
   try {
     await fn();
     console.log(`   ✓ ${name}`);
@@ -522,9 +617,195 @@ async function main(): Promise<void> {
     );
   });
 
+  await scenario(
+    '10. Мутирующий POST (transition) не повторяется при 503 (неопределённый исход), ошибка несёт подсказку про возможное выполнение',
+    async () => {
+      const fake = new FakeApiServer((_request, res) => {
+        sendJson(res, 503, { message: 'Service temporarily unavailable' });
+      });
+      const apiBase = await fake.start();
+      try {
+        const call = await withServer(
+          async (harness) => {
+            await legacyInitialize(harness, 1);
+            return harness.request(2, 'tools/call', {
+              name: 'fr_yandex_tracker_transition_issue',
+              arguments: { issueKey: 'FRTEST-1', transitionId: 'close' },
+            });
+          },
+          { YANDEX_TRACKER_API_BASE: apiBase }
+        );
+
+        assert(
+          fake.requests.length === 1,
+          `неидемпотентный POST не должен повторяться на 503: подставной API получил ${fake.requests.length} запрос(ов), ожидался 1`
+        );
+        assert(
+          call.result?.isError === true,
+          `ожидался isError:true, получено ${JSON.stringify(call.result)}`
+        );
+        const payload = JSON.parse(call.result.content?.[0]?.text ?? '{}') as {
+          error?: { statusCode?: number; message?: string };
+        };
+        assert(
+          payload.error?.statusCode === 503,
+          `error.statusCode должен быть 503, получено ${JSON.stringify(payload.error)}`
+        );
+        assert(
+          typeof payload.error?.message === 'string' &&
+            payload.error.message.includes('Повтор отключён') &&
+            payload.error.message.includes('дубль'),
+          `сообщение об ошибке должно подсказывать про возможное выполнение операции и отключённый повтор, получено ${JSON.stringify(payload.error?.message)}`
+        );
+      } finally {
+        await fake.stop();
+      }
+    }
+  );
+
+  await scenario(
+    '11. Читающий POST (`_search`, idempotencyDeclared:true) повторяется при 503',
+    async () => {
+      const fake = new FakeApiServer((_request, res, callIndex) => {
+        if (callIndex === 1) {
+          sendJson(res, 503, { message: 'Service temporarily unavailable' });
+          return;
+        }
+        sendJson(res, 200, []);
+      });
+      const apiBase = await fake.start();
+      try {
+        const call = await withServer(
+          async (harness) => {
+            await legacyInitialize(harness, 1);
+            return harness.request(2, 'tools/call', {
+              name: 'fr_yandex_tracker_find_issues',
+              arguments: { query: 'Test', fields: ['id'] },
+            });
+          },
+          {
+            YANDEX_TRACKER_API_BASE: apiBase,
+            YANDEX_TRACKER_RETRY_MIN_DELAY: '100',
+          }
+        );
+
+        assert(
+          fake.requests.length === 2,
+          `идемпотентный (читающий) POST должен повториться один раз после 503: подставной API получил ${fake.requests.length} запрос(ов), ожидалось 2`
+        );
+        assert(
+          call.result?.isError !== true,
+          `после успешного повтора tools/call НЕ должен быть isError, получено ${JSON.stringify(call.result)}`
+        );
+      } finally {
+        await fake.stop();
+      }
+    }
+  );
+
+  await scenario(
+    '12. Ошибка API доходит до клиента как isError:true с message/statusCode/errorsData',
+    async () => {
+      const fakeErrorsData = { transitionId: 'close', reason: 'not applicable from this status' };
+      const fake = new FakeApiServer((_request, res) => {
+        sendJson(res, 400, { message: 'Invalid transition', errorsData: fakeErrorsData });
+      });
+      const apiBase = await fake.start();
+      try {
+        const call = await withServer(
+          async (harness) => {
+            await legacyInitialize(harness, 1);
+            return harness.request(2, 'tools/call', {
+              name: 'fr_yandex_tracker_transition_issue',
+              arguments: { issueKey: 'FRTEST-1', transitionId: 'close' },
+            });
+          },
+          { YANDEX_TRACKER_API_BASE: apiBase }
+        );
+
+        assert(
+          fake.requests.length === 1,
+          `400 не является повторяемым статусом: подставной API получил ${fake.requests.length} запрос(ов), ожидался 1`
+        );
+        assert(
+          call.result?.isError === true,
+          `ожидался isError:true, получено ${JSON.stringify(call.result)}`
+        );
+        const payload = JSON.parse(call.result.content?.[0]?.text ?? '{}') as {
+          error?: { statusCode?: number; message?: string; errorsData?: unknown };
+        };
+        assert(
+          payload.error?.statusCode === 400,
+          `error.statusCode должен быть 400, получено ${JSON.stringify(payload.error)}`
+        );
+        assert(
+          typeof payload.error?.message === 'string' &&
+            payload.error.message.includes('Invalid transition'),
+          `error.message должен сохранить текст ошибки API, получено ${JSON.stringify(payload.error?.message)}`
+        );
+        assert(
+          JSON.stringify(payload.error?.errorsData) === JSON.stringify(fakeErrorsData),
+          `error.errorsData должен дойти до клиента без потерь, получено ${JSON.stringify(payload.error?.errorsData)}`
+        );
+      } finally {
+        await fake.stop();
+      }
+    }
+  );
+
+  await scenario(
+    '13. Таймаут: API не отвечает — клиент получает понятную сетевую ошибку',
+    async () => {
+      const fake = new FakeApiServer(() => {
+        // Намеренно не отвечаем — сервер должен дождаться таймаута axios.
+      });
+      const apiBase = await fake.start();
+      try {
+        const call = await withServer(
+          async (harness) => {
+            await legacyInitialize(harness, 1);
+            return harness.request(2, 'tools/call', {
+              name: 'fr_yandex_tracker_raw_api_request',
+              arguments: { method: 'GET', path: '/v3/myself', fields: ['id'] },
+            });
+          },
+          {
+            YANDEX_TRACKER_API_BASE: apiBase,
+            REQUEST_TIMEOUT: '5000',
+            YANDEX_TRACKER_RETRY_ATTEMPTS: '0',
+          }
+        );
+
+        assert(
+          call.result?.isError === true,
+          `ожидался isError:true при таймауте, получено ${JSON.stringify(call.result)}`
+        );
+        const payload = JSON.parse(call.result.content?.[0]?.text ?? '{}') as {
+          error?: { statusCode?: number; message?: string };
+        };
+        assert(
+          payload.error?.statusCode === 0,
+          `таймаут должен маппиться в NETWORK_ERROR (statusCode 0), получено ${JSON.stringify(payload.error)}`
+        );
+        assert(
+          typeof payload.error?.message === 'string' && payload.error.message.length > 0,
+          `сообщение об ошибке таймаута должно быть непустым, получено ${JSON.stringify(payload.error?.message)}`
+        );
+        assert(
+          fake.requests.length === 1,
+          `при RETRY_ATTEMPTS=0 ожидался ровно 1 запрос к подставному API, получено ${fake.requests.length}`
+        );
+      } finally {
+        await fake.stop();
+      }
+    }
+  );
+
   console.log(
     `\n${failures === 0 ? '✅' : '❌'} Raw-wire тесты (${SERVER_LABEL}): ${
-      failures === 0 ? 'все 9 сценариев пройдены' : `${failures} сценариев провалено`
+      failures === 0
+        ? `все ${scenarioCount} сценариев пройдены`
+        : `${failures} из ${scenarioCount} сценариев провалено`
     }`
   );
   process.exit(failures === 0 ? 0 : 1);
