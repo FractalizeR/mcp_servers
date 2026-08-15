@@ -62,8 +62,171 @@ interface JSONRPCResponse {
   };
 }
 
-const TIMEOUT_MS = 20000; // 20 секунд на весь тест (основной сценарий + отдельный процесс для DoD 2.1.A)
-const SERVER_STARTUP_DELAY_MS = 1000; // 1 секунда на запуск сервера
+const TIMEOUT_MS = 40000; // 40 секунд на весь тест (основной сценарий + отдельный процесс для DoD 2.1.A)
+const RESPONSE_WAIT_TIMEOUT_MS = 10000; // событийное ожидание JSON-RPC ответа
+const STDERR_PATTERN_TIMEOUT_MS = 10000; // событийное ожидание подстроки в stderr
+
+/**
+ * Ожидание JSON-RPC ответа с `expectedId` в stdout процесса `proc`.
+ * Резолвится сразу, как только распознана подходящая строка — не привязано
+ * к фиксированной задержке и не зависит от скорости машины.
+ *
+ * Также завершается раньше таймаута (с диагностикой, включающей весь
+ * накопленный stderr), если процесс закрылся или упал до ответа, вместо
+ * молчаливого ожидания полного таймаута.
+ */
+async function waitForJSONRPCResponse(
+  stdoutBuffer: string,
+  proc: ReturnType<typeof spawn>,
+  expectedId: number,
+  getStderr: () => string,
+  timeoutMs: number
+): Promise<JSONRPCResponse> {
+  return new Promise((resolve, reject) => {
+    let buffer = stdoutBuffer;
+    let settled = false;
+
+    const finish = (fn: () => void): void => {
+      if (settled) return;
+      settled = true;
+      proc.stdout?.off('data', onData);
+      proc.off('close', onClose);
+      proc.off('error', onError);
+      clearTimeout(timer);
+      fn();
+    };
+
+    const onData = (data: Buffer): void => {
+      buffer += data.toString();
+
+      // Пытаемся найти JSON-RPC ответ в буфере
+      const lines = buffer.split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+
+        try {
+          const parsed = JSON.parse(line) as JSONRPCResponse;
+          if (parsed.jsonrpc === '2.0' && parsed.id === expectedId) {
+            finish(() => resolve(parsed));
+            return;
+          }
+        } catch {
+          // Не JSON или неполный JSON, продолжаем ждать
+        }
+      }
+    };
+
+    const onClose = (code: number | null, signal: NodeJS.Signals | null): void => {
+      finish(() =>
+        reject(
+          new Error(
+            `Процесс закрылся (code=${code}, signal=${signal}) до ответа на запрос id=${expectedId}.\n` +
+              `stderr: ${getStderr()}`
+          )
+        )
+      );
+    };
+
+    const onError = (error: Error): void => {
+      finish(() =>
+        reject(new Error(`Ошибка процесса при ожидании ответа id=${expectedId}: ${error.message}`))
+      );
+    };
+
+    proc.stdout?.on('data', onData);
+    proc.on('close', onClose);
+    proc.on('error', onError);
+
+    const timer = setTimeout(() => {
+      finish(() =>
+        reject(
+          new Error(
+            `Таймаут (${timeoutMs}ms) ожидания JSON-RPC ответа id=${expectedId}.\n` +
+              `stderr: ${getStderr()}`
+          )
+        )
+      );
+    }, timeoutMs);
+  });
+}
+
+/**
+ * Ожидание, пока `getStderr()` не будет содержать `pattern`, с резолвом сразу
+ * при появлении подстроки — не привязано к фиксированной задержке. Именно
+ * это закрывает реальную гонку, из-за которой smoke-тест был нестабилен в
+ * CI: прежняя версия ждала фиксированные 1000ms и затем один раз проверяла
+ * то, что успело накопиться в stderr — на более медленной/загруженной
+ * машине проверка могла отработать раньше, чем предупреждение было
+ * напечатано.
+ *
+ * Также завершается раньше таймаута, если процесс закрылся/упал до
+ * появления подстроки, и всегда включает накопленный stderr в текст ошибки,
+ * чтобы падение было диагностируемо без повторного прогона.
+ */
+async function waitForStderrSubstring(
+  child: ReturnType<typeof spawn>,
+  pattern: string,
+  getStderr: () => string,
+  timeoutMs: number
+): Promise<void> {
+  // Данные могли прийти (и уже быть накоплены слушателем 'data' вызывающей
+  // стороны) ещё до вызова этой функции.
+  if (getStderr().includes(pattern)) {
+    return;
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    let settled = false;
+
+    const finish = (fn: () => void): void => {
+      if (settled) return;
+      settled = true;
+      child.stderr?.off('data', onData);
+      child.off('close', onClose);
+      child.off('error', onError);
+      clearTimeout(timer);
+      fn();
+    };
+
+    const onData = (): void => {
+      if (getStderr().includes(pattern)) {
+        finish(resolve);
+      }
+    };
+
+    const onClose = (code: number | null, signal: NodeJS.Signals | null): void => {
+      finish(() =>
+        reject(
+          new Error(
+            `Процесс закрылся (code=${code}, signal=${signal}) до появления "${pattern}" в stderr.\n` +
+              `stderr so far: ${getStderr()}`
+          )
+        )
+      );
+    };
+
+    const onError = (error: Error): void => {
+      finish(() =>
+        reject(new Error(`Ошибка процесса до появления "${pattern}" в stderr: ${error.message}`))
+      );
+    };
+
+    child.stderr?.on('data', onData);
+    child.on('close', onClose);
+    child.on('error', onError);
+
+    const timer = setTimeout(() => {
+      finish(() =>
+        reject(
+          new Error(
+            `Таймаут (${timeoutMs}ms) ожидания "${pattern}" в stderr.\n` +
+              `stderr so far: ${getStderr()}`
+          )
+        )
+      );
+    }, timeoutMs);
+  });
+}
 
 /**
  * Главная функция smoke-теста
@@ -166,9 +329,10 @@ async function main(): Promise<void> {
       }
     });
 
-    // Даём серверу время на запуск
-    console.log(`   Ожидание запуска сервера (${SERVER_STARTUP_DELAY_MS}ms)...`);
-    await sleep(SERVER_STARTUP_DELAY_MS);
+    // Фиксированной паузы перед первым запросом больше нет: запись в stdin
+    // буферизуется ОС-пайпом независимо от того, успел ли дочерний процесс
+    // стартовать, а waitForJSONRPCResponse() ниже ждёт реального события
+    // ответа (со своим таймаутом) — ждать здесь нечего.
 
     // 2. Отправляем JSON-RPC запрос tools/list
     console.log('\n2️⃣  Отправка JSON-RPC запроса: tools/list');
@@ -182,7 +346,13 @@ async function main(): Promise<void> {
     console.log('   Запрос отправлен, ожидание ответа...');
 
     // 3. Ожидаем ответ
-    const response = await waitForJSONRPCResponse(stdoutData, serverProcess, 1);
+    const response = await waitForJSONRPCResponse(
+      stdoutData,
+      serverProcess,
+      1,
+      () => stderrData,
+      RESPONSE_WAIT_TIMEOUT_MS
+    );
 
     // 4. Валидируем ответ
     console.log('\n3️⃣  Валидация ответа');
@@ -195,7 +365,13 @@ async function main(): Promise<void> {
     console.log('\n4️⃣  Проверка детерминированности порядка (второй tools/list)');
     const secondRequest: JSONRPCRequest = { jsonrpc: '2.0', method: 'tools/list', id: 2 };
     serverProcess.stdin?.write(JSON.stringify(secondRequest) + '\n');
-    const secondResponse = await waitForJSONRPCResponse(stdoutData, serverProcess, 2);
+    const secondResponse = await waitForJSONRPCResponse(
+      stdoutData,
+      serverProcess,
+      2,
+      () => stderrData,
+      RESPONSE_WAIT_TIMEOUT_MS
+    );
 
     const firstToolsJson = JSON.stringify(response.result?.tools ?? []);
     const secondToolsJson = JSON.stringify(secondResponse.result?.tools ?? []);
@@ -206,48 +382,6 @@ async function main(): Promise<void> {
       );
     }
     console.log('   ✓ Список побайтово идентичен');
-  }
-
-  /**
-   * Ожидание JSON-RPC ответа из stdout
-   */
-  async function waitForJSONRPCResponse(
-    stdoutBuffer: string,
-    process: ReturnType<typeof spawn>,
-    expectedId: number
-  ): Promise<JSONRPCResponse> {
-    return new Promise((resolve, reject) => {
-      let buffer = stdoutBuffer;
-
-      const onData = (data: Buffer) => {
-        buffer += data.toString();
-
-        // Пытаемся найти JSON-RPC ответ в буфере
-        const lines = buffer.split('\n');
-        for (const line of lines) {
-          if (!line.trim()) continue;
-
-          try {
-            const parsed = JSON.parse(line) as JSONRPCResponse;
-            if (parsed.jsonrpc === '2.0' && parsed.id === expectedId) {
-              process.stdout?.off('data', onData);
-              resolve(parsed);
-              return;
-            }
-          } catch {
-            // Не JSON или неполный JSON, продолжаем ждать
-          }
-        }
-      };
-
-      process.stdout?.on('data', onData);
-
-      // Таймаут на получение ответа (5 секунд)
-      setTimeout(() => {
-        process.stdout?.off('data', onData);
-        reject(new Error('Таймаут ожидания ответа от сервера (5000ms)'));
-      }, 5000);
-    });
   }
 
   /**
@@ -352,49 +486,29 @@ async function runDeprecatedEnvVarSmokeTest(): Promise<void> {
   });
 
   try {
-    await sleep(SERVER_STARTUP_DELAY_MS);
-
-    if (child.exitCode !== null || child.killed) {
-      throw new Error(
-        `Сервер упал при старте с устаревшей TOOL_DISCOVERY_MODE\nstderr: ${stderrData}`
-      );
-    }
-
-    if (!stderrData.includes('TOOL_DISCOVERY_MODE')) {
-      throw new Error(
-        `Сервер не напечатал предупреждение о TOOL_DISCOVERY_MODE в stderr.\nstderr: ${stderrData}`
-      );
-    }
+    // Событийное ожидание: резолвится сразу, как только строка предупреждения
+    // попала в stderr, либо падает раньше срока (со всем накопленным
+    // stderr), если процесс закрылся/упал первым — вместо однократной
+    // проверки буфера после фиксированной паузы.
+    await waitForStderrSubstring(
+      child,
+      'TOOL_DISCOVERY_MODE',
+      () => stderrData,
+      STDERR_PATTERN_TIMEOUT_MS
+    );
     console.log('   ✓ Предупреждение в stderr есть, сервер не упал');
 
     // Сервер должен продолжать штатно отвечать на tools/list
     const request: JSONRPCRequest = { jsonrpc: '2.0', method: 'tools/list', id: 1 };
     child.stdin?.write(JSON.stringify(request) + '\n');
 
-    const response = await new Promise<JSONRPCResponse>((resolve, reject) => {
-      let buffer = stdoutData;
-      const onData = (data: Buffer): void => {
-        buffer += data.toString();
-        for (const line of buffer.split('\n')) {
-          if (!line.trim()) continue;
-          try {
-            const parsed = JSON.parse(line) as JSONRPCResponse;
-            if (parsed.jsonrpc === '2.0' && parsed.id === 1) {
-              child.stdout?.off('data', onData);
-              resolve(parsed);
-              return;
-            }
-          } catch {
-            // неполный JSON, продолжаем ждать
-          }
-        }
-      };
-      child.stdout?.on('data', onData);
-      setTimeout(() => {
-        child.stdout?.off('data', onData);
-        reject(new Error('Таймаут ожидания tools/list после TOOL_DISCOVERY_MODE warning (5000ms)'));
-      }, 5000);
-    });
+    const response = await waitForJSONRPCResponse(
+      stdoutData,
+      child,
+      1,
+      () => stderrData,
+      RESPONSE_WAIT_TIMEOUT_MS
+    );
 
     if (response.error || !response.result?.tools?.length) {
       throw new Error(`tools/list не отработал штатно после warning: ${JSON.stringify(response)}`);

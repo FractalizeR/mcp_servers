@@ -34,8 +34,172 @@ interface JSONRPCResponse {
   };
 }
 
-const TIMEOUT_MS = 20000; // 20 seconds for entire test (main scenario + separate process for DoD 2.1.A)
-const SERVER_STARTUP_DELAY_MS = 1000; // 1 second for server startup
+const TIMEOUT_MS = 40000; // 40 seconds for entire test (main scenario + separate process for DoD 2.1.A)
+const RESPONSE_WAIT_TIMEOUT_MS = 10000; // event-based wait for a JSON-RPC response
+const STDERR_PATTERN_TIMEOUT_MS = 10000; // event-based wait for a stderr substring
+
+/**
+ * Wait until a JSON-RPC response with `expectedId` shows up on `proc`'s
+ * stdout. Resolves the instant a matching line is parsed — not tied to any
+ * fixed delay, so it is not sensitive to how fast the host machine is.
+ *
+ * Also settles early (with diagnostics, including everything collected on
+ * stderr so far) if the process closes or errors before responding, instead
+ * of silently waiting out the full timeout.
+ */
+async function waitForJSONRPCResponse(
+  stdoutBuffer: string,
+  proc: ChildProcessWithoutNullStreams,
+  expectedId: number,
+  getStderr: () => string,
+  timeoutMs: number
+): Promise<JSONRPCResponse> {
+  return new Promise((resolve, reject) => {
+    let buffer = stdoutBuffer;
+    let settled = false;
+
+    const finish = (fn: () => void): void => {
+      if (settled) return;
+      settled = true;
+      proc.stdout?.off('data', onData);
+      proc.off('close', onClose);
+      proc.off('error', onError);
+      clearTimeout(timer);
+      fn();
+    };
+
+    const onData = (data: Buffer): void => {
+      buffer += data.toString();
+
+      // Try to find JSON-RPC response in buffer
+      const lines = buffer.split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+
+        try {
+          const parsed = JSON.parse(line) as JSONRPCResponse;
+          if (parsed.jsonrpc === '2.0' && parsed.id === expectedId) {
+            finish(() => resolve(parsed));
+            return;
+          }
+        } catch {
+          // Not JSON or incomplete JSON, continue waiting
+        }
+      }
+    };
+
+    const onClose = (code: number | null, signal: NodeJS.Signals | null): void => {
+      finish(() =>
+        reject(
+          new Error(
+            `Process closed (code=${code}, signal=${signal}) before responding to request id=${expectedId}.\n` +
+              `stderr: ${getStderr()}`
+          )
+        )
+      );
+    };
+
+    const onError = (error: Error): void => {
+      finish(() =>
+        reject(
+          new Error(`Process error while waiting for response id=${expectedId}: ${error.message}`)
+        )
+      );
+    };
+
+    proc.stdout?.on('data', onData);
+    proc.on('close', onClose);
+    proc.on('error', onError);
+
+    const timer = setTimeout(() => {
+      finish(() =>
+        reject(
+          new Error(
+            `Timeout (${timeoutMs}ms) waiting for JSON-RPC response id=${expectedId}.\n` +
+              `stderr: ${getStderr()}`
+          )
+        )
+      );
+    }, timeoutMs);
+  });
+}
+
+/**
+ * Wait until `getStderr()` contains `pattern`, resolving as soon as newly
+ * arrived stderr data makes it match — not tied to any fixed delay. This is
+ * what closes the actual race that made this smoke test flaky in CI: the
+ * previous version slept a fixed 1000ms and then inspected whatever had
+ * accumulated in stderr exactly once, so on a slower/loaded machine the
+ * check could run before the warning had been written.
+ *
+ * Also settles early if the process closes/errors before the pattern
+ * appears, and always includes the stderr collected so far in any rejection
+ * so a failure is diagnosable without re-running.
+ */
+async function waitForStderrSubstring(
+  child: ChildProcessWithoutNullStreams,
+  pattern: string,
+  getStderr: () => string,
+  timeoutMs: number
+): Promise<void> {
+  // Data may have already arrived (and been accumulated by the caller's own
+  // 'data' listener) before this function was even called.
+  if (getStderr().includes(pattern)) {
+    return;
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    let settled = false;
+
+    const finish = (fn: () => void): void => {
+      if (settled) return;
+      settled = true;
+      child.stderr?.off('data', onData);
+      child.off('close', onClose);
+      child.off('error', onError);
+      clearTimeout(timer);
+      fn();
+    };
+
+    const onData = (): void => {
+      if (getStderr().includes(pattern)) {
+        finish(resolve);
+      }
+    };
+
+    const onClose = (code: number | null, signal: NodeJS.Signals | null): void => {
+      finish(() =>
+        reject(
+          new Error(
+            `Process closed (code=${code}, signal=${signal}) before stderr contained "${pattern}".\n` +
+              `stderr so far: ${getStderr()}`
+          )
+        )
+      );
+    };
+
+    const onError = (error: Error): void => {
+      finish(() =>
+        reject(new Error(`Process error before stderr contained "${pattern}": ${error.message}`))
+      );
+    };
+
+    child.stderr?.on('data', onData);
+    child.on('close', onClose);
+    child.on('error', onError);
+
+    const timer = setTimeout(() => {
+      finish(() =>
+        reject(
+          new Error(
+            `Timeout (${timeoutMs}ms) waiting for stderr to contain "${pattern}".\n` +
+              `stderr so far: ${getStderr()}`
+          )
+        )
+      );
+    }, timeoutMs);
+  });
+}
 
 /**
  * Main smoke test function
@@ -136,9 +300,11 @@ async function main(): Promise<void> {
       }
     });
 
-    // Give server time to start
-    console.log(`   Waiting for server startup (${SERVER_STARTUP_DELAY_MS}ms)...`);
-    await sleep(SERVER_STARTUP_DELAY_MS);
+    // No fixed startup pause here: stdin writes are buffered by the OS pipe
+    // regardless of whether the child has finished starting up yet, and
+    // waitForJSONRPCResponse() below waits for the actual response event
+    // (with its own timeout), so there is nothing useful to wait for before
+    // sending the first request.
 
     // 2. Send JSON-RPC tools/list request
     console.log('\n2️⃣  Sending JSON-RPC request: tools/list');
@@ -152,7 +318,13 @@ async function main(): Promise<void> {
     console.log('   Request sent, waiting for response...');
 
     // 3. Wait for response
-    const response = await waitForJSONRPCResponse(stdoutData, serverProcess, 1);
+    const response = await waitForJSONRPCResponse(
+      stdoutData,
+      serverProcess,
+      1,
+      () => stderrData,
+      RESPONSE_WAIT_TIMEOUT_MS
+    );
 
     // 4. Validate response
     console.log('\n3️⃣  Validating response');
@@ -165,7 +337,13 @@ async function main(): Promise<void> {
     console.log('\n4️⃣  Checking order determinism (second tools/list)');
     const secondRequest: JSONRPCRequest = { jsonrpc: '2.0', method: 'tools/list', id: 2 };
     serverProcess.stdin?.write(JSON.stringify(secondRequest) + '\n');
-    const secondResponse = await waitForJSONRPCResponse(stdoutData, serverProcess, 2);
+    const secondResponse = await waitForJSONRPCResponse(
+      stdoutData,
+      serverProcess,
+      2,
+      () => stderrData,
+      RESPONSE_WAIT_TIMEOUT_MS
+    );
 
     const firstToolsJson = JSON.stringify(response.result?.tools ?? []);
     const secondToolsJson = JSON.stringify(secondResponse.result?.tools ?? []);
@@ -176,48 +354,6 @@ async function main(): Promise<void> {
       );
     }
     console.log('   ✓ List is byte-identical');
-  }
-
-  /**
-   * Wait for JSON-RPC response from stdout
-   */
-  async function waitForJSONRPCResponse(
-    stdoutBuffer: string,
-    process: ReturnType<typeof spawn>,
-    expectedId: number
-  ): Promise<JSONRPCResponse> {
-    return new Promise((resolve, reject) => {
-      let buffer = stdoutBuffer;
-
-      const onData = (data: Buffer) => {
-        buffer += data.toString();
-
-        // Try to find JSON-RPC response in buffer
-        const lines = buffer.split('\n');
-        for (const line of lines) {
-          if (!line.trim()) continue;
-
-          try {
-            const parsed = JSON.parse(line) as JSONRPCResponse;
-            if (parsed.jsonrpc === '2.0' && parsed.id === expectedId) {
-              process.stdout?.off('data', onData);
-              resolve(parsed);
-              return;
-            }
-          } catch {
-            // Not JSON or incomplete JSON, continue waiting
-          }
-        }
-      };
-
-      process.stdout?.on('data', onData);
-
-      // Timeout for receiving response (5 seconds)
-      setTimeout(() => {
-        process.stdout?.off('data', onData);
-        reject(new Error('Timeout waiting for server response (5000ms)'));
-      }, 5000);
-    });
   }
 
   /**
@@ -321,51 +457,28 @@ async function runDeprecatedEnvVarSmokeTest(): Promise<void> {
   });
 
   try {
-    await sleep(SERVER_STARTUP_DELAY_MS);
-
-    if (child.exitCode !== null || child.killed) {
-      throw new Error(
-        `Server crashed at startup with deprecated TOOL_DISCOVERY_MODE\nstderr: ${stderrData}`
-      );
-    }
-
-    if (!stderrData.includes('TOOL_DISCOVERY_MODE')) {
-      throw new Error(
-        `Server did not print a TOOL_DISCOVERY_MODE warning to stderr.\nstderr: ${stderrData}`
-      );
-    }
+    // Event-based: resolves the instant the warning line lands on stderr, or
+    // fails fast (with the collected stderr) if the process closes/errors
+    // first, instead of sampling the buffer once after a fixed pause.
+    await waitForStderrSubstring(
+      child,
+      'TOOL_DISCOVERY_MODE',
+      () => stderrData,
+      STDERR_PATTERN_TIMEOUT_MS
+    );
     console.log('   ✓ Warning printed to stderr, server did not crash');
 
     // Server should keep responding normally to tools/list
     const request: JSONRPCRequest = { jsonrpc: '2.0', method: 'tools/list', id: 1 };
     child.stdin?.write(JSON.stringify(request) + '\n');
 
-    const response = await new Promise<JSONRPCResponse>((resolve, reject) => {
-      let buffer = stdoutData;
-      const onData = (data: Buffer): void => {
-        buffer += data.toString();
-        for (const line of buffer.split('\n')) {
-          if (!line.trim()) continue;
-          try {
-            const parsed = JSON.parse(line) as JSONRPCResponse;
-            if (parsed.jsonrpc === '2.0' && parsed.id === 1) {
-              child.stdout?.off('data', onData);
-              resolve(parsed);
-              return;
-            }
-          } catch {
-            // incomplete JSON, keep waiting
-          }
-        }
-      };
-      child.stdout?.on('data', onData);
-      setTimeout(() => {
-        child.stdout?.off('data', onData);
-        reject(
-          new Error('Timeout waiting for tools/list after TOOL_DISCOVERY_MODE warning (5000ms)')
-        );
-      }, 5000);
-    });
+    const response = await waitForJSONRPCResponse(
+      stdoutData,
+      child,
+      1,
+      () => stderrData,
+      RESPONSE_WAIT_TIMEOUT_MS
+    );
 
     if (response.error || !response.result?.tools?.length) {
       throw new Error(
