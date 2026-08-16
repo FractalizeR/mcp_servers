@@ -1,3 +1,15 @@
+## [1.8.1](https://github.com/FractalizeR/mcp_servers/compare/v1.8.0...v1.8.1) (2026-08-16)
+
+### Bug Fixes
+
+* **core:** детерминированный порядок tools/list ([7f7f230](https://github.com/FractalizeR/mcp_servers/commit/7f7f23027504e8939131f2bfe04dc8e13593f595))
+* **tracker:** баги записи/чтения и Entity API ([e3fe694](https://github.com/FractalizeR/mcp_servers/commit/e3fe694e0268b1e1b1b86dc61675f8fc1595299c))
+* **tracker:** регрессионный тест get_project expand + подъём testTimeout smoke ([92ff147](https://github.com/FractalizeR/mcp_servers/commit/92ff14729312d575c3a010554ffd5bc600b32689))
+
+### Refactoring
+
+* **core:** переименование totalCount → itemsOnPage ([4fb399e](https://github.com/FractalizeR/mcp_servers/commit/4fb399e4481c635a6edca83e7c6509beceb8e46e))
+
 ## [1.8.0](https://github.com/FractalizeR/mcp_servers/compare/v1.7.0...v1.8.0) (2026-08-15)
 
 ### Features
