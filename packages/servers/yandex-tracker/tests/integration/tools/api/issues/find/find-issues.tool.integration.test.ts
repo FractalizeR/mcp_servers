@@ -53,7 +53,7 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.totalCount).toBe(2);
+      expect(response.itemsOnPage).toBe(2);
       expect(response.items).toHaveLength(2);
       expect(response.summary.fieldsReturned).toEqual(STANDARD_ISSUE_FIELDS);
       expect(response.summary.searchCriteria).toMatchObject({
@@ -89,7 +89,7 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.totalCount).toBe(3);
+      expect(response.itemsOnPage).toBe(3);
       expect(response.items).toHaveLength(3);
       expect(response.summary.searchCriteria.hasQuery).toBe(true);
 
@@ -117,7 +117,7 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.totalCount).toBe(2);
+      expect(response.itemsOnPage).toBe(2);
       expect(response.summary.searchCriteria.hasQueue).toBe(true);
 
       mockServer.assertAllRequestsDone();
@@ -149,7 +149,7 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.totalCount).toBe(1);
+      expect(response.itemsOnPage).toBe(1);
       expect(response.summary.searchCriteria.hasFilter).toBe(true);
 
       mockServer.assertAllRequestsDone();
@@ -177,7 +177,7 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.totalCount).toBe(2);
+      expect(response.itemsOnPage).toBe(2);
       // R14: perPage больше не эхуется в searchCriteria
       expect(response.summary.searchCriteria).not.toHaveProperty('perPage');
 
@@ -207,7 +207,7 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.totalCount).toBe(2);
+      expect(response.itemsOnPage).toBe(2);
 
       mockServer.assertAllRequestsDone();
     });
@@ -320,7 +320,7 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(result.content[0]!.text);
       const response = responseWrapper.data;
 
-      expect(response.totalCount).toBe(0);
+      expect(response.itemsOnPage).toBe(0);
       expect(response.items).toHaveLength(0);
 
       mockServer.assertAllRequestsDone();

@@ -22,8 +22,8 @@
 import { z } from 'zod';
 
 /**
- * Порог количества элементов для режима `auto`: `totalCount <= threshold`
- * ⇒ тела инлайном, `totalCount > threshold` ⇒ `resource_link`.
+ * Порог количества элементов для режима `auto`: `itemsOnPage <= threshold`
+ * ⇒ тела инлайном, `itemsOnPage > threshold` ⇒ `resource_link`.
  *
  * ОБОСНОВАНИЕ ЗНАЧЕНИЯ (20): типичная сводка одной сущности (issue/page/
  * task) в JSON — примерно 150–400 токенов в зависимости от набора полей.

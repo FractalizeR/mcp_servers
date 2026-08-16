@@ -24,13 +24,13 @@ describe('buildCollectionOutputSchema', () => {
     expect(properties['data']).toBeDefined();
   });
 
-  it('data содержит mode/totalCount/threshold/items/resourceLinks', () => {
+  it('data содержит mode/itemsOnPage/threshold/items/resourceLinks', () => {
     const outputSchema = buildCollectionOutputSchema(ItemSchema);
     const properties = outputSchema.properties as Record<string, unknown>;
     const dataSchema = properties['data'] as { properties: Record<string, unknown> };
 
     expect(Object.keys(dataSchema.properties)).toEqual(
-      expect.arrayContaining(['mode', 'totalCount', 'threshold', 'items', 'resourceLinks'])
+      expect.arrayContaining(['mode', 'itemsOnPage', 'threshold', 'items', 'resourceLinks'])
     );
   });
 

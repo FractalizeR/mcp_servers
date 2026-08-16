@@ -41,7 +41,7 @@ export function buildCollectionOutputSchema<
 >(itemSchema: z.ZodObject<TItem>, summarySchema?: z.ZodObject<TSummary>): JsonObjectSchema {
   const dataSchema = z.object({
     mode: z.enum(['links', 'full']),
-    totalCount: z.number(),
+    itemsOnPage: z.number(),
     threshold: z.number(),
     ...(summarySchema ? { summary: summarySchema } : {}),
     items: z.array(itemSchema).optional(),

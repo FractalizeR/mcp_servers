@@ -133,7 +133,7 @@ export type FindIssuesParams = z.infer<typeof FindIssuesParamsSchema>;
  * Трекера, эхо `fields` и флаги примененных критериев поиска. Раньше эти три
  * поля лежали на верхнем уровне `data` вместе с `issues`/`count`; теперь они
  * под `summary` — форма, заданная `BaseTool.formatCollectionResult()` (пакет
- * 5.1.B): `{ mode, totalCount, threshold, summary?, items? | resourceLinks? }`.
+ * 5.1.B): `{ mode, itemsOnPage, threshold, summary?, items? | resourceLinks? }`.
  */
 export const FindIssuesSummarySchema = z.object({
   pagination: PaginationMetaSchema,
@@ -158,7 +158,7 @@ export const FindIssuesSummarySchema = z.object({
  */
 export const FindIssuesOutputDataSchema = z.object({
   mode: z.enum(['links', 'full']),
-  totalCount: z.number(),
+  itemsOnPage: z.number(),
   threshold: z.number(),
   summary: FindIssuesSummarySchema,
   items: z.array(FilteredEntitySchema).optional(),

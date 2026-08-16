@@ -36,7 +36,7 @@ export const GetAllTasksSummarySchema = z.object({
 /**
  * outputSchema (JSON Schema 2020-12) — describes the whole success envelope,
  * not just `data` (see base-tool.ts SuccessEnvelope). Форма `data` —
- * `{ mode, totalCount, threshold, summary, items?, resourceLinks? }`, см.
+ * `{ mode, itemsOnPage, threshold, summary, items?, resourceLinks? }`, см.
  * `buildCollectionOutputSchema` (пакет 5.1.B).
  */
 export const GET_ALL_TASKS_OUTPUT_SCHEMA = buildCollectionOutputSchema(

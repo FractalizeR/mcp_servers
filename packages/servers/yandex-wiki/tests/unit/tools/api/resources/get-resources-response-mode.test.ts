@@ -116,7 +116,7 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
       const result = await tool.execute({ idx: 1, responseMode: 'auto' });
       const data = (result['structuredContent'] as { data: Record<string, unknown> }).data;
       expect(data['mode']).toBe('links');
-      expect(data['totalCount']).toBe(25);
+      expect(data['itemsOnPage']).toBe(25);
     });
 
     it('responseMode по умолчанию (параметр не передан) ведёт себя как auto', async () => {
@@ -163,7 +163,7 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
       ).data;
 
       expect(data.summary.gridItems).toHaveLength(2);
-      // totalCount/resourceLinks учитывают ТОЛЬКО линкуемые (не-grid) ресурсы.
+      // itemsOnPage/resourceLinks учитывают ТОЛЬКО линкуемые (не-grid) ресурсы.
       expect(data.resourceLinks).toHaveLength(1);
 
       const linkBlocks = result.content.filter(isResourceLinkBlock);
@@ -184,11 +184,11 @@ describe('GetResourcesTool — responseMode / ResourceLink (пакет 5.1.C.wik
       expect(result.content.filter(isResourceLinkBlock)).toHaveLength(0);
       const data = (
         result['structuredContent'] as {
-          data: { summary: { gridItems: unknown[] }; totalCount: number };
+          data: { summary: { gridItems: unknown[] }; itemsOnPage: number };
         }
       ).data;
       expect(data.summary.gridItems).toHaveLength(2);
-      expect(data.totalCount).toBe(0);
+      expect(data.itemsOnPage).toBe(0);
     });
   });
 

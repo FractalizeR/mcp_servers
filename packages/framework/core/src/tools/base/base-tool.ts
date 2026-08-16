@@ -295,7 +295,7 @@ export abstract class BaseTool<TFacade = unknown> {
     );
 
     const base = {
-      totalCount: options.items.length,
+      itemsOnPage: options.items.length,
       threshold,
       ...(options.summary !== undefined ? { summary: options.summary } : {}),
     };

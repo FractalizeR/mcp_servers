@@ -356,7 +356,7 @@ describe('FindIssuesTool', () => {
       expect(parsed.data.items[0]?.queue).toHaveProperty('key');
     });
 
-    it('должен добавлять key/summary в fieldsReturned, даже если агент их не запросил (resource_link identity)', async () => {
+    it('в режиме full НЕ подмешивает key/summary к запрошенным полям (регрессия контекста)', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
@@ -372,11 +372,37 @@ describe('FindIssuesTool', () => {
         };
       };
       expect(parsed.success).toBe(true);
+      expect(parsed.data.summary.fieldsReturned).toEqual(['status']);
+      expect(parsed.data.items[0]).toHaveProperty('status');
+      expect(parsed.data.items[0]).not.toHaveProperty('key');
+      expect(parsed.data.items[0]).not.toHaveProperty('summary');
+    });
+
+    it('в режиме links добавляет key/summary для resource_link (identity)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        query: 'Author: me()',
+        fields: ['status'],
+        responseMode: 'links',
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          resourceLinks: Array<{ uri: string; name: string; title?: string }>;
+          summary: { fieldsReturned: string[] };
+        };
+      };
+      expect(parsed.success).toBe(true);
       expect(parsed.data.summary.fieldsReturned).toEqual(
         expect.arrayContaining(['status', 'key', 'summary'])
       );
-      expect(parsed.data.items[0]).toHaveProperty('key', 'QUEUE-123');
-      expect(parsed.data.items[0]).toHaveProperty('summary', 'Test Issue 1');
+      expect(parsed.data.resourceLinks[0]).toMatchObject({
+        uri: 'tracker://issue/QUEUE-123',
+        name: 'QUEUE-123',
+        title: 'Test Issue 1',
+      });
     });
   });
 
@@ -389,10 +415,10 @@ describe('FindIssuesTool', () => {
       expect(result.isError).not.toBe(true);
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
-        data: { totalCount: number; items: IssueWithUnknownFields[] };
+        data: { itemsOnPage: number; items: IssueWithUnknownFields[] };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.totalCount).toBe(0);
+      expect(parsed.data.itemsOnPage).toBe(0);
       expect(parsed.data.items).toHaveLength(0);
     });
 
@@ -482,7 +508,7 @@ describe('FindIssuesTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          totalCount: number;
+          itemsOnPage: number;
           items: IssueWithUnknownFields[];
           summary: {
             fieldsReturned: string[];
@@ -497,7 +523,7 @@ describe('FindIssuesTool', () => {
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.totalCount).toBe(2);
+      expect(parsed.data.itemsOnPage).toBe(2);
       expect(parsed.data.items).toHaveLength(2);
       expect(parsed.data.summary.searchCriteria).toBeDefined();
       expect(parsed.data.summary.searchCriteria.hasQuery).toBe(true);
@@ -507,7 +533,7 @@ describe('FindIssuesTool', () => {
   });
 
   describe('Pagination', () => {
-    it('должен добавлять поле pagination в ответ (регрессия формата: items/totalCount на месте)', async () => {
+    it('должен добавлять поле pagination в ответ (регрессия формата: items/itemsOnPage на месте)', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
@@ -515,14 +541,14 @@ describe('FindIssuesTool', () => {
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
         success: boolean;
         data: {
-          totalCount: number;
+          itemsOnPage: number;
           items: unknown[];
           summary: { pagination: { hasNextPage: boolean } };
         };
       };
       expect(parsed.success).toBe(true);
       // прежние ключи сохранены (переименованы формально, форма — та же)
-      expect(parsed.data.totalCount).toBe(1);
+      expect(parsed.data.itemsOnPage).toBe(1);
       expect(parsed.data.items).toHaveLength(1);
       // новое поле
       expect(parsed.data.summary.pagination).toBeDefined();
@@ -661,10 +687,10 @@ describe('FindIssuesTool', () => {
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        data: { mode: string; totalCount: number; threshold: number };
+        data: { mode: string; itemsOnPage: number; threshold: number };
       };
       expect(parsed.data.mode).toBe('full');
-      expect(parsed.data.totalCount).toBe(20);
+      expect(parsed.data.itemsOnPage).toBe(20);
       expect(parsed.data.threshold).toBe(20);
     });
 
@@ -675,10 +701,10 @@ describe('FindIssuesTool', () => {
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       const parsed = JSON.parse(result.content[0]?.text || '{}') as {
-        data: { mode: string; totalCount: number; resourceLinks?: unknown[] };
+        data: { mode: string; itemsOnPage: number; resourceLinks?: unknown[] };
       };
       expect(parsed.data.mode).toBe('links');
-      expect(parsed.data.totalCount).toBe(21);
+      expect(parsed.data.itemsOnPage).toBe(21);
       expect(parsed.data.resourceLinks).toHaveLength(21);
     });
 

@@ -39,7 +39,7 @@ function makeTask(i: number): TaskWithUnknownFields {
 
 interface StructuredCollectionData {
   mode: 'links' | 'full';
-  totalCount: number;
+  itemsOnPage: number;
   threshold: number;
   items?: unknown[];
   resourceLinks?: { uri: string; name: string }[];
