@@ -29,19 +29,23 @@ describe('UpdateEntityTool', () => {
   });
 
   it('обновит запись', async () => {
-    const entity = { id: '1', self: 'url', version: 2, shortId: 'G-1', entityType: 'goal' };
+    const entity = { id: '1', self: 'url', version: 2, shortId: 1, entityType: 'goal' };
     vi.mocked(mockTrackerFacade.updateEntity).mockResolvedValue(entity);
 
     const result = await tool.execute({
       entityType: 'goal',
       entityId: '1',
-      name: 'Renamed goal',
+      extraFields: { summary: 'Renamed goal' },
       fields: ['id'],
     });
 
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.updateEntity).toHaveBeenCalledWith(
-      expect.objectContaining({ entityType: 'goal', entityId: '1', name: 'Renamed goal' })
+      expect.objectContaining({
+        entityType: 'goal',
+        entityId: '1',
+        extraFields: { summary: 'Renamed goal' },
+      })
     );
   });
 

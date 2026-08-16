@@ -53,6 +53,10 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
 
     const { links, fields } = validation.data;
 
+    // 'id' нужен всегда: из него строится `linkId` (строковый ключ для
+    // последующего delete_link). API возвращает id числом, а схема ждёт строку.
+    const fieldsForFilter = Array.from(new Set([...fields, 'id']));
+
     try {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(this.logger, 'Создание связей', links.length, fields);
@@ -64,7 +68,7 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
       const processedResults = BatchResultProcessor.process(
         results,
         (link: LinkWithUnknownFields): Partial<LinkWithUnknownFields> =>
-          ResponseFieldFilter.filter<LinkWithUnknownFields>(link, fields)
+          ResponseFieldFilter.filter<LinkWithUnknownFields>(link, fieldsForFilter)
       );
 
       // 5. Логирование результатов
@@ -86,7 +90,7 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
         failed: processedResults.failed.length,
         links: processedResults.successful.map((item) => ({
           issueId: item.key,
-          linkId: item.data.id,
+          linkId: String(item.data.id),
           link: item.data,
         })),
         errors: processedResults.failed.map((item) => ({

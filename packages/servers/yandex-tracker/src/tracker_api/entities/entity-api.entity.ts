@@ -103,8 +103,11 @@ export interface EntityApiRecord {
   /** Версия записи для оптимистичных блокировок (всегда присутствует) */
   readonly version: number;
 
-  /** Короткий отображаемый идентификатор (всегда присутствует) */
-  readonly shortId: string;
+  /**
+   * Короткий отображаемый идентификатор (всегда присутствует).
+   * API возвращает его ЧИСЛОМ (подтверждено живой пробой 2026-08-16).
+   */
+  readonly shortId: number;
 
   /** Тип записи — совпадает с entityType запроса (всегда присутствует) */
   readonly entityType: EntityApiType;
@@ -121,11 +124,13 @@ export interface EntityApiRecord {
   /** Вложения (может отсутствовать/быть пустым) */
   readonly attachments?: unknown[];
 
-  /** Название (может отсутствовать в ответе, если не запрошено полями) */
-  readonly name?: string;
-
-  /** Описание (может отсутствовать) */
-  readonly description?: string;
+  /**
+   * Кастомные поля записи (всегда объект; содержимое зависит от entityType).
+   * `summary` — обязательное поле при create (подтверждено живой пробой:
+   * `name`/`description` в Entity API НЕ существуют, поле 422 «поля [name] не
+   * существуют»). Отдаётся только при явном запросе поля через `fields=...`.
+   */
+  readonly fields?: Record<string, unknown>;
 
   /** Key Results цели — присутствуют только у entityType='goal' при явном fields=keyResultItems */
   readonly keyResultItems?: readonly KeyResultItem[];

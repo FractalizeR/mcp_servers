@@ -38,20 +38,26 @@ describe('UpdateEntityOperation', () => {
   });
 
   it('возвращает обновлённую запись как есть при нормальной форме ответа', async () => {
-    const record = { id: '1', self: 'url', version: 2, shortId: 'G-1', entityType: 'goal' };
+    const record = { id: '1', self: 'url', version: 2, shortId: 1, entityType: 'goal' };
     vi.mocked(mockHttpClient.patch).mockResolvedValue(record);
 
-    const result = await operation.execute({ entityType: 'goal', entityId: '1', name: 'New name' });
+    const result = await operation.execute({
+      entityType: 'goal',
+      entityId: '1',
+      extraFields: { summary: 'New summary' },
+    });
 
     expect(result).toBe(record);
-    expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/entities/goal/1', { name: 'New name' });
+    expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/entities/goal/1', {
+      fields: { summary: 'New summary' },
+    });
   });
 
   it('конверт поиска вместо обновлённой записи — явная ошибка, а не тихая порча данных', async () => {
     vi.mocked(mockHttpClient.patch).mockResolvedValue({ hits: 0, pages: 0 });
 
     await expect(
-      operation.execute({ entityType: 'goal', entityId: '1', name: 'New name' })
+      operation.execute({ entityType: 'goal', entityId: '1', extraFields: { summary: 'x' } })
     ).rejects.toThrow(/конверт поиска/);
   });
 });

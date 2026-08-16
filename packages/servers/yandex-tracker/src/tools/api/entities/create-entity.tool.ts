@@ -23,15 +23,13 @@ export class CreateEntityTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { entityType, name, description, extraFields, fields } = validation.data;
+    const { entityType, extraFields, fields } = validation.data;
 
     try {
-      this.logger.info('Создание записи Entity API', { entityType, name });
+      this.logger.info('Создание записи Entity API', { entityType });
 
       const entity = await this.facade.createEntity({
         entityType,
-        name,
-        description,
         extraFields,
       });
 
@@ -41,7 +39,7 @@ export class CreateEntityTool extends BaseTool<YandexTrackerFacade> {
 
       return this.formatSuccess({
         entity: filtered,
-        message: `Запись "${name}" (${entityType}) успешно создана`,
+        message: `Запись (${entityType}) успешно создана`,
         fieldsReturned: fields,
       });
     } catch (error: unknown) {

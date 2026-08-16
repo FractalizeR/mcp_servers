@@ -64,7 +64,7 @@ describe('AddChecklistItemOperation', () => {
         checked: false,
       };
 
-      vi.mocked(mockHttpClient.post).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.post).mockResolvedValue({ checklistItems: [mockItem] });
 
       const result = await operation.execute('TEST-1', input);
 
@@ -92,7 +92,7 @@ describe('AddChecklistItemOperation', () => {
         deadline: '2025-12-31T23:59:59.000Z',
       };
 
-      vi.mocked(mockHttpClient.post).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.post).mockResolvedValue({ checklistItems: [mockItem] });
 
       const result = await operation.execute('PROJ-10', input);
 
@@ -112,6 +112,25 @@ describe('AddChecklistItemOperation', () => {
       await expect(operation.execute('TEST-1', input)).rejects.toThrow('API Error');
     });
 
+    it('извлекает созданный элемент из checklistItems, а не id задачи (регрессия itemId)', async () => {
+      const input: AddChecklistItemInput = { text: 'New item' };
+
+      // Реальный ответ API v2 — ОБНОВЛЁННАЯ задача: корневой id — это id задачи,
+      // созданный элемент лежит последним в checklistItems.
+      vi.mocked(mockHttpClient.post).mockResolvedValue({
+        id: 'issue-id',
+        checklistItems: [
+          { id: 'old-item', text: 'Old', checked: false },
+          { id: 'new-item', text: 'New item', checked: false },
+        ],
+      });
+
+      const result = await operation.execute('TEST-1', input);
+
+      expect(result.id).toBe('new-item');
+      expect(result.text).toBe('New item');
+    });
+
     it('should log info messages', async () => {
       const input: AddChecklistItemInput = {
         text: 'Test item',
@@ -123,7 +142,7 @@ describe('AddChecklistItemOperation', () => {
         checked: false,
       };
 
-      vi.mocked(mockHttpClient.post).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.post).mockResolvedValue({ checklistItems: [mockItem] });
 
       await operation.execute('TEST-2', input);
 
@@ -157,8 +176,8 @@ describe('AddChecklistItemOperation', () => {
       };
 
       vi.mocked(mockHttpClient.post)
-        .mockResolvedValueOnce(mockItem1)
-        .mockResolvedValueOnce(mockItem2);
+        .mockResolvedValueOnce({ checklistItems: [mockItem1] })
+        .mockResolvedValueOnce({ checklistItems: [mockItem2] });
 
       const result = await operation.executeMany([
         { issueId: 'TEST-1', text: 'Item 1' },
@@ -186,7 +205,7 @@ describe('AddChecklistItemOperation', () => {
       };
 
       vi.mocked(mockHttpClient.post)
-        .mockResolvedValueOnce(mockItem)
+        .mockResolvedValueOnce({ checklistItems: [mockItem] })
         .mockRejectedValueOnce(new Error('Issue not found'));
 
       const result = await operation.executeMany([
@@ -214,7 +233,7 @@ describe('AddChecklistItemOperation', () => {
         deadline: '2025-12-31',
       };
 
-      vi.mocked(mockHttpClient.post).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.post).mockResolvedValue({ checklistItems: [mockItem] });
 
       await operation.executeMany([
         {
@@ -241,7 +260,7 @@ describe('AddChecklistItemOperation', () => {
         checked: false,
       };
 
-      vi.mocked(mockHttpClient.post).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.post).mockResolvedValue({ checklistItems: [mockItem] });
 
       await operation.executeMany([
         { issueId: 'TEST-1', text: 'Item 1' },

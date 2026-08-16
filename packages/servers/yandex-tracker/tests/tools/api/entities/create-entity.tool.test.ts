@@ -23,34 +23,35 @@ describe('CreateEntityTool', () => {
     tool = new CreateEntityTool(mockTrackerFacade, mockLogger);
   });
 
-  it('вернёт ошибку валидации, если name не указан', async () => {
+  it('вернёт ошибку валидации, если extraFields не указан', async () => {
     const result = await tool.execute({ entityType: 'goal', fields: ['id'] });
     expect(result.isError).toBe(true);
   });
 
-  it('создаст цель с дополнительными полями (extraFields)', async () => {
-    const entity = { id: '1', self: 'url', version: 1, shortId: 'G-1', entityType: 'goal' };
+  it('создаст цель с кастомными полями (extraFields)', async () => {
+    const entity = { id: '1', self: 'url', version: 1, shortId: 1, entityType: 'goal' };
     vi.mocked(mockTrackerFacade.createEntity).mockResolvedValue(entity);
 
     const result = await tool.execute({
       entityType: 'goal',
-      name: 'Increase revenue',
-      extraFields: { author: 'user1' },
+      extraFields: { summary: 'Increase revenue', author: 'user1' },
       fields: ['id'],
     });
 
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.createEntity).toHaveBeenCalledWith({
       entityType: 'goal',
-      name: 'Increase revenue',
-      description: undefined,
-      extraFields: { author: 'user1' },
+      extraFields: { summary: 'Increase revenue', author: 'user1' },
     });
   });
 
   it('обработает ошибку facade', async () => {
     vi.mocked(mockTrackerFacade.createEntity).mockRejectedValue(new Error('Permission denied'));
-    const result = await tool.execute({ entityType: 'goal', name: 'X', fields: ['id'] });
+    const result = await tool.execute({
+      entityType: 'goal',
+      extraFields: { summary: 'X' },
+      fields: ['id'],
+    });
     expect(result.isError).toBe(true);
   });
 });

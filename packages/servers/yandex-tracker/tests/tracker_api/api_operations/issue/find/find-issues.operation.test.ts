@@ -116,6 +116,40 @@ describe('FindIssuesOperation (pagination)', () => {
       // Мок-ответ не настроен → reject
       await expect(operation.execute({ query: 'invalid' })).rejects.toThrow();
     });
+
+    it('транслирует queue → query "Queue: <queue>" при order (order игнорируется queue-фильтром)', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue]);
+
+      await operation.execute({ queue: 'DVIZHDEV', order: ['-updatedAt'] });
+
+      const history = httpClient.getRequestHistory();
+      const post = history.find((r) => r.method === 'POST');
+      expect(post?.data).toEqual({ query: 'Queue: DVIZHDEV', order: ['-updatedAt'] });
+    });
+
+    it('не транслирует queue без order (остаётся queue-фильтр)', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue]);
+
+      await operation.execute({ queue: 'DVIZHDEV' });
+
+      const history = httpClient.getRequestHistory();
+      const post = history.find((r) => r.method === 'POST');
+      expect(post?.data).toEqual({ queue: 'DVIZHDEV' });
+    });
+
+    it('не транслирует queue при order, если уже задан query', async () => {
+      httpClient.setResponse('POST', '/v3/issues/_search', [mockIssue]);
+
+      await operation.execute({ query: 'Status: open', queue: 'DVIZHDEV', order: ['-updatedAt'] });
+
+      const history = httpClient.getRequestHistory();
+      const post = history.find((r) => r.method === 'POST');
+      expect(post?.data).toEqual({
+        query: 'Status: open',
+        queue: 'DVIZHDEV',
+        order: ['-updatedAt'],
+      });
+    });
   });
 
   describe('fetchAll', () => {

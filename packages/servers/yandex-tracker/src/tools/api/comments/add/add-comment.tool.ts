@@ -52,6 +52,11 @@ export class AddCommentTool extends BaseTool<YandexTrackerFacade> {
 
     const { comments, fields } = validation.data;
 
+    // 'id' нужен всегда: из него строится `commentId` (строковый ключ для
+    // последующих edit/delete comment). API возвращает id числом, а схема
+    // ответа требует строку — поэтому ниже String(item.data.id).
+    const fieldsForFilter = Array.from(new Set([...fields, 'id']));
+
     try {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(
@@ -68,7 +73,7 @@ export class AddCommentTool extends BaseTool<YandexTrackerFacade> {
       const processedResults = BatchResultProcessor.process(
         results,
         (comment: CommentWithUnknownFields): Partial<CommentWithUnknownFields> =>
-          ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fields)
+          ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fieldsForFilter)
       );
 
       // 5. Логирование результатов
@@ -90,7 +95,7 @@ export class AddCommentTool extends BaseTool<YandexTrackerFacade> {
         failed: processedResults.failed.length,
         comments: processedResults.successful.map((item) => ({
           issueId: item.key,
-          commentId: item.data.id,
+          commentId: String(item.data.id),
           comment: item.data,
         })),
         errors: processedResults.failed.map((item) => ({

@@ -1522,7 +1522,9 @@ export class MockServer {
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
       }
-      return [201, item];
+      // Реальный API v2 возвращает ОБНОВЛЁННУЮ задачу с массивом checklistItems,
+      // а не сам элемент (см. AddChecklistItemOperation).
+      return [201, { id: 'issue-id', checklistItems: [item] }];
     });
     this.pendingMocks.push(mockKey);
     return this;

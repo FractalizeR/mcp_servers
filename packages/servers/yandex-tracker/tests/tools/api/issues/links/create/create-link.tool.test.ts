@@ -382,5 +382,30 @@ describe('CreateLinkTool', () => {
       expect(parsed.data.total).toBe(3);
       expect(parsed.data.successful).toBe(3);
     });
+
+    it('должен привести linkId к строке, когда API вернул id числом (регрессия -32602)', async () => {
+      // Реальный API v3 возвращает id связи числом, а не строкой.
+      const numericIdLink = {
+        ...createLinkFixture({ id: '12345' }),
+        id: 12345,
+      } as unknown as LinkWithUnknownFields;
+
+      vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue([
+        { status: 'fulfilled', value: numericIdLink },
+      ]);
+
+      // id НЕ запрошен в fields — инструмент обязан вернуть его для linkId.
+      const result = await tool.execute({
+        links: [{ issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' }],
+        fields: ['type'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: { links: Array<{ issueId: string; linkId: string }> };
+      };
+      expect(parsed.data.links[0].linkId).toBe('12345');
+    });
   });
 });

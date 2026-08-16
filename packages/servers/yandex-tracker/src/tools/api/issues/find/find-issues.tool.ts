@@ -10,7 +10,11 @@
 import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { ResponseFieldFilter, ResultLogger } from '@fractalizer/mcp-core';
+import {
+  ResponseFieldFilter,
+  ResultLogger,
+  resolveCollectionResponseMode,
+} from '@fractalizer/mcp-core';
 import type { ResourceLinkDescriptor } from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { FindIssuesParamsSchema } from '#tools/api/issues/find/find-issues.schema.js';
@@ -19,11 +23,10 @@ import { buildIssueResourceUri } from '#resources/tracker-resource-uri.js';
 import { FIND_ISSUES_TOOL_METADATA } from './find-issues.metadata.js';
 
 /**
- * Поля, гарантированно присутствующие в отфильтрованном issue независимо от
- * запрошенного агентом `fields` (пакет 5.1.C.tracker) — нужны, чтобы построить
- * `resource_link` (uri/name/title) даже если агент их не запрашивал явно.
- * Дешёвая добавка (два коротких поля), которая делает КАЖДЫЙ элемент
- * коллекции самоидентифицируемым в обоих режимах ответа (`full`/`links`).
+ * Поля, которые нужны, чтобы построить `resource_link` (uri/name/title) в
+ * режиме `links` — добавляются ТОЛЬКО там. В режиме `full` тела отдаются
+ * ровно по запрошенному `fields` (никакого «подмешивания» summary — оно
+ * дорого по контексту в самом массовом инструменте).
  */
 const RESOURCE_LINK_IDENTITY_FIELDS = ['key', 'summary'] as const;
 /**
@@ -63,11 +66,6 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
 
     const { fields, responseMode, ...searchParams } = validation.data;
 
-    // Гарантируем 'key'/'summary' в наборе полей фильтрации — иначе в режиме
-    // links resource_link для элементов, где агент их не запросил, лишился
-    // бы адреса/заголовка (см. комментарий RESOURCE_LINK_IDENTITY_FIELDS).
-    const fieldsForFilter = Array.from(new Set([...fields, ...RESOURCE_LINK_IDENTITY_FIELDS]));
-
     try {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(
@@ -101,7 +99,12 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
         ...(searchParams.maxItems !== undefined && { maxItems: searchParams.maxItems }),
       });
 
-      // 4. Фильтрация полей (всегда включает 'key'/'summary' — см. fieldsForFilter выше)
+      // 4. Фильтрация полей: `key`/`summary` добавляются ТОЛЬКО в режиме
+      // `links` (нужны для resource_link uri/title). В `full` — ровно `fields`.
+      const resolvedMode = resolveCollectionResponseMode(responseMode, result.items.length);
+      const identityFields = resolvedMode === 'links' ? RESOURCE_LINK_IDENTITY_FIELDS : [];
+      const fieldsForFilter = Array.from(new Set([...fields, ...identityFields]));
+
       const filteredIssues = result.items.map((issue) =>
         ResponseFieldFilter.filter<IssueWithUnknownFields>(issue, fieldsForFilter)
       );

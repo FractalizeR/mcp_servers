@@ -1,13 +1,11 @@
 /**
  * DTO для создания записи Entity API (Goal/Project/Portfolio)
  *
- * ВАЖНО: официальная документация НЕ описывает тело запроса Entity API (нет
- * страниц `api-ref/entities/*`), а референсный клиент шлёт `**kwargs` без
- * allowlist (`Collection.create`). `name` — обоснованное предположение по
- * аналогии с остальными именованными сущностями Трекера. `extraFields` —
- * открытый passthrough для полей, специфичных для конкретного entityType
- * (например, `parentEntity`/`teamUsers`/`author`/`deadline`), форма которых
- * не зафиксирована ни доком, ни клиентом — агент передаёт их как есть.
+ * ПОДТВЕРЖДЕНО ЖИВОЙ ПРОБОЙ 2026-08-16: тело create — `{ fields: {...} }`, где
+ * `fields` — объект кастомных полей записи. `summary` — обязательное поле
+ * внутри `fields` (без него API отвечает 422 «summary: Требуется параметр»).
+ * Поля `name`/`description` в Entity API НЕ существуют (422 «поля [name] не
+ * существуют») — прежняя гипотеза о них была неверна и убрана.
  */
 
 import type { EntityApiType } from '#tracker_api/entities/index.js';
@@ -16,16 +14,9 @@ export interface CreateEntityDto {
   /** Тип создаваемой записи Entity API */
   entityType: EntityApiType;
 
-  /** Название записи */
-  name: string;
-
-  /** Описание записи (опционально) */
-  description?: string | undefined;
-
   /**
-   * Дополнительные поля тела запроса, специфичные для entityType
-   * (например `parentEntity`, `teamUsers`, `author`) — форма не
-   * зафиксирована документацией, передаётся как есть.
+   * Кастомные поля записи, которые будут отправлены в `{ fields: {...} }`.
+   * Для всех entityType обязательно поле `summary` (строка).
    */
-  extraFields?: Record<string, unknown> | undefined;
+  extraFields: Record<string, unknown>;
 }

@@ -31,7 +31,13 @@ export class GetQueueOperation extends BaseOperation {
 
     this.logger.info(`Получение очереди: ${queueId}`);
 
-    const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, queueId);
+    // Кеш-ключ обязан учитывать expand: без этого первый вызов без expand
+    // кеширует очередь без issueTypes/workflows, и повторный вызов с
+    // expand=all молча вернёт урезанные данные из кеша.
+    const cacheKey =
+      expand !== undefined
+        ? `${EntityCacheKey.createKey(EntityType.QUEUE, queueId)}:expand=${expand}`
+        : EntityCacheKey.createKey(EntityType.QUEUE, queueId);
 
     return this.withCache(cacheKey, async () => {
       const queryParams = new URLSearchParams();

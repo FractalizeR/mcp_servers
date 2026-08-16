@@ -1,8 +1,8 @@
 /**
  * DTO для обновления записи Entity API (Goal/Project/Portfolio)
  *
- * См. примечание о неполной документированности тела запроса в
- * `create-entity.dto.ts`.
+ * См. примечание о форме тела в `create-entity.dto.ts`: `{ fields: {...} }`,
+ * поля `name`/`description` в Entity API не существуют.
  */
 
 import type { EntityApiType } from '#tracker_api/entities/index.js';
@@ -14,15 +14,12 @@ export interface UpdateEntityDto {
   /** Идентификатор записи */
   entityId: string;
 
-  /** Новое название записи (опционально) */
-  name?: string | undefined;
-
-  /** Новое описание записи (опционально) */
-  description?: string | undefined;
-
   /** Версия записи для оптимистичной блокировки (опционально) */
   version?: number | undefined;
 
-  /** Дополнительные поля тела запроса, специфичные для entityType (опционально) */
+  /**
+   * Кастомные поля записи, отправляемые в `{ fields: {...} }` (опционально —
+   * при пустом PATCH тело можно не слать).
+   */
   extraFields?: Record<string, unknown> | undefined;
 }

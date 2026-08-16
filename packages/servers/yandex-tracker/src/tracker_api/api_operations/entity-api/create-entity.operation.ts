@@ -16,21 +16,20 @@ import { assertEntityRecordShape } from './assert-entity-record-shape.util.js';
 
 export class CreateEntityOperation extends BaseOperation {
   async execute(dto: CreateEntityDto): Promise<EntityApiOutput> {
-    const { entityType, name, description, extraFields } = dto;
+    const { entityType, extraFields } = dto;
 
-    if (!name || name.trim() === '') {
-      throw new Error('CreateEntityOperation: название записи обязательно');
+    if (extraFields === undefined || Object.keys(extraFields).length === 0) {
+      throw new Error(
+        'CreateEntityOperation: extraFields обязателен (Entity API требует минимум поле summary)'
+      );
     }
 
-    this.logger.info(`Создание записи Entity API: ${entityType}`, { name });
+    this.logger.info(`Создание записи Entity API: ${entityType}`);
 
-    const body: Record<string, unknown> = {
-      name,
-      ...(description !== undefined ? { description } : {}),
-      ...(extraFields ?? {}),
-    };
-
-    const data = await this.httpClient.post<unknown>(`/v3/entities/${entityType}`, body);
+    // Подтверждено живой пробой: тело — `{ fields: {...} }`, а не name/description.
+    const data = await this.httpClient.post<unknown>(`/v3/entities/${entityType}`, {
+      fields: extraFields,
+    });
     return assertEntityRecordShape<EntityApiOutput>(data, `create_entity ${entityType}`);
   }
 }

@@ -16,13 +16,10 @@ import { assertEntityRecordShape } from './assert-entity-record-shape.util.js';
 
 export class UpdateEntityOperation extends BaseOperation {
   async execute(dto: UpdateEntityDto): Promise<EntityApiOutput> {
-    const { entityType, entityId, name, description, version, extraFields } = dto;
+    const { entityType, entityId, version, extraFields } = dto;
 
-    const body: Record<string, unknown> = {
-      ...(name !== undefined ? { name } : {}),
-      ...(description !== undefined ? { description } : {}),
-      ...(extraFields ?? {}),
-    };
+    // Подтверждено живой пробой: тело — `{ fields: {...} }`, а не name/description.
+    const body: Record<string, unknown> = extraFields !== undefined ? { fields: extraFields } : {};
 
     this.logger.info(`Обновление записи Entity API: ${entityType}/${entityId}`);
 

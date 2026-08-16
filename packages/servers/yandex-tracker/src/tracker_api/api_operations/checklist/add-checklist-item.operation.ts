@@ -16,6 +16,15 @@ import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 
+/**
+ * Ответ API v2 на POST /v2/issues/{id}/checklistItems: возвращается ОБНОВЛЁННАЯ
+ * задача (issue), а не созданный элемент — новый элемент лежит последним в
+ * массиве `checklistItems` этой задачи.
+ */
+interface AddChecklistItemResponse {
+  readonly checklistItems?: ChecklistItemWithUnknownFields[];
+}
+
 export class AddChecklistItemOperation extends BaseOperation {
   private readonly parallelExecutor: ParallelExecutor;
 
@@ -51,14 +60,23 @@ export class AddChecklistItemOperation extends BaseOperation {
   ): Promise<ChecklistItemWithUnknownFields> {
     this.logger.info(`Добавление элемента в чеклист задачи ${issueId}`);
 
-    const item = await this.httpClient.post<ChecklistItemWithUnknownFields>(
+    // API v2 возвращает ОБНОВЛЁННУЮ задачу с полным массивом `checklistItems`,
+    // а не созданный элемент: id из корня ответа — это id задачи (поймано как
+    // баг «itemId ≠ id элемента чеклиста»). Новый элемент — последний в массиве.
+    const response = await this.httpClient.post<AddChecklistItemResponse>(
       `/v2/issues/${issueId}/checklistItems`,
       input
     );
 
-    this.logger.info(`Элемент успешно добавлен в чеклист задачи ${issueId}: ${item.id}`);
+    const items = response.checklistItems ?? [];
+    const created = items[items.length - 1];
+    if (created === undefined) {
+      throw new Error(`API не вернул созданный элемент чеклиста для задачи ${issueId}`);
+    }
 
-    return item;
+    this.logger.info(`Элемент успешно добавлен в чеклист задачи ${issueId}: ${created.id}`);
+
+    return created;
   }
 
   /**

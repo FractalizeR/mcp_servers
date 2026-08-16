@@ -54,6 +54,10 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
 
     const { worklogs, fields } = validation.data;
 
+    // 'id' нужен всегда: из него строится `worklogId` (строковый ключ для
+    // последующих update/delete worklog). API возвращает id числом.
+    const fieldsForFilter = Array.from(new Set([...fields, 'id']));
+
     try {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(
@@ -70,7 +74,7 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
       const processedResults = BatchResultProcessor.process(
         results,
         (worklog: WorklogWithUnknownFields): Partial<WorklogWithUnknownFields> =>
-          ResponseFieldFilter.filter<WorklogWithUnknownFields>(worklog, fields)
+          ResponseFieldFilter.filter<WorklogWithUnknownFields>(worklog, fieldsForFilter)
       );
 
       // 5. Логирование результатов
@@ -92,7 +96,7 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
         failed: processedResults.failed.length,
         worklogs: processedResults.successful.map((item) => ({
           issueId: item.key,
-          worklogId: item.data.id,
+          worklogId: String(item.data.id),
           worklog: item.data,
         })),
         errors: processedResults.failed.map((item) => ({

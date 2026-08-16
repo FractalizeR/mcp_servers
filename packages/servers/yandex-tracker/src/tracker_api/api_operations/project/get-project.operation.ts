@@ -39,7 +39,13 @@ export class GetProjectOperation extends BaseOperation {
 
     this.logger.info(`Получение проекта: ${projectId}`);
 
-    const cacheKey = EntityCacheKey.createKey(EntityType.PROJECT, projectId);
+    // Кеш-ключ обязан учитывать expand (иначе повторный вызов с expand
+    // вернёт урезанный первый ответ из кеша — та же причина, что в
+    // GetQueueOperation).
+    const cacheKey =
+      expand !== undefined
+        ? `${EntityCacheKey.createKey(EntityType.PROJECT, projectId)}:expand=${expand}`
+        : EntityCacheKey.createKey(EntityType.PROJECT, projectId);
 
     return this.withCache(cacheKey, async () => {
       const queryParams = new URLSearchParams();

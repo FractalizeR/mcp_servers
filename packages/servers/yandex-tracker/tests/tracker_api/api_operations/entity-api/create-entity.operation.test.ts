@@ -38,18 +38,23 @@ describe('CreateEntityOperation', () => {
   });
 
   it('возвращает созданную запись как есть при нормальной форме ответа', async () => {
-    const record = { id: '1', self: 'url', version: 1, shortId: 'G-1', entityType: 'goal' };
+    const record = { id: '1', self: 'url', version: 1, shortId: 1, entityType: 'goal' };
     vi.mocked(mockHttpClient.post).mockResolvedValue(record);
 
-    const result = await operation.execute({ entityType: 'goal', name: 'Goal 1' });
+    const result = await operation.execute({
+      entityType: 'goal',
+      extraFields: { summary: 'Goal 1' },
+    });
 
     expect(result).toBe(record);
-    expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/entities/goal', { name: 'Goal 1' });
+    expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/entities/goal', {
+      fields: { summary: 'Goal 1' },
+    });
   });
 
-  it('пустое название — explicit error без похода в HTTP', async () => {
-    await expect(operation.execute({ entityType: 'goal', name: '  ' })).rejects.toThrow(
-      /название записи обязательно/
+  it('пустой extraFields — explicit error без похода в HTTP', async () => {
+    await expect(operation.execute({ entityType: 'goal', extraFields: {} })).rejects.toThrow(
+      /extraFields обязателен/
     );
     expect(mockHttpClient.post).not.toHaveBeenCalled();
   });
@@ -57,8 +62,8 @@ describe('CreateEntityOperation', () => {
   it('конверт поиска вместо созданной записи — явная ошибка, а не тихая порча данных', async () => {
     vi.mocked(mockHttpClient.post).mockResolvedValue({ hits: 0, pages: 0 });
 
-    await expect(operation.execute({ entityType: 'goal', name: 'Goal 1' })).rejects.toThrow(
-      /конверт поиска/
-    );
+    await expect(
+      operation.execute({ entityType: 'goal', extraFields: { summary: 'Goal 1' } })
+    ).rejects.toThrow(/конверт поиска/);
   });
 });

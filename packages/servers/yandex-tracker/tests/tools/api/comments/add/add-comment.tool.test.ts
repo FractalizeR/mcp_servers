@@ -346,6 +346,38 @@ describe('AddCommentTool', () => {
       expect(returnedComment).toHaveProperty('text');
       // Другие поля должны быть отфильтрованы
     });
+
+    it('должен привести commentId к строке, когда API вернул id числом (регрессия -32602)', async () => {
+      // Реальный API v3 возвращает id комментария числом, а не строкой —
+      // раньше это валило outputSchema с "commentId must be string".
+      const numericIdComment = {
+        ...createCommentFixture({ id: '12345' }),
+        id: 12345,
+      } as unknown as CommentWithUnknownFields;
+
+      vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-1',
+          value: numericIdComment,
+        },
+      ]);
+
+      // id НЕ запрошен в fields — инструмент обязан вернуть его для commentId.
+      const result = await tool.execute({
+        comments: [{ issueId: 'TEST-1', text: 'Comment 1' }],
+        fields: ['text'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          comments: Array<{ issueId: string; commentId: string }>;
+        };
+      };
+      expect(parsed.data.comments[0].commentId).toBe('12345');
+    });
   });
 
   describe('Error handling', () => {

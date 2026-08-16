@@ -17,16 +17,13 @@ export const UpdateEntityParamsSchema = z.object({
   /** Идентификатор записи (обязательно) */
   entityId: z.string().min(1, 'Entity ID не может быть пустым'),
 
-  /** Новое название записи (опционально) */
-  name: z.string().min(1).optional(),
-
-  /** Новое описание записи (опционально) */
-  description: z.string().optional(),
-
   /** Версия записи для оптимистичной блокировки (опционально) */
   version: z.number().int().positive().optional(),
 
-  /** Дополнительные поля тела запроса, специфичные для entityType (опционально) */
+  /**
+   * Кастомные поля записи (отправляются в тело `{ fields: {...} }`).
+   * Поля `name`/`description` в Entity API НЕ существуют.
+   */
   extraFields: z.record(z.string(), z.unknown()).optional(),
 
   /** Список полей для возврата (обязательно) */

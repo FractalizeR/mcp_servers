@@ -317,7 +317,16 @@ export class FindIssuesOperation extends BaseOperation {
       requestBody['keys'] = params.keys;
     }
     if (params.queue !== undefined) {
-      requestBody['queue'] = params.queue;
+      // order в API `_search` работает ТОЛЬКО при поиске через query; при
+      // фильтре по `queue` он молча игнорируется (проверено против API).
+      // Транслируем `queue` → `query "Queue: <queue>"`, когда задан order, —
+      // чтобы сортировка работала единообразно, а не «иногда».
+      const orderPresent = params.order !== undefined && params.order.length > 0;
+      if (orderPresent && params.query === undefined) {
+        requestBody['query'] = `Queue: ${params.queue}`;
+      } else {
+        requestBody['queue'] = params.queue;
+      }
     }
     if (params.filterId !== undefined) {
       requestBody['filterId'] = params.filterId;

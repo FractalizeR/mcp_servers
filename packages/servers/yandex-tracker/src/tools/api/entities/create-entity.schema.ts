@@ -17,19 +17,14 @@ export const CreateEntityParamsSchema = z.object({
   /** Тип создаваемой записи Entity API — goal/project/portfolio (обязательно) */
   entityType: z.enum(['goal', 'project', 'portfolio']),
 
-  /** Название записи (обязательно) */
-  name: z.string().min(1, 'Название записи обязательно'),
-
-  /** Описание записи (опционально) */
-  description: z.string().optional(),
-
   /**
-   * Дополнительные поля тела запроса, специфичные для entityType
-   * (например `parentEntity`/`teamUsers`/`author`) — форма НЕ зафиксирована
-   * ни официальной документацией, ни референсным клиентом (см. DTO),
-   * передаются как есть.
+   * Кастомные поля записи (отправляются в тело `{ fields: {...} }`).
+   * Поле `summary` (строка) — обязательное для всех entityType. `name`/`description`
+   * в Entity API НЕ существуют (422 «поля [name] не существуют»).
    */
-  extraFields: z.record(z.string(), z.unknown()).optional(),
+  extraFields: z
+    .record(z.string(), z.unknown())
+    .describe('Кастомные поля записи Entity API; обязательно поле summary (строка)'),
 
   /** Список полей для возврата (обязательно) */
   fields: FieldsSchema,

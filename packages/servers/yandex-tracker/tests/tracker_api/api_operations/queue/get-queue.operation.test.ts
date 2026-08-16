@@ -71,6 +71,26 @@ describe('GetQueueOperation', () => {
       expect(mockCacheManager.set).toHaveBeenCalledWith(cacheKey, mockQueue);
     });
 
+    it('should use distinct cache keys for different expand values (regression)', async () => {
+      const mockQueue: QueueWithUnknownFields = createQueueFixture({ key: 'TEST' });
+      vi.mocked(mockHttpClient.get).mockResolvedValue(mockQueue);
+
+      // Первый вызов без expand закешировал очередь без issueTypes/workflows;
+      // повторный вызов с expand НЕ должен вернуть этот урезанный кеш.
+      await operation.execute({ queueId: 'TEST' });
+      await operation.execute({ queueId: 'TEST', expand: 'all' });
+
+      expect(mockHttpClient.get).toHaveBeenCalledTimes(2);
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        EntityCacheKey.createKey(EntityType.QUEUE, 'TEST'),
+        mockQueue
+      );
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        `${EntityCacheKey.createKey(EntityType.QUEUE, 'TEST')}:expand=all`,
+        mockQueue
+      );
+    });
+
     it('should return cached queue if available', async () => {
       const cachedQueue: QueueWithUnknownFields = createQueueFixture({ key: 'CACHED' });
       const cacheKey = EntityCacheKey.createKey(EntityType.QUEUE, 'CACHED');
