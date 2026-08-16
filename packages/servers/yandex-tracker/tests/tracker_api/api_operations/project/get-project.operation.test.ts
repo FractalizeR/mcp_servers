@@ -71,6 +71,26 @@ describe('GetProjectOperation', () => {
       expect(mockCacheManager.set).toHaveBeenCalledWith(cacheKey, mockProject);
     });
 
+    it('should use distinct cache keys for different expand values (regression)', async () => {
+      const mockProject: ProjectWithUnknownFields = createProjectFixture({ id: 'project123' });
+      vi.mocked(mockHttpClient.get).mockResolvedValue(mockProject);
+
+      // Первый вызов без expand закешировал проект; повторный с expand НЕ должен
+      // вернуть этот урезанный кеш (та же причина, что в GetQueueOperation).
+      await operation.execute({ projectId: 'project123' });
+      await operation.execute({ projectId: 'project123', expand: 'queues' });
+
+      expect(mockHttpClient.get).toHaveBeenCalledTimes(2);
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        EntityCacheKey.createKey(EntityType.PROJECT, 'project123'),
+        mockProject
+      );
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        `${EntityCacheKey.createKey(EntityType.PROJECT, 'project123')}:expand=queues`,
+        mockProject
+      );
+    });
+
     it('should return cached project if available', async () => {
       const cachedProject: ProjectWithUnknownFields = createProjectFixture({ id: 'cached' });
       const _cacheKey = EntityCacheKey.createKey(EntityType.PROJECT, 'cached');
