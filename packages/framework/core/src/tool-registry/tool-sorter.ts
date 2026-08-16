@@ -27,7 +27,10 @@ export class ToolSorter {
    * @returns Отсортированный массив
    */
   sortByPriority(tools: BaseTool[]): BaseTool[] {
-    const sorted = tools.sort((a, b) => {
+    // Сортируем КОПИЮ, а не входной массив: мутация входа сломала бы
+    // идемпотентность повторных вызовов (вызывающие передают свежий массив из
+    // Map.values(), но копия — дешёвая гарантия чистоты контракта).
+    const sorted = [...tools].sort((a, b) => {
       // Получаем priority из METADATA
       const aClass = a.constructor as typeof BaseTool;
       const bClass = b.constructor as typeof BaseTool;
@@ -44,8 +47,19 @@ export class ToolSorter {
         return aPrio - bPrio;
       }
 
-      // Затем по имени (алфавит)
-      return a.getDefinition().name.localeCompare(b.getDefinition().name);
+      // Затем по имени. Сравнение по code point (`<`/`>`), а не localeCompare:
+      // localeCompare зависит от ICU-локли и может дать РАЗНЫЙ порядок в разных
+      // окружениях (CI=POSIX vs локально=en) — для ASCII snake_case имён это
+      // единственный детерминированный способ.
+      const nameA = a.getDefinition().name;
+      const nameB = b.getDefinition().name;
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
     });
 
     // Логируем распределение по приоритетам

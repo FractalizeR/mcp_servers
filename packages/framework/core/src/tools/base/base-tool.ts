@@ -75,6 +75,9 @@ export abstract class BaseTool<TFacade = unknown> {
   protected readonly facade: TFacade;
   protected readonly logger: Logger;
 
+  /** Кеш определения (см. getDefinition): definition чист по статичным METADATA+schema. */
+  private cachedDefinition: ToolDefinition | undefined;
+
   constructor(facade: TFacade, logger: Logger) {
     this.facade = facade;
     this.logger = logger;
@@ -93,6 +96,17 @@ export abstract class BaseTool<TFacade = unknown> {
    * теперь единственная проекция живёт здесь).
    */
   getDefinition(): ToolDefinition {
+    // definition — чистый по METADATA + schema (обе статичны), поэтому кешируем
+    // результат первого вызова. Кроме производительности (компаратор ToolSorter
+    // дёргал getDefinition() по O(n log n) раз и каждый раз заново генерировал
+    // inputSchema из Zod) это гарантирует ПОБАЙТОВУЮ стабильность: если
+    // генерация JSON Schema хоть где-то зависит от порядка итерации (разный в
+    // разных процессах/Node), два tools/list в одном процессе вернут идентичный
+    // список — контракт детерминированного порядка.
+    if (this.cachedDefinition !== undefined) {
+      return this.cachedDefinition;
+    }
+
     const ToolClass = this.constructor as typeof BaseTool;
     const metadata = ToolClass.METADATA;
 
@@ -144,6 +158,7 @@ export abstract class BaseTool<TFacade = unknown> {
       result.annotations = metadata.annotations;
     }
 
+    this.cachedDefinition = result;
     return result;
   }
 
