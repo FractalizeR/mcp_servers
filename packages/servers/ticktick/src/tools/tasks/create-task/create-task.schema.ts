@@ -18,14 +18,14 @@ const ChecklistItemSchema = z.object({
  * Parameters schema for creating a task
  */
 export const CreateTaskParamsSchema = z.object({
-  title: z.string().min(1).max(500).describe('Task title (required)'),
+  title: z.string().min(1).max(500).describe('Заголовок задачи (обязательно)'),
   projectId: z.string().optional().describe('Project ID (defaults to Inbox)'),
-  content: z.string().optional().describe('Task description/content'),
+  content: z.string().optional().describe('Описание/содержимое задачи'),
   priority: OptionalPrioritySchema,
   dueDate: z.string().optional().describe('Due date in ISO format (YYYY-MM-DD or full ISO)'),
   startDate: z.string().optional().describe('Start date in ISO format'),
-  tags: z.array(z.string()).optional().describe('Tags to assign'),
-  items: z.array(ChecklistItemSchema).optional().describe('Subtasks/checklist items'),
+  tags: z.array(z.string()).optional().describe('Теги для назначения'),
+  items: z.array(ChecklistItemSchema).optional().describe('Подзадачи/элементы чеклиста'),
   fields: OptionalFieldsSchema,
 });
 

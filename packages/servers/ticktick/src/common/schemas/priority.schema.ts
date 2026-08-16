@@ -19,7 +19,7 @@ export const PrioritySchema = z
   .refine((val) => [0, 1, 3, 5].includes(val), {
     message: 'Priority must be 0 (none), 1 (low), 3 (medium), or 5 (high)',
   })
-  .describe('Task priority: 0=none, 1=low, 3=medium, 5=high');
+  .describe('Приоритет задачи: 0=нет, 1=низкий, 3=средний, 5=высокий');
 
 export type Priority = z.infer<typeof PrioritySchema>;
 

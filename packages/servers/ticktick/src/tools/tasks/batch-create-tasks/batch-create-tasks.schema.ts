@@ -11,9 +11,9 @@ import { buildOutputSchema } from '@fractalizer/mcp-core';
  * Single task schema for batch creation
  */
 const BatchTaskSchema = z.object({
-  title: z.string().min(1).max(500).describe('Task title (required)'),
+  title: z.string().min(1).max(500).describe('Заголовок задачи (обязательно)'),
   projectId: z.string().optional().describe('Project ID (defaults to Inbox)'),
-  content: z.string().optional().describe('Task description/content'),
+  content: z.string().optional().describe('Описание/содержимое задачи'),
   priority: OptionalPrioritySchema,
   dueDate: z.string().optional().describe('Due date in ISO format'),
 });
@@ -26,7 +26,7 @@ export const BatchCreateTasksParamsSchema = z.object({
     .array(BatchTaskSchema)
     .min(1, 'At least one task is required')
     .max(50, 'Maximum 50 tasks per batch request')
-    .describe('Tasks to create (max 50)'),
+    .describe('Задачи для создания (до 50)'),
   fields: OptionalFieldsSchema,
 });
 

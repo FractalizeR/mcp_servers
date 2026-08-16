@@ -30,7 +30,7 @@ export const GetIssueLinksParamsSchema = z
     /**
      * Массив ключей или ID задач для получения связей
      */
-    issueIds: IssueKeysSchema.describe('Array of issue IDs or keys'),
+    issueIds: IssueKeysSchema.describe('Массив ID или ключей задач'),
 
     /**
      * Массив полей для возврата в результате (обязательный)

@@ -16,7 +16,7 @@ import { z } from 'zod';
 export const StatusFilterSchema = z
   .enum(['all', 'uncompleted', 'completed'])
   .default('uncompleted')
-  .describe('Filter by task status: all, uncompleted (default), or completed');
+  .describe('Фильтр по статусу задачи: all, uncompleted (по умолчанию) или completed');
 
 export type StatusFilter = z.infer<typeof StatusFilterSchema>;
 

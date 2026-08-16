@@ -34,7 +34,7 @@ export interface UpdateChecklistItemDto {
  * If projectId is not provided, task will be created in inbox.
  */
 export interface CreateTaskDto {
-  /** Task title (required) */
+  /** Заголовок задачи (обязательно) */
   title: string;
 
   /** Project/list ID (optional, defaults to inbox) */
@@ -67,7 +67,7 @@ export interface CreateTaskDto {
   /** Recurrence rule in RRULE format */
   repeatFlag?: string;
 
-  /** Tags to assign */
+  /** Теги для назначения */
   tags?: string[];
 
   /** Checklist items to create */

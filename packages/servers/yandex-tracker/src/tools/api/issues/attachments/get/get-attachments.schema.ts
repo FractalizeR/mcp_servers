@@ -29,7 +29,7 @@ export const GetAttachmentsParamsSchema = z.object({
   issueIds: z
     .array(IssueKeySchema)
     .min(1, 'Массив issueIds должен содержать минимум 1 элемент')
-    .describe('Array of issue IDs or keys (e.g., ["TEST-123", "TEST-456"])'),
+    .describe('Массив ID или ключей задач (например, ["TEST-123", "TEST-456"])'),
 
   /**
    * Массив полей для возврата в результате (обязательный)

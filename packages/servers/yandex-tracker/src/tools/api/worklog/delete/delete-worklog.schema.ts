@@ -12,12 +12,12 @@ export const DeleteWorklogParamsSchema = z.object({
   /**
    * Идентификатор или ключ задачи (обязательно)
    */
-  issueId: IssueKeySchema.describe('Issue ID or key (e.g., TEST-123)'),
+  issueId: IssueKeySchema.describe('ID или ключ задачи (например, TEST-123)'),
 
   /**
    * Идентификатор записи времени (обязательно)
    */
-  worklogId: z.string().describe('Worklog ID to delete'),
+  worklogId: z.string().describe('ID записи времени для удаления'),
 });
 
 /**

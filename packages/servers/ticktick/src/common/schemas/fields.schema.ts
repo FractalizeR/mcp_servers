@@ -47,6 +47,6 @@ export type Fields = z.infer<typeof FieldsSchema>;
 export const OptionalFieldsSchema = z
   .array(z.string().min(1, 'Field name cannot be empty'))
   .optional()
-  .describe('Optional list of fields to return. If not specified, returns all fields.');
+  .describe('Необязательный список полей для возврата. Если не указан — возвращаются все поля.');
 
 export type OptionalFields = z.infer<typeof OptionalFieldsSchema>;

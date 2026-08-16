@@ -12,7 +12,7 @@ import { GET_TASKS_BY_PRIORITY_OUTPUT_SCHEMA } from './get-tasks-by-priority.sch
  */
 export const GET_TASKS_BY_PRIORITY_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_tasks_by_priority', MCP_TOOL_PREFIX),
-  description: '[Tasks/Read] Get tasks with a specific priority level',
+  description: '[Tasks/Read] Получить задачи с определённым уровнем приоритета',
   category: ToolCategory.TASKS,
   subcategory: 'read',
   priority: ToolPriority.NORMAL,

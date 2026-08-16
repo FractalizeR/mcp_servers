@@ -68,7 +68,7 @@ export interface Task {
   repeatFlag?: string;
   /** Task tags */
   tags?: string[];
-  /** Subtasks/checklist items */
+  /** Подзадачи/элементы чеклиста */
   items?: ChecklistItem[];
   /** Progress percentage (0-100) */
   progress?: number;

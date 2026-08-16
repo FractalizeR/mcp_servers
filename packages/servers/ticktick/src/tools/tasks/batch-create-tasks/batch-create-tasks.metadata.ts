@@ -12,7 +12,7 @@ import { BATCH_CREATE_TASKS_OUTPUT_SCHEMA } from './batch-create-tasks.schema.js
  */
 export const BATCH_CREATE_TASKS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('batch_create_tasks', MCP_TOOL_PREFIX),
-  description: '[Tasks/Write] Create multiple tasks at once (up to 50)',
+  description: '[Tasks/Write] Создать несколько задач за раз (до 50)',
   category: ToolCategory.TASKS,
   subcategory: 'write',
   priority: ToolPriority.HIGH,

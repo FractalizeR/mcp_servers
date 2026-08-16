@@ -12,7 +12,7 @@ import { GET_ALL_TASKS_OUTPUT_SCHEMA } from './get-all-tasks.schema.js';
  */
 export const GET_ALL_TASKS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_all_tasks', MCP_TOOL_PREFIX),
-  description: '[Tasks/Read] Get all tasks from all projects',
+  description: '[Tasks/Read] Получить все задачи из всех проектов',
   category: ToolCategory.TASKS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

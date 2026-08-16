@@ -31,7 +31,7 @@ export const GetCommentsParamsSchema = z
      * Массив идентификаторов или ключей задач (обязательно)
      */
     issueIds: IssueKeysSchema.describe(
-      "Array of issue IDs or keys (e.g., ['TEST-123', 'TEST-456'])"
+      "Массив ID или ключей задач (e.g., ['TEST-123', 'TEST-456'])"
     ),
 
     /**

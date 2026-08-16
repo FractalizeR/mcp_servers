@@ -12,7 +12,7 @@ import { GET_TASKS_OUTPUT_SCHEMA } from './get-tasks.schema.js';
  */
 export const GET_TASKS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_tasks', MCP_TOOL_PREFIX),
-  description: '[Tasks/Read] Get multiple tasks by IDs (batch)',
+  description: '[Tasks/Read] Получить несколько задач по ID (batch)',
   category: ToolCategory.TASKS,
   subcategory: 'read',
   priority: ToolPriority.CRITICAL,

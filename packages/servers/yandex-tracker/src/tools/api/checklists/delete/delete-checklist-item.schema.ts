@@ -12,7 +12,7 @@ const DeleteChecklistItemSchema = z.object({
   /**
    * Идентификатор или ключ задачи (обязательно)
    */
-  issueId: IssueKeySchema.describe('Issue ID or key (e.g., TEST-123)'),
+  issueId: IssueKeySchema.describe('ID или ключ задачи (например, TEST-123)'),
 
   /**
    * Идентификатор элемента чеклиста (обязательно)
@@ -33,7 +33,7 @@ export const DeleteChecklistItemParamsSchema = z.object({
   items: z
     .array(DeleteChecklistItemSchema)
     .min(1, 'Массив items должен содержать минимум 1 элемент')
-    .describe('Array of checklist items to delete'),
+    .describe('Массив элементов чеклиста для удаления'),
 });
 
 /**

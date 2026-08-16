@@ -27,14 +27,14 @@ export const AddWorklogParamsSchema = z.object({
         /**
          * Идентификатор или ключ задачи (обязательно)
          */
-        issueId: IssueKeySchema.describe('Issue ID or key (e.g., TEST-123)'),
+        issueId: IssueKeySchema.describe('ID или ключ задачи (например, TEST-123)'),
 
         /**
          * Дата и время начала работы (ISO 8601) (обязательно)
          */
         start: z
           .string()
-          .describe('Start date and time (ISO 8601, e.g., 2023-01-15T10:00:00.000+0000)'),
+          .describe('Дата и время начала (ISO 8601, например, 2023-01-15T10:00:00.000+0000)'),
 
         /**
          * Продолжительность работы (обязательно)
@@ -42,7 +42,9 @@ export const AddWorklogParamsSchema = z.object({
          * - Человекочитаемый: "1h", "30m", "1h 30m"
          * - ISO 8601 Duration: "PT1H", "PT30M", "PT1H30M"
          */
-        duration: z.string().describe('Duration (e.g., "1h 30m", "PT1H30M", "2 hours")'),
+        duration: z
+          .string()
+          .describe('Продолжительность (например, "1h 30m", "PT1H30M", "2 hours")'),
 
         /**
          * Комментарий к записи времени (опционально)
@@ -51,7 +53,7 @@ export const AddWorklogParamsSchema = z.object({
       })
     )
     .min(1, 'Массив worklogs должен содержать минимум 1 элемент')
-    .describe('Array of worklogs to add to issues'),
+    .describe('Массив записей времени для добавления к задачам'),
 
   /**
    * Массив полей для возврата в результате (обязательный)

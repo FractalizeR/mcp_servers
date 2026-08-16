@@ -28,7 +28,7 @@ export const EditCommentParamsSchema = z.object({
         /**
          * Идентификатор или ключ задачи (обязательно)
          */
-        issueId: IssueKeySchema.describe('Issue ID or key (e.g., TEST-123)'),
+        issueId: IssueKeySchema.describe('ID или ключ задачи (например, TEST-123)'),
 
         /**
          * Идентификатор комментария (обязательно)
@@ -42,7 +42,7 @@ export const EditCommentParamsSchema = z.object({
       })
     )
     .min(1, 'Массив comments должен содержать минимум 1 элемент')
-    .describe('Array of comments to edit'),
+    .describe('Массив комментариев для редактирования'),
 
   /**
    * Массив полей для возврата в результате (обязательный)

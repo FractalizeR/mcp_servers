@@ -48,6 +48,6 @@ export const OptionalResponseFieldsSchema = z
   .array(z.string().min(1, 'Field name cannot be empty'))
   .optional()
   .default([])
-  .describe('Optional list of response fields to return. If not specified, returns all fields.');
+  .describe('Необязательный список полей ответа. Если не указан — возвращаются все поля.');
 
 export type OptionalResponseFields = z.infer<typeof OptionalResponseFieldsSchema>;

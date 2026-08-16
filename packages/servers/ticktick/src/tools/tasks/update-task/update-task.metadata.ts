@@ -12,7 +12,7 @@ import { UPDATE_TASK_OUTPUT_SCHEMA } from './update-task.schema.js';
  */
 export const UPDATE_TASK_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_task', MCP_TOOL_PREFIX),
-  description: '[Tasks/Write] Update an existing task',
+  description: '[Tasks/Write] Обновить существующую задачу',
   category: ToolCategory.TASKS,
   subcategory: 'write',
   priority: ToolPriority.CRITICAL,

@@ -42,13 +42,13 @@ export const CreateLinkParamsSchema = z.object({
   links: z
     .array(
       z.object({
-        issueId: IssueKeySchema.describe('Issue ID or key (from)'),
-        relationship: LinkRelationshipSchema.describe('Link type and direction'),
-        targetIssue: IssueKeySchema.describe('Target issue ID or key (to)'),
+        issueId: IssueKeySchema.describe('ID или ключ задачи (откуда)'),
+        relationship: LinkRelationshipSchema.describe('Тип и направление связи'),
+        targetIssue: IssueKeySchema.describe('ID или ключ целевой задачи (куда)'),
       })
     )
     .min(1)
-    .describe('Array of links to create'),
+    .describe('Массив связей для создания'),
 
   /**
    * Поля для возврата в результате (применяется ко всем связям)

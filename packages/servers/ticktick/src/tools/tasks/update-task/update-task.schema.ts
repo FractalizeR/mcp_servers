@@ -13,11 +13,11 @@ import { buildOutputSchema } from '@fractalizer/mcp-core';
 export const UpdateTaskParamsSchema = z.object({
   projectId: z.string().min(1, 'Project ID is required').describe('ID of the project'),
   taskId: z.string().min(1, 'Task ID is required').describe('ID of the task'),
-  title: z.string().min(1).max(500).optional().describe('New title'),
-  content: z.string().optional().describe('New description/content'),
-  priority: OptionalPrioritySchema.describe('New priority'),
-  dueDate: z.string().nullable().optional().describe('New due date (null to remove)'),
-  tags: z.array(z.string()).optional().describe('New tags'),
+  title: z.string().min(1).max(500).optional().describe('Новый заголовок'),
+  content: z.string().optional().describe('Новое описание/содержимое'),
+  priority: OptionalPrioritySchema.describe('Новый приоритет'),
+  dueDate: z.string().nullable().optional().describe('Новый срок (null — убрать)'),
+  tags: z.array(z.string()).optional().describe('Новые теги'),
   fields: OptionalFieldsSchema,
 });
 

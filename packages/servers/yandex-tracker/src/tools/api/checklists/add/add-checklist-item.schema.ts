@@ -24,7 +24,7 @@ const ChecklistItemSchema = z
     /**
      * Идентификатор или ключ задачи (обязательно)
      */
-    issueId: IssueKeySchema.describe('Issue ID or key (e.g., TEST-123)'),
+    issueId: IssueKeySchema.describe('ID или ключ задачи (например, TEST-123)'),
   })
   .merge(BaseChecklistItemFieldsSchema.pick({ text: true }))
   .merge(
@@ -44,7 +44,7 @@ export const AddChecklistItemParamsSchema = z.object({
   items: z
     .array(ChecklistItemSchema)
     .min(1, 'Массив items должен содержать минимум 1 элемент')
-    .describe('Array of checklist items to add to issues'),
+    .describe('Массив элементов чеклиста для добавления к задачам'),
 
   /**
    * Массив полей для возврата в результате (обязательный)

@@ -21,7 +21,7 @@ export const DeleteLinkParamsSchema = z.object({
         /**
          * Идентификатор или ключ задачи (обязательно)
          */
-        issueId: IssueKeySchema.describe('Issue ID or key (e.g., TEST-123)'),
+        issueId: IssueKeySchema.describe('ID или ключ задачи (например, TEST-123)'),
 
         /**
          * ID связи для удаления (обязательно)
@@ -30,7 +30,7 @@ export const DeleteLinkParamsSchema = z.object({
       })
     )
     .min(1, 'Массив links должен содержать минимум 1 элемент')
-    .describe('Array of links to delete'),
+    .describe('Массив связей для удаления'),
 });
 
 /**

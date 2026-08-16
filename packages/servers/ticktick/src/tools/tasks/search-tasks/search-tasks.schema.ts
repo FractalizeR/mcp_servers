@@ -17,7 +17,7 @@ export const SearchTasksParamsSchema = z.object({
   query: z
     .string()
     .min(1, 'Search query is required')
-    .describe('Search query (searches in title and content)'),
+    .describe('Поисковый запрос (ищет по заголовку и содержимому)'),
   fields: FieldsSchema,
   responseMode: collectionResponseModeParamSchema({ itemsNoun: 'задач' }),
 });

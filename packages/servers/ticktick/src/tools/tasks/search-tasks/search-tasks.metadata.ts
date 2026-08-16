@@ -12,7 +12,7 @@ import { SEARCH_TASKS_OUTPUT_SCHEMA } from './search-tasks.schema.js';
  */
 export const SEARCH_TASKS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('search_tasks', MCP_TOOL_PREFIX),
-  description: '[Tasks/Read] Search tasks by text in title and content',
+  description: '[Tasks/Read] Поиск задач по тексту в заголовке и содержимом',
   category: ToolCategory.TASKS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

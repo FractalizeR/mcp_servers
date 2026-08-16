@@ -437,6 +437,10 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
   - `'low'` — редко используемые (demo, debug)
 - ✅ Формат `description`: `[Category/Subcategory] Краткое описание`
 - ✅ Длина description: `≤ 80 символов`
+- ✅ Язык — **русский** для всего, что видит агент: и `description` в `METADATA`, и
+  field-level `.describe()` в `*.schema.ts` (технические токены `ID`/`ISO`/`batch`/`markdown`
+  допустимы как есть). Единообразие — канон: не смешивать русский и английский в
+  описаниях инструментов одного сервера.
 - ✅ Добавить `tags` для поиска (3-5 тегов): `['read', 'query', 'filter']`
 
 **Примеры:**
