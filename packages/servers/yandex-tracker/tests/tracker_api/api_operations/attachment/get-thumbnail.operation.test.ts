@@ -157,7 +157,7 @@ describe('GetThumbnailOperation', () => {
         const attachment = createAttachmentFixture({ mimetype });
 
         // Act
-        const _result = operation.supportsThumbnail(attachment);
+        await operation.supportsThumbnail(attachment);
 
         // Assert - we need to mock FileDownloadUtil.isImage to return true
         // For this test, we assume the method works correctly
@@ -202,7 +202,7 @@ describe('GetThumbnailOperation', () => {
         vi.spyOn(originalUtils.FileDownloadUtil, 'isImageByExtension').mockReturnValue(true);
 
         // Act
-        const _result = operation.supportsThumbnail(attachment);
+        await operation.supportsThumbnail(attachment);
 
         // Assert - depends on implementation
         // For this test, we assume it returns true if isImageByExtension returns true

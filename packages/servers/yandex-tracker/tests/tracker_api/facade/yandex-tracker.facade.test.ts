@@ -5,6 +5,7 @@ import type {
   IssueServicesContainer,
   QueueServicesContainer,
   ProjectAgileServicesContainer,
+  EntityAdminServicesContainer,
 } from '#tracker_api/facade/services/containers/index.js';
 import type { PingResult } from '#tracker_api/api_operations/user/ping.operation.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
@@ -38,6 +39,7 @@ import type {
   WorklogWithUnknownFields,
 } from '#tracker_api/entities/index.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { createBoardFixture, createSprintFixture } from '#helpers/agile.fixture.js';
 
 describe('YandexTrackerFacade', () => {
   let facade: YandexTrackerFacade;
@@ -47,6 +49,7 @@ describe('YandexTrackerFacade', () => {
   let mockIssuesContainer: IssueServicesContainer;
   let mockQueuesContainer: QueueServicesContainer;
   let mockProjectAgileContainer: ProjectAgileServicesContainer;
+  let mockEntityAdminContainer: EntityAdminServicesContainer;
 
   beforeEach(() => {
     // Create mock containers with services
@@ -154,12 +157,35 @@ describe('YandexTrackerFacade', () => {
       },
     } as unknown as ProjectAgileServicesContainer;
 
+    mockEntityAdminContainer = {
+      entityApi: {
+        findEntities: vi.fn(),
+        getEntity: vi.fn(),
+        createEntity: vi.fn(),
+        updateEntity: vi.fn(),
+        deleteEntity: vi.fn(),
+      },
+      administration: {
+        getIssueTypes: vi.fn(),
+        getPriorities: vi.fn(),
+        getStatuses: vi.fn(),
+        getResolutions: vi.fn(),
+      },
+      filter: { getFilters: vi.fn(), createFilter: vi.fn(), updateFilter: vi.fn() },
+      queueLocalField: {
+        getQueueLocalFields: vi.fn(),
+        createQueueLocalField: vi.fn(),
+        updateQueueLocalField: vi.fn(),
+      },
+    } as unknown as EntityAdminServicesContainer;
+
     // Create facade with mocked containers
     facade = new YandexTrackerFacade(
       mockCoreContainer,
       mockIssuesContainer,
       mockQueuesContainer,
-      mockProjectAgileContainer
+      mockProjectAgileContainer,
+      mockEntityAdminContainer
     );
   });
 
@@ -583,7 +609,8 @@ describe('YandexTrackerFacade', () => {
         mockCoreContainer,
         mockIssuesContainer,
         mockQueuesContainer,
-        mockProjectAgileContainer
+        mockProjectAgileContainer,
+        mockEntityAdminContainer
       );
 
       // Assert - проверяем, что можем вызвать методы
@@ -777,11 +804,11 @@ describe('YandexTrackerFacade', () => {
     describe('getBoards', () => {
       it('должна делегировать вызов BoardService.getBoards без параметров', async () => {
         const mockResult: BoardsListOutput = [
-          {
+          createBoardFixture({
             id: '1',
             self: 'https://api.tracker.yandex.net/v3/boards/1',
             name: 'Board 1',
-          },
+          }),
         ];
 
         vi.mocked(mockProjectAgileContainer.board.getBoards).mockResolvedValue(mockResult);
@@ -795,11 +822,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.getBoards с параметрами', async () => {
         const params: GetBoardsDto = { filter: 'active' };
         const mockResult: BoardsListOutput = [
-          {
+          createBoardFixture({
             id: '1',
             self: 'https://api.tracker.yandex.net/v3/boards/1',
             name: 'Active Board',
-          },
+          }),
         ];
 
         vi.mocked(mockProjectAgileContainer.board.getBoards).mockResolvedValue(mockResult);
@@ -814,11 +841,11 @@ describe('YandexTrackerFacade', () => {
     describe('getBoard', () => {
       it('должна делегировать вызов BoardService.getBoard', async () => {
         const boardId = '1';
-        const mockResult: BoardOutput = {
+        const mockResult: BoardOutput = createBoardFixture({
           id: '1',
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.board.getBoard).mockResolvedValue(mockResult);
 
@@ -831,11 +858,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.getBoard с params', async () => {
         const boardId = '1';
         const params = { localized: true };
-        const mockResult: BoardOutput = {
+        const mockResult: BoardOutput = createBoardFixture({
           id: '1',
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.board.getBoard).mockResolvedValue(mockResult);
 
@@ -849,11 +876,11 @@ describe('YandexTrackerFacade', () => {
     describe('createBoard', () => {
       it('должна делегировать вызов BoardService.createBoard', async () => {
         const input: CreateBoardDto = { name: 'Sprint Board', filter: { query: 'status: open' } };
-        const mockResult: BoardOutput = {
+        const mockResult: BoardOutput = createBoardFixture({
           id: '1',
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.board.createBoard).mockResolvedValue(mockResult);
 
@@ -868,11 +895,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.updateBoard', async () => {
         const boardId = '1';
         const input = { name: 'Updated Board' };
-        const mockResult: BoardOutput = {
+        const mockResult: BoardOutput = createBoardFixture({
           id: '1',
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Updated Board',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.board.updateBoard).mockResolvedValue(mockResult);
 
@@ -901,11 +928,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов SprintService.getSprints', async () => {
         const boardId = '1';
         const mockResult: SprintsListOutput = [
-          {
+          createSprintFixture({
             id: '10',
             self: 'https://api.tracker.yandex.net/v3/sprints/10',
             name: 'Sprint 1',
-          },
+          }),
         ];
 
         vi.mocked(mockProjectAgileContainer.sprint.getSprints).mockResolvedValue(mockResult);
@@ -920,11 +947,11 @@ describe('YandexTrackerFacade', () => {
     describe('getSprint', () => {
       it('должна делегировать вызов SprintService.getSprint', async () => {
         const sprintId = '10';
-        const mockResult: SprintOutput = {
+        const mockResult: SprintOutput = createSprintFixture({
           id: '10',
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.sprint.getSprint).mockResolvedValue(mockResult);
 
@@ -943,11 +970,11 @@ describe('YandexTrackerFacade', () => {
           startDate: '2024-01-01',
           endDate: '2024-01-14',
         };
-        const mockResult: SprintOutput = {
+        const mockResult: SprintOutput = createSprintFixture({
           id: '10',
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.sprint.createSprint).mockResolvedValue(mockResult);
 
@@ -962,11 +989,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов SprintService.updateSprint', async () => {
         const sprintId = '10';
         const input = { name: 'Sprint 1 Updated' };
-        const mockResult: SprintOutput = {
+        const mockResult: SprintOutput = createSprintFixture({
           id: '10',
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1 Updated',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.sprint.updateSprint).mockResolvedValue(mockResult);
 

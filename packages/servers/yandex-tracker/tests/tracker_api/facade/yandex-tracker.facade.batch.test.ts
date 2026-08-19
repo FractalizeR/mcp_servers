@@ -17,6 +17,7 @@ import type {
   IssueServicesContainer,
   QueueServicesContainer,
   ProjectAgileServicesContainer,
+  EntityAdminServicesContainer,
 } from '#tracker_api/facade/services/containers/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import { createLinkFixture } from '#helpers/link.fixture.js';
@@ -41,6 +42,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
   let mockIssuesContainer: IssueServicesContainer;
   let mockQueuesContainer: QueueServicesContainer;
   let mockProjectAgileContainer: ProjectAgileServicesContainer;
+  let mockEntityAdminContainer: EntityAdminServicesContainer;
 
   beforeEach(() => {
     // Create mock containers with services
@@ -156,11 +158,19 @@ describe('YandexTrackerFacade - Batch Methods', () => {
       },
     } as unknown as ProjectAgileServicesContainer;
 
+    mockEntityAdminContainer = {
+      entityApi: {},
+      administration: {},
+      filter: {},
+      queueLocalField: {},
+    } as unknown as EntityAdminServicesContainer;
+
     facade = new YandexTrackerFacade(
       mockCoreContainer,
       mockIssuesContainer,
       mockQueuesContainer,
-      mockProjectAgileContainer
+      mockProjectAgileContainer,
+      mockEntityAdminContainer
     );
   });
 
