@@ -116,7 +116,7 @@ module.exports = {
 
     {
       name: 'server-operations-isolation',
-      severity: 'warn', // warn чтобы не блокировать development
+      severity: 'error',
       comment: 'Operations импортируются только через Facade или Composition Root',
       from: {
         path: '^packages/servers/[^/]+/src/',
