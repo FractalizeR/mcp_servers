@@ -189,9 +189,9 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 **Все workspaces ОБЯЗАНЫ иметь одинаковый набор базовых команд:**
 - `build` — `tsc -b && tsc-alias` (НЕ `tsc` без `-b`!)
 - `clean` — `rimraf dist` (только артефакты сборки)
-- `lint` — `eslint src --ext .ts`
-- `lint:fix` — `eslint src --ext .ts --fix`
-- `lint:quiet` — `eslint src --ext .ts --quiet`
+- `lint` — `eslint src --ext .ts` (+ `scripts`, если каталог есть)
+- `lint:fix` — то же с `--fix`
+- `lint:quiet` — то же с `--quiet`
 - `format` — `prettier --write "src/**/*.ts" "tests/**/*.ts"`
 - `format:check` — `prettier --check "src/**/*.ts" "tests/**/*.ts"`
 - `test` — `vitest run`
@@ -200,6 +200,7 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - `test:verbose` — `vitest run --reporter=verbose`
 - `test:watch` — `vitest watch`
 - `typecheck` — `tsc --noEmit`
+- `typecheck:scripts` — `tsc --noEmit -p tsconfig.scripts.json` (где есть `scripts`)
 - `validate` — полная валидация (все шаги, полный вывод)
 - `validate:quiet` — те же шаги, минимальный вывод (для ИИ агентов)
 
@@ -207,7 +208,7 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - Делегирует команды через `--workspaces --if-present`
 - `clean` — только артефакты, `clean:all` — включая node_modules
 - `validate` / `validate:quiet` — единый пайплайн через `scripts/validate.sh [--quiet]`
-  - Шаги: build, lint, typecheck, test, test:smoke, test:smoke:server, cpd, depcruise, validate:docs, validate:tools, knip:root
+  - Шаги: build, lint, typecheck, typecheck:scripts, test, test:smoke, test:smoke:server, cpd, depcruise, validate:docs, validate:tools, knip:root, lint:servers-scripts
   - Quiet mode: lint:quiet, test:quiet, cpd:quiet + `--output-logs=errors-only`
   - **Добавить новый шаг:** только в `scripts/validate.sh` — оба режима обновятся автоматически
 

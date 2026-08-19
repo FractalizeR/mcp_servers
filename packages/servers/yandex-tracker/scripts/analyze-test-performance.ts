@@ -48,7 +48,7 @@ function analyzeTests() {
     execSync('npx vitest run --reporter=json --outputFile=test-results.json', {
       stdio: 'inherit',
     });
-  } catch (error) {
+  } catch {
     // Тесты могут упасть, но нам все равно нужны результаты
     console.warn('⚠️  Some tests failed, but analyzing results anyway...\n');
   }

@@ -1,3 +1,5 @@
+import { serversScriptsConfig } from '../../eslint.shared.config.js';
+
 /**
  * Fallback flat config для файлов, лежащих прямо в packages/servers/
  * (например, tsup.config.base.ts — общий конфиг сборки для трёх серверов).
@@ -10,8 +12,14 @@
  * "ESLint couldn't find an eslint.config.js file" — это ломает lint-staged
  * (husky pre-commit) на любом коммите, трогающем такой файл.
  *
- * Пустой конфиг: файлы внутри packages/servers/{name}/ по-прежнему
- * используют СВОЙ ближайший eslint.config.js (serverConfig()) — этот файл
- * их не переопределяет и не применяет к ним никаких правил.
+ * Файлы внутри packages/servers/{name}/ по-прежнему используют СВОЙ
+ * ближайший eslint.config.js (serverConfig()) — этот файл их не
+ * переопределяет.
+ *
+ * Помимо роли fallback здесь подключён профиль scripts: каталог
+ * packages/servers/scripts (общие скрипты сборки mcpb) не является
+ * npm-workspace, поэтому turbo run lint до него не дотягивается. Его
+ * линтует корневая команда lint:servers-scripts. Файлы, не попавшие под
+ * scripts/**, правил по-прежнему не получают.
  */
-export default [{}];
+export default serversScriptsConfig();
