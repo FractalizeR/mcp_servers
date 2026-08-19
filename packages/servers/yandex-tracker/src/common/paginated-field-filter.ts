@@ -13,7 +13,7 @@
 
 import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 
-import type { PaginatedResult, PaginationMeta } from '../entities/common/index.js';
+import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/common/index.js';
 
 /**
  * Пагинируемый результат с отфильтрованными по `fields` элементами.

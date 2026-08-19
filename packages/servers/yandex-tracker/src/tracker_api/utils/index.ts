@@ -20,6 +20,4 @@ export type { CursorTag, DecodedCursor } from './cursor-codec.util.js';
 export { stripTrackerHost } from './strip-host.util.js';
 export { FileUploadUtil } from './file-upload.util.js';
 export { FileDownloadUtil } from './file-download.util.js';
-export { paginatedFieldFilter } from './paginated-field-filter.util.js';
-export type { FilteredPaginatedResult } from './paginated-field-filter.util.js';
 export { ItemBudget, DEFAULT_MAX_TOTAL_ITEMS } from './item-budget.util.js';

@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-server-yandex-tracker",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "MCP Server for Yandex Tracker API integration",
   "keywords": [
     "mcp",
@@ -59,13 +59,13 @@
     "benchmark:bundle": "bash benchmarks/bundle-size.sh",
     "benchmark:memory": "tsx benchmarks/memory-usage.ts",
     "build": "tsc -b && tsc-alias && npm run build:bundle",
-    "build:bundle": "tsx ../scripts/increment-build.ts && tsup",
-    "build:mcpb": "npm run build && tsx ../scripts/build-mcpb.ts",
+    "build:bundle": "tsup",
+    "build:mcpb": "npm run build && tsx ../scripts/increment-build.ts && tsx ../scripts/build-mcpb.ts",
     "clean": "rimraf dist",
     "cpd": "jscpd src",
     "cpd:quiet": "jscpd src --silent",
     "cpd:report": "jscpd src --reporters html,console",
-    "depcruise": "depcruise src -c ../../../.dependency-cruiser.cjs",
+    "depcruise": "cd ../../.. && depcruise packages/servers/yandex-tracker/src -c .dependency-cruiser.cjs",
     "dev": "npm run build && node dist/yandex-tracker.bundle.cjs",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.ts\"",
@@ -97,9 +97,9 @@
     "validate:tools": "tsx scripts/validate-tool-registration.ts"
   },
   "dependencies": {
-    "@fractalizer/mcp-cli": "^1.9.0",
-    "@fractalizer/mcp-core": "^1.9.0",
-    "@fractalizer/mcp-infrastructure": "^1.9.0",
+    "@fractalizer/mcp-cli": "^1.9.1",
+    "@fractalizer/mcp-core": "^1.9.1",
+    "@fractalizer/mcp-infrastructure": "^1.9.1",
     "@iarna/toml": "^2.2.5",
     "@modelcontextprotocol/server": "^2.0.0",
     "axios": "^1.13.6",

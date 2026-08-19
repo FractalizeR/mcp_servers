@@ -13,7 +13,7 @@ import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure
 import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ExecuteTransitionDto } from '#tracker_api/dto/index.js';
-import { IssueRefetchAfterTransitionError } from '#tracker_api/api_operations/issue/transitions/transition-issue.operation.js';
+import { IssueRefetchAfterTransitionError } from '#tracker_api/facade/index.js';
 import { TransitionIssueParamsSchema } from '#tools/api/issues/transitions/execute/transition-issue.schema.js';
 
 import { TRANSITION_ISSUE_TOOL_METADATA } from './transition-issue.metadata.js';

@@ -8,33 +8,32 @@
  */
 
 import { injectable, inject } from 'inversify';
-import { TYPES } from '#composition-root/types.js';
-import type { GetTaskOperation } from '#ticktick_api/api_operations/tasks/get-task.operation.js';
-import type { GetTasksOperation } from '#ticktick_api/api_operations/tasks/get-tasks.operation.js';
-import type { CreateTaskOperation } from '#ticktick_api/api_operations/tasks/create-task.operation.js';
-import type { UpdateTaskOperation } from '#ticktick_api/api_operations/tasks/update-task.operation.js';
-import type { DeleteTaskOperation } from '#ticktick_api/api_operations/tasks/delete-task.operation.js';
-import type { CompleteTaskOperation } from '#ticktick_api/api_operations/tasks/complete-task.operation.js';
+import { GetTaskOperation } from '#ticktick_api/api_operations/tasks/get-task.operation.js';
+import { GetTasksOperation } from '#ticktick_api/api_operations/tasks/get-tasks.operation.js';
+import { CreateTaskOperation } from '#ticktick_api/api_operations/tasks/create-task.operation.js';
+import { UpdateTaskOperation } from '#ticktick_api/api_operations/tasks/update-task.operation.js';
+import { DeleteTaskOperation } from '#ticktick_api/api_operations/tasks/delete-task.operation.js';
+import { CompleteTaskOperation } from '#ticktick_api/api_operations/tasks/complete-task.operation.js';
 
 @injectable()
 export class TaskOperationsContainer {
   constructor(
-    @inject(TYPES.GetTaskOperation)
+    @inject(GetTaskOperation)
     readonly getTask: GetTaskOperation,
 
-    @inject(TYPES.GetTasksOperation)
+    @inject(GetTasksOperation)
     readonly getTasks: GetTasksOperation,
 
-    @inject(TYPES.CreateTaskOperation)
+    @inject(CreateTaskOperation)
     readonly createTask: CreateTaskOperation,
 
-    @inject(TYPES.UpdateTaskOperation)
+    @inject(UpdateTaskOperation)
     readonly updateTask: UpdateTaskOperation,
 
-    @inject(TYPES.DeleteTaskOperation)
+    @inject(DeleteTaskOperation)
     readonly deleteTask: DeleteTaskOperation,
 
-    @inject(TYPES.CompleteTaskOperation)
+    @inject(CompleteTaskOperation)
     readonly completeTask: CompleteTaskOperation
   ) {}
 }

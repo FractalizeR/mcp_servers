@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { BatchResultProcessor } from '@fractalizer/mcp-core';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
-import { paginatedFieldFilter } from '#tracker_api/utils/paginated-field-filter.util.js';
+import { paginatedFieldFilter } from '#common/paginated-field-filter.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/index.js';
 
 interface Entry {

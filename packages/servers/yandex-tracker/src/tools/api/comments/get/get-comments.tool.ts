@@ -8,7 +8,7 @@
  */
 
 import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
-import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
+import { paginatedFieldFilter } from '#common/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';

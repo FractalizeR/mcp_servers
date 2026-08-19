@@ -525,56 +525,80 @@ describe('ParallelExecutor', () => {
   });
 
   describe('интеграция с реальными операциями', () => {
-    it('должен корректно выполнять параллельные промисы с задержками', async () => {
+    it('должен запускать операции параллельно, а не последовательно', async () => {
       // Arrange
-      const delay = (ms: number): Promise<void> =>
-        new Promise((resolve) => setTimeout(resolve, ms));
+      // Барьер вместо замера времени: каждая операция отмечается стартовавшей и ждёт,
+      // пока стартуют все три. Параллельное выполнение снимает барьер и тест проходит;
+      // последовательное — навсегда блокирует первую операцию, и тест падает по таймауту.
+      // Проверка не зависит от часов, поэтому не флачит под нагрузкой полной валидации.
+      const total = 3;
+      let startedCount = 0;
+      let releaseBarrier: () => void = (): void => {};
+      const allStarted = new Promise<void>((resolve) => {
+        releaseBarrier = resolve;
+      });
 
-      const operations = [
-        {
-          key: 'slow1',
-          fn: async (): Promise<string> => {
-            await delay(10);
-            return 'slow1';
-          },
-        },
-        {
-          key: 'fast',
-          fn: async (): Promise<string> => {
-            await delay(5);
-            return 'fast';
-          },
-        },
-        {
-          key: 'slow2',
-          fn: async (): Promise<string> => {
-            await delay(10);
-            return 'slow2';
-          },
-        },
-      ];
+      const barrieredOperation = (value: string) => async (): Promise<string> => {
+        startedCount++;
+        if (startedCount === total) {
+          releaseBarrier();
+        }
+        await allStarted;
+        return value;
+      };
 
-      const startTime = Date.now();
+      const operations = ['first', 'second', 'third'].map((value) => ({
+        key: value,
+        fn: barrieredOperation(value),
+      }));
 
       // Act
-      const result = await executor.executeParallel(operations, 'delayed operations');
-      const duration = Date.now() - startTime;
+      const result = await executor.executeParallel(operations, 'parallel operations');
 
       // Assert
       const fulfilledResults = result.filter((r) => r.status === 'fulfilled');
       expect(fulfilledResults).toHaveLength(3);
-      // Параллельное выполнение должно занять ~10ms, а не 25ms (последовательно)
-      expect(duration).toBeLessThan(50); // Даём запас на медленные CI
+      expect(startedCount).toBe(total);
+      expect(ParallelExecutor.getSuccessfulResults(result)).toEqual(['first', 'second', 'third']);
+    });
 
-      if (result[0]?.status === 'fulfilled') {
-        expect(result[0].value).toBe('slow1');
-      }
-      if (result[1]?.status === 'fulfilled') {
-        expect(result[1].value).toBe('fast');
-      }
-      if (result[2]?.status === 'fulfilled') {
-        expect(result[2].value).toBe('slow2');
-      }
+    it('должен ставить операции сверх лимита concurrency в очередь', async () => {
+      // Arrange
+      // Лимит 2 при 3 операциях: третья не должна стартовать, пока держится барьер
+      // из первых двух. Снова без замеров времени — только наблюдаемый порядок событий.
+      const executorWithLimit2 = new ParallelExecutor(logger, {
+        maxBatchSize: 100,
+        maxConcurrentRequests: 2,
+      });
+
+      let startedCount = 0;
+      let releaseBarrier: () => void = (): void => {};
+      const twoStarted = new Promise<void>((resolve) => {
+        releaseBarrier = resolve;
+      });
+      let startedWhenBarrierLifted = 0;
+
+      const operations = ['a', 'b', 'c'].map((value) => ({
+        key: value,
+        fn: async (): Promise<string> => {
+          startedCount++;
+          if (startedCount === 2) {
+            // Третья операция не стартовала: p-limit держит её в очереди
+            startedWhenBarrierLifted = startedCount;
+            releaseBarrier();
+          }
+          await twoStarted;
+          return value;
+        },
+      }));
+
+      // Act
+      const result = await executorWithLimit2.executeParallel(operations, 'throttled operations');
+
+      // Assert
+      expect(startedWhenBarrierLifted).toBe(2);
+      expect(startedCount).toBe(3);
+      expect(ParallelExecutor.getSuccessfulResults(result)).toEqual(['a', 'b', 'c']);
     });
   });
 });

@@ -25,7 +25,6 @@
  */
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
 import * as http from 'node:http';
 import type { Socket } from 'node:net';
 
@@ -58,8 +57,14 @@ interface JsonRpcResponse {
   error?: JsonRpcError;
 }
 
-const STARTUP_DELAY_MS = 900;
-const RESPONSE_TIMEOUT_MS = 8000;
+// В окно теперь входит и старт процесса — фиксированной паузы перед первым
+// запросом больше нет (см. withServer): запись в stdin буферизуется ОС-пайпом
+// независимо от того, успел ли дочерний процесс стартовать.
+const RESPONSE_TIMEOUT_MS = 20000;
+// Запас перед SIGKILL при штатном SIGTERM-остановe: событие 'exit' обычно
+// приходит почти мгновенно, таймер — лишь страховка на случай, если процесс
+// не отреагирует на SIGTERM.
+const SHUTDOWN_GRACE_MS = 2000;
 
 function modernMeta(extra: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -70,21 +75,63 @@ function modernMeta(extra: Record<string, unknown> = {}): Record<string, unknown
   };
 }
 
+interface PendingRequest {
+  resolve: (msg: JsonRpcResponse) => void;
+  reject: (error: Error) => void;
+  timer: NodeJS.Timeout;
+}
+
 class ServerHarness {
   private readonly child: ChildProcessWithoutNullStreams;
   private buffer = '';
-  private readonly waiters = new Map<number, (msg: JsonRpcResponse) => void>();
+  private stderrData = '';
+  private readonly waiters = new Map<number, PendingRequest>();
 
   constructor(envOverrides: Record<string, string> = {}) {
     this.child = spawn('node', [BUNDLE_PATH], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, LOG_LEVEL: 'error', ...BASE_ENV, ...envOverrides },
     });
-    this.child.stdout.on('data', (data: Buffer) => this.onData(data));
+    // Один разделяемый декодер на поток: последовательность, разорванная
+    // границей чанка, склеивается, а не превращается в U+FFFD.
+    this.child.stdout.setEncoding('utf8');
+    this.child.stdout.on('data', (chunk: unknown) => this.onData(chunk));
+    // stderr читается и копится, чтобы попасть в текст отказа — без этого
+    // отказ по 'close'/'error' ниже был бы недиагностируемым ("что-то упало"
+    // вместо конкретной ошибки сервера).
+    this.child.stderr.setEncoding('utf8');
+    this.child.stderr.on('data', (chunk: unknown) => {
+      this.stderrData += assertUtf8Chunk(chunk);
+    });
+
+    // Смерть ребёнка между записью в stdin и обработкой ECONNRESET/EPIPE даёт
+    // необработанное исключение вместо отказа сценария — 'close'/'error' ниже
+    // уже дают настоящую диагностику, здесь только гасим падение процесса.
+    this.child.stdin.on('error', () => {});
+
+    this.child.on('close', (code, signal) => {
+      this.rejectAllPending(
+        `Процесс сервера закрылся (code=${code}, signal=${signal}) до ответа.\n` +
+          `stderr: ${this.stderrData}`
+      );
+    });
+    this.child.on('error', (error) => {
+      this.rejectAllPending(
+        `Ошибка процесса сервера: ${error.message}\nstderr: ${this.stderrData}`
+      );
+    });
   }
 
-  private onData(data: Buffer): void {
-    this.buffer += data.toString();
+  private rejectAllPending(message: string): void {
+    for (const waiter of this.waiters.values()) {
+      clearTimeout(waiter.timer);
+      waiter.reject(new Error(message));
+    }
+    this.waiters.clear();
+  }
+
+  private onData(chunk: unknown): void {
+    this.buffer += assertUtf8Chunk(chunk);
     let idx: number;
     while ((idx = this.buffer.indexOf('\n')) >= 0) {
       const line = this.buffer.slice(0, idx);
@@ -102,7 +149,8 @@ class ServerHarness {
         const waiter = this.waiters.get(msg.id);
         if (waiter) {
           this.waiters.delete(msg.id);
-          waiter(msg);
+          clearTimeout(waiter.timer);
+          waiter.resolve(msg);
         }
       }
     }
@@ -120,13 +168,15 @@ class ServerHarness {
     const pending = new Promise<JsonRpcResponse>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.waiters.delete(id);
-        reject(new Error(`Таймаут ожидания ответа id=${id} method=${method}`));
+        reject(
+          new Error(
+            `Таймаут (${RESPONSE_TIMEOUT_MS}ms) ожидания ответа id=${id} method=${method}.\n` +
+              `stderr: ${this.stderrData}`
+          )
+        );
       }, RESPONSE_TIMEOUT_MS);
 
-      this.waiters.set(id, (msg) => {
-        clearTimeout(timer);
-        resolve(msg);
-      });
+      this.waiters.set(id, { resolve, reject, timer });
     });
 
     this.send({ jsonrpc: '2.0', id, method, ...(params ? { params } : {}) });
@@ -137,13 +187,27 @@ class ServerHarness {
     this.send({ jsonrpc: '2.0', method, ...(params ? { params } : {}) });
   }
 
+  /** SIGTERM → событие 'exit' → SIGKILL по истечении SHUTDOWN_GRACE_MS. */
   async close(): Promise<void> {
-    if (this.child.killed) return;
-    this.child.kill('SIGTERM');
-    await sleep(300);
-    if (!this.child.killed) {
-      this.child.kill('SIGKILL');
-    }
+    if (this.child.exitCode !== null || this.child.signalCode !== null) return;
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = (): void => {
+        if (settled) return;
+        settled = true;
+        this.child.off('exit', onExit);
+        clearTimeout(timer);
+        resolve();
+      };
+      const onExit = (): void => finish();
+
+      this.child.on('exit', onExit);
+      this.child.kill('SIGTERM');
+      const timer = setTimeout(() => {
+        this.child.kill('SIGKILL');
+        finish();
+      }, SHUTDOWN_GRACE_MS);
+    });
   }
 }
 
@@ -152,7 +216,6 @@ async function withServer<T>(
   envOverrides?: Record<string, string>
 ): Promise<T> {
   const harness = new ServerHarness(envOverrides);
-  await sleep(STARTUP_DELAY_MS);
   try {
     return await fn(harness);
   } finally {
@@ -287,6 +350,145 @@ async function legacyInitialize(harness: ServerHarness, id: number): Promise<Jso
   });
   harness.notify('notifications/initialized');
   return response;
+}
+
+const MISMATCH_CONTEXT_CHARS = 120;
+
+/**
+ * Единственный разрешённый способ превратить чанк потока в строку.
+ *
+ * Наивный `chunk.toString()` декодирует каждый чанк независимо и рвёт
+ * многобайтный UTF-8 на границе чанка: буква превращается в два U+FFFD, длина
+ * ответа меняется на символ. Именно это давало «два последовательных
+ * tools/list вернули разные списки» в релизном CI (4 падения из 6). Поэтому
+ * потоки переводятся в `setEncoding('utf8')` — один разделяемый декодер на
+ * поток, корректно склеивающий последовательность через границу чанка, — а
+ * эта проверка не даёт молча вернуться к побайтовому декодированию.
+ */
+function assertUtf8Chunk(chunk: unknown): string {
+  if (typeof chunk !== 'string') {
+    throw new Error(
+      'Поток дочернего процесса не переведён в setEncoding("utf8") — пришёл Buffer. ' +
+        'Декодирование чанка по отдельности рвёт многобайтный UTF-8 на границе чанка.'
+    );
+  }
+  return chunk;
+}
+
+/**
+ * U+FFFD в ответе сервера означает не баг сервера, а испорченное чтение на
+ * стороне теста. Проверка стоит на зелёном пути специально: порча,
+ * случившаяся одинаково в обоих ответах, расхождения не даёт и иначе прошла
+ * бы молча.
+ */
+function assertNoDecodingDamage(label: string, json: string): void {
+  const at = json.indexOf('\uFFFD');
+  if (at < 0) {
+    return;
+  }
+  const window = json.slice(Math.max(0, at - MISMATCH_CONTEXT_CHARS), at + MISMATCH_CONTEXT_CHARS);
+  throw new Error(
+    `${label}: в ответе найден U+FFFD на индексе ${at}. Это ДЕФЕКТ ЧТЕНИЯ на стороне ` +
+      'теста, а не сервера: многобайтный UTF-8 порвался на границе чанка. Проверь, что ' +
+      `поток переведён в setEncoding("utf8") и чанки не декодируются поштучно.\n  ${JSON.stringify(window)}`
+  );
+}
+
+function toolNamesForDiagnostics(tools: unknown): string[] {
+  if (!Array.isArray(tools)) {
+    return [];
+  }
+  return tools.map((tool, index) => {
+    const name = (tool as { name?: unknown } | null)?.name;
+    return typeof name === 'string' ? name : `<no-name@${index}>`;
+  });
+}
+
+function duplicatedNames(names: string[]): string[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const name of names) {
+    if (seen.has(name)) {
+      duplicates.add(name);
+    }
+    seen.add(name);
+  }
+  return [...duplicates];
+}
+
+/**
+ * Отчёт о расхождении двух ответов `tools/list`; `undefined`, когда списки
+ * побайтово совпадают.
+ *
+ * Единственный источник данных о четырёх падениях релиза — лог GitHub Actions,
+ * поэтому отчёт должен быть самодостаточным: по нему решают, что именно
+ * разошлось, без повторного прогона (который локально не воспроизводится).
+ */
+function describeToolsListMismatch(first: unknown, second: unknown): string | undefined {
+  const firstJson = JSON.stringify(first ?? []);
+  const secondJson = JSON.stringify(second ?? []);
+  if (firstJson === secondJson) {
+    return undefined;
+  }
+
+  const lines: string[] = ['===== tools/list mismatch diagnostics ====='];
+  lines.push(`json length: first=${firstJson.length}, second=${secondJson.length} (UTF-16 units)`);
+
+  let diffAt = 0;
+  while (
+    diffAt < firstJson.length &&
+    diffAt < secondJson.length &&
+    firstJson[diffAt] === secondJson[diffAt]
+  ) {
+    diffAt += 1;
+  }
+  const from = Math.max(0, diffAt - MISMATCH_CONTEXT_CHARS);
+  const to = diffAt + MISMATCH_CONTEXT_CHARS;
+  lines.push(`first difference at index ${diffAt}; window [${from}, ${to}):`);
+  lines.push(`  first : ${JSON.stringify(firstJson.slice(from, to))}`);
+  lines.push(`  second: ${JSON.stringify(secondJson.slice(from, to))}`);
+
+  const firstNames = toolNamesForDiagnostics(first);
+  const secondNames = toolNamesForDiagnostics(second);
+  lines.push(`tool count: first=${firstNames.length}, second=${secondNames.length}`);
+  if (firstJson.includes('\uFFFD') || secondJson.includes('\uFFFD')) {
+    lines.push(
+      'ВЕРДИКТ: в ответе есть U+FFFD — это дефект ЧТЕНИЯ на стороне теста ' +
+        '(многобайтный UTF-8 порван на границе чанка), а не расхождение на стороне сервера.'
+    );
+  }
+
+  const firstSet = new Set(firstNames);
+  const secondSet = new Set(secondNames);
+  const onlyInFirst = [...firstSet].filter((name) => !secondSet.has(name));
+  const onlyInSecond = [...secondSet].filter((name) => !firstSet.has(name));
+  lines.push(`only in first (${onlyInFirst.length}): ${onlyInFirst.join(', ') || '-'}`);
+  lines.push(`only in second (${onlyInSecond.length}): ${onlyInSecond.join(', ') || '-'}`);
+
+  const firstDuplicates = duplicatedNames(firstNames);
+  const secondDuplicates = duplicatedNames(secondNames);
+  if (firstDuplicates.length > 0 || secondDuplicates.length > 0) {
+    lines.push(
+      `duplicate names: first=[${firstDuplicates.join(', ')}], second=[${secondDuplicates.join(', ')}]`
+    );
+  }
+
+  if (onlyInFirst.length === 0 && onlyInSecond.length === 0) {
+    const reordered = firstNames
+      .map((name, index) =>
+        secondNames[index] === name
+          ? undefined
+          : `#${index}: ${name} -> ${secondNames[index] ?? '<missing>'}`
+      )
+      .filter((entry): entry is string => entry !== undefined);
+    lines.push(
+      reordered.length === 0
+        ? 'name order: identical (names and order match, so the difference is inside tool definitions - see the window above)'
+        : `name order differs at ${reordered.length} position(s), first 20: ${reordered.slice(0, 20).join('; ')}`
+    );
+  }
+
+  return lines.join('\n');
 }
 
 async function main(): Promise<void> {
@@ -474,10 +676,12 @@ async function main(): Promise<void> {
       await harness.request(1, 'server/discover', { _meta: modernMeta() });
       const first = await harness.request(2, 'tools/list', { _meta: modernMeta() });
       const second = await harness.request(3, 'tools/list', { _meta: modernMeta() });
-      assert(
-        JSON.stringify(first.result?.tools) === JSON.stringify(second.result?.tools),
-        'два последовательных tools/list вернули разные списки tools'
-      );
+      assertNoDecodingDamage('tools/list', JSON.stringify(first.result?.tools));
+      const mismatch = describeToolsListMismatch(first.result?.tools, second.result?.tools);
+      if (mismatch !== undefined) {
+        console.log(mismatch);
+        throw new Error(`два последовательных tools/list вернули разные списки tools\n${mismatch}`);
+      }
     })
   );
 

@@ -1,6 +1,6 @@
 {
   "name": "mcp-framework-monorepo",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "private": true,
   "license": "PolyForm-Shield-1.0.0",
   "author": "Fractalizer",
@@ -28,8 +28,8 @@
     "cpd:report:root": "jscpd packages/framework/*/src packages/servers/*/src --reporters html,console",
     "cpd:root": "jscpd packages/framework/*/src packages/servers/*/src",
     "depcruise": "turbo run depcruise",
-    "depcruise:graph": "depcruise packages --output-type dot | dot -T svg > dependency-graph.svg",
-    "depcruise:root": "depcruise packages --validate",
+    "depcruise:graph": "depcruise packages/framework/*/src packages/servers/*/src --output-type dot | dot -T svg > dependency-graph.svg",
+    "depcruise:root": "depcruise packages/framework/*/src packages/servers/*/src --validate",
     "deps:audit": "npm audit --audit-level=moderate",
     "deps:check": "npx npm-check-updates -u --deep --dep dev,prod",
     "deps:outdated": "npm outdated --workspaces",

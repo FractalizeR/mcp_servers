@@ -6,7 +6,7 @@ import {
 } from '@fractalizer/mcp-core';
 import type { StaticToolMetadata } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import { MAX_ATTACHMENT_SIZE } from '#wiki_api/api_operations/index.js';
+import { MAX_ATTACHMENT_SIZE } from '#constants';
 import { UploadAttachmentOutputDataSchema } from './upload-attachment.schema.js';
 
 export const UPLOAD_ATTACHMENT_TOOL_METADATA: StaticToolMetadata = {

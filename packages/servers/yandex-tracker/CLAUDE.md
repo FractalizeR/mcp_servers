@@ -373,11 +373,11 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
 - ESLint правила: `max-params` (≤5), `complexity` (≤15), `max-depth` (≤5)
 - Режим `warn` — не блокирует build, но предупреждает
 
-**Build Number:**
-- Автоматически инкрементируется при каждой сборке бандла (`npm run build`)
-- Хранится в `manifest.json` → `_meta.build.number`
-- Помогает избежать кеширования при обновлениях
-- Формат версии: `{version}+{buildNumber}` (например, `0.1.0+42`)
+**Build hash (MCPB):**
+- `manifest.json` — производный артефакт, в git не хранится (`.gitignore`)
+- Генерируется из `manifest.template.json` только в `npm run build:mcpb`
+  (`packages/servers/scripts/increment-build.ts`), обычный `npm run build` его не трогает
+- Формат версии: `{version}+{gitHash}` (например, `1.9.0+a1b2c3d`)
 
 ---
 

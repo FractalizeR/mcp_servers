@@ -126,7 +126,8 @@ function bindCacheLayer(container: Container): void {
  */
 function bindOperations(container: Container): void {
   for (const definition of OPERATION_DEFINITIONS) {
-    container.bind(definition.symbol).toDynamicValue(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const factory = (): any => {
       const httpClient = container.get<IHttpClient>(TYPES.HttpClient);
       const cacheManager = container.get<CacheManager>(TYPES.CacheManager);
       const logger = container.get<Logger>(TYPES.Logger);
@@ -137,7 +138,15 @@ function bindOperations(container: Container): void {
       }
 
       return new definition.operationClass(httpClient, cacheManager, logger);
-    });
+    };
+
+    // Двойная регистрация — как в tracker/wiki:
+    // 1. Symbol-based: символы принадлежат composition-root и остаются внутри него.
+    container.bind(definition.symbol).toDynamicValue(factory);
+    // 2. Class-based: потребители в слое facade инжектят сам класс операции и
+    //    поэтому не импортируют composition-root.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    container.bind(definition.operationClass as any).toDynamicValue(factory);
   }
 }
 
@@ -154,6 +163,16 @@ function bindContainers(container: Container): void {
   container
     .bind<TaskOperationsContainer>(TYPES.TaskOperationsContainer)
     .to(TaskOperationsContainer);
+
+  // Class-based алиасы: TickTickFacade инжектит классы контейнеров, а не символы.
+  container
+    .bind<ProjectOperationsContainer>(ProjectOperationsContainer)
+    .toDynamicValue(() =>
+      container.get<ProjectOperationsContainer>(TYPES.ProjectOperationsContainer)
+    );
+  container
+    .bind<TaskOperationsContainer>(TaskOperationsContainer)
+    .toDynamicValue(() => container.get<TaskOperationsContainer>(TYPES.TaskOperationsContainer));
 }
 
 /**
