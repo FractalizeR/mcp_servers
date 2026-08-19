@@ -69,7 +69,7 @@
       "dependsOn": ["^build"],
       "cache": true,
       "inputs": ["src/**/*.ts", "tests/**/*.ts", "tsconfig*.json"],
-      "outputs": ["*.tsbuildinfo"]
+      "outputs": []
     },
     "cpd": {
       "cache": true,
