@@ -122,6 +122,46 @@ describe('DevSession.open', () => {
     ).rejects.toThrow(HandshakeTimeoutError);
   });
 
+  it('накапливает stderr без порчи многобайтного UTF-8, разорванного на границе чанка', async () => {
+    const transport = new FakeTransport();
+    transport.send = () => new Promise(() => {});
+    const full = Buffer.from('привет, мир\n', 'utf-8');
+    // Разрезаем ровно внутри двухбайтовой последовательности первого символа
+    // ('п' = 0xD0 0xBF), эмулируя разрыв многобайтного символа на границе
+    // TCP/pipe-чанка — ровно кейс из коммита d5de3d88.
+    transport.stderr.write(full.subarray(0, 1));
+    transport.stderr.write(full.subarray(1));
+
+    const masker = createMasker({ clientEnv: {} });
+    const error = await DevSession.open({
+      launch: LAUNCH,
+      masker,
+      transportFactory: () => transport,
+      handshakeTimeoutMs: 30,
+    }).catch((e: unknown) => e as HandshakeTimeoutError);
+
+    expect(error).toBeInstanceOf(HandshakeTimeoutError);
+    expect((error as HandshakeTimeoutError).message).not.toContain('�');
+    expect((error as HandshakeTimeoutError).message).toContain('привет, мир');
+  });
+
+  it('не теряет хвост потока: последний чанк без завершающего символа доходит до буфера', async () => {
+    const transport = new FakeTransport();
+    transport.send = () => new Promise(() => {});
+    transport.stderr.write('первая строка\n');
+    transport.stderr.write('незавершённый хвост без перевода строки');
+
+    const masker = createMasker({ clientEnv: {} });
+    const error = (await DevSession.open({
+      launch: LAUNCH,
+      masker,
+      transportFactory: () => transport,
+      handshakeTimeoutMs: 30,
+    }).catch((e: unknown) => e)) as HandshakeTimeoutError;
+
+    expect(error.message).toContain('незавершённый хвост без перевода строки');
+  });
+
   it('закрывает транспорт при неудавшемся handshake (не остаётся висеть)', async () => {
     const transport = new FakeTransport();
     transport.send = () => new Promise(() => {});

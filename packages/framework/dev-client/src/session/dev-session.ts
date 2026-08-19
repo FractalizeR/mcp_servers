@@ -174,12 +174,21 @@ export class DevSession {
 
   private attachStderrCapture(): void {
     const withStderr = this.transport as {
-      stderr?: { on?: (event: string, cb: (chunk: Buffer) => void) => void } | null;
+      stderr?: {
+        on?: (event: string, cb: (chunk: string) => void) => void;
+        setEncoding?: (encoding: string) => void;
+      } | null;
     };
     const stream = withStderr.stderr;
     if (!stream || typeof stream.on !== 'function') return;
-    stream.on('data', (chunk: Buffer) => {
-      const text = chunk.toString('utf-8');
+    // setEncoding('utf-8') переводит поток на один разделяемый StringDecoder
+    // вместо побайтового `chunk.toString()` на каждый 'data' — тот приём ровно
+    // тот антипаттерн из коммита d5de3d88 (см. packages/servers/scripts/
+    // mcp-wire-harness/utf8-stream.ts): многобайтный символ, попавший на
+    // границу чанка, декодируется половинами в два U+FFFD. Node сам флашит
+    // декодер на EOF, так что хвост потока не теряется.
+    stream.setEncoding?.('utf-8');
+    stream.on('data', (text: string) => {
       this.stderrChunks.push(text);
       this.stderrLength += text.length;
       while (this.stderrLength > STDERR_BUFFER_LIMIT_CHARS && this.stderrChunks.length > 1) {
