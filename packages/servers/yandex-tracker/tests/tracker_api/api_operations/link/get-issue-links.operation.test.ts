@@ -10,6 +10,7 @@ import type { ServerConfig } from '#config';
 import { GetIssueLinksOperation } from '#tracker_api/api_operations/link/get-issue-links.operation.js';
 import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
 import { createLinkListFixture } from '#helpers/link.fixture.js';
+import { at } from '#helpers/tool-result.helper.js';
 
 describe('GetIssueLinksOperation', () => {
   let operation: GetIssueLinksOperation;
@@ -57,11 +58,12 @@ describe('GetIssueLinksOperation', () => {
       const results = await operation.execute(['TEST-1']);
 
       expect(results).toHaveLength(1);
-      expect(results[0].status).toBe('fulfilled');
-      if (results[0].status === 'fulfilled') {
-        expect(results[0].value.items).toHaveLength(3);
-        expect(results[0].value.pagination.hasNextPage).toBe(false);
-        expect(results[0].value.pagination.fetchedAll).toBe(true);
+      const results0 = at(results);
+      expect(results0.status).toBe('fulfilled');
+      if (results0.status === 'fulfilled') {
+        expect(results0.value.items).toHaveLength(3);
+        expect(results0.value.pagination.hasNextPage).toBe(false);
+        expect(results0.value.pagination.fetchedAll).toBe(true);
       }
     });
 
@@ -77,9 +79,10 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1']);
 
-      if (results[0].status === 'fulfilled') {
-        expect(results[0].value.pagination.hasNextPage).toBe(false);
-        expect(results[0].value.pagination.fetchedAll).toBe(true);
+      const results0 = at(results);
+      if (results0.status === 'fulfilled') {
+        expect(results0.value.pagination.hasNextPage).toBe(false);
+        expect(results0.value.pagination.fetchedAll).toBe(true);
       } else {
         throw new Error('expected fulfilled');
       }
@@ -97,8 +100,9 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1']);
 
-      if (results[0].status === 'fulfilled') {
-        expect(results[0].value.pagination.hasNextPage).toBe(true);
+      const results0 = at(results);
+      if (results0.status === 'fulfilled') {
+        expect(results0.value.pagination.hasNextPage).toBe(true);
       } else {
         throw new Error('expected fulfilled');
       }
@@ -111,8 +115,8 @@ describe('GetIssueLinksOperation', () => {
       const results = await operation.execute(['TEST-1', 'TEST-2']);
 
       expect(results).toHaveLength(2);
-      expect(results[0].status).toBe('fulfilled');
-      expect(results[1].status).toBe('rejected');
+      expect(at(results).status).toBe('fulfilled');
+      expect(at(results, 1).status).toBe('rejected');
     });
 
     it('возвращает пустой массив для пустого входа', async () => {
@@ -139,10 +143,11 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1'], { fetchAll: true });
 
-      if (results[0].status === 'fulfilled') {
-        expect(results[0].value.items).toHaveLength(2);
-        expect(results[0].value.pagination.fetchedAll).toBe(true);
-        expect(results[0].value.pagination.pagesFetched).toBe(2);
+      const results0 = at(results);
+      if (results0.status === 'fulfilled') {
+        expect(results0.value.items).toHaveLength(2);
+        expect(results0.value.pagination.fetchedAll).toBe(true);
+        expect(results0.value.pagination.pagesFetched).toBe(2);
       }
     });
 
@@ -158,9 +163,10 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1'], { fetchAll: true, maxItems: 2 });
 
-      if (results[0].status === 'fulfilled') {
-        expect(results[0].value.items).toHaveLength(2);
-        expect(results[0].value.pagination.truncated).toBe(true);
+      const results0 = at(results);
+      if (results0.status === 'fulfilled') {
+        expect(results0.value.items).toHaveLength(2);
+        expect(results0.value.pagination.truncated).toBe(true);
       }
     });
   });
@@ -175,11 +181,12 @@ describe('GetIssueLinksOperation', () => {
       });
 
       const first = await operation.execute(['TEST-1'], { perPage: 1 });
-      expect(first[0].status).toBe('fulfilled');
-      if (first[0].status !== 'fulfilled') {
+      const first0 = at(first);
+      expect(first0.status).toBe('fulfilled');
+      if (first0.status !== 'fulfilled') {
         return;
       }
-      const nextCursor = first[0].value.pagination.nextCursor;
+      const nextCursor = first0.value.pagination.nextCursor;
       expect(nextCursor).toBeDefined();
 
       // Курсор декодируется в относительный next-путь.
@@ -191,20 +198,22 @@ describe('GetIssueLinksOperation', () => {
       httpClient.setResponse('GET', '/v3/issues/TEST-1/links?id=NEXT', createLinkListFixture(2));
 
       const second = await operation.execute(['TEST-1'], { cursor: nextCursor });
-      expect(second[0].status).toBe('fulfilled');
-      if (second[0].status === 'fulfilled') {
-        expect(second[0].value.items).toHaveLength(2);
-        expect(second[0].value.pagination.hasNextPage).toBe(false);
-        expect(second[0].value.pagination.nextCursor).toBeUndefined();
+      const second0 = at(second);
+      expect(second0.status).toBe('fulfilled');
+      if (second0.status === 'fulfilled') {
+        expect(second0.value.items).toHaveLength(2);
+        expect(second0.value.pagination.hasNextPage).toBe(false);
+        expect(second0.value.pagination.nextCursor).toBeUndefined();
       }
     });
 
     it('битый курсор → InvalidCursorError (без тихого fallback)', async () => {
       const results = await operation.execute(['TEST-1'], { cursor: 'broken-cursor' });
 
-      expect(results[0].status).toBe('rejected');
-      if (results[0].status === 'rejected') {
-        expect(results[0].reason).toBeInstanceOf(InvalidCursorError);
+      const results0 = at(results);
+      expect(results0.status).toBe('rejected');
+      if (results0.status === 'rejected') {
+        expect(results0.reason).toBeInstanceOf(InvalidCursorError);
       }
     });
 
@@ -213,9 +222,10 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1'], { cursor: alien });
 
-      expect(results[0].status).toBe('rejected');
-      if (results[0].status === 'rejected') {
-        expect(results[0].reason).toBeInstanceOf(InvalidCursorError);
+      const results0 = at(results);
+      expect(results0.status).toBe('rejected');
+      if (results0.status === 'rejected') {
+        expect(results0.reason).toBeInstanceOf(InvalidCursorError);
       }
     });
 

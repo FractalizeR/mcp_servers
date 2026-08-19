@@ -6,6 +6,7 @@ import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { EditCommentInput } from '#tracker_api/dto/index.js';
 import type { ServerConfig } from '#config';
 import { EditCommentOperation } from '#tracker_api/api_operations/comment/edit-comment.operation.js';
+import { at } from '#helpers/tool-result.helper.js';
 
 describe('EditCommentOperation', () => {
   let operation: EditCommentOperation;
@@ -186,10 +187,10 @@ describe('EditCommentOperation', () => {
       const result = await operation.executeMany(comments);
 
       expect(result).toHaveLength(2);
-      expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1:123');
-      expect(result[1].status).toBe('fulfilled');
-      expect(result[1].key).toBe('TEST-2:456');
+      expect(at(result).status).toBe('fulfilled');
+      expect(at(result).key).toBe('TEST-1:123');
+      expect(at(result, 1).status).toBe('fulfilled');
+      expect(at(result, 1).key).toBe('TEST-2:456');
     });
 
     it('should handle partial failures when editing comments', async () => {
@@ -215,12 +216,13 @@ describe('EditCommentOperation', () => {
       const result = await operation.executeMany(comments);
 
       expect(result).toHaveLength(2);
-      expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1:123');
-      expect(result[1].status).toBe('rejected');
-      expect(result[1].key).toBe('TEST-2:456');
-      if (result[1].status === 'rejected') {
-        expect(result[1].reason.message).toBe('Comment not found');
+      expect(at(result).status).toBe('fulfilled');
+      expect(at(result).key).toBe('TEST-1:123');
+      const result1 = at(result, 1);
+      expect(result1.status).toBe('rejected');
+      expect(result1.key).toBe('TEST-2:456');
+      if (result1.status === 'rejected') {
+        expect(result1.reason.message).toBe('Comment not found');
       }
     });
 

@@ -30,3 +30,18 @@ export function getTextContent(result: ToolResult, index = 0): string {
 export function parseTextContent<T>(result: ToolResult, index = 0): T {
   return JSON.parse(getTextContent(result, index)) as T;
 }
+
+/**
+ * Элемент массива по индексу. `noUncheckedIndexedAccess` делает `items[i]`
+ * возможно-`undefined`; молчаливое чтение поля у отсутствующего элемента даёт
+ * проверку, которая проходит при пустом ответе. Здесь отсутствие — провал.
+ */
+export function at<T>(items: readonly T[], index = 0): T {
+  const item = items[index];
+  if (item === undefined) {
+    throw new Error(
+      `элемент [${String(index)}] отсутствует: длина массива ${String(items.length)}`
+    );
+  }
+  return item;
+}

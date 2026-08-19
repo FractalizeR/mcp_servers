@@ -13,6 +13,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ServerConfig } from '#config';
 import { GetAttachmentsOperation } from '#tracker_api/api_operations/attachment/get-attachments.operation.js';
 import { createAttachmentListFixture } from '#helpers/attachment.fixture.js';
+import { at } from '#helpers/tool-result.helper.js';
 
 describe('GetAttachmentsOperation', () => {
   let operation: GetAttachmentsOperation;
@@ -121,10 +122,11 @@ describe('GetAttachmentsOperation', () => {
       const results = await operation.executeMany(['TEST-1', 'TEST-2']);
 
       expect(results).toHaveLength(2);
-      expect(results[0].status).toBe('fulfilled');
-      if (results[0].status === 'fulfilled') {
-        expect(results[0].value.items).toHaveLength(2);
-        expect(results[0].value.pagination.fetchedAll).toBe(true);
+      const results0 = at(results);
+      expect(results0.status).toBe('fulfilled');
+      if (results0.status === 'fulfilled') {
+        expect(results0.value.items).toHaveLength(2);
+        expect(results0.value.pagination.fetchedAll).toBe(true);
       }
     });
 
@@ -137,8 +139,8 @@ describe('GetAttachmentsOperation', () => {
 
       const results = await operation.executeMany(['TEST-1', 'TEST-2']);
 
-      expect(results[0].status).toBe('fulfilled');
-      expect(results[1].status).toBe('rejected');
+      expect(at(results).status).toBe('fulfilled');
+      expect(at(results, 1).status).toBe('rejected');
     });
 
     it('возвращает пустой массив для пустого входа', async () => {

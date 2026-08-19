@@ -8,7 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import { getTextContent, at } from '#helpers/tool-result.helper.js';
 
 describe('DeleteChecklistItemTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -220,9 +220,9 @@ describe('DeleteChecklistItemTool', () => {
       expect(parsed.data.failed).toBe(1);
       expect(parsed.data.items).toHaveLength(1);
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].issueId).toBe('TEST-456');
-      expect(parsed.data.errors[0].itemId).toBe('item-456');
-      expect(parsed.data.errors[0].error).toContain('Item not found');
+      expect(at(parsed.data.errors).issueId).toBe('TEST-456');
+      expect(at(parsed.data.errors).itemId).toBe('item-456');
+      expect(at(parsed.data.errors).error).toContain('Item not found');
     });
 
     it('должен обработать полную ошибку batch', async () => {
@@ -258,7 +258,7 @@ describe('DeleteChecklistItemTool', () => {
         };
       };
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].error).toContain('Checklist item not found');
+      expect(at(parsed.data.errors).error).toContain('Checklist item not found');
     });
 
     it('должен обработать ошибку доступа (403)', async () => {
@@ -278,7 +278,7 @@ describe('DeleteChecklistItemTool', () => {
         };
       };
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].error).toContain('Access denied');
+      expect(at(parsed.data.errors).error).toContain('Access denied');
     });
 
     it('должен обработать ошибку несуществующей задачи (404)', async () => {
@@ -302,7 +302,7 @@ describe('DeleteChecklistItemTool', () => {
         };
       };
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].error).toContain('Issue not found');
+      expect(at(parsed.data.errors).error).toContain('Issue not found');
     });
   });
 });

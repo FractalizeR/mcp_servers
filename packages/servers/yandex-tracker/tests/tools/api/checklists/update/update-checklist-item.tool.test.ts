@@ -11,7 +11,7 @@ import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createChecklistItemFixture } from '#helpers/checklist-item.fixture.js';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import { getTextContent, at } from '#helpers/tool-result.helper.js';
 
 describe('UpdateChecklistItemTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -262,8 +262,8 @@ describe('UpdateChecklistItemTool', () => {
       expect(parsed.data.successful).toBe(1);
       expect(parsed.data.failed).toBe(0);
       expect(parsed.data.items).toHaveLength(1);
-      expect(parsed.data.items[0].issueId).toBe('TEST-123');
-      expect(parsed.data.items[0].checklistItemId).toBe('item-1');
+      expect(at(parsed.data.items).issueId).toBe('TEST-123');
+      expect(at(parsed.data.items).checklistItemId).toBe('item-1');
     });
 
     it('должен вернуть несколько обновлённых элементов', async () => {
@@ -331,10 +331,10 @@ describe('UpdateChecklistItemTool', () => {
       expect(parsed.data.successful).toBe(1);
       expect(parsed.data.failed).toBe(1);
       expect(parsed.data.items).toHaveLength(1);
-      expect(parsed.data.items[0].issueId).toBe('TEST-123');
+      expect(at(parsed.data.items).issueId).toBe('TEST-123');
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].issueId).toBe('TEST-456');
-      expect(parsed.data.errors[0].error).toContain('Item not found');
+      expect(at(parsed.data.errors).issueId).toBe('TEST-456');
+      expect(at(parsed.data.errors).error).toContain('Item not found');
     });
 
     it('должен обработать полный провал batch операции', async () => {

@@ -11,7 +11,7 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createCommentListFixture } from '#helpers/comment.fixture.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/index.js';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import { getTextContent, at } from '#helpers/tool-result.helper.js';
 
 /** Метаданные пагинации по умолчанию для single-page без Link. */
 const defaultMeta: PaginationMeta = {
@@ -319,8 +319,8 @@ describe('GetCommentsTool', () => {
       expect(parsed.data.successful).toBe(1);
       expect(parsed.data.failed).toBe(0);
       expect(parsed.data.comments).toHaveLength(1);
-      expect(parsed.data.comments[0].issueId).toBe('TEST-123');
-      expect(parsed.data.comments[0].count).toBe(3);
+      expect(at(parsed.data.comments).issueId).toBe('TEST-123');
+      expect(at(parsed.data.comments).count).toBe(3);
       expect(parsed.data.fieldsReturned).toEqual(['id', 'text']);
     });
 
@@ -351,14 +351,14 @@ describe('GetCommentsTool', () => {
         };
       };
       // Регрессия формата: прежние ключи на месте
-      expect(parsed.data.comments[0].issueId).toBe('TEST-123');
-      expect(parsed.data.comments[0].comments).toHaveLength(3);
-      expect(parsed.data.comments[0].count).toBe(3);
+      expect(at(parsed.data.comments).issueId).toBe('TEST-123');
+      expect(at(parsed.data.comments).comments).toHaveLength(3);
+      expect(at(parsed.data.comments).count).toBe(3);
       // Аддитивно: метаданные пагинации
-      expect(parsed.data.comments[0].pagination).toBeDefined();
-      expect(parsed.data.comments[0].pagination.hasNextPage).toBe(true);
-      expect(parsed.data.comments[0].pagination.fetchedAll).toBe(false);
-      expect(parsed.data.comments[0].pagination.total).toBe(42);
+      expect(at(parsed.data.comments).pagination).toBeDefined();
+      expect(at(parsed.data.comments).pagination.hasNextPage).toBe(true);
+      expect(at(parsed.data.comments).pagination.fetchedAll).toBe(false);
+      expect(at(parsed.data.comments).pagination.total).toBe(42);
     });
 
     it('должен передавать fetchAll и maxItems в фасад', async () => {
@@ -429,7 +429,7 @@ describe('GetCommentsTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toBe(1);
-      expect(parsed.data.comments[0].count).toBe(0);
+      expect(at(parsed.data.comments).count).toBe(0);
     });
 
     it('должен обработать batch результаты для нескольких задач', async () => {
@@ -469,10 +469,10 @@ describe('GetCommentsTool', () => {
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toBe(2);
       expect(parsed.data.comments).toHaveLength(2);
-      expect(parsed.data.comments[0].issueId).toBe('TEST-123');
-      expect(parsed.data.comments[0].count).toBe(3);
-      expect(parsed.data.comments[1].issueId).toBe('TEST-456');
-      expect(parsed.data.comments[1].count).toBe(0);
+      expect(at(parsed.data.comments).issueId).toBe('TEST-123');
+      expect(at(parsed.data.comments).count).toBe(3);
+      expect(at(parsed.data.comments, 1).issueId).toBe('TEST-456');
+      expect(at(parsed.data.comments, 1).count).toBe(0);
     });
   });
 

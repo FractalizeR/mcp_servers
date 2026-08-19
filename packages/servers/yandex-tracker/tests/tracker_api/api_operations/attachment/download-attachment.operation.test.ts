@@ -13,6 +13,7 @@ import {
   createAttachmentListFixture,
 } from '#helpers/attachment.fixture.js';
 import { createMockFileBuffer, compareBuffers } from '#helpers/file-upload.helper.js';
+import { at } from '#helpers/tool-result.helper.js';
 
 describe('DownloadAttachmentOperation', () => {
   let operation: DownloadAttachmentOperation;
@@ -184,7 +185,7 @@ describe('DownloadAttachmentOperation', () => {
       const issueId = 'TEST-123';
       const attachmentId = '67890';
       const mockAttachments: AttachmentWithUnknownFields[] = createAttachmentListFixture(3);
-      mockAttachments[1].id = attachmentId; // Нужный файл в середине списка
+      at(mockAttachments, 1).id = attachmentId; // Нужный файл в середине списка
 
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockAttachments);
 

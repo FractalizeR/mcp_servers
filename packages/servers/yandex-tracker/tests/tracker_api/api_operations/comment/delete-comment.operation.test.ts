@@ -4,6 +4,7 @@ import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-m
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ServerConfig } from '#config';
 import { DeleteCommentOperation } from '#tracker_api/api_operations/comment/delete-comment.operation.js';
+import { at } from '#helpers/tool-result.helper.js';
 
 describe('DeleteCommentOperation', () => {
   let operation: DeleteCommentOperation;
@@ -104,10 +105,10 @@ describe('DeleteCommentOperation', () => {
       const result = await operation.executeMany(comments);
 
       expect(result).toHaveLength(2);
-      expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1:123');
-      expect(result[1].status).toBe('fulfilled');
-      expect(result[1].key).toBe('TEST-2:456');
+      expect(at(result).status).toBe('fulfilled');
+      expect(at(result).key).toBe('TEST-1:123');
+      expect(at(result, 1).status).toBe('fulfilled');
+      expect(at(result, 1).key).toBe('TEST-2:456');
     });
 
     it('should handle partial failures when deleting comments', async () => {
@@ -123,12 +124,13 @@ describe('DeleteCommentOperation', () => {
       const result = await operation.executeMany(comments);
 
       expect(result).toHaveLength(2);
-      expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1:123');
-      expect(result[1].status).toBe('rejected');
-      expect(result[1].key).toBe('TEST-2:456');
-      if (result[1].status === 'rejected') {
-        expect(result[1].reason.message).toBe('Comment not found');
+      expect(at(result).status).toBe('fulfilled');
+      expect(at(result).key).toBe('TEST-1:123');
+      const result1 = at(result, 1);
+      expect(result1.status).toBe('rejected');
+      expect(result1.key).toBe('TEST-2:456');
+      if (result1.status === 'rejected') {
+        expect(result1.reason.message).toBe('Comment not found');
       }
     });
 

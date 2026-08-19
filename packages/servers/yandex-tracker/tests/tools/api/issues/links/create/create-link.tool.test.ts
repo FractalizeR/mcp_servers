@@ -11,7 +11,7 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createLinkFixture, createSubtaskLinkFixture } from '#helpers/link.fixture.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import { getTextContent, at } from '#helpers/tool-result.helper.js';
 
 describe('CreateLinkTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -267,7 +267,7 @@ describe('CreateLinkTool', () => {
       expect(parsed.data.failed).toBe(1);
       expect(parsed.data.links).toHaveLength(1);
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].error).toContain('Issue not found');
+      expect(at(parsed.data.errors).error).toContain('Issue not found');
     });
 
     it('должен фильтровать поля для всех созданных связей', async () => {
@@ -311,11 +311,11 @@ describe('CreateLinkTool', () => {
         };
       };
       // Проверяем, что в результате только запрошенные поля
-      expect(parsed.data.links[0].link.id).toBeDefined();
-      expect(parsed.data.links[0].link.type).toBeDefined();
+      expect(at(parsed.data.links).link.id).toBeDefined();
+      expect(at(parsed.data.links).link.type).toBeDefined();
       // object и direction не должны быть в результате, т.к. не запрошены
-      expect(parsed.data.links[0].link.object).toBeUndefined();
-      expect(parsed.data.links[0].link.direction).toBeUndefined();
+      expect(at(parsed.data.links).link.object).toBeUndefined();
+      expect(at(parsed.data.links).link.direction).toBeUndefined();
     });
 
     it('должен обработать общую ошибку от facade', async () => {
@@ -406,7 +406,7 @@ describe('CreateLinkTool', () => {
         success: boolean;
         data: { links: Array<{ issueId: string; linkId: string }> };
       };
-      expect(parsed.data.links[0].linkId).toBe('12345');
+      expect(at(parsed.data.links).linkId).toBe('12345');
     });
   });
 });

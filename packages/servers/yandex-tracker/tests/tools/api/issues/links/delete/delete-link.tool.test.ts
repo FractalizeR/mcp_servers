@@ -8,7 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import { getTextContent, at } from '#helpers/tool-result.helper.js';
 
 describe('DeleteLinkTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -110,9 +110,9 @@ describe('DeleteLinkTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toHaveLength(1);
-      expect(parsed.data.successful[0].issueId).toBe('TEST-123');
-      expect(parsed.data.successful[0].linkId).toBe('link789');
-      expect(parsed.data.successful[0].success).toBe(true);
+      expect(at(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(at(parsed.data.successful).linkId).toBe('link789');
+      expect(at(parsed.data.successful).success).toBe(true);
     });
 
     it('должен обработать ошибки от facade', async () => {

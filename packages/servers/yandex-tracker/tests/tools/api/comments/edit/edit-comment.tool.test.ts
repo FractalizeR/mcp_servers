@@ -9,7 +9,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createEditedCommentFixture } from '#helpers/comment.fixture.js';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import { getTextContent, at } from '#helpers/tool-result.helper.js';
 
 describe('EditCommentTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -254,9 +254,9 @@ describe('EditCommentTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.successful).toHaveLength(1);
       expect(parsed.data.failed).toHaveLength(1);
-      expect(parsed.data.failed[0].issueId).toBe('TEST-456');
-      expect(parsed.data.failed[0].commentId).toBe('67890');
-      expect(parsed.data.failed[0].error).toContain('Comment not found');
+      expect(at(parsed.data.failed).issueId).toBe('TEST-456');
+      expect(at(parsed.data.failed).commentId).toBe('67890');
+      expect(at(parsed.data.failed).error).toContain('Comment not found');
     });
 
     it('должен обработать полную ошибку batch', async () => {
@@ -290,7 +290,7 @@ describe('EditCommentTool', () => {
         };
       };
       expect(parsed.data.failed).toHaveLength(1);
-      expect(parsed.data.failed[0].error).toContain('Comment not found');
+      expect(at(parsed.data.failed).error).toContain('Comment not found');
     });
 
     it('должен обработать ошибку доступа (403)', async () => {
@@ -311,7 +311,7 @@ describe('EditCommentTool', () => {
         };
       };
       expect(parsed.data.failed).toHaveLength(1);
-      expect(parsed.data.failed[0].error).toContain('Access denied');
+      expect(at(parsed.data.failed).error).toContain('Access denied');
     });
   });
 });

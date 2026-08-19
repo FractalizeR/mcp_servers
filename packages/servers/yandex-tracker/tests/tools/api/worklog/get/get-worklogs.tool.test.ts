@@ -11,7 +11,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/index.js';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import { getTextContent, at } from '#helpers/tool-result.helper.js';
 
 /** Метаданные пагинации по умолчанию (одна страница, всё получено). */
 const META: PaginationMeta = {
@@ -147,10 +147,10 @@ describe('GetWorklogsTool', () => {
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
-      expect(parsed.data.worklogs[0].issueId).toBe('TEST-1');
-      expect(parsed.data.worklogs[0].count).toBe(2);
-      expect(parsed.data.worklogs[0].worklogs).toHaveLength(2);
-      expect(parsed.data.worklogs[0].pagination).toMatchObject({
+      expect(at(parsed.data.worklogs).issueId).toBe('TEST-1');
+      expect(at(parsed.data.worklogs).count).toBe(2);
+      expect(at(parsed.data.worklogs).worklogs).toHaveLength(2);
+      expect(at(parsed.data.worklogs).pagination).toMatchObject({
         hasNextPage: false,
         fetchedAll: true,
       });
@@ -166,8 +166,8 @@ describe('GetWorklogsTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         data: { worklogs: Array<{ worklogs: Array<Record<string, unknown>> }> };
       };
-      expect(parsed.data.worklogs[0].worklogs[0]).toHaveProperty('id');
-      expect(parsed.data.worklogs[0].worklogs[0]).not.toHaveProperty('duration');
+      expect(at(parsed.data.worklogs).worklogs[0]).toHaveProperty('id');
+      expect(at(parsed.data.worklogs).worklogs[0]).not.toHaveProperty('duration');
     });
   });
 
