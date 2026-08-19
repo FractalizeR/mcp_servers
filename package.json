@@ -45,6 +45,7 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "lint:quiet": "turbo run lint:quiet",
+    "lint:servers-scripts": "eslint packages/servers/scripts --ext .ts",
     "loc": "tsx scripts/cloc-summary.ts",
     "loc:by-file": "cloc packages/framework packages/servers --exclude-dir=node_modules,dist,.git --by-file",
     "loc:full": "cloc packages/framework packages/servers --exclude-dir=node_modules,dist,.git",

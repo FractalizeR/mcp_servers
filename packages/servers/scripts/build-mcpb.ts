@@ -18,6 +18,7 @@
 
 import { packExtension } from '@anthropic-ai/mcpb/cli';
 import { validateManifest } from '@anthropic-ai/mcpb/node';
+import { accessSync } from 'node:fs';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
@@ -40,7 +41,7 @@ function findMonorepoRoot(packageRoot: string): string {
     const turboPath = path.join(current, 'turbo.json');
     try {
       // Синхронная проверка для простоты
-      require('node:fs').accessSync(turboPath);
+      accessSync(turboPath);
       return current;
     } catch {
       current = path.dirname(current);

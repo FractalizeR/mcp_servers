@@ -56,14 +56,14 @@
     },
     "lint": {
       "cache": true,
-      "inputs": ["src/**/*.ts", "eslint.config.js", "package.json"]
+      "inputs": ["src/**/*.ts", "scripts/**/*.ts", "eslint.config.js", "package.json"]
     },
     "lint:fix": {
       "cache": false
     },
     "lint:quiet": {
       "cache": true,
-      "inputs": ["src/**/*.ts", "eslint.config.js", "package.json"]
+      "inputs": ["src/**/*.ts", "scripts/**/*.ts", "eslint.config.js", "package.json"]
     },
     "typecheck": {
       "dependsOn": ["^build"],

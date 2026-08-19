@@ -61,11 +61,17 @@ turbo run $TURBO_TASKS $TURBO_FLAGS
 # see root package.json), so it belongs here alongside knip:root /
 # validate:docs:root rather than in TURBO_TASKS above. Was missing entirely
 # before this fix, so `prettier --check` could fail while CI stayed green.
+# lint:servers-scripts: packages/servers/scripts (общие скрипты сборки mcpb)
+# не является npm-workspace — у него нет package.json, поэтому turbo run lint
+# его не видит. Без этого шага каталог остаётся вне линта, как и весь
+# scripts/** до этого изменения.
 if $QUIET; then
+  npm run lint:servers-scripts --silent
   npm run knip:root --silent 2>&1 | tail -1
   npm run validate:docs:root --silent 2>/dev/null | grep -v '^$' | tail -1
   npm run format:check --silent
 else
+  npm run lint:servers-scripts
   npm run knip:root
   npm run validate:docs:root
   npm run format:check
