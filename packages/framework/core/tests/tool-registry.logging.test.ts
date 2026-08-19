@@ -71,9 +71,9 @@ class ThrowingTool extends EchoTool {
 
 /** Собирает ВСЕ строковые/объектные аргументы всех вызовов всех методов логгера */
 function collectAllLoggedArgs(mockLogger: Logger): unknown[] {
-  const spies = [mockLogger.debug, mockLogger.info, mockLogger.warn, mockLogger.error] as Array<{
-    mock: { calls: unknown[][] };
-  }>;
+  const spies = [mockLogger.debug, mockLogger.info, mockLogger.warn, mockLogger.error].map((fn) =>
+    vi.mocked(fn)
+  );
   return spies.flatMap((spy) => spy.mock.calls.flat());
 }
 

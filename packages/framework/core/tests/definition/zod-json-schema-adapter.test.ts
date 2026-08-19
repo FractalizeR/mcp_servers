@@ -291,7 +291,6 @@ describe('zodToMcpInputSchema', () => {
 
   describe('Ошибки и исключения', () => {
     it('должен выбросить ошибку если schema не является z.object()', () => {
-      // @ts-expect-error - намеренно передаем невалидный тип для тестирования
       const invalidSchema = z.string();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Тест требует передачи невалидного типа

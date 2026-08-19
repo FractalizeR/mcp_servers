@@ -135,13 +135,11 @@ interface JsonRpcResponseLike {
  */
 class InMemoryHarness {
   private readonly waiters = new Map<number, (msg: JsonRpcResponseLike) => void>();
-  private readonly serverTransport: InMemoryTransport;
   private readonly clientTransport: InMemoryTransport;
   private readonly handle: StdioServerHandle;
 
   constructor(factory: () => Server) {
     const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
-    this.serverTransport = serverTransport;
     this.clientTransport = clientTransport;
     this.clientTransport.onmessage = (message: JSONRPCMessage): void => {
       const msg = message as unknown as JsonRpcResponseLike;
