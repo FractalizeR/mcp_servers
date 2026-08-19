@@ -13,7 +13,6 @@
  */
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
 
 interface JSONRPCRequest {
   jsonrpc: string;
@@ -34,9 +33,19 @@ interface JSONRPCResponse {
   };
 }
 
-const TIMEOUT_MS = 40000; // 40 seconds for entire test (main scenario + separate process for DoD 2.1.A)
+// 55s: the 4 windows inside the test (2×RESPONSE_WAIT_TIMEOUT_MS in
+// runSmokeTest + STDERR_PATTERN_TIMEOUT_MS and RESPONSE_WAIT_TIMEOUT_MS in
+// runDeprecatedEnvVarSmokeTest) add up to exactly 40000 with no slack for two
+// spawns and bundle parsing — if all four windows were ever fully exhausted,
+// the global timeout used to fire first and replace the specific window's
+// diagnosable message with a bare "test exceeded timeout". 15s (37.5%) slack.
+const TIMEOUT_MS = 55000;
 const RESPONSE_WAIT_TIMEOUT_MS = 10000; // event-based wait for a JSON-RPC response
 const STDERR_PATTERN_TIMEOUT_MS = 10000; // event-based wait for a stderr substring
+// Fallback before SIGKILL on a normal SIGTERM shutdown — the 'exit' event
+// usually arrives almost instantly, the timer is only a safety net.
+const SHUTDOWN_GRACE_MS = 2000;
+const SHUTDOWN_GRACE_MS_SECONDARY = 1000;
 
 /**
  * Wait until a JSON-RPC response with `expectedId` shows up on `proc`'s
@@ -198,6 +207,40 @@ async function waitForStderrSubstring(
         )
       );
     }, timeoutMs);
+  });
+}
+
+/**
+ * Stop a process on the 'exit' event instead of a fixed pause: SIGTERM →
+ * wait for 'exit' → SIGKILL once `fallbackMs` elapses if the process didn't
+ * react. Resolves almost instantly in the normal case, right after the
+ * process actually terminates, rather than after an arbitrarily chosen
+ * pause. Returns `true` if a forced SIGKILL was needed (for the caller's log).
+ */
+async function stopGracefully(
+  proc: ChildProcessWithoutNullStreams,
+  fallbackMs: number
+): Promise<boolean> {
+  if (proc.exitCode !== null || proc.signalCode !== null) {
+    return false;
+  }
+  return new Promise<boolean>((resolve) => {
+    let settled = false;
+    const finish = (forcedKill: boolean): void => {
+      if (settled) return;
+      settled = true;
+      proc.off('exit', onExit);
+      clearTimeout(timer);
+      resolve(forcedKill);
+    };
+    const onExit = (): void => finish(false);
+
+    proc.on('exit', onExit);
+    proc.kill('SIGTERM');
+    const timer = setTimeout(() => {
+      proc.kill('SIGKILL');
+      finish(true);
+    }, fallbackMs);
   });
 }
 
@@ -385,16 +428,11 @@ async function main(): Promise<void> {
     // здесь `serverProcess` сужается до `never` (TS2339), хотя рантайм-значение
     // корректно (см. https://github.com/microsoft/TypeScript/issues/9998).
     const proc = serverProcess as unknown as ChildProcessWithoutNullStreams | null;
-    if (proc && !proc.killed) {
+    if (proc) {
       console.log('\n🛑 Stopping server...');
-      proc.kill('SIGTERM');
-
-      // Give 2 seconds for graceful shutdown
-      await sleep(2000);
-
-      if (!proc.killed) {
+      const forcedKill = await stopGracefully(proc, SHUTDOWN_GRACE_MS);
+      if (forcedKill) {
         console.log('⚠️  Server did not respond to SIGTERM, sending SIGKILL...');
-        proc.kill('SIGKILL');
       }
     }
   }
@@ -639,12 +677,9 @@ async function runDeprecatedEnvVarSmokeTest(): Promise<void> {
     }
     console.log(`   ✓ tools/list keeps working (${response.result.tools.length} tools)`);
   } finally {
-    if (!child.killed) {
-      child.kill('SIGTERM');
-      await sleep(1000);
-      if (!child.killed) {
-        child.kill('SIGKILL');
-      }
+    const forcedKill = await stopGracefully(child, SHUTDOWN_GRACE_MS_SECONDARY);
+    if (forcedKill) {
+      console.log('   ⚠️  Child process did not respond to SIGTERM, sending SIGKILL...');
     }
   }
 }

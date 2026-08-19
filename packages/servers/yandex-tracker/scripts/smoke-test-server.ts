@@ -41,7 +41,6 @@
  */
 
 import { spawn } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
 
 interface JSONRPCRequest {
   jsonrpc: string;
@@ -62,9 +61,19 @@ interface JSONRPCResponse {
   };
 }
 
-const TIMEOUT_MS = 40000; // 40 секунд на весь тест (основной сценарий + отдельный процесс для DoD 2.1.A)
+// 55с: 4 события внутри теста (2×RESPONSE_WAIT_TIMEOUT_MS в runSmokeTest +
+// STDERR_PATTERN_TIMEOUT_MS и RESPONSE_WAIT_TIMEOUT_MS в
+// runDeprecatedEnvVarSmokeTest) дают ровно 40000 без запаса на два spawn и
+// разбор бандла — раньше при полном исчерпании всех четырёх окон глобальный
+// таймаут срабатывал первым и подменял диагностируемое сообщение
+// конкретного окна безадресным "Тест превысил таймаут". 15с (37.5%) запаса.
+const TIMEOUT_MS = 55000;
 const RESPONSE_WAIT_TIMEOUT_MS = 10000; // событийное ожидание JSON-RPC ответа
 const STDERR_PATTERN_TIMEOUT_MS = 10000; // событийное ожидание подстроки в stderr
+// Запас перед SIGKILL при штатном SIGTERM-остановe дочернего процесса —
+// событие 'exit' обычно приходит почти мгновенно, таймер лишь страховка.
+const SHUTDOWN_GRACE_MS = 2000;
+const SHUTDOWN_GRACE_MS_SECONDARY = 1000;
 
 /**
  * Ожидание JSON-RPC ответа с `expectedId` в stdout процесса `proc`.
@@ -225,6 +234,40 @@ async function waitForStderrSubstring(
         )
       );
     }, timeoutMs);
+  });
+}
+
+/**
+ * Останов процесса по событию 'exit' вместо фиксированной паузы: SIGTERM →
+ * ждём 'exit' → SIGKILL по истечении `fallbackMs`, если процесс не отреагировал.
+ * В обычном случае резолвится почти мгновенно после реального завершения
+ * процесса, а не после произвольно выбранной паузы. Возвращает `true`, если
+ * потребовался принудительный SIGKILL (для лога вызывающей стороны).
+ */
+async function stopGracefully(
+  proc: ReturnType<typeof spawn>,
+  fallbackMs: number
+): Promise<boolean> {
+  if (proc.exitCode !== null || proc.signalCode !== null) {
+    return false;
+  }
+  return new Promise<boolean>((resolve) => {
+    let settled = false;
+    const finish = (forcedKill: boolean): void => {
+      if (settled) return;
+      settled = true;
+      proc.off('exit', onExit);
+      clearTimeout(timer);
+      resolve(forcedKill);
+    };
+    const onExit = (): void => finish(false);
+
+    proc.on('exit', onExit);
+    proc.kill('SIGTERM');
+    const timer = setTimeout(() => {
+      proc.kill('SIGKILL');
+      finish(true);
+    }, fallbackMs);
   });
 }
 
@@ -411,16 +454,11 @@ async function main(): Promise<void> {
     // до `never`). Рантайм-поведение корректно (одна и та же переменная
     // захвачена замыканием), это чисто сигнатурное ограничение компилятора.
     const proc = serverProcess as ReturnType<typeof spawn> | null;
-    if (proc && !proc.killed) {
+    if (proc) {
       console.log('\n🛑 Останавливаем сервер...');
-      proc.kill('SIGTERM');
-
-      // Даём 2 секунды на graceful shutdown
-      await sleep(2000);
-
-      if (!proc.killed) {
+      const forcedKill = await stopGracefully(proc, SHUTDOWN_GRACE_MS);
+      if (forcedKill) {
         console.log('⚠️  Сервер не ответил на SIGTERM, отправляем SIGKILL...');
-        proc.kill('SIGKILL');
       }
     }
   }
@@ -668,12 +706,9 @@ async function runDeprecatedEnvVarSmokeTest(): Promise<void> {
       `   ✓ tools/list продолжает работать (${response.result.tools.length} инструментов)`
     );
   } finally {
-    if (!child.killed) {
-      child.kill('SIGTERM');
-      await sleep(1000);
-      if (!child.killed) {
-        child.kill('SIGKILL');
-      }
+    const forcedKill = await stopGracefully(child, SHUTDOWN_GRACE_MS_SECONDARY);
+    if (forcedKill) {
+      console.log('   ⚠️  Дочерний процесс не ответил на SIGTERM, отправляем SIGKILL...');
     }
   }
 }

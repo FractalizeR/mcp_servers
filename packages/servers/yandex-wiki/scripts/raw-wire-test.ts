@@ -25,7 +25,6 @@
  */
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
 import * as http from 'node:http';
 import type { Socket } from 'node:net';
 
@@ -58,8 +57,14 @@ interface JsonRpcResponse {
   error?: JsonRpcError;
 }
 
-const STARTUP_DELAY_MS = 900;
-const RESPONSE_TIMEOUT_MS = 8000;
+// В окно теперь входит и старт процесса — фиксированной паузы перед первым
+// запросом больше нет (см. withServer): запись в stdin буферизуется ОС-пайпом
+// независимо от того, успел ли дочерний процесс стартовать.
+const RESPONSE_TIMEOUT_MS = 20000;
+// Запас перед SIGKILL при штатном SIGTERM-остановe: событие 'exit' обычно
+// приходит почти мгновенно, таймер — лишь страховка на случай, если процесс
+// не отреагирует на SIGTERM.
+const SHUTDOWN_GRACE_MS = 2000;
 
 function modernMeta(extra: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -70,10 +75,17 @@ function modernMeta(extra: Record<string, unknown> = {}): Record<string, unknown
   };
 }
 
+interface PendingRequest {
+  resolve: (msg: JsonRpcResponse) => void;
+  reject: (error: Error) => void;
+  timer: NodeJS.Timeout;
+}
+
 class ServerHarness {
   private readonly child: ChildProcessWithoutNullStreams;
   private buffer = '';
-  private readonly waiters = new Map<number, (msg: JsonRpcResponse) => void>();
+  private stderrData = '';
+  private readonly waiters = new Map<number, PendingRequest>();
 
   constructor(envOverrides: Record<string, string> = {}) {
     this.child = spawn('node', [BUNDLE_PATH], {
@@ -84,6 +96,38 @@ class ServerHarness {
     // границей чанка, склеивается, а не превращается в U+FFFD.
     this.child.stdout.setEncoding('utf8');
     this.child.stdout.on('data', (chunk: unknown) => this.onData(chunk));
+    // stderr читается и копится, чтобы попасть в текст отказа — без этого
+    // отказ по 'close'/'error' ниже был бы недиагностируемым ("что-то упало"
+    // вместо конкретной ошибки сервера).
+    this.child.stderr.setEncoding('utf8');
+    this.child.stderr.on('data', (chunk: unknown) => {
+      this.stderrData += assertUtf8Chunk(chunk);
+    });
+
+    // Смерть ребёнка между записью в stdin и обработкой ECONNRESET/EPIPE даёт
+    // необработанное исключение вместо отказа сценария — 'close'/'error' ниже
+    // уже дают настоящую диагностику, здесь только гасим падение процесса.
+    this.child.stdin.on('error', () => {});
+
+    this.child.on('close', (code, signal) => {
+      this.rejectAllPending(
+        `Процесс сервера закрылся (code=${code}, signal=${signal}) до ответа.\n` +
+          `stderr: ${this.stderrData}`
+      );
+    });
+    this.child.on('error', (error) => {
+      this.rejectAllPending(
+        `Ошибка процесса сервера: ${error.message}\nstderr: ${this.stderrData}`
+      );
+    });
+  }
+
+  private rejectAllPending(message: string): void {
+    for (const waiter of this.waiters.values()) {
+      clearTimeout(waiter.timer);
+      waiter.reject(new Error(message));
+    }
+    this.waiters.clear();
   }
 
   private onData(chunk: unknown): void {
@@ -105,7 +149,8 @@ class ServerHarness {
         const waiter = this.waiters.get(msg.id);
         if (waiter) {
           this.waiters.delete(msg.id);
-          waiter(msg);
+          clearTimeout(waiter.timer);
+          waiter.resolve(msg);
         }
       }
     }
@@ -123,13 +168,15 @@ class ServerHarness {
     const pending = new Promise<JsonRpcResponse>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.waiters.delete(id);
-        reject(new Error(`Таймаут ожидания ответа id=${id} method=${method}`));
+        reject(
+          new Error(
+            `Таймаут (${RESPONSE_TIMEOUT_MS}ms) ожидания ответа id=${id} method=${method}.\n` +
+              `stderr: ${this.stderrData}`
+          )
+        );
       }, RESPONSE_TIMEOUT_MS);
 
-      this.waiters.set(id, (msg) => {
-        clearTimeout(timer);
-        resolve(msg);
-      });
+      this.waiters.set(id, { resolve, reject, timer });
     });
 
     this.send({ jsonrpc: '2.0', id, method, ...(params ? { params } : {}) });
@@ -140,13 +187,27 @@ class ServerHarness {
     this.send({ jsonrpc: '2.0', method, ...(params ? { params } : {}) });
   }
 
+  /** SIGTERM → событие 'exit' → SIGKILL по истечении SHUTDOWN_GRACE_MS. */
   async close(): Promise<void> {
-    if (this.child.killed) return;
-    this.child.kill('SIGTERM');
-    await sleep(300);
-    if (!this.child.killed) {
-      this.child.kill('SIGKILL');
-    }
+    if (this.child.exitCode !== null || this.child.signalCode !== null) return;
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = (): void => {
+        if (settled) return;
+        settled = true;
+        this.child.off('exit', onExit);
+        clearTimeout(timer);
+        resolve();
+      };
+      const onExit = (): void => finish();
+
+      this.child.on('exit', onExit);
+      this.child.kill('SIGTERM');
+      const timer = setTimeout(() => {
+        this.child.kill('SIGKILL');
+        finish();
+      }, SHUTDOWN_GRACE_MS);
+    });
   }
 }
 
@@ -155,7 +216,6 @@ async function withServer<T>(
   envOverrides?: Record<string, string>
 ): Promise<T> {
   const harness = new ServerHarness(envOverrides);
-  await sleep(STARTUP_DELAY_MS);
   try {
     return await fn(harness);
   } finally {
