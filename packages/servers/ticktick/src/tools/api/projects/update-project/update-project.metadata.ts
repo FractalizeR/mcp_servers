@@ -12,7 +12,7 @@ import { UPDATE_PROJECT_OUTPUT_SCHEMA } from './update-project.schema.js';
  */
 export const UPDATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_project', MCP_TOOL_PREFIX),
-  description: '[Projects/Write] Обновить проект.',
+  description: '[Projects/Write] Обновить проект: имя, цвет, вид (project, list, rename, update)',
   category: ToolCategory.PROJECTS,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

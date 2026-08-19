@@ -18,7 +18,7 @@ import { GetIssueLinksOutputSchema } from './get-issue-links.schema.js';
  */
 export const GET_ISSUE_LINKS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_issue_links', MCP_TOOL_PREFIX),
-  description: '[Issues/Links] Получить связи задач (batch)',
+  description: '[Issues/Links] Получить связи задач (link, relation, batch, get)',
   category: ToolCategory.ISSUES,
   subcategory: 'links',
   priority: ToolPriority.HIGH,

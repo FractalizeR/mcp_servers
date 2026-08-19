@@ -18,7 +18,7 @@ import { IssueUrlOutputSchema } from '#tools/helpers/issue-url/issue-url.schema.
  */
 export const ISSUE_URL_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_issue_urls', MCP_TOOL_PREFIX),
-  description: '[Helpers/URL] URL задачи',
+  description: '[Helpers/URL] Построить URL задачи (issue, url, link) в веб-интерфейсе Трекера',
   category: ToolCategory.HELPERS,
   subcategory: 'url',
   priority: ToolPriority.NORMAL,

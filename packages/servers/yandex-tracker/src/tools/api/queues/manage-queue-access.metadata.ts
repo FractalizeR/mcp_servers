@@ -18,7 +18,7 @@ import { ManageQueueAccessOutputSchema } from './manage-queue-access.schema.js';
  */
 export const MANAGE_QUEUE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('manage_queue_access', MCP_TOOL_PREFIX),
-  description: '[Queues/Write] Управление доступом к очереди',
+  description: '[Queues/Write] Управление доступом к очереди (queue, permissions, access, grant)',
   category: ToolCategory.QUEUES,
   subcategory: 'write',
   priority: ToolPriority.CRITICAL,

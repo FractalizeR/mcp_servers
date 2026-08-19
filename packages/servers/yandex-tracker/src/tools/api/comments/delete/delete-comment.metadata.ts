@@ -18,7 +18,7 @@ import { DeleteCommentOutputSchema } from '#tools/api/comments/delete/delete-com
  */
 export const DELETE_COMMENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_comment', MCP_TOOL_PREFIX),
-  description: '[Comments/Write] Удалить комментарии (batch)',
+  description: '[Comments/Write] Удалить комментарии из задачи (comment, delete, batch)',
   category: ToolCategory.COMMENTS,
   subcategory: 'delete',
   priority: ToolPriority.HIGH,

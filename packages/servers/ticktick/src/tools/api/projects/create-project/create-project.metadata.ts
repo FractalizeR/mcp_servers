@@ -12,7 +12,7 @@ import { CREATE_PROJECT_OUTPUT_SCHEMA } from './create-project.schema.js';
  */
 export const CREATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_project', MCP_TOOL_PREFIX),
-  description: '[Projects/Write] Создать новый проект.',
+  description: '[Projects/Write] Создать новый список задач (project, list, create) в TickTick',
   category: ToolCategory.PROJECTS,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

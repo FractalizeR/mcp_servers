@@ -12,7 +12,7 @@ import { DeleteBoardOutputSchema } from './delete-board.schema.js';
  */
 export const DELETE_BOARD_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_board', MCP_TOOL_PREFIX),
-  description: '[Boards/Write] Удалить доску',
+  description: '[Boards/Write] Удалить доску (board, kanban, delete, remove)',
   category: ToolCategory.BOARDS,
   subcategory: 'delete',
   priority: ToolPriority.NORMAL,

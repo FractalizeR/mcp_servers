@@ -18,7 +18,8 @@ import { CreateQueueOutputSchema } from './create-queue.schema.js';
  */
 export const CREATE_QUEUE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_queue', MCP_TOOL_PREFIX),
-  description: '[Queues/Write] Создать новую очередь',
+  description:
+    '[Queues/Write] Создать очередь (queue, create) — пространство для задач с типами и полями',
   category: ToolCategory.QUEUES,
   subcategory: 'write',
   priority: ToolPriority.CRITICAL,

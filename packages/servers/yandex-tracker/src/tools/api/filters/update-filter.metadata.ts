@@ -9,7 +9,7 @@ import { UpdateFilterOutputSchema } from './update-filter.schema.js';
 
 export const UPDATE_FILTER_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_filter', MCP_TOOL_PREFIX),
-  description: '[Filters/Write] Обновить сохранённый фильтр',
+  description: '[Filters/Write] Обновить сохранённый фильтр (filter, saved search, edit, update)',
   category: ToolCategory.ISSUES,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

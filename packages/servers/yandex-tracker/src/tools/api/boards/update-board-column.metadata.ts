@@ -9,7 +9,7 @@ import { UpdateBoardColumnOutputSchema } from './update-board-column.schema.js';
 
 export const UPDATE_BOARD_COLUMN_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_board_column', MCP_TOOL_PREFIX),
-  description: '[Boards/Write] Обновить колонку доски',
+  description: '[Boards/Write] Обновить колонку доски (board, column, kanban, edit, update)',
   category: ToolCategory.BOARDS,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

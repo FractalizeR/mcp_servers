@@ -12,7 +12,7 @@ import { DELETE_TASK_OUTPUT_SCHEMA } from './delete-task.schema.js';
  */
 export const DELETE_TASK_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_task', MCP_TOOL_PREFIX),
-  description: '[Tasks/Write] Удалить задачу',
+  description: '[Tasks/Write] Удалить задачу (task, todo, delete, remove)',
   category: ToolCategory.TASKS,
   // 'delete' отдельно от 'write' (M5 отчёта ревью): позволяет отключить все
   // удаляющие tools рубильником DISABLED_TOOL_GROUPS=tasks:delete, не

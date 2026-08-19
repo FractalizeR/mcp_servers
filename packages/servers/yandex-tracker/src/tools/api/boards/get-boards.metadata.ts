@@ -12,7 +12,7 @@ import { GetBoardsOutputSchema } from './get-boards.schema.js';
  */
 export const GET_BOARDS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_boards', MCP_TOOL_PREFIX),
-  description: '[Boards/Read] Получить список досок',
+  description: '[Boards/Read] Получить список досок (board, kanban, list, search)',
   category: ToolCategory.BOARDS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

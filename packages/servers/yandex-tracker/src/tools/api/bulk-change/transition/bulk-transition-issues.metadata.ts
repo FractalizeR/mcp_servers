@@ -18,7 +18,8 @@ import { BulkTransitionIssuesOutputSchema } from './bulk-transition-issues.schem
  */
 export const BULK_TRANSITION_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('bulk_transition_issues', MCP_TOOL_PREFIX),
-  description: '[Bulk/Write] Массовая смена статусов задач',
+  description:
+    '[Bulk/Write] Массовая смена статусов задач (bulk, batch, transition) — быстрее transition_issue по одной',
   category: ToolCategory.ISSUES,
   subcategory: 'bulk',
   priority: ToolPriority.HIGH,

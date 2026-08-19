@@ -18,7 +18,8 @@ import { GetIssuesOutputSchema } from '#tools/api/issues/get/get-issues.schema.j
  */
 export const GET_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_issues', MCP_TOOL_PREFIX),
-  description: '[Issues/Read] Получить задачи',
+  description:
+    '[Issues/Read] Получить задачи по ключам (issue, ticket, get, fetch) — быстрее find_issues, если ключи уже известны',
   category: ToolCategory.ISSUES,
   subcategory: 'read',
   priority: ToolPriority.CRITICAL,

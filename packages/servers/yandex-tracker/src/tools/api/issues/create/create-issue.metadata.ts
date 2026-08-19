@@ -18,7 +18,7 @@ import { CreateIssueOutputSchema } from '#tools/api/issues/create/create-issue.s
  */
 export const CREATE_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_issue', MCP_TOOL_PREFIX),
-  description: '[Issues/Write] Создать новую задачу',
+  description: '[Issues/Write] Создать новую задачу (issue, ticket, create) в очереди Трекера',
   category: ToolCategory.ISSUES,
   subcategory: 'write',
   priority: ToolPriority.CRITICAL,

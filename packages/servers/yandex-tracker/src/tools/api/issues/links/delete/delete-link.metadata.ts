@@ -18,7 +18,7 @@ import { DeleteLinkOutputSchema } from './delete-link.schema.js';
  */
 export const DELETE_LINK_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_link', MCP_TOOL_PREFIX),
-  description: '[Issues/Links] Удалить связь между задачами',
+  description: '[Issues/Links] Удалить связь между задачами (link, relation, delete)',
   category: ToolCategory.ISSUES,
   subcategory: 'delete',
   priority: ToolPriority.HIGH,

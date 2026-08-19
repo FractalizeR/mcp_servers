@@ -32,7 +32,7 @@ describe('IssueUrlTool', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe(buildToolName('get_issue_urls', MCP_TOOL_PREFIX));
-      expect(definition.description).toContain('URL задачи');
+      expect(definition.description).toContain('URL задачи'); // префикс+суть, см. лимит 120 в tool-metadata.test.ts
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['issueKeys']);
       expect(definition.inputSchema.properties?.['issueKeys']).toBeDefined();
@@ -180,7 +180,9 @@ describe('IssueUrlTool', () => {
     it('должен иметь статические метаданные', () => {
       expect(IssueUrlTool.METADATA).toBeDefined();
       expect(IssueUrlTool.METADATA.name).toBe(buildToolName('get_issue_urls', MCP_TOOL_PREFIX));
-      expect(IssueUrlTool.METADATA.description).toBe('[Helpers/URL] URL задачи');
+      expect(IssueUrlTool.METADATA.description).toBe(
+        '[Helpers/URL] Построить URL задачи (issue, url, link) в веб-интерфейсе Трекера'
+      );
       expect(IssueUrlTool.METADATA.category).toBe(ToolCategory.HELPERS);
       expect(IssueUrlTool.METADATA.tags).toContain('url');
       expect(IssueUrlTool.METADATA.isHelper).toBe(true);

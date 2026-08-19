@@ -9,7 +9,7 @@ import { CreateSprintOutputSchema } from './create-sprint.schema.js';
 
 export const CREATE_SPRINT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_sprint', MCP_TOOL_PREFIX),
-  description: '[Sprints/Write] Создать спринт',
+  description: '[Sprints/Write] Создать спринт (sprint, iteration, create)',
   category: ToolCategory.SPRINTS,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

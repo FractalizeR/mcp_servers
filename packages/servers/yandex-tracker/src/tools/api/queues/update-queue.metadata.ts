@@ -18,7 +18,7 @@ import { UpdateQueueOutputSchema } from './update-queue.schema.js';
  */
 export const UPDATE_QUEUE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_queue', MCP_TOOL_PREFIX),
-  description: '[Queues/Write] Обновить параметры очереди',
+  description: '[Queues/Write] Обновить параметры очереди (queue, edit, update)',
   category: ToolCategory.QUEUES,
   subcategory: 'write',
   priority: ToolPriority.CRITICAL,

@@ -9,7 +9,7 @@ import { CreateFilterOutputSchema } from './create-filter.schema.js';
 
 export const CREATE_FILTER_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_filter', MCP_TOOL_PREFIX),
-  description: '[Filters/Write] Создать сохранённый фильтр',
+  description: '[Filters/Write] Создать сохранённый фильтр задач (filter, saved search, create)',
   category: ToolCategory.ISSUES,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

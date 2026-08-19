@@ -10,7 +10,7 @@ import { AddRowsOutputDataSchema } from './add-rows.schema.js';
 
 export const ADD_ROWS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('add_rows', MCP_TOOL_PREFIX),
-  description: '[Grids/Write] Добавить строки в таблицу',
+  description: '[Grids/Write] Добавить строки в таблицу (grid, table, row, add)',
   category: ToolCategory.GRIDS,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

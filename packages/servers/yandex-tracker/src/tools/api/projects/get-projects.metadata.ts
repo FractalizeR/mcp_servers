@@ -18,7 +18,7 @@ import { GetProjectsOutputSchema } from './get-projects.schema.js';
  */
 export const GET_PROJECTS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_projects', MCP_TOOL_PREFIX),
-  description: '[Projects/Read] Получить список проектов',
+  description: '[Projects/Read] Получить список проектов (project, list, search)',
   category: ToolCategory.PROJECTS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

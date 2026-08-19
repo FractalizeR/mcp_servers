@@ -18,7 +18,7 @@ import { GetQueueOutputSchema } from './get-queue.schema.js';
  */
 export const GET_QUEUE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_queue', MCP_TOOL_PREFIX),
-  description: '[Queues/Read] Получить параметры очереди',
+  description: '[Queues/Read] Получить параметры очереди по ключу (queue, get)',
   category: ToolCategory.QUEUES,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

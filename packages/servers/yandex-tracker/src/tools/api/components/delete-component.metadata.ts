@@ -18,7 +18,7 @@ import { DeleteComponentOutputSchema } from './delete-component.schema.js';
  */
 export const DELETE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_component', MCP_TOOL_PREFIX),
-  description: '[Components/Write] Удалить компонент',
+  description: '[Components/Write] Удалить компонент очереди (component, delete, remove)',
   category: ToolCategory.COMPONENTS,
   subcategory: 'delete',
   priority: ToolPriority.HIGH,

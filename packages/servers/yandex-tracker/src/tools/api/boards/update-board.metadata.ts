@@ -12,7 +12,7 @@ import { UpdateBoardOutputSchema } from './update-board.schema.js';
  */
 export const UPDATE_BOARD_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_board', MCP_TOOL_PREFIX),
-  description: '[Boards/Write] Обновить доску',
+  description: '[Boards/Write] Обновить доску (board, kanban, edit, update)',
   category: ToolCategory.BOARDS,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

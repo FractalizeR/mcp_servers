@@ -18,7 +18,8 @@ import { GetBulkChangeStatusOutputSchema } from './get-bulk-change-status.schema
  */
 export const GET_BULK_CHANGE_STATUS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_bulk_change_status', MCP_TOOL_PREFIX),
-  description: '[Bulk/Read] Получить статус bulk операции',
+  description:
+    '[Bulk/Read] Статус массовой (bulk) операции — для bulk_update_issues/bulk_transition_issues/bulk_move_issues',
   category: ToolCategory.ISSUES,
   subcategory: 'bulk',
   priority: ToolPriority.NORMAL,

@@ -18,7 +18,7 @@ import { DeleteProjectOutputSchema } from './delete-project.schema.js';
  */
 export const DELETE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_project', MCP_TOOL_PREFIX),
-  description: '[Projects/Delete] Удалить проект',
+  description: '[Projects/Delete] Удалить проект (project, delete, remove)',
   category: ToolCategory.PROJECTS,
   subcategory: 'delete',
   priority: ToolPriority.CRITICAL,

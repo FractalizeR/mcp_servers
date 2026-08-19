@@ -177,7 +177,9 @@ describe('DemoTool', () => {
     it('должен иметь статические метаданные', () => {
       expect(DemoTool.METADATA).toBeDefined();
       expect(DemoTool.METADATA.name).toBe(buildToolName('demo', MCP_TOOL_PREFIX));
-      expect(DemoTool.METADATA.description).toBe('[Helpers/Demo] Тестовый инструмент');
+      expect(DemoTool.METADATA.description).toBe(
+        '[Helpers/Demo] Тестовый инструмент (demo, test) для проверки конфигурации сервера'
+      );
       expect(DemoTool.METADATA.category).toBe(ToolCategory.HELPERS);
       expect(DemoTool.METADATA.tags).toContain('demo');
       expect(DemoTool.METADATA.isHelper).toBe(true);

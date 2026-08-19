@@ -10,7 +10,7 @@ import { CreatePageOutputDataSchema } from './create-page.schema.js';
 
 export const CREATE_PAGE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_page', MCP_TOOL_PREFIX),
-  description: '[Pages/Write] Создать новую страницу Wiki',
+  description: '[Pages/Write] Создать новую страницу Wiki (page, create)',
   category: ToolCategory.PAGES,
   subcategory: 'write',
   priority: ToolPriority.HIGH,

@@ -18,7 +18,7 @@ import { UpdateComponentOutputSchema } from './update-component.schema.js';
  */
 export const UPDATE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_component', MCP_TOOL_PREFIX),
-  description: '[Components/Write] Обновить компонент',
+  description: '[Components/Write] Обновить компонент очереди (component, edit, update)',
   category: ToolCategory.COMPONENTS,
   subcategory: 'write',
   priority: ToolPriority.HIGH,

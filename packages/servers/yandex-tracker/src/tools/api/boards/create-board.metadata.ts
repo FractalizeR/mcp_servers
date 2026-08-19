@@ -12,7 +12,7 @@ import { CreateBoardOutputSchema } from './create-board.schema.js';
  */
 export const CREATE_BOARD_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_board', MCP_TOOL_PREFIX),
-  description: '[Boards/Write] Создать доску',
+  description: '[Boards/Write] Создать доску (board, kanban, create)',
   category: ToolCategory.BOARDS,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

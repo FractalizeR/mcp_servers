@@ -9,7 +9,7 @@ import { GetBoardColumnsOutputSchema } from './get-board-columns.schema.js';
 
 export const GET_BOARD_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_board_columns', MCP_TOOL_PREFIX),
-  description: '[Boards/Read] Получить список колонок доски',
+  description: '[Boards/Read] Получить список колонок доски (board, column, kanban, list)',
   category: ToolCategory.BOARDS,
   subcategory: 'read',
   priority: ToolPriority.NORMAL,

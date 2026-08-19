@@ -18,7 +18,7 @@ import { DownloadAttachmentOutputSchema } from './download-attachment.schema.js'
  */
 export const DOWNLOAD_ATTACHMENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('download_attachment', MCP_TOOL_PREFIX),
-  description: '[Issues/Attachments] Скачать файл из задачи',
+  description: '[Issues/Attachments] Скачать файл из задачи (attachment, file, download)',
   category: ToolCategory.ISSUES,
   subcategory: 'attachments',
   priority: ToolPriority.HIGH,

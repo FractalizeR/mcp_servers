@@ -14,7 +14,7 @@ import { DeleteAttachmentOutputSchema } from './delete-attachment.schema.js';
  */
 export const DELETE_ATTACHMENT_TOOL_METADATA = {
   name: buildToolName('delete_attachment', MCP_TOOL_PREFIX),
-  description: '[Issues/Attachments] Удалить файл из задачи',
+  description: '[Issues/Attachments] Удалить файл из задачи (attachment, file, delete, remove)',
   category: ToolCategory.ISSUES,
   subcategory: 'delete',
   priority: ToolPriority.NORMAL,

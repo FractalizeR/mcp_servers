@@ -10,7 +10,8 @@ import { GetPageByIdOutputDataSchema } from './get-page-by-id.schema.js';
 
 export const GET_PAGE_BY_ID_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_page_by_id', MCP_TOOL_PREFIX),
-  description: '[Pages/Read] Получить страницу Wiki по ID',
+  description:
+    '[Pages/Read] Получить страницу Wiki по ID (page, get) — когда известен id, а не slug',
   category: ToolCategory.PAGES,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

@@ -12,7 +12,7 @@ import { COMPLETE_TASK_OUTPUT_SCHEMA } from './complete-task.schema.js';
  */
 export const COMPLETE_TASK_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('complete_task', MCP_TOOL_PREFIX),
-  description: '[Tasks/Write] Отметить задачу выполненной',
+  description: '[Tasks/Write] Отметить задачу выполненной (task, todo, complete, done, finish)',
   category: ToolCategory.TASKS,
   subcategory: 'write',
   priority: ToolPriority.HIGH,

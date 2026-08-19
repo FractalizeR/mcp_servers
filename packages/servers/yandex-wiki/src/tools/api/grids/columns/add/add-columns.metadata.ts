@@ -10,7 +10,7 @@ import { AddColumnsOutputDataSchema } from './add-columns.schema.js';
 
 export const ADD_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('add_columns', MCP_TOOL_PREFIX),
-  description: '[Grids/Write] Добавить колонки в таблицу',
+  description: '[Grids/Write] Добавить колонки в таблицу (grid, table, column, add)',
   category: ToolCategory.GRIDS,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

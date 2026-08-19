@@ -18,7 +18,8 @@ import { BulkUpdateIssuesOutputSchema } from './bulk-update-issues.schema.js';
  */
 export const BULK_UPDATE_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('bulk_update_issues', MCP_TOOL_PREFIX),
-  description: '[Bulk/Write] Массовое обновление полей задач',
+  description:
+    '[Bulk/Write] Массовое обновление полей задач (bulk, batch, update) — быстрее update_issue по одной',
   category: ToolCategory.ISSUES,
   subcategory: 'bulk',
   priority: ToolPriority.HIGH,

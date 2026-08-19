@@ -18,7 +18,7 @@ import { GetQueuesOutputSchema } from './get-queues.schema.js';
  */
 export const GET_QUEUES_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_queues', MCP_TOOL_PREFIX),
-  description: '[Queues/Read] Получить список очередей',
+  description: '[Queues/Read] Получить список очередей (queue, list, search)',
   category: ToolCategory.QUEUES,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

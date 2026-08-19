@@ -18,7 +18,7 @@ import { DemoOutputSchema } from './demo.schema.js';
  */
 export const DEMO_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('demo', MCP_TOOL_PREFIX),
-  description: '[Helpers/Demo] Тестовый инструмент',
+  description: '[Helpers/Demo] Тестовый инструмент (demo, test) для проверки конфигурации сервера',
   category: ToolCategory.HELPERS,
   subcategory: 'demo',
   priority: ToolPriority.LOW,

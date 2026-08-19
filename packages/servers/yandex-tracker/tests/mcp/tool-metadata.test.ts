@@ -77,15 +77,27 @@ describe('Tool Metadata Validation', () => {
       }
     });
 
-    it('все descriptions должны быть достаточно краткими (≤80 символов)', () => {
+    it('все descriptions должны быть достаточно краткими (≤120 символов)', () => {
+      // Лимит поднят с 80 до 120 (пакет 3.5, discoverability): при 80 символах
+      // клиентский поиск по имени/тексту не находил `get_issues` даже по точному
+      // запросу — короткое "[Category] Глагол Существительное" без английских
+      // ключевых слов и без разбора со смежным инструментом систематически
+      // проигрывало более многословным соседям (воспроизведено вживую). 80 символов
+      // физически не вмещают префикс категории + суть + 2-4 английских ключевых
+      // слова + короткую дизамбигуацию вида "быстрее find_issues, если ключи уже
+      // известны" — на выходе такой правки максимум по серверу составил 114 символов
+      // (get_issues), 120 оставляет запас ~5% без ухода в абзацы. Расширены точечно
+      // только исходно бедные описания (< 45 символов, будущие аутсайдеры поиска) —
+      // медиана длины по серверу осталась короткой, см.
+      // .agentic-planning/plan_tracker_tool_fixes/3.5_descriptions_table.md.
       for (const ToolClass of TOOL_CLASSES) {
         const metadata = (ToolClass as any).METADATA;
         const description = metadata.description;
 
         expect(
           description.length,
-          `Description для ${metadata.name} слишком длинное: ${description.length} символов (лимит 80)`
-        ).toBeLessThanOrEqual(80);
+          `Description для ${metadata.name} слишком длинное: ${description.length} символов (лимит 120)`
+        ).toBeLessThanOrEqual(120);
       }
     });
   });

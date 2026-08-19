@@ -10,7 +10,7 @@ import { UpdateCellsOutputDataSchema } from './update-cells.schema.js';
 
 export const UPDATE_CELLS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_cells', MCP_TOOL_PREFIX),
-  description: '[Grids/Write] Обновить ячейки в таблице',
+  description: '[Grids/Write] Обновить ячейки в таблице (grid, table, cell, update)',
   category: ToolCategory.GRIDS,
   subcategory: 'write',
   priority: ToolPriority.NORMAL,

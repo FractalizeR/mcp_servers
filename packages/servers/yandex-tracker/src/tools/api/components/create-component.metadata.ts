@@ -18,7 +18,7 @@ import { CreateComponentOutputSchema } from './create-component.schema.js';
  */
 export const CREATE_COMPONENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_component', MCP_TOOL_PREFIX),
-  description: '[Components/Write] Создать компонент',
+  description: '[Components/Write] Создать компонент очереди (component, create)',
   category: ToolCategory.COMPONENTS,
   subcategory: 'write',
   priority: ToolPriority.HIGH,

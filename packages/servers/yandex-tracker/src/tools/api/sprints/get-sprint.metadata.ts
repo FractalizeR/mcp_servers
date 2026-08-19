@@ -9,7 +9,7 @@ import { GetSprintOutputSchema } from './get-sprint.schema.js';
 
 export const GET_SPRINT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_sprint', MCP_TOOL_PREFIX),
-  description: '[Sprints/Read] Получить параметры спринта',
+  description: '[Sprints/Read] Получить параметры спринта по ID (sprint, iteration, get)',
   category: ToolCategory.SPRINTS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

@@ -18,7 +18,8 @@ import { CreateProjectOutputSchema } from './create-project.schema.js';
  */
 export const CREATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_project', MCP_TOOL_PREFIX),
-  description: '[Projects/Write] Создать новый проект',
+  description:
+    '[Projects/Write] Создать новый проект (project, create) — портфель очередей Трекера',
   category: ToolCategory.PROJECTS,
   subcategory: 'write',
   priority: ToolPriority.CRITICAL,

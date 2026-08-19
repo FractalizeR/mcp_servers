@@ -9,7 +9,7 @@ import { DeleteBoardColumnOutputSchema } from './delete-board-column.schema.js';
 
 export const DELETE_BOARD_COLUMN_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_board_column', MCP_TOOL_PREFIX),
-  description: '[Boards/Write] Удалить колонку доски',
+  description: '[Boards/Write] Удалить колонку доски (board, column, delete, remove)',
   category: ToolCategory.BOARDS,
   subcategory: 'delete',
   priority: ToolPriority.NORMAL,

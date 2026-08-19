@@ -10,7 +10,7 @@ import { MoveColumnsOutputDataSchema } from './move-columns.schema.js';
 
 export const MOVE_COLUMNS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('move_columns', MCP_TOOL_PREFIX),
-  description: '[Grids/Write] Переместить колонки в таблице',
+  description: '[Grids/Write] Переместить колонки в таблице (grid, table, column, move, reorder)',
   category: ToolCategory.GRIDS,
   subcategory: 'write',
   priority: ToolPriority.LOW,

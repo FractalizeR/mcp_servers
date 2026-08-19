@@ -10,7 +10,7 @@ import { MoveRowsOutputDataSchema } from './move-rows.schema.js';
 
 export const MOVE_ROWS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('move_rows', MCP_TOOL_PREFIX),
-  description: '[Grids/Write] Переместить строки в таблице',
+  description: '[Grids/Write] Переместить строки в таблице (grid, table, row, move, reorder)',
   category: ToolCategory.GRIDS,
   subcategory: 'write',
   priority: ToolPriority.LOW,

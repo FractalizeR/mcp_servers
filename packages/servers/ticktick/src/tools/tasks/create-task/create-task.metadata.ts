@@ -12,7 +12,7 @@ import { CREATE_TASK_OUTPUT_SCHEMA } from './create-task.schema.js';
  */
 export const CREATE_TASK_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_task', MCP_TOOL_PREFIX),
-  description: '[Tasks/Write] Создать новую задачу',
+  description: '[Tasks/Write] Создать новую задачу (task, todo, create) в TickTick',
   category: ToolCategory.TASKS,
   subcategory: 'write',
   priority: ToolPriority.CRITICAL,

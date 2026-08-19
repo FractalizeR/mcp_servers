@@ -18,7 +18,7 @@ import { UploadAttachmentOutputSchema } from './upload-attachment.schema.js';
  */
 export const UPLOAD_ATTACHMENT_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('upload_attachment', MCP_TOOL_PREFIX),
-  description: '[Issues/Attachments] Загрузить файл в задачу',
+  description: '[Issues/Attachments] Загрузить файл в задачу (attachment, file, upload)',
   category: ToolCategory.ISSUES,
   subcategory: 'attachments',
   priority: ToolPriority.HIGH,

@@ -18,7 +18,7 @@ import { PingOutputSchema } from './ping.schema.js';
  */
 export const PING_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('ping', MCP_TOOL_PREFIX),
-  description: '[System/Health] Проверка доступности сервера',
+  description: '[System/Health] Проверка доступности сервера (ping, health, healthcheck, status)',
   category: ToolCategory.SYSTEM,
   subcategory: 'health',
   priority: ToolPriority.CRITICAL,

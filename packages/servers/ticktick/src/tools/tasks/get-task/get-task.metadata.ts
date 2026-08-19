@@ -12,7 +12,8 @@ import { GET_TASK_OUTPUT_SCHEMA } from './get-task.schema.js';
  */
 export const GET_TASK_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_task', MCP_TOOL_PREFIX),
-  description: '[Tasks/Read] Получить задачу по ID',
+  description:
+    '[Tasks/Read] Получить задачу по ID (task, todo, get) — если ID неизвестен, используй search_tasks',
   category: ToolCategory.TASKS,
   subcategory: 'read',
   priority: ToolPriority.CRITICAL,
