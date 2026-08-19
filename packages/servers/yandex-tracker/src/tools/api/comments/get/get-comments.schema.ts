@@ -20,6 +20,7 @@ import {
   FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
+  BatchErrorValueSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -101,7 +102,7 @@ export const GetCommentsOutputDataSchema = z.object({
   errors: z.array(
     z.object({
       issueId: z.string(),
-      error: z.string(),
+      error: BatchErrorValueSchema,
     })
   ),
   fieldsReturned: FieldsReturnedSchema,

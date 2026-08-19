@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, buildOutputSchema } from '#common/schemas/index.js';
+import { IssueKeySchema, buildOutputSchema, BatchErrorValueSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для удаления комментариев (batch-режим)
@@ -54,7 +54,7 @@ export const DeleteCommentOutputDataSchema = z.object({
     z.object({
       issueId: z.string(),
       commentId: z.string(),
-      error: z.string(),
+      error: BatchErrorValueSchema,
     })
   ),
 });

@@ -62,15 +62,68 @@ export const PaginationMetaSchema = z.object({
 });
 
 /**
- * Элемент ошибки batch-операции — форма `{ <idField>: string, error: string }`
+ * Значение поля `error` элемента batch-ошибки.
+ *
+ * `BatchResultProcessor.process()` (`@fractalizer/mcp-core`,
+ * `src/utils/batch-result-processor.ts`) кладёт сюда либо строку (обычный `Error`/
+ * произвольная причина отказа), либо полный `ApiErrorClass.toJSON()` — объект вида
+ * `ApiErrorDetails` (`@fractalizer/mcp-infrastructure`,
+ * `src/http/error/api-error.class.ts`). Схема обязана описывать ровно то, что
+ * фактически может прийти в рантайме, иначе клиент MCP отбраковывает валидный ответ
+ * с частичным отказом (см. план `1.1_common_error_contract_sequential.md`).
+ *
+ * Объектная ветвь описывает только гарантированные `ApiErrorDetails` поля
+ * (`statusCode`, `message`) и опциональные (`errors`, `retryAfter`) явно, а
+ * `.passthrough()` пропускает остальные (например `errorsData`, чья форма не
+ * гарантирована API) — `ApiErrorDetails` расширяем, и схема не должна ломаться при
+ * появлении новых полей.
+ *
+ * `errors` (детали по полям, обычно для 400): TypeScript-тип `ApiErrorDetails.errors`
+ * (`@fractalizer/mcp-infrastructure`, `src/http/error/api-error.class.ts`) объявляет
+ * `Record<string, string[]>`, но `ErrorMapper.mapResponseError()`
+ * (`src/http/error/error-mapper.ts:71`) берёт значение НЕВАЛИДИРОВАННЫМ кастом из
+ * тела ответа Трекера — рантайм-форма ничем не подтверждена. Референсный клиент
+ * (`yandex_tracker_client/exceptions.py:84-87`) форматирует значение по ключу как
+ * СКАЛЯР (`u"- {}: {}".format(key, message)`), а не массив. Схема, объявляющая только
+ * массив, отбраковывает валидный batch-ответ при скалярной форме — ровно тот отказ,
+ * который вся эта волна фиксов устраняла (см. BLOCKER находка 1 внешнего ревью).
+ * Поэтому здесь описано ОБА варианта, гарантированных фактами: строка на ключ или
+ * массив строк на ключ.
+ */
+export const BatchErrorValueSchema = z.union([
+  z.string().describe('Текстовое описание ошибки (например, message обычного Error)'),
+  z
+    .object({
+      statusCode: z.number().describe('HTTP статус-код ошибки'),
+      message: z.string().describe('Сообщение об ошибке'),
+      errors: z
+        .record(z.string(), z.union([z.string(), z.array(z.string())]))
+        .optional()
+        .describe(
+          'Детализированные ошибки по полям (для 400 ошибок). Значение по ключу — ' +
+            'строка или массив строк: форма зависит от ответа Трекера, не валидируется на приёме'
+        ),
+      retryAfter: z
+        .number()
+        .optional()
+        .describe('Время ожидания перед повторной попыткой в секундах (для 429 ошибок)'),
+    })
+    .passthrough()
+    .describe('Полные детали API-ошибки (ApiErrorClass.toJSON())'),
+]);
+
+/**
+ * Элемент ошибки batch-операции — форма `{ <idField>: string, error: BatchErrorValueSchema }`
  * встречается почти во всех batch tools под разными именами id-поля
  * (issueId/key/...). Фабрика параметризует только имя ключа.
  */
 export function makeBatchErrorItemSchema<TKey extends string>(
   keyField: TKey
-): z.ZodObject<{ [K in TKey]: z.ZodString } & { error: z.ZodString }> {
+): z.ZodObject<{ [K in TKey]: z.ZodString } & { error: typeof BatchErrorValueSchema }> {
   return z.object({
     [keyField]: z.string(),
-    error: z.string(),
-  }) as unknown as z.ZodObject<{ [K in TKey]: z.ZodString } & { error: z.ZodString }>;
+    error: BatchErrorValueSchema,
+  }) as unknown as z.ZodObject<
+    { [K in TKey]: z.ZodString } & { error: typeof BatchErrorValueSchema }
+  >;
 }

@@ -9,6 +9,7 @@ import {
   FilteredEntitySchema,
   FieldsReturnedSchema,
   buildOutputSchema,
+  BatchErrorValueSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -47,7 +48,7 @@ export const GetIssuesOutputDataSchema = z.object({
   errors: z.array(
     z.object({
       key: z.string(),
-      error: z.string(),
+      error: BatchErrorValueSchema,
     })
   ),
   fieldsReturned: FieldsReturnedSchema,

@@ -18,6 +18,7 @@ import {
   FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
+  BatchErrorValueSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -83,7 +84,7 @@ export const GetIssueLinksOutputDataSchema = z.object({
   failed: z.array(
     z.object({
       issueId: z.string(),
-      error: z.string(),
+      error: BatchErrorValueSchema,
     })
   ),
   fieldsReturned: FieldsReturnedSchema,

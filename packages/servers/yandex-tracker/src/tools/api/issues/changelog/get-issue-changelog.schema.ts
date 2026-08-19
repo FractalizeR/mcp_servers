@@ -19,6 +19,7 @@ import {
   FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
+  BatchErrorValueSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -94,7 +95,7 @@ export const GetIssueChangelogOutputDataSchema = z.object({
   failed: z.array(
     z.object({
       key: z.string(),
-      error: z.string(),
+      error: BatchErrorValueSchema,
     })
   ),
   fieldsReturned: FieldsReturnedSchema,
