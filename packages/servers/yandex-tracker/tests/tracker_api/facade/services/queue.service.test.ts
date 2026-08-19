@@ -25,7 +25,6 @@ function paginatedQueues(items: QueueWithUnknownFields[]): PaginatedResult<Queue
   return {
     items,
     pagination: {
-      page: 1,
       perPage: 50,
       hasNextPage: false,
       fetchedAll: true,
@@ -106,7 +105,7 @@ describe('QueueService', () => {
     });
 
     it('должен делегировать вызов ops.getQueues.execute с параметрами', async () => {
-      const params: GetQueuesDto = { perPage: 50, page: 2 };
+      const params: GetQueuesDto = { perPage: 50 };
       const mockResult = paginatedQueues([createQueueFixture() as QueueWithUnknownFields]);
 
       vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);

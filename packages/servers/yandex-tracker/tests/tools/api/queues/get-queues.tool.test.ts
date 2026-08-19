@@ -229,7 +229,7 @@ describe('GetQueuesTool', () => {
         const error = new Error('Network timeout');
         vi.mocked(mockTrackerFacade.getQueues).mockRejectedValue(error);
 
-        const result = await tool.execute({ perPage: 10, page: 1, fields: ['id', 'key', 'name'] });
+        const result = await tool.execute({ perPage: 10, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(getTextContent(result)) as {

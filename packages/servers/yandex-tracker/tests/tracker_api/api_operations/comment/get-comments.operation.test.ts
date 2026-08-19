@@ -141,7 +141,7 @@ describe('GetCommentsOperation', () => {
 
       expect(result.pagination.perPage).toBe(50);
       // page больше не отдаётся в cursor-режиме
-      expect(result.pagination.page).toBeUndefined();
+      expect(result.pagination).not.toHaveProperty('page');
       expect(mockHttpClient.getRequestHistory()).toContainEqual(
         expect.objectContaining({ path: '/v3/issues/PROJ-10/comments?perPage=50' })
       );

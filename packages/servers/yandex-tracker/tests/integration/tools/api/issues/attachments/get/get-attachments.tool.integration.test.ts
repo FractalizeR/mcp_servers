@@ -14,6 +14,7 @@ import {
   createAttachmentListFixture,
   createImageAttachmentFixture,
 } from '#helpers/attachment.fixture.js';
+import { at } from '#helpers/tool-result.helper.js';
 
 describe('get-attachments integration tests (batch)', () => {
   let client: TestMCPClient;
@@ -71,8 +72,8 @@ describe('get-attachments integration tests (batch)', () => {
       const issueIds = ['QUEUE-1', 'QUEUE-2'];
       const attachments1 = createAttachmentListFixture(2);
       const attachments2 = createAttachmentListFixture(3);
-      mockServer.mockGetAttachmentsSuccess(issueIds[0], attachments1);
-      mockServer.mockGetAttachmentsSuccess(issueIds[1], attachments2);
+      mockServer.mockGetAttachmentsSuccess(at(issueIds), attachments1);
+      mockServer.mockGetAttachmentsSuccess(at(issueIds, 1), attachments2);
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
@@ -152,8 +153,8 @@ describe('get-attachments integration tests (batch)', () => {
       // Arrange
       const issueIds = ['QUEUE-1', 'NONEXISTENT-1'];
       const attachments = createAttachmentListFixture(2);
-      mockServer.mockGetAttachmentsSuccess(issueIds[0], attachments);
-      mockServer.mockGetAttachments404(issueIds[1]);
+      mockServer.mockGetAttachmentsSuccess(at(issueIds), attachments);
+      mockServer.mockGetAttachments404(at(issueIds, 1));
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {

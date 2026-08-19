@@ -11,6 +11,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_CHECKLIST_FIELDS } from '#helpers/test-fields.js';
+import { at } from '#helpers/tool-result.helper.js';
 
 describe('get-checklist integration tests (batch)', () => {
   let client: TestMCPClient;
@@ -69,8 +70,8 @@ describe('get-checklist integration tests (batch)', () => {
         { id: 'item-4', text: 'Fourth item', checked: false },
         { id: 'item-5', text: 'Fifth item', checked: true },
       ];
-      mockServer.mockGetChecklistSuccess(issueIds[0], checklist1);
-      mockServer.mockGetChecklistSuccess(issueIds[1], checklist2);
+      mockServer.mockGetChecklistSuccess(at(issueIds), checklist1);
+      mockServer.mockGetChecklistSuccess(at(issueIds, 1), checklist2);
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_checklist', {
@@ -158,8 +159,8 @@ describe('get-checklist integration tests (batch)', () => {
         { id: 'item-1', text: 'First item', checked: false },
         { id: 'item-2', text: 'Second item', checked: true },
       ];
-      mockServer.mockGetChecklistSuccess(issueIds[0], checklist);
-      mockServer.mockGetChecklist404(issueIds[1]);
+      mockServer.mockGetChecklistSuccess(at(issueIds), checklist);
+      mockServer.mockGetChecklist404(at(issueIds, 1));
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_checklist', {

@@ -63,7 +63,7 @@ describe('GetProjectsOperation', () => {
       expect(result.pagination.fetchedAll).toBe(true);
       expect(result.pagination.pagesFetched).toBe(1);
       // Курсор-режим: legacy-поле page больше не выставляется.
-      expect(result.pagination.page).toBeUndefined();
+      expect(result.pagination).not.toHaveProperty('page');
     });
 
     it('с Link rel=next: hasNextPage=true и появляется nextCursor', async () => {

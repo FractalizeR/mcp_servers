@@ -64,7 +64,7 @@ describe('GetQueuesOperation', () => {
       expect(result.pagination.perPage).toBe(50);
       expect(result.pagination.nextCursor).toBeUndefined();
       // Курсор-режим: legacy-поле page больше не выставляется.
-      expect(result.pagination.page).toBeUndefined();
+      expect(result.pagination).not.toHaveProperty('page');
     });
 
     it('с Link rel=next: hasNextPage=true и появляется nextCursor', async () => {

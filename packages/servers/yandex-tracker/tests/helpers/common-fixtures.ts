@@ -39,7 +39,6 @@ export function createUserRef(overrides?: Partial<UserRef>): UserRef {
 export function createPaginationParams(overrides?: Partial<PaginationParams>): PaginationParams {
   return {
     perPage: 50,
-    page: 1,
     ...overrides,
   };
 }

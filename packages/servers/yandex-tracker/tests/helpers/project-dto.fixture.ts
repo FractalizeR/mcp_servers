@@ -22,7 +22,6 @@ import type { ProjectStatus } from '../../src/tracker_api/entities/index.js';
 export function createGetProjectsDto(overrides?: Partial<GetProjectsDto>): GetProjectsDto {
   return {
     perPage: 50,
-    page: 1,
     ...overrides,
   };
 }

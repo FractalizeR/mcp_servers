@@ -60,13 +60,12 @@ export function createUpdateQueueDto(overrides?: Partial<UpdateQueueDto>): Updat
  *
  * @example
  * ```typescript
- * const dto = createGetQueuesDto({ perPage: 100, page: 2 });
+ * const dto = createGetQueuesDto({ perPage: 100 });
  * ```
  */
 export function createGetQueuesDto(overrides?: Partial<GetQueuesDto>): GetQueuesDto {
   return {
     perPage: 50,
-    page: 1,
     ...overrides,
   };
 }
