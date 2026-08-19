@@ -1,3 +1,13 @@
+## [2.3.0](https://github.com/FractalizeR/mcp_servers/compare/v2.2.0...v2.3.0) (2026-08-19)
+
+### Features
+
+* **quality:** гейт typecheck:tests — тесты наконец проверяются типами ([#395](https://github.com/FractalizeR/mcp_servers/issues/395)) ([3043309](https://github.com/FractalizeR/mcp_servers/commit/3043309e07fb754e1b955b8a6cfcc19114988107))
+
+### Bug Fixes
+
+* **quality:** typecheck:tests не тянет scripts за пределы rootDir ([#396](https://github.com/FractalizeR/mcp_servers/issues/396)) ([434e4e6](https://github.com/FractalizeR/mcp_servers/commit/434e4e66a792de49b01c4161069e4bb67d4e1abc)), closes [#395](https://github.com/FractalizeR/mcp_servers/issues/395) [#394](https://github.com/FractalizeR/mcp_servers/issues/394) [#395](https://github.com/FractalizeR/mcp_servers/issues/395) [#393](https://github.com/FractalizeR/mcp_servers/issues/393) [#394](https://github.com/FractalizeR/mcp_servers/issues/394) [#394](https://github.com/FractalizeR/mcp_servers/issues/394) [#395](https://github.com/FractalizeR/mcp_servers/issues/395)
+
 ## [2.2.0](https://github.com/FractalizeR/mcp_servers/compare/v2.1.0...v2.2.0) (2026-08-19)
 
 ### Features
