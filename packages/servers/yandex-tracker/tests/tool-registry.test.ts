@@ -6,7 +6,6 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { ToolCallParams } from '@fractalizer/mcp-infrastructure/types.js';
 import type { PingResult } from '#tracker_api/api_operations/user/ping.operation.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
-import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { PingTool } from '#tools/ping.tool.js';
 import { GetIssuesTool } from '#tools/api/issues/get/index.js';
 import { CreateIssueTool } from '#tools/api/issues/create/index.js';
@@ -18,6 +17,10 @@ import { TransitionIssueTool } from '#tools/api/issues/transitions/execute/index
 import { IssueUrlTool } from '#tools/helpers/issue-url/index.js';
 import { DemoTool } from '#tools/helpers/demo/index.js';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createIssueFixture } from '#helpers/issue.fixture.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { createUserFixture } from '#helpers/common-fixtures.js';
 
 describe('ToolRegistry', () => {
   let registry: ToolRegistry;
@@ -226,7 +229,7 @@ describe('ToolRegistry', () => {
           status: 'fulfilled',
           key: 'TEST-1',
           index: 0,
-          value: {
+          value: createIssueFixture({
             self: 'https://api.tracker.yandex.net/v3/issues/TEST-1',
             id: '1',
             key: 'TEST-1',
@@ -235,10 +238,10 @@ describe('ToolRegistry', () => {
             statusStartTime: '2023-01-01T00:00:00.000+0000',
             updatedAt: '2023-01-01T00:00:00.000+0000',
             createdAt: '2023-01-01T00:00:00.000+0000',
-            queue: { id: '1', key: 'Q', name: 'Queue' },
+            queue: createQueueFixture({ id: '1', key: 'Q', name: 'Queue' }),
             status: { id: '1', key: 'open', display: 'Open' },
-            createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
-          } as IssueWithUnknownFields,
+            createdBy: createUserFixture({ uid: 'user1', display: 'User', login: 'user1' }),
+          }),
         },
       ];
 
@@ -264,7 +267,7 @@ describe('ToolRegistry', () => {
       expect(result.content).toHaveLength(1);
       expect(result.content[0]!.type).toBe('text');
 
-      const content = JSON.parse(result.content[0]!.text);
+      const content = JSON.parse(getTextContent(result));
       expect(content.success).toBe(false);
       expect(content.message).toContain('не найден');
       expect(content.availableTools).toContain(buildToolName('ping', MCP_TOOL_PREFIX));
@@ -294,7 +297,7 @@ describe('ToolRegistry', () => {
       expect(result.isError).toBe(true);
       expect(result.content).toHaveLength(1);
 
-      const content = JSON.parse(result.content[0]!.text);
+      const content = JSON.parse(getTextContent(result));
       expect(content.success).toBe(false);
       expect(content.message).toContain('Ошибка при проверке подключения');
       expect(content.tool).toBeUndefined(); // BaseTool не добавляет tool в formatError
@@ -335,7 +338,7 @@ describe('ToolRegistry', () => {
       // Assert
       expect(result.isError).toBe(true);
 
-      const content = JSON.parse(result.content[0]!.text);
+      const content = JSON.parse(getTextContent(result));
       expect(content.message).toContain('Ошибка при проверке подключения');
     });
 

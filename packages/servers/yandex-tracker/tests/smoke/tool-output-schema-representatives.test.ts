@@ -49,6 +49,8 @@ import { IssueUrlOutputDataSchema } from '#tools/helpers/issue-url/issue-url.sch
 
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
+import type { ToolResult } from '@fractalizer/mcp-infrastructure';
+import { createIssueFixture } from '#helpers/issue.fixture.js';
 
 function mockLogger(): Logger {
   return {
@@ -61,8 +63,8 @@ function mockLogger(): Logger {
 }
 
 /** Достаёт structuredContent из ToolResult без `any`. */
-function getStructuredContent(result: { structuredContent?: unknown }): unknown {
-  return result.structuredContent;
+function getStructuredContent(result: ToolResult): unknown {
+  return result['structuredContent'];
 }
 
 function paginatedProjects(
@@ -99,13 +101,13 @@ describe('DoD 2: structuredContent валиден по outputSchema (предс�
   });
 
   it('get_issues — Issues/Read batch (успех + ошибка)', async () => {
-    const mockIssue: IssueWithUnknownFields = {
+    const mockIssue: IssueWithUnknownFields = createIssueFixture({
       id: '1',
       key: 'QUEUE-1',
       summary: 'Test',
       queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
       status: { id: '1', key: 'open', display: 'Open' },
-    };
+    });
     const facade = {
       getIssues: vi.fn().mockResolvedValue([
         { status: 'fulfilled', value: mockIssue, key: 'QUEUE-1', index: 0 },

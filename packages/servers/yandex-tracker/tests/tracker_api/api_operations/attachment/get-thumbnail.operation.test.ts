@@ -170,7 +170,6 @@ describe('GetThumbnailOperation', () => {
       const attachment = createAttachmentFixture({
         name: 'document.pdf',
         mimetype: 'application/pdf',
-        thumbnail: undefined,
       });
 
       // Replace the utility methods temporarily
@@ -193,7 +192,6 @@ describe('GetThumbnailOperation', () => {
         const attachment = createAttachmentFixture({
           name,
           mimetype: 'application/octet-stream', // Unknown MIME
-          thumbnail: undefined,
         });
 
         // Mock FileDownloadUtil methods
@@ -243,7 +241,6 @@ describe('GetThumbnailOperation', () => {
       const attachment = createAttachmentFixture({
         name: 'readme.txt',
         mimetype: 'text/plain',
-        thumbnail: undefined,
       });
 
       // Mock FileDownloadUtil
@@ -263,7 +260,6 @@ describe('GetThumbnailOperation', () => {
       const attachment = createAttachmentFixture({
         name: 'document.pdf',
         mimetype: 'application/pdf',
-        thumbnail: undefined,
       });
 
       // Mock FileDownloadUtil
