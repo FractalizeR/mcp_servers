@@ -79,6 +79,55 @@ module.exports = {
       },
     },
 
+    {
+      name: 'dev-client-no-servers',
+      severity: 'error',
+      comment:
+        'dev-client — dev-инструмент для проверки серверов, но не часть их рантайма: ' +
+        'зависимость в эту сторону означала бы, что dev-client тестируется бандлом одного ' +
+        'конкретного сервера, а не работает с любым локально собранным бандлом.',
+      from: {
+        path: '^packages/framework/dev-client/',
+      },
+      to: {
+        path: '^packages/servers/',
+      },
+    },
+
+    {
+      name: 'dev-client-only-depends-on-framework',
+      severity: 'error',
+      comment: 'dev-client может зависеть только от infrastructure/core/cli (граф — вниз, не вбок/вверх)',
+      from: {
+        path: '^packages/framework/dev-client/',
+      },
+      to: {
+        path: '^packages/',
+        pathNot: [
+          '^packages/framework/infrastructure/',
+          '^packages/framework/core/',
+          '^packages/framework/cli/',
+          '^packages/framework/dev-client/',
+        ],
+      },
+    },
+
+    // Правило `no-circular-dev-client` («framework-пакеты не зависят от
+    // dev-client») здесь НЕ объявлено, и это осознанно: path-based правило в
+    // этом монорепо его выразить не может, а мёртвое правило, выглядящее
+    // живым, хуже отсутствующего. Две независимые причины:
+    //   1) infrastructure/core/cli запускают depcruise ИЗ своего каталога, их
+    //      модули репортятся как `src/...` — `from.path: '^packages/...'` не
+    //      совпадёт никогда;
+    //   2) межпакетный импорт `@fractalizer/mcp-dev-client` резолвится в
+    //      `packages/framework/dev-client/dist/index.js`, а `dist/` целиком
+    //      отсечён `options.exclude` — такого ребра в графе просто нет
+    //      (проверено: пробный импорт из core не порождает ни одной
+    //      зависимости в JSON-выводе depcruise).
+    // Машинная защита живёт вместо этого в тестах dev-client:
+    // `packages/framework/dev-client/tests/unit/no-framework-dependents.test.ts`
+    // — он сканирует исходники framework-пакетов на импорт dev-client.
+
     // ================================================
     // 2. MCP SERVERS INTERNAL ARCHITECTURE
     // (applies to all servers: yandex-tracker, yandex-wiki)

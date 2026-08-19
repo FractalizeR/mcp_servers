@@ -1,0 +1,3 @@
+{"tool": "fr_yandex_tracker_ping", "args": {}, "label": "health check", "expect": {"isError": false}}
+{"tool": "fr_yandex_tracker_find_issues", "args": {"query": "Assignee: me()", "fields": ["id", "key", "summary", "status.key"]}, "label": "my issues", "expect": {"isError": false}}
+{"tool": "fr_yandex_tracker_get_users", "args": {"userIds": ["bot-yandex-tracker"], "fields": ["id", "login", "display"]}, "label": "bot user info", "expect": {"isError": false}}

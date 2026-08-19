@@ -1,0 +1,3 @@
+{"tool": "yw_ping", "args": {}, "label": "ping", "expect": {"isError": false}}
+{"tool": "yw_get_page", "args": {"slug": "homepage", "fields": "title,description"}, "label": "get_homepage", "expect": {"isError": false}}
+{"tool": "yw_search", "args": {"query": "home"}, "label": "search_docs", "expect": {"isError": false}}

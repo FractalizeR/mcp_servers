@@ -519,6 +519,47 @@ packages/servers/yandex-tracker/
 
 ---
 
+## 🔧 Тестирование инструментов (dev interface)
+
+**Быстрая проверка инструментов без перезагрузки MCP-клиента.**
+
+### Команды
+
+```bash
+# Список инструментов (92 штуки) с классификацией read/write/local-side-effect
+npm run tools:list
+
+# Вызвать один инструмент
+npm run tools:call -- 'fr_yandex_tracker_get_issues' '{"issueIds": ["TEST-1"], "fields": ["id"]}'
+
+# Запустить батч вызовов (JSONL файл)
+npm run tools:batch -- dev-calls.example.jsonl
+```
+
+### Примеры
+
+- **`dev-calls.example.jsonl`** — примеры 3 read-инструментов (ping, find_issues, get_users)
+- **Запуск:** `npm run tools:batch -- dev-calls.example.jsonl`
+
+### Write-операции и флаги безопасности
+
+- **Read-инструменты** выполняются без ограничений
+- **Write-инструменты** требуют `--dangerously-allow-write` (явное подтверждение)
+- **local-side-effect** (скачивание файлов) — неблокирующие, но тоже требуют флага
+
+Пример:
+```bash
+npm run tools:call -- 'fr_yandex_tracker_create_issue' '@params.json' --dangerously-allow-write
+npm run tools:batch -- create-issues.jsonl --dangerously-allow-write
+```
+
+### Важно: вызовы идут в боевой API
+
+⚠️ Все вызовы выполняются **в боевом Яндекс.Трекере** под вашим токеном из MCP-клиента.
+Read-операции безопасны; write-операции **создают/изменяют реальные данные**.
+
+---
+
 ## 🔗 ДОПОЛНИТЕЛЬНО
 
 - **Архитектура monorepo:** [../../../ARCHITECTURE.md](../../../ARCHITECTURE.md)

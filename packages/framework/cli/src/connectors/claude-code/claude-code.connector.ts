@@ -54,7 +54,7 @@ import { BaseConnector } from '../base/base-connector.js';
 import { CommandExecutor } from '../../utils/command-executor.js';
 import { Logger } from '../../utils/logger.js';
 import type { ConnectionStatus, MCPClientInfo } from '../../types/client.types.js';
-import type { ServerLaunchSpec } from '../../types/launch.types.js';
+import type { GetLaunchSpecResult, ServerLaunchSpec } from '../../types/launch.types.js';
 
 /**
  * Type guard для проверки Error
@@ -83,6 +83,29 @@ const CLAUDE_MCP_LIST_TIMEOUT_MS = 5000;
  * бесконечного цикла при неожиданных ответах CLI.
  */
 const MAX_DISCONNECT_ITERATIONS = 4;
+
+/**
+ * Подстрока, по которой отличается «записи нет» от прочих ошибок `claude mcp get`.
+ *
+ * Снято с реального вывода CLI 2.x: `No MCP server named "<name>". Configured
+ * servers: ...`. Это единственный сигнал, различающий «сервера с таким именем
+ * нет» от прочих сбоев (падение процесса, битый `~/.claude.json`) — сам CLI
+ * не даёт структурированного кода ошибки. Если формулировка изменится в
+ * будущей версии CLI — деградация безопасна: исход просто попадёт в
+ * `commandFailed` вместо `notConnected` (более консервативная, а не более
+ * опасная классификация).
+ */
+const NOT_FOUND_MARKER = 'No MCP server named';
+
+/**
+ * Внутренний результат {@link ClaudeCodeConnector.runGet} — отличает «записи
+ * нет» от «команда упала по другой причине», не раскрывая сырой вывод дальше
+ * необходимого (вывод при успехе может содержать env).
+ */
+type RawGetResult =
+  | { kind: 'ok'; output: string }
+  | { kind: 'notFound' }
+  | { kind: 'commandFailed'; message: string };
 
 /**
  * Коннектор для Claude Code CLI.
@@ -257,31 +280,39 @@ export class ClaudeCodeConnector extends BaseConnector {
    *     KEY=value
    *     OTHER=...
    *
-   * @returns spec, если сервер есть и stdio; `null` если не найден, http/sse или
-   *          парсинг не удался.
+   * @returns {@link GetLaunchSpecResult} — `found`/`notConnected`/`notStdio`/
+   *          `unparsable`/`commandFailed` (см. типовой JSDoc).
    */
-  getLaunchSpec(): Promise<ServerLaunchSpec | null> {
-    const output = this.runGet();
-    if (output === null) return Promise.resolve(null);
-    return Promise.resolve(this.parseLaunchSpecFromGet(output));
+  getLaunchSpec(): Promise<GetLaunchSpecResult> {
+    const result = this.runGet();
+    if (result.kind === 'notFound') return Promise.resolve({ outcome: 'notConnected' });
+    if (result.kind === 'commandFailed') {
+      return Promise.resolve({ outcome: 'commandFailed', message: result.message });
+    }
+    return Promise.resolve(this.parseLaunchSpecFromGet(result.output));
   }
 
   // ----- internal -----
 
   /**
-   * Выполнить `claude mcp get <name>` с таймаутом, проглотив ошибку.
+   * Выполнить `claude mcp get <name>` с таймаутом.
    *
-   * `claude mcp get` возвращает non-zero, когда сервер не существует ни в одном
-   * scope. В этом случае возвращаем `null` (а не пробрасываем) — вызывающий код
-   * различает «нет записи» (null) и «есть запись» (любая строка вывода).
+   * Различает три исхода (см. {@link RawGetResult}): успех, «записи нет»
+   * (детектируется по {@link NOT_FOUND_MARKER} в тексте ошибки) и «команда
+   * упала по другой причине» (таймаут, битый конфиг, неожиданный сбой CLI).
    */
-  private runGet(): string | null {
+  private runGet(): RawGetResult {
     try {
-      return CommandExecutor.execFile('claude', ['mcp', 'get', this.serverName], {
+      const output = CommandExecutor.execFile('claude', ['mcp', 'get', this.serverName], {
         timeout: CLAUDE_MCP_LIST_TIMEOUT_MS,
       });
-    } catch {
-      return null;
+      return { kind: 'ok', output };
+    } catch (error) {
+      const message = isError(error) ? error.message : String(error);
+      if (message.includes(NOT_FOUND_MARKER)) {
+        return { kind: 'notFound' };
+      }
+      return { kind: 'commandFailed', message };
     }
   }
 
@@ -293,12 +324,17 @@ export class ClaudeCodeConnector extends BaseConnector {
    * Этого достаточно для итеративного `disconnect`: одной итерации хватает,
    * чтобы убрать запись из показанного scope, а следующая увидит следующий.
    *
-   * @returns scope или `null`, если запись отсутствует / парсинг неудачен.
+   * Оба «отрицательных» исхода `runGet` (`notFound` и `commandFailed`)
+   * трактуются одинаково — `null` — как и до введения {@link GetLaunchSpecResult}:
+   * connect/disconnect не различают их семантику, им важно только «есть/нет».
+   *
+   * @returns scope или `null`, если запись отсутствует / команда не удалась /
+   *          парсинг неудачен.
    */
   private async getCurrentScope(): Promise<ClaudeCodeScope | null> {
-    const output = this.runGet();
-    if (output === null) return null;
-    return Promise.resolve(this.parseScopeFromGet(output));
+    const result = this.runGet();
+    if (result.kind !== 'ok') return null;
+    return Promise.resolve(this.parseScopeFromGet(result.output));
   }
 
   /**
@@ -386,7 +422,7 @@ export class ClaudeCodeConnector extends BaseConnector {
    *  - `Args:` — одна строка, разделители — пробелы. Пути с пробелами в
    *    результате парсятся некорректно (ограничение `claude mcp get`).
    */
-  private parseLaunchSpecFromGet(output: string): ServerLaunchSpec | null {
+  private parseLaunchSpecFromGet(output: string): GetLaunchSpecResult {
     const rawLines = output.split('\n');
     const trimmedLines = rawLines.map((l) => l.trim());
     const findValue = (label: string): string | undefined => {
@@ -397,12 +433,15 @@ export class ClaudeCodeConnector extends BaseConnector {
 
     const type = findValue('Type');
     if (type && type.toLowerCase() !== 'stdio') {
-      return null;
+      return { outcome: 'notStdio', transport: type };
     }
 
     const command = findValue('Command');
     if (!command) {
-      return null;
+      return {
+        outcome: 'unparsable',
+        reason: 'В выводе `claude mcp get` не найдено поле `Command` — формат CLI мог измениться',
+      };
     }
 
     const argsLine = findValue('Args') ?? '';
@@ -410,7 +449,7 @@ export class ClaudeCodeConnector extends BaseConnector {
 
     const env = this.parseEnvSection(rawLines);
 
-    return { command, args, env };
+    return { outcome: 'found', spec: { command, args, env } };
   }
 
   /**

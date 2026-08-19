@@ -15,7 +15,7 @@ import type {
   DoctorCommandOptions,
   DoctorReport,
 } from '../types/doctor.types.js';
-import type { ServerLaunchSpec } from '../types/launch.types.js';
+import type { GetLaunchSpecResult } from '../types/launch.types.js';
 
 /**
  * Internal: ключ группы для проверок без явной group (например, доменные
@@ -63,8 +63,8 @@ export async function doctorCommand(options: DoctorCommandOptions): Promise<Doct
   // конфигурации (или вызывает CLI) — может быть дорогим. Внутри doctor мы
   // вызываем его для двух проверок (interpretConnectionStatus и
   // checkCommandExistsOnDisk), достаточно одного чтения.
-  const launchSpecCache = new Map<MCPConnector, Promise<ServerLaunchSpec | null>>();
-  const getCachedLaunchSpec = (connector: MCPConnector): Promise<ServerLaunchSpec | null> => {
+  const launchSpecCache = new Map<MCPConnector, Promise<GetLaunchSpecResult>>();
+  const getCachedLaunchSpec = (connector: MCPConnector): Promise<GetLaunchSpecResult> => {
     let p = launchSpecCache.get(connector);
     if (!p) {
       p = connector.getLaunchSpec();
@@ -111,7 +111,7 @@ export async function doctorCommand(options: DoctorCommandOptions): Promise<Doct
  */
 function buildClientChecks(
   connector: MCPConnector,
-  getCachedLaunchSpec: (c: MCPConnector) => Promise<ServerLaunchSpec | null>
+  getCachedLaunchSpec: (c: MCPConnector) => Promise<GetLaunchSpecResult>
 ): DoctorCheck[] {
   const group = connector.getClientInfo().displayName;
   return [
@@ -152,7 +152,7 @@ function buildGetStatusCheck(connector: MCPConnector, group: string): DoctorChec
 function buildCommandExistsCheck(
   connector: MCPConnector,
   group: string,
-  getCachedLaunchSpec: (c: MCPConnector) => Promise<ServerLaunchSpec | null>
+  getCachedLaunchSpec: (c: MCPConnector) => Promise<GetLaunchSpecResult>
 ): DoctorCheck {
   return {
     name: 'command-exists',
@@ -191,21 +191,21 @@ function interpretConnectionStatus(status: {
  * `BaseConnector.validateLaunchSpec`/`ConfigurableConnector.commandExistsOnDisk`.
  *
  * Кейсы:
- *  - `spec === null` (сервер не подключен) → `skip`.
+ *  - `outcome !== 'found'` (сервер не подключен / не stdio / вывод клиента не
+ *    разобран / команда чтения записи упала) → `skip`/`warn` в зависимости от
+ *    исхода, см. {@link describeMissingLaunchSpec}.
  *  - Команда — `npx`/`pipx`/`uvx` или относительная — `warn`.
  *  - Команда — абсолютный путь или `node` с абсолютным скриптом — `fs.access(R_OK)`.
  */
 async function checkCommandExistsOnDisk(
   connector: MCPConnector,
-  getCachedLaunchSpec: (c: MCPConnector) => Promise<ServerLaunchSpec | null>
+  getCachedLaunchSpec: (c: MCPConnector) => Promise<GetLaunchSpecResult>
 ): Promise<DoctorCheckResult> {
-  const spec = await getCachedLaunchSpec(connector);
-  if (spec === null) {
-    return {
-      status: 'skip',
-      message: 'Сервер не подключен к этому клиенту',
-    };
+  const result = await getCachedLaunchSpec(connector);
+  if (result.outcome !== 'found') {
+    return describeMissingLaunchSpec(result);
   }
+  const spec = result.spec;
 
   const filePath = resolveExecutablePath(spec);
 
@@ -237,6 +237,43 @@ async function checkCommandExistsOnDisk(
       message: `Файл не найден или недоступен: ${filePath}`,
       hint: 'Переподключите сервер командой `connect` (путь к бандлу мог измениться при обновлении пакета).',
     };
+  }
+}
+
+/**
+ * Отрендерить исходы {@link GetLaunchSpecResult}, отличные от `found`, в
+ * {@link DoctorCheckResult}.
+ *
+ * `notConnected` — ожидаемое штатное состояние (сервер просто не подключен к
+ * этому клиенту) → `skip`. Остальные три исхода — признак проблемы с самим
+ * механизмом чтения записи (не с диском) → `warn`, чтобы не молчать о них.
+ */
+function describeMissingLaunchSpec(
+  result: Exclude<GetLaunchSpecResult, { outcome: 'found' }>
+): DoctorCheckResult {
+  switch (result.outcome) {
+    case 'notConnected':
+      return { status: 'skip', message: 'Сервер не подключен к этому клиенту' };
+    case 'notStdio':
+      return {
+        status: 'skip',
+        message: `Транспорт сервера не stdio (${result.transport}) — проверка файла на диске неприменима`,
+      };
+    case 'unparsable':
+      return {
+        status: 'warn',
+        message: `Не удалось разобрать данные о подключении сервера: ${result.reason}`,
+      };
+    case 'commandFailed':
+      // Текст ошибки команды намеренно не подставляется: `result.message` несёт
+      // до 200 символов stderr упавшей команды (`utils/command-executor.ts`), а
+      // он может содержать фрагмент `env` записи клиента — то есть токен. Вывод
+      // doctor идёт в тот же терминал, откуда попадает в контекст ИИ-агента.
+      return {
+        status: 'warn',
+        message:
+          'Команда получения конфигурации клиента завершилась ошибкой. Текст не печатается: он может содержать env записи. Проверьте вручную: claude mcp get <имя сервера>.',
+      };
   }
 }
 

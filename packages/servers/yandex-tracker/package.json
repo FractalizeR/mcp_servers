@@ -86,6 +86,9 @@
     "test:smoke:server": "tsx scripts/smoke-test-server.ts",
     "test:verbose": "vitest run --reporter=verbose",
     "test:watch": "vitest watch",
+    "tools:batch": "mcp-dev batch --server-name fractalizer_mcp_yandex_tracker --package-dir .",
+    "tools:call": "mcp-dev call --server-name fractalizer_mcp_yandex_tracker --package-dir .",
+    "tools:list": "mcp-dev list --server-name fractalizer_mcp_yandex_tracker --package-dir . --json",
     "typecheck": "tsc --noEmit",
     "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
@@ -112,6 +115,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@fractalizer/mcp-dev-client": "^2.0.0",
+    "@modelcontextprotocol/client": "^2.0.0",
     "@types/inquirer": "^9.0.9",
     "@types/mime-types": "^3.0.1",
     "ajv": "^8.18.0",

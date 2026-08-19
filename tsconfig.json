@@ -4,6 +4,7 @@
     { "path": "./packages/framework/infrastructure" },
     { "path": "./packages/framework/cli" },
     { "path": "./packages/framework/core" },
+    { "path": "./packages/framework/dev-client" },
     { "path": "./packages/servers/yandex-tracker" },
     { "path": "./packages/servers/yandex-wiki" }
   ]

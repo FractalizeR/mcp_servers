@@ -25,6 +25,14 @@ describe('DownloadAttachmentTool', () => {
       expect(DownloadAttachmentTool.METADATA).toBe(DOWNLOAD_ATTACHMENT_TOOL_METADATA);
       expect(DownloadAttachmentTool.METADATA.name).toBe('yw_download_attachment');
     });
+
+    // Регрессия: инструмент писал файл на диск пользователя (saveToPath) с
+    // readOnlyHint: true. Клиент, доверяющий аннотации, мог авто-одобрить запись
+    // на диск без подтверждения. В yandex-tracker та же классификация уже была
+    // исправлена (пакет 3.1.G), в wiki правка не доехала.
+    it('readOnlyHint: false — saveToPath пишет на диск пользователя', () => {
+      expect(DownloadAttachmentTool.METADATA.annotations?.readOnlyHint).toBe(false);
+    });
   });
 
   describe('execute', () => {

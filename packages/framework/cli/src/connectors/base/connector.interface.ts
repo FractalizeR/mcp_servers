@@ -4,7 +4,7 @@
  */
 
 import type { MCPClientInfo, ConnectionStatus } from '../../types/client.types.js';
-import type { ServerLaunchSpec } from '../../types/launch.types.js';
+import type { GetLaunchSpecResult, ServerLaunchSpec } from '../../types/launch.types.js';
 
 /**
  * Базовый интерфейс для всех MCP коннекторов.
@@ -69,10 +69,10 @@ export interface MCPConnector {
   /**
    * Получить текущую записанную в конфиге клиента спецификацию запуска.
    * Используется командой `doctor` для самодиагностики (например, проверка
-   * существования `command` на диске).
+   * существования `command` на диске) и пакетом `@fractalizer/mcp-dev-client`
+   * для получения секретов из `env` записи.
    *
-   * @returns Spec, если сервер подключен; `null` если не подключен или конфиг
-   *          недоступен/повреждён.
+   * @returns Различимый исход — см. {@link GetLaunchSpecResult}.
    */
-  getLaunchSpec(): Promise<ServerLaunchSpec | null>;
+  getLaunchSpec(): Promise<GetLaunchSpecResult>;
 }

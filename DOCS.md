@@ -28,6 +28,7 @@
 - **[Infrastructure](./packages/framework/infrastructure/README.md)** — HTTP, cache, logging, async utilities
 - **[CLI](./packages/framework/cli/README.md)** — Generic CLI для MCP подключений
 - **[Core](./packages/framework/core/README.md)** — BaseTool, registry, type system, utilities
+- **[Dev Client](./packages/framework/dev-client/README.md)** — dev-интерфейс вызова MCP-инструментов (`mcp-dev`)
 
 ---
 

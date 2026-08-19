@@ -153,7 +153,7 @@ describe('Integration: full workflow (real tmp files)', () => {
         env: { TOKEN: 'sec' },
       };
       await c.connect(spec);
-      expect(await c.getLaunchSpec()).toEqual(spec);
+      expect(await c.getLaunchSpec()).toEqual({ outcome: 'found', spec });
     });
   });
 
@@ -202,7 +202,7 @@ describe('Integration: full workflow (real tmp files)', () => {
       await c.connect(spec);
 
       const restored = await c.getLaunchSpec();
-      expect(restored).toEqual(spec);
+      expect(restored).toEqual({ outcome: 'found', spec });
     });
 
     it('TOML disconnect удаляет запись, файл остаётся валидным TOML', async () => {

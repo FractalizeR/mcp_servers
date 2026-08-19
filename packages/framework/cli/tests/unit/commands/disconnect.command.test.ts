@@ -28,7 +28,7 @@ function makeConnector(name: string, status: ConnectionStatus): MCPConnector {
     disconnect: vi.fn().mockResolvedValue(undefined),
     validateLaunchSpec: vi.fn().mockResolvedValue([]),
     getStatus: vi.fn().mockResolvedValue(status),
-    getLaunchSpec: vi.fn().mockResolvedValue(null),
+    getLaunchSpec: vi.fn().mockResolvedValue({ outcome: 'notConnected' }),
   } as unknown as MCPConnector;
 }
 
