@@ -87,19 +87,9 @@ for (const dir of packageDirs) {
   console.log(`✅ ${pkg.name}: ${oldVersion} → ${version}`);
   updatedCount++;
 
-  // Также обновить manifest.json если существует (для MCPB)
-  const manifestPath = join(rootDir, dir, 'manifest.json');
-  if (existsSync(manifestPath)) {
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-    const shortHash = process.env.GITHUB_SHA?.slice(0, 7) || 'local';
-    manifest.version = `${version}+${shortHash}`;
-    if (manifest._meta?.build) {
-      manifest._meta.build.hash = shortHash;
-      manifest._meta.build.last_updated = new Date().toISOString().split('T')[0];
-    }
-    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
-    console.log(`  📦 manifest.json: ${manifest.version}`);
-  }
+  // manifest.json здесь НЕ трогается: он производный (шаблон + версия из
+  // package.json + git hash) и генерируется в build:mcpb скриптом
+  // packages/servers/scripts/increment-build.ts. В git не хранится.
 }
 
 console.log(`\nUpdated ${updatedCount} packages to version ${version}`);

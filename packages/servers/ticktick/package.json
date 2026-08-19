@@ -56,8 +56,8 @@
   ],
   "scripts": {
     "build": "tsc -b && tsc-alias && npm run build:bundle",
-    "build:bundle": "tsx ../scripts/increment-build.ts && tsup",
-    "build:mcpb": "npm run build && tsx ../scripts/build-mcpb.ts",
+    "build:bundle": "tsup",
+    "build:mcpb": "npm run build && tsx ../scripts/increment-build.ts && tsx ../scripts/build-mcpb.ts",
     "clean": "rimraf dist",
     "cpd": "jscpd src",
     "cpd:quiet": "jscpd src --silent",
