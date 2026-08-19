@@ -127,7 +127,7 @@ describe('AddChecklistItemTool', () => {
 
     it('должен принять корректные параметры', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -143,7 +143,7 @@ describe('AddChecklistItemTool', () => {
   describe('Operation calls', () => {
     it('должен вызвать addChecklistItemMany с минимальными параметрами', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -166,7 +166,7 @@ describe('AddChecklistItemTool', () => {
     it('должен вызвать addChecklistItemMany с несколькими элементами', async () => {
       const mockItem2 = createChecklistItemFixture({ id: 'item-2', text: 'Item 2', checked: true });
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
         { status: 'fulfilled', key: 'TEST-456', value: mockItem2 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
@@ -199,7 +199,7 @@ describe('AddChecklistItemTool', () => {
 
     it('должен вызвать addChecklistItemMany со всеми параметрами', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -229,7 +229,7 @@ describe('AddChecklistItemTool', () => {
 
     it('должен вернуть добавленные элементы', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -264,7 +264,7 @@ describe('AddChecklistItemTool', () => {
     it('должен вернуть несколько добавленных элементов', async () => {
       const mockItem2 = createChecklistItemFixture({ id: 'item-2', text: 'Item 2', checked: true });
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
         { status: 'fulfilled', key: 'TEST-456', value: mockItem2 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
@@ -297,8 +297,8 @@ describe('AddChecklistItemTool', () => {
   describe('Partial failures', () => {
     it('должен обработать частичные ошибки', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
-        { status: 'rejected', key: 'TEST-456', reason: new Error('Issue not found') },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
+        { status: 'rejected', key: 'TEST-456', reason: new Error('Issue not found'), index: 1 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -334,7 +334,7 @@ describe('AddChecklistItemTool', () => {
 
     it('должен обработать полный провал batch операции', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'rejected', key: 'TEST-123', reason: new Error('API Error') },
+        { status: 'rejected', key: 'TEST-123', reason: new Error('API Error'), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -364,7 +364,7 @@ describe('AddChecklistItemTool', () => {
   describe('Logging', () => {
     it('должен логировать начало добавления элементов', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -385,7 +385,7 @@ describe('AddChecklistItemTool', () => {
 
     it('должен логировать успешное добавление', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 

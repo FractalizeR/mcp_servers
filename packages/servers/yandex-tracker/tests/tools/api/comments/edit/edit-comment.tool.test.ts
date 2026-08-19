@@ -107,6 +107,7 @@ describe('EditCommentTool', () => {
     it('должен принять корректные параметры', async () => {
       vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-123:12345',
           value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
@@ -126,6 +127,7 @@ describe('EditCommentTool', () => {
     it('должен вызвать editCommentsMany с корректными параметрами', async () => {
       vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-123:12345',
           value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
@@ -145,11 +147,13 @@ describe('EditCommentTool', () => {
     it('должен вернуть успешный результат для batch операции', async () => {
       vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-123:12345',
           value: createEditedCommentFixture({ id: '12345', text: 'Updated 1' }),
         },
         {
+          index: 1,
           status: 'fulfilled',
           key: 'TEST-456:67890',
           value: createEditedCommentFixture({ id: '67890', text: 'Updated 2' }),
@@ -184,6 +188,7 @@ describe('EditCommentTool', () => {
     it('должен логировать начало редактирования', async () => {
       vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-123:12345',
           value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
@@ -204,6 +209,7 @@ describe('EditCommentTool', () => {
     it('должен логировать результаты', async () => {
       vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-123:12345',
           value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
@@ -227,11 +233,17 @@ describe('EditCommentTool', () => {
     it('должен обработать частичные ошибки в batch', async () => {
       vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-123:12345',
           value: createEditedCommentFixture({ id: '12345', text: 'Updated' }),
         },
-        { status: 'rejected', key: 'TEST-456:67890', reason: new Error('Comment not found') },
+        {
+          status: 'rejected',
+          key: 'TEST-456:67890',
+          reason: new Error('Comment not found'),
+          index: 1,
+        },
       ]);
 
       const result = await tool.execute({
@@ -274,7 +286,12 @@ describe('EditCommentTool', () => {
 
     it('должен обработать ошибку несуществующего комментария (404)', async () => {
       vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
-        { status: 'rejected', key: 'TEST-123:NONEXISTENT', reason: new Error('Comment not found') },
+        {
+          status: 'rejected',
+          key: 'TEST-123:NONEXISTENT',
+          reason: new Error('Comment not found'),
+          index: 0,
+        },
       ]);
 
       const result = await tool.execute({
@@ -295,7 +312,12 @@ describe('EditCommentTool', () => {
 
     it('должен обработать ошибку доступа (403)', async () => {
       vi.mocked(mockTrackerFacade.editCommentsMany).mockResolvedValue([
-        { status: 'rejected', key: 'PRIVATE-123:12345', reason: new Error('Access denied') },
+        {
+          status: 'rejected',
+          key: 'PRIVATE-123:12345',
+          reason: new Error('Access denied'),
+          index: 0,
+        },
       ]);
 
       const result = await tool.execute({

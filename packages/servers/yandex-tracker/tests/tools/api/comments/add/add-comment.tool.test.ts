@@ -140,6 +140,7 @@ describe('AddCommentTool', () => {
     it('должен принять корректные параметры', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-123',
           value: mockComment1,
@@ -159,11 +160,13 @@ describe('AddCommentTool', () => {
     it('должен вызвать addCommentsMany с массивом комментариев', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: mockComment1,
         },
         {
+          index: 1,
           status: 'fulfilled',
           key: 'TEST-2',
           value: mockComment2,
@@ -187,11 +190,13 @@ describe('AddCommentTool', () => {
     it('должен передать attachmentIds для каждого комментария индивидуально', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: mockComment1,
         },
         {
+          index: 1,
           status: 'fulfilled',
           key: 'TEST-2',
           value: mockComment2,
@@ -215,11 +220,13 @@ describe('AddCommentTool', () => {
     it('должен вернуть unified batch result format', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: mockComment1,
         },
         {
+          index: 1,
           status: 'fulfilled',
           key: 'TEST-2',
           value: mockComment2,
@@ -267,11 +274,13 @@ describe('AddCommentTool', () => {
     it('должен обработать частичные ошибки', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: mockComment1,
         },
         {
+          index: 1,
           status: 'rejected',
           key: 'TEST-2',
           reason: new Error('Not found'),
@@ -320,6 +329,7 @@ describe('AddCommentTool', () => {
 
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: fullComment,
@@ -358,6 +368,7 @@ describe('AddCommentTool', () => {
 
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: numericIdComment,

@@ -198,9 +198,9 @@ describe('calculateToolsMetrics', () => {
 
       // Assert
       expect(Object.keys(metrics.byCategory)).toHaveLength(3);
-      expect(metrics.byCategory.cat1).toBe(1);
-      expect(metrics.byCategory.cat2).toBe(1);
-      expect(metrics.byCategory.cat3).toBe(1);
+      expect(metrics.byCategory['cat1']).toBe(1);
+      expect(metrics.byCategory['cat2']).toBe(1);
+      expect(metrics.byCategory['cat3']).toBe(1);
     });
   });
 
@@ -272,7 +272,7 @@ describe('calculateToolsMetrics', () => {
       const metrics = calculateToolsMetrics(definitions);
 
       // Assert
-      expect(metrics.byPriority.normal).toBe(2);
+      expect(metrics.byPriority['normal']).toBe(2);
     });
   });
 
@@ -433,12 +433,12 @@ describe('calculateToolsMetrics', () => {
       expect(metrics.estimatedTokens).toBeGreaterThan(500); // 50 tools * ~50 chars / 4 ≈ 625 tokens
 
       // Проверяем распределение
-      expect(metrics.byCategory.issues).toBe(30);
-      expect(metrics.byCategory.helpers).toBe(20);
+      expect(metrics.byCategory['issues']).toBe(30);
+      expect(metrics.byCategory['helpers']).toBe(20);
 
-      expect(metrics.byPriority.critical).toBe(10);
-      expect(metrics.byPriority.high).toBe(15);
-      expect(metrics.byPriority.normal).toBe(25);
+      expect(metrics.byPriority['critical']).toBe(10);
+      expect(metrics.byPriority['high']).toBe(15);
+      expect(metrics.byPriority['normal']).toBe(25);
     });
   });
 });

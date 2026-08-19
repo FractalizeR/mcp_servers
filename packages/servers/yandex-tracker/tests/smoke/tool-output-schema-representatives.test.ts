@@ -48,6 +48,7 @@ import { IssueUrlTool } from '#tools/helpers/issue-url/index.js';
 import { IssueUrlOutputDataSchema } from '#tools/helpers/issue-url/issue-url.schema.js';
 
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 function mockLogger(): Logger {
   return {
@@ -102,7 +103,7 @@ describe('DoD 2: structuredContent валиден по outputSchema (предс�
       id: '1',
       key: 'QUEUE-1',
       summary: 'Test',
-      queue: { id: '1', key: 'QUEUE', name: 'Queue' },
+      queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
       status: { id: '1', key: 'open', display: 'Open' },
     };
     const facade = {

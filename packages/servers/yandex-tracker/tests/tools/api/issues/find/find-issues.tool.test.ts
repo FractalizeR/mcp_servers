@@ -14,6 +14,7 @@ import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/comm
 import { successEnvelopeSchema } from '#common/schemas/index.js';
 import { FindIssuesOutputDataSchema } from '#tools/api/issues/find/find-issues.schema.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 /**
  * Метаданные пагинации по умолчанию (одна полная страница).
@@ -43,11 +44,11 @@ describe('FindIssuesTool', () => {
     key: 'QUEUE-123',
     summary: 'Test Issue 1',
     description: 'Test Description 1',
-    queue: {
+    queue: createQueueFixture({
       id: '1',
       key: 'QUEUE',
       name: 'Test Queue',
-    },
+    }),
     status: {
       id: '1',
       key: 'open',
@@ -68,11 +69,11 @@ describe('FindIssuesTool', () => {
     key: 'QUEUE-456',
     summary: 'Test Issue 2',
     description: 'Test Description 2',
-    queue: {
+    queue: createQueueFixture({
       id: '1',
       key: 'QUEUE',
       name: 'Test Queue',
-    },
+    }),
     status: {
       id: '2',
       key: 'closed',
@@ -687,7 +688,7 @@ describe('FindIssuesTool', () => {
       });
 
       const envelopeSchema = successEnvelopeSchema(FindIssuesOutputDataSchema);
-      const parseResult = envelopeSchema.safeParse(result.structuredContent);
+      const parseResult = envelopeSchema.safeParse(result['structuredContent']);
       expect(parseResult.success).toBe(true);
     });
 
@@ -700,7 +701,7 @@ describe('FindIssuesTool', () => {
       });
 
       const envelopeSchema = successEnvelopeSchema(FindIssuesOutputDataSchema);
-      const parseResult = envelopeSchema.safeParse(result.structuredContent);
+      const parseResult = envelopeSchema.safeParse(result['structuredContent']);
       expect(parseResult.success).toBe(true);
     });
   });
@@ -814,7 +815,7 @@ describe('FindIssuesTool', () => {
           'элемента был сопоставим с реальным ответом API Яндекс.Трекера (типичная ' +
           'сводка одной сущности — примерно 150–400 токенов), а не тривиальной ' +
           `строкой-заглушкой. Итерация ${index}.`.repeat(6),
-        queue: { id: '1', key: 'QUEUE', name: 'Test Queue' },
+        queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Test Queue' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: {
           uid: `uid-${index}`,

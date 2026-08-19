@@ -17,6 +17,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import { AnalyzeIssueDescriptionTool } from '#tools/api/issues/analyze/index.js';
 import { ISSUE_DESCRIPTION_EDITOR_URI } from '#resources/apps-ui-uri.js';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 function makeLogger(): Logger {
   return {
@@ -80,7 +81,7 @@ describe('AnalyzeIssueDescriptionTool', () => {
       id: '1',
       key: 'QUEUE-1',
       summary: 'Test',
-      queue: { id: '1', key: 'QUEUE', name: 'Queue' },
+      queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
       createdBy: { id: 'u1', display: 'User' },
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
@@ -101,7 +102,7 @@ describe('AnalyzeIssueDescriptionTool', () => {
     expect(payload.data.currentDescription).not.toContain('script');
     expect(payload.data.currentDescription).toBe('Легитимный текст и продолжение');
     expect(payload.data.version).toBe(3);
-    expect(result.structuredContent).toEqual(payload);
+    expect(result['structuredContent']).toEqual(payload);
   });
 
   it('пустое description → suggestedDescription содержит шаблон разделов', async () => {
@@ -109,7 +110,7 @@ describe('AnalyzeIssueDescriptionTool', () => {
       id: '2',
       key: 'QUEUE-2',
       summary: 'Test 2',
-      queue: { id: '1', key: 'QUEUE', name: 'Queue' },
+      queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
       createdBy: { id: 'u1', display: 'User' },
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',

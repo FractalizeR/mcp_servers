@@ -37,6 +37,7 @@ import type {
   TransitionWithUnknownFields,
   WorklogWithUnknownFields,
 } from '#tracker_api/entities/index.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('YandexTrackerFacade', () => {
   let facade: YandexTrackerFacade;
@@ -393,7 +394,7 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-1',
         summary: 'New Issue',
-        queue: { id: '1', key: 'TEST', name: 'Test' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
         createdAt: '2024-01-01',
@@ -425,7 +426,7 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Updated',
-        queue: { id: '1', key: 'TEST', name: 'Test' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
         createdAt: '2024-01-01',
@@ -451,7 +452,7 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Updated',
-        queue: { id: '1', key: 'TEST', name: 'Test' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
         createdAt: '2024-01-01',
@@ -544,7 +545,7 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test',
-        queue: { id: '1', key: 'TEST', name: 'Test' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '2', key: 'inProgress', display: 'In Progress' },
         createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
         createdAt: '2024-01-01',

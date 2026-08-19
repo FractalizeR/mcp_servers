@@ -17,6 +17,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import { AnalyzeIssueDescriptionTool } from '#tools/api/issues/analyze/index.js';
 import { UpdateIssueTool } from '#tools/api/issues/update/index.js';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 function makeLogger(): Logger {
   return {
@@ -45,7 +46,7 @@ describe('Fallback без MCP Apps: analyze_issue_description → update_issue',
       id: '1',
       key: 'QUEUE-1',
       summary: 'Test',
-      queue: { id: '1', key: 'QUEUE', name: 'Queue' },
+      queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
       createdBy: { id: 'u1', display: 'User' },
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',

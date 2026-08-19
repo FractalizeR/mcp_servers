@@ -16,6 +16,7 @@ import type {
   IssueWithUnknownFields,
   TransitionWithUnknownFields,
 } from '#tracker_api/entities/index.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 // Fixtures
 function createIssueFixture(overrides = {}): IssueWithUnknownFields {
@@ -23,7 +24,7 @@ function createIssueFixture(overrides = {}): IssueWithUnknownFields {
     id: '1',
     key: 'TEST-1',
     summary: 'Test Issue',
-    queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+    queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
     status: { id: '1', key: 'open', display: 'Open' },
     createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
     createdAt: '2024-01-01',

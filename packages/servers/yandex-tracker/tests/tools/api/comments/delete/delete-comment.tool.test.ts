@@ -96,7 +96,7 @@ describe('DeleteCommentTool', () => {
 
     it('должен принять корректные параметры', async () => {
       vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined, index: 0 },
       ]);
 
       const result = await tool.execute({
@@ -110,7 +110,7 @@ describe('DeleteCommentTool', () => {
   describe('Operation calls', () => {
     it('должен вызвать deleteCommentsMany с корректными параметрами', async () => {
       vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -124,8 +124,8 @@ describe('DeleteCommentTool', () => {
 
     it('должен вернуть успешный результат для batch операции', async () => {
       vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
-        { status: 'fulfilled', key: 'TEST-456:67890', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined, index: 0 },
+        { status: 'fulfilled', key: 'TEST-456:67890', value: undefined, index: 1 },
       ]);
 
       const result = await tool.execute({
@@ -154,7 +154,7 @@ describe('DeleteCommentTool', () => {
   describe('Logging', () => {
     it('должен логировать начало удаления', async () => {
       vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -169,7 +169,7 @@ describe('DeleteCommentTool', () => {
 
     it('должен логировать результаты', async () => {
       vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -189,8 +189,13 @@ describe('DeleteCommentTool', () => {
   describe('Error handling', () => {
     it('должен обработать частичные ошибки в batch', async () => {
       vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined },
-        { status: 'rejected', key: 'TEST-456:67890', reason: new Error('Comment not found') },
+        { status: 'fulfilled', key: 'TEST-123:12345', value: undefined, index: 0 },
+        {
+          status: 'rejected',
+          key: 'TEST-456:67890',
+          reason: new Error('Comment not found'),
+          index: 1,
+        },
       ]);
 
       const result = await tool.execute({
@@ -231,7 +236,12 @@ describe('DeleteCommentTool', () => {
 
     it('должен обработать ошибку несуществующего комментария (404)', async () => {
       vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
-        { status: 'rejected', key: 'TEST-123:NONEXISTENT', reason: new Error('Comment not found') },
+        {
+          status: 'rejected',
+          key: 'TEST-123:NONEXISTENT',
+          reason: new Error('Comment not found'),
+          index: 0,
+        },
       ]);
 
       const result = await tool.execute({
@@ -251,7 +261,12 @@ describe('DeleteCommentTool', () => {
 
     it('должен обработать ошибку доступа (403)', async () => {
       vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
-        { status: 'rejected', key: 'PRIVATE-123:12345', reason: new Error('Access denied') },
+        {
+          status: 'rejected',
+          key: 'PRIVATE-123:12345',
+          reason: new Error('Access denied'),
+          index: 0,
+        },
       ]);
 
       const result = await tool.execute({
@@ -272,6 +287,7 @@ describe('DeleteCommentTool', () => {
     it('должен обработать ошибку попытки удалить чужой комментарий', async () => {
       vi.mocked(mockTrackerFacade.deleteCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'rejected',
           key: 'TEST-123:12345',
           reason: new Error('Cannot delete comment of another user'),

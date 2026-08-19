@@ -11,6 +11,7 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('UpdateIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -22,11 +23,11 @@ describe('UpdateIssueTool', () => {
     key: 'QUEUE-123',
     summary: 'Updated Summary',
     description: 'Updated Description',
-    queue: {
+    queue: createQueueFixture({
       id: '1',
       key: 'QUEUE',
       name: 'Test Queue',
-    },
+    }),
     status: {
       id: '2',
       key: 'in-progress',

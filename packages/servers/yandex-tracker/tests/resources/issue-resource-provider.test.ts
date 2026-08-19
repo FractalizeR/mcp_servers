@@ -9,12 +9,13 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import { IssueResourceProvider } from '#resources/issue-resource-provider.js';
 import { buildIssueResourceUri } from '#resources/tracker-resource-uri.js';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 const mockIssue: IssueWithUnknownFields = {
   id: '1',
   key: 'QUEUE-1',
   summary: 'Test Issue',
-  queue: { id: '1', key: 'QUEUE', name: 'Queue' },
+  queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
   status: { id: '1', key: 'open', display: 'Open' },
 };
 

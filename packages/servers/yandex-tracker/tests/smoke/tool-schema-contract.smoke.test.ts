@@ -123,11 +123,11 @@ describe('Tool Schema Contract (Smoke) — JSON Schema 2020-12', () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const result = await pingTool!.execute({});
 
-      expect(result.structuredContent).toBeDefined();
+      expect(result['structuredContent']).toBeDefined();
       expect(result.content[0]?.type).toBe('text');
 
       const textPayload = JSON.parse(getTextContent(result)) as unknown;
-      expect(textPayload).toEqual(result.structuredContent);
+      expect(textPayload).toEqual(result['structuredContent']);
     });
   });
 });

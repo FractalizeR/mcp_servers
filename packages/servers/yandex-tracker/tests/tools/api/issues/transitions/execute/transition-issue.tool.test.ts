@@ -12,6 +12,7 @@ import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
 import { IssueRefetchAfterTransitionError } from '#tracker_api/api_operations/issue/transitions/transition-issue.operation.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('TransitionIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -22,11 +23,11 @@ describe('TransitionIssueTool', () => {
     id: '1',
     key: 'QUEUE-123',
     summary: 'Test Issue',
-    queue: {
+    queue: createQueueFixture({
       id: '1',
       key: 'QUEUE',
       name: 'Test Queue',
-    },
+    }),
     status: {
       id: '2',
       key: 'in-progress',

@@ -49,7 +49,7 @@ describe('AddWorklogTool', () => {
       } as unknown as WorklogWithUnknownFields;
 
       vi.mocked(mockTrackerFacade.addWorklogsMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-1', value: numericIdWorklog },
+        { status: 'fulfilled', key: 'TEST-1', value: numericIdWorklog, index: 0 },
       ]);
 
       // id НЕ запрошен в fields — инструмент обязан вернуть его для worklogId.

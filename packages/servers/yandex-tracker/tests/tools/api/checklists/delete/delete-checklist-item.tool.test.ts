@@ -96,7 +96,7 @@ describe('DeleteChecklistItemTool', () => {
 
     it('должен принять корректные параметры', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
       ]);
 
       const result = await tool.execute({
@@ -110,7 +110,7 @@ describe('DeleteChecklistItemTool', () => {
   describe('Operation calls', () => {
     it('должен вызвать deleteChecklistItemMany с корректными параметрами', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -124,8 +124,8 @@ describe('DeleteChecklistItemTool', () => {
 
     it('должен вернуть успешный результат для batch операции', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
-        { status: 'fulfilled', key: 'TEST-456/item-456', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
+        { status: 'fulfilled', key: 'TEST-456/item-456', value: undefined, index: 1 },
       ]);
 
       const result = await tool.execute({
@@ -158,7 +158,7 @@ describe('DeleteChecklistItemTool', () => {
   describe('Logging', () => {
     it('должен логировать начало удаления', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -173,7 +173,7 @@ describe('DeleteChecklistItemTool', () => {
 
     it('должен логировать результаты', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -193,8 +193,13 @@ describe('DeleteChecklistItemTool', () => {
   describe('Error handling', () => {
     it('должен обработать частичные ошибки в batch', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
-        { status: 'rejected', key: 'TEST-456/item-456', reason: new Error('Item not found') },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
+        {
+          status: 'rejected',
+          key: 'TEST-456/item-456',
+          reason: new Error('Item not found'),
+          index: 1,
+        },
       ]);
 
       const result = await tool.execute({
@@ -240,6 +245,7 @@ describe('DeleteChecklistItemTool', () => {
     it('должен обработать ошибку несуществующего элемента (404)', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
         {
+          index: 0,
           status: 'rejected',
           key: 'TEST-123/NONEXISTENT',
           reason: new Error('Checklist item not found'),
@@ -263,7 +269,12 @@ describe('DeleteChecklistItemTool', () => {
 
     it('должен обработать ошибку доступа (403)', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'rejected', key: 'PRIVATE-123/item-123', reason: new Error('Access denied') },
+        {
+          status: 'rejected',
+          key: 'PRIVATE-123/item-123',
+          reason: new Error('Access denied'),
+          index: 0,
+        },
       ]);
 
       const result = await tool.execute({
@@ -284,6 +295,7 @@ describe('DeleteChecklistItemTool', () => {
     it('должен обработать ошибку несуществующей задачи (404)', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
         {
+          index: 0,
           status: 'rejected',
           key: 'NONEXISTENT-999/item-123',
           reason: new Error('Issue not found'),

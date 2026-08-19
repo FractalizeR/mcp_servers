@@ -10,6 +10,7 @@ import {
   EntityType,
 } from '@fractalizer/mcp-infrastructure/cache/entity-cache-key.js';
 import { ApiErrorClass } from '@fractalizer/mcp-infrastructure/http/error/api-error.class.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('CreateIssueOperation', () => {
   let operation: CreateIssueOperation;
@@ -59,7 +60,7 @@ describe('CreateIssueOperation', () => {
         key: 'TEST-123',
         summary: 'Test Issue',
         description: 'Test description',
-        queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
         createdAt: '2024-01-01T10:00:00.000Z',
@@ -90,7 +91,7 @@ describe('CreateIssueOperation', () => {
         id: '2',
         key: 'PROJ-456',
         summary: 'New Feature',
-        queue: { id: '2', key: 'PROJ', name: 'Project' },
+        queue: createQueueFixture({ id: '2', key: 'PROJ', name: 'Project' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: { uid: 'user2', display: 'User 2', login: 'user2', isActive: true },
         createdAt: '2024-01-02T10:00:00.000Z',
@@ -115,7 +116,7 @@ describe('CreateIssueOperation', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test Issue',
-        queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
         createdAt: '2024-01-01T10:00:00.000Z',
@@ -154,7 +155,7 @@ describe('CreateIssueOperation', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test Issue',
-        queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
         createdAt: '2024-01-01T10:00:00.000Z',
@@ -175,7 +176,7 @@ describe('CreateIssueOperation', () => {
       id: '1',
       key: 'TEST-123',
       summary: 'Test Issue',
-      queue: { id: '1', key: 'TEST', name: 'Test Queue' },
+      queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
       status: { id: '1', key: 'open', display: 'Open' },
       createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
       createdAt: '2024-01-01T10:00:00.000Z',

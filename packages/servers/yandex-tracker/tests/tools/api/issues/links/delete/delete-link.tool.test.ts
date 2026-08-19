@@ -77,7 +77,7 @@ describe('DeleteLinkTool', () => {
   describe('Operation calls', () => {
     it('должен вызвать deleteLinksMany с корректными параметрами', async () => {
       vi.mocked(mockTrackerFacade.deleteLinksMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:link456', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123:link456', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -91,7 +91,7 @@ describe('DeleteLinkTool', () => {
 
     it('должен вернуть успешный результат при удалении связи', async () => {
       vi.mocked(mockTrackerFacade.deleteLinksMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:link789', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123:link789', value: undefined, index: 0 },
       ]);
 
       const result = await tool.execute({
@@ -118,7 +118,7 @@ describe('DeleteLinkTool', () => {
     it('должен обработать ошибки от facade', async () => {
       const error = new Error('Link deletion failed');
       vi.mocked(mockTrackerFacade.deleteLinksMany).mockResolvedValue([
-        { status: 'rejected', key: 'TEST-123:link999', reason: error },
+        { status: 'rejected', key: 'TEST-123:link999', reason: error, index: 0 },
       ]);
 
       const result = await tool.execute({
@@ -133,8 +133,8 @@ describe('DeleteLinkTool', () => {
 
     it('должен обработать смешанные результаты (success + failure)', async () => {
       vi.mocked(mockTrackerFacade.deleteLinksMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-1:link1', value: undefined },
-        { status: 'rejected', key: 'TEST-2:link2', reason: new Error('Not found') },
+        { status: 'fulfilled', key: 'TEST-1:link1', value: undefined, index: 0 },
+        { status: 'rejected', key: 'TEST-2:link2', reason: new Error('Not found'), index: 1 },
       ]);
 
       const result = await tool.execute({

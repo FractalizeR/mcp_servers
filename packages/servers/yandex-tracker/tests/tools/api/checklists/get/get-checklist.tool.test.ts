@@ -121,7 +121,7 @@ describe('GetChecklistTool', () => {
 
     it('должен принять корректные параметры', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -137,7 +137,7 @@ describe('GetChecklistTool', () => {
   describe('Operation calls', () => {
     it('должен вызвать getChecklistMany с issueIds', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -151,8 +151,8 @@ describe('GetChecklistTool', () => {
 
     it('должен вызвать getChecklistMany с несколькими issueIds', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
-        { status: 'fulfilled', key: 'TEST-456', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
+        { status: 'fulfilled', key: 'TEST-456', value: paginated(mockChecklist), index: 1 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -166,7 +166,7 @@ describe('GetChecklistTool', () => {
 
     it('должен вернуть чеклист одной задачи', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -207,7 +207,7 @@ describe('GetChecklistTool', () => {
 
     it('должен пробрасывать параметры пагинации в фасад', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -226,7 +226,7 @@ describe('GetChecklistTool', () => {
 
     it('должен прокинуть cursor в фасад (одна задача)', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -266,8 +266,8 @@ describe('GetChecklistTool', () => {
       const checklist1 = createChecklistOutputFixture(2);
       const checklist2 = createChecklistOutputFixture(4);
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(checklist1) },
-        { status: 'fulfilled', key: 'TEST-456', value: paginated(checklist2) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(checklist1), index: 0 },
+        { status: 'fulfilled', key: 'TEST-456', value: paginated(checklist2), index: 1 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -298,7 +298,7 @@ describe('GetChecklistTool', () => {
 
     it('должен вернуть пустой чеклист', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated([]) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated([]), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -328,8 +328,8 @@ describe('GetChecklistTool', () => {
   describe('Partial failures', () => {
     it('должен обработать частичные ошибки', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
-        { status: 'rejected', key: 'TEST-456', reason: new Error('Issue not found') },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
+        { status: 'rejected', key: 'TEST-456', reason: new Error('Issue not found'), index: 1 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -358,7 +358,7 @@ describe('GetChecklistTool', () => {
 
     it('должен обработать полный провал batch операции', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'rejected', key: 'TEST-123', reason: new Error('API Error') },
+        { status: 'rejected', key: 'TEST-123', reason: new Error('API Error'), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -386,7 +386,7 @@ describe('GetChecklistTool', () => {
   describe('Logging', () => {
     it('должен логировать начало получения чеклистов', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -407,7 +407,7 @@ describe('GetChecklistTool', () => {
 
     it('должен логировать успешное получение', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
