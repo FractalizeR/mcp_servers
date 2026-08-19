@@ -140,7 +140,8 @@ module.exports = {
       from: {
         path: '^packages/servers/[^/]+/src/',
         pathNot: [
-          '^packages/servers/[^/]+/src/index\\.ts$',                     // Entry point может импортировать
+          '^packages/servers/[^/]+/src/index\\.ts$',                     // Публичный API пакета (library usage)
+          '^packages/servers/[^/]+/src/server\\.ts$',                    // Точка входа бандла: собирает контейнер — это и есть её работа
           '^packages/servers/[^/]+/src/composition-root/',               // Файлы внутри composition-root могут импортировать друг друга
           '^packages/servers/[^/]+/src/(mcp|tools)/tool-registry\\.ts$', // ToolRegistry импортирует definitions для автоматической регистрации
         ],
