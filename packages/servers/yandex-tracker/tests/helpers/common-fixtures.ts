@@ -9,6 +9,7 @@ import type {
   PaginationParams,
   TimestampFields,
 } from '../../src/tracker_api/entities/common/index.js';
+import type { User, UserWithUnknownFields } from '../../src/tracker_api/entities/user.entity.js';
 
 /**
  * Создать UserRef для тестов
@@ -38,7 +39,6 @@ export function createUserRef(overrides?: Partial<UserRef>): UserRef {
 export function createPaginationParams(overrides?: Partial<PaginationParams>): PaginationParams {
   return {
     perPage: 50,
-    page: 1,
     ...overrides,
   };
 }
@@ -61,6 +61,24 @@ export function createTimestampFields(overrides?: Partial<TimestampFields>): Tim
   return {
     createdAt: now,
     updatedAt: now,
+    ...overrides,
+  };
+}
+
+/**
+ * Форма продиктована типом `User` (`uid`/`login`/`isActive`), который объявлен в
+ * `Issue.createdBy`. Живой API отдаёт там ref `{self, id, display}` — расхождение
+ * в типах сущностей, не в фикстуре; см. раздел про расхождения в
+ * `.agentic-planning/typecheck_tests_debt/README.md`.
+ */
+export function createUserFixture(
+  overrides?: Partial<User> & Record<string, unknown>
+): UserWithUnknownFields {
+  return {
+    uid: '1234567890',
+    display: 'Test User',
+    login: 'test.user',
+    isActive: true,
     ...overrides,
   };
 }

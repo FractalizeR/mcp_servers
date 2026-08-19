@@ -8,6 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('DeleteLinkTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -46,7 +47,7 @@ describe('DeleteLinkTool', () => {
       const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -76,7 +77,7 @@ describe('DeleteLinkTool', () => {
   describe('Operation calls', () => {
     it('должен вызвать deleteLinksMany с корректными параметрами', async () => {
       vi.mocked(mockTrackerFacade.deleteLinksMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:link456', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123:link456', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -90,7 +91,7 @@ describe('DeleteLinkTool', () => {
 
     it('должен вернуть успешный результат при удалении связи', async () => {
       vi.mocked(mockTrackerFacade.deleteLinksMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123:link789', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123:link789', value: undefined, index: 0 },
       ]);
 
       const result = await tool.execute({
@@ -98,7 +99,7 @@ describe('DeleteLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -109,15 +110,15 @@ describe('DeleteLinkTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toHaveLength(1);
-      expect(parsed.data.successful[0].issueId).toBe('TEST-123');
-      expect(parsed.data.successful[0].linkId).toBe('link789');
-      expect(parsed.data.successful[0].success).toBe(true);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).linkId).toBe('link789');
+      expect(itemAt(parsed.data.successful).success).toBe(true);
     });
 
     it('должен обработать ошибки от facade', async () => {
       const error = new Error('Link deletion failed');
       vi.mocked(mockTrackerFacade.deleteLinksMany).mockResolvedValue([
-        { status: 'rejected', key: 'TEST-123:link999', reason: error },
+        { status: 'rejected', key: 'TEST-123:link999', reason: error, index: 0 },
       ]);
 
       const result = await tool.execute({
@@ -125,15 +126,15 @@ describe('DeleteLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}');
+      const parsed = JSON.parse(getTextContent(result));
       expect(parsed.data.failed).toHaveLength(1);
       expect(parsed.data.failed[0].error).toContain('Link deletion failed');
     });
 
     it('должен обработать смешанные результаты (success + failure)', async () => {
       vi.mocked(mockTrackerFacade.deleteLinksMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-1:link1', value: undefined },
-        { status: 'rejected', key: 'TEST-2:link2', reason: new Error('Not found') },
+        { status: 'fulfilled', key: 'TEST-1:link1', value: undefined, index: 0 },
+        { status: 'rejected', key: 'TEST-2:link2', reason: new Error('Not found'), index: 1 },
       ]);
 
       const result = await tool.execute({
@@ -144,7 +145,7 @@ describe('DeleteLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}');
+      const parsed = JSON.parse(getTextContent(result));
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(1);
       expect(parsed.data.failed).toHaveLength(1);

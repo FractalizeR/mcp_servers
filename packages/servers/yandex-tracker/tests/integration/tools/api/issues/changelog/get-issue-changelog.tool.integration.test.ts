@@ -5,6 +5,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_CHANGELOG_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('get-issue-changelog integration tests (batch mode)', () => {
   let client: TestMCPClient;
@@ -33,7 +34,7 @@ describe('get-issue-changelog integration tests (batch mode)', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data).toHaveProperty('successful');
     expect(response.data).toHaveProperty('failed');
     expect(response.data.total).toBe(2);
@@ -63,7 +64,7 @@ describe('get-issue-changelog integration tests (batch mode)', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(2);
     expect(response.data.successful.length).toBe(1);
     expect(response.data.failed.length).toBe(1);
@@ -88,7 +89,7 @@ describe('get-issue-changelog integration tests (batch mode)', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.successful).toBeDefined();
     expect(response.data.successful.length).toBe(1);
     expect(response.data.successful[0].changelog).toBeDefined();

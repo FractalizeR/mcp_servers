@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CreateEntityTool } from '#tools/api/entities/create-entity.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { createEntityApiRecordFixture } from '#helpers/entity-api.fixture.js';
 
 describe('CreateEntityTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -29,7 +30,7 @@ describe('CreateEntityTool', () => {
   });
 
   it('создаст цель с кастомными полями (extraFields)', async () => {
-    const entity = { id: '1', self: 'url', version: 1, shortId: 1, entityType: 'goal' };
+    const entity = createEntityApiRecordFixture({ version: 1 });
     vi.mocked(mockTrackerFacade.createEntity).mockResolvedValue(entity);
 
     const result = await tool.execute({

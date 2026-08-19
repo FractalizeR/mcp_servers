@@ -23,7 +23,7 @@ import type { ServerConfig } from '#config';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
 import { MCP_SERVER_NAME } from '#constants';
-import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { normalizeToolName } from '@fractalizer/mcp-core';
 

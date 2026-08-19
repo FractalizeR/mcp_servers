@@ -12,6 +12,7 @@ import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_CHANGELOG_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 /**
  * Метаданные пагинации по умолчанию (одна полная страница).
@@ -98,7 +99,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -161,7 +162,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -201,7 +202,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -236,7 +237,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           successful: Array<{ changelog: ChangelogEntryWithUnknownFields[] }>;
@@ -291,7 +292,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении истории изменений задач');
+      expect(getTextContent(result)).toContain('Ошибка при получении истории изменений задач');
     });
   });
 
@@ -307,7 +308,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: {
           successful: Array<{
             issueKey: string;

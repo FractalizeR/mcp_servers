@@ -5,13 +5,14 @@ import type {
   IssueServicesContainer,
   QueueServicesContainer,
   ProjectAgileServicesContainer,
+  EntityAdminServicesContainer,
 } from '#tracker_api/facade/services/containers/index.js';
 import type { PingResult } from '#tracker_api/api_operations/user/ping.operation.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
 import type { User } from '#tracker_api/entities/user.entity.js';
 import type { Issue, IssueWithUnknownFields } from '#tracker_api/entities/issue.entity.js';
-import type { Queue } from '#tracker_api/entities/queue.entity.js';
+
 import type { Status } from '#tracker_api/entities/status.entity.js';
 import type {
   FindIssuesInputDto,
@@ -33,10 +34,16 @@ import type {
   SprintsListOutput,
 } from '#tracker_api/dto/index.js';
 import type {
-  ChangelogEntryWithUnknownFields,
   TransitionWithUnknownFields,
   WorklogWithUnknownFields,
 } from '#tracker_api/entities/index.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { createBoardFixture, createSprintFixture } from '#helpers/agile.fixture.js';
+import { createUserFixture } from '#helpers/common-fixtures.js';
+import { createIssueFixture } from '#helpers/issue.fixture.js';
+import { createPaginatedFixture } from '#helpers/pagination.fixture.js';
+import { createWorklogFixture } from '#helpers/worklog.fixture.js';
+import type { BatchChangelogResult } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
 
 describe('YandexTrackerFacade', () => {
   let facade: YandexTrackerFacade;
@@ -46,6 +53,7 @@ describe('YandexTrackerFacade', () => {
   let mockIssuesContainer: IssueServicesContainer;
   let mockQueuesContainer: QueueServicesContainer;
   let mockProjectAgileContainer: ProjectAgileServicesContainer;
+  let mockEntityAdminContainer: EntityAdminServicesContainer;
 
   beforeEach(() => {
     // Create mock containers with services
@@ -153,12 +161,35 @@ describe('YandexTrackerFacade', () => {
       },
     } as unknown as ProjectAgileServicesContainer;
 
+    mockEntityAdminContainer = {
+      entityApi: {
+        findEntities: vi.fn(),
+        getEntity: vi.fn(),
+        createEntity: vi.fn(),
+        updateEntity: vi.fn(),
+        deleteEntity: vi.fn(),
+      },
+      administration: {
+        getIssueTypes: vi.fn(),
+        getPriorities: vi.fn(),
+        getStatuses: vi.fn(),
+        getResolutions: vi.fn(),
+      },
+      filter: { getFilters: vi.fn(), createFilter: vi.fn(), updateFilter: vi.fn() },
+      queueLocalField: {
+        getQueueLocalFields: vi.fn(),
+        createQueueLocalField: vi.fn(),
+        updateQueueLocalField: vi.fn(),
+      },
+    } as unknown as EntityAdminServicesContainer;
+
     // Create facade with mocked containers
     facade = new YandexTrackerFacade(
       mockCoreContainer,
       mockIssuesContainer,
       mockQueuesContainer,
-      mockProjectAgileContainer
+      mockProjectAgileContainer,
+      mockEntityAdminContainer
     );
   });
 
@@ -209,11 +240,7 @@ describe('YandexTrackerFacade', () => {
       // Arrange
       const issueKeys = ['TEST-1', 'TEST-2'];
 
-      const mockQueue: Queue = {
-        id: '1',
-        key: 'TEST',
-        name: 'Test Queue',
-      };
+      const mockQueue = createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' });
 
       const mockStatus: Status = {
         id: '1',
@@ -289,11 +316,7 @@ describe('YandexTrackerFacade', () => {
       // Arrange
       const issueKeys = ['TEST-1', 'INVALID'];
 
-      const mockQueue: Queue = {
-        id: '1',
-        key: 'TEST',
-        name: 'Test Queue',
-      };
+      const mockQueue = createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' });
 
       const mockStatus: Status = {
         id: '1',
@@ -356,18 +379,9 @@ describe('YandexTrackerFacade', () => {
   describe('findIssues', () => {
     it('должна делегировать вызов IssueService.findIssues', async () => {
       const params: FindIssuesInputDto = { query: 'status: open', perPage: 50 };
-      const mockResult: FindIssuesResult = [
-        {
-          id: '1',
-          key: 'TEST-1',
-          summary: 'Test',
-          queue: { id: '1', key: 'TEST', name: 'Test' },
-          status: { id: '1', key: 'open', display: 'Open' },
-          createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01',
-        },
-      ];
+      const mockResult: FindIssuesResult = createPaginatedFixture([
+        createIssueFixture({ id: '1', key: 'TEST-1', summary: 'Test' }),
+      ]);
 
       vi.mocked(mockIssuesContainer.issue.findIssues).mockResolvedValue(mockResult);
 
@@ -393,9 +407,9 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-1',
         summary: 'New Issue',
-        queue: { id: '1', key: 'TEST', name: 'Test' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+        createdBy: createUserFixture({ uid: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
       };
@@ -425,9 +439,9 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Updated',
-        queue: { id: '1', key: 'TEST', name: 'Test' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+        createdBy: createUserFixture({ uid: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-02',
       };
@@ -451,9 +465,9 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Updated',
-        queue: { id: '1', key: 'TEST', name: 'Test' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+        createdBy: createUserFixture({ uid: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-02',
       };
@@ -477,33 +491,40 @@ describe('YandexTrackerFacade', () => {
 
   describe('getIssueChangelog', () => {
     it('должна делегировать вызов IssueService.getIssueChangelog', async () => {
-      const issueKey = 'TEST-123';
-      const mockResult: ChangelogEntryWithUnknownFields[] = [
+      const issueKeys = ['TEST-123'];
+      const mockResult: BatchChangelogResult[] = [
         {
-          id: '1',
-          self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/changelog/1',
-          issue: { id: '123', key: 'TEST-123', display: 'Test Issue' },
-          updatedAt: '2024-01-01',
-          updatedBy: { uid: '1', display: 'User', login: 'user', isActive: true },
-          type: 'IssueUpdated',
-          fields: [],
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: createPaginatedFixture([
+            {
+              id: '1',
+              self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/changelog/1',
+              issue: { id: '123', key: 'TEST-123', display: 'Test Issue' },
+              updatedAt: '2024-01-01',
+              updatedBy: createUserFixture({ uid: '1', display: 'User' }),
+              type: 'IssueUpdated',
+              fields: [],
+            },
+          ]),
         },
       ];
 
       vi.mocked(mockIssuesContainer.issue.getIssueChangelog).mockResolvedValue(mockResult);
 
-      const result = await facade.getIssueChangelog(issueKey);
+      const result = await facade.getIssueChangelog(issueKeys);
 
-      expect(mockIssuesContainer.issue.getIssueChangelog).toHaveBeenCalledWith(issueKey, {});
+      expect(mockIssuesContainer.issue.getIssueChangelog).toHaveBeenCalledWith(issueKeys, {});
       expect(result).toEqual(mockResult);
     });
 
     it('должна обрабатывать ошибки от IssueService.getIssueChangelog', async () => {
-      const issueKey = 'TEST-123';
+      const issueKeys = ['TEST-123'];
       const error = new Error('Changelog failed');
       vi.mocked(mockIssuesContainer.issue.getIssueChangelog).mockRejectedValue(error);
 
-      await expect(facade.getIssueChangelog(issueKey)).rejects.toThrow('Changelog failed');
+      await expect(facade.getIssueChangelog(issueKeys)).rejects.toThrow('Changelog failed');
     });
   });
 
@@ -544,9 +565,9 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test',
-        queue: { id: '1', key: 'TEST', name: 'Test' },
+        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '2', key: 'inProgress', display: 'In Progress' },
-        createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+        createdBy: createUserFixture({ uid: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-02',
       };
@@ -582,7 +603,8 @@ describe('YandexTrackerFacade', () => {
         mockCoreContainer,
         mockIssuesContainer,
         mockQueuesContainer,
-        mockProjectAgileContainer
+        mockProjectAgileContainer,
+        mockEntityAdminContainer
       );
 
       // Assert - проверяем, что можем вызвать методы
@@ -597,16 +619,9 @@ describe('YandexTrackerFacade', () => {
     describe('getWorklogs', () => {
       it('должна делегировать вызов WorklogService.getWorklogs', async () => {
         const issueId = 'TEST-1';
-        const mockResult: WorklogWithUnknownFields[] = [
-          {
-            id: '1',
-            self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
-            issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
-            createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
-            createdAt: '2024-01-01',
-            duration: 'PT1H',
-          },
-        ];
+        const mockResult = createPaginatedFixture([
+          createWorklogFixture({ id: '1', duration: 'PT1H' }),
+        ]);
 
         vi.mocked(mockIssuesContainer.worklog.getWorklogs).mockResolvedValue(mockResult);
 
@@ -620,15 +635,15 @@ describe('YandexTrackerFacade', () => {
     describe('addWorklog', () => {
       it('должна делегировать вызов WorklogService.addWorklog', async () => {
         const issueId = 'TEST-1';
-        const input: AddWorklogInput = { duration: 'PT1H', comment: 'Work done' };
-        const mockResult: WorklogWithUnknownFields = {
-          id: '1',
-          self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
-          issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
-          createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
-          createdAt: '2024-01-01',
+        const input: AddWorklogInput = {
+          start: '2024-01-01T10:00:00.000+0000',
           duration: 'PT1H',
+          comment: 'Work done',
         };
+        const mockResult: WorklogWithUnknownFields = createWorklogFixture({
+          id: '1',
+          duration: 'PT1H',
+        });
 
         vi.mocked(mockIssuesContainer.worklog.addWorklog).mockResolvedValue(mockResult);
 
@@ -644,14 +659,10 @@ describe('YandexTrackerFacade', () => {
         const issueId = 'TEST-1';
         const worklogId = '123';
         const input: UpdateWorklogInput = { duration: 'PT2H' };
-        const mockResult: WorklogWithUnknownFields = {
+        const mockResult: WorklogWithUnknownFields = createWorklogFixture({
           id: '123',
-          self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/123',
-          issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
-          createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
-          createdAt: '2024-01-01',
           duration: 'PT2H',
-        };
+        });
 
         vi.mocked(mockIssuesContainer.worklog.updateWorklog).mockResolvedValue(mockResult);
 
@@ -722,7 +733,7 @@ describe('YandexTrackerFacade', () => {
 
     describe('createField', () => {
       it('должна делегировать вызов FieldService.createField', async () => {
-        const input: CreateFieldDto = { name: 'Custom Field', type: 'string' };
+        const input: CreateFieldDto = { name: 'Custom Field', schema: { type: 'string' } };
         const mockResult: FieldOutput = {
           id: 'newField',
           self: 'https://api.tracker.yandex.net/v3/fields/newField',
@@ -776,11 +787,11 @@ describe('YandexTrackerFacade', () => {
     describe('getBoards', () => {
       it('должна делегировать вызов BoardService.getBoards без параметров', async () => {
         const mockResult: BoardsListOutput = [
-          {
+          createBoardFixture({
             id: '1',
             self: 'https://api.tracker.yandex.net/v3/boards/1',
             name: 'Board 1',
-          },
+          }),
         ];
 
         vi.mocked(mockProjectAgileContainer.board.getBoards).mockResolvedValue(mockResult);
@@ -794,11 +805,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.getBoards с параметрами', async () => {
         const params: GetBoardsDto = { filter: 'active' };
         const mockResult: BoardsListOutput = [
-          {
+          createBoardFixture({
             id: '1',
             self: 'https://api.tracker.yandex.net/v3/boards/1',
             name: 'Active Board',
-          },
+          }),
         ];
 
         vi.mocked(mockProjectAgileContainer.board.getBoards).mockResolvedValue(mockResult);
@@ -813,11 +824,11 @@ describe('YandexTrackerFacade', () => {
     describe('getBoard', () => {
       it('должна делегировать вызов BoardService.getBoard', async () => {
         const boardId = '1';
-        const mockResult: BoardOutput = {
+        const mockResult: BoardOutput = createBoardFixture({
           id: '1',
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.board.getBoard).mockResolvedValue(mockResult);
 
@@ -830,11 +841,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.getBoard с params', async () => {
         const boardId = '1';
         const params = { localized: true };
-        const mockResult: BoardOutput = {
+        const mockResult: BoardOutput = createBoardFixture({
           id: '1',
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.board.getBoard).mockResolvedValue(mockResult);
 
@@ -848,11 +859,11 @@ describe('YandexTrackerFacade', () => {
     describe('createBoard', () => {
       it('должна делегировать вызов BoardService.createBoard', async () => {
         const input: CreateBoardDto = { name: 'Sprint Board', filter: { query: 'status: open' } };
-        const mockResult: BoardOutput = {
+        const mockResult: BoardOutput = createBoardFixture({
           id: '1',
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.board.createBoard).mockResolvedValue(mockResult);
 
@@ -867,11 +878,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.updateBoard', async () => {
         const boardId = '1';
         const input = { name: 'Updated Board' };
-        const mockResult: BoardOutput = {
+        const mockResult: BoardOutput = createBoardFixture({
           id: '1',
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Updated Board',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.board.updateBoard).mockResolvedValue(mockResult);
 
@@ -900,11 +911,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов SprintService.getSprints', async () => {
         const boardId = '1';
         const mockResult: SprintsListOutput = [
-          {
+          createSprintFixture({
             id: '10',
             self: 'https://api.tracker.yandex.net/v3/sprints/10',
             name: 'Sprint 1',
-          },
+          }),
         ];
 
         vi.mocked(mockProjectAgileContainer.sprint.getSprints).mockResolvedValue(mockResult);
@@ -919,11 +930,11 @@ describe('YandexTrackerFacade', () => {
     describe('getSprint', () => {
       it('должна делегировать вызов SprintService.getSprint', async () => {
         const sprintId = '10';
-        const mockResult: SprintOutput = {
+        const mockResult: SprintOutput = createSprintFixture({
           id: '10',
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.sprint.getSprint).mockResolvedValue(mockResult);
 
@@ -938,15 +949,15 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов SprintService.createSprint', async () => {
         const input: CreateSprintDto = {
           name: 'Sprint 1',
-          boardId: '1',
+          board: '1',
           startDate: '2024-01-01',
           endDate: '2024-01-14',
         };
-        const mockResult: SprintOutput = {
+        const mockResult: SprintOutput = createSprintFixture({
           id: '10',
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.sprint.createSprint).mockResolvedValue(mockResult);
 
@@ -961,11 +972,11 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов SprintService.updateSprint', async () => {
         const sprintId = '10';
         const input = { name: 'Sprint 1 Updated' };
-        const mockResult: SprintOutput = {
+        const mockResult: SprintOutput = createSprintFixture({
           id: '10',
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1 Updated',
-        };
+        });
 
         vi.mocked(mockProjectAgileContainer.sprint.updateSprint).mockResolvedValue(mockResult);
 

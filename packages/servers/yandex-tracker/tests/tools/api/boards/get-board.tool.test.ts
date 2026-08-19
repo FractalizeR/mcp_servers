@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GetBoardTool } from '#tools/api/boards/get-board.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('GetBoardTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -37,7 +38,7 @@ describe('GetBoardTool', () => {
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.getBoard).toHaveBeenCalledWith('1', { localized: undefined });
 
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+    const parsed = JSON.parse(getTextContent(result)) as {
       data: { board: { id: string; name: string } };
     };
     expect(parsed.data.board.id).toBe('1');

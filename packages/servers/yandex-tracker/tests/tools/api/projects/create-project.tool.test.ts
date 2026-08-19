@@ -9,6 +9,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createProjectFixture } from '#helpers/project.fixture.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('CreateProjectTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -57,7 +58,7 @@ describe('CreateProjectTool', () => {
         const result = await tool.execute({ name: 'Test', lead: 'user1', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -69,7 +70,7 @@ describe('CreateProjectTool', () => {
         const result = await tool.execute({ key: 'PROJ', lead: 'user1', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -81,7 +82,7 @@ describe('CreateProjectTool', () => {
         const result = await tool.execute({ key: 'PROJ', name: 'Test', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -98,7 +99,7 @@ describe('CreateProjectTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -149,7 +150,7 @@ describe('CreateProjectTool', () => {
           lead: 'user1',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             projectKey: string;
@@ -196,7 +197,7 @@ describe('CreateProjectTool', () => {
           teamUserIds: ['user1', 'user2'],
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             projectKey: string;
@@ -286,7 +287,7 @@ describe('CreateProjectTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -308,7 +309,7 @@ describe('CreateProjectTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -328,7 +329,7 @@ describe('CreateProjectTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -348,7 +349,7 @@ describe('CreateProjectTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;

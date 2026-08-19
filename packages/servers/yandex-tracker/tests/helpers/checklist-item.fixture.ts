@@ -4,7 +4,10 @@
  * Используются в тестах для создания mock данных элементов чеклиста.
  */
 
-import type { ChecklistItem } from '../../src/tracker_api/entities/checklist-item.entity.js';
+import type {
+  ChecklistItem,
+  ChecklistItemWithUnknownFields,
+} from '../../src/tracker_api/entities/checklist-item.entity.js';
 import { createUserRef } from './common-fixtures.js';
 
 /**
@@ -27,7 +30,9 @@ import { createUserRef } from './common-fixtures.js';
  * });
  * ```
  */
-export function createChecklistItemFixture(overrides?: Partial<ChecklistItem>): ChecklistItem {
+export function createChecklistItemFixture(
+  overrides?: Partial<ChecklistItem>
+): ChecklistItemWithUnknownFields {
   return {
     id: 'checklist-item-123',
     text: 'Test checklist item',
@@ -103,7 +108,9 @@ export function createChecklistItemWithDeadlineFixture(
  * const fullItem = createFullChecklistItemFixture();
  * ```
  */
-export function createFullChecklistItemFixture(overrides?: Partial<ChecklistItem>): ChecklistItem {
+export function createFullChecklistItemFixture(
+  overrides?: Partial<ChecklistItem>
+): ChecklistItemWithUnknownFields {
   return createChecklistItemFixture({
     assignee: createUserRef(),
     deadline: new Date('2025-12-31T23:59:59.000Z').toISOString(),
@@ -126,7 +133,7 @@ export function createFullChecklistItemFixture(overrides?: Partial<ChecklistItem
 export function createChecklistItemListFixture(
   count: number,
   baseOverrides?: Partial<ChecklistItem>
-): ChecklistItem[] {
+): ChecklistItemWithUnknownFields[] {
   return Array.from({ length: count }, (_, index) =>
     createChecklistItemFixture({
       id: `checklist-item-${100 + index}`,
@@ -145,7 +152,9 @@ export function createChecklistItemListFixture(
  * const minimal = createMinimalChecklistItemFixture();
  * ```
  */
-export function createMinimalChecklistItemFixture(id = 'checklist-item-minimal'): ChecklistItem {
+export function createMinimalChecklistItemFixture(
+  id = 'checklist-item-minimal'
+): ChecklistItemWithUnknownFields {
   return {
     id,
     text: 'Minimal checklist item',

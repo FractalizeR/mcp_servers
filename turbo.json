@@ -77,6 +77,12 @@
       "inputs": ["src/**/*.ts", "scripts/**/*.ts", "tsconfig*.json"],
       "outputs": []
     },
+    "typecheck:tests": {
+      "dependsOn": ["^build"],
+      "cache": true,
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts", "tsconfig*.json"],
+      "outputs": []
+    },
     "cpd": {
       "cache": true,
       "inputs": ["src/**/*.ts"],

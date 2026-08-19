@@ -53,7 +53,8 @@ describe('Tool Metadata Validation', () => {
       // инструментов его не переопределял (подтверждено грепом перед удалением).
       for (const ToolClass of TOOL_CLASSES) {
         const metadata = (ToolClass as any).METADATA;
-        const hasGetParamsSchemaMethod = typeof ToolClass.prototype.getParamsSchema === 'function';
+        const hasGetParamsSchemaMethod =
+          typeof Reflect.get(ToolClass.prototype, 'getParamsSchema') === 'function';
 
         expect(
           hasGetParamsSchemaMethod,

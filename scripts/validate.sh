@@ -35,7 +35,7 @@ QUIET=false
 # branches 75%, statements 80%). Before this line was added, those
 # thresholds were declared but never checked by anything in the validation
 # pipeline — the gate looked enforced only because nothing measured it.
-TURBO_TASKS_COMMON="build typecheck typecheck:scripts test:coverage test:smoke test:smoke:server test:raw-wire depcruise validate:docs validate:tools"
+TURBO_TASKS_COMMON="build typecheck typecheck:scripts typecheck:tests test:coverage test:smoke test:smoke:server test:raw-wire depcruise validate:docs validate:tools"
 
 if $QUIET; then
   TURBO_TASKS="$TURBO_TASKS_COMMON lint:quiet cpd:quiet"

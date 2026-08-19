@@ -4,6 +4,7 @@ import { createTestClient } from '#integration/helpers/mcp-client.js';
 import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('delete-link integration tests', () => {
   let client: TestMCPClient;
@@ -36,7 +37,7 @@ describe('delete-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
     expect(response.data.successful).toHaveLength(1);
@@ -64,7 +65,7 @@ describe('delete-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.failed).toHaveLength(1);
     expect(response.data.failed[0].issueId).toBe(issueKey);
     expect(response.data.failed[0].linkId).toBe(linkId);
@@ -94,7 +95,7 @@ describe('delete-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(3);
     expect(response.data.successful).toHaveLength(3);
     mockServer.assertAllRequestsDone();
@@ -120,7 +121,7 @@ describe('delete-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(2);
     expect(response.data.successful).toHaveLength(2);
     expect(response.data.successful[0].issueId).toBe(issue1);
@@ -146,7 +147,7 @@ describe('delete-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
     expect(response.data.successful).toHaveLength(1);

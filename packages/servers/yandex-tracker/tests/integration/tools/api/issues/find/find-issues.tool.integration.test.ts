@@ -11,6 +11,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('find-issues integration tests', () => {
   let client: TestMCPClient;
@@ -50,7 +51,7 @@ describe('find-issues integration tests', () => {
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.itemsOnPage).toBe(2);
@@ -86,7 +87,7 @@ describe('find-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.itemsOnPage).toBe(3);
@@ -114,7 +115,7 @@ describe('find-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.itemsOnPage).toBe(2);
@@ -146,7 +147,7 @@ describe('find-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.itemsOnPage).toBe(1);
@@ -174,7 +175,7 @@ describe('find-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.itemsOnPage).toBe(2);
@@ -204,7 +205,7 @@ describe('find-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.itemsOnPage).toBe(2);
@@ -230,7 +231,7 @@ describe('find-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.summary.fieldsReturned).toEqual(fields);
@@ -267,7 +268,7 @@ describe('find-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
       const issue = response.items[0];
 
@@ -297,7 +298,7 @@ describe('find-issues integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка при поиске задач');
+      expect(getTextContent(result)).toContain('Ошибка при поиске задач');
 
       mockServer.assertAllRequestsDone();
     });
@@ -317,7 +318,7 @@ describe('find-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.itemsOnPage).toBe(0);
@@ -336,8 +337,8 @@ describe('find-issues integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
-      expect(result.content[0]!.text).toContain(
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain(
         'хотя бы один способ поиска: query, filter, keys, queue или filterId'
       );
     });
@@ -351,7 +352,7 @@ describe('find-issues integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
 
     it('должен вернуть ошибку для невалидного perPage (не целое число)', async () => {
@@ -364,7 +365,7 @@ describe('find-issues integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
   });
 });

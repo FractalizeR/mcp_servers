@@ -11,6 +11,7 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createCommentListFixture } from '#helpers/comment.fixture.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/index.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 /** Метаданные пагинации по умолчанию для single-page без Link. */
 const defaultMeta: PaginationMeta = {
@@ -88,7 +89,7 @@ describe('GetCommentsTool', () => {
       const result = await tool.execute({ fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -100,7 +101,7 @@ describe('GetCommentsTool', () => {
       const result = await tool.execute({ issueIds: ['TEST-123'] });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -112,7 +113,7 @@ describe('GetCommentsTool', () => {
       const result = await tool.execute({ issueIds: [], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить некорректный perPage (отрицательное число)', async () => {
@@ -123,7 +124,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить некорректный perPage (больше 500)', async () => {
@@ -134,7 +135,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить cursor вместе с perPage (bulk-конфликт)', async () => {
@@ -146,7 +147,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить cursor при нескольких issueIds (batch-ограничение)', async () => {
@@ -157,7 +158,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен принять корректные параметры', async () => {
@@ -299,7 +300,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -318,8 +319,8 @@ describe('GetCommentsTool', () => {
       expect(parsed.data.successful).toBe(1);
       expect(parsed.data.failed).toBe(0);
       expect(parsed.data.comments).toHaveLength(1);
-      expect(parsed.data.comments[0].issueId).toBe('TEST-123');
-      expect(parsed.data.comments[0].count).toBe(3);
+      expect(itemAt(parsed.data.comments).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.comments).count).toBe(3);
       expect(parsed.data.fieldsReturned).toEqual(['id', 'text']);
     });
 
@@ -339,7 +340,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: {
           comments: Array<{
             issueId: string;
@@ -350,14 +351,14 @@ describe('GetCommentsTool', () => {
         };
       };
       // Регрессия формата: прежние ключи на месте
-      expect(parsed.data.comments[0].issueId).toBe('TEST-123');
-      expect(parsed.data.comments[0].comments).toHaveLength(3);
-      expect(parsed.data.comments[0].count).toBe(3);
+      expect(itemAt(parsed.data.comments).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.comments).comments).toHaveLength(3);
+      expect(itemAt(parsed.data.comments).count).toBe(3);
       // Аддитивно: метаданные пагинации
-      expect(parsed.data.comments[0].pagination).toBeDefined();
-      expect(parsed.data.comments[0].pagination.hasNextPage).toBe(true);
-      expect(parsed.data.comments[0].pagination.fetchedAll).toBe(false);
-      expect(parsed.data.comments[0].pagination.total).toBe(42);
+      expect(itemAt(parsed.data.comments).pagination).toBeDefined();
+      expect(itemAt(parsed.data.comments).pagination.hasNextPage).toBe(true);
+      expect(itemAt(parsed.data.comments).pagination.fetchedAll).toBe(false);
+      expect(itemAt(parsed.data.comments).pagination.total).toBe(42);
     });
 
     it('должен передавать fetchAll и maxItems в фасад', async () => {
@@ -396,7 +397,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть пустой массив для задачи без комментариев', async () => {
@@ -415,7 +416,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -428,7 +429,7 @@ describe('GetCommentsTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toBe(1);
-      expect(parsed.data.comments[0].count).toBe(0);
+      expect(itemAt(parsed.data.comments).count).toBe(0);
     });
 
     it('должен обработать batch результаты для нескольких задач', async () => {
@@ -453,7 +454,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -468,10 +469,10 @@ describe('GetCommentsTool', () => {
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toBe(2);
       expect(parsed.data.comments).toHaveLength(2);
-      expect(parsed.data.comments[0].issueId).toBe('TEST-123');
-      expect(parsed.data.comments[0].count).toBe(3);
-      expect(parsed.data.comments[1].issueId).toBe('TEST-456');
-      expect(parsed.data.comments[1].count).toBe(0);
+      expect(itemAt(parsed.data.comments).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.comments).count).toBe(3);
+      expect(itemAt(parsed.data.comments, 1).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.comments, 1).count).toBe(0);
     });
   });
 
@@ -543,7 +544,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении комментариев');
+      expect(getTextContent(result)).toContain('Ошибка при получении комментариев');
     });
 
     it('должен обработать частичные ошибки (partial failures)', async () => {
@@ -568,7 +569,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -606,7 +607,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;

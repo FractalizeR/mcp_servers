@@ -171,7 +171,7 @@ interface BatchToolCase {
   /** Относительный путь исходника — используется для проверки полноты. */
   sourcePath: string;
   label: string;
-  outputDataSchema: z.ZodTypeAny;
+  outputDataSchema: z.ZodObject<z.ZodRawShape>;
   buildParams: () => ToolCallParams;
   facadeMethod: keyof YandexTrackerFacade;
   results: (FulfilledLike | RejectedLike)[];

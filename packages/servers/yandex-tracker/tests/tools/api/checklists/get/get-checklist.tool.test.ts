@@ -12,6 +12,7 @@ import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createChecklistOutputFixture } from '#helpers/checklist-dto.fixture.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 /** Обернуть массив элементов чеклиста в PaginatedResult (single-page). */
 function paginated(
@@ -84,7 +85,7 @@ describe('GetChecklistTool', () => {
       const result = await tool.execute({ fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -96,7 +97,7 @@ describe('GetChecklistTool', () => {
       const result = await tool.execute({ issueIds: ['TEST-123'] });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -108,19 +109,19 @@ describe('GetChecklistTool', () => {
       const result = await tool.execute({ issueIds: [], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить пустой issueId в массиве', async () => {
       const result = await tool.execute({ issueIds: [''], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен принять корректные параметры', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -136,7 +137,7 @@ describe('GetChecklistTool', () => {
   describe('Operation calls', () => {
     it('должен вызвать getChecklistMany с issueIds', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -150,8 +151,8 @@ describe('GetChecklistTool', () => {
 
     it('должен вызвать getChecklistMany с несколькими issueIds', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
-        { status: 'fulfilled', key: 'TEST-456', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
+        { status: 'fulfilled', key: 'TEST-456', value: paginated(mockChecklist), index: 1 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -165,7 +166,7 @@ describe('GetChecklistTool', () => {
 
     it('должен вернуть чеклист одной задачи', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -175,7 +176,7 @@ describe('GetChecklistTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -191,11 +192,11 @@ describe('GetChecklistTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toHaveLength(1);
-      expect(parsed.data.successful[0].issueId).toBe('TEST-123');
-      expect(parsed.data.successful[0].itemsCount).toBe(3);
-      expect(parsed.data.successful[0].checklist).toHaveLength(3);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).itemsCount).toBe(3);
+      expect(itemAt(parsed.data.successful).checklist).toHaveLength(3);
       // Регрессия: прежние ключи сохранены + добавлен pagination
-      expect(parsed.data.successful[0].pagination).toEqual({
+      expect(itemAt(parsed.data.successful).pagination).toEqual({
         hasNextPage: false,
         fetchedAll: true,
         truncated: false,
@@ -206,7 +207,7 @@ describe('GetChecklistTool', () => {
 
     it('должен пробрасывать параметры пагинации в фасад', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -225,7 +226,7 @@ describe('GetChecklistTool', () => {
 
     it('должен прокинуть cursor в фасад (одна задача)', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -265,8 +266,8 @@ describe('GetChecklistTool', () => {
       const checklist1 = createChecklistOutputFixture(2);
       const checklist2 = createChecklistOutputFixture(4);
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(checklist1) },
-        { status: 'fulfilled', key: 'TEST-456', value: paginated(checklist2) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(checklist1), index: 0 },
+        { status: 'fulfilled', key: 'TEST-456', value: paginated(checklist2), index: 1 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -276,7 +277,7 @@ describe('GetChecklistTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -291,13 +292,13 @@ describe('GetChecklistTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(2);
-      expect(parsed.data.successful[0].itemsCount).toBe(2);
-      expect(parsed.data.successful[1].itemsCount).toBe(4);
+      expect(itemAt(parsed.data.successful).itemsCount).toBe(2);
+      expect(itemAt(parsed.data.successful, 1).itemsCount).toBe(4);
     });
 
     it('должен вернуть пустой чеклист', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated([]) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated([]), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -307,7 +308,7 @@ describe('GetChecklistTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -319,16 +320,16 @@ describe('GetChecklistTool', () => {
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.successful[0].itemsCount).toBe(0);
-      expect(parsed.data.successful[0].checklist).toHaveLength(0);
+      expect(itemAt(parsed.data.successful).itemsCount).toBe(0);
+      expect(itemAt(parsed.data.successful).checklist).toHaveLength(0);
     });
   });
 
   describe('Partial failures', () => {
     it('должен обработать частичные ошибки', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
-        { status: 'rejected', key: 'TEST-456', reason: new Error('Issue not found') },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
+        { status: 'rejected', key: 'TEST-456', reason: new Error('Issue not found'), index: 1 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -338,7 +339,7 @@ describe('GetChecklistTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -349,15 +350,15 @@ describe('GetChecklistTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(1);
-      expect(parsed.data.successful[0].issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
       expect(parsed.data.failed).toHaveLength(1);
-      expect(parsed.data.failed[0].issueId).toBe('TEST-456');
-      expect(parsed.data.failed[0].error).toContain('Issue not found');
+      expect(itemAt(parsed.data.failed).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.failed).error).toContain('Issue not found');
     });
 
     it('должен обработать полный провал batch операции', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'rejected', key: 'TEST-123', reason: new Error('API Error') },
+        { status: 'rejected', key: 'TEST-123', reason: new Error('API Error'), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -367,7 +368,7 @@ describe('GetChecklistTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -385,7 +386,7 @@ describe('GetChecklistTool', () => {
   describe('Logging', () => {
     it('должен логировать начало получения чеклистов', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -406,7 +407,7 @@ describe('GetChecklistTool', () => {
 
     it('должен логировать успешное получение', async () => {
       const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
-        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist) },
+        { status: 'fulfilled', key: 'TEST-123', value: paginated(mockChecklist), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -437,7 +438,7 @@ describe('GetChecklistTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении чеклистов');
+      expect(getTextContent(result)).toContain('Ошибка при получении чеклистов');
     });
   });
 });

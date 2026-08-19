@@ -156,12 +156,7 @@ describe('GetThumbnailOperation', () => {
       for (const mimetype of imageTypes) {
         const attachment = createAttachmentFixture({ mimetype });
 
-        // Act
-        const _result = operation.supportsThumbnail(attachment);
-
-        // Assert - we need to mock FileDownloadUtil.isImage to return true
-        // For this test, we assume the method works correctly
-        // In a real scenario, you'd mock FileDownloadUtil
+        expect(operation.supportsThumbnail(attachment)).toBe(true);
       }
     });
 
@@ -170,7 +165,6 @@ describe('GetThumbnailOperation', () => {
       const attachment = createAttachmentFixture({
         name: 'document.pdf',
         mimetype: 'application/pdf',
-        thumbnail: undefined,
       });
 
       // Replace the utility methods temporarily
@@ -193,7 +187,6 @@ describe('GetThumbnailOperation', () => {
         const attachment = createAttachmentFixture({
           name,
           mimetype: 'application/octet-stream', // Unknown MIME
-          thumbnail: undefined,
         });
 
         // Mock FileDownloadUtil methods
@@ -201,11 +194,7 @@ describe('GetThumbnailOperation', () => {
         vi.spyOn(originalUtils.FileDownloadUtil, 'isImage').mockReturnValue(false);
         vi.spyOn(originalUtils.FileDownloadUtil, 'isImageByExtension').mockReturnValue(true);
 
-        // Act
-        const _result = operation.supportsThumbnail(attachment);
-
-        // Assert - depends on implementation
-        // For this test, we assume it returns true if isImageByExtension returns true
+        expect(operation.supportsThumbnail(attachment)).toBe(true);
       }
     });
 
@@ -243,7 +232,6 @@ describe('GetThumbnailOperation', () => {
       const attachment = createAttachmentFixture({
         name: 'readme.txt',
         mimetype: 'text/plain',
-        thumbnail: undefined,
       });
 
       // Mock FileDownloadUtil
@@ -263,7 +251,6 @@ describe('GetThumbnailOperation', () => {
       const attachment = createAttachmentFixture({
         name: 'document.pdf',
         mimetype: 'application/pdf',
-        thumbnail: undefined,
       });
 
       // Mock FileDownloadUtil

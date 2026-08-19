@@ -59,8 +59,6 @@ export function createComponentFixture(overrides?: Partial<Component>): Componen
     name,
     queue: overrides?.queue || createQueueRef(),
     assignAuto: overrides?.assignAuto !== undefined ? overrides.assignAuto : false,
-    description: overrides?.description,
-    lead: overrides?.lead,
     ...overrides,
   };
 }

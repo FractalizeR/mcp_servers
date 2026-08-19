@@ -25,7 +25,6 @@ function paginatedQueues(items: QueueWithUnknownFields[]): PaginatedResult<Queue
   return {
     items,
     pagination: {
-      page: 1,
       perPage: 50,
       hasNextPage: false,
       fetchedAll: true,
@@ -39,28 +38,9 @@ import type {
   UpdateQueueParams,
   ManageQueueAccessParams,
 } from '#tracker_api/api_operations/index.js';
-
-// Fixtures
-function createQueueFixture(overrides = {}): QueueOutput {
-  return {
-    id: '1',
-    self: 'https://api.tracker.yandex.net/v3/queues/TEST',
-    key: 'TEST',
-    name: 'Test Queue',
-    lead: { uid: '1', display: 'Lead User', login: 'lead', isActive: true },
-    ...overrides,
-  };
-}
-
-function createQueueFieldFixture(overrides = {}) {
-  return {
-    id: 'field1',
-    self: 'https://api.tracker.yandex.net/v3/fields/field1',
-    key: 'field1',
-    name: 'Field 1',
-    ...overrides,
-  };
-}
+import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { createQueueFieldFixture } from '#helpers/queue-field.fixture.js';
+import { createQueuePermissionFixture } from '#helpers/queue-permission.fixture.js';
 
 describe('QueueService', () => {
   let service: QueueService;
@@ -94,7 +74,7 @@ describe('QueueService', () => {
 
   describe('getQueues', () => {
     it('должен делегировать вызов ops.getQueues.execute без параметров', async () => {
-      const mockResult = paginatedQueues([createQueueFixture() as QueueWithUnknownFields]);
+      const mockResult = paginatedQueues([createQueueFixture()]);
 
       vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);
 
@@ -105,8 +85,8 @@ describe('QueueService', () => {
     });
 
     it('должен делегировать вызов ops.getQueues.execute с параметрами', async () => {
-      const params: GetQueuesDto = { perPage: 50, page: 2 };
-      const mockResult = paginatedQueues([createQueueFixture() as QueueWithUnknownFields]);
+      const params: GetQueuesDto = { perPage: 50, cursor: 'next-page-token' };
+      const mockResult = paginatedQueues([createQueueFixture()]);
 
       vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);
 
@@ -225,16 +205,13 @@ describe('QueueService', () => {
       const params: ManageQueueAccessParams = {
         queueId: 'TEST',
         accessData: {
-          create: { users: ['user1'], groups: [] },
+          role: 'access',
+          subjects: ['user1'],
+          action: 'add',
         },
       };
       const mockResult: QueuePermissionsOutput = [
-        {
-          self: 'https://api.tracker.yandex.net/v3/queues/TEST/permissions/create',
-          type: 'create',
-          users: [{ uid: 'user1', display: 'User 1', login: 'user1', isActive: true }],
-          groups: [],
-        },
+        createQueuePermissionFixture({ id: 'user1', display: 'User 1' }),
       ];
 
       vi.mocked(mockOpsContainer.manageQueueAccess.execute).mockResolvedValue(mockResult);

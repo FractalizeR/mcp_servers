@@ -60,13 +60,12 @@ export function createUpdateQueueDto(overrides?: Partial<UpdateQueueDto>): Updat
  *
  * @example
  * ```typescript
- * const dto = createGetQueuesDto({ perPage: 100, page: 2 });
+ * const dto = createGetQueuesDto({ perPage: 100 });
  * ```
  */
 export function createGetQueuesDto(overrides?: Partial<GetQueuesDto>): GetQueuesDto {
   return {
     perPage: 50,
-    page: 1,
     ...overrides,
   };
 }
@@ -81,6 +80,7 @@ export function createGetQueuesDto(overrides?: Partial<GetQueuesDto>): GetQueues
  */
 export function createGetQueueDto(overrides?: Partial<GetQueueDto>): GetQueueDto {
   return {
+    queueId: 'TEST',
     ...overrides,
   };
 }
@@ -95,6 +95,7 @@ export function createGetQueueDto(overrides?: Partial<GetQueueDto>): GetQueueDto
  */
 export function createGetQueueFieldsDto(overrides?: Partial<GetQueueFieldsDto>): GetQueueFieldsDto {
   return {
+    queueId: 'TEST',
     ...overrides,
   };
 }

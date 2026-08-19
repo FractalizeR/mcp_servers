@@ -8,6 +8,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_COMPONENT_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('get-components integration tests', () => {
   let client: TestMCPClient;
@@ -36,7 +37,7 @@ describe('get-components integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.components).toBeDefined();
       expect(Array.isArray(response.data.components)).toBe(true);
       expect(response.data.components.length).toBeGreaterThan(0);
@@ -56,7 +57,7 @@ describe('get-components integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.components).toBeDefined();
       expect(Array.isArray(response.data.components)).toBe(true);
       expect(response.data.components.length).toBe(0);
@@ -96,7 +97,7 @@ describe('get-components integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       const component = response.data.components[0];
 
       expect(component).toHaveProperty('id');

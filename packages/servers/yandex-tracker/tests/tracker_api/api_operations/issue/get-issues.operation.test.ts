@@ -7,6 +7,7 @@ import type { ServerConfig } from '#config';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure/types.js';
 import { GetIssuesOperation } from '#tracker_api/api_operations/issue/get-issues.operation.js';
+import { createIssueFixture } from '#helpers/issue.fixture.js';
 
 describe('GetIssuesOperation', () => {
   let operation: GetIssuesOperation;
@@ -17,7 +18,7 @@ describe('GetIssuesOperation', () => {
   let mockParallelExecutor: ParallelExecutor;
 
   beforeEach(() => {
-    mockHttpClient = {} as HttpClient;
+    mockHttpClient = {} as IHttpClient;
     mockCacheManager = {
       get: vi.fn().mockResolvedValue(null),
       set: vi.fn().mockResolvedValue(undefined),
@@ -57,36 +58,9 @@ describe('GetIssuesOperation', () => {
     it('успешно получает несколько задач', async () => {
       const issueKeys = ['TASK-1', 'TASK-2', 'TASK-3'];
       const mockIssues: IssueWithUnknownFields[] = [
-        {
-          id: '1',
-          key: 'TASK-1',
-          summary: 'Issue 1',
-          queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
-          status: { id: '1', key: 'open', display: 'Open' },
-          createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01',
-        } as IssueWithUnknownFields,
-        {
-          id: '2',
-          key: 'TASK-2',
-          summary: 'Issue 2',
-          queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
-          status: { id: '1', key: 'open', display: 'Open' },
-          createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01',
-        } as IssueWithUnknownFields,
-        {
-          id: '3',
-          key: 'TASK-3',
-          summary: 'Issue 3',
-          queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
-          status: { id: '1', key: 'open', display: 'Open' },
-          createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01',
-        } as IssueWithUnknownFields,
+        createIssueFixture({ id: '1', key: 'TASK-1', summary: 'Issue 1' }),
+        createIssueFixture({ id: '2', key: 'TASK-2', summary: 'Issue 2' }),
+        createIssueFixture({ id: '3', key: 'TASK-3', summary: 'Issue 3' }),
       ];
 
       const mockBatchResults: BatchResult<string, IssueWithUnknownFields> = [
@@ -122,16 +96,11 @@ describe('GetIssuesOperation', () => {
 
     it('обрабатывает частичные ошибки', async () => {
       const issueKeys = ['TASK-1', 'TASK-2', 'TASK-3'];
-      const mockIssue: IssueWithUnknownFields = {
+      const mockIssue: IssueWithUnknownFields = createIssueFixture({
         id: '1',
         key: 'TASK-1',
         summary: 'Issue 1',
-        queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
-        status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-01',
-      } as IssueWithUnknownFields;
+      });
       const mockError = new Error('Network error');
 
       const mockBatchResults: BatchResult<string, IssueWithUnknownFields> = [
@@ -185,16 +154,11 @@ describe('GetIssuesOperation', () => {
 
     it('выполняет реальный код кеширования для одной задачи (покрывает строки 76-81)', async () => {
       const issueKey = 'TASK-1';
-      const mockIssue: IssueWithUnknownFields = {
+      const mockIssue: IssueWithUnknownFields = createIssueFixture({
         id: '1',
         key: 'TASK-1',
         summary: 'Issue 1',
-        queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
-        status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-01',
-      } as IssueWithUnknownFields;
+      });
 
       // НЕ мокируем parallelExecutor - используем реальный
       const realParallelExecutor = new ParallelExecutor(mockLogger, {
@@ -229,16 +193,11 @@ describe('GetIssuesOperation', () => {
 
     it('использует кешированные данные если доступны', async () => {
       const issueKey = 'TASK-CACHED';
-      const cachedIssue: IssueWithUnknownFields = {
+      const cachedIssue: IssueWithUnknownFields = createIssueFixture({
         id: '99',
         key: 'TASK-CACHED',
         summary: 'Cached Issue',
-        queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
-        status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-01',
-      } as IssueWithUnknownFields;
+      });
 
       // Используем реальный parallelExecutor
       const realParallelExecutor = new ParallelExecutor(mockLogger, {
@@ -270,16 +229,9 @@ describe('GetIssuesOperation', () => {
 
     it('выполняет batch запросов с реальным parallelExecutor', async () => {
       const issueKeys = ['TASK-A', 'TASK-B', 'TASK-C'];
-      const mockIssues: IssueWithUnknownFields[] = issueKeys.map((key, idx) => ({
-        id: String(idx + 1),
-        key,
-        summary: `Issue ${key}`,
-        queue: { id: '1', key: 'Q', display: 'Queue', name: 'Queue' },
-        status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: 'user1', display: 'User', login: 'user1', isActive: true },
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-01',
-      })) as IssueWithUnknownFields[];
+      const mockIssues: IssueWithUnknownFields[] = issueKeys.map((key, idx) =>
+        createIssueFixture({ id: String(idx + 1), key, summary: `Issue ${key}` })
+      );
 
       // Используем реальный parallelExecutor
       const realParallelExecutor = new ParallelExecutor(mockLogger, {

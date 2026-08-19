@@ -8,6 +8,7 @@ import { ToolCategory, buildToolName } from '@fractalizer/mcp-core';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('IssueUrlTool', () => {
   let tool: IssueUrlTool;
@@ -57,7 +58,7 @@ describe('IssueUrlTool', () => {
         const result = await tool.execute({});
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -69,7 +70,7 @@ describe('IssueUrlTool', () => {
         const result = await tool.execute({ issueKeys: [] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -89,7 +90,7 @@ describe('IssueUrlTool', () => {
         const result = await tool.execute({ issueKeys: ['TEST-123'] });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             count: number;
@@ -112,7 +113,7 @@ describe('IssueUrlTool', () => {
         const result = await tool.execute({ issueKeys: ['TEST-1', 'TEST-2', 'QUEUE-99'] });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             count: number;
@@ -137,7 +138,7 @@ describe('IssueUrlTool', () => {
         const result = await tool.execute({ issueKeys: ['PROJECT-456'] });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             urls: Array<{

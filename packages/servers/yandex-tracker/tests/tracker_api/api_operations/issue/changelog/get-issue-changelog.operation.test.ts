@@ -144,7 +144,7 @@ describe('GetIssueChangelogOperation (pagination)', () => {
     expect(first?.status).toBe('fulfilled');
     if (first?.status === 'fulfilled') {
       // page больше не отдаётся в cursor-режиме
-      expect(first.value.pagination.page).toBeUndefined();
+      expect(first.value.pagination).not.toHaveProperty('page');
       expect(first.value.pagination.perPage).toBe(50);
     }
     expect(httpClient.getRequestHistory()).toContainEqual(

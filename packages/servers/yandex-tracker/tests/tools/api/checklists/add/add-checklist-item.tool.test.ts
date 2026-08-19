@@ -11,6 +11,7 @@ import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createChecklistItemFixture } from '#helpers/checklist-item.fixture.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('AddChecklistItemTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -75,7 +76,7 @@ describe('AddChecklistItemTool', () => {
       const result = await tool.execute({ fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -89,7 +90,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -101,7 +102,7 @@ describe('AddChecklistItemTool', () => {
       const result = await tool.execute({ items: [], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить пустой issueId в элементе', async () => {
@@ -111,7 +112,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить пустой text в элементе', async () => {
@@ -121,12 +122,12 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен принять корректные параметры', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -142,7 +143,7 @@ describe('AddChecklistItemTool', () => {
   describe('Operation calls', () => {
     it('должен вызвать addChecklistItemMany с минимальными параметрами', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -165,8 +166,8 @@ describe('AddChecklistItemTool', () => {
     it('должен вызвать addChecklistItemMany с несколькими элементами', async () => {
       const mockItem2 = createChecklistItemFixture({ id: 'item-2', text: 'Item 2', checked: true });
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
-        { status: 'fulfilled', key: 'TEST-456', value: mockItem2 },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
+        { status: 'fulfilled', key: 'TEST-456', value: mockItem2, index: 1 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -198,7 +199,7 @@ describe('AddChecklistItemTool', () => {
 
     it('должен вызвать addChecklistItemMany со всеми параметрами', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -228,7 +229,7 @@ describe('AddChecklistItemTool', () => {
 
     it('должен вернуть добавленные элементы', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -238,7 +239,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -256,15 +257,15 @@ describe('AddChecklistItemTool', () => {
       expect(parsed.data.successful).toBe(1);
       expect(parsed.data.failed).toBe(0);
       expect(parsed.data.items).toHaveLength(1);
-      expect(parsed.data.items[0].issueId).toBe('TEST-123');
-      expect(parsed.data.items[0].itemId).toBe('item-12345');
+      expect(itemAt(parsed.data.items).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.items).itemId).toBe('item-12345');
     });
 
     it('должен вернуть несколько добавленных элементов', async () => {
       const mockItem2 = createChecklistItemFixture({ id: 'item-2', text: 'Item 2', checked: true });
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
-        { status: 'fulfilled', key: 'TEST-456', value: mockItem2 },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
+        { status: 'fulfilled', key: 'TEST-456', value: mockItem2, index: 1 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -277,7 +278,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -296,8 +297,8 @@ describe('AddChecklistItemTool', () => {
   describe('Partial failures', () => {
     it('должен обработать частичные ошибки', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
-        { status: 'rejected', key: 'TEST-456', reason: new Error('Issue not found') },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
+        { status: 'rejected', key: 'TEST-456', reason: new Error('Issue not found'), index: 1 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -310,7 +311,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -325,15 +326,15 @@ describe('AddChecklistItemTool', () => {
       expect(parsed.data.successful).toBe(1);
       expect(parsed.data.failed).toBe(1);
       expect(parsed.data.items).toHaveLength(1);
-      expect(parsed.data.items[0].issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.items).issueId).toBe('TEST-123');
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].issueId).toBe('TEST-456');
-      expect(parsed.data.errors[0].error).toContain('Issue not found');
+      expect(itemAt(parsed.data.errors).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.errors).error).toContain('Issue not found');
     });
 
     it('должен обработать полный провал batch операции', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'rejected', key: 'TEST-123', reason: new Error('API Error') },
+        { status: 'rejected', key: 'TEST-123', reason: new Error('API Error'), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -343,7 +344,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -363,7 +364,7 @@ describe('AddChecklistItemTool', () => {
   describe('Logging', () => {
     it('должен логировать начало добавления элементов', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -384,7 +385,7 @@ describe('AddChecklistItemTool', () => {
 
     it('должен логировать успешное добавление', async () => {
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
-        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem },
+        { status: 'fulfilled', key: 'TEST-123', value: mockChecklistItem, index: 0 },
       ];
       vi.mocked(mockTrackerFacade.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -415,7 +416,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при добавлении элементов в чеклисты');
+      expect(getTextContent(result)).toContain('Ошибка при добавлении элементов в чеклисты');
     });
   });
 });

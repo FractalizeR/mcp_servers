@@ -8,6 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('DeleteChecklistItemTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -65,7 +66,7 @@ describe('DeleteChecklistItemTool', () => {
       const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -77,7 +78,7 @@ describe('DeleteChecklistItemTool', () => {
       const result = await tool.execute({ items: [] });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -90,12 +91,12 @@ describe('DeleteChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('itemId');
+      expect(getTextContent(result)).toContain('itemId');
     });
 
     it('должен принять корректные параметры', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
       ]);
 
       const result = await tool.execute({
@@ -109,7 +110,7 @@ describe('DeleteChecklistItemTool', () => {
   describe('Operation calls', () => {
     it('должен вызвать deleteChecklistItemMany с корректными параметрами', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -123,8 +124,8 @@ describe('DeleteChecklistItemTool', () => {
 
     it('должен вернуть успешный результат для batch операции', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
-        { status: 'fulfilled', key: 'TEST-456/item-456', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
+        { status: 'fulfilled', key: 'TEST-456/item-456', value: undefined, index: 1 },
       ]);
 
       const result = await tool.execute({
@@ -135,7 +136,7 @@ describe('DeleteChecklistItemTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -157,7 +158,7 @@ describe('DeleteChecklistItemTool', () => {
   describe('Logging', () => {
     it('должен логировать начало удаления', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -172,7 +173,7 @@ describe('DeleteChecklistItemTool', () => {
 
     it('должен логировать результаты', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
       ]);
 
       await tool.execute({
@@ -192,8 +193,13 @@ describe('DeleteChecklistItemTool', () => {
   describe('Error handling', () => {
     it('должен обработать частичные ошибки в batch', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined },
-        { status: 'rejected', key: 'TEST-456/item-456', reason: new Error('Item not found') },
+        { status: 'fulfilled', key: 'TEST-123/item-123', value: undefined, index: 0 },
+        {
+          status: 'rejected',
+          key: 'TEST-456/item-456',
+          reason: new Error('Item not found'),
+          index: 1,
+        },
       ]);
 
       const result = await tool.execute({
@@ -204,7 +210,7 @@ describe('DeleteChecklistItemTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -219,9 +225,9 @@ describe('DeleteChecklistItemTool', () => {
       expect(parsed.data.failed).toBe(1);
       expect(parsed.data.items).toHaveLength(1);
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].issueId).toBe('TEST-456');
-      expect(parsed.data.errors[0].itemId).toBe('item-456');
-      expect(parsed.data.errors[0].error).toContain('Item not found');
+      expect(itemAt(parsed.data.errors).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.errors).itemId).toBe('item-456');
+      expect(itemAt(parsed.data.errors).error).toContain('Item not found');
     });
 
     it('должен обработать полную ошибку batch', async () => {
@@ -233,12 +239,13 @@ describe('DeleteChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при удалении элементов');
+      expect(getTextContent(result)).toContain('Ошибка при удалении элементов');
     });
 
     it('должен обработать ошибку несуществующего элемента (404)', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
         {
+          index: 0,
           status: 'rejected',
           key: 'TEST-123/NONEXISTENT',
           reason: new Error('Checklist item not found'),
@@ -250,19 +257,24 @@ describe('DeleteChecklistItemTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           errors: Array<{ issueId: string; itemId: string; error: string }>;
         };
       };
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].error).toContain('Checklist item not found');
+      expect(itemAt(parsed.data.errors).error).toContain('Checklist item not found');
     });
 
     it('должен обработать ошибку доступа (403)', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
-        { status: 'rejected', key: 'PRIVATE-123/item-123', reason: new Error('Access denied') },
+        {
+          status: 'rejected',
+          key: 'PRIVATE-123/item-123',
+          reason: new Error('Access denied'),
+          index: 0,
+        },
       ]);
 
       const result = await tool.execute({
@@ -270,19 +282,20 @@ describe('DeleteChecklistItemTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           errors: Array<{ issueId: string; itemId: string; error: string }>;
         };
       };
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].error).toContain('Access denied');
+      expect(itemAt(parsed.data.errors).error).toContain('Access denied');
     });
 
     it('должен обработать ошибку несуществующей задачи (404)', async () => {
       vi.mocked(mockTrackerFacade.deleteChecklistItemMany).mockResolvedValue([
         {
+          index: 0,
           status: 'rejected',
           key: 'NONEXISTENT-999/item-123',
           reason: new Error('Issue not found'),
@@ -294,14 +307,14 @@ describe('DeleteChecklistItemTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           errors: Array<{ issueId: string; itemId: string; error: string }>;
         };
       };
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].error).toContain('Issue not found');
+      expect(itemAt(parsed.data.errors).error).toContain('Issue not found');
     });
   });
 });

@@ -10,6 +10,7 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createProjectListFixture } from '#helpers/project.fixture.js';
 import type { PaginatedResult, ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 /**
  * Обернуть массив проектов в PaginatedResult.
@@ -88,7 +89,7 @@ describe('GetProjectsTool', () => {
           queueId: 'all',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             projects: unknown[];
@@ -113,7 +114,7 @@ describe('GetProjectsTool', () => {
           perPage: 10,
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             projects: unknown[];
@@ -136,7 +137,7 @@ describe('GetProjectsTool', () => {
           expand: 'queues',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             projects: unknown[];
@@ -157,7 +158,7 @@ describe('GetProjectsTool', () => {
           queueId: 'QUEUE1',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             projects: unknown[];
@@ -179,7 +180,7 @@ describe('GetProjectsTool', () => {
           total: 0,
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             projects: unknown[];
@@ -199,7 +200,7 @@ describe('GetProjectsTool', () => {
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: { projects: unknown[]; count: number; total?: number };
         };
@@ -216,7 +217,7 @@ describe('GetProjectsTool', () => {
         const result = await tool.execute({ perPage: 50, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             projects: unknown[];
@@ -256,7 +257,7 @@ describe('GetProjectsTool', () => {
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -273,7 +274,7 @@ describe('GetProjectsTool', () => {
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -288,7 +289,7 @@ describe('GetProjectsTool', () => {
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -306,7 +307,7 @@ describe('GetProjectsTool', () => {
 
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           data: {
             projects: unknown[];
             total: number;
@@ -330,7 +331,7 @@ describe('GetProjectsTool', () => {
 
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           data: { total?: number; count: number };
         };
         expect(parsed.data.total).toBeUndefined();
@@ -359,7 +360,7 @@ describe('GetProjectsTool', () => {
         expect(mockTrackerFacade.getProjects).toHaveBeenCalledWith(
           expect.objectContaining({ cursor: 'c1:abc' })
         );
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           data: { pagination: { nextCursor?: string } };
         };
         expect(parsed.data.pagination.nextCursor).toBe('c1:next');
@@ -373,7 +374,7 @@ describe('GetProjectsTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };

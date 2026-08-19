@@ -9,6 +9,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('AddWorklogTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -48,7 +49,7 @@ describe('AddWorklogTool', () => {
       } as unknown as WorklogWithUnknownFields;
 
       vi.mocked(mockTrackerFacade.addWorklogsMany).mockResolvedValue([
-        { status: 'fulfilled', key: 'TEST-1', value: numericIdWorklog },
+        { status: 'fulfilled', key: 'TEST-1', value: numericIdWorklog, index: 0 },
       ]);
 
       // id НЕ запрошен в fields — инструмент обязан вернуть его для worklogId.
@@ -58,12 +59,12 @@ describe('AddWorklogTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: { worklogs: Array<{ issueId: string; worklogId: string }> };
       };
-      expect(parsed.data.worklogs[0].issueId).toBe('TEST-1');
-      expect(parsed.data.worklogs[0].worklogId).toBe('12345');
+      expect(itemAt(parsed.data.worklogs).issueId).toBe('TEST-1');
+      expect(itemAt(parsed.data.worklogs).worklogId).toBe('12345');
     });
   });
 });

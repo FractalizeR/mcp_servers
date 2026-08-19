@@ -1,0 +1,3 @@
+=== БАЗОВЫЕ МЕТРИКИ (до правок) ===
+yandex-tracker: non-null '!' = 252, 'as X' = 1286, 'as unknown' = 378
+yandex-wiki: non-null '!' = 9, 'as X' = 202, 'as unknown' = 38

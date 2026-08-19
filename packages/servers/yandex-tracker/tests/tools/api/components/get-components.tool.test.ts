@@ -11,6 +11,7 @@ import { MCP_TOOL_PREFIX } from '#constants';
 import { createComponentFixture } from '#helpers/component.fixture.js';
 import type { ComponentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 /** Обернуть массив компонентов в PaginatedResult (single-page). */
 function paginated(
@@ -68,7 +69,7 @@ describe('GetComponentsTool', () => {
         const result = await tool.execute({});
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -80,7 +81,7 @@ describe('GetComponentsTool', () => {
         const result = await tool.execute({ queueId: '', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -127,7 +128,7 @@ describe('GetComponentsTool', () => {
           queueId: 'MYQUEUE',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             components: unknown[];
@@ -157,7 +158,7 @@ describe('GetComponentsTool', () => {
           queueId: 'EMPTY',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             components: unknown[];
@@ -187,7 +188,7 @@ describe('GetComponentsTool', () => {
         const result = await tool.execute({ queueId: 'PROJECT', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             components: Array<{ name: string }>;
@@ -205,7 +206,7 @@ describe('GetComponentsTool', () => {
         const result = await tool.execute({ queueId: 'SINGLE', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             components: unknown[];
@@ -226,7 +227,7 @@ describe('GetComponentsTool', () => {
         const result = await tool.execute({ queueId: 'LARGE', fields: ['id', 'name'] });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             components: unknown[];
@@ -246,7 +247,7 @@ describe('GetComponentsTool', () => {
         const result = await tool.execute({ queueId: 'NOTEXIST', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -263,7 +264,7 @@ describe('GetComponentsTool', () => {
         const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -278,7 +279,7 @@ describe('GetComponentsTool', () => {
         const result = await tool.execute({ queueId: 'RESTRICTED', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -293,7 +294,7 @@ describe('GetComponentsTool', () => {
         const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;

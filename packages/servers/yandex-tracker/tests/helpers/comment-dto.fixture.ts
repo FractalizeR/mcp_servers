@@ -104,7 +104,6 @@ export function createGetCommentsInputFixture(
 ): GetCommentsInput {
   return {
     perPage: 50,
-    page: 1,
     ...overrides,
   };
 }

@@ -6,6 +6,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SearchWorklogTool } from '#tools/api/worklog/search/search-worklog.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createWorklogFixture } from '#helpers/worklog.fixture.js';
 
 function paginated<T>(items: T[]) {
   return {
@@ -47,7 +49,7 @@ describe('SearchWorklogTool', () => {
   });
 
   it('найдёт worklog по автору и диапазону дат', async () => {
-    const worklog = [{ id: '1', self: 'url', version: 1, duration: 'PT1H' }];
+    const worklog = [createWorklogFixture({ id: '1', duration: 'PT1H' })];
     vi.mocked(mockTrackerFacade.searchWorklog).mockResolvedValue(paginated(worklog));
 
     const result = await tool.execute({
@@ -65,7 +67,7 @@ describe('SearchWorklogTool', () => {
         createdAtTo: '2026-08-14T00:00:00.000+0000',
       })
     );
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as { data: { count: number } };
+    const parsed = JSON.parse(getTextContent(result)) as { data: { count: number } };
     expect(parsed.data.count).toBe(1);
   });
 

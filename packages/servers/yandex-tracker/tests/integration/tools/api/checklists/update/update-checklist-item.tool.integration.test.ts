@@ -11,6 +11,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_CHECKLIST_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('update-checklist-item integration tests (batch)', () => {
   let client: TestMCPClient;
@@ -42,7 +43,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -74,7 +75,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -100,7 +101,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.items[0].item.checked).toBe(true);
@@ -129,7 +130,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.items[0].item.assignee).toBeDefined();
@@ -153,7 +154,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.items[0].item.deadline).toBe(deadline);
@@ -194,7 +195,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.items[0].item.text).toBe(updatedText);
@@ -224,7 +225,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -252,7 +253,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert - partial failure is not an error at tool level
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -275,7 +276,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии items', async () => {
@@ -286,7 +287,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии fields', async () => {
@@ -297,7 +298,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при пустом checklistItemId в элементе', async () => {
@@ -309,7 +310,7 @@ describe('update-checklist-item integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
   });
 });

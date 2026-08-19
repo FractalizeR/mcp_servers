@@ -10,6 +10,8 @@ import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('CreateIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -21,11 +23,11 @@ describe('CreateIssueTool', () => {
     key: 'TESTQUEUE-1',
     summary: 'Test Issue',
     description: 'Test Description',
-    queue: {
+    queue: createQueueFixture({
       id: '1',
       key: 'TESTQUEUE',
       name: 'Test Queue',
-    },
+    }),
     status: {
       id: '1',
       key: 'open',
@@ -76,7 +78,7 @@ describe('CreateIssueTool', () => {
       const result = await tool.execute({ summary: 'Test' });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -88,7 +90,7 @@ describe('CreateIssueTool', () => {
       const result = await tool.execute({ queue: 'TESTQUEUE' });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -100,14 +102,14 @@ describe('CreateIssueTool', () => {
       const result = await tool.execute({ queue: '', summary: 'Test' });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('queue');
+      expect(getTextContent(result)).toContain('queue');
     });
 
     it('должен отклонить пустой summary', async () => {
       const result = await tool.execute({ queue: 'TESTQUEUE', summary: '' });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('summary');
+      expect(getTextContent(result)).toContain('summary');
     });
   });
 
@@ -181,7 +183,7 @@ describe('CreateIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issueKey: string;
@@ -211,7 +213,7 @@ describe('CreateIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
@@ -237,7 +239,7 @@ describe('CreateIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
@@ -264,7 +266,7 @@ describe('CreateIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
@@ -331,8 +333,8 @@ describe('CreateIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при создании задачи');
-      expect(result.content[0]?.text).toContain('TESTQUEUE');
+      expect(getTextContent(result)).toContain('Ошибка при создании задачи');
+      expect(getTextContent(result)).toContain('TESTQUEUE');
     });
 
     it('должен обработать ошибки валидации (400)', async () => {
@@ -346,7 +348,7 @@ describe('CreateIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при создании задачи');
+      expect(getTextContent(result)).toContain('Ошибка при создании задачи');
     });
   });
 });

@@ -11,6 +11,7 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createLinkFixture, createSubtaskLinkFixture } from '#helpers/link.fixture.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('CreateLinkTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -53,7 +54,7 @@ describe('CreateLinkTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -68,7 +69,7 @@ describe('CreateLinkTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -122,6 +123,8 @@ describe('CreateLinkTool', () => {
           {
             status: 'fulfilled',
             value: createLinkFixture(),
+            key: 'TEST-1',
+            index: 0,
           },
         ];
         vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
@@ -145,8 +148,8 @@ describe('CreateLinkTool', () => {
   describe('Batch operations', () => {
     it('должен вызвать createLinksMany с корректными параметрами', async () => {
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: createLinkFixture() },
-        { status: 'fulfilled', value: createSubtaskLinkFixture() },
+        { status: 'fulfilled', value: createLinkFixture(), key: 'TEST-1', index: 0 },
+        { status: 'fulfilled', value: createSubtaskLinkFixture(), key: 'TEST-2', index: 1 },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
 
@@ -184,8 +187,8 @@ describe('CreateLinkTool', () => {
       const mockLink1 = createLinkFixture({ id: 'link-1' });
       const mockLink2 = createSubtaskLinkFixture({ id: 'link-2' });
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: mockLink1 },
-        { status: 'fulfilled', value: mockLink2 },
+        { status: 'fulfilled', value: mockLink1, key: 'TEST-1', index: 0 },
+        { status: 'fulfilled', value: mockLink2, key: 'TEST-2', index: 1 },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
 
@@ -206,7 +209,7 @@ describe('CreateLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -229,8 +232,13 @@ describe('CreateLinkTool', () => {
     it('должен обработать частичные ошибки', async () => {
       const mockLink = createLinkFixture({ id: 'link-1' });
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: mockLink },
-        { status: 'rejected', reason: new Error('Issue not found: TEST-99') },
+        { status: 'fulfilled', value: mockLink, key: 'TEST-1', index: 0 },
+        {
+          status: 'rejected',
+          reason: new Error('Issue not found: TEST-99'),
+          key: 'TEST-2',
+          index: 1,
+        },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
 
@@ -251,7 +259,7 @@ describe('CreateLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -266,7 +274,7 @@ describe('CreateLinkTool', () => {
       expect(parsed.data.failed).toBe(1);
       expect(parsed.data.links).toHaveLength(1);
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].error).toContain('Issue not found');
+      expect(itemAt(parsed.data.errors).error).toContain('Issue not found');
     });
 
     it('должен фильтровать поля для всех созданных связей', async () => {
@@ -283,8 +291,8 @@ describe('CreateLinkTool', () => {
         direction: 'outward',
       });
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: mockLink1 },
-        { status: 'fulfilled', value: mockLink2 },
+        { status: 'fulfilled', value: mockLink1, key: 'TEST-1', index: 0 },
+        { status: 'fulfilled', value: mockLink2, key: 'TEST-2', index: 1 },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
 
@@ -304,17 +312,17 @@ describe('CreateLinkTool', () => {
         fields: ['id', 'type'],
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: {
           links: Array<{ link: LinkWithUnknownFields }>;
         };
       };
       // Проверяем, что в результате только запрошенные поля
-      expect(parsed.data.links[0].link.id).toBeDefined();
-      expect(parsed.data.links[0].link.type).toBeDefined();
+      expect(itemAt(parsed.data.links).link.id).toBeDefined();
+      expect(itemAt(parsed.data.links).link.type).toBeDefined();
       // object и direction не должны быть в результате, т.к. не запрошены
-      expect(parsed.data.links[0].link.object).toBeUndefined();
-      expect(parsed.data.links[0].link.direction).toBeUndefined();
+      expect(itemAt(parsed.data.links).link.object).toBeUndefined();
+      expect(itemAt(parsed.data.links).link.direction).toBeUndefined();
     });
 
     it('должен обработать общую ошибку от facade', async () => {
@@ -333,19 +341,31 @@ describe('CreateLinkTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка');
+      expect(getTextContent(result)).toContain('Ошибка');
     });
 
     it('должен работать с разными типами связей в одном batch', async () => {
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: createLinkFixture({ id: 'link-1' }) },
-        { status: 'fulfilled', value: createSubtaskLinkFixture({ id: 'link-2' }) },
+        {
+          status: 'fulfilled',
+          value: createLinkFixture({ id: 'link-1' }),
+          key: 'TEST-1',
+          index: 0,
+        },
+        {
+          status: 'fulfilled',
+          value: createSubtaskLinkFixture({ id: 'link-2' }),
+          key: 'TEST-2',
+          index: 1,
+        },
         {
           status: 'fulfilled',
           value: createLinkFixture({
             id: 'link-3',
             type: { id: 'depends', inward: 'зависит от', outward: 'блокирует' },
           }),
+          key: 'TEST-3',
+          index: 2,
         },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
@@ -372,7 +392,7 @@ describe('CreateLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: {
           total: number;
           successful: number;
@@ -391,7 +411,7 @@ describe('CreateLinkTool', () => {
       } as unknown as LinkWithUnknownFields;
 
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue([
-        { status: 'fulfilled', value: numericIdLink },
+        { status: 'fulfilled', value: numericIdLink, key: 'TEST-1', index: 0 },
       ]);
 
       // id НЕ запрошен в fields — инструмент обязан вернуть его для linkId.
@@ -401,11 +421,11 @@ describe('CreateLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: { links: Array<{ issueId: string; linkId: string }> };
       };
-      expect(parsed.data.links[0].linkId).toBe('12345');
+      expect(itemAt(parsed.data.links).linkId).toBe('12345');
     });
   });
 });

@@ -11,6 +11,8 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
 import { IssueRefetchAfterTransitionError } from '#tracker_api/api_operations/issue/transitions/transition-issue.operation.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('TransitionIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -21,11 +23,11 @@ describe('TransitionIssueTool', () => {
     id: '1',
     key: 'QUEUE-123',
     summary: 'Test Issue',
-    queue: {
+    queue: createQueueFixture({
       id: '1',
       key: 'QUEUE',
       name: 'Test Queue',
-    },
+    }),
     status: {
       id: '2',
       key: 'in-progress',
@@ -77,7 +79,7 @@ describe('TransitionIssueTool', () => {
       const result = await tool.execute({ transitionId: 'close', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -89,7 +91,7 @@ describe('TransitionIssueTool', () => {
       const result = await tool.execute({ issueKey: 'QUEUE-123', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -176,7 +178,7 @@ describe('TransitionIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issueKey: string;
@@ -187,7 +189,7 @@ describe('TransitionIssueTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.issueKey).toBe('QUEUE-123');
       expect(parsed.data.transitionId).toBe('start-progress');
-      expect(parsed.data.issue.status.key).toBe('in-progress');
+      expect(parsed.data.issue.status?.key).toBe('in-progress');
     });
   });
 
@@ -202,7 +204,7 @@ describe('TransitionIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
@@ -226,7 +228,7 @@ describe('TransitionIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
@@ -279,9 +281,9 @@ describe('TransitionIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при выполнении перехода');
-      expect(result.content[0]?.text).toContain('QUEUE-123');
-      expect(result.content[0]?.text).toContain('close');
+      expect(getTextContent(result)).toContain('Ошибка при выполнении перехода');
+      expect(getTextContent(result)).toContain('QUEUE-123');
+      expect(getTextContent(result)).toContain('close');
     });
 
     it('должен обработать invalid transition ошибки (400)', async () => {
@@ -295,7 +297,7 @@ describe('TransitionIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при выполнении перехода');
+      expect(getTextContent(result)).toContain('Ошибка при выполнении перехода');
     });
 
     it('находка №1 (BLOCKER): провал дочитывания ПОСЛЕ успешного перехода НЕ должен возвращаться как ошибка (success:false)', async () => {
@@ -320,7 +322,7 @@ describe('TransitionIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issueKey: string;

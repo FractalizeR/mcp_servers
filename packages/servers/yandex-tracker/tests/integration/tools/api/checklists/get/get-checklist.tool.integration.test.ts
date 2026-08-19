@@ -11,6 +11,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_CHECKLIST_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('get-checklist integration tests (batch)', () => {
   let client: TestMCPClient;
@@ -44,7 +45,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -69,8 +70,8 @@ describe('get-checklist integration tests (batch)', () => {
         { id: 'item-4', text: 'Fourth item', checked: false },
         { id: 'item-5', text: 'Fifth item', checked: true },
       ];
-      mockServer.mockGetChecklistSuccess(issueIds[0], checklist1);
-      mockServer.mockGetChecklistSuccess(issueIds[1], checklist2);
+      mockServer.mockGetChecklistSuccess(itemAt(issueIds), checklist1);
+      mockServer.mockGetChecklistSuccess(itemAt(issueIds, 1), checklist2);
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_checklist', {
@@ -80,7 +81,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -105,7 +106,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -136,7 +137,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.successful[0].itemsCount).toBe(5);
@@ -158,8 +159,8 @@ describe('get-checklist integration tests (batch)', () => {
         { id: 'item-1', text: 'First item', checked: false },
         { id: 'item-2', text: 'Second item', checked: true },
       ];
-      mockServer.mockGetChecklistSuccess(issueIds[0], checklist);
-      mockServer.mockGetChecklist404(issueIds[1]);
+      mockServer.mockGetChecklistSuccess(itemAt(issueIds), checklist);
+      mockServer.mockGetChecklist404(itemAt(issueIds, 1));
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_checklist', {
@@ -169,7 +170,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -194,7 +195,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert - partial failure is not an error at tool level
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -216,7 +217,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии issueIds', async () => {
@@ -227,7 +228,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии fields', async () => {
@@ -238,7 +239,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при пустом issueId в массиве', async () => {
@@ -250,7 +251,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
   });
 });

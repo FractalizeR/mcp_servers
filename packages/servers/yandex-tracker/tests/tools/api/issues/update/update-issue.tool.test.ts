@@ -10,6 +10,8 @@ import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('UpdateIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -21,11 +23,11 @@ describe('UpdateIssueTool', () => {
     key: 'QUEUE-123',
     summary: 'Updated Summary',
     description: 'Updated Description',
-    queue: {
+    queue: createQueueFixture({
       id: '1',
       key: 'QUEUE',
       name: 'Test Queue',
-    },
+    }),
     status: {
       id: '2',
       key: 'in-progress',
@@ -75,7 +77,7 @@ describe('UpdateIssueTool', () => {
       const result = await tool.execute({ summary: 'Test' });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -200,7 +202,7 @@ describe('UpdateIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issueKey: string;
@@ -228,7 +230,7 @@ describe('UpdateIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
@@ -252,7 +254,7 @@ describe('UpdateIssueTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
@@ -302,8 +304,8 @@ describe('UpdateIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при обновлении задачи');
-      expect(result.content[0]?.text).toContain('QUEUE-123');
+      expect(getTextContent(result)).toContain('Ошибка при обновлении задачи');
+      expect(getTextContent(result)).toContain('QUEUE-123');
     });
 
     it('должен обработать not found ошибки (404)', async () => {
@@ -317,7 +319,7 @@ describe('UpdateIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при обновлении задачи');
+      expect(getTextContent(result)).toContain('Ошибка при обновлении задачи');
     });
   });
 });

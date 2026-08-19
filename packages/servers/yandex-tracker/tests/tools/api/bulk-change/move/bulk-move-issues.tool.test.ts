@@ -7,6 +7,7 @@ import { BulkMoveIssuesTool } from '#tools/api/bulk-change/move/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { BulkChangeOperationWithUnknownFields } from '#tracker_api/entities/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('BulkMoveIssuesTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -102,7 +103,7 @@ describe('BulkMoveIssuesTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: { initialStatus: boolean };
       };

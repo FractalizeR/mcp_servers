@@ -10,6 +10,7 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createQueueListFixture } from '#helpers/queue.fixture.js';
 import type { PaginatedResult, QueueWithUnknownFields } from '#tracker_api/entities/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 /** Обернуть массив очередей в PaginatedResult (single-page по умолчанию). */
 function paginated(
@@ -88,7 +89,7 @@ describe('GetQueuesTool', () => {
         const result = await tool.execute({ perPage: -1, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -100,7 +101,7 @@ describe('GetQueuesTool', () => {
         const result = await tool.execute({ perPage: 101, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -139,7 +140,7 @@ describe('GetQueuesTool', () => {
           count: 3,
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             queues: unknown[];
@@ -193,7 +194,7 @@ describe('GetQueuesTool', () => {
           count: 0,
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             queues: unknown[];
@@ -214,7 +215,7 @@ describe('GetQueuesTool', () => {
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -228,10 +229,10 @@ describe('GetQueuesTool', () => {
         const error = new Error('Network timeout');
         vi.mocked(mockTrackerFacade.getQueues).mockRejectedValue(error);
 
-        const result = await tool.execute({ perPage: 10, page: 1, fields: ['id', 'key', 'name'] });
+        const result = await tool.execute({ perPage: 10, fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -255,7 +256,7 @@ describe('GetQueuesTool', () => {
 
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           data: {
             queues: unknown[];
             count: number;
@@ -293,7 +294,7 @@ describe('GetQueuesTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };

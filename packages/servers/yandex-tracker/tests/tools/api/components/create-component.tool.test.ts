@@ -9,6 +9,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createComponentFixture } from '#helpers/component.fixture.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('CreateComponentTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -55,7 +56,7 @@ describe('CreateComponentTool', () => {
         const result = await tool.execute({});
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -70,7 +71,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -85,7 +86,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -101,7 +102,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -117,7 +118,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -174,7 +175,7 @@ describe('CreateComponentTool', () => {
           name: 'Test Component',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             component: { id: string; name: string };
@@ -352,7 +353,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -373,7 +374,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -392,7 +393,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -412,7 +413,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -431,7 +432,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -450,7 +451,7 @@ describe('CreateComponentTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };

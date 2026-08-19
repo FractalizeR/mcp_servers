@@ -6,6 +6,7 @@ import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { AddCommentInput } from '#tracker_api/dto/index.js';
 import type { ServerConfig } from '#config';
 import { AddCommentOperation } from '#tracker_api/api_operations/comment/add-comment.operation.js';
+import { itemAt } from '#helpers/tool-result.helper.js';
 
 describe('AddCommentOperation', () => {
   let operation: AddCommentOperation;
@@ -100,7 +101,7 @@ describe('AddCommentOperation', () => {
       const result = await operation.execute('PROJ-10', input);
 
       expect(result.attachments).toHaveLength(2);
-      expect(result.attachments?.[0].id).toBe('att-1');
+      expect(itemAt(result.attachments ?? []).id).toBe('att-1');
     });
 
     it('should handle API errors', async () => {
@@ -242,15 +243,17 @@ describe('AddCommentOperation', () => {
       const result = await operation.executeMany(comments);
 
       expect(result).toHaveLength(2);
-      expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1');
-      if (result[0].status === 'fulfilled') {
-        expect(result[0].value).toEqual(mockComment1);
+      const result0 = itemAt(result);
+      expect(result0.status).toBe('fulfilled');
+      expect(result0.key).toBe('TEST-1');
+      if (result0.status === 'fulfilled') {
+        expect(result0.value).toEqual(mockComment1);
       }
-      expect(result[1].status).toBe('fulfilled');
-      expect(result[1].key).toBe('TEST-2');
-      if (result[1].status === 'fulfilled') {
-        expect(result[1].value).toEqual(mockComment2);
+      const result1 = itemAt(result, 1);
+      expect(result1.status).toBe('fulfilled');
+      expect(result1.key).toBe('TEST-2');
+      if (result1.status === 'fulfilled') {
+        expect(result1.value).toEqual(mockComment2);
       }
     });
 
@@ -279,15 +282,17 @@ describe('AddCommentOperation', () => {
       const result = await operation.executeMany(comments);
 
       expect(result).toHaveLength(2);
-      expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1');
-      if (result[0].status === 'fulfilled') {
-        expect(result[0].value).toEqual(mockComment);
+      const result0 = itemAt(result);
+      expect(result0.status).toBe('fulfilled');
+      expect(result0.key).toBe('TEST-1');
+      if (result0.status === 'fulfilled') {
+        expect(result0.value).toEqual(mockComment);
       }
-      expect(result[1].status).toBe('rejected');
-      expect(result[1].key).toBe('TEST-2');
-      if (result[1].status === 'rejected') {
-        expect(result[1].reason.message).toBe('Not found');
+      const result1 = itemAt(result, 1);
+      expect(result1.status).toBe('rejected');
+      expect(result1.key).toBe('TEST-2');
+      if (result1.status === 'rejected') {
+        expect(result1.reason.message).toBe('Not found');
       }
     });
 

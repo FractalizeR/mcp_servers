@@ -11,6 +11,7 @@ import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/inde
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createLinkListFixture } from '#helpers/link.fixture.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 /** Метаданные пагинации по умолчанию (одна страница, всё получено). */
 const META: PaginationMeta = {
@@ -81,7 +82,7 @@ describe('GetIssueLinksTool', () => {
       const result = await tool.execute({ fields: ['id', 'type'] });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -93,7 +94,7 @@ describe('GetIssueLinksTool', () => {
       const result = await tool.execute({ issueIds: ['TEST-123'] });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -105,7 +106,7 @@ describe('GetIssueLinksTool', () => {
       const result = await tool.execute({ issueIds: [], fields: ['id', 'type'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить cursor при нескольких issueIds', async () => {
@@ -116,7 +117,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить cursor вместе с bulk-параметрами (fetchAll)', async () => {
@@ -128,7 +129,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен принять корректные параметры', async () => {
@@ -210,7 +211,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -228,12 +229,12 @@ describe('GetIssueLinksTool', () => {
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toHaveLength(1);
       expect(parsed.data.failed).toHaveLength(0);
-      expect(parsed.data.successful[0].issueId).toBe('TEST-123');
-      expect(parsed.data.successful[0].count).toBe(3);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).count).toBe(3);
       expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
       // Регрессия: прежние ключи (links/count) на месте + добавлено поле pagination
-      expect(parsed.data.successful[0].links).toHaveLength(3);
-      expect(parsed.data.successful[0].pagination).toMatchObject({
+      expect(itemAt(parsed.data.successful).links).toHaveLength(3);
+      expect(itemAt(parsed.data.successful).pagination).toMatchObject({
         hasNextPage: false,
         fetchedAll: true,
       });
@@ -255,7 +256,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -269,7 +270,7 @@ describe('GetIssueLinksTool', () => {
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toHaveLength(1);
       expect(parsed.data.failed).toHaveLength(0);
-      expect(parsed.data.successful[0].count).toBe(0);
+      expect(itemAt(parsed.data.successful).count).toBe(0);
     });
 
     it('должен обработать batch результаты для нескольких задач', async () => {
@@ -294,7 +295,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -307,10 +308,10 @@ describe('GetIssueLinksTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(2);
-      expect(parsed.data.successful[0].issueId).toBe('TEST-123');
-      expect(parsed.data.successful[0].count).toBe(3);
-      expect(parsed.data.successful[1].issueId).toBe('TEST-456');
-      expect(parsed.data.successful[1].count).toBe(0);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).count).toBe(3);
+      expect(itemAt(parsed.data.successful, 1).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.successful, 1).count).toBe(0);
     });
 
     it('должен фильтровать поля в результатах', async () => {
@@ -329,7 +330,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           successful: Array<{
@@ -341,9 +342,9 @@ describe('GetIssueLinksTool', () => {
           fieldsReturned: string[];
         };
       };
-      expect(parsed.data.successful[0].links[0]).toHaveProperty('id');
-      expect(parsed.data.successful[0].links[0]).toHaveProperty('type');
-      expect(parsed.data.successful[0].links[0]).not.toHaveProperty('createdBy');
+      expect(itemAt(parsed.data.successful).links[0]).toHaveProperty('id');
+      expect(itemAt(parsed.data.successful).links[0]).toHaveProperty('type');
+      expect(itemAt(parsed.data.successful).links[0]).not.toHaveProperty('createdBy');
       expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
     });
   });
@@ -416,7 +417,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении связей задач');
+      expect(getTextContent(result)).toContain('Ошибка при получении связей задач');
     });
 
     it('должен обработать частичные ошибки (partial failures)', async () => {
@@ -441,7 +442,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -477,7 +478,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;

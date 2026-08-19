@@ -7,19 +7,19 @@ describe('resolveLogsDir', () => {
   const PROJECT_ROOT = '/fake/project/root';
   const SERVER_NAME = 'mcp-server-test';
   const LOGS_SUBDIR = 'logs';
-  const originalXdg = process.env.XDG_CACHE_HOME;
+  const originalXdg = process.env['XDG_CACHE_HOME'];
 
   afterEach(() => {
     if (originalXdg === undefined) {
-      delete process.env.XDG_CACHE_HOME;
+      delete process.env['XDG_CACHE_HOME'];
     } else {
-      process.env.XDG_CACHE_HOME = originalXdg;
+      process.env['XDG_CACHE_HOME'] = originalXdg;
     }
   });
 
   describe('default (no env)', () => {
     beforeEach(() => {
-      delete process.env.XDG_CACHE_HOME;
+      delete process.env['XDG_CACHE_HOME'];
     });
 
     it('should use ~/.cache/<serverName>/logs when LOGS_DIR is not set', () => {
@@ -40,13 +40,13 @@ describe('resolveLogsDir', () => {
 
   describe('XDG_CACHE_HOME support', () => {
     it('should respect XDG_CACHE_HOME when set', () => {
-      process.env.XDG_CACHE_HOME = '/custom/cache';
+      process.env['XDG_CACHE_HOME'] = '/custom/cache';
       const result = resolveLogsDir(undefined, PROJECT_ROOT, SERVER_NAME, LOGS_SUBDIR);
       expect(result).toBe(join('/custom/cache', SERVER_NAME, LOGS_SUBDIR));
     });
 
     it('should fall back to ~/.cache when XDG_CACHE_HOME is not set', () => {
-      delete process.env.XDG_CACHE_HOME;
+      delete process.env['XDG_CACHE_HOME'];
       const result = resolveLogsDir(undefined, PROJECT_ROOT, SERVER_NAME, LOGS_SUBDIR);
       expect(result).toBe(join(homedir(), '.cache', SERVER_NAME, LOGS_SUBDIR));
     });

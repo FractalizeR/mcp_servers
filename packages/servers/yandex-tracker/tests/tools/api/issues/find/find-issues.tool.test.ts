@@ -13,6 +13,8 @@ import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/common/index.js';
 import { successEnvelopeSchema } from '#common/schemas/index.js';
 import { FindIssuesOutputDataSchema } from '#tools/api/issues/find/find-issues.schema.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 /**
  * Метаданные пагинации по умолчанию (одна полная страница).
@@ -42,11 +44,11 @@ describe('FindIssuesTool', () => {
     key: 'QUEUE-123',
     summary: 'Test Issue 1',
     description: 'Test Description 1',
-    queue: {
+    queue: createQueueFixture({
       id: '1',
       key: 'QUEUE',
       name: 'Test Queue',
-    },
+    }),
     status: {
       id: '1',
       key: 'open',
@@ -67,11 +69,11 @@ describe('FindIssuesTool', () => {
     key: 'QUEUE-456',
     summary: 'Test Issue 2',
     description: 'Test Description 2',
-    queue: {
+    queue: createQueueFixture({
       id: '1',
       key: 'QUEUE',
       name: 'Test Queue',
-    },
+    }),
     status: {
       id: '2',
       key: 'closed',
@@ -123,7 +125,7 @@ describe('FindIssuesTool', () => {
       const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -138,7 +140,7 @@ describe('FindIssuesTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -154,7 +156,7 @@ describe('FindIssuesTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -302,7 +304,7 @@ describe('FindIssuesTool', () => {
       });
 
       expect(result.isError).not.toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           items: Array<Partial<IssueWithUnknownFields>>;
@@ -326,7 +328,7 @@ describe('FindIssuesTool', () => {
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           items: IssueWithUnknownFields[];
@@ -346,7 +348,7 @@ describe('FindIssuesTool', () => {
         fields: ['key', 'queue.key'],
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           items: Array<Partial<IssueWithUnknownFields>>;
@@ -366,7 +368,7 @@ describe('FindIssuesTool', () => {
         fields: ['status'],
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           items: Array<Partial<IssueWithUnknownFields>>;
@@ -389,7 +391,7 @@ describe('FindIssuesTool', () => {
         responseMode: 'links',
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           resourceLinks: Array<{ uri: string; name: string; title?: string }>;
@@ -415,7 +417,7 @@ describe('FindIssuesTool', () => {
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: { itemsOnPage: number; items: IssueWithUnknownFields[] };
       };
@@ -431,7 +433,7 @@ describe('FindIssuesTool', () => {
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
         error: string;
@@ -507,7 +509,7 @@ describe('FindIssuesTool', () => {
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           itemsOnPage: number;
@@ -543,7 +545,7 @@ describe('FindIssuesTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
       };
       expect(parsed.data.summary.searchCriteria.notFoundKeys).toEqual([]);
@@ -558,7 +560,7 @@ describe('FindIssuesTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: {
           itemsOnPage: number;
           summary: { searchCriteria: { keysCount: number; notFoundKeys?: string[] } };
@@ -577,7 +579,7 @@ describe('FindIssuesTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
       };
       // Трекер не считает ключи задач регистронезависимыми (queue-префикс
@@ -593,7 +595,7 @@ describe('FindIssuesTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
       };
       expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
@@ -607,7 +609,7 @@ describe('FindIssuesTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
       };
       expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
@@ -621,7 +623,7 @@ describe('FindIssuesTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
       };
       expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
@@ -635,7 +637,7 @@ describe('FindIssuesTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
       };
       expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
@@ -669,7 +671,7 @@ describe('FindIssuesTool', () => {
         fields: STANDARD_ISSUE_FIELDS,
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
       };
       expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
@@ -686,7 +688,7 @@ describe('FindIssuesTool', () => {
       });
 
       const envelopeSchema = successEnvelopeSchema(FindIssuesOutputDataSchema);
-      const parseResult = envelopeSchema.safeParse(result.structuredContent);
+      const parseResult = envelopeSchema.safeParse(result['structuredContent']);
       expect(parseResult.success).toBe(true);
     });
 
@@ -699,7 +701,7 @@ describe('FindIssuesTool', () => {
       });
 
       const envelopeSchema = successEnvelopeSchema(FindIssuesOutputDataSchema);
-      const parseResult = envelopeSchema.safeParse(result.structuredContent);
+      const parseResult = envelopeSchema.safeParse(result['structuredContent']);
       expect(parseResult.success).toBe(true);
     });
   });
@@ -724,7 +726,7 @@ describe('FindIssuesTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -738,7 +740,7 @@ describe('FindIssuesTool', () => {
 
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           itemsOnPage: number;
@@ -760,7 +762,7 @@ describe('FindIssuesTool', () => {
 
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: Record<string, unknown> & { summary: { searchCriteria: Record<string, unknown> } };
       };
       expect(parsed.data).not.toHaveProperty('page');
@@ -792,7 +794,7 @@ describe('FindIssuesTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as { success: boolean };
+      const parsed = JSON.parse(getTextContent(result)) as { success: boolean };
       expect(parsed.success).toBe(false);
     });
   });
@@ -813,7 +815,7 @@ describe('FindIssuesTool', () => {
           'элемента был сопоставим с реальным ответом API Яндекс.Трекера (типичная ' +
           'сводка одной сущности — примерно 150–400 токенов), а не тривиальной ' +
           `строкой-заглушкой. Итерация ${index}.`.repeat(6),
-        queue: { id: '1', key: 'QUEUE', name: 'Test Queue' },
+        queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Test Queue' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: {
           uid: `uid-${index}`,
@@ -836,7 +838,7 @@ describe('FindIssuesTool', () => {
       });
 
       expect(result.isError).not.toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: {
           mode: string;
           items?: unknown[];
@@ -871,7 +873,7 @@ describe('FindIssuesTool', () => {
         responseMode: 'full',
       });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { mode: string; items?: unknown[]; resourceLinks?: unknown[] };
       };
       expect(parsed.data.mode).toBe('full');
@@ -886,7 +888,7 @@ describe('FindIssuesTool', () => {
       // responseMode не передан — проверяем именно значение по умолчанию схемы.
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { mode: string; itemsOnPage: number; threshold: number };
       };
       expect(parsed.data.mode).toBe('full');
@@ -900,7 +902,7 @@ describe('FindIssuesTool', () => {
 
       const result = await tool.execute({ query: 'Author: me()', fields: STANDARD_ISSUE_FIELDS });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { mode: string; itemsOnPage: number; resourceLinks?: unknown[] };
       };
       expect(parsed.data.mode).toBe('links');
@@ -933,8 +935,8 @@ describe('FindIssuesTool', () => {
         responseMode: 'links',
       });
 
-      const fullSize = fullResult.content[0]?.text.length ?? 0;
-      const linksSize = linksResult.content[0]?.text.length ?? 0;
+      const fullSize = getTextContent(fullResult).length;
+      const linksSize = getTextContent(linksResult).length;
 
       expect(fullSize).toBeGreaterThan(0);
       expect(linksSize).toBeGreaterThan(0);

@@ -17,8 +17,25 @@ import type {
   IssueServicesContainer,
   QueueServicesContainer,
   ProjectAgileServicesContainer,
+  EntityAdminServicesContainer,
 } from '#tracker_api/facade/services/containers/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
+import { createLinkFixture } from '#helpers/link.fixture.js';
+import { createCommentFixture } from '#helpers/comment.fixture.js';
+import { createChecklistItemFixture } from '#helpers/checklist-item.fixture.js';
+import { createAttachmentFixture } from '#helpers/attachment.fixture.js';
+import { createPaginatedFixture } from '#helpers/pagination.fixture.js';
+import type {
+  LinkWithUnknownFields,
+  CommentWithUnknownFields,
+  ChecklistItemWithUnknownFields,
+  WorklogWithUnknownFields,
+  AttachmentWithUnknownFields,
+} from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/common/pagination.entity.js';
+import type { LinkRelationship } from '#tracker_api/entities/link.entity.js';
+import { createWorklogFixture } from '#helpers/worklog.fixture.js';
+import { createBulkChangeOperationFixture } from '#helpers/bulk-change.fixture.js';
 
 describe('YandexTrackerFacade - Batch Methods', () => {
   let facade: YandexTrackerFacade;
@@ -28,6 +45,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
   let mockIssuesContainer: IssueServicesContainer;
   let mockQueuesContainer: QueueServicesContainer;
   let mockProjectAgileContainer: ProjectAgileServicesContainer;
+  let mockEntityAdminContainer: EntityAdminServicesContainer;
 
   beforeEach(() => {
     // Create mock containers with services
@@ -143,11 +161,19 @@ describe('YandexTrackerFacade - Batch Methods', () => {
       },
     } as unknown as ProjectAgileServicesContainer;
 
+    mockEntityAdminContainer = {
+      entityApi: {},
+      administration: {},
+      filter: {},
+      queueLocalField: {},
+    } as unknown as EntityAdminServicesContainer;
+
     facade = new YandexTrackerFacade(
       mockCoreContainer,
       mockIssuesContainer,
       mockQueuesContainer,
-      mockProjectAgileContainer
+      mockProjectAgileContainer,
+      mockEntityAdminContainer
     );
   });
 
@@ -159,14 +185,14 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
   describe('createLinksMany', () => {
     it('должна делегировать вызов IssueLinkService.createLinksMany', async () => {
-      const links = [
-        { issueId: 'TEST-1', relationship: 'relates' as const, targetIssue: 'TEST-2' },
-        { issueId: 'TEST-3', relationship: 'depends' as const, targetIssue: 'TEST-4' },
+      const links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }> =
+        [
+          { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+          { issueId: 'TEST-3', relationship: 'depends on', targetIssue: 'TEST-4' },
+        ];
+      const mockResult: BatchResult<string, LinkWithUnknownFields> = [
+        { status: 'fulfilled', key: 'TEST-1', value: createLinkFixture(), index: 0 },
       ];
-      const mockResult: BatchResult<string, unknown> = {
-        successful: [{ id: 'TEST-1', result: { id: 'link1' } }],
-        failed: [],
-      };
 
       vi.mocked(mockIssuesContainer.link.createLinksMany).mockResolvedValue(mockResult);
 
@@ -179,14 +205,13 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
   describe('deleteLinksMany', () => {
     it('должна делегировать вызов IssueLinkService.deleteLinksMany', async () => {
-      const links = [
+      const links: Array<{ issueId: string; linkId: string }> = [
         { issueId: 'TEST-1', linkId: 'link1' },
         { issueId: 'TEST-2', linkId: 'link2' },
       ];
-      const mockResult: BatchResult<string, void> = {
-        successful: [{ id: 'TEST-1', result: undefined }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, void> = [
+        { status: 'fulfilled', key: 'TEST-1', value: undefined, index: 0 },
+      ];
 
       vi.mocked(mockIssuesContainer.link.deleteLinksMany).mockResolvedValue(mockResult);
 
@@ -205,10 +230,9 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         { issueId: 'TEST-1', text: 'Comment 1' },
         { issueId: 'TEST-2', text: 'Comment 2', attachmentIds: ['att1'] },
       ];
-      const mockResult: BatchResult<string, unknown> = {
-        successful: [{ id: 'TEST-1', result: { id: 'comment1', text: 'Comment 1' } }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, CommentWithUnknownFields> = [
+        { status: 'fulfilled', key: 'TEST-1', value: createCommentFixture(), index: 0 },
+      ];
 
       vi.mocked(mockIssuesContainer.comment.addCommentsMany).mockResolvedValue(mockResult);
 
@@ -222,10 +246,14 @@ describe('YandexTrackerFacade - Batch Methods', () => {
   describe('getCommentsMany', () => {
     it('должна делегировать вызов CommentService.getCommentsMany', async () => {
       const issueIds = ['TEST-1', 'TEST-2'];
-      const mockResult: BatchResult<string, unknown[]> = {
-        successful: [{ id: 'TEST-1', result: [{ id: 'comment1' }] }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, PaginatedResult<CommentWithUnknownFields>> = [
+        {
+          status: 'fulfilled',
+          key: 'TEST-1',
+          value: createPaginatedFixture([createCommentFixture()]),
+          index: 0,
+        },
+      ];
 
       vi.mocked(mockIssuesContainer.comment.getCommentsMany).mockResolvedValue(mockResult);
 
@@ -238,10 +266,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
     it('должна передавать параметры запроса', async () => {
       const issueIds = ['TEST-1'];
       const input = { perPage: 10 };
-      const mockResult: BatchResult<string, unknown[]> = {
-        successful: [],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, PaginatedResult<CommentWithUnknownFields>> = [];
 
       vi.mocked(mockIssuesContainer.comment.getCommentsMany).mockResolvedValue(mockResult);
 
@@ -257,10 +282,9 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         { issueId: 'TEST-1', commentId: 'c1', text: 'Updated 1' },
         { issueId: 'TEST-2', commentId: 'c2', text: 'Updated 2' },
       ];
-      const mockResult: BatchResult<string, unknown> = {
-        successful: [{ id: 'TEST-1', result: { id: 'c1', text: 'Updated 1' } }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, CommentWithUnknownFields> = [
+        { status: 'fulfilled', key: 'TEST-1', value: createCommentFixture(), index: 0 },
+      ];
 
       vi.mocked(mockIssuesContainer.comment.editCommentsMany).mockResolvedValue(mockResult);
 
@@ -277,10 +301,9 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         { issueId: 'TEST-1', commentId: 'c1' },
         { issueId: 'TEST-2', commentId: 'c2' },
       ];
-      const mockResult: BatchResult<string, void> = {
-        successful: [{ id: 'TEST-1', result: undefined }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, void> = [
+        { status: 'fulfilled', key: 'TEST-1', value: undefined, index: 0 },
+      ];
 
       vi.mocked(mockIssuesContainer.comment.deleteCommentsMany).mockResolvedValue(mockResult);
 
@@ -296,10 +319,14 @@ describe('YandexTrackerFacade - Batch Methods', () => {
   describe('getChecklistMany', () => {
     it('должна делегировать вызов ChecklistService.getChecklistMany', async () => {
       const issueIds = ['TEST-1', 'TEST-2'];
-      const mockResult: BatchResult<string, unknown[]> = {
-        successful: [{ id: 'TEST-1', result: [{ id: 'item1', text: 'Item 1' }] }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, PaginatedResult<ChecklistItemWithUnknownFields>> = [
+        {
+          status: 'fulfilled',
+          key: 'TEST-1',
+          value: createPaginatedFixture([createChecklistItemFixture()]),
+          index: 0,
+        },
+      ];
 
       vi.mocked(mockIssuesContainer.checklist.getChecklistMany).mockResolvedValue(mockResult);
 
@@ -319,10 +346,9 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         { issueId: 'TEST-1', text: 'Task 1' },
         { issueId: 'TEST-2', text: 'Task 2', checked: true },
       ];
-      const mockResult: BatchResult<string, unknown> = {
-        successful: [{ id: 'TEST-1', result: { id: 'item1', text: 'Task 1' } }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
+        { status: 'fulfilled', key: 'TEST-1', value: createChecklistItemFixture(), index: 0 },
+      ];
 
       vi.mocked(mockIssuesContainer.checklist.addChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -339,10 +365,9 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         { issueId: 'TEST-1', checklistItemId: 'item1', checked: true },
         { issueId: 'TEST-2', checklistItemId: 'item2', text: 'Updated' },
       ];
-      const mockResult: BatchResult<string, unknown> = {
-        successful: [{ id: 'TEST-1', result: { id: 'item1', checked: true } }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
+        { status: 'fulfilled', key: 'TEST-1', value: createChecklistItemFixture(), index: 0 },
+      ];
 
       vi.mocked(mockIssuesContainer.checklist.updateChecklistItemMany).mockResolvedValue(
         mockResult
@@ -361,10 +386,9 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         { issueId: 'TEST-1', itemId: 'item1' },
         { issueId: 'TEST-2', itemId: 'item2' },
       ];
-      const mockResult: BatchResult<string, void> = {
-        successful: [{ id: 'TEST-1', result: undefined }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, void> = [
+        { status: 'fulfilled', key: 'TEST-1', value: undefined, index: 0 },
+      ];
 
       vi.mocked(mockIssuesContainer.checklist.deleteChecklistItemMany).mockResolvedValue(
         mockResult
@@ -382,10 +406,14 @@ describe('YandexTrackerFacade - Batch Methods', () => {
   describe('getWorklogsMany', () => {
     it('должна делегировать вызов WorklogService.getWorklogsMany', async () => {
       const issueIds = ['TEST-1', 'TEST-2'];
-      const mockResult: BatchResult<string, unknown[]> = {
-        successful: [{ id: 'TEST-1', result: [{ id: 'wl1', duration: 'PT1H' }] }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, PaginatedResult<WorklogWithUnknownFields>> = [
+        {
+          status: 'fulfilled',
+          key: 'TEST-1',
+          value: createPaginatedFixture([createWorklogFixture()]),
+          index: 0,
+        },
+      ];
 
       vi.mocked(mockIssuesContainer.worklog.getWorklogsMany).mockResolvedValue(mockResult);
 
@@ -402,10 +430,9 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         { issueId: 'TEST-1', start: '2024-01-01', duration: 'PT1H' },
         { issueId: 'TEST-2', start: '2024-01-02', duration: 'PT2H', comment: 'Work done' },
       ];
-      const mockResult: BatchResult<string, unknown> = {
-        successful: [{ id: 'TEST-1', result: { id: 'wl1', duration: 'PT1H' } }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, WorklogWithUnknownFields> = [
+        { status: 'fulfilled', key: 'TEST-1', value: createWorklogFixture(), index: 0 },
+      ];
 
       vi.mocked(mockIssuesContainer.worklog.addWorklogsMany).mockResolvedValue(mockResult);
 
@@ -421,10 +448,14 @@ describe('YandexTrackerFacade - Batch Methods', () => {
   describe('getAttachmentsMany', () => {
     it('должна делегировать вызов IssueAttachmentService.getAttachmentsMany', async () => {
       const issueIds = ['TEST-1', 'TEST-2'];
-      const mockResult: BatchResult<string, unknown[]> = {
-        successful: [{ id: 'TEST-1', result: [{ id: 'att1', name: 'file.txt' }] }],
-        failed: [],
-      };
+      const mockResult: BatchResult<string, PaginatedResult<AttachmentWithUnknownFields>> = [
+        {
+          status: 'fulfilled',
+          key: 'TEST-1',
+          value: createPaginatedFixture([createAttachmentFixture()]),
+          index: 0,
+        },
+      ];
 
       vi.mocked(mockIssuesContainer.attachment.getAttachmentsMany).mockResolvedValue(mockResult);
 
@@ -446,11 +477,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         issues: ['TEST-1', 'TEST-2'],
         values: { priority: 'minor' },
       };
-      const mockResult = {
-        id: 'op1',
-        self: 'https://api.tracker.yandex.net/v3/bulkchange/op1',
-        status: 'RUNNING',
-      };
+      const mockResult = createBulkChangeOperationFixture({ id: 'op1', status: 'RUNNING' });
 
       vi.mocked(mockProjectAgileContainer.bulkChange.bulkUpdateIssues).mockResolvedValue(
         mockResult
@@ -470,11 +497,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         transition: 'close',
         values: { resolution: 'fixed' },
       };
-      const mockResult = {
-        id: 'op2',
-        self: 'https://api.tracker.yandex.net/v3/bulkchange/op2',
-        status: 'RUNNING',
-      };
+      const mockResult = createBulkChangeOperationFixture({ id: 'op2', status: 'RUNNING' });
 
       vi.mocked(mockProjectAgileContainer.bulkChange.bulkTransitionIssues).mockResolvedValue(
         mockResult
@@ -496,11 +519,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         queue: 'QUEUE2',
         moveAllFields: true,
       };
-      const mockResult = {
-        id: 'op3',
-        self: 'https://api.tracker.yandex.net/v3/bulkchange/op3',
-        status: 'RUNNING',
-      };
+      const mockResult = createBulkChangeOperationFixture({ id: 'op3', status: 'RUNNING' });
 
       vi.mocked(mockProjectAgileContainer.bulkChange.bulkMoveIssues).mockResolvedValue(mockResult);
 
@@ -514,13 +533,12 @@ describe('YandexTrackerFacade - Batch Methods', () => {
   describe('getBulkChangeStatus', () => {
     it('должна делегировать вызов BulkChangeService.getBulkChangeStatus', async () => {
       const operationId = 'op1';
-      const mockResult = {
+      const mockResult = createBulkChangeOperationFixture({
         id: 'op1',
-        self: 'https://api.tracker.yandex.net/v3/bulkchange/op1',
         status: 'COMPLETED',
         processedIssues: 10,
         totalIssues: 10,
-      };
+      });
 
       vi.mocked(mockProjectAgileContainer.bulkChange.getBulkChangeStatus).mockResolvedValue(
         mockResult
@@ -536,13 +554,12 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
     it('должна возвращать статус FAILED при ошибке', async () => {
       const operationId = 'op-failed';
-      const mockResult = {
+      const mockResult = createBulkChangeOperationFixture({
         id: 'op-failed',
-        self: 'https://api.tracker.yandex.net/v3/bulkchange/op-failed',
         status: 'FAILED',
         processedIssues: 5,
         totalIssues: 10,
-      };
+      });
 
       vi.mocked(mockProjectAgileContainer.bulkChange.getBulkChangeStatus).mockResolvedValue(
         mockResult
@@ -559,7 +576,9 @@ describe('YandexTrackerFacade - Batch Methods', () => {
   describe('getAttachments', () => {
     it('должна делегировать вызов IssueAttachmentService.getAttachments', async () => {
       const issueId = 'TEST-1';
-      const mockResult = [{ id: 'att1', name: 'file.txt', mimetype: 'text/plain' }];
+      const mockResult = createPaginatedFixture([
+        createAttachmentFixture({ name: 'file.txt', mimetype: 'text/plain' }),
+      ]);
 
       vi.mocked(mockIssuesContainer.attachment.getAttachments).mockResolvedValue(mockResult);
 
@@ -577,7 +596,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
     it('должна делегировать вызов IssueAttachmentService.uploadAttachment', async () => {
       const issueId = 'TEST-1';
       const input = { filename: 'test.txt', file: Buffer.from('test'), mimetype: 'text/plain' };
-      const mockResult = { id: 'att1', name: 'test.txt', mimetype: 'text/plain' };
+      const mockResult = createAttachmentFixture({ name: 'test.txt', mimetype: 'text/plain' });
 
       vi.mocked(mockIssuesContainer.attachment.uploadAttachment).mockResolvedValue(mockResult);
 
@@ -590,7 +609,10 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
   describe('downloadAttachment', () => {
     it('должна делегировать вызов IssueAttachmentService.downloadAttachment', async () => {
-      const mockResult = { content: Buffer.from('test'), filename: 'test.txt' };
+      const mockResult = {
+        content: Buffer.from('test'),
+        metadata: createAttachmentFixture({ name: 'test.txt' }),
+      };
 
       vi.mocked(mockIssuesContainer.attachment.downloadAttachment).mockResolvedValue(mockResult);
 
@@ -621,7 +643,10 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
   describe('getThumbnail', () => {
     it('должна делегировать вызов IssueAttachmentService.getThumbnail', async () => {
-      const mockResult = { content: Buffer.from('thumbnail'), filename: 'thumb.jpg' };
+      const mockResult = {
+        content: Buffer.from('thumbnail'),
+        metadata: createAttachmentFixture({ name: 'thumb.jpg', mimetype: 'image/jpeg' }),
+      };
 
       vi.mocked(mockIssuesContainer.attachment.getThumbnail).mockResolvedValue(mockResult);
 

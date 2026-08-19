@@ -4,7 +4,7 @@
  */
 
 import MockAdapter from 'axios-mock-adapter';
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance } from 'axios' with { 'resolution-mode': 'require' };
 import {
   generateIssue,
   generateComment,
@@ -825,7 +825,7 @@ export class MockServer {
   /**
    * Mock успешного создания связи между задачами
    */
-  mockCreateLinkSuccess(issueKey: string, targetIssue: string, link: unknown): this {
+  mockCreateLinkSuccess(issueKey: string, _targetIssue: string, link: unknown): this {
     const mockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/links`;
     this.mockAdapter.onPost(`${TRACKER_API_V3}/issues/${issueKey}/links`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
@@ -1184,7 +1184,7 @@ export class MockServer {
    * Mock успешного создания очереди
    */
   mockCreateQueueSuccess(queueData?: Record<string, unknown>): this {
-    const queue = generateQueue({ overrides: queueData });
+    const queue = generateQueue(queueData ? { overrides: queueData } : {});
     const mockKey = `POST ${TRACKER_API_V3}/queues/`;
     this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
@@ -1488,8 +1488,10 @@ export class MockServer {
   mockDeleteComponentSuccess(componentId: string, queueId = 'TEST'): this {
     // DELETE operation сначала GET компонент для получения queue.id
     const component = generateComponent({
-      id: componentId,
-      queue: { id: queueId, key: queueId, display: queueId },
+      overrides: {
+        id: componentId,
+        queue: { id: queueId, key: queueId, display: queueId },
+      },
     });
     const getMockKey = `GET /v2/components/${componentId}`;
     this.mockAdapter.onGet(`/v2/components/${componentId}`).reply(() => {

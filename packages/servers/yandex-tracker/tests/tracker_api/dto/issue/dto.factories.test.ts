@@ -214,13 +214,11 @@ describe('DTO Factories', () => {
 
     test('поддерживает overrides', () => {
       const dto = createFindIssuesByQueue('DEVOPS', {
-        page: 2,
         perPage: 25,
       });
 
       expect(dto).toMatchObject({
         queue: 'DEVOPS',
-        page: 2,
         perPage: 25,
       });
     });

@@ -14,6 +14,7 @@ import {
   createAttachmentListFixture,
   createImageAttachmentFixture,
 } from '#helpers/attachment.fixture.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('get-attachments integration tests (batch)', () => {
   let client: TestMCPClient;
@@ -51,7 +52,7 @@ describe('get-attachments integration tests (batch)', () => {
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -71,8 +72,8 @@ describe('get-attachments integration tests (batch)', () => {
       const issueIds = ['QUEUE-1', 'QUEUE-2'];
       const attachments1 = createAttachmentListFixture(2);
       const attachments2 = createAttachmentListFixture(3);
-      mockServer.mockGetAttachmentsSuccess(issueIds[0], attachments1);
-      mockServer.mockGetAttachmentsSuccess(issueIds[1], attachments2);
+      mockServer.mockGetAttachmentsSuccess(itemAt(issueIds), attachments1);
+      mockServer.mockGetAttachmentsSuccess(itemAt(issueIds, 1), attachments2);
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
@@ -83,7 +84,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -109,7 +110,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -137,7 +138,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.successful[0].attachments[0]).toHaveProperty('thumbnail');
@@ -152,8 +153,8 @@ describe('get-attachments integration tests (batch)', () => {
       // Arrange
       const issueIds = ['QUEUE-1', 'NONEXISTENT-1'];
       const attachments = createAttachmentListFixture(2);
-      mockServer.mockGetAttachmentsSuccess(issueIds[0], attachments);
-      mockServer.mockGetAttachments404(issueIds[1]);
+      mockServer.mockGetAttachmentsSuccess(itemAt(issueIds), attachments);
+      mockServer.mockGetAttachments404(itemAt(issueIds, 1));
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_attachments', {
@@ -164,7 +165,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -190,7 +191,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert - partial failure is not an error at tool level
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -212,7 +213,7 @@ describe('get-attachments integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии issueIds', async () => {
@@ -223,7 +224,7 @@ describe('get-attachments integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии fields', async () => {
@@ -234,7 +235,7 @@ describe('get-attachments integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при пустом issueId в массиве', async () => {
@@ -246,7 +247,7 @@ describe('get-attachments integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
   });
 });

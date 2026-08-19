@@ -10,6 +10,7 @@ import { createTestClient } from '#integration/helpers/mcp-client.js';
 import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 // Мокаем модуль fs/promises для возможности имитации ошибок
 const { writeFileMock } = vi.hoisted(() => ({
@@ -40,9 +41,9 @@ describe('get-thumbnail integration tests', () => {
 
     // Сбрасываем мок writeFile и используем реальную реализацию по умолчанию
     writeFileMock.mockReset();
-    writeFileMock.mockImplementation(async (...args) => {
+    writeFileMock.mockImplementation(async (path, data) => {
       const fs = await import('node:fs/promises');
-      return fs.writeFile(...args);
+      return fs.writeFile(path, data);
     });
   });
 
@@ -83,7 +84,7 @@ describe('get-thumbnail integration tests', () => {
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response).toMatchObject({
@@ -130,7 +131,7 @@ describe('get-thumbnail integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.size).toBeGreaterThan(0);
@@ -158,7 +159,7 @@ describe('get-thumbnail integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка');
+      expect(getTextContent(result)).toContain('Ошибка');
 
       mockServer.assertAllRequestsDone();
     });
@@ -208,7 +209,7 @@ describe('get-thumbnail integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
 
     it('должен вернуть ошибку при пустом attachmentId', async () => {
@@ -220,7 +221,7 @@ describe('get-thumbnail integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
 
     it('должен вернуть ошибку при отсутствии обязательных параметров', async () => {
@@ -229,7 +230,7 @@ describe('get-thumbnail integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
   });
 
@@ -271,8 +272,8 @@ describe('get-thumbnail integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Не удалось сохранить миниатюру');
-      expect(result.content[0]!.text).toContain(saveToPath);
+      expect(getTextContent(result)).toContain('Не удалось сохранить миниатюру');
+      expect(getTextContent(result)).toContain(saveToPath);
 
       mockServer.assertAllRequestsDone();
     });
@@ -314,8 +315,8 @@ describe('get-thumbnail integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Не удалось сохранить миниатюру');
-      expect(result.content[0]!.text).toContain(saveToPath);
+      expect(getTextContent(result)).toContain('Не удалось сохранить миниатюру');
+      expect(getTextContent(result)).toContain(saveToPath);
 
       mockServer.assertAllRequestsDone();
     });

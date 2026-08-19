@@ -48,7 +48,7 @@ export function createMockBinaryBuffer(size: number): Buffer {
  */
 export function createMockFormData(buffer: Buffer, filename: string, fieldName = 'file'): FormData {
   const formData = new FormData();
-  const blob = new Blob([buffer]);
+  const blob = new Blob([new Uint8Array(buffer)]);
   formData.append(fieldName, blob, filename);
   return formData;
 }

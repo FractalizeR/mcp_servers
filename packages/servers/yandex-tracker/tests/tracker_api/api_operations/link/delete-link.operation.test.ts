@@ -4,6 +4,7 @@ import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-m
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ServerConfig } from '#config';
 import { DeleteLinkOperation } from '#tracker_api/api_operations/link/delete-link.operation.js';
+import { itemAt } from '#helpers/tool-result.helper.js';
 
 describe('DeleteLinkOperation', () => {
   let operation: DeleteLinkOperation;
@@ -149,12 +150,12 @@ describe('DeleteLinkOperation', () => {
       const result = await operation.executeMany(links);
 
       expect(result).toHaveLength(3);
-      expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1:link1');
-      expect(result[1].status).toBe('fulfilled');
-      expect(result[1].key).toBe('TEST-2:link2');
-      expect(result[2].status).toBe('fulfilled');
-      expect(result[2].key).toBe('TEST-3:link3');
+      expect(itemAt(result).status).toBe('fulfilled');
+      expect(itemAt(result).key).toBe('TEST-1:link1');
+      expect(itemAt(result, 1).status).toBe('fulfilled');
+      expect(itemAt(result, 1).key).toBe('TEST-2:link2');
+      expect(itemAt(result, 2).status).toBe('fulfilled');
+      expect(itemAt(result, 2).key).toBe('TEST-3:link3');
 
       // Проверяем, что все API вызовы были сделаны
       expect(mockHttpClient.delete).toHaveBeenCalledTimes(3);
@@ -178,15 +179,16 @@ describe('DeleteLinkOperation', () => {
       const result = await operation.executeMany(links);
 
       expect(result).toHaveLength(3);
-      expect(result[0].status).toBe('fulfilled');
-      expect(result[0].key).toBe('TEST-1:link1');
-      expect(result[1].status).toBe('rejected');
-      expect(result[1].key).toBe('TEST-2:link2');
-      if (result[1].status === 'rejected') {
-        expect(result[1].reason.message).toBe('Link not found');
+      expect(itemAt(result).status).toBe('fulfilled');
+      expect(itemAt(result).key).toBe('TEST-1:link1');
+      const result1 = itemAt(result, 1);
+      expect(result1.status).toBe('rejected');
+      expect(result1.key).toBe('TEST-2:link2');
+      if (result1.status === 'rejected') {
+        expect(result1.reason.message).toBe('Link not found');
       }
-      expect(result[2].status).toBe('fulfilled');
-      expect(result[2].key).toBe('TEST-3:link3');
+      expect(itemAt(result, 2).status).toBe('fulfilled');
+      expect(itemAt(result, 2).key).toBe('TEST-3:link3');
     });
 
     it('should handle empty array', async () => {
@@ -210,9 +212,9 @@ describe('DeleteLinkOperation', () => {
 
       expect(result).toHaveLength(3);
       expect(result.every((r) => r.status === 'fulfilled')).toBe(true);
-      expect(result[0].key).toBe('TEST-100:link1');
-      expect(result[1].key).toBe('TEST-100:link2');
-      expect(result[2].key).toBe('TEST-100:link3');
+      expect(itemAt(result).key).toBe('TEST-100:link1');
+      expect(itemAt(result, 1).key).toBe('TEST-100:link2');
+      expect(itemAt(result, 2).key).toBe('TEST-100:link3');
     });
 
     it('should log batch operation info', async () => {

@@ -11,6 +11,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { createAttachmentFixture } from '#helpers/attachment.fixture.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('upload-attachment integration tests', () => {
   let client: TestMCPClient;
@@ -55,7 +56,7 @@ describe('upload-attachment integration tests', () => {
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response).toMatchObject({
@@ -98,7 +99,7 @@ describe('upload-attachment integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.attachment).toHaveProperty('mimetype', mimetype);
@@ -131,7 +132,7 @@ describe('upload-attachment integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.attachment).toHaveProperty('thumbnail');
@@ -159,7 +160,7 @@ describe('upload-attachment integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка');
+      expect(getTextContent(result)).toContain('Ошибка');
 
       mockServer.assertAllRequestsDone();
     });
@@ -177,7 +178,7 @@ describe('upload-attachment integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
 
     it('должен вернуть ошибку при пустом filename', async () => {
@@ -191,7 +192,7 @@ describe('upload-attachment integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
 
     it('должен вернуть ошибку при отсутствии fileContent и filePath', async () => {
@@ -204,7 +205,7 @@ describe('upload-attachment integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
 
     it('должен вернуть ошибку при отсутствии fields', async () => {
@@ -217,7 +218,7 @@ describe('upload-attachment integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
   });
 });

@@ -10,6 +10,7 @@ import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createCommentFixture } from '#helpers/comment.fixture.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('AddCommentTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -74,7 +75,7 @@ describe('AddCommentTool', () => {
       const result = await tool.execute({ fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -88,7 +89,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -103,7 +104,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('минимум 1 элемент');
+      expect(getTextContent(result)).toContain('минимум 1 элемент');
     });
 
     it('должен отклонить comment без issueId', async () => {
@@ -113,7 +114,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить comment без text', async () => {
@@ -123,7 +124,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить пустой text', async () => {
@@ -133,12 +134,13 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('text');
+      expect(getTextContent(result)).toContain('text');
     });
 
     it('должен принять корректные параметры', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-123',
           value: mockComment1,
@@ -158,11 +160,13 @@ describe('AddCommentTool', () => {
     it('должен вызвать addCommentsMany с массивом комментариев', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: mockComment1,
         },
         {
+          index: 1,
           status: 'fulfilled',
           key: 'TEST-2',
           value: mockComment2,
@@ -186,11 +190,13 @@ describe('AddCommentTool', () => {
     it('должен передать attachmentIds для каждого комментария индивидуально', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: mockComment1,
         },
         {
+          index: 1,
           status: 'fulfilled',
           key: 'TEST-2',
           value: mockComment2,
@@ -214,11 +220,13 @@ describe('AddCommentTool', () => {
     it('должен вернуть unified batch result format', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: mockComment1,
         },
         {
+          index: 1,
           status: 'fulfilled',
           key: 'TEST-2',
           value: mockComment2,
@@ -234,7 +242,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -256,21 +264,23 @@ describe('AddCommentTool', () => {
       expect(parsed.data.failed).toBe(0);
       expect(parsed.data.comments).toHaveLength(2);
       expect(parsed.data.errors).toHaveLength(0);
-      expect(parsed.data.comments[0].issueId).toBe('TEST-1');
-      expect(parsed.data.comments[0].commentId).toBe('12345');
-      expect(parsed.data.comments[1].issueId).toBe('TEST-2');
-      expect(parsed.data.comments[1].commentId).toBe('67890');
+      expect(itemAt(parsed.data.comments).issueId).toBe('TEST-1');
+      expect(itemAt(parsed.data.comments).commentId).toBe('12345');
+      expect(itemAt(parsed.data.comments, 1).issueId).toBe('TEST-2');
+      expect(itemAt(parsed.data.comments, 1).commentId).toBe('67890');
       expect(parsed.data.fieldsReturned).toEqual(['id', 'text']);
     });
 
     it('должен обработать частичные ошибки', async () => {
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: mockComment1,
         },
         {
+          index: 1,
           status: 'rejected',
           key: 'TEST-2',
           reason: new Error('Not found'),
@@ -286,7 +296,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -307,8 +317,8 @@ describe('AddCommentTool', () => {
       expect(parsed.data.failed).toBe(1);
       expect(parsed.data.comments).toHaveLength(1);
       expect(parsed.data.errors).toHaveLength(1);
-      expect(parsed.data.errors[0].issueId).toBe('TEST-2');
-      expect(parsed.data.errors[0].error).toContain('Not found');
+      expect(itemAt(parsed.data.errors).issueId).toBe('TEST-2');
+      expect(itemAt(parsed.data.errors).error).toContain('Not found');
     });
 
     it('должен фильтровать поля для всех созданных комментариев', async () => {
@@ -319,6 +329,7 @@ describe('AddCommentTool', () => {
 
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: fullComment,
@@ -331,7 +342,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           comments: Array<{
@@ -341,7 +352,7 @@ describe('AddCommentTool', () => {
       };
 
       // Проверяем, что вернулись только указанные поля
-      const returnedComment = parsed.data.comments[0].comment;
+      const returnedComment = itemAt(parsed.data.comments).comment;
       expect(returnedComment).toHaveProperty('id');
       expect(returnedComment).toHaveProperty('text');
       // Другие поля должны быть отфильтрованы
@@ -357,6 +368,7 @@ describe('AddCommentTool', () => {
 
       vi.mocked(mockTrackerFacade.addCommentsMany).mockResolvedValue([
         {
+          index: 0,
           status: 'fulfilled',
           key: 'TEST-1',
           value: numericIdComment,
@@ -370,13 +382,13 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           comments: Array<{ issueId: string; commentId: string }>;
         };
       };
-      expect(parsed.data.comments[0].commentId).toBe('12345');
+      expect(itemAt(parsed.data.comments).commentId).toBe('12345');
     });
   });
 
@@ -394,8 +406,8 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при добавлении комментариев');
-      expect(result.content[0]?.text).toContain('2 задач');
+      expect(getTextContent(result)).toContain('Ошибка при добавлении комментариев');
+      expect(getTextContent(result)).toContain('2 задач');
     });
   });
 });

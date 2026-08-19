@@ -4,22 +4,22 @@
  */
 
 import type { Container } from 'inversify';
-import type { ToolRegistry } from '@fractalizer/mcp-core/tool-registry.js';
+import type { ToolRegistry } from '@fractalizer/mcp-core';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance } from 'axios' with { 'resolution-mode': 'require' };
 import type { ServerConfig } from '#config';
 import { TYPES } from '#composition-root/types.js';
 import { createContainer } from '#composition-root/index.js';
+import type { ToolResult } from '@fractalizer/mcp-infrastructure';
 
 /**
  * Результат выполнения MCP tool
  */
-export interface ToolExecutionResult {
-  content: Array<{
-    type: string;
-    text: string;
-  }>;
-  isError?: boolean;
+export type ToolExecutionResult = ToolResult;
+
+/** Axios instance вызываем как функцию и держит defaults/interceptors. */
+function isAxiosInstance(value: unknown): value is AxiosInstance {
+  return typeof value === 'function' && 'defaults' in value && 'interceptors' in value;
 }
 
 /**
@@ -83,8 +83,11 @@ export class TestMCPClient {
    * Получить axios instance (для настройки HTTP моков)
    */
   getAxiosInstance(): AxiosInstance {
-    const httpClient = this.getHttpClient();
-    return httpClient.getAxiosInstance();
+    const instance = this.getHttpClient().getAxiosInstance?.();
+    if (!isAxiosInstance(instance)) {
+      throw new Error('HTTP-клиент не отдаёт axios instance — моки HTTP настроить не на чем');
+    }
+    return instance;
   }
 }
 

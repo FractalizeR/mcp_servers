@@ -12,6 +12,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { AttachmentWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/index.js';
 import { createAttachmentListFixture } from '#helpers/attachment.fixture.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 /** Метаданные пагинации по умолчанию (одна страница, всё получено). */
 const META: PaginationMeta = {
@@ -82,7 +83,7 @@ describe('GetAttachmentsTool', () => {
       const result = await tool.execute({ issueIds: ['TEST-1'], fields: ['id', 'name'] });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -95,9 +96,9 @@ describe('GetAttachmentsTool', () => {
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
-      expect(parsed.data.successful[0].issueId).toBe('TEST-1');
-      expect(parsed.data.successful[0].attachmentsCount).toBe(2);
-      expect(parsed.data.successful[0].attachments).toHaveLength(2);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-1');
+      expect(itemAt(parsed.data.successful).attachmentsCount).toBe(2);
+      expect(itemAt(parsed.data.successful).attachments).toHaveLength(2);
       expect(parsed.data.successful[0]).not.toHaveProperty('pagination');
     });
 
@@ -108,11 +109,11 @@ describe('GetAttachmentsTool', () => {
 
       const result = await tool.execute({ issueIds: ['TEST-1'], fields: ['id'] });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { successful: Array<{ attachments: Array<Record<string, unknown>> }> };
       };
-      expect(parsed.data.successful[0].attachments[0]).toHaveProperty('id');
-      expect(parsed.data.successful[0].attachments[0]).not.toHaveProperty('size');
+      expect(itemAt(parsed.data.successful).attachments[0]).toHaveProperty('id');
+      expect(itemAt(parsed.data.successful).attachments[0]).not.toHaveProperty('size');
     });
   });
 

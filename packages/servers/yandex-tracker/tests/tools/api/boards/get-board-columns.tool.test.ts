@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GetBoardColumnsTool } from '#tools/api/boards/get-board-columns.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 function paginated<T>(items: T[]) {
   return {
@@ -49,7 +50,7 @@ describe('GetBoardColumnsTool', () => {
 
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.getBoardColumns).toHaveBeenCalledWith({ boardId: 'b1' });
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as { data: { count: number } };
+    const parsed = JSON.parse(getTextContent(result)) as { data: { count: number } };
     expect(parsed.data.count).toBe(1);
   });
 

@@ -17,7 +17,7 @@
  */
 
 import { describe, it, expect, beforeAll, vi, afterEach } from 'vitest';
-import Ajv2020 from 'ajv/dist/2020.js';
+import ajv2020Module from 'ajv/dist/2020.js';
 import { TOOL_CLASSES } from '#composition-root/definitions/tool-definitions.js';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
@@ -27,7 +27,9 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { ServerConfig } from '#config';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
+const Ajv2020 = ajv2020Module.default;
 const ajv = new Ajv2020({ strict: false });
 
 describe('Tool Schema Contract (Smoke) — JSON Schema 2020-12', () => {
@@ -122,11 +124,11 @@ describe('Tool Schema Contract (Smoke) — JSON Schema 2020-12', () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const result = await pingTool!.execute({});
 
-      expect(result.structuredContent).toBeDefined();
+      expect(result['structuredContent']).toBeDefined();
       expect(result.content[0]?.type).toBe('text');
 
-      const textPayload = JSON.parse(result.content[0]?.text ?? 'null') as unknown;
-      expect(textPayload).toEqual(result.structuredContent);
+      const textPayload = JSON.parse(getTextContent(result)) as unknown;
+      expect(textPayload).toEqual(result['structuredContent']);
     });
   });
 });
