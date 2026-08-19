@@ -2,7 +2,9 @@ import type { Issue, IssueWithUnknownFields } from '#tracker_api/entities/issue.
 import { createUserFixture } from './common-fixtures.js';
 import { createQueueFixture } from './queue.fixture.js';
 
-export function createIssueFixture(overrides?: Partial<Issue>): IssueWithUnknownFields {
+export function createIssueFixture(
+  overrides?: Partial<Issue> & Record<string, unknown>
+): IssueWithUnknownFields {
   const key = overrides?.key ?? 'TEST-1';
   return {
     id: '1',

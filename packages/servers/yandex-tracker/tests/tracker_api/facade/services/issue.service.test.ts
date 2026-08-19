@@ -17,6 +17,8 @@ import type {
   TransitionWithUnknownFields,
 } from '#tracker_api/entities/index.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { createPaginatedFixture } from '#helpers/pagination.fixture.js';
+import { createUserFixture } from '#helpers/common-fixtures.js';
 
 // Fixtures
 function createIssueFixture(overrides = {}): IssueWithUnknownFields {
@@ -116,7 +118,7 @@ describe('IssueService', () => {
   describe('findIssues', () => {
     it('должен делегировать вызов ops.findIssues.execute', async () => {
       const params = { query: 'status: open', perPage: 50 };
-      const mockResult: FindIssuesResult = [createIssueFixture()];
+      const mockResult: FindIssuesResult = createPaginatedFixture([createIssueFixture()]);
 
       vi.mocked(mockOpsContainer.findIssues.execute).mockResolvedValue(mockResult);
 
@@ -128,14 +130,14 @@ describe('IssueService', () => {
 
     it('должен поддерживать поиск по filter', async () => {
       const params = { filter: { status: 'open' } };
-      const mockResult: FindIssuesResult = [];
+      const mockResult: FindIssuesResult = createPaginatedFixture([]);
 
       vi.mocked(mockOpsContainer.findIssues.execute).mockResolvedValue(mockResult);
 
       const result = await service.findIssues(params);
 
       expect(mockOpsContainer.findIssues.execute).toHaveBeenCalledWith(params);
-      expect(result).toEqual([]);
+      expect(result).toEqual(mockResult);
     });
   });
 
@@ -212,7 +214,7 @@ describe('IssueService', () => {
               self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/changelog/1',
               issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
               updatedAt: '2024-01-01',
-              updatedBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+              updatedBy: createUserFixture({ uid: '1', display: 'User', login: 'user' }),
               type: 'IssueUpdated',
               fields: [],
             },

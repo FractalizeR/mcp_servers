@@ -35,6 +35,7 @@ import { createQueueListFixture } from '#helpers/queue.fixture.js';
 import { createProjectListFixture } from '#helpers/project.fixture.js';
 import type { IssueWithUnknownFields, PaginatedResult } from '#tracker_api/entities/index.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { createIssueFixture } from '#helpers/issue.fixture.js';
 
 function page<T>(items: T[]): PaginatedResult<T> {
   return {
@@ -49,13 +50,13 @@ function page<T>(items: T[]): PaginatedResult<T> {
   };
 }
 
-const mockIssue: IssueWithUnknownFields = {
+const mockIssue: IssueWithUnknownFields = createIssueFixture({
   id: '1',
   key: 'QUEUE-1',
   summary: 'Задача, не попавшая в listResources',
   queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
   status: { id: '1', key: 'open', display: 'Open' },
-};
+});
 
 function makeMockFacade(): YandexTrackerFacade {
   const queues = createQueueListFixture(1);

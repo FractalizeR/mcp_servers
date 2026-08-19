@@ -38,29 +38,9 @@ import type {
   UpdateQueueParams,
   ManageQueueAccessParams,
 } from '#tracker_api/api_operations/index.js';
-import { createUserRef } from '#helpers/common-fixtures.js';
-
-// Fixtures
-function createQueueFixture(overrides = {}): QueueOutput {
-  return {
-    id: '1',
-    self: 'https://api.tracker.yandex.net/v3/queues/TEST',
-    key: 'TEST',
-    name: 'Test Queue',
-    lead: createUserRef({ id: '1', display: 'Lead User' }),
-    ...overrides,
-  };
-}
-
-function createQueueFieldFixture(overrides = {}) {
-  return {
-    id: 'field1',
-    self: 'https://api.tracker.yandex.net/v3/fields/field1',
-    key: 'field1',
-    name: 'Field 1',
-    ...overrides,
-  };
-}
+import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { createQueueFieldFixture } from '#helpers/queue-field.fixture.js';
+import { createQueuePermissionFixture } from '#helpers/queue-permission.fixture.js';
 
 describe('QueueService', () => {
   let service: QueueService;
@@ -225,16 +205,13 @@ describe('QueueService', () => {
       const params: ManageQueueAccessParams = {
         queueId: 'TEST',
         accessData: {
-          create: { users: ['user1'], groups: [] },
+          role: 'access',
+          subjects: ['user1'],
+          action: 'add',
         },
       };
       const mockResult: QueuePermissionsOutput = [
-        {
-          self: 'https://api.tracker.yandex.net/v3/queues/TEST/permissions/create',
-          type: 'create',
-          users: [createUserRef({ id: 'user1', display: 'User 1' })],
-          groups: [],
-        },
+        createQueuePermissionFixture({ id: 'user1', display: 'User 1' }),
       ];
 
       vi.mocked(mockOpsContainer.manageQueueAccess.execute).mockResolvedValue(mockResult);

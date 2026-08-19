@@ -1,7 +1,9 @@
 import type { Board, BoardWithUnknownFields } from '#tracker_api/entities/board.entity.js';
 import type { Sprint, SprintWithUnknownFields } from '#tracker_api/entities/sprint.entity.js';
 
-export function createBoardFixture(overrides?: Partial<Board>): BoardWithUnknownFields {
+export function createBoardFixture(
+  overrides?: Partial<Board> & Record<string, unknown>
+): BoardWithUnknownFields {
   const id = overrides?.id ?? '1';
   return {
     id,
@@ -12,7 +14,9 @@ export function createBoardFixture(overrides?: Partial<Board>): BoardWithUnknown
   };
 }
 
-export function createSprintFixture(overrides?: Partial<Sprint>): SprintWithUnknownFields {
+export function createSprintFixture(
+  overrides?: Partial<Sprint> & Record<string, unknown>
+): SprintWithUnknownFields {
   const id = overrides?.id ?? '1';
   return {
     id,

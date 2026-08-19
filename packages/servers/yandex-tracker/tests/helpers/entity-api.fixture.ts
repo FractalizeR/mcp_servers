@@ -7,7 +7,7 @@ import type {
 import { createUserRef } from './common-fixtures.js';
 
 export function createEntityApiRecordFixture(
-  overrides?: Partial<EntityApiRecord>
+  overrides?: Partial<EntityApiRecord> & Record<string, unknown>
 ): EntityApiRecordWithUnknownFields {
   const id = overrides?.id ?? '1';
   return {
@@ -23,7 +23,7 @@ export function createEntityApiRecordFixture(
 }
 
 export function createKeyResultItemFixture(
-  overrides?: Partial<KeyResultItem>
+  overrides?: Partial<KeyResultItem> & Record<string, unknown>
 ): KeyResultItemWithUnknownFields {
   return {
     id: 'kr1',

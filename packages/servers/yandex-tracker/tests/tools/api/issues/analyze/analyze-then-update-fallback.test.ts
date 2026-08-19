@@ -18,6 +18,8 @@ import { AnalyzeIssueDescriptionTool } from '#tools/api/issues/analyze/index.js'
 import { UpdateIssueTool } from '#tools/api/issues/update/index.js';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { createIssueFixture } from '#helpers/issue.fixture.js';
+import { createUserFixture } from '#helpers/common-fixtures.js';
 
 function makeLogger(): Logger {
   return {
@@ -42,17 +44,17 @@ interface AnalyzeSuccessPayload {
 
 describe('Fallback без MCP Apps: analyze_issue_description → update_issue', () => {
   it('агент читает suggestedDescription из текста результата и применяет его через update_issue', async () => {
-    const originalIssue: IssueWithUnknownFields = {
+    const originalIssue: IssueWithUnknownFields = createIssueFixture({
       id: '1',
       key: 'QUEUE-1',
       summary: 'Test',
       queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
-      createdBy: { id: 'u1', display: 'User' },
+      createdBy: createUserFixture({ uid: 'u1', display: 'User' }),
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
       description: 'Коротко',
       version: 7,
-    };
+    });
 
     const getIssues = vi
       .fn()

@@ -5,7 +5,9 @@ import type {
 } from '#tracker_api/entities/bulk-change.entity.js';
 import { createUserRef } from './common-fixtures.js';
 
-export function createWorklogFixture(overrides?: Partial<Worklog>): WorklogWithUnknownFields {
+export function createWorklogFixture(
+  overrides?: Partial<Worklog> & Record<string, unknown>
+): WorklogWithUnknownFields {
   const id = overrides?.id ?? 'wl1';
   return {
     id,
@@ -20,7 +22,7 @@ export function createWorklogFixture(overrides?: Partial<Worklog>): WorklogWithU
 }
 
 export function createBulkChangeOperationFixture(
-  overrides?: Partial<BulkChangeOperation>
+  overrides?: Partial<BulkChangeOperation> & Record<string, unknown>
 ): BulkChangeOperationWithUnknownFields {
   const id = overrides?.id ?? 'bulk-1';
   return {

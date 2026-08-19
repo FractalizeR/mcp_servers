@@ -18,6 +18,8 @@ import { AnalyzeIssueDescriptionTool } from '#tools/api/issues/analyze/index.js'
 import { ISSUE_DESCRIPTION_EDITOR_URI } from '#resources/apps-ui-uri.js';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { createIssueFixture } from '#helpers/issue.fixture.js';
+import { createUserFixture } from '#helpers/common-fixtures.js';
 
 function makeLogger(): Logger {
   return {
@@ -77,17 +79,17 @@ describe('AnalyzeIssueDescriptionTool', () => {
   });
 
   it('санитайзит description со скриптом перед анализом и возвратом', async () => {
-    const mockIssue: IssueWithUnknownFields = {
+    const mockIssue: IssueWithUnknownFields = createIssueFixture({
       id: '1',
       key: 'QUEUE-1',
       summary: 'Test',
       queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
-      createdBy: { id: 'u1', display: 'User' },
+      createdBy: createUserFixture({ uid: 'u1', display: 'User' }),
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
       description: 'Легитимный текст<script>alert(document.cookie)</script> и продолжение',
       version: 3,
-    };
+    });
     const getIssues = vi
       .fn()
       .mockResolvedValue([{ status: 'fulfilled', key: 'QUEUE-1', index: 0, value: mockIssue }]);
@@ -106,15 +108,15 @@ describe('AnalyzeIssueDescriptionTool', () => {
   });
 
   it('пустое description → suggestedDescription содержит шаблон разделов', async () => {
-    const mockIssue: IssueWithUnknownFields = {
+    const mockIssue: IssueWithUnknownFields = createIssueFixture({
       id: '2',
       key: 'QUEUE-2',
       summary: 'Test 2',
       queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
-      createdBy: { id: 'u1', display: 'User' },
+      createdBy: createUserFixture({ uid: 'u1', display: 'User' }),
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
-    };
+    });
     const getIssues = vi
       .fn()
       .mockResolvedValue([{ status: 'fulfilled', key: 'QUEUE-2', index: 0, value: mockIssue }]);
