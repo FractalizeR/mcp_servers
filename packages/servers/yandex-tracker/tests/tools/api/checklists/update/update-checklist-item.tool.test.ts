@@ -168,7 +168,7 @@ describe('UpdateChecklistItemTool', () => {
       const mockItem2 = createChecklistItemFixture({ id: 'item-2', text: 'Item 2', checked: true });
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
         { status: 'fulfilled', key: 'TEST-123/item-1', value: mockChecklistItem, index: 0 },
-        { status: 'fulfilled', key: 'TEST-456/item-2', value: mockItem2 },
+        { status: 'fulfilled', key: 'TEST-456/item-2', value: mockItem2, index: 1 },
       ];
       vi.mocked(mockTrackerFacade.updateChecklistItemMany).mockResolvedValue(mockResult);
 
@@ -270,7 +270,7 @@ describe('UpdateChecklistItemTool', () => {
       const mockItem2 = createChecklistItemFixture({ id: 'item-2', text: 'Item 2', checked: true });
       const mockResult: BatchResult<string, ChecklistItemWithUnknownFields> = [
         { status: 'fulfilled', key: 'TEST-123/item-1', value: mockChecklistItem, index: 0 },
-        { status: 'fulfilled', key: 'TEST-456/item-2', value: mockItem2 },
+        { status: 'fulfilled', key: 'TEST-456/item-2', value: mockItem2, index: 1 },
       ];
       vi.mocked(mockTrackerFacade.updateChecklistItemMany).mockResolvedValue(mockResult);
 

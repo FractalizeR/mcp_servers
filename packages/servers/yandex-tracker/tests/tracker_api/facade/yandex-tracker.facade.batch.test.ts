@@ -33,6 +33,7 @@ import type {
   AttachmentWithUnknownFields,
 } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/common/pagination.entity.js';
+import type { LinkRelationship } from '#tracker_api/entities/link.entity.js';
 
 describe('YandexTrackerFacade - Batch Methods', () => {
   let facade: YandexTrackerFacade;
@@ -182,10 +183,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
   describe('createLinksMany', () => {
     it('должна делегировать вызов IssueLinkService.createLinksMany', async () => {
-      const links = [
-        { issueId: 'TEST-1', relationship: 'relates' as const, targetIssue: 'TEST-2' },
-        { issueId: 'TEST-3', relationship: 'depends' as const, targetIssue: 'TEST-4' },
-      ];
+      const links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }> =
+        [
+          { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+          { issueId: 'TEST-3', relationship: 'depends', targetIssue: 'TEST-4' },
+        ];
       const mockResult: BatchResult<string, LinkWithUnknownFields> = [
         { status: 'fulfilled', key: 'TEST-1', value: createLinkFixture(), index: 0 },
       ];
@@ -201,10 +203,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
 
   describe('deleteLinksMany', () => {
     it('должна делегировать вызов IssueLinkService.deleteLinksMany', async () => {
-      const links = [
-        { issueId: 'TEST-1', linkId: 'link1' },
-        { issueId: 'TEST-2', linkId: 'link2' },
-      ];
+      const links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }> =
+        [
+          { issueId: 'TEST-1', linkId: 'link1' },
+          { issueId: 'TEST-2', linkId: 'link2' },
+        ];
       const mockResult: BatchResult<string, void> = [
         { status: 'fulfilled', key: 'TEST-1', value: undefined, index: 0 },
       ];

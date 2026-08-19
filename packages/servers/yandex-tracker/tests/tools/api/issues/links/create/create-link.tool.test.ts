@@ -123,6 +123,8 @@ describe('CreateLinkTool', () => {
           {
             status: 'fulfilled',
             value: createLinkFixture(),
+            key: 'TEST-1',
+            index: 0,
           },
         ];
         vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
@@ -146,8 +148,8 @@ describe('CreateLinkTool', () => {
   describe('Batch operations', () => {
     it('должен вызвать createLinksMany с корректными параметрами', async () => {
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: createLinkFixture() },
-        { status: 'fulfilled', value: createSubtaskLinkFixture() },
+        { status: 'fulfilled', value: createLinkFixture(), key: 'TEST-1', index: 0 },
+        { status: 'fulfilled', value: createSubtaskLinkFixture(), key: 'TEST-2', index: 1 },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
 
@@ -185,8 +187,8 @@ describe('CreateLinkTool', () => {
       const mockLink1 = createLinkFixture({ id: 'link-1' });
       const mockLink2 = createSubtaskLinkFixture({ id: 'link-2' });
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: mockLink1 },
-        { status: 'fulfilled', value: mockLink2 },
+        { status: 'fulfilled', value: mockLink1, key: 'TEST-1', index: 0 },
+        { status: 'fulfilled', value: mockLink2, key: 'TEST-2', index: 1 },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
 
@@ -230,8 +232,13 @@ describe('CreateLinkTool', () => {
     it('должен обработать частичные ошибки', async () => {
       const mockLink = createLinkFixture({ id: 'link-1' });
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: mockLink },
-        { status: 'rejected', reason: new Error('Issue not found: TEST-99') },
+        { status: 'fulfilled', value: mockLink, key: 'TEST-1', index: 0 },
+        {
+          status: 'rejected',
+          reason: new Error('Issue not found: TEST-99'),
+          key: 'TEST-2',
+          index: 1,
+        },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
 
@@ -284,8 +291,8 @@ describe('CreateLinkTool', () => {
         direction: 'outward',
       });
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: mockLink1 },
-        { status: 'fulfilled', value: mockLink2 },
+        { status: 'fulfilled', value: mockLink1, key: 'TEST-1', index: 0 },
+        { status: 'fulfilled', value: mockLink2, key: 'TEST-2', index: 1 },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
 
@@ -339,14 +346,26 @@ describe('CreateLinkTool', () => {
 
     it('должен работать с разными типами связей в одном batch', async () => {
       const mockBatchResult: BatchResult<string, LinkWithUnknownFields> = [
-        { status: 'fulfilled', value: createLinkFixture({ id: 'link-1' }) },
-        { status: 'fulfilled', value: createSubtaskLinkFixture({ id: 'link-2' }) },
+        {
+          status: 'fulfilled',
+          value: createLinkFixture({ id: 'link-1' }),
+          key: 'TEST-1',
+          index: 0,
+        },
+        {
+          status: 'fulfilled',
+          value: createSubtaskLinkFixture({ id: 'link-2' }),
+          key: 'TEST-2',
+          index: 1,
+        },
         {
           status: 'fulfilled',
           value: createLinkFixture({
             id: 'link-3',
             type: { id: 'depends', inward: 'зависит от', outward: 'блокирует' },
           }),
+          key: 'TEST-3',
+          index: 2,
         },
       ];
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue(mockBatchResult);
@@ -392,7 +411,7 @@ describe('CreateLinkTool', () => {
       } as unknown as LinkWithUnknownFields;
 
       vi.mocked(mockTrackerFacade.createLinksMany).mockResolvedValue([
-        { status: 'fulfilled', value: numericIdLink },
+        { status: 'fulfilled', value: numericIdLink, key: 'TEST-1', index: 0 },
       ]);
 
       // id НЕ запрошен в fields — инструмент обязан вернуть его для linkId.

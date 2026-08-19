@@ -8,6 +8,7 @@ import type { ServerConfig } from '#config';
 import { CreateLinkOperation } from '#tracker_api/api_operations/link/create-link.operation.js';
 import { createLinkFixture, createSubtaskLinkFixture } from '#helpers/link.fixture.js';
 import { at } from '#helpers/tool-result.helper.js';
+import type { LinkRelationship } from '#tracker_api/entities/link.entity.js';
 
 describe('CreateLinkOperation', () => {
   let operation: CreateLinkOperation;
@@ -227,10 +228,11 @@ describe('CreateLinkOperation', () => {
 
   describe('executeMany', () => {
     it('should create multiple links with individual parameters', async () => {
-      const links = [
-        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
-        { issueId: 'TEST-3', relationship: 'has subtasks', targetIssue: 'TEST-4' },
-      ];
+      const links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }> =
+        [
+          { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+          { issueId: 'TEST-3', relationship: 'has subtasks', targetIssue: 'TEST-4' },
+        ];
 
       const mockLink1 = createLinkFixture({
         id: 'link-1',
@@ -253,10 +255,11 @@ describe('CreateLinkOperation', () => {
     });
 
     it('should handle partial failures when creating links', async () => {
-      const links = [
-        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
-        { issueId: 'TEST-3', relationship: 'invalid', targetIssue: 'TEST-4' },
-      ];
+      const links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }> =
+        [
+          { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+          { issueId: 'TEST-3', relationship: 'duplicates', targetIssue: 'TEST-4' },
+        ];
 
       const mockLink = createLinkFixture();
       const error = new Error('Invalid relationship');
@@ -271,10 +274,11 @@ describe('CreateLinkOperation', () => {
     });
 
     it('should use individual parameters for each link', async () => {
-      const links = [
-        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
-        { issueId: 'TEST-3', relationship: 'depends on', targetIssue: 'TEST-4' },
-      ];
+      const links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }> =
+        [
+          { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+          { issueId: 'TEST-3', relationship: 'depends on', targetIssue: 'TEST-4' },
+        ];
 
       vi.mocked(mockHttpClient.post).mockResolvedValue(createLinkFixture());
 
@@ -299,10 +303,11 @@ describe('CreateLinkOperation', () => {
     });
 
     it('should log batch operation start', async () => {
-      const links = [
-        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
-        { issueId: 'TEST-3', relationship: 'has subtasks', targetIssue: 'TEST-4' },
-      ];
+      const links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }> =
+        [
+          { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+          { issueId: 'TEST-3', relationship: 'has subtasks', targetIssue: 'TEST-4' },
+        ];
 
       vi.mocked(mockHttpClient.post).mockResolvedValue(createLinkFixture());
 
@@ -314,11 +319,12 @@ describe('CreateLinkOperation', () => {
     });
 
     it('should handle all successful creations', async () => {
-      const links = [
-        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
-        { issueId: 'TEST-3', relationship: 'relates', targetIssue: 'TEST-4' },
-        { issueId: 'TEST-5', relationship: 'relates', targetIssue: 'TEST-6' },
-      ];
+      const links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }> =
+        [
+          { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' },
+          { issueId: 'TEST-3', relationship: 'relates', targetIssue: 'TEST-4' },
+          { issueId: 'TEST-5', relationship: 'relates', targetIssue: 'TEST-6' },
+        ];
 
       vi.mocked(mockHttpClient.post).mockResolvedValue(createLinkFixture());
 
@@ -329,10 +335,11 @@ describe('CreateLinkOperation', () => {
     });
 
     it('should handle all failures', async () => {
-      const links = [
-        { issueId: 'TEST-1', relationship: 'invalid', targetIssue: 'TEST-2' },
-        { issueId: 'TEST-3', relationship: 'invalid', targetIssue: 'TEST-4' },
-      ];
+      const links: Array<{ issueId: string; relationship: LinkRelationship; targetIssue: string }> =
+        [
+          { issueId: 'TEST-1', relationship: 'duplicates', targetIssue: 'TEST-2' },
+          { issueId: 'TEST-3', relationship: 'duplicates', targetIssue: 'TEST-4' },
+        ];
 
       const error = new Error('Invalid relationship');
       vi.mocked(mockHttpClient.post).mockRejectedValue(error);
