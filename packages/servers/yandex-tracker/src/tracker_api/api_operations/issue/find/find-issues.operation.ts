@@ -237,6 +237,10 @@ export class FindIssuesOperation extends BaseOperation {
     const items: IssueWithUnknownFields[] = [...first.data];
     let pagesFetched = 1;
     let hasError = false;
+    // Число элементов на последней фактически загруженной странице (см.
+    // BuildMetaInput.pageItemCount, F3): используется для sanity-проверки
+    // hasNextPage при отсутствии Link. Стартуем с первой страницы (first).
+    let lastPageItemCount = first.data.length;
 
     for (let page = 2; page <= lastPage && items.length < limit; page += 1) {
       const endpoint = this.buildEndpoint({
@@ -254,6 +258,7 @@ export class FindIssuesOperation extends BaseOperation {
           true
         );
         items.push(...response.data);
+        lastPageItemCount = response.data.length;
         pagesFetched += 1;
       } catch (error) {
         hasError = true;
@@ -275,6 +280,7 @@ export class FindIssuesOperation extends BaseOperation {
       pagesFetched,
       truncated,
       hasError,
+      pageItemCount: lastPageItemCount,
       tag: CURSOR_TAGS.findIssues,
       cursorExtra: opts.bodyHash,
       ...(perPage !== undefined ? { perPage } : {}),

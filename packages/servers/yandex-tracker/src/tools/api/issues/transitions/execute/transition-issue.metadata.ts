@@ -18,7 +18,8 @@ import { TransitionIssueOutputSchema } from '#tools/api/issues/transitions/execu
  */
 export const TRANSITION_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('transition_issue', MCP_TOOL_PREFIX),
-  description: '[Issues/Workflow] Выполнить переход задачи',
+  description:
+    '[Issues/Workflow] Сменить статус задачи (transition, status) — для одной; массово — bulk_transition_issues',
   category: ToolCategory.ISSUES,
   subcategory: 'workflow',
   priority: ToolPriority.HIGH,

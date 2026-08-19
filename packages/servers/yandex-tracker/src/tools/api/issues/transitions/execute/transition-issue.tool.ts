@@ -13,6 +13,7 @@ import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure
 import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ExecuteTransitionDto } from '#tracker_api/dto/index.js';
+import { IssueRefetchAfterTransitionError } from '#tracker_api/api_operations/issue/transitions/transition-issue.operation.js';
 import { TransitionIssueParamsSchema } from '#tools/api/issues/transitions/execute/transition-issue.schema.js';
 
 import { TRANSITION_ISSUE_TOOL_METADATA } from './transition-issue.metadata.js';
@@ -95,6 +96,25 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
         fieldsReturned: fields ?? 'all',
       });
     } catch (error: unknown) {
+      // Находка №1 (BLOCKER, внешнее ревью 2026-08): переход УЖЕ выполнен
+      // сервером (POST `_execute` отработал) — провал последующего GET не
+      // является провалом перехода. Отдавать `success:false` здесь означало
+      // бы спровоцировать агента на повтор не идемпотентного перехода.
+      // Возвращаем success с явной пометкой `refetchFailed: true` вместо
+      // `issue` — форма зафиксирована в `TransitionIssueOutputDataSchema`.
+      if (error instanceof IssueRefetchAfterTransitionError) {
+        this.logger.warn(
+          `Переход ${transitionId} для задачи ${issueKey} выполнен, но дочитывание задачи провалилось — отдаю success с refetchFailed`,
+          { error: error.cause }
+        );
+        return this.formatSuccess({
+          issueKey,
+          transitionId,
+          refetchFailed: true,
+          fieldsReturned: fields ?? 'all',
+        });
+      }
+
       return this.formatError(
         `Ошибка при выполнении перехода задачи ${issueKey} (transition: ${transitionId})`,
         error

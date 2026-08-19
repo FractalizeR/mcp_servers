@@ -51,11 +51,32 @@ export type TransitionIssueParams = z.infer<typeof TransitionIssueParamsSchema>;
  *
  * `fieldsReturned` — либо эхо параметра `fields`, либо литерал `'all'`, когда
  * `fields` не передан (см. tool.ts: `fields ?? 'all'`).
+ *
+ * `issue`/`refetchFailed` (находка №1, внешнее ревью 2026-08): переход
+ * выполняется в два шага — POST `_execute`, затем GET для актуального
+ * состояния задачи. Если POST успешен, а GET проваливается (сеть/таймаут/429),
+ * переход СЧИТАЕТСЯ выполненным (`success: true`) — иначе агент, поверив в
+ * ошибку, рискует повторить не идемпотентный переход. В этом случае `issue`
+ * отсутствует, а `refetchFailed: true` явно сообщает: "переход выполнен,
+ * но актуальное состояние задачи получить не удалось — перечитайте задачу
+ * отдельным вызовом (get_issues), не полагаясь на это поле".
  */
 export const TransitionIssueOutputDataSchema = z.object({
   issueKey: z.string(),
   transitionId: z.string(),
-  issue: FilteredEntitySchema,
+  issue: FilteredEntitySchema.optional().describe(
+    'Актуальное состояние задачи после перехода. Отсутствует, если переход ' +
+      'выполнен, но дочитывание провалилось (см. refetchFailed)'
+  ),
+  refetchFailed: z
+    .boolean()
+    .optional()
+    .describe(
+      'true, если переход выполнен успешно, но дочитывание актуального ' +
+        'состояния задачи (GET) провалилось — поле issue отсутствует. ' +
+        'Переход НЕ повторять; актуальное состояние получить отдельно ' +
+        '(get_issues)'
+    ),
   fieldsReturned: z.union([z.array(z.string()), z.literal('all')]),
 });
 

@@ -11,6 +11,8 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/common/index.js';
+import { successEnvelopeSchema } from '#common/schemas/index.js';
+import { FindIssuesOutputDataSchema } from '#tools/api/issues/find/find-issues.schema.js';
 
 /**
  * Метаданные пагинации по умолчанию (одна полная страница).
@@ -529,6 +531,204 @@ describe('FindIssuesTool', () => {
       expect(parsed.data.summary.searchCriteria.hasQuery).toBe(true);
       // perPage не задан в запросе → не подделываем дефолтом, поле опущено
       expect(parsed.data.summary.searchCriteria.perPage).toBeUndefined();
+    });
+  });
+
+  describe('notFoundKeys (дефект №3: тихая потеря ненайденных keys)', () => {
+    it('поиск по keys, все найдены → notFoundKeys пустой массив', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1, mockIssue2]));
+
+      const result = await tool.execute({
+        keys: ['QUEUE-123', 'QUEUE-456'],
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+      };
+      expect(parsed.data.summary.searchCriteria.notFoundKeys).toEqual([]);
+    });
+
+    it('часть keys не найдена → notFoundKeys перечисляет именно отсутствующие', async () => {
+      // Трекер вернул только TEST-15, TEST-999999 отсутствует в ответе.
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        keys: ['QUEUE-123', 'TEST-999999'],
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: {
+          itemsOnPage: number;
+          summary: { searchCriteria: { keysCount: number; notFoundKeys?: string[] } };
+        };
+      };
+      expect(parsed.data.itemsOnPage).toBe(1);
+      expect(parsed.data.summary.searchCriteria.keysCount).toBe(2);
+      expect(parsed.data.summary.searchCriteria.notFoundKeys).toEqual(['TEST-999999']);
+    });
+
+    it('регистр ключей значим: "queue-123" не считается найденным при ответе "QUEUE-123"', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        keys: ['queue-123'],
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+      };
+      // Трекер не считает ключи задач регистронезависимыми (queue-префикс
+      // канонически в верхнем регистре) — сравнение строго по строке.
+      expect(parsed.data.summary.searchCriteria.notFoundKeys).toEqual(['queue-123']);
+    });
+
+    it('поиск НЕ по keys (query) → notFoundKeys отсутствует в ответе (не применимо)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        query: 'Author: me()',
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+      };
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+    });
+
+    it('поиск по queue → notFoundKeys отсутствует в ответе (не применимо)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        queue: 'QUEUE',
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+      };
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+    });
+
+    it('поиск по filter → notFoundKeys отсутствует в ответе (не применимо)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        filter: { status: 'open' },
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+      };
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+    });
+
+    it('поиск по filterId → notFoundKeys отсутствует в ответе (не применимо)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        filterId: '42',
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+      };
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+    });
+
+    it('находка №2 (MAJOR): keys больше страницы (fetchedAll=false) → notFoundKeys НЕ считается вовсе, а не ложно перечисляет непоместившиеся ключи', async () => {
+      // Регрессионный тест: раньше notFoundKeys считался по result.items ОДНОЙ
+      // страницы всегда. Если запрошенных ключей больше, чем влезает на
+      // страницу (или обход был обрезан truncated/не завершён), ключи со
+      // следующих страниц ошибочно попадали в notFoundKeys — агент читал
+      // "задачи не существует" там, где она просто не поместилась, и мог
+      // создать дубль (цена ВЫШЕ исходной тихой потери). Здесь единственный
+      // найденный элемент — QUEUE-123, но выдача заведомо НЕ полная
+      // (fetchedAll: false, hasNextPage: true) — TEST-999999 может быть на
+      // следующей странице, а не отсутствовать. notFoundKeys обязан
+      // отсутствовать целиком, а не содержать TEST-999999.
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue({
+        items: [mockIssue1],
+        pagination: {
+          hasNextPage: true,
+          fetchedAll: false,
+          truncated: false,
+          hasError: false,
+          pagesFetched: 1,
+          nextCursor: 'opaque-cursor',
+        },
+      });
+
+      const result = await tool.execute({
+        keys: ['QUEUE-123', 'TEST-999999'],
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+      };
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+    });
+  });
+
+  describe('outputSchema DoD (новое поле notFoundKeys описано в контракте)', () => {
+    it('structuredContent с notFoundKeys (часть keys не найдена) валиден по FindIssuesOutputDataSchema', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        keys: ['QUEUE-123', 'TEST-999999'],
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const envelopeSchema = successEnvelopeSchema(FindIssuesOutputDataSchema);
+      const parseResult = envelopeSchema.safeParse(result.structuredContent);
+      expect(parseResult.success).toBe(true);
+    });
+
+    it('structuredContent без notFoundKeys (поиск по query) валиден по FindIssuesOutputDataSchema', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        query: 'Author: me()',
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      const envelopeSchema = successEnvelopeSchema(FindIssuesOutputDataSchema);
+      const parseResult = envelopeSchema.safeParse(result.structuredContent);
+      expect(parseResult.success).toBe(true);
+    });
+  });
+
+  describe('Cursor description (дефект №4: контракт cursor+критерии поиска)', () => {
+    it('описание параметра cursor называет требование повторно передать критерии поиска', () => {
+      const definition = tool.getDefinition();
+      const cursorSchema = definition.inputSchema.properties?.['cursor'] as {
+        description?: string;
+      };
+
+      expect(cursorSchema?.description).toBeDefined();
+      // Правило должно быть понятно ДО вызова, не только из текста рантайм-ошибки.
+      expect(cursorSchema?.description).toMatch(/повторно/);
+      expect(cursorSchema?.description).toMatch(/keys/);
+    });
+
+    it('cursor без критериев поиска отклоняется тем же рефайном "хотя бы один способ поиска" (поведение остаётся защитным)', async () => {
+      const result = await tool.execute({
+        cursor: 'c1:abc',
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      expect(result.isError).toBe(true);
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        message: string;
+      };
+      expect(parsed.success).toBe(false);
     });
   });
 

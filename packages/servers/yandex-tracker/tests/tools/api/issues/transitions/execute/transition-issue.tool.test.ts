@@ -10,6 +10,7 @@ import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
+import { IssueRefetchAfterTransitionError } from '#tracker_api/api_operations/issue/transitions/transition-issue.operation.js';
 
 describe('TransitionIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -61,7 +62,7 @@ describe('TransitionIssueTool', () => {
 
       expect(definition.name).toBe(buildToolName('transition_issue', MCP_TOOL_PREFIX));
       // После миграции на getParamsSchema() description берется из METADATA
-      expect(definition.description).toContain('Выполнить переход задачи');
+      expect(definition.description).toContain('Сменить статус задачи');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toEqual(['issueKey', 'transitionId']);
       expect(definition.inputSchema.properties?.['issueKey']).toBeDefined();
@@ -295,6 +296,44 @@ describe('TransitionIssueTool', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toContain('Ошибка при выполнении перехода');
+    });
+
+    it('находка №1 (BLOCKER): провал дочитывания ПОСЛЕ успешного перехода НЕ должен возвращаться как ошибка (success:false)', async () => {
+      // Регрессионный тест: раньше любая ошибка GET (в т.ч. после успешного
+      // POST `_execute`) ловилась общим catch и превращалась в
+      // `success:false` — агент читал "переход не выполнен" и мог его
+      // повторить, хотя сервер переход УЖЕ применил. Переход не идемпотентен:
+      // повтор либо даёт 4xx "недоступен из текущего статуса", либо
+      // выполняет ВТОРОЙ переход. Ожидаемое поведение: success:true,
+      // `issue` отсутствует, `refetchFailed: true` в data.
+      const refetchError = new IssueRefetchAfterTransitionError(
+        'QUEUE-123',
+        'close',
+        new Error('HTTP 429: Too Many Requests')
+      );
+      vi.mocked(mockTrackerFacade.transitionIssue).mockRejectedValue(refetchError);
+
+      const result = await tool.execute({
+        issueKey: 'QUEUE-123',
+        transitionId: 'close',
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        success: boolean;
+        data: {
+          issueKey: string;
+          transitionId: string;
+          issue?: IssueWithUnknownFields;
+          refetchFailed?: boolean;
+        };
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.data.issueKey).toBe('QUEUE-123');
+      expect(parsed.data.transitionId).toBe('close');
+      expect(parsed.data.refetchFailed).toBe(true);
+      expect(parsed.data.issue).toBeUndefined();
     });
   });
 });

@@ -18,7 +18,8 @@ import { FindIssuesOutputSchema } from '#tools/api/issues/find/find-issues.schem
  */
 export const FIND_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('find_issues', MCP_TOOL_PREFIX),
-  description: '[Issues/Read] Поиск по фильтру',
+  description:
+    '[Issues/Read] Поиск задач по фильтру (issue, search, query) — ключи заранее неизвестны, иначе get_issues быстрее',
   category: ToolCategory.ISSUES,
   subcategory: 'read',
   priority: ToolPriority.CRITICAL,

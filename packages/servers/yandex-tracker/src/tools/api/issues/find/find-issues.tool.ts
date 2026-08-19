@@ -109,6 +109,30 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
         ResponseFieldFilter.filter<IssueWithUnknownFields>(issue, fieldsForFilter)
       );
 
+      // Дефект №3 (тихая потеря данных): при поиске по `keys` Трекер молча
+      // опускает ненайденные ключи в ответе — единственным намёком раньше
+      // было расхождение keysCount/itemsOnPage. Сравнение регистрозависимое
+      // (см. find-issues.schema.ts): Трекер не считает "test-15" == "TEST-15".
+      //
+      // Находка №2 (MAJOR, внешнее ревью 2026-08): `result.items` — это ОДНА
+      // страница (или обрезанная цепочка при `truncated`), а не гарантированно
+      // полная выдача. Раньше `notFoundKeys` считался по ней всегда — если
+      // запрошенных ключей больше, чем влезает на страницу, все ключи со
+      // второй и далее страниц ошибочно попадали в notFoundKeys, и агент
+      // читал «задачи не существует» там, где она просто не поместилась на
+      // странице (риск дубля выше исходного дефекта тихой потери).
+      // `notFoundKeys` теперь считается ТОЛЬКО когда выдача заведомо полная
+      // (`pagination.fetchedAll === true` — полный обход завершён без обрыва
+      // по лимиту и без незагруженной следующей страницы); иначе поле не
+      // отдаётся вовсе — семантика «не могу утверждать», а не ложное «не
+      // найдено».
+      const notFoundKeys =
+        searchParams.keys && result.pagination.fetchedAll
+          ? searchParams.keys.filter(
+              (requestedKey) => !result.items.some((issue) => issue.key === requestedKey)
+            )
+          : undefined;
+
       // 5. Логирование результатов
       this.logger.info('Задачи найдены', {
         count: result.items.length,
@@ -145,6 +169,7 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
             hasFilter: !!searchParams.filter,
             keysCount: searchParams.keys?.length ?? 0,
             hasQueue: !!searchParams.queue,
+            ...(notFoundKeys !== undefined ? { notFoundKeys } : {}),
           },
         },
       });

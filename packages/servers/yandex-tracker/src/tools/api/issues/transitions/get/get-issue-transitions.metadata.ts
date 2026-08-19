@@ -18,7 +18,7 @@ import { GetIssueTransitionsOutputSchema } from '#tools/api/issues/transitions/g
  */
 export const GET_ISSUE_TRANSITIONS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_issue_transitions', MCP_TOOL_PREFIX),
-  description: '[Issues/Workflow] Доступные переходы',
+  description: '[Issues/Workflow] Доступные переходы статуса задачи (transition, workflow, status)',
   category: ToolCategory.ISSUES,
   subcategory: 'workflow',
   priority: ToolPriority.HIGH,

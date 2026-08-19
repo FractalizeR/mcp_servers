@@ -317,19 +317,44 @@ export class MockServer {
   /**
    * E2E: Mock успешного перехода
    */
-  e2e_transitionIssueSuccess(issueKey: string, transition: string): this {
-    const issue = generateIssue({ overrides: { key: issueKey } });
-    const mockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`;
+  e2e_transitionIssueSuccess(
+    issueKey: string,
+    transition: string,
+    issueOverrides?: Record<string, unknown>
+  ): this {
+    // Как и mockTransitionIssueSuccess: POST `_execute` отвечает списком
+    // переходов, а не задачей, поэтому операция дочитывает задачу отдельным
+    // GET `/v3/issues/{issueKey}` — регистрируем оба запроса.
+    const transitionsResponse = [
+      {
+        id: transition,
+        self: `${TRACKER_API_BASE}${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}`,
+        to: { id: '1', key: 'someStatus', display: 'Some Status' },
+      },
+    ];
+    const postMockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`;
     this.mockAdapter
       .onPost(`${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`)
       .reply(() => {
-        const index = this.pendingMocks.indexOf(mockKey);
+        const index = this.pendingMocks.indexOf(postMockKey);
         if (index !== -1) {
           this.pendingMocks.splice(index, 1);
         }
-        return [200, issue];
+        return [200, transitionsResponse];
       });
-    this.pendingMocks.push(mockKey);
+    this.pendingMocks.push(postMockKey);
+
+    const issue = generateIssue({ overrides: { key: issueKey, ...issueOverrides } });
+    const getMockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(getMockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, issue];
+    });
+    this.pendingMocks.push(getMockKey);
+
     return this;
   }
 
@@ -346,13 +371,15 @@ export class MockServer {
       },
     ];
     const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/changelog`;
-    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/changelog`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [200, changelog];
-    });
+    this.mockAdapter
+      .onGet(new RegExp(`^${TRACKER_API_V3}/issues/${issueKey}/changelog(\\?.*)?$`))
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [200, changelog];
+      });
     this.pendingMocks.push(mockKey);
     return this;
   }
@@ -456,20 +483,49 @@ export class MockServer {
 
   /**
    * Mock успешного перехода
+   *
+   * ВАЖНО: реальный API v3 отвечает на POST `_execute` списком переходов,
+   * доступных из НОВОГО статуса (id/self/to/screen), а НЕ задачей — см.
+   * TransitionIssueOperation. Поэтому операция дочитывает задачу отдельным
+   * GET `/v3/issues/{issueKey}` сразу после успешного перехода — этот мок
+   * регистрирует оба запроса, чтобы вызывающему тесту не нужно было знать
+   * о деталях реализации.
    */
-  mockTransitionIssueSuccess(issueKey: string, transition: string): this {
-    const issue = generateIssue({ overrides: { key: issueKey } });
-    const mockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`;
+  mockTransitionIssueSuccess(
+    issueKey: string,
+    transition: string,
+    issueOverrides?: Record<string, unknown>
+  ): this {
+    const transitionsResponse = [
+      {
+        id: transition,
+        self: `${TRACKER_API_BASE}${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}`,
+        to: { id: '1', key: 'someStatus', display: 'Some Status' },
+      },
+    ];
+    const postMockKey = `POST ${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`;
     this.mockAdapter
       .onPost(`${TRACKER_API_V3}/issues/${issueKey}/transitions/${transition}/_execute`)
       .reply(() => {
-        const index = this.pendingMocks.indexOf(mockKey);
+        const index = this.pendingMocks.indexOf(postMockKey);
         if (index !== -1) {
           this.pendingMocks.splice(index, 1);
         }
-        return [200, issue];
+        return [200, transitionsResponse];
       });
-    this.pendingMocks.push(mockKey);
+    this.pendingMocks.push(postMockKey);
+
+    const issue = generateIssue({ overrides: { key: issueKey, ...issueOverrides } });
+    const getMockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}`;
+    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}`).reply(() => {
+      const index = this.pendingMocks.indexOf(getMockKey);
+      if (index !== -1) {
+        this.pendingMocks.splice(index, 1);
+      }
+      return [200, issue];
+    });
+    this.pendingMocks.push(getMockKey);
+
     return this;
   }
 
@@ -505,13 +561,15 @@ export class MockServer {
       },
     ];
     const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/changelog`;
-    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/changelog`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [200, changelog];
-    });
+    this.mockAdapter
+      .onGet(new RegExp(`^${TRACKER_API_V3}/issues/${issueKey}/changelog(\\?.*)?$`))
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [200, changelog];
+      });
     this.pendingMocks.push(mockKey);
     return this;
   }
@@ -522,13 +580,15 @@ export class MockServer {
   mockGetChangelog404(issueKey: string): this {
     const response = generateError404();
     const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/changelog`;
-    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/changelog`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [404, response];
-    });
+    this.mockAdapter
+      .onGet(new RegExp(`^${TRACKER_API_V3}/issues/${issueKey}/changelog(\\?.*)?$`))
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [404, response];
+      });
     this.pendingMocks.push(mockKey);
     return this;
   }
@@ -800,13 +860,15 @@ export class MockServer {
    */
   mockGetLinksSuccess(issueKey: string, links: unknown[]): this {
     const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/links`;
-    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/links`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [200, links];
-    });
+    this.mockAdapter
+      .onGet(new RegExp(`^${TRACKER_API_V3}/issues/${issueKey}/links(\\?.*)?$`))
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [200, links];
+      });
     this.pendingMocks.push(mockKey);
     return this;
   }
@@ -817,13 +879,15 @@ export class MockServer {
   mockGetLinks404(issueKey: string): this {
     const response = generateError404();
     const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/links`;
-    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/links`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [404, response];
-    });
+    this.mockAdapter
+      .onGet(new RegExp(`^${TRACKER_API_V3}/issues/${issueKey}/links(\\?.*)?$`))
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [404, response];
+      });
     this.pendingMocks.push(mockKey);
     return this;
   }
@@ -926,13 +990,15 @@ export class MockServer {
    */
   mockGetCommentsEmpty(issueKey: string): this {
     const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/comments`;
-    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/comments`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [200, []];
-    });
+    this.mockAdapter
+      .onGet(new RegExp(`^${TRACKER_API_V3}/issues/${issueKey}/comments(\\?.*)?$`))
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [200, []];
+      });
     this.pendingMocks.push(mockKey);
     return this;
   }
@@ -943,13 +1009,15 @@ export class MockServer {
   mockGetComments404(issueKey: string): this {
     const response = generateError404();
     const mockKey = `GET ${TRACKER_API_V3}/issues/${issueKey}/comments`;
-    this.mockAdapter.onGet(`${TRACKER_API_V3}/issues/${issueKey}/comments`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [404, response];
-    });
+    this.mockAdapter
+      .onGet(new RegExp(`^${TRACKER_API_V3}/issues/${issueKey}/comments(\\?.*)?$`))
+      .reply(() => {
+        const index = this.pendingMocks.indexOf(mockKey);
+        if (index !== -1) {
+          this.pendingMocks.splice(index, 1);
+        }
+        return [404, response];
+      });
     this.pendingMocks.push(mockKey);
     return this;
   }
