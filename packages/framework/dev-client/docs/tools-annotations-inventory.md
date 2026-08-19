@@ -1,4 +1,4 @@
-# Инвентарь: annotations всех tool-метаданных трёх серверов
+# Инвентарь: annotations всех tool-метаданных двух серверов
 
 Постоянное место инвентаря (перенесено из `.agentic-planning/plan_mcp_dev_interface/inventory_tools_annotations.md`
 пакетом 1.3 плана dev-интерфейса вызова MCP-инструментов). Причина переноса: правила проекта
@@ -29,16 +29,13 @@ download_attachment`) на момент верификации уже устра
    `node packages/framework/dev-client/dist/cli/bin/mcp-dev.js list --json --server-name
    fractalizer_mcp_yandex_tracker --package-dir packages/servers/yandex-tracker` (аналогично для
    wiki). Закрывает слепые пятна (а)-(в) статического парса: это то, что клиент получит на самом
-   деле. **Не видит:** ticktick — сервер не подключён ни в одном scope MCP-клиента на этой машине
-   (`mcp-dev list` вернул `notConnected`, exit code 2); для ticktick список по-прежнему статический
-   (канал 1) плюс сверка по коду (канал 3). Также не видит переопределение annotations в рантайме
+   деле. **Не видит:** переопределение annotations в рантайме
    на основании входных аргументов конкретного вызова (annotations в MCP статичны на уровне
    definition, так что этот случай архитектурно исключён, а не просто не проверен).
 3. **Семантическая сверка по коду** (пакет 1.3) — для каждого инструмента с `readOnlyHint: true`
    прослежена цепочка `*.tool.ts` → `facade.*` → `*.service.ts` → `*.operation.ts` до конкретного
-   `httpClient.<verb>` (или, для ticktick, до отсутствия сетевого вызова — локальная фильтрация
-   поверх уже прочитанных данных), плюс grep на `writeFile`/`createWriteStream`/`writeFileSync` по
-   каталогам `tools/` всех трёх серверов. Закрывает то, что не видят каналы 1-2: значение хинта
+   `httpClient.<verb>`, плюс grep на `writeFile`/`createWriteStream`/`writeFileSync` по
+   каталогам `tools/` обоих серверов. Закрывает то, что не видят каналы 1-2: значение хинта
    может быть синтаксически корректным, но семантически неверным (хинт есть, факт не
    соответствует). **Не видит:** поведение, зависящее от значений аргументов вызова (например,
    гипотетический инструмент, который пишет на диск только при определённом параметре) — сверка
@@ -46,17 +43,17 @@ download_attachment`) на момент верификации уже устра
    за пределами `httpClient`/`fs` (например, запись в кэш-файл через сторонний SDK, если такой
    появится).
 
-**Итого файлов метаданных:** 153 (tracker 92, wiki 36, ticktick 25) — подтверждено всеми тремя
+**Итого файлов метаданных:** 128 (tracker 92, wiki 36) — подтверждено всеми тремя
 каналами; `mcp-dev list --json` вернул ровно 92 и 36 записей для tracker и wiki соответственно
-(canal 2), совпадает со статическим парсом (канал 1) и с `TOOL_CLASSES.length` каждого сервера
+(канал 2), совпадает со статическим парсом (канал 1) и с `TOOL_CLASSES.length` каждого сервера
 (проверяется регрессионным тестом `tests/composition-root/annotations.test.ts` /
-`tests/unit/composition-root/annotations.test.ts` — 93/37/26 тестов = N инструментов + 1 проверка
+`tests/unit/composition-root/annotations.test.ts` — 93/37 тестов = N инструментов + 1 проверка
 непустоты списка).
 
 ## Семантическая сверка read-only инструментов
 
 Для каждого сервера ниже перечислены все инструменты с `readOnlyHint: true` (по факту — по
-реальному `tools/list` для tracker/wiki, по статическому парсу + коду для ticktick) и результат
+реальному `tools/list`) и результат
 проверки: не пишут ни в удалённое окружение (нет вызовов `httpClient.post/postWithResponse/patch/
 put/delete`), ни на локальную ФС (нет `writeFile`/`createWriteStream`/`writeFileSync`).
 
@@ -78,16 +75,6 @@ put/delete`), ни на локальную ФС (нет `writeFile`/`createWrite
   `get_descendants`, `get_descendants_by_id`, `get_grid`, `get_page`, `get_page_by_id`,
   `get_resources`, `ping`, `raw_api_request`, `search` — та же проверка, тот же результат: только
   `httpClient.get`, `raw_api_request` заперт на GET аналогично tracker.
-- **ticktick** (17 инструментов, статически — сервер не подключён): `get_overdue_tasks`,
-  `get_tasks_due_in_days`, `get_tasks_due_this_week`, `get_tasks_due_today`,
-  `get_tasks_due_tomorrow`, `get_project_tasks`, `get_project`, `get_projects`, `raw_api_request`,
-  `get_engaged_tasks`, `get_next_tasks`, `ping`, `get_all_tasks`, `get_task`,
-  `get_tasks_by_priority`, `get_tasks`, `search_tasks` — часть из них (`get_overdue_tasks`,
-  `get_tasks_due_*`, `get_engaged_tasks`, `get_next_tasks`, `search_tasks`,
-  `get_tasks_by_priority`) не делают отдельного HTTP-вызова вовсе: это чистая клиентская
-  фильтрация в `ticktick.facade.ts` поверх результата `getAllTasks()`, которая сама сводится к
-  `getProjects()` + `getProjectData()` на `httpClient.get`. `raw_api_request` заперт на GET так же,
-  как в tracker/wiki. В каталоге `tools/` ticktick нет ни одного `writeFile`.
 
 **Не найдено ни одного действующего расхождения.** Единственный известный кандидат —
 `yandex-wiki / download_attachment` — на момент верификации (2026-08-19) уже исправлен в коде:
@@ -97,7 +84,7 @@ put/delete`), ни на локальную ФС (нет `writeFile`/`createWrite
 `yandex-tracker` (`download_attachment`, `get_thumbnail` — оба `false`, правка «пакет 3.1.G»).
 Реальный `tools/list` подтверждает: `yw_download_attachment` → `readOnly: false`, `class: "write"`.
 Независимо от значения `readOnlyHint`, dev-client классифицирует `download_attachment` в tracker/
-wiki (и гипотетический аналог в ticktick, если появится) как минимум `local-side-effect` по
+wiki как минимум `local-side-effect` по
 наличию аргумента `saveToPath` в схеме — см. `hasPathLikeProperty()` в
 `packages/framework/dev-client/src/write-policy/classify.ts`. Это независимый механизм защиты,
 не полагающийся на корректность `readOnlyHint` — правка на будущее не станет единственной линией
@@ -111,7 +98,6 @@ wiki (и гипотетический аналог в ticktick, если поя�
 
 - `packages/servers/yandex-tracker/tests/composition-root/annotations.test.ts`
 - `packages/servers/yandex-wiki/tests/unit/composition-root/annotations.test.ts`
-- `packages/servers/ticktick/tests/unit/composition-root/annotations.test.ts`
 
 Тест итерирует по `TOOL_CLASSES` (не по списку заранее известных имён), поэтому новый инструмент
 без явных хинтов роняет сборку сервера при первом же `npm test`. Проверено эмпирически: временное
@@ -251,31 +237,6 @@ wiki (и гипотетический аналог в ticktick, если поя�
 | yandex-wiki | get_resources | true | false | true | true | get-resources.metadata.ts |
 | yandex-wiki | search | true | false | true | true | search.metadata.ts |
 | yandex-wiki | ping | true | false | true | true | ping.metadata.ts |
-| ticktick | get_overdue_tasks | true | false | true | true | get-overdue-tasks.metadata.ts |
-| ticktick | get_tasks_due_in_days | true | false | true | true | get-tasks-due-in-days.metadata.ts |
-| ticktick | get_tasks_due_this_week | true | false | true | true | get-tasks-due-this-week.metadata.ts |
-| ticktick | get_tasks_due_today | true | false | true | true | get-tasks-due-today.metadata.ts |
-| ticktick | get_tasks_due_tomorrow | true | false | true | true | get-tasks-due-tomorrow.metadata.ts |
-| ticktick | create_project | false | false | false | true | create-project.metadata.ts |
-| ticktick | delete_project | false | true | true | true | delete-project.metadata.ts |
-| ticktick | get_project_tasks | true | false | true | true | get-project-tasks.metadata.ts |
-| ticktick | get_project | true | false | true | true | get-project.metadata.ts |
-| ticktick | get_projects | true | false | true | true | get-projects.metadata.ts |
-| ticktick | update_project | false | false | true | true | update-project.metadata.ts |
-| ticktick | raw_api_request | true | false | true | true | raw-api-request.metadata.ts |
-| ticktick | get_engaged_tasks | true | false | true | true | get-engaged-tasks.metadata.ts |
-| ticktick | get_next_tasks | true | false | true | true | get-next-tasks.metadata.ts |
-| ticktick | ping | true | false | true | true | ping.metadata.ts |
-| ticktick | batch_create_tasks | false | false | false | true | batch-create-tasks.metadata.ts |
-| ticktick | complete_task | false | true | true | true | complete-task.metadata.ts |
-| ticktick | create_task | false | false | false | true | create-task.metadata.ts |
-| ticktick | delete_task | false | true | true | true | delete-task.metadata.ts |
-| ticktick | get_all_tasks | true | false | true | true | get-all-tasks.metadata.ts |
-| ticktick | get_task | true | false | true | true | get-task.metadata.ts |
-| ticktick | get_tasks_by_priority | true | false | true | true | get-tasks-by-priority.metadata.ts |
-| ticktick | get_tasks | true | false | true | true | get-tasks.metadata.ts |
-| ticktick | search_tasks | true | false | true | true | search-tasks.metadata.ts |
-| ticktick | update_task | false | false | true | true | update-task.metadata.ts |
 
 ## Сводка
 
@@ -283,6 +244,5 @@ wiki (и гипотетический аналог в ticktick, если поя�
 - **yandex-wiki**: 36 tools; readOnlyHint: {'true': 12, 'false': 24}; destructiveHint: {'false': 26, 'true': 10}
   (было 13/23 в предварительной версии — `download_attachment` перешёл из `true` в `false`, см.
   «Семантическая сверка»)
-- **ticktick**: 25 tools; readOnlyHint: {'true': 17, 'false': 8}; destructiveHint: {'false': 22, 'true': 3}
 
-- **Без явных readOnly/destructive:** 0 (подтверждено регрессионным тестом на 153 инструментах)
+- **Без явных readOnly/destructive:** 0 (подтверждено регрессионным тестом на 128 инструментах)

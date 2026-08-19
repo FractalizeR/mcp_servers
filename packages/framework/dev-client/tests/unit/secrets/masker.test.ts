@@ -52,14 +52,14 @@ describe('createMasker', () => {
   });
 
   it('маскирует секрет из родительского окружения по чувствительному имени ключа', () => {
-    // Обратная сторона того же H1: риск плана «ticktick читает токены из
-    // process.env» обязан оставаться закрытым.
+    // Обратная сторона того же H1: риск, что какой-нибудь сервер читает токены
+    // из process.env, обязан оставаться закрытым независимо от имени сервера.
     const masker = createMasker({
       clientEnv: {},
       parentEnv: {
         HOME: '/Users/fractalizer',
-        TICKTICK_ACCESS_TOKEN: SECRET,
-        TICKTICK_CLIENT_SECRET: 'another-secret-value-987654',
+        OTHER_SERVICE_ACCESS_TOKEN: SECRET,
+        OTHER_SERVICE_CLIENT_SECRET: 'another-secret-value-987654',
       },
     });
     const masked = masker(
@@ -87,8 +87,8 @@ describe('createMasker', () => {
         LOG_LEVEL: 'warning',
         YANDEX_TRACKER_API_BASE: 'https://api.tracker.yandex.net',
         REQUEST_TIMEOUT: '300000',
-        TICKTICK_CLIENT_ID: 'client-abcdef123456',
-        TICKTICK_REDIRECT_URI: 'http://localhost:8080/callback',
+        OTHER_SERVICE_CLIENT_ID: 'client-abcdef123456',
+        OTHER_SERVICE_REDIRECT_URI: 'http://localhost:8080/callback',
       },
     });
     const text =

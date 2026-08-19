@@ -304,7 +304,7 @@ npm run tools:call -- fr_yandex_tracker_get_issues '{"issueIds":["PROJ-1"]}'
 npm run tools:batch -- calls.jsonl --dangerously-allow-write
 ```
 
-Имена инструментов всегда с префиксом сервера (`fr_yandex_tracker_`, `yw_`, `fr_ticktick_` —
+Имена инструментов всегда с префиксом сервера (`fr_yandex_tracker_`, `yw_` —
 `MCP_TOOL_PREFIX` в `src/constants.ts` сервера); список актуальных имён — `npm run tools:list`.
 
 После доработки — обязательно прогони `tools:batch` по кейсам из того, что менял: сами

@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-dev-client",
-  "version": "1.9.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Dev-only MCP client: open a real stdio session against a locally built server bundle, list/call tools, run batches — without registering the agent as an MCP client",
   "keywords": [
@@ -57,7 +57,7 @@
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet && npm run cpd:quiet && npm run depcruise && npm run validate:docs"
   },
   "dependencies": {
-    "@fractalizer/mcp-cli": "^1.9.0",
+    "@fractalizer/mcp-cli": "^2.0.0",
     "@modelcontextprotocol/client": "^2.0.0",
     "commander": "^14.0.3"
   },

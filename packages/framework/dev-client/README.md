@@ -5,8 +5,8 @@
 дорабатывающего код, как ещё одного MCP-клиента и без перезапуска сессии
 между вызовами.
 
-`private: true` — пакет не публикуется в npm. Каждый из трёх серверов
-(`yandex-tracker`, `yandex-wiki`, `ticktick`) подключает его как
+`private: true` — пакет не публикуется в npm. Каждый из двух серверов
+(`yandex-tracker`, `yandex-wiki`) подключает его как
 `devDependency` и вызывает через npm-скрипты `tools:list`/`tools:call`/`tools:batch`
 (добавляются npm-скриптами конкретного сервера, см. его `README.md`).
 
@@ -55,7 +55,7 @@ mcp-dev batch <file.jsonl>       --server-name <n> --package-dir <dir> [--danger
 {"tool": "fr_yandex_tracker_find_issues", "args": {"query": "Queue: PROJ"}, "label": "smoke", "expect": {"isError": false}}
 ```
 
-Имя инструмента — всегда с префиксом сервера (`fr_yandex_tracker_`, `yw_`, `fr_ticktick_` —
+Имя инструмента — всегда с префиксом сервера (`fr_yandex_tracker_`, `yw_` —
 `MCP_TOOL_PREFIX` в `src/constants.ts` конкретного сервера); фактический список — `mcp-dev list`.
 
 - `label` — опциональная метка строки для читаемости вывода.

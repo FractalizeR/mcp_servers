@@ -156,10 +156,8 @@ jobs:
             "@fractalizer/mcp-core"
             "@fractalizer/mcp-server-yandex-tracker"
             "@fractalizer/mcp-server-yandex-wiki"
-            "@fractalizer/mcp-server-ticktick"
             "mcp-server-yandex-tracker"
             "mcp-server-yandex-wiki"
-            "mcp-server-ticktick"
           )
           TOTAL=${#PACKAGES[@]}
 
@@ -244,7 +242,6 @@ jobs:
           echo "📦 Building MCPB bundles for all servers..."
           npm run build:mcpb --workspace=@fractalizer/mcp-server-yandex-tracker
           npm run build:mcpb --workspace=@fractalizer/mcp-server-yandex-wiki
-          npm run build:mcpb --workspace=@fractalizer/mcp-server-ticktick
 
       - name: Rename and upload MCPB files
         run: |
@@ -265,14 +262,6 @@ jobs:
             mv "$YW_FILE" "mcp-server-yandex-wiki.mcpb"
             UPLOAD_FILES="$UPLOAD_FILES mcp-server-yandex-wiki.mcpb"
             echo "✅ yandex-wiki MCPB ready"
-          fi
-
-          # TickTick
-          TT_FILE=$(ls fractalizer_mcp_ticktick-*.mcpb 2>/dev/null | head -n 1)
-          if [ -n "$TT_FILE" ]; then
-            mv "$TT_FILE" "mcp-server-ticktick.mcpb"
-            UPLOAD_FILES="$UPLOAD_FILES mcp-server-ticktick.mcpb"
-            echo "✅ ticktick MCPB ready"
           fi
 
           if [ -z "$UPLOAD_FILES" ]; then

@@ -38,10 +38,8 @@ const packageDirs = [
   'packages/framework/core',
   'packages/servers/yandex-tracker',
   'packages/servers/yandex-wiki',
-  'packages/servers/ticktick',
   'packages/wrappers/mcp-server-yandex-tracker',
   'packages/wrappers/mcp-server-yandex-wiki',
-  'packages/wrappers/mcp-server-ticktick',
 ];
 
 // Имена внутренних пакетов для обновления зависимостей
@@ -51,7 +49,6 @@ const internalPackages = [
   '@fractalizer/mcp-core',
   '@fractalizer/mcp-server-yandex-tracker',
   '@fractalizer/mcp-server-yandex-wiki',
-  '@fractalizer/mcp-server-ticktick',
 ];
 
 let updatedCount = 0;

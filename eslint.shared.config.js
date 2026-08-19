@@ -8,7 +8,7 @@ import prettierConfig from 'eslint-config-prettier';
  *
  * Два профиля:
  * - frameworkConfig() — строгий, для framework пакетов (infrastructure, core, search, cli)
- * - serverConfig() — чуть мягче, для серверов (yandex-tracker, ticktick, yandex-wiki)
+ * - serverConfig() — чуть мягче, для серверов (yandex-tracker, yandex-wiki)
  *
  * Использование в пакете:
  *   import { frameworkConfig } from '../../eslint.config.shared.js';
@@ -159,7 +159,7 @@ export function frameworkConfig() {
 }
 
 /**
- * Server config — чуть мягче для серверов (yandex-tracker, ticktick, yandex-wiki)
+ * Server config — чуть мягче для серверов (yandex-tracker, yandex-wiki)
  */
 export function serverConfig() {
   return [
