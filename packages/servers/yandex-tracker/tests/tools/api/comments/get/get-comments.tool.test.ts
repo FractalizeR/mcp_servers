@@ -113,7 +113,7 @@ describe('GetCommentsTool', () => {
       const result = await tool.execute({ issueIds: [], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить некорректный perPage (отрицательное число)', async () => {
@@ -124,7 +124,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить некорректный perPage (больше 500)', async () => {
@@ -135,7 +135,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить cursor вместе с perPage (bulk-конфликт)', async () => {
@@ -147,7 +147,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить cursor при нескольких issueIds (batch-ограничение)', async () => {
@@ -158,7 +158,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен принять корректные параметры', async () => {
@@ -397,7 +397,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть пустой массив для задачи без комментариев', async () => {
@@ -544,7 +544,7 @@ describe('GetCommentsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении комментариев');
+      expect(getTextContent(result)).toContain('Ошибка при получении комментариев');
     });
 
     it('должен обработать частичные ошибки (partial failures)', async () => {

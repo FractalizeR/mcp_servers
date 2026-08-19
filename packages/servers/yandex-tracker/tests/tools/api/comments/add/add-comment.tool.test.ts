@@ -104,7 +104,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('минимум 1 элемент');
+      expect(getTextContent(result)).toContain('минимум 1 элемент');
     });
 
     it('должен отклонить comment без issueId', async () => {
@@ -114,7 +114,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить comment без text', async () => {
@@ -124,7 +124,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить пустой text', async () => {
@@ -134,7 +134,7 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('text');
+      expect(getTextContent(result)).toContain('text');
     });
 
     it('должен принять корректные параметры', async () => {
@@ -406,8 +406,8 @@ describe('AddCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при добавлении комментариев');
-      expect(result.content[0]?.text).toContain('2 задач');
+      expect(getTextContent(result)).toContain('Ошибка при добавлении комментариев');
+      expect(getTextContent(result)).toContain('2 задач');
     });
   });
 });

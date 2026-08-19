@@ -11,6 +11,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('get-issues integration tests', () => {
   let client: TestMCPClient;
@@ -47,7 +48,7 @@ describe('get-issues integration tests', () => {
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response).toMatchObject({
@@ -91,7 +92,7 @@ describe('get-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response).toMatchObject({
@@ -129,7 +130,7 @@ describe('get-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.fieldsReturned).toEqual(fields);
@@ -167,7 +168,7 @@ describe('get-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
       const issue = response.issues[0].issue;
 
@@ -199,7 +200,7 @@ describe('get-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined(); // Tool не падает, возвращает mixed results
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response).toMatchObject({
@@ -233,7 +234,7 @@ describe('get-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.failed).toBe(1);
@@ -256,7 +257,7 @@ describe('get-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.failed).toBe(1);
@@ -286,7 +287,7 @@ describe('get-issues integration tests', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response).toMatchObject({
@@ -318,7 +319,7 @@ describe('get-issues integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
 
     it('должен вернуть ошибку при невалидном формате ключа', async () => {
@@ -329,7 +330,7 @@ describe('get-issues integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
 
     it('должен вернуть ошибку если issueKeys не массив', async () => {
@@ -340,7 +341,7 @@ describe('get-issues integration tests', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('Ошибка валидации параметров');
+      expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
   });
 });

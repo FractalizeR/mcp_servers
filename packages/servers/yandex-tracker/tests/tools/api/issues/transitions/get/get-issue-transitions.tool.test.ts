@@ -219,8 +219,8 @@ describe('GetIssueTransitionsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении переходов');
-      expect(result.content[0]?.text).toContain('QUEUE-123');
+      expect(getTextContent(result)).toContain('Ошибка при получении переходов');
+      expect(getTextContent(result)).toContain('QUEUE-123');
     });
 
     it('должен обработать not found ошибки (404)', async () => {
@@ -233,7 +233,7 @@ describe('GetIssueTransitionsTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении переходов');
+      expect(getTextContent(result)).toContain('Ошибка при получении переходов');
     });
   });
 });

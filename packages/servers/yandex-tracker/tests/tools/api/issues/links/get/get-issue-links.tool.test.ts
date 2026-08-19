@@ -106,7 +106,7 @@ describe('GetIssueLinksTool', () => {
       const result = await tool.execute({ issueIds: [], fields: ['id', 'type'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить cursor при нескольких issueIds', async () => {
@@ -117,7 +117,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить cursor вместе с bulk-параметрами (fetchAll)', async () => {
@@ -129,7 +129,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен принять корректные параметры', async () => {
@@ -417,7 +417,7 @@ describe('GetIssueLinksTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении связей задач');
+      expect(getTextContent(result)).toContain('Ошибка при получении связей задач');
     });
 
     it('должен обработать частичные ошибки (partial failures)', async () => {

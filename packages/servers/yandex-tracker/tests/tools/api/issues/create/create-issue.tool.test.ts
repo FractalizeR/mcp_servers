@@ -102,14 +102,14 @@ describe('CreateIssueTool', () => {
       const result = await tool.execute({ queue: '', summary: 'Test' });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('queue');
+      expect(getTextContent(result)).toContain('queue');
     });
 
     it('должен отклонить пустой summary', async () => {
       const result = await tool.execute({ queue: 'TESTQUEUE', summary: '' });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('summary');
+      expect(getTextContent(result)).toContain('summary');
     });
   });
 
@@ -333,8 +333,8 @@ describe('CreateIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при создании задачи');
-      expect(result.content[0]?.text).toContain('TESTQUEUE');
+      expect(getTextContent(result)).toContain('Ошибка при создании задачи');
+      expect(getTextContent(result)).toContain('TESTQUEUE');
     });
 
     it('должен обработать ошибки валидации (400)', async () => {
@@ -348,7 +348,7 @@ describe('CreateIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при создании задачи');
+      expect(getTextContent(result)).toContain('Ошибка при создании задачи');
     });
   });
 });

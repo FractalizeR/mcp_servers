@@ -91,7 +91,7 @@ describe('DeleteCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('commentId');
+      expect(getTextContent(result)).toContain('commentId');
     });
 
     it('должен принять корректные параметры', async () => {
@@ -231,7 +231,7 @@ describe('DeleteCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при удалении комментариев');
+      expect(getTextContent(result)).toContain('Ошибка при удалении комментариев');
     });
 
     it('должен обработать ошибку несуществующего комментария (404)', async () => {

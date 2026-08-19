@@ -109,14 +109,14 @@ describe('GetChecklistTool', () => {
       const result = await tool.execute({ issueIds: [], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить пустой issueId в массиве', async () => {
       const result = await tool.execute({ issueIds: [''], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен принять корректные параметры', async () => {
@@ -438,7 +438,7 @@ describe('GetChecklistTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении чеклистов');
+      expect(getTextContent(result)).toContain('Ошибка при получении чеклистов');
     });
   });
 });

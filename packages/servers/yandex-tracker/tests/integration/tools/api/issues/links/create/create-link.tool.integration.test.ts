@@ -5,6 +5,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { createSubtaskLinkFixture, createRelatesLinkFixture } from '#helpers/link.fixture.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('create-link integration tests', () => {
   let client: TestMCPClient;
@@ -48,7 +49,7 @@ describe('create-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
     expect(response.data.successful).toBe(1);
@@ -89,7 +90,7 @@ describe('create-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
     expect(response.data.successful).toBe(1);
@@ -132,7 +133,7 @@ describe('create-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
     expect(response.data.successful).toBe(1);
@@ -159,7 +160,7 @@ describe('create-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
     expect(response.data.successful).toBe(0);
@@ -198,7 +199,7 @@ describe('create-link integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.links[0].link).toHaveProperty('id');
     expect(response.data.links[0].link).toHaveProperty('type');

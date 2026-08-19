@@ -14,7 +14,7 @@ import {
   createAttachmentListFixture,
   createImageAttachmentFixture,
 } from '#helpers/attachment.fixture.js';
-import { at } from '#helpers/tool-result.helper.js';
+import { getTextContent, at } from '#helpers/tool-result.helper.js';
 
 describe('get-attachments integration tests (batch)', () => {
   let client: TestMCPClient;
@@ -52,7 +52,7 @@ describe('get-attachments integration tests (batch)', () => {
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -84,7 +84,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -110,7 +110,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -138,7 +138,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.successful[0].attachments[0]).toHaveProperty('thumbnail');
@@ -165,7 +165,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -191,7 +191,7 @@ describe('get-attachments integration tests (batch)', () => {
       // Assert - partial failure is not an error at tool level
       expect(result.isError).toBeUndefined();
 
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -213,7 +213,7 @@ describe('get-attachments integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии issueIds', async () => {
@@ -224,7 +224,7 @@ describe('get-attachments integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии fields', async () => {
@@ -235,7 +235,7 @@ describe('get-attachments integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при пустом issueId в массиве', async () => {
@@ -247,7 +247,7 @@ describe('get-attachments integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
   });
 });

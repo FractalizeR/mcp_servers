@@ -8,6 +8,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_COMPONENT_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('update-component integration tests', () => {
   let client: TestMCPClient;
@@ -37,7 +38,7 @@ describe('update-component integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.component).toBeDefined();
       expect(response.data.component.name).toBe('Updated Component');
       mockServer.assertAllRequestsDone();
@@ -59,7 +60,7 @@ describe('update-component integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.component).toBeDefined();
       mockServer.assertAllRequestsDone();
     });
@@ -84,7 +85,7 @@ describe('update-component integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.component).toBeDefined();
       mockServer.assertAllRequestsDone();
     });
@@ -106,7 +107,7 @@ describe('update-component integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.component).toBeDefined();
       mockServer.assertAllRequestsDone();
     });
@@ -146,7 +147,7 @@ describe('update-component integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       const component = response.data.component;
 
       expect(component).toHaveProperty('id');

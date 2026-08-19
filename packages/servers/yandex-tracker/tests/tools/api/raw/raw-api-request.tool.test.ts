@@ -8,6 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 interface ParsedResult {
   success: boolean;
@@ -69,7 +70,7 @@ describe('RawApiRequestTool', () => {
         query: { expand: 'transitions' },
       });
 
-      const parsed = parse(result.content[0]?.text);
+      const parsed = parse(getTextContent(result));
       expect(parsed.success).toBe(true);
       expect(parsed.data?.data).toEqual({ key: 'QUEUE-1', summary: 'Test' });
       expect(parsed.data?.fieldsReturned).toEqual(['key', 'summary']);
@@ -103,7 +104,7 @@ describe('RawApiRequestTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      const parsed = parse(result.content[0]?.text);
+      const parsed = parse(getTextContent(result));
       expect(parsed.success).toBe(false);
       expect(parsed.message).toContain('Ошибка raw API запроса');
     });

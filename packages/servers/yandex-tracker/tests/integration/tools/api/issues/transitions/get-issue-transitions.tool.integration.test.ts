@@ -5,6 +5,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_TRANSITION_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('get-issue-transitions integration tests', () => {
   let client: TestMCPClient;
@@ -32,7 +33,7 @@ describe('get-issue-transitions integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data).toHaveProperty('transitions');
     expect(Array.isArray(response.data.transitions)).toBe(true);
     expect(response.data.transitions.length).toBeGreaterThan(0);
@@ -72,7 +73,7 @@ describe('get-issue-transitions integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.transitions).toBeDefined();
     mockServer.assertAllRequestsDone();
   });

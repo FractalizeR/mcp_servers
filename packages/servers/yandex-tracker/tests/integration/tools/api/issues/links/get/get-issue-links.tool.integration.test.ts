@@ -9,6 +9,7 @@ import {
   createSubtaskLinkFixture,
   createRelatesLinkFixture,
 } from '#helpers/link.fixture.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('get-issue-links integration tests', () => {
   let client: TestMCPClient;
@@ -37,7 +38,7 @@ describe('get-issue-links integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
     expect(response.data.successful).toHaveLength(1);
@@ -60,7 +61,7 @@ describe('get-issue-links integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.successful[0].count).toBe(0);
     expect(response.data.successful[0].links).toEqual([]);
@@ -84,7 +85,7 @@ describe('get-issue-links integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.successful[0].links).toHaveLength(2);
     expect(response.data.successful[0].links[0].type.id).toBe('subtask');
@@ -105,7 +106,7 @@ describe('get-issue-links integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.failed).toHaveLength(1);
     expect(response.data.failed[0].issueId).toBe(issueKey);
@@ -126,7 +127,7 @@ describe('get-issue-links integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     const link = response.data.successful[0].links[0];
     expect(link).toHaveProperty('id');
@@ -149,7 +150,7 @@ describe('get-issue-links integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.successful[0].count).toBe(50);
     expect(response.data.successful[0].links).toHaveLength(50);
@@ -179,7 +180,7 @@ describe('get-issue-links integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     const link = response.data.successful[0].links[0];
     expect(link).toHaveProperty('updatedBy');

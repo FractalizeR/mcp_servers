@@ -8,6 +8,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_QUEUE_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('update-queue integration tests', () => {
   let client: TestMCPClient;
@@ -37,7 +38,7 @@ describe('update-queue integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.queue).toBeDefined();
       expect(response.data.queue.name).toBe('Updated Queue Name');
       mockServer.assertAllRequestsDone();
@@ -59,7 +60,7 @@ describe('update-queue integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.queue).toBeDefined();
       mockServer.assertAllRequestsDone();
     });
@@ -83,7 +84,7 @@ describe('update-queue integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.queue).toBeDefined();
       mockServer.assertAllRequestsDone();
     });
@@ -123,7 +124,7 @@ describe('update-queue integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       const queue = response.data.queue;
 
       expect(queue).toHaveProperty('id');

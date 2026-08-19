@@ -304,8 +304,8 @@ describe('UpdateIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при обновлении задачи');
-      expect(result.content[0]?.text).toContain('QUEUE-123');
+      expect(getTextContent(result)).toContain('Ошибка при обновлении задачи');
+      expect(getTextContent(result)).toContain('QUEUE-123');
     });
 
     it('должен обработать not found ошибки (404)', async () => {
@@ -319,7 +319,7 @@ describe('UpdateIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при обновлении задачи');
+      expect(getTextContent(result)).toContain('Ошибка при обновлении задачи');
     });
   });
 });

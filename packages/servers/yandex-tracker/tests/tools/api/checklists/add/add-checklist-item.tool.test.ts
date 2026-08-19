@@ -102,7 +102,7 @@ describe('AddChecklistItemTool', () => {
       const result = await tool.execute({ items: [], fields: ['id', 'text'] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить пустой issueId в элементе', async () => {
@@ -112,7 +112,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен отклонить пустой text в элементе', async () => {
@@ -122,7 +122,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен принять корректные параметры', async () => {
@@ -416,7 +416,7 @@ describe('AddChecklistItemTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при добавлении элементов в чеклисты');
+      expect(getTextContent(result)).toContain('Ошибка при добавлении элементов в чеклисты');
     });
   });
 });

@@ -4,6 +4,7 @@ import { createTestClient } from '#integration/helpers/mcp-client.js';
 import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('get-comments integration tests', () => {
   let client: TestMCPClient;
@@ -31,7 +32,7 @@ describe('get-comments integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
     expect(response.data.successful).toBe(1);
     expect(response.data.comments).toBeDefined();
@@ -55,7 +56,7 @@ describe('get-comments integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
     expect(response.data.successful).toBe(1);
     expect(response.data.comments).toBeDefined();
@@ -78,7 +79,7 @@ describe('get-comments integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
     expect(response.data.failed).toBe(1);
     expect(response.data.errors).toBeDefined();
@@ -100,7 +101,7 @@ describe('get-comments integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
     expect(response.data.comments).toBeDefined();
     expect(Array.isArray(response.data.comments)).toBe(true);
@@ -121,7 +122,7 @@ describe('get-comments integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
     expect(response.data.comments).toBeDefined();
     expect(Array.isArray(response.data.comments)).toBe(true);

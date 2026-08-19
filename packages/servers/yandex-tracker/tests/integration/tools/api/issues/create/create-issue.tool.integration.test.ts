@@ -5,6 +5,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('create-issue integration tests', () => {
   let client: TestMCPClient;
@@ -36,7 +37,7 @@ describe('create-issue integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.issue).toHaveProperty('key');
     expect(response.data.issue.key).toBe('TEST-1');
@@ -68,7 +69,7 @@ describe('create-issue integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.issue.key).toBe('TEST-2');
     expect(response.data.issue.summary).toBe('Full issue');
     mockServer.assertAllRequestsDone();
@@ -107,7 +108,7 @@ describe('create-issue integration tests', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.issue).toHaveProperty('key');
     expect(response.data.issue).toHaveProperty('summary');
     mockServer.assertAllRequestsDone();

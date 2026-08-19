@@ -292,7 +292,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при получении истории изменений задач');
+      expect(getTextContent(result)).toContain('Ошибка при получении истории изменений задач');
     });
   });
 

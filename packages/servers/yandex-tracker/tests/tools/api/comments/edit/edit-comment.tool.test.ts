@@ -91,7 +91,7 @@ describe('EditCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('commentId');
+      expect(getTextContent(result)).toContain('commentId');
     });
 
     it('должен отклонить пустой text', async () => {
@@ -101,7 +101,7 @@ describe('EditCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('text');
+      expect(getTextContent(result)).toContain('text');
     });
 
     it('должен принять корректные параметры', async () => {
@@ -281,7 +281,7 @@ describe('EditCommentTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при редактировании комментариев');
+      expect(getTextContent(result)).toContain('Ошибка при редактировании комментариев');
     });
 
     it('должен обработать ошибку несуществующего комментария (404)', async () => {

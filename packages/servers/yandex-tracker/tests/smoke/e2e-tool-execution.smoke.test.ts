@@ -11,6 +11,7 @@ import { TYPES } from '#composition-root/types.js';
 import type { ServerConfig } from '#config';
 import type { ToolRegistry, BaseTool } from '@fractalizer/mcp-core';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('E2E Tool Execution (Smoke)', () => {
   const fakeConfig: ServerConfig = {
@@ -105,7 +106,7 @@ describe('E2E Tool Execution (Smoke)', () => {
     expect(result.content).toBeDefined();
     expect(result.content[0]).toHaveProperty('type', 'text');
     // Проверяем что в ответе есть информация об ошибке
-    const responseText = result.content[0]?.text;
+    const responseText = getTextContent(result);
     expect(responseText).toBeDefined();
     expect(typeof responseText).toBe('string');
   });

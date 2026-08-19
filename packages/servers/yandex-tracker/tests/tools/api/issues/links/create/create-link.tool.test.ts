@@ -341,7 +341,7 @@ describe('CreateLinkTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка');
+      expect(getTextContent(result)).toContain('Ошибка');
     });
 
     it('должен работать с разными типами связей в одном batch', async () => {

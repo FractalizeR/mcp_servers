@@ -8,6 +8,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_QUEUE_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('get-queues integration tests', () => {
   let client: TestMCPClient;
@@ -34,7 +35,7 @@ describe('get-queues integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.queues).toBeDefined();
       expect(Array.isArray(response.data.queues)).toBe(true);
       expect(response.data.queues.length).toBeGreaterThan(0);
@@ -52,7 +53,7 @@ describe('get-queues integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.queues).toBeDefined();
       expect(Array.isArray(response.data.queues)).toBe(true);
       expect(response.data.queues.length).toBe(0);
@@ -71,7 +72,7 @@ describe('get-queues integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.queues).toBeDefined();
       mockServer.assertAllRequestsDone();
     });
@@ -88,7 +89,7 @@ describe('get-queues integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.queues).toBeDefined();
       mockServer.assertAllRequestsDone();
     });
@@ -106,7 +107,7 @@ describe('get-queues integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       const queue = response.data.queues[0];
 
       expect(queue).toHaveProperty('id');

@@ -7,6 +7,7 @@ import { createTestClient } from '#integration/helpers/mcp-client.js';
 import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('delete-component integration tests', () => {
   let client: TestMCPClient;
@@ -34,7 +35,7 @@ describe('delete-component integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.success).toBe(true);
       mockServer.assertAllRequestsDone();
     });
@@ -91,7 +92,7 @@ describe('delete-component integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response).toHaveProperty('data');
       expect(response.data).toHaveProperty('success');
       expect(response.data.success).toBe(true);

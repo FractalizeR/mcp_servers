@@ -11,7 +11,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_CHECKLIST_FIELDS } from '#helpers/test-fields.js';
-import { at } from '#helpers/tool-result.helper.js';
+import { getTextContent, at } from '#helpers/tool-result.helper.js';
 
 describe('get-checklist integration tests (batch)', () => {
   let client: TestMCPClient;
@@ -45,7 +45,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -81,7 +81,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -106,7 +106,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -137,7 +137,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.successful[0].itemsCount).toBe(5);
@@ -170,7 +170,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
@@ -195,7 +195,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert - partial failure is not an error at tool level
       expect(result.isError).toBeUndefined();
-      const responseWrapper = JSON.parse(result.content[0]!.text);
+      const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
@@ -217,7 +217,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии issueIds', async () => {
@@ -228,7 +228,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при отсутствии fields', async () => {
@@ -239,7 +239,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
 
     it('должен вернуть ошибку при пустом issueId в массиве', async () => {
@@ -251,7 +251,7 @@ describe('get-checklist integration tests (batch)', () => {
 
       // Assert
       expect(result.isError).toBe(true);
-      expect(result.content[0]!.text).toContain('валидации');
+      expect(getTextContent(result)).toContain('валидации');
     });
   });
 });

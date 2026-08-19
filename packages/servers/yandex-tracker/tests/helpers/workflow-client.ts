@@ -2,6 +2,7 @@
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 /**
  * Helper для E2E workflows с автоматическим извлечением данных
@@ -24,10 +25,10 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to create issue: ${result.content[0]?.text}`);
+      throw new Error(`Failed to create issue: ${getTextContent(result)}`);
     }
 
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     return response.data.issueKey;
   }
 
@@ -41,10 +42,10 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to get issue: ${result.content[0]?.text}`);
+      throw new Error(`Failed to get issue: ${getTextContent(result)}`);
     }
 
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     return response.data.issues[0]?.issue;
   }
 
@@ -59,7 +60,7 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to update issue: ${result.content[0]?.text}`);
+      throw new Error(`Failed to update issue: ${getTextContent(result)}`);
     }
   }
 
@@ -74,7 +75,7 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to transition issue: ${result.content[0]?.text}`);
+      throw new Error(`Failed to transition issue: ${getTextContent(result)}`);
     }
   }
 
@@ -88,10 +89,10 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to find issues: ${result.content[0]?.text}`);
+      throw new Error(`Failed to find issues: ${getTextContent(result)}`);
     }
 
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     // find_issues (пакет 5.1.C.tracker): формат коллекции — data.items в
     // режиме full (результаты воркфлоу-тестов малы, ниже порога — mode='auto'
     // всегда резолвится в 'full').
@@ -111,10 +112,10 @@ export class WorkflowClient {
     );
 
     if (result.isError) {
-      throw new Error(`Failed to get changelog: ${result.content[0]?.text}`);
+      throw new Error(`Failed to get changelog: ${getTextContent(result)}`);
     }
 
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     // Извлекаем результат для первой (единственной) задачи из batch результата
     if (response.data.successful && response.data.successful.length > 0) {
       return response.data.successful[0].changelog;
@@ -135,10 +136,10 @@ export class WorkflowClient {
     );
 
     if (result.isError) {
-      throw new Error(`Failed to get transitions: ${result.content[0]?.text}`);
+      throw new Error(`Failed to get transitions: ${getTextContent(result)}`);
     }
 
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     return response.data.transitions;
   }
 }

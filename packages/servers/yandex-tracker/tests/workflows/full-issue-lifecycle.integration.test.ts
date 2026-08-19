@@ -23,6 +23,7 @@ import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('Full Issue Lifecycle (Integration)', () => {
   let client: TestMCPClient;
@@ -59,7 +60,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       }
     );
     expect(createIssueResult.isError).toBeFalsy();
-    const issueData = JSON.parse(createIssueResult.content[0]!.text);
+    const issueData = JSON.parse(getTextContent(createIssueResult));
     const issueKey = issueData.data.issueKey;
     expect(issueKey).toBe('TEST-1');
 
@@ -79,7 +80,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       fields: ['id', 'text'],
     });
     expect(addCommentResult.isError).toBeFalsy();
-    const commentData = JSON.parse(addCommentResult.content[0]!.text);
+    const commentData = JSON.parse(getTextContent(addCommentResult));
     expect(commentData.data.comments).toBeDefined();
     expect(commentData.data.comments[0].comment).toBeDefined();
 
@@ -107,7 +108,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       }
     );
     expect(uploadResult.isError).toBeFalsy();
-    const attachmentData = JSON.parse(uploadResult.content[0]!.text);
+    const attachmentData = JSON.parse(getTextContent(uploadResult));
     expect(attachmentData.success).toBe(true);
 
     // 4. Создать чеклист (batch API)
@@ -125,7 +126,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       }
     );
     expect(addChecklistResult.isError).toBeFalsy();
-    const checklistData = JSON.parse(addChecklistResult.content[0]!.text);
+    const checklistData = JSON.parse(getTextContent(addChecklistResult));
     expect(checklistData.success).toBe(true);
 
     // 5. Создать вторую задачу для связи
@@ -144,7 +145,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       }
     );
     expect(createIssue2Result.isError).toBeFalsy();
-    const issue2Data = JSON.parse(createIssue2Result.content[0]!.text);
+    const issue2Data = JSON.parse(getTextContent(createIssue2Result));
     const issueKey2 = issue2Data.data.issueKey;
 
     // 6. Создать связь между задачами
@@ -165,7 +166,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       fields: ['id', 'type', 'object'],
     });
     expect(createLinkResult.isError).toBeFalsy();
-    const linkData = JSON.parse(createLinkResult.content[0]!.text);
+    const linkData = JSON.parse(getTextContent(createLinkResult));
     expect(linkData.success).toBe(true);
     expect(linkData.data.links).toBeDefined();
     expect(linkData.data.links[0].link.id).toBe('link-1');
@@ -194,7 +195,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       }
     );
     expect(changelogResult.isError).toBeFalsy();
-    const changelogData = JSON.parse(changelogResult.content[0]!.text);
+    const changelogData = JSON.parse(getTextContent(changelogResult));
     expect(changelogData.data.successful).toHaveLength(1);
     expect(changelogData.data.successful[0].changelog).toBeInstanceOf(Array);
     expect(changelogData.data.successful[0].changelog.length).toBeGreaterThan(0);
@@ -265,7 +266,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       fields: ['id', 'text'],
     });
     expect(commentsResult.isError).toBeFalsy();
-    const commentsData = JSON.parse(commentsResult.content[0]!.text);
+    const commentsData = JSON.parse(getTextContent(commentsResult));
     expect(commentsData.data.comments).toHaveLength(1);
     expect(commentsData.data.comments[0].count).toBe(3);
 
@@ -281,7 +282,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
       fields: ['id', 'text', 'checked'],
     });
     expect(checklistResult.isError).toBeFalsy();
-    const checklistData = JSON.parse(checklistResult.content[0]!.text);
+    const checklistData = JSON.parse(getTextContent(checklistResult));
     expect(checklistData.data.successful[0].checklist).toHaveLength(3);
 
     mockServer.assertAllRequestsDone();

@@ -8,6 +8,7 @@ import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
 import { STANDARD_QUEUE_FIELD_FIELDS } from '#helpers/test-fields.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('get-queue-fields integration tests', () => {
   let client: TestMCPClient;
@@ -36,7 +37,7 @@ describe('get-queue-fields integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       expect(response.data.fields).toBeDefined();
       expect(Array.isArray(response.data.fields)).toBe(true);
       expect(response.data.fields.length).toBeGreaterThan(0);
@@ -58,7 +59,7 @@ describe('get-queue-fields integration tests', () => {
 
       // Assert
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(result.content[0]!.text);
+      const response = JSON.parse(getTextContent(result));
       const field = response.data.fields[0];
 
       expect(field).toHaveProperty('id');

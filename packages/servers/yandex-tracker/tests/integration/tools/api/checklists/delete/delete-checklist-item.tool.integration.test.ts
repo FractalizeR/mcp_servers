@@ -4,6 +4,7 @@ import { createTestClient } from '#integration/helpers/mcp-client.js';
 import { createMockServer } from '#integration/helpers/mock-server.js';
 import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
 import type { MockServer } from '#integration/helpers/mock-server.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('delete-checklist-item integration tests (batch)', () => {
   let client: TestMCPClient;
@@ -31,7 +32,7 @@ describe('delete-checklist-item integration tests (batch)', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.successful).toBe(1);
     expect(response.data.items).toHaveLength(1);
     expect(response.data.items[0].success).toBe(true);
@@ -51,7 +52,7 @@ describe('delete-checklist-item integration tests (batch)', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.failed).toBe(1);
     expect(response.data.errors).toHaveLength(1);
     mockServer.assertAllRequestsDone();
@@ -76,7 +77,7 @@ describe('delete-checklist-item integration tests (batch)', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(2);
     expect(response.data.successful).toBe(2);
     expect(response.data.failed).toBe(0);
@@ -104,7 +105,7 @@ describe('delete-checklist-item integration tests (batch)', () => {
 
     // Assert
     expect(result.isError).toBeUndefined();
-    const response = JSON.parse(result.content[0]!.text);
+    const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(2);
     expect(response.data.successful).toBe(1);
     expect(response.data.failed).toBe(1);

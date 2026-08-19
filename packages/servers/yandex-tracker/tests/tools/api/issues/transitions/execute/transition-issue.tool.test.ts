@@ -281,9 +281,9 @@ describe('TransitionIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при выполнении перехода');
-      expect(result.content[0]?.text).toContain('QUEUE-123');
-      expect(result.content[0]?.text).toContain('close');
+      expect(getTextContent(result)).toContain('Ошибка при выполнении перехода');
+      expect(getTextContent(result)).toContain('QUEUE-123');
+      expect(getTextContent(result)).toContain('close');
     });
 
     it('должен обработать invalid transition ошибки (400)', async () => {
@@ -297,7 +297,7 @@ describe('TransitionIssueTool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0]?.text).toContain('Ошибка при выполнении перехода');
+      expect(getTextContent(result)).toContain('Ошибка при выполнении перехода');
     });
 
     it('находка №1 (BLOCKER): провал дочитывания ПОСЛЕ успешного перехода НЕ должен возвращаться как ошибка (success:false)', async () => {
