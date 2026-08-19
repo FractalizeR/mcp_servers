@@ -1,3 +1,9 @@
+## [2.4.0](https://github.com/FractalizeR/mcp_servers/compare/v2.3.0...v2.4.0) (2026-08-19)
+
+### Features
+
+* **quality:** гейт typecheck:tests во framework-пакетах ([#397](https://github.com/FractalizeR/mcp_servers/issues/397)) ([9307c21](https://github.com/FractalizeR/mcp_servers/commit/9307c21c785b8bc8b8f133c1bf063c5ddec78e35))
+
 ## [2.3.0](https://github.com/FractalizeR/mcp_servers/compare/v2.2.0...v2.3.0) (2026-08-19)
 
 ### Features
