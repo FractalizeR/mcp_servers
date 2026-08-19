@@ -126,6 +126,7 @@ close(): Promise<void>
 | 1.2 Гигиена ожиданий в харнессах | [1.2_timing_hygiene_sequential.md](1.2_timing_hygiene_sequential.md) | sequential | 1.1 (те же файлы) |
 | 2.1 Единый набор проверок в CI | [2.1_ci_validate_unification_parallel.md](2.1_ci_validate_unification_parallel.md) | parallel | — |
 | 3.1 Живой гейт depcruise | [3.1_depcruise_gate_parallel.md](3.1_depcruise_gate_parallel.md) | parallel | 2.1 |
+| 4.1 Долг `typecheck:tests` (931 ошибка) | [4.1_typecheck_tests_debt_sequential.md](4.1_typecheck_tests_debt_sequential.md) | sequential | 2.1 |
 
 1.1 и 1.2 идут строго по очереди: у них один набор файлов. 2.1 и 3.1 с ними не пересекаются и
 могут исполняться параллельно.
