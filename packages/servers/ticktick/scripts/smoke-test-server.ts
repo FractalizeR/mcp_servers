@@ -68,8 +68,8 @@ async function waitForJSONRPCResponse(
       fn();
     };
 
-    const onData = (data: Buffer): void => {
-      buffer += data.toString();
+    const onData = (chunk: unknown): void => {
+      buffer += assertUtf8Chunk(chunk);
 
       // Try to find JSON-RPC response in buffer
       const lines = buffer.split('\n');
@@ -201,6 +201,146 @@ async function waitForStderrSubstring(
   });
 }
 
+const MISMATCH_CONTEXT_CHARS = 120;
+
+/**
+ * The only allowed way to turn a stream chunk into a string.
+ *
+ * A naive `chunk.toString()` decodes every chunk on its own and tears
+ * multi-byte UTF-8 apart on the chunk boundary: one letter becomes two U+FFFD
+ * and the response length shifts by a character. That is what produced "two
+ * consecutive tools/list calls returned different lists" in the release CI
+ * (4 of 6 failures). Streams are therefore switched to `setEncoding('utf8')` —
+ * a single shared decoder per stream that stitches a sequence across the chunk
+ * boundary — and this check keeps anyone from silently going back to per-chunk
+ * decoding.
+ */
+function assertUtf8Chunk(chunk: unknown): string {
+  if (typeof chunk !== 'string') {
+    throw new Error(
+      'Child process stream is not in setEncoding("utf8") mode — got a Buffer. ' +
+        'Decoding chunks individually tears multi-byte UTF-8 on the chunk boundary.'
+    );
+  }
+  return chunk;
+}
+
+/**
+ * A U+FFFD in the server response means a broken read on the test side, not a
+ * server bug. The check sits on the green path on purpose: damage that hits
+ * both responses identically produces no mismatch and would otherwise pass
+ * unnoticed.
+ */
+function assertNoDecodingDamage(label: string, json: string): void {
+  const at = json.indexOf('\uFFFD');
+  if (at < 0) {
+    return;
+  }
+  const window = json.slice(Math.max(0, at - MISMATCH_CONTEXT_CHARS), at + MISMATCH_CONTEXT_CHARS);
+  throw new Error(
+    `${label}: found U+FFFD at index ${at}. This is a test-side READ DEFECT, not a server ` +
+      'bug: multi-byte UTF-8 was torn on a chunk boundary. Check that the stream uses ' +
+      `setEncoding("utf8") and that chunks are not decoded one by one.\n  ${JSON.stringify(window)}`
+  );
+}
+
+function toolNamesForDiagnostics(tools: unknown): string[] {
+  if (!Array.isArray(tools)) {
+    return [];
+  }
+  return tools.map((tool, index) => {
+    const name = (tool as { name?: unknown } | null)?.name;
+    return typeof name === 'string' ? name : `<no-name@${index}>`;
+  });
+}
+
+function duplicatedNames(names: string[]): string[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const name of names) {
+    if (seen.has(name)) {
+      duplicates.add(name);
+    }
+    seen.add(name);
+  }
+  return [...duplicates];
+}
+
+/**
+ * Report describing how two `tools/list` responses differ; `undefined` when the
+ * lists are byte-identical.
+ *
+ * The only data about the four release failures is the GitHub Actions log, so
+ * the report must be self-contained: it has to show what exactly diverged
+ * without a re-run (the mismatch does not reproduce locally).
+ */
+function describeToolsListMismatch(first: unknown, second: unknown): string | undefined {
+  const firstJson = JSON.stringify(first ?? []);
+  const secondJson = JSON.stringify(second ?? []);
+  if (firstJson === secondJson) {
+    return undefined;
+  }
+
+  const lines: string[] = ['===== tools/list mismatch diagnostics ====='];
+  lines.push(`json length: first=${firstJson.length}, second=${secondJson.length} (UTF-16 units)`);
+
+  let diffAt = 0;
+  while (
+    diffAt < firstJson.length &&
+    diffAt < secondJson.length &&
+    firstJson[diffAt] === secondJson[diffAt]
+  ) {
+    diffAt += 1;
+  }
+  const from = Math.max(0, diffAt - MISMATCH_CONTEXT_CHARS);
+  const to = diffAt + MISMATCH_CONTEXT_CHARS;
+  lines.push(`first difference at index ${diffAt}; window [${from}, ${to}):`);
+  lines.push(`  first : ${JSON.stringify(firstJson.slice(from, to))}`);
+  lines.push(`  second: ${JSON.stringify(secondJson.slice(from, to))}`);
+
+  const firstNames = toolNamesForDiagnostics(first);
+  const secondNames = toolNamesForDiagnostics(second);
+  lines.push(`tool count: first=${firstNames.length}, second=${secondNames.length}`);
+  if (firstJson.includes('\uFFFD') || secondJson.includes('\uFFFD')) {
+    lines.push(
+      'VERDICT: the response contains U+FFFD — this is a test-side READ defect ' +
+        '(multi-byte UTF-8 torn on a chunk boundary), not a server-side divergence.'
+    );
+  }
+
+  const firstSet = new Set(firstNames);
+  const secondSet = new Set(secondNames);
+  const onlyInFirst = [...firstSet].filter((name) => !secondSet.has(name));
+  const onlyInSecond = [...secondSet].filter((name) => !firstSet.has(name));
+  lines.push(`only in first (${onlyInFirst.length}): ${onlyInFirst.join(', ') || '-'}`);
+  lines.push(`only in second (${onlyInSecond.length}): ${onlyInSecond.join(', ') || '-'}`);
+
+  const firstDuplicates = duplicatedNames(firstNames);
+  const secondDuplicates = duplicatedNames(secondNames);
+  if (firstDuplicates.length > 0 || secondDuplicates.length > 0) {
+    lines.push(
+      `duplicate names: first=[${firstDuplicates.join(', ')}], second=[${secondDuplicates.join(', ')}]`
+    );
+  }
+
+  if (onlyInFirst.length === 0 && onlyInSecond.length === 0) {
+    const reordered = firstNames
+      .map((name, index) =>
+        secondNames[index] === name
+          ? undefined
+          : `#${index}: ${name} -> ${secondNames[index] ?? '<missing>'}`
+      )
+      .filter((entry): entry is string => entry !== undefined);
+    lines.push(
+      reordered.length === 0
+        ? 'name order: identical (names and order match, so the difference is inside tool definitions - see the window above)'
+        : `name order differs at ${reordered.length} position(s), first 20: ${reordered.slice(0, 20).join('; ')}`
+    );
+  }
+
+  return lines.join('\n');
+}
+
 /**
  * Main smoke test function
  */
@@ -278,12 +418,18 @@ async function main(): Promise<void> {
     let stdoutData = '';
     let stderrData = '';
 
-    serverProcess.stdout?.on('data', (data) => {
-      stdoutData += data.toString();
+    // One shared decoder per stream (see assertUtf8Chunk): both stdout and
+    // stderr have several listeners, and per-chunk decoding by each of them
+    // would tear multi-byte UTF-8 on the chunk boundary.
+    serverProcess.stdout?.setEncoding('utf8');
+    serverProcess.stderr?.setEncoding('utf8');
+
+    serverProcess.stdout?.on('data', (chunk: unknown) => {
+      stdoutData += assertUtf8Chunk(chunk);
     });
 
-    serverProcess.stderr?.on('data', (data) => {
-      stderrData += data.toString();
+    serverProcess.stderr?.on('data', (chunk: unknown) => {
+      stderrData += assertUtf8Chunk(chunk);
     });
 
     // Handle startup errors
@@ -345,12 +491,16 @@ async function main(): Promise<void> {
       RESPONSE_WAIT_TIMEOUT_MS
     );
 
-    const firstToolsJson = JSON.stringify(response.result?.tools ?? []);
-    const secondToolsJson = JSON.stringify(secondResponse.result?.tools ?? []);
-    if (firstToolsJson !== secondToolsJson) {
+    assertNoDecodingDamage('tools/list', JSON.stringify(response.result?.tools));
+    const mismatch = describeToolsListMismatch(
+      response.result?.tools,
+      secondResponse.result?.tools
+    );
+    if (mismatch !== undefined) {
+      console.log(mismatch);
       throw new Error(
         'Two consecutive tools/list calls returned DIFFERENT lists — deterministic order ' +
-          'contract is violated (see ToolSorter.sortByPriority).'
+          `contract is violated (see ToolSorter.sortByPriority).\n${mismatch}`
       );
     }
     console.log('   ✓ List is byte-identical');
@@ -449,11 +599,13 @@ async function runDeprecatedEnvVarSmokeTest(): Promise<void> {
 
   let stdoutData = '';
   let stderrData = '';
-  child.stdout?.on('data', (data) => {
-    stdoutData += data.toString();
+  child.stdout?.setEncoding('utf8');
+  child.stderr?.setEncoding('utf8');
+  child.stdout?.on('data', (chunk: unknown) => {
+    stdoutData += assertUtf8Chunk(chunk);
   });
-  child.stderr?.on('data', (data) => {
-    stderrData += data.toString();
+  child.stderr?.on('data', (chunk: unknown) => {
+    stderrData += assertUtf8Chunk(chunk);
   });
 
   try {
