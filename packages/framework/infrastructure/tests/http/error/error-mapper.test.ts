@@ -327,6 +327,81 @@ describe('ErrorMapper', () => {
       });
     });
 
+    describe('Случай 409: конфликт состояния обогащается подсказкой', () => {
+      it('должен сохранить исходное сообщение API и дописать доменно-нейтральную подсказку', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(409, {
+            errorMessages: ['Задача: не удалось сохранить изменения, попробуйте ещё раз'],
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        expect(result.statusCode).toBe(409);
+        // Исходное сообщение API сохранено дословно (не подменено)
+        expect(result.message).toContain(
+          'Задача: не удалось сохранить изменения, попробуйте ещё раз'
+        );
+        // Дописана констатация причины конфликта
+        expect(result.message.toLowerCase()).toContain('конфликт');
+        expect(result.message).toContain('уникальными данными уже');
+      });
+
+      // Регрессия находки 3 внешнего ревью: прежняя подсказка заканчивалась
+      // императивом «перечитайте... и повторите операцию», что для 409 на
+      // конфликт уникальности (CreateIssueOperation.unique у Tracker) читалось
+      // как прямое приглашение создать дубликат. Подсказка обязана оставаться
+      // констатацией причины, а не советом «повторить».
+      it('не должен призывать слепо повторить операцию (риск дубликата при конфликте уникальности)', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(409, {
+            errorMessages: ['Задача с таким ключом уже существует'],
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        expect(result.message).not.toContain('повторите операцию');
+      });
+
+      it('не должен упоминать доменные понятия конкретного продукта (framework общий для Tracker/Wiki/TickTick)', () => {
+        const axiosError = createAxiosError({
+          response: createAxiosResponse(409, {
+            errorMessages: ['Задача: не удалось сохранить изменения, попробуйте ещё раз'],
+          }),
+        });
+
+        const result = ErrorMapper.mapAxiosError(axiosError);
+
+        // Подсказка не должна называть конкретное поле версионирования — у части
+        // серверов (Wiki, TickTick) такого поля может не быть вовсе. Какое поле
+        // перечитывать, агент видит из схемы конкретного MCP-инструмента.
+        const lowerMessage = result.message.toLowerCase();
+        expect(lowerMessage).not.toContain('version');
+        expect(lowerMessage).not.toContain('версии');
+        expect(lowerMessage).not.toContain('etag');
+      });
+
+      it('не должен менять сообщение для прочих статусов (400/404/500)', () => {
+        const cases: Array<{ status: number; message: string }> = [
+          { status: 400, message: 'Неверный запрос' },
+          { status: 404, message: 'Не найдено' },
+          { status: 500, message: 'Внутренняя ошибка сервера' },
+        ];
+
+        for (const { status, message } of cases) {
+          const axiosError = createAxiosError({
+            response: createAxiosResponse(status, { message }),
+          });
+
+          const result = ErrorMapper.mapAxiosError(axiosError);
+
+          expect(result.statusCode).toBe(status);
+          expect(result.message).toBe(message);
+        }
+      });
+    });
+
     describe('Граничные случаи', () => {
       it('должен обработать null data в response', () => {
         const axiosError = createAxiosError({

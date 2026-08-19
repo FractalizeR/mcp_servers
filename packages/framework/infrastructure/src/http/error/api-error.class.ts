@@ -41,8 +41,16 @@ export interface ApiErrorDetails {
   statusCode: number;
   /** Сообщение об ошибке */
   message: string;
-  /** Детализированные ошибки по полям (для 400 ошибок) */
-  errors?: Record<string, string[]> | undefined;
+  /**
+   * Детализированные ошибки по полям (для 400 ошибок).
+   *
+   * Значение по ключу — строка ИЛИ массив строк. Форма приходит из недоверенного
+   * тела ответа API и не валидируется на приёме (`ErrorMapper.mapResponseError()`
+   * берёт её невалидированным кастом): референсный Python-клиент
+   * (`yandex_tracker_client/exceptions.py:84-87`) форматирует значение как скаляр,
+   * поэтому тип обязан допускать обе формы, а не только массив.
+   */
+  errors?: Record<string, string[] | string> | undefined;
   /** Время ожидания перед повторной попыткой (в секундах, для 429 ошибок) */
   retryAfter?: number | undefined;
   /**
@@ -89,7 +97,7 @@ export class ApiErrorClass extends Error {
    *   "assignee": ["Invalid user ID"]
    * }
    */
-  readonly errors?: Record<string, string[]> | undefined;
+  readonly errors?: Record<string, string[] | string> | undefined;
 
   /**
    * Время ожидания перед повторной попыткой (в секундах, для 429 ошибок)
@@ -108,7 +116,7 @@ export class ApiErrorClass extends Error {
   constructor(
     statusCode: HttpStatusCode,
     message: string,
-    errors?: Record<string, string[]>,
+    errors?: Record<string, string[] | string>,
     retryAfter?: number,
     errorsData?: JsonValue
   ) {
