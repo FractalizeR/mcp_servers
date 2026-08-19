@@ -1,3 +1,20 @@
+## [1.9.1](https://github.com/FractalizeR/mcp_servers/compare/v1.9.0...v1.9.1) (2026-08-19)
+
+### Bug Fixes
+
+* **build:** manifest.json больше не мусорит в git status ([5aa2636](https://github.com/FractalizeR/mcp_servers/commit/5aa2636e86ec95fcf685a364bbe760d6bf5d50ea))
+* **build:** turbo больше не ищет несуществующие артефакты typecheck ([c5b5931](https://github.com/FractalizeR/mcp_servers/commit/c5b593175c5b374185806a6f31f565901ff4f191))
+* **quality:** гейт архитектурных границ ожил ([782db33](https://github.com/FractalizeR/mcp_servers/commit/782db338ffb092ea8f58e28f8b7b52c4c900d0dc))
+* **quality:** правило composition-root знало не ту точку входа ([cfa9d34](https://github.com/FractalizeR/mcp_servers/commit/cfa9d34aae8b2ae0519dc6b49250d414475ad450))
+* **servers:** operations больше не торчат наружу через баррель ([640c612](https://github.com/FractalizeR/mcp_servers/commit/640c612f628f2285bb314b095d3bf79027e09a8e))
+* **servers:** вещи переехали туда, где им место — гейт зелёный ([bcf3527](https://github.com/FractalizeR/mcp_servers/commit/bcf3527da23c619aa36106beeaa63ce138f725a6))
+* **tests:** харнессы рвали UTF-8 на границе чанка stdout ([d5de3d8](https://github.com/FractalizeR/mcp_servers/commit/d5de3d88f078929fe2dc2a5df34ba1f84e95723c))
+* детерминизм релизного гейта — причина флака tools/list, единый CI, живой depcruise ([#390](https://github.com/FractalizeR/mcp_servers/issues/390)) ([a6d0b5b](https://github.com/FractalizeR/mcp_servers/commit/a6d0b5b0809a0d731f49483d87d57cd98c572206))
+
+### Refactoring
+
+* **tests:** харнессы ждут событий, а не времени ([3ddc04f](https://github.com/FractalizeR/mcp_servers/commit/3ddc04f1398b9e6ec5da1ce83a9beb8882c7e31e))
+
 ## [1.9.0](https://github.com/FractalizeR/mcp_servers/compare/v1.8.1...v1.9.0) (2026-08-19)
 
 ### Features
