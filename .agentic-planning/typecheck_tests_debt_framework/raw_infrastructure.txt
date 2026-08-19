@@ -1,0 +1,14 @@
+npm notice run mcp-framework-monorepo@2.2.0 npx
+npm notice run 'tsc' --noEmit -p packages/framework/infrastructure/tsconfig.tests.json
+packages/framework/infrastructure/tests/http/client/http-client.test.ts(321,52): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+packages/framework/infrastructure/tests/http/client/http-client.test.ts(333,22): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+packages/framework/infrastructure/tests/http/client/http-client.test.ts(344,51): error TS2493: Tuple type '[]' of length '0' has no element at index '1'.
+packages/framework/infrastructure/tests/http/client/http-client.test.ts(353,20): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+packages/framework/infrastructure/tests/http/client/http-client.test.ts(361,53): error TS2493: Tuple type '[]' of length '0' has no element at index '0'.
+packages/framework/infrastructure/tests/http/client/http-client.test.ts(374,22): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+packages/framework/infrastructure/tests/http/client/http-client.test.ts(385,52): error TS2493: Tuple type '[]' of length '0' has no element at index '1'.
+packages/framework/infrastructure/tests/http/client/http-client.test.ts(403,20): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.

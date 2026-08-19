@@ -1,0 +1,184 @@
+npm notice run mcp-framework-monorepo@2.2.0 npx
+npm notice run 'tsc' --noEmit -p packages/framework/core/tsconfig.tests.json
+packages/framework/core/tests/definition/schema-to-definition.test.ts(57,31): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(60,29): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(74,81): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(77,81): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(80,82): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(104,31): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(105,31): error TS4111: Property 'enum' comes from an index signature, so it must be accessed with ['enum'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(106,31): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(109,29): error TS4111: Property 'enum' comes from an index signature, so it must be accessed with ['enum'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(118,31): error TS4111: Property 'minLength' comes from an index signature, so it must be accessed with ['minLength'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(119,31): error TS4111: Property 'maxLength' comes from an index signature, so it must be accessed with ['maxLength'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(122,26): error TS4111: Property 'minimum' comes from an index signature, so it must be accessed with ['minimum'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(123,26): error TS4111: Property 'maximum' comes from an index signature, so it must be accessed with ['maximum'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(126,27): error TS4111: Property 'minItems' comes from an index signature, so it must be accessed with ['minItems'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(127,27): error TS4111: Property 'maxItems' comes from an index signature, so it must be accessed with ['maxItems'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(136,30): error TS4111: Property 'default' comes from an index signature, so it must be accessed with ['default'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(137,30): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(143,38): error TS4111: Property 'default' comes from an index signature, so it must be accessed with ['default'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(154,31): error TS4111: Property 'anyOf' comes from an index signature, so it must be accessed with ['anyOf'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(155,31): error TS4111: Property 'anyOf' comes from an index signature, so it must be accessed with ['anyOf'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(171,35): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(172,35): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(173,35): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(176,36): error TS4111: Property 'required' comes from an index signature, so it must be accessed with ['required'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(177,36): error TS4111: Property 'required' comes from an index signature, so it must be accessed with ['required'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(184,21): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(186,30): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(190,21): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(192,30): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(196,21): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(197,21): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(206,32): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(207,33): error TS4111: Property 'items' comes from an index signature, so it must be accessed with ['items'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(207,67): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(208,32): error TS4111: Property 'minItems' comes from an index signature, so it must be accessed with ['minItems'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(215,30): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(217,43): error TS4111: Property 'items' comes from an index signature, so it must be accessed with ['items'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(218,26): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(219,26): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(220,26): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(221,26): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(233,35): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(235,35): error TS4111: Property 'additionalProperties' comes from an index signature, so it must be accessed with ['additionalProperties'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(238,31): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(251,25): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(263,31): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(279,25): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(280,25): error TS4111: Property 'pattern' comes from an index signature, so it must be accessed with ['pattern'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(281,25): error TS4111: Property 'examples' comes from an index signature, so it must be accessed with ['examples'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(321,31): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(324,30): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(349,35): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(352,35): error TS4111: Property 'pattern' comes from an index signature, so it must be accessed with ['pattern'].
+packages/framework/core/tests/definition/schema-to-definition.test.ts(353,35): error TS4111: Property 'examples' comes from an index signature, so it must be accessed with ['examples'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(95,67): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(101,76): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(107,77): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(116,31): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(117,31): error TS4111: Property 'enum' comes from an index signature, so it must be accessed with ['enum'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(126,31): error TS4111: Property 'minLength' comes from an index signature, so it must be accessed with ['minLength'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(127,31): error TS4111: Property 'maxLength' comes from an index signature, so it must be accessed with ['maxLength'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(134,26): error TS4111: Property 'minimum' comes from an index signature, so it must be accessed with ['minimum'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(135,26): error TS4111: Property 'maximum' comes from an index signature, so it must be accessed with ['maximum'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(142,27): error TS4111: Property 'minItems' comes from an index signature, so it must be accessed with ['minItems'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(143,27): error TS4111: Property 'maxItems' comes from an index signature, so it must be accessed with ['maxItems'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(152,30): error TS4111: Property 'default' comes from an index signature, so it must be accessed with ['default'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(158,38): error TS4111: Property 'default' comes from an index signature, so it must be accessed with ['default'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(168,31): error TS4111: Property 'anyOf' comes from an index signature, so it must be accessed with ['anyOf'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(169,31): error TS4111: Property 'anyOf' comes from an index signature, so it must be accessed with ['anyOf'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(178,35): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(179,35): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(180,35): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(187,21): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(189,30): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(193,21): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(202,32): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(203,33): error TS4111: Property 'items' comes from an index signature, so it must be accessed with ['items'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(203,67): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(210,30): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(212,43): error TS4111: Property 'items' comes from an index signature, so it must be accessed with ['items'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(213,26): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(214,26): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(215,26): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(216,26): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(225,35): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(226,35): error TS4111: Property 'additionalProperties' comes from an index signature, so it must be accessed with ['additionalProperties'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(237,31): error TS4111: Property 'description' comes from an index signature, so it must be accessed with ['description'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(292,7): error TS2578: Unused '@ts-expect-error' directive.
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(349,23): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(350,23): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(351,23): error TS4111: Property 'properties' comes from an index signature, so it must be accessed with ['properties'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(375,23): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/definition/zod-json-schema-adapter.test.ts(378,24): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+packages/framework/core/tests/mcp-server-adapter/prompts.wire.test.ts(146,20): error TS6133: 'serverTransport' is declared but its value is never read.
+packages/framework/core/tests/mcp-server-adapter/resources.wire.test.ts(138,20): error TS6133: 'serverTransport' is declared but its value is never read.
+packages/framework/core/tests/params-redactor.test.ts(132,26): error TS2532: Object is possibly 'undefined'.
+packages/framework/core/tests/tool-access-policy.test.ts(31,7): error TS2417: Class static side 'typeof MockTool' incorrectly extends base class static side 'typeof BaseTool'.
+  Types of property 'METADATA' are incompatible.
+    Type '{ category: string; subcategory: string; priority: "normal"; }' is missing the following properties from type 'StaticToolMetadata': name, description, tags, isHelper
+packages/framework/core/tests/tool-access-policy.test.ts(70,7): error TS2417: Class static side 'typeof AllowedCategoryMockTool' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "normal"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-access-policy.test.ts(173,29): error TS2554: Expected 0 arguments, but got 1.
+packages/framework/core/tests/tool-access-policy.test.ts(174,30): error TS2554: Expected 0 arguments, but got 1.
+packages/framework/core/tests/tool-registry.contract.test.ts(16,7): error TS2417: Class static side 'typeof MockTool' incorrectly extends base class static side 'typeof BaseTool'.
+  Types of property 'METADATA' are incompatible.
+    Type '{ category: string; subcategory: string; priority: "normal"; }' is missing the following properties from type 'StaticToolMetadata': name, description, tags, isHelper
+packages/framework/core/tests/tool-registry.contract.test.ts(53,7): error TS2417: Class static side 'typeof CriticalMockTool' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "critical"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(60,7): error TS2417: Class static side 'typeof HighPriorityMockTool' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "high"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(67,7): error TS2417: Class static side 'typeof LowPriorityMockTool' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "low"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(75,7): error TS2417: Class static side 'typeof OtherCategoryMockTool' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "normal"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(144,35): error TS2417: Class static side 'typeof ToolA' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "normal"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(151,35): error TS2417: Class static side 'typeof ToolB' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "normal"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(232,13): error TS2417: Class static side 'typeof ToolA' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "normal"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(235,13): error TS2417: Class static side 'typeof ToolB' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "normal"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(269,14): error TS2532: Object is possibly 'undefined'.
+packages/framework/core/tests/tool-registry.contract.test.ts(304,13): error TS2417: Class static side 'typeof ToolA' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "normal"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(307,13): error TS2417: Class static side 'typeof ToolB' incorrectly extends base class static side 'typeof MockTool'.
+  Types of property 'METADATA' are incompatible.
+    Property 'subcategory' is missing in type '{ category: string; priority: "normal"; }' but required in type '{ category: string; subcategory: string; priority: "normal"; }'.
+packages/framework/core/tests/tool-registry.contract.test.ts(355,14): error TS2532: Object is possibly 'undefined'.
+packages/framework/core/tests/tool-registry.contract.test.ts(366,14): error TS2532: Object is possibly 'undefined'.
+packages/framework/core/tests/tool-registry.logging.test.ts(20,7): error TS2417: Class static side 'typeof EchoTool' incorrectly extends base class static side 'typeof BaseTool'.
+  The types of 'METADATA.category' are incompatible between these types.
+    Type 'string' is not assignable to type 'ToolCategory'.
+packages/framework/core/tests/tool-registry.logging.test.ts(69,17): error TS2352: Conversion of type '((message: string, error?: unknown, context?: Record<string, unknown> | undefined) => void)[]' to type '{ mock: { calls: unknown[][]; }; }[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '(message: string, error?: unknown, context?: Record<string, unknown> | undefined) => void' is not comparable to type '{ mock: { calls: unknown[][]; }; }'.
+packages/framework/core/tests/tool-registry.redaction-allowlist.test.ts(24,7): error TS2417: Class static side 'typeof LegacyTool' incorrectly extends base class static side 'typeof BaseTool'.
+  The types of 'METADATA.category' are incompatible between these types.
+    Type 'string' is not assignable to type 'ToolCategory'.
+packages/framework/core/tests/tools/base/base-tool.test.ts(216,21): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/base/base-tool.test.ts(231,21): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/base/base-tool.test.ts(234,33): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/base/base-tool.test.ts(242,21): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/base/base-tool.test.ts(261,21): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/base/base-tool.test.ts(273,33): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/base/base-tool.test.ts(294,21): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/base/base-tool.test.ts(303,30): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(66,7): error TS2417: Class static side 'typeof FakeCollectionTool' incorrectly extends base class static side 'typeof BaseTool'.
+  Types of property 'METADATA' are incompatible.
+    Type '{ category: string; priority: "normal"; }' is missing the following properties from type 'StaticToolMetadata': name, description, tags, isHelper
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(121,33): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(146,33): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(166,33): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(177,33): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(188,33): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(201,33): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(214,21): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(220,22): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/tools/common/collection-result/format-collection-result.test.ts(230,28): error TS4111: Property 'structuredContent' comes from an index signature, so it must be accessed with ['structuredContent'].
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(15,11): error TS2353: Object literal may only specify known properties, and 'expected' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(36,11): error TS2353: Object literal may only specify known properties, and 'expected' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(57,11): error TS2353: Object literal may only specify known properties, and 'options' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(78,11): error TS2353: Object literal may only specify known properties, and 'minimum' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(100,11): error TS2353: Object literal may only specify known properties, and 'minimum' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(122,11): error TS2353: Object literal may only specify known properties, and 'maximum' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(144,11): error TS2353: Object literal may only specify known properties, and 'validation' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(164,11): error TS2353: Object literal may only specify known properties, and 'expected' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(185,11): error TS2353: Object literal may only specify known properties, and 'expected' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(192,11): error TS2353: Object literal may only specify known properties, and 'minimum' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(213,11): error TS2353: Object literal may only specify known properties, and 'expected' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(220,11): error TS2353: Object literal may only specify known properties, and 'minimum' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(237,11): error TS2353: Object literal may only specify known properties, and 'options' does not exist in type 'ZodIssueMinimal'.
+packages/framework/core/tests/utils/zod-error-formatter.test.ts(244,11): error TS2353: Object literal may only specify known properties, and 'options' does not exist in type 'ZodIssueMinimal'.
