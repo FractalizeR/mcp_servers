@@ -1,3 +1,13 @@
+## [2.2.0](https://github.com/FractalizeR/mcp_servers/compare/v2.1.0...v2.2.0) (2026-08-19)
+
+### Features
+
+* **dev-client:** dev-интерфейс вызова MCP-инструментов + дедупликация харнесса ([#393](https://github.com/FractalizeR/mcp_servers/issues/393)) ([adf59a5](https://github.com/FractalizeR/mcp_servers/commit/adf59a5aea9015273f05d865ef2115722d7a034b))
+
+### Bug Fixes
+
+* **quality:** typecheck:scripts видит общий проводной харнесс ([#394](https://github.com/FractalizeR/mcp_servers/issues/394)) ([2cb1451](https://github.com/FractalizeR/mcp_servers/commit/2cb1451e1940d7a897b944af874e85554be5ccf3)), closes [#392](https://github.com/FractalizeR/mcp_servers/issues/392) [#393](https://github.com/FractalizeR/mcp_servers/issues/393)
+
 ## [2.1.0](https://github.com/FractalizeR/mcp_servers/compare/v2.0.0...v2.1.0) (2026-08-19)
 
 ### Features
