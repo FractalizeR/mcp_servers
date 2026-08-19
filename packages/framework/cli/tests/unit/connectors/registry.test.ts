@@ -13,7 +13,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ConnectorRegistry } from '../../../src/connectors/registry.js';
 import type { MCPConnector } from '../../../src/connectors/base/connector.interface.js';
 import type { MCPClientInfo, ConnectionStatus } from '../../../src/types/client.types.js';
-import type { ServerLaunchSpec } from '../../../src/types/launch.types.js';
+import type { GetLaunchSpecResult, ServerLaunchSpec } from '../../../src/types/launch.types.js';
 
 interface MockConnectorOpts {
   name: string;
@@ -37,7 +37,7 @@ function makeConnector(opts: MockConnectorOpts): MCPConnector {
     connect: vi.fn<(spec: ServerLaunchSpec) => Promise<void>>(),
     disconnect: vi.fn<() => Promise<void>>(),
     validateLaunchSpec: vi.fn<(spec: ServerLaunchSpec) => Promise<string[]>>(),
-    getLaunchSpec: vi.fn<() => Promise<ServerLaunchSpec | null>>(),
+    getLaunchSpec: vi.fn<() => Promise<GetLaunchSpecResult>>(),
   } as unknown as MCPConnector;
 }
 

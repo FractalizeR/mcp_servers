@@ -65,7 +65,7 @@ function makeConnector(opts: ConnectorMockOpts = {}): MCPConnector {
         ((): Promise<{ connected: boolean; details: { configPath: string } }> =>
           Promise.resolve({ connected: true, details: { configPath: '/tmp/cfg.json' } }))
     ),
-    getLaunchSpec: vi.fn().mockResolvedValue(null),
+    getLaunchSpec: vi.fn().mockResolvedValue({ outcome: 'notConnected' }),
   } as unknown as MCPConnector;
 }
 

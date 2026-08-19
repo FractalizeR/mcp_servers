@@ -16,7 +16,7 @@ export {
 } from './types/client.types.js';
 
 // Re-export launch spec
-export { type ServerLaunchSpec } from './types/launch.types.js';
+export { type ServerLaunchSpec, type GetLaunchSpecResult } from './types/launch.types.js';
 
 // Re-export doctor types (Stage 1.3)
 export {

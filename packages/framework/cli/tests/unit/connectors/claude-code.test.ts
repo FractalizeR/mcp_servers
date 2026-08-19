@@ -14,6 +14,10 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { ClaudeCodeConnector } from '../../../src/connectors/claude-code/claude-code.connector.js';
 import { CommandExecutor } from '../../../src/utils/command-executor.js';
+import {
+  REAL_MCP_GET_STDIO_USER_SCOPE,
+  REAL_MCP_GET_NOT_FOUND,
+} from '../../fixtures/claude-mcp-get.fixtures.js';
 
 vi.mock('../../../src/utils/command-executor.js', () => ({
   CommandExecutor: {
@@ -375,20 +379,42 @@ describe('ClaudeCodeConnector', () => {
     });
   });
 
-  describe('getLaunchSpec через `claude mcp get`', () => {
-    it('парсит многострочный Environment (CLI 2.x: KEY=value на отдельных строках)', async () => {
+  describe('getLaunchSpec через `claude mcp get` — GetLaunchSpecResult (4 различимых исхода)', () => {
+    it('outcome: found — парсит многострочный Environment (CLI 2.x: KEY=value на отдельных строках)', async () => {
       vi.mocked(CommandExecutor.execFile).mockReturnValue(
         buildGetOutput({ scope: 'local', envLines: ['TOKEN=sec', 'ORG=org-1'] })
       );
-      const spec = await connector.getLaunchSpec();
-      expect(spec).toEqual({
-        command: 'node',
-        args: ['/abs/script.cjs'],
-        env: { TOKEN: 'sec', ORG: 'org-1' },
+      const result = await connector.getLaunchSpec();
+      expect(result).toEqual({
+        outcome: 'found',
+        spec: {
+          command: 'node',
+          args: ['/abs/script.cjs'],
+          env: { TOKEN: 'sec', ORG: 'org-1' },
+        },
       });
     });
 
-    it('парсит legacy однострочный Environment (через запятую)', async () => {
+    it('outcome: found — реальный вывод CLI (фикстура, user scope, ✔)', async () => {
+      vi.mocked(CommandExecutor.execFile).mockReturnValue(REAL_MCP_GET_STDIO_USER_SCOPE);
+      const result = await connector.getLaunchSpec();
+      expect(result).toEqual({
+        outcome: 'found',
+        spec: {
+          command: 'node',
+          args: [
+            '/Users/fractalizer/PhpstormProjects/github.com/FractalizeR/mcp_servers/packages/servers/yandex-tracker/dist/yandex-tracker.bundle.cjs',
+          ],
+          env: {
+            YANDEX_TRACKER_TOKEN: 'FAKE_TOKEN_VALUE',
+            YANDEX_ORG_ID: 'FAKE_ORG_ID_VALUE',
+            LOG_LEVEL: 'FAKE_LOG_LEVEL_VALUE',
+          },
+        },
+      });
+    });
+
+    it('outcome: found — парсит legacy однострочный Environment (через запятую)', async () => {
       vi.mocked(CommandExecutor.execFile).mockReturnValue(
         [
           `${SERVER_NAME}:`,
@@ -398,34 +424,50 @@ describe('ClaudeCodeConnector', () => {
           '  Environment: TOKEN=sec, ORG=org-1',
         ].join('\n')
       );
-      const spec = await connector.getLaunchSpec();
-      expect(spec).toEqual({
-        command: 'node',
-        args: ['/abs/script.cjs'],
-        env: { TOKEN: 'sec', ORG: 'org-1' },
+      const result = await connector.getLaunchSpec();
+      expect(result).toEqual({
+        outcome: 'found',
+        spec: {
+          command: 'node',
+          args: ['/abs/script.cjs'],
+          env: { TOKEN: 'sec', ORG: 'org-1' },
+        },
       });
     });
 
-    it('возвращает null для http/sse сервера', async () => {
+    it('outcome: notStdio для http/sse сервера — несёт transport из вывода', async () => {
       vi.mocked(CommandExecutor.execFile).mockReturnValue(
         [`server`, '  Type: http', '  Command: irrelevant'].join('\n')
       );
-      const spec = await connector.getLaunchSpec();
-      expect(spec).toBeNull();
+      const result = await connector.getLaunchSpec();
+      expect(result).toEqual({ outcome: 'notStdio', transport: 'http' });
     });
 
-    it('возвращает null при отсутствии Command', async () => {
+    it('outcome: unparsable при отсутствии Command', async () => {
       vi.mocked(CommandExecutor.execFile).mockReturnValue('Type: stdio\nArgs: a');
-      const spec = await connector.getLaunchSpec();
-      expect(spec).toBeNull();
+      const result = await connector.getLaunchSpec();
+      expect(result.outcome).toBe('unparsable');
+      if (result.outcome !== 'unparsable') throw new Error('unreachable');
+      expect(result.reason.length).toBeGreaterThan(0);
     });
 
-    it('возвращает null если CommandExecutor бросает', async () => {
+    it('outcome: notConnected — реальный текст ошибки CLI при отсутствии записи (фикстура)', async () => {
       vi.mocked(CommandExecutor.execFile).mockImplementation(() => {
-        throw new Error('not found');
+        throw new Error(REAL_MCP_GET_NOT_FOUND);
       });
-      const spec = await connector.getLaunchSpec();
-      expect(spec).toBeNull();
+      const result = await connector.getLaunchSpec();
+      expect(result).toEqual({ outcome: 'notConnected' });
+    });
+
+    it('outcome: commandFailed — ошибка CLI без маркера «нет записи» (например, таймаут)', async () => {
+      vi.mocked(CommandExecutor.execFile).mockImplementation(() => {
+        throw new Error('Timeout: claude mcp get exceeded 5000ms');
+      });
+      const result = await connector.getLaunchSpec();
+      expect(result).toEqual({
+        outcome: 'commandFailed',
+        message: 'Timeout: claude mcp get exceeded 5000ms',
+      });
     });
 
     it('передаёт имя сервера как отдельный аргумент (без shell-escaping)', async () => {
@@ -439,8 +481,11 @@ describe('ClaudeCodeConnector', () => {
 
     it('возвращает пустые args/env когда полей нет', async () => {
       vi.mocked(CommandExecutor.execFile).mockReturnValue('Command: /abs/server');
-      const spec = await connector.getLaunchSpec();
-      expect(spec).toEqual({ command: '/abs/server', args: [], env: {} });
+      const result = await connector.getLaunchSpec();
+      expect(result).toEqual({
+        outcome: 'found',
+        spec: { command: '/abs/server', args: [], env: {} },
+      });
     });
 
     it('multi-line Environment с пустой следующей строкой и trailing-секцией → env: {}', async () => {
@@ -455,11 +500,14 @@ describe('ClaudeCodeConnector', () => {
           'To remove this server, run: claude mcp remove "x"',
         ].join('\n')
       );
-      const spec = await connector.getLaunchSpec();
-      expect(spec).toEqual({
-        command: 'node',
-        args: ['/abs/script.cjs'],
-        env: {},
+      const result = await connector.getLaunchSpec();
+      expect(result).toEqual({
+        outcome: 'found',
+        spec: {
+          command: 'node',
+          args: ['/abs/script.cjs'],
+          env: {},
+        },
       });
     });
   });

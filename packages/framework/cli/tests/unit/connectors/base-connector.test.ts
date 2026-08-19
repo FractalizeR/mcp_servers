@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
 import { BaseConnector } from '../../../src/connectors/base/base-connector.js';
 import type { MCPClientInfo, ConnectionStatus } from '../../../src/types/client.types.js';
-import type { ServerLaunchSpec } from '../../../src/types/launch.types.js';
+import type { GetLaunchSpecResult, ServerLaunchSpec } from '../../../src/types/launch.types.js';
 
 vi.mock('node:fs/promises', async () => {
   const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
@@ -47,8 +47,8 @@ class TestConnector extends BaseConnector {
   disconnect(): Promise<void> {
     return Promise.resolve();
   }
-  getLaunchSpec(): Promise<ServerLaunchSpec | null> {
-    return Promise.resolve(null);
+  getLaunchSpec(): Promise<GetLaunchSpecResult> {
+    return Promise.resolve({ outcome: 'notConnected' });
   }
 }
 

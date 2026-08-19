@@ -8,7 +8,7 @@
  *  - connect: создаёт файл / мержит с существующим / сохраняет env как есть
  *  - disconnect: удаляет запись / noop при отсутствии файла
  *  - getStatus: пять сценариев из плана 1.4.1
- *  - getLaunchSpec: записанная spec / null если файла нет / null если сервера нет
+ *  - getLaunchSpec: outcome found (записанная spec) / notConnected (файла или сервера нет) / unparsable (исключение при чтении)
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
@@ -449,7 +449,7 @@ describe('ConfigurableConnector', () => {
   });
 
   describe('getLaunchSpec', () => {
-    it('возвращает spec если сервер записан', async () => {
+    it('возвращает outcome: found со spec если сервер записан', async () => {
       vi.mocked(FileManager.exists).mockResolvedValue(true);
       vi.mocked(FileManager.readJSON).mockResolvedValue({
         mcpServers: {
@@ -462,30 +462,33 @@ describe('ConfigurableConnector', () => {
       });
       const c = new ConfigurableConnector(SERVER_NAME, baseJsonConfig);
       expect(await c.getLaunchSpec()).toEqual({
-        command: 'node',
-        args: ['/abs/script.cjs'],
-        env: { K: 'v' },
+        outcome: 'found',
+        spec: {
+          command: 'node',
+          args: ['/abs/script.cjs'],
+          env: { K: 'v' },
+        },
       });
     });
 
-    it('null если файл не существует', async () => {
+    it('outcome: notConnected если файл не существует', async () => {
       vi.mocked(FileManager.exists).mockResolvedValue(false);
       const c = new ConfigurableConnector(SERVER_NAME, baseJsonConfig);
-      expect(await c.getLaunchSpec()).toBeNull();
+      expect(await c.getLaunchSpec()).toEqual({ outcome: 'notConnected' });
     });
 
-    it('null если сервера нет в конфиге', async () => {
+    it('outcome: notConnected если сервера нет в конфиге', async () => {
       vi.mocked(FileManager.exists).mockResolvedValue(true);
       vi.mocked(FileManager.readJSON).mockResolvedValue({ mcpServers: {} });
       const c = new ConfigurableConnector(SERVER_NAME, baseJsonConfig);
-      expect(await c.getLaunchSpec()).toBeNull();
+      expect(await c.getLaunchSpec()).toEqual({ outcome: 'notConnected' });
     });
 
-    it('null если чтение бросает исключение', async () => {
+    it('outcome: unparsable если чтение бросает исключение', async () => {
       vi.mocked(FileManager.exists).mockResolvedValue(true);
       vi.mocked(FileManager.readJSON).mockRejectedValue(new Error('broken'));
       const c = new ConfigurableConnector(SERVER_NAME, baseJsonConfig);
-      expect(await c.getLaunchSpec()).toBeNull();
+      expect(await c.getLaunchSpec()).toEqual({ outcome: 'unparsable', reason: 'broken' });
     });
 
     it('сохраняет и читает обратно cwd / disabled (H4)', async () => {
@@ -520,9 +523,10 @@ describe('ConfigurableConnector', () => {
           },
         },
       });
-      const spec = await c.getLaunchSpec();
-      expect(spec?.cwd).toBe('/abs/workdir');
-      expect(spec?.disabled).toBe(true);
+      const result = await c.getLaunchSpec();
+      if (result.outcome !== 'found') throw new Error('expected outcome: found');
+      expect(result.spec.cwd).toBe('/abs/workdir');
+      expect(result.spec.disabled).toBe(true);
     });
 
     it('не пишет cwd/disabled когда они undefined (clean object)', async () => {
@@ -546,8 +550,9 @@ describe('ConfigurableConnector', () => {
         },
       });
       const c = new ConfigurableConnector(SERVER_NAME, tomlConfig);
-      const spec = await c.getLaunchSpec();
-      expect(spec?.command).toBe('node');
+      const result = await c.getLaunchSpec();
+      if (result.outcome !== 'found') throw new Error('expected outcome: found');
+      expect(result.spec.command).toBe('node');
       expect(FileManager.readTOML).toHaveBeenCalled();
       expect(FileManager.readJSON).not.toHaveBeenCalled();
     });

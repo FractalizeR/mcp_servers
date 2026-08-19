@@ -12,6 +12,7 @@ import type {
   ConfigManagerOptions,
   ConfigPromptDefinition,
   ServerLaunchSpec,
+  GetLaunchSpecResult,
   DoctorCheck,
   DoctorReport,
   IConnectorRegistry,
@@ -100,7 +101,24 @@ describe('types', () => {
     expectTypeOf<MCPConnector['connect']>().parameter(0).toEqualTypeOf<ServerLaunchSpec>();
     expectTypeOf<MCPConnector['validateLaunchSpec']>().returns.toEqualTypeOf<Promise<string[]>>();
     expectTypeOf<MCPConnector['getLaunchSpec']>().returns.toEqualTypeOf<
-      Promise<ServerLaunchSpec | null>
+      Promise<GetLaunchSpecResult>
     >();
+  });
+
+  it('GetLaunchSpecResult: 5 различимых исходов через discriminated union по outcome', () => {
+    const found: GetLaunchSpecResult = {
+      outcome: 'found',
+      spec: { command: 'node', args: ['/x'], env: {} },
+    };
+    const notConnected: GetLaunchSpecResult = { outcome: 'notConnected' };
+    const notStdio: GetLaunchSpecResult = { outcome: 'notStdio', transport: 'http' };
+    const unparsable: GetLaunchSpecResult = { outcome: 'unparsable', reason: 'no Command field' };
+    const commandFailed: GetLaunchSpecResult = { outcome: 'commandFailed', message: 'timeout' };
+
+    expect(found.outcome).toBe('found');
+    expect(notConnected.outcome).toBe('notConnected');
+    expect(notStdio.outcome).toBe('notStdio');
+    expect(unparsable.outcome).toBe('unparsable');
+    expect(commandFailed.outcome).toBe('commandFailed');
   });
 });

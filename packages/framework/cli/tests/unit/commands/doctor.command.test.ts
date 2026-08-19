@@ -15,7 +15,7 @@ import { doctorCommand } from '../../../src/commands/doctor.command.js';
 import type { MCPConnector } from '../../../src/connectors/base/connector.interface.js';
 import type { IConnectorRegistry } from '../../../src/types.js';
 import type { ConnectionStatus, MCPClientInfo } from '../../../src/types/client.types.js';
-import type { ServerLaunchSpec } from '../../../src/types/launch.types.js';
+import type { GetLaunchSpecResult, ServerLaunchSpec } from '../../../src/types/launch.types.js';
 import type { DoctorCheck } from '../../../src/types/doctor.types.js';
 
 vi.mock('node:fs/promises', async () => {
@@ -31,6 +31,8 @@ interface ConnectorOpts {
   isInstalled?: boolean;
   status?: ConnectionStatus;
   spec?: ServerLaunchSpec | null;
+  /** Прямая подстановка результата getLaunchSpec (для сценариев notStdio/unparsable/commandFailed) */
+  launchSpecResult?: GetLaunchSpecResult;
 }
 
 function makeConnector(opts: ConnectorOpts): MCPConnector {
@@ -48,7 +50,12 @@ function makeConnector(opts: ConnectorOpts): MCPConnector {
     connect: vi.fn(),
     disconnect: vi.fn(),
     validateLaunchSpec: vi.fn(),
-    getLaunchSpec: vi.fn().mockResolvedValue(opts.spec ?? null),
+    getLaunchSpec: vi
+      .fn()
+      .mockResolvedValue(
+        opts.launchSpecResult ??
+          (opts.spec ? { outcome: 'found', spec: opts.spec } : { outcome: 'notConnected' })
+      ),
   } as unknown as MCPConnector;
 }
 
@@ -146,6 +153,57 @@ describe('doctorCommand', () => {
 
       const commandCheck = report.checks.find((c) => c.check.name === 'command-exists');
       expect(commandCheck?.result.status).toBe('fail');
+    });
+
+    it('outcome: notStdio → command-exists возвращает skip (не диск, а транспорт)', async () => {
+      const conn = makeConnector({
+        name: 'gemini',
+        isInstalled: true,
+        status: { connected: true },
+        launchSpecResult: { outcome: 'notStdio', transport: 'http' },
+      });
+      const registry = makeRegistry([conn]);
+      const report = await doctorCommand({ registry });
+
+      const commandCheck = report.checks.find((c) => c.check.name === 'command-exists');
+      expect(commandCheck?.result.status).toBe('skip');
+      expect(commandCheck?.result.message).toContain('http');
+    });
+
+    it('outcome: unparsable → command-exists возвращает warn', async () => {
+      const conn = makeConnector({
+        name: 'gemini',
+        isInstalled: true,
+        status: { connected: true },
+        launchSpecResult: { outcome: 'unparsable', reason: 'no Command field' },
+      });
+      const registry = makeRegistry([conn]);
+      const report = await doctorCommand({ registry });
+
+      const commandCheck = report.checks.find((c) => c.check.name === 'command-exists');
+      expect(commandCheck?.result.status).toBe('warn');
+      expect(commandCheck?.result.message).toContain('no Command field');
+    });
+
+    it('outcome: commandFailed → command-exists возвращает warn', async () => {
+      const conn = makeConnector({
+        name: 'gemini',
+        isInstalled: true,
+        status: { connected: true },
+        launchSpecResult: {
+          outcome: 'commandFailed',
+          message: 'Timeout: claude mcp get exceeded 5000ms YANDEX_TRACKER_TOKEN=y0_leaked',
+        },
+      });
+      const registry = makeRegistry([conn]);
+      const report = await doctorCommand({ registry });
+
+      const commandCheck = report.checks.find((c) => c.check.name === 'command-exists');
+      expect(commandCheck?.result.status).toBe('warn');
+      // Регресс на N6: `result.message` несёт до 200 символов stderr упавшей
+      // команды, а он может содержать env записи (токен). Дословно не печатаем.
+      expect(commandCheck?.result.message).not.toContain('y0_leaked');
+      expect(commandCheck?.result.message).toContain('claude mcp get');
     });
   });
 

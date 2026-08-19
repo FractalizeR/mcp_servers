@@ -13,7 +13,7 @@ import { CommandExecutor } from '../../utils/command-executor.js';
 import { FileManager } from '../../utils/file-manager.js';
 import { resolveExecutablePath } from '../../utils/launch-spec-helpers.js';
 import type { ConnectionStatus, MCPClientInfo } from '../../types/client.types.js';
-import type { ServerLaunchSpec } from '../../types/launch.types.js';
+import type { GetLaunchSpecResult, ServerLaunchSpec } from '../../types/launch.types.js';
 
 /**
  * Таймаут для проверки `checkCommand` в {@link ConfigurableConnector.isInstalled}.
@@ -290,19 +290,24 @@ export class ConfigurableConnector extends BaseConnector {
   /**
    * Прочитать spec, записанную в конфиге клиента.
    *
-   * @returns spec, если сервер присутствует в конфиге; `null` иначе.
+   * Файл-based клиенты пишут ровно то, что было передано в `connect()` —
+   * поэтому здесь различимы только `found`/`notConnected`/`unparsable`
+   * (`notStdio`/`commandFailed` для этого класса коннекторов невозможны:
+   * записи всегда описывают команду+аргументы, а чтение — не внешняя команда).
+   *
+   * @returns {@link GetLaunchSpecResult}.
    */
-  async getLaunchSpec(): Promise<ServerLaunchSpec | null> {
+  async getLaunchSpec(): Promise<GetLaunchSpecResult> {
     try {
       const configPath = this.resolveConfigPath();
       if (!(await FileManager.exists(configPath))) {
-        return null;
+        return { outcome: 'notConnected' };
       }
 
       const config = await this.readConfig();
       const entry = config[this.getServerKey()]?.[this._serverName];
       if (!entry) {
-        return null;
+        return { outcome: 'notConnected' };
       }
 
       const spec: ServerLaunchSpec = {
@@ -316,9 +321,9 @@ export class ConfigurableConnector extends BaseConnector {
       if (entry.disabled !== undefined) {
         spec.disabled = entry.disabled;
       }
-      return spec;
-    } catch {
-      return null;
+      return { outcome: 'found', spec };
+    } catch (error) {
+      return { outcome: 'unparsable', reason: isError(error) ? error.message : String(error) };
     }
   }
 

@@ -8,7 +8,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { MCPConnector } from './connector.interface.js';
 import type { ConnectionStatus, MCPClientInfo } from '../../types/client.types.js';
-import type { ServerLaunchSpec } from '../../types/launch.types.js';
+import type { GetLaunchSpecResult, ServerLaunchSpec } from '../../types/launch.types.js';
 import { resolveExecutablePath } from '../../utils/launch-spec-helpers.js';
 
 /**
@@ -34,7 +34,7 @@ export abstract class BaseConnector implements MCPConnector {
   abstract getStatus(): Promise<ConnectionStatus>;
   abstract connect(spec: ServerLaunchSpec): Promise<void>;
   abstract disconnect(): Promise<void>;
-  abstract getLaunchSpec(): Promise<ServerLaunchSpec | null>;
+  abstract getLaunchSpec(): Promise<GetLaunchSpecResult>;
 
   /**
    * Базовая валидация спецификации запуска.

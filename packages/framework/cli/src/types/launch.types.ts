@@ -61,3 +61,61 @@ export interface ServerLaunchSpec {
    */
   disabled?: boolean;
 }
+
+/**
+ * Различимые исходы {@link MCPConnector.getLaunchSpec} (`connectors/base/connector.interface.ts`).
+ *
+ * До этого типа метод схлопывал четыре разные причины отсутствия spec в один
+ * `null`: записи нет, транспорт не stdio, вывод клиента не разобран, сама
+ * команда чтения записи (для CLI-based клиентов вроде Claude Code) упала или
+ * истекла по таймауту. Разные причины требуют разной реакции у потребителя
+ * (например, `mcp-dev` из пакета `@fractalizer/mcp-dev-client` должен показать
+ * разный текст ошибки), поэтому объединены в discriminated union по полю
+ * `outcome`.
+ *
+ * `unparsable` не несёт сырой вывод клиента — он может содержать `env` записи
+ * (секреты); только безопасное для печати описание причины.
+ *
+ * `commandFailed`, в отличие от него, **может нести фрагмент stderr упавшей
+ * команды**: `CommandExecutor` подмешивает в сообщение до `STDERR_PREVIEW_LIMIT`
+ * символов stderr (`utils/command-executor.ts`). Сейчас `claude mcp get` при
+ * ошибке `env` в stderr не печатает, то есть известной утечки нет, — но
+ * гарантией это не является, и потребитель обязан считать `message` этого
+ * исхода потенциально чувствительным: не печатать его дословно и пропускать
+ * через маскер, если тот доступен. Так и поступает `mcp-dev` из
+ * `@fractalizer/mcp-dev-client` — он заменяет текст на инструкцию проверить
+ * запись вручную.
+ *
+ * @example
+ * ```typescript
+ * const result = await connector.getLaunchSpec();
+ * if (result.outcome === 'found') {
+ *   await connect(result.spec);
+ * }
+ * ```
+ */
+export type GetLaunchSpecResult =
+  | {
+      /** Запись найдена и разобрана — {@link ServerLaunchSpec} готова к использованию */
+      readonly outcome: 'found';
+      readonly spec: ServerLaunchSpec;
+    }
+  | {
+      /** Сервер не зарегистрирован в этом клиенте (ни в одном из scope) */
+      readonly outcome: 'notConnected';
+    }
+  | {
+      /** Запись есть, но транспорт не stdio (например, `http`/`sse`) — `mcp-dev` не умеет запускать такие серверы локально */
+      readonly outcome: 'notStdio';
+      readonly transport: string;
+    }
+  | {
+      /** Запись есть и транспорт stdio, но структуру вывода клиента не удалось разобрать (формат изменился) */
+      readonly outcome: 'unparsable';
+      readonly reason: string;
+    }
+  | {
+      /** Команда чтения записи (например, `claude mcp get`) завершилась с ошибкой или истекла по таймауту */
+      readonly outcome: 'commandFailed';
+      readonly message: string;
+    };
