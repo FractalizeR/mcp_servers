@@ -33,13 +33,32 @@
 | yandex-tracker | 252 → **42** | 1286 → **1280** |
 | yandex-wiki | 9 → 9 | 202 → 202 |
 
-Добавлено ровно одно приведение — в `delete-checklist-item.operation.test.ts`, где
-`deleteRequest` объявлен `protected` и структурно выразить его снаружи нельзя; оно
-стоит за рантайм-проверкой наличия метода.
+Добавлены три приведения, все обоснованные: одно в `delete-checklist-item.operation.test.ts`
+(`deleteRequest` объявлен `protected`, структурно выразить снаружи нельзя — стоит за
+рантайм-проверкой наличия метода) и два `as unknown as EntityAdminServicesContainer`
+в тестах фасада, где мок контейнера собирается частично (счётчик `as unknown as`:
+376 → 378). Общий счёт приведений при этом снизился.
 
 ## Что гейт не покрывает
 
 `packages/framework/*` не имеют `tsconfig.tests.json`, а их `tsconfig.json` включает
 только `src/**/*` — тесты framework типами не проверяются. Замер пробным конфигом
 (2026-08-19): **infrastructure 8, cli 0, core 149**. Это отдельный объём, в этот пакет
-работ не входил.
+работ не входил; факт зафиксирован в `CLAUDE.md` рядом с описанием шага, чтобы не
+пропасть вместе с этим планом.
+
+## Расхождения типов сущностей с реальным API (найдено ревью, не чинилось)
+
+Ревью вскрыло, что три фикстуры кодируют форму, которой живой API не отдаёт, — но
+причина не в тестах, а в типах в `src/`, которым фикстуры обязаны удовлетворять:
+
+- `Issue.createdBy: User` (`uid/login/isActive`), тогда как API возвращает ref
+  `{self, id, display}` — см. `yandex_tracker_client/tests/common/issues.py:54`;
+- `Issue.queue: Queue` целиком, тогда как API возвращает ref `{self, id, key, display}`
+  — там же, строки 188-193;
+- `BulkChangeStatus` = `PENDING|RUNNING|COMPLETED|FAILED|CANCELLED`, тогда как референс
+  показывает `CREATED` и `COMPLETE` (`bulkchange.py:22`, `test_bulkchange.py:90`);
+  на этом энуме построен `switch` в `get-bulk-change-status.tool.ts`.
+
+Правка затрагивает 20 и 16 файлов в `src/` соответственно и требует живой пробы API —
+это отдельная задача.

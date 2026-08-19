@@ -201,6 +201,7 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - `test:watch` — `vitest watch`
 - `typecheck` — `tsc --noEmit`
 - `typecheck:scripts` — `tsc --noEmit -p tsconfig.scripts.json` (где есть `scripts`)
+- `typecheck:tests` — `tsc --noEmit -p tsconfig.tests.json` (пока только `packages/servers/*`; во `framework` нет `tsconfig.tests.json`, их тесты типами не проверяются)
 - `validate` — полная валидация (все шаги, полный вывод)
 - `validate:quiet` — те же шаги, минимальный вывод (для ИИ агентов)
 
@@ -208,7 +209,7 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - Делегирует команды через `--workspaces --if-present`
 - `clean` — только артефакты, `clean:all` — включая node_modules
 - `validate` / `validate:quiet` — единый пайплайн через `scripts/validate.sh [--quiet]`
-  - Шаги: build, lint, typecheck, typecheck:scripts, test, test:smoke, test:smoke:server, cpd, depcruise, validate:docs, validate:tools, knip:root, lint:servers-scripts
+  - Шаги: build, lint, typecheck, typecheck:scripts, typecheck:tests, test, test:smoke, test:smoke:server, cpd, depcruise, validate:docs, validate:tools, knip:root, lint:servers-scripts
   - Quiet mode: lint:quiet, test:quiet, cpd:quiet + `--output-logs=errors-only`
   - **Добавить новый шаг:** только в `scripts/validate.sh` — оба режима обновятся автоматически
 

@@ -1,2 +1,0 @@
-npm notice run mcp-framework-monorepo@1.9.0 npx
-npm notice run 'tsc' --noEmit -p tsconfig.tests.json

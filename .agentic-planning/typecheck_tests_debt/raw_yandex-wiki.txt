@@ -1,9 +1,0 @@
-npm notice run mcp-framework-monorepo@1.9.0 npx
-npm notice run 'tsc' --noEmit -p tsconfig.tests.json
-tests/unit/config/api-base-config.test.ts(9,17): error TS4111: Property 'YANDEX_WIKI_TOKEN' comes from an index signature, so it must be accessed with ['YANDEX_WIKI_TOKEN'].
-tests/unit/config/api-base-config.test.ts(10,17): error TS4111: Property 'YANDEX_ORG_ID' comes from an index signature, so it must be accessed with ['YANDEX_ORG_ID'].
-tests/unit/config/api-base-config.test.ts(11,24): error TS4111: Property 'YANDEX_WIKI_API_BASE' comes from an index signature, so it must be accessed with ['YANDEX_WIKI_API_BASE'].
-tests/unit/config/api-base-config.test.ts(24,17): error TS4111: Property 'YANDEX_WIKI_API_BASE' comes from an index signature, so it must be accessed with ['YANDEX_WIKI_API_BASE'].
-tests/unit/config/api-base-config.test.ts(30,17): error TS4111: Property 'YANDEX_WIKI_API_BASE' comes from an index signature, so it must be accessed with ['YANDEX_WIKI_API_BASE'].
-tests/unit/config/api-base-config.test.ts(36,17): error TS4111: Property 'YANDEX_WIKI_API_BASE' comes from an index signature, so it must be accessed with ['YANDEX_WIKI_API_BASE'].
-tests/unit/config/api-base-config.test.ts(42,17): error TS4111: Property 'YANDEX_WIKI_API_BASE' comes from an index signature, so it must be accessed with ['YANDEX_WIKI_API_BASE'].
