@@ -1,3 +1,19 @@
+## [2.0.0](https://github.com/FractalizeR/mcp_servers/compare/v1.9.1...v2.0.0) (2026-08-19)
+
+### ⚠ BREAKING CHANGES
+
+* **servers:** удалить MCP-сервер TickTick из монорепозитория (#391)
+* **servers:** пакеты @fractalizer/mcp-server-ticktick и
+mcp-server-ticktick больше не собираются и не публикуются.
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude <noreply@anthropic.com>
+
+### Features
+
+* **servers:** удалить MCP-сервер TickTick из монорепозитория ([c6621ed](https://github.com/FractalizeR/mcp_servers/commit/c6621edd694fc7ae9eed7c78b44702d5ef804f74))
+* **servers:** удалить MCP-сервер TickTick из монорепозитория ([#391](https://github.com/FractalizeR/mcp_servers/issues/391)) ([5af3fd2](https://github.com/FractalizeR/mcp_servers/commit/5af3fd2065089da17c5090522956d6d7495e1b91))
+
 ## [1.9.1](https://github.com/FractalizeR/mcp_servers/compare/v1.9.0...v1.9.1) (2026-08-19)
 
 ### Bug Fixes
