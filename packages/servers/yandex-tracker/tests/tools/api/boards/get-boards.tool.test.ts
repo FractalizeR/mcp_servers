@@ -8,6 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('GetBoardsTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -54,7 +55,7 @@ describe('GetBoardsTool', () => {
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.getBoards).toHaveBeenCalledWith({ localized: undefined });
 
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+    const parsed = JSON.parse(getTextContent(result)) as {
       success: boolean;
       data: { boards: unknown[]; count: number };
     };
@@ -69,7 +70,7 @@ describe('GetBoardsTool', () => {
     const result = await tool.execute({ fields: ['id'] });
 
     expect(result.isError).toBe(true);
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as { error: string };
+    const parsed = JSON.parse(getTextContent(result)) as { error: string };
     expect(parsed.error).toBe('Network error');
   });
 });

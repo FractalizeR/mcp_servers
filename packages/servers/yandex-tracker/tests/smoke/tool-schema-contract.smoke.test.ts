@@ -27,6 +27,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { ServerConfig } from '#config';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 const ajv = new Ajv2020({ strict: false });
 
@@ -125,7 +126,7 @@ describe('Tool Schema Contract (Smoke) — JSON Schema 2020-12', () => {
       expect(result.structuredContent).toBeDefined();
       expect(result.content[0]?.type).toBe('text');
 
-      const textPayload = JSON.parse(result.content[0]?.text ?? 'null') as unknown;
+      const textPayload = JSON.parse(getTextContent(result)) as unknown;
       expect(textPayload).toEqual(result.structuredContent);
     });
   });

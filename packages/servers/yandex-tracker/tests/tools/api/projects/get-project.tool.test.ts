@@ -9,6 +9,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createProjectFixture } from '#helpers/project.fixture.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('GetProjectTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -50,7 +51,7 @@ describe('GetProjectTool', () => {
         const result = await tool.execute({});
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -62,7 +63,7 @@ describe('GetProjectTool', () => {
         const result = await tool.execute({ projectId: '', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -106,7 +107,7 @@ describe('GetProjectTool', () => {
           projectName: 'My Project',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             project: { key: string; name: string };
@@ -131,7 +132,7 @@ describe('GetProjectTool', () => {
           projectId: 'project123',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             project: { id: string };
@@ -183,7 +184,7 @@ describe('GetProjectTool', () => {
         });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             project: {
@@ -210,7 +211,7 @@ describe('GetProjectTool', () => {
         const result = await tool.execute({ projectId: 'NOTEXIST', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -227,7 +228,7 @@ describe('GetProjectTool', () => {
         const result = await tool.execute({ projectId: 'PROJ', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -242,7 +243,7 @@ describe('GetProjectTool', () => {
         const result = await tool.execute({ projectId: 'RESTRICTED', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -257,7 +258,7 @@ describe('GetProjectTool', () => {
         const result = await tool.execute({ projectId: 'PROJ', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;

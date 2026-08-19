@@ -8,6 +8,7 @@ import { ToolCategory, buildToolName } from '@fractalizer/mcp-core';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('DemoTool', () => {
   let tool: DemoTool;
@@ -57,7 +58,7 @@ describe('DemoTool', () => {
         const result = await tool.execute({});
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -69,7 +70,7 @@ describe('DemoTool', () => {
         const result = await tool.execute({ message: '' });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -89,7 +90,7 @@ describe('DemoTool', () => {
         const result = await tool.execute({ message: 'Test message' });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             status: string;
@@ -108,7 +109,7 @@ describe('DemoTool', () => {
         const result = await tool.execute({ message: 'Test' });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             timestamp: string;
@@ -122,7 +123,7 @@ describe('DemoTool', () => {
         const result = await tool.execute({ message: 'Test' });
 
         expect(result.isError).toBeUndefined();
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             info: string;
@@ -161,7 +162,7 @@ describe('DemoTool', () => {
         const result = await errorTool.execute({ message: 'Test' });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;

@@ -9,6 +9,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('UpdateQueueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -61,7 +62,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -73,7 +74,7 @@ describe('UpdateQueueTool', () => {
         const result = await tool.execute({ queueId: '', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -122,7 +123,7 @@ describe('UpdateQueueTool', () => {
           queueName: 'Updated Queue',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             queueKey: string;
@@ -296,7 +297,7 @@ describe('UpdateQueueTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -317,7 +318,7 @@ describe('UpdateQueueTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -336,7 +337,7 @@ describe('UpdateQueueTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -355,7 +356,7 @@ describe('UpdateQueueTool', () => {
         });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };

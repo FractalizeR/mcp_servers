@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FindUsersTool } from '#tools/api/users/find-users.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 function paginated<T>(items: T[]) {
   return {
@@ -51,7 +52,7 @@ describe('FindUsersTool', () => {
     expect(mockTrackerFacade.findUsers).toHaveBeenCalledWith(
       expect.objectContaining({ perPage: undefined })
     );
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as { data: { count: number } };
+    const parsed = JSON.parse(getTextContent(result)) as { data: { count: number } };
     expect(parsed.data.count).toBe(1);
   });
 

@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FindEntitiesTool } from '#tools/api/entities/find-entities.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 function paginated<T>(items: T[]) {
   return {
@@ -51,7 +52,7 @@ describe('FindEntitiesTool', () => {
     expect(mockTrackerFacade.findEntities).toHaveBeenCalledWith(
       expect.objectContaining({ entityType: 'goal' })
     );
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+    const parsed = JSON.parse(getTextContent(result)) as {
       data: { entityType: string; count: number };
     };
     expect(parsed.data.entityType).toBe('goal');

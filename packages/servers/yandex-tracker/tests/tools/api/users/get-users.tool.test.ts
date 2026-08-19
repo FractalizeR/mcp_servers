@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GetUsersTool } from '#tools/api/users/get-users.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('GetUsersTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -42,7 +43,7 @@ describe('GetUsersTool', () => {
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.getUsers).toHaveBeenCalledWith(['ivanov', 'unknown-user']);
 
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+    const parsed = JSON.parse(getTextContent(result)) as {
       data: { total: number; successful: number; failed: number };
     };
     expect(parsed.data.total).toBe(2);

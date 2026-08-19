@@ -15,6 +15,7 @@ import {
 } from '#helpers/queue-field.fixture.js';
 import { expectDefinitionMatchesSchema } from '#helpers/schema-definition-matcher.js';
 import { GetQueueFieldsParamsSchema } from '#tools/api/queues/get-queue-fields.schema.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('GetQueueFieldsTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -68,7 +69,7 @@ describe('GetQueueFieldsTool', () => {
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -80,7 +81,7 @@ describe('GetQueueFieldsTool', () => {
         const result = await tool.execute({ queueId: '', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -120,7 +121,7 @@ describe('GetQueueFieldsTool', () => {
           count: 5,
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             fields: unknown[];
@@ -144,7 +145,7 @@ describe('GetQueueFieldsTool', () => {
           count: 5,
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             fields: Array<{
@@ -174,7 +175,7 @@ describe('GetQueueFieldsTool', () => {
 
         expect(result.isError).toBeUndefined();
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             fields: Array<{
@@ -199,7 +200,7 @@ describe('GetQueueFieldsTool', () => {
           count: 0,
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             fields: unknown[];
@@ -250,7 +251,7 @@ describe('GetQueueFieldsTool', () => {
 
         expect(result.isError).toBeUndefined();
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             fields: Array<{
@@ -272,7 +273,7 @@ describe('GetQueueFieldsTool', () => {
         const result = await tool.execute({ queueId: 'NOTEXIST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -289,7 +290,7 @@ describe('GetQueueFieldsTool', () => {
         const result = await tool.execute({ queueId: 'PRIVATE', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -304,7 +305,7 @@ describe('GetQueueFieldsTool', () => {
         const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
@@ -319,7 +320,7 @@ describe('GetQueueFieldsTool', () => {
         const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };

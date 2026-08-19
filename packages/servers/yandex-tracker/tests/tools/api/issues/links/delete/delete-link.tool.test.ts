@@ -8,6 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('DeleteLinkTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -46,7 +47,7 @@ describe('DeleteLinkTool', () => {
       const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         message: string;
       };
@@ -98,7 +99,7 @@ describe('DeleteLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -125,7 +126,7 @@ describe('DeleteLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}');
+      const parsed = JSON.parse(getTextContent(result));
       expect(parsed.data.failed).toHaveLength(1);
       expect(parsed.data.failed[0].error).toContain('Link deletion failed');
     });
@@ -144,7 +145,7 @@ describe('DeleteLinkTool', () => {
       });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}');
+      const parsed = JSON.parse(getTextContent(result));
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(1);
       expect(parsed.data.failed).toHaveLength(1);

@@ -11,6 +11,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 /** Метаданные пагинации по умолчанию (одна страница, всё получено). */
 const META: PaginationMeta = {
@@ -132,7 +133,7 @@ describe('GetWorklogsTool', () => {
       const result = await tool.execute({ issueIds: ['TEST-1'], fields: ['id'] });
 
       expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
           total: number;
@@ -162,7 +163,7 @@ describe('GetWorklogsTool', () => {
 
       const result = await tool.execute({ issueIds: ['TEST-1'], fields: ['id'] });
 
-      const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+      const parsed = JSON.parse(getTextContent(result)) as {
         data: { worklogs: Array<{ worklogs: Array<Record<string, unknown>> }> };
       };
       expect(parsed.data.worklogs[0].worklogs[0]).toHaveProperty('id');

@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ManageSprintLifecycleTool } from '#tools/api/sprints/manage-sprint-lifecycle.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('ManageSprintLifecycleTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -39,7 +40,7 @@ describe('ManageSprintLifecycleTool', () => {
       sprintId: '1',
       action: 'start',
     });
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+    const parsed = JSON.parse(getTextContent(result)) as {
       data: { sprint: unknown; message: string };
     };
     expect(parsed.data.sprint).toEqual(sprint);
@@ -52,7 +53,7 @@ describe('ManageSprintLifecycleTool', () => {
     const result = await tool.execute({ sprintId: '1', action: 'delete' });
 
     expect(result.isError).toBeUndefined();
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+    const parsed = JSON.parse(getTextContent(result)) as {
       data: { sprint: unknown; message: string };
     };
     expect(parsed.data.sprint).toBeNull();

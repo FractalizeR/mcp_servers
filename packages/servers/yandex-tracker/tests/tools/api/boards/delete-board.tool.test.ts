@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DeleteBoardTool } from '#tools/api/boards/delete-board.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('DeleteBoardTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -35,7 +36,7 @@ describe('DeleteBoardTool', () => {
 
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.deleteBoard).toHaveBeenCalledWith('1');
-    const parsed = JSON.parse(result.content[0]?.text || '{}') as { data: { success: boolean } };
+    const parsed = JSON.parse(getTextContent(result)) as { data: { success: boolean } };
     expect(parsed.data.success).toBe(true);
   });
 

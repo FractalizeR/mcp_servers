@@ -9,6 +9,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('GetQueueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -50,7 +51,7 @@ describe('GetQueueTool', () => {
         const result = await tool.execute({ fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -62,7 +63,7 @@ describe('GetQueueTool', () => {
         const result = await tool.execute({ queueId: '', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
         };
@@ -105,7 +106,7 @@ describe('GetQueueTool', () => {
           queueName: 'Test Queue',
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             queue: {
@@ -131,7 +132,7 @@ describe('GetQueueTool', () => {
           expand: undefined,
         });
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             queue: {
@@ -180,7 +181,7 @@ describe('GetQueueTool', () => {
 
         expect(result.isError).toBeUndefined();
 
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
             queue: {
@@ -204,7 +205,7 @@ describe('GetQueueTool', () => {
         const result = await tool.execute({ queueId: 'NOTEXIST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -221,7 +222,7 @@ describe('GetQueueTool', () => {
         const result = await tool.execute({ queueId: 'PRIVATE', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           message: string;
           error: string;
@@ -238,7 +239,7 @@ describe('GetQueueTool', () => {
         const result = await tool.execute({ queueId: 'TEST', fields: ['id', 'key', 'name'] });
 
         expect(result.isError).toBe(true);
-        const parsed = JSON.parse(result.content[0]?.text || '{}') as {
+        const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           error: string;
         };
