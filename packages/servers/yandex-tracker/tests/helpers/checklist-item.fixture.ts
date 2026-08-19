@@ -133,7 +133,7 @@ export function createFullChecklistItemFixture(
 export function createChecklistItemListFixture(
   count: number,
   baseOverrides?: Partial<ChecklistItem>
-): ChecklistItem[] {
+): ChecklistItemWithUnknownFields[] {
   return Array.from({ length: count }, (_, index) =>
     createChecklistItemFixture({
       id: `checklist-item-${100 + index}`,

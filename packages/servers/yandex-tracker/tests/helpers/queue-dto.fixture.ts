@@ -80,6 +80,7 @@ export function createGetQueuesDto(overrides?: Partial<GetQueuesDto>): GetQueues
  */
 export function createGetQueueDto(overrides?: Partial<GetQueueDto>): GetQueueDto {
   return {
+    queueId: 'TEST',
     ...overrides,
   };
 }
@@ -94,6 +95,7 @@ export function createGetQueueDto(overrides?: Partial<GetQueueDto>): GetQueueDto
  */
 export function createGetQueueFieldsDto(overrides?: Partial<GetQueueFieldsDto>): GetQueueFieldsDto {
   return {
+    queueId: 'TEST',
     ...overrides,
   };
 }

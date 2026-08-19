@@ -234,11 +234,11 @@ const DEFAULT_RULES: RandomizationRule[] = [
  */
 export interface GenerateOptions {
   /** Переопределения конкретных полей (deep merge) */
-  overrides?: Record<string, unknown>;
+  overrides?: Record<string, unknown> | undefined;
   /** Дополнительные правила рандомизации */
-  customRules?: RandomizationRule[];
+  customRules?: RandomizationRule[] | undefined;
   /** Отключить рандомизацию для определенных путей (dot notation) */
-  preservePaths?: string[];
+  preservePaths?: string[] | undefined;
 }
 
 /**
