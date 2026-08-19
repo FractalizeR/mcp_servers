@@ -129,7 +129,7 @@ describe('redactParams', () => {
       const result = redactParams({ issues: [{ id: 'A-1', comment: 'text' }] });
 
       const shape = result['issues'] as { items: Array<{ properties: Record<string, unknown> }> };
-      expect(Object.keys(shape.items[0].properties).sort()).toEqual(['comment', 'id']);
+      expect(Object.keys(shape.items[0]?.properties ?? {}).sort()).toEqual(['comment', 'id']);
     });
 
     it('очень большой массив: редактор ограничивает число обрабатываемых элементов', () => {

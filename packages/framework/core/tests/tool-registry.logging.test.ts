@@ -13,16 +13,21 @@ import { ToolRegistry, type ToolConstructor } from '../src/tool-registry/index.j
 import { BaseTool } from '../src/tools/base/base-tool.js';
 import type { Container } from 'inversify';
 import type { Logger, ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { ToolDefinition } from '../src/tools/base/index.js';
+import {
+  ToolCategory,
+  ToolPriority,
+  type StaticToolMetadata,
+  type ToolDefinition,
+} from '../src/tools/base/index.js';
 
 const SECRET_MARKER = 'UNIQUE_SECRET_MARKER_b81e4f0d';
 
 class EchoTool extends BaseTool<void> {
-  static override METADATA = {
+  static override METADATA: StaticToolMetadata = {
     name: 'echo_tool',
     description: 'Echo tool for logging tests',
-    category: 'test',
-    priority: 'normal' as const,
+    category: ToolCategory.SYSTEM,
+    priority: ToolPriority.NORMAL,
     tags: [],
     isHelper: true,
   };
@@ -46,7 +51,7 @@ class EchoTool extends BaseTool<void> {
 }
 
 class ThrowingTool extends EchoTool {
-  static override METADATA = {
+  static override METADATA: StaticToolMetadata = {
     ...EchoTool.METADATA,
     name: 'throwing_tool',
   };

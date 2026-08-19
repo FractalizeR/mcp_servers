@@ -17,7 +17,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Logger, ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { BaseTool } from '../../../../src/tools/base/base-tool.js';
-import type { ToolDefinition } from '../../../../src/tools/base/index.js';
+import {
+  ToolCategory,
+  ToolPriority,
+  type StaticToolMetadata,
+  type ToolDefinition,
+} from '../../../../src/tools/base/index.js';
 import {
   DEFAULT_COLLECTION_LINKS_THRESHOLD,
   type CollectionResponseMode,
@@ -64,9 +69,13 @@ function toResourceLink(item: FakeItem): ResourceLinkDescriptor {
 
 /** Тестовый инструмент фреймворка: коллекция FakeItem с переключаемым режимом ответа. */
 class FakeCollectionTool extends BaseTool<void> {
-  static override METADATA = {
-    category: 'system',
-    priority: 'normal' as const,
+  static override METADATA: StaticToolMetadata = {
+    name: 'fake_collection_tool',
+    description: 'Тестовый инструмент-коллекция',
+    category: ToolCategory.SYSTEM,
+    priority: ToolPriority.NORMAL,
+    tags: [],
+    isHelper: false,
   };
 
   constructor(

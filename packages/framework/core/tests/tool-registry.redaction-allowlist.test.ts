@@ -16,17 +16,22 @@ import { ToolRegistry, type ToolConstructor } from '../src/tool-registry/index.j
 import { BaseTool } from '../src/tools/base/base-tool.js';
 import type { Container } from 'inversify';
 import type { Logger, ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { ToolDefinition } from '../src/tools/base/index.js';
+import {
+  ToolCategory,
+  ToolPriority,
+  type StaticToolMetadata,
+  type ToolDefinition,
+} from '../src/tools/base/index.js';
 
 const SECRET_MARKER = 'UNIQUE_SECRET_MARKER_c4e1a9d7';
 
 /** Tool БЕЗ заполненного redactionAllowlist — контроль регрессии (DoD п.4) */
 class LegacyTool extends BaseTool<void> {
-  static override METADATA = {
+  static override METADATA: StaticToolMetadata = {
     name: 'legacy_tool',
     description: 'Tool without redactionAllowlist',
-    category: 'test',
-    priority: 'normal' as const,
+    category: ToolCategory.SYSTEM,
+    priority: ToolPriority.NORMAL,
     tags: [],
     isHelper: true,
   };
@@ -51,7 +56,7 @@ class LegacyTool extends BaseTool<void> {
 
 /** Tool С заполненным redactionAllowlist: issueId и queue объявлены безопасными */
 class AllowlistedTool extends LegacyTool {
-  static override METADATA = {
+  static override METADATA: StaticToolMetadata = {
     ...LegacyTool.METADATA,
     name: 'allowlisted_tool',
     redactionAllowlist: ['issueId', 'queue'] as const,
