@@ -1,9 +1,7 @@
 // tests/unit/wiki_api/api_operations/attachment/upload-attachment.operation.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  UploadAttachmentOperation,
-  MAX_ATTACHMENT_SIZE,
-} from '#wiki_api/api_operations/attachment/upload-attachment.operation.js';
+import { UploadAttachmentOperation } from '#wiki_api/api_operations/attachment/upload-attachment.operation.js';
+import { MAX_ATTACHMENT_SIZE } from '#constants';
 import { createMockHttpClient, createMockCacheManager, createMockLogger } from '#helpers/index.js';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure';
 import type { Attachment } from '../../../../../src/wiki_api/entities/index.js';

@@ -20,7 +20,6 @@ src/tracker_api/utils/
 ├── tracker-paginator.util.ts   # TrackerPaginator
 ├── cursor-codec.util.ts        # CursorCodec (opaque-курсор)
 ├── item-budget.util.ts         # ItemBudget (общий бюджет batch)
-├── paginated-field-filter.util.ts  # paginatedFieldFilter
 ├── strip-host.util.ts          # stripTrackerHost
 ├── file-upload.util.ts         # FileUploadUtil
 ├── file-download.util.ts       # FileDownloadUtil

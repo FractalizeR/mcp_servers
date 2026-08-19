@@ -29,13 +29,14 @@
  * Ни create/abort/get/upload_part/finish НЕ выставлены отдельными MCP tools —
  * агент не может создать сессию и бросить её висеть незавершённой.
  *
- * ОГРАНИЧЕНИЕ РАЗМЕРА: 10 МБ (см. MAX_FILE_SIZE) — тот же порог, что и у
+ * ОГРАНИЧЕНИЕ РАЗМЕРА: 10 МБ (см. MAX_ATTACHMENT_SIZE в src/constants.ts) — тот же порог, что и у
  * Трекера (`UploadAttachmentOperation.DEFAULT_MAX_FILE_SIZE`), с запасом
  * ниже документированного потолка одной части API (16 МБ). Файлы крупнее не
  * поддержаны этой операцией намеренно — не multipart-цикл, а одна часть.
  */
 
 import { BaseOperation } from '../base-operation.js';
+import { MAX_ATTACHMENT_SIZE } from '#constants';
 import type { Attachment, AttachFileResponse } from '#wiki_api/entities/index.js';
 
 export interface UploadAttachmentParams {
@@ -47,9 +48,6 @@ export interface UploadAttachmentParams {
 interface UploadSessionResponse {
   readonly session_id: string;
 }
-
-/** 10 МБ — см. заголовок файла про ограничение размера. */
-export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 
 export class UploadAttachmentOperation extends BaseOperation {
   async execute(params: UploadAttachmentParams): Promise<Attachment> {
