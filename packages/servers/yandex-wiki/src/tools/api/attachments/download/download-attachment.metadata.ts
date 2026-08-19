@@ -24,8 +24,13 @@ export const DOWNLOAD_ATTACHMENT_TOOL_METADATA: StaticToolMetadata = {
   redactionAllowlist: ['idx', 'file_id'],
   title: 'Скачать вложение',
   outputSchema: buildOutputSchema(DownloadAttachmentOutputDataSchema),
+  // readOnlyHint: false — синхронизация с yandex-tracker (пакет 3.1.G): readOnlyHint
+  // в спеке MCP означает «не меняет своё окружение», а `saveToPath` пишет файл на
+  // диск пользователя — это меняет окружение клиента, даже если состояние самой Вики
+  // не затрагивается. Клиент, доверяющий аннотации, мог бы авто-одобрить запись на
+  // диск без подтверждения.
   annotations: {
-    readOnlyHint: true,
+    readOnlyHint: false,
     destructiveHint: false,
     idempotentHint: true,
     openWorldHint: true,
