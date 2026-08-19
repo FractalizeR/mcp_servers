@@ -74,18 +74,20 @@ describe('GetCommentsOperation', () => {
   describe('execute (single-page mode)', () => {
     it('should call correct endpoint and return PaginatedResult', async () => {
       const comments = [makeComment('1')];
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments', comments);
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments?perPage=50', comments);
 
       const result = await operation.execute('TEST-1');
 
       expect(result.items).toEqual(comments);
       expect(mockHttpClient.getRequestHistory()).toContainEqual(
-        expect.objectContaining({ method: 'GET', path: '/v3/issues/TEST-1/comments' })
+        expect.objectContaining({ method: 'GET', path: '/v3/issues/TEST-1/comments?perPage=50' })
       );
     });
 
     it('should report hasNextPage=false / fetchedAll=true without Link header', async () => {
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments', [makeComment('1')]);
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments?perPage=50', [
+        makeComment('1'),
+      ]);
 
       const result = await operation.execute('TEST-1');
 
@@ -95,11 +97,33 @@ describe('GetCommentsOperation', () => {
       expect(result.pagination.pagesFetched).toBe(1);
     });
 
-    it('should report hasNextPage=true when Link rel=next present', async () => {
+    it('РЕГРЕССИЯ (план 3.3/3.4): без явного perPage, один комментарий, Link rel=next всё равно есть → hasNextPage=false', async () => {
+      // Точное воспроизведение живого симптома плана 3.3: get_comments вызван
+      // без perPage, у задачи один комментарий, Трекер всё равно отдаёт
+      // Link rel="next". До пакета 3.4 hasNextPage ложно оставался true
+      // (perPage не долетал до buildMeta). Теперь операция сама шлёт
+      // DEFAULT_PER_PAGE=50 явно, sanity-check (F3) сравнивает 1 < 50 и
+      // гасит hasNextPage — симптом исправлен.
       mockHttpClient.setResponse(
         'GET',
-        '/v3/issues/TEST-1/comments',
+        '/v3/issues/TEST-1/comments?perPage=50',
         [makeComment('1')],
+        nextLink(2)
+      );
+
+      const result = await operation.execute('TEST-1');
+
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+    });
+
+    it('should report hasNextPage=true when the page is exactly full (perPage elements) and Link rel=next present', async () => {
+      const fullPage = Array.from({ length: 50 }, (_, i) => makeComment(String(i + 1)));
+      mockHttpClient.setResponse(
+        'GET',
+        '/v3/issues/TEST-1/comments?perPage=50',
+        fullPage,
         nextLink(2)
       );
 
@@ -124,19 +148,25 @@ describe('GetCommentsOperation', () => {
     });
 
     it('should pass expand parameter to endpoint', async () => {
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-2/comments?expand=attachments', []);
+      mockHttpClient.setResponse(
+        'GET',
+        '/v3/issues/TEST-2/comments?perPage=50&expand=attachments',
+        []
+      );
 
       const input: GetCommentsInput = { expand: 'attachments' };
       await operation.execute('TEST-2', input);
 
       expect(mockHttpClient.getRequestHistory()).toContainEqual(
-        expect.objectContaining({ path: '/v3/issues/TEST-2/comments?expand=attachments' })
+        expect.objectContaining({
+          path: '/v3/issues/TEST-2/comments?perPage=50&expand=attachments',
+        })
       );
     });
 
     it('should normalize non-array response to array', async () => {
       const single = makeComment('1', 'Single comment');
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments', single);
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments?perPage=50', single);
 
       const result = await operation.execute('TEST-1');
 
@@ -150,14 +180,16 @@ describe('GetCommentsOperation', () => {
     });
 
     it('exposes nextCursor decoding to the next-URL path (Link rel=next by id)', async () => {
+      // perPage=1 явно передан агентом и совпадает с числом элементов
+      // страницы — sanity-check (F3) не гасит hasNextPage/nextCursor.
       mockHttpClient.setResponse(
         'GET',
-        '/v3/issues/TEST-1/comments',
+        '/v3/issues/TEST-1/comments?perPage=1',
         [makeComment('1')],
         nextLinkById('NEXT')
       );
 
-      const result = await operation.execute('TEST-1');
+      const result = await operation.execute('TEST-1', { perPage: 1 });
 
       expect(result.pagination.nextCursor).toBeDefined();
       const decoded = CursorCodec.decode(result.pagination.nextCursor!, CURSOR_TAGS.comments);
@@ -166,10 +198,15 @@ describe('GetCommentsOperation', () => {
 
     it('does NOT emit total/totalPages without rel=seek (X-Total-* present)', async () => {
       // Регрессия: раньше X-Total-Pages рисовал ложный totalPages даже без seek.
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments', [makeComment('1')], {
-        'x-total-count': '42',
-        'x-total-pages': '5',
-      });
+      mockHttpClient.setResponse(
+        'GET',
+        '/v3/issues/TEST-1/comments?perPage=50',
+        [makeComment('1')],
+        {
+          'x-total-count': '42',
+          'x-total-pages': '5',
+        }
+      );
 
       const result = await operation.execute('TEST-1');
 
@@ -180,17 +217,19 @@ describe('GetCommentsOperation', () => {
 
   describe('execute (cursor mode)', () => {
     it('paginates via cursor: nextCursor → request next page → next records', async () => {
-      // Первая страница отдаёт Link rel=next по id-курсору.
+      // Первая страница отдаёт Link rel=next по id-курсору; perPage=1 явно
+      // передан и совпадает с числом элементов — hasNextPage/nextCursor не
+      // гасятся sanity-check'ом (F3).
       mockHttpClient.setResponse(
         'GET',
-        '/v3/issues/TEST-1/comments',
+        '/v3/issues/TEST-1/comments?perPage=1',
         [makeComment('1')],
         nextLinkById('NEXT')
       );
       // Декодированный путь курсора возвращает следующие записи.
       mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments?id=NEXT', [makeComment('2')]);
 
-      const firstPage = await operation.execute('TEST-1');
+      const firstPage = await operation.execute('TEST-1', { perPage: 1 });
       const cursor = firstPage.pagination.nextCursor;
       expect(cursor).toBeDefined();
 
@@ -252,8 +291,12 @@ describe('GetCommentsOperation', () => {
 
   describe('executeMany', () => {
     it('should get comments for multiple issues returning PaginatedResult', async () => {
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments', [makeComment('1')]);
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-2/comments', [makeComment('2')]);
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments?perPage=50', [
+        makeComment('1'),
+      ]);
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-2/comments?perPage=50', [
+        makeComment('2'),
+      ]);
 
       const result = await operation.executeMany(['TEST-1', 'TEST-2']);
 
@@ -271,7 +314,9 @@ describe('GetCommentsOperation', () => {
     });
 
     it('should handle partial failures', async () => {
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments', [makeComment('1')]);
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments?perPage=50', [
+        makeComment('1'),
+      ]);
       // TEST-2 не сконфигурирован → MockHttpClient отклонит
 
       const result = await operation.executeMany(['TEST-1', 'TEST-2']);
@@ -289,8 +334,8 @@ describe('GetCommentsOperation', () => {
     });
 
     it('should log batch operation start', async () => {
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments', []);
-      mockHttpClient.setResponse('GET', '/v3/issues/TEST-2/comments', []);
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-1/comments?perPage=50', []);
+      mockHttpClient.setResponse('GET', '/v3/issues/TEST-2/comments?perPage=50', []);
 
       await operation.executeMany(['TEST-1', 'TEST-2']);
 

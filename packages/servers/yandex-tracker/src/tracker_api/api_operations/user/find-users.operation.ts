@@ -12,6 +12,7 @@ import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import {
   TrackerPaginator,
   DEFAULT_MAX_PER_PAGE,
+  DEFAULT_PER_PAGE,
   CursorCodec,
   CURSOR_TAGS,
 } from '#tracker_api/utils/index.js';
@@ -21,14 +22,18 @@ import type { PaginatedResult } from '#tracker_api/entities/index.js';
 
 export class FindUsersOperation extends BaseOperation {
   async execute(params: FindUsersDto = {}): Promise<PaginatedResult<UserWithUnknownFields>> {
-    const { perPage = 50, cursor, fetchAll, maxItems } = params;
+    // НАШ явный дефолт DEFAULT_PER_PAGE, когда агент не передал perPage —
+    // чтобы perPage всегда был известен buildMeta (F3-sanity-check).
+    const { perPage = DEFAULT_PER_PAGE, cursor, fetchAll, maxItems } = params;
 
     if (cursor !== undefined) {
       const { path } = CursorCodec.decode(cursor, CURSOR_TAGS.users);
       this.logger.info('Получение списка пользователей (cursor)');
       const response = await this.httpClient.getWithResponse<UserWithUnknownFields[]>(path);
+      const cursorPerPage = TrackerPaginator.perPageFromPath(path);
       return TrackerPaginator.singlePage<UserWithUnknownFields>(response, {
         tag: CURSOR_TAGS.users,
+        ...(cursorPerPage !== undefined ? { perPage: cursorPerPage } : {}),
       });
     }
 

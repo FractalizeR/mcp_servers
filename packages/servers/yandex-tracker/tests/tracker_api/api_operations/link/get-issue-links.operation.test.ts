@@ -52,7 +52,7 @@ describe('GetIssueLinksOperation', () => {
 
   describe('execute (batch, single page)', () => {
     it('возвращает BatchResult с PaginatedResult; без Link → fetchedAll=true', async () => {
-      httpClient.setResponse('GET', '/v3/issues/TEST-1/links', createLinkListFixture(3));
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/links?perPage=50', createLinkListFixture(3));
 
       const results = await operation.execute(['TEST-1']);
 
@@ -65,20 +65,47 @@ describe('GetIssueLinksOperation', () => {
       }
     });
 
-    it('при наличии Link rel=next → hasNextPage=true', async () => {
-      httpClient.setResponse('GET', '/v3/issues/TEST-1/links', createLinkListFixture(1), {
-        link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/links?page=2>; rel="next"',
-      });
+    it('РЕГРЕССИЯ (план 3.3/3.4): без явного perPage, одна связь, Link rel=next всё равно есть → hasNextPage=false', async () => {
+      httpClient.setResponse(
+        'GET',
+        '/v3/issues/TEST-1/links?perPage=50',
+        createLinkListFixture(1),
+        {
+          link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/links?page=2>; rel="next"',
+        }
+      );
+
+      const results = await operation.execute(['TEST-1']);
+
+      if (results[0].status === 'fulfilled') {
+        expect(results[0].value.pagination.hasNextPage).toBe(false);
+        expect(results[0].value.pagination.fetchedAll).toBe(true);
+      } else {
+        throw new Error('expected fulfilled');
+      }
+    });
+
+    it('при заполненной ровно до perPage странице + Link rel=next → hasNextPage=true', async () => {
+      httpClient.setResponse(
+        'GET',
+        '/v3/issues/TEST-1/links?perPage=50',
+        createLinkListFixture(50),
+        {
+          link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/links?page=2>; rel="next"',
+        }
+      );
 
       const results = await operation.execute(['TEST-1']);
 
       if (results[0].status === 'fulfilled') {
         expect(results[0].value.pagination.hasNextPage).toBe(true);
+      } else {
+        throw new Error('expected fulfilled');
       }
     });
 
     it('обрабатывает несколько задач и частичные ошибки', async () => {
-      httpClient.setResponse('GET', '/v3/issues/TEST-1/links', createLinkListFixture(2));
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/links?perPage=50', createLinkListFixture(2));
       // TEST-2 не замокан → rejected
 
       const results = await operation.execute(['TEST-1', 'TEST-2']);
@@ -140,12 +167,14 @@ describe('GetIssueLinksOperation', () => {
 
   describe('cursor pagination', () => {
     it('single-page выдаёт nextCursor, декодирование ведёт по next-пути', async () => {
-      // Первая страница: есть Link rel=next → nextCursor определён.
-      httpClient.setResponse('GET', '/v3/issues/TEST-1/links', createLinkListFixture(1), {
+      // Первая страница: есть Link rel=next → nextCursor определён. perPage=1
+      // явно передан и совпадает с числом элементов — sanity-check (F3) не
+      // гасит hasNextPage/nextCursor.
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/links?perPage=1', createLinkListFixture(1), {
         link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/links?id=NEXT>; rel="next"',
       });
 
-      const first = await operation.execute(['TEST-1']);
+      const first = await operation.execute(['TEST-1'], { perPage: 1 });
       expect(first[0].status).toBe('fulfilled');
       if (first[0].status !== 'fulfilled') {
         return;
@@ -203,7 +232,7 @@ describe('GetIssueLinksOperation', () => {
     });
 
     it('базовый запрос (без cursor) использует кеш', async () => {
-      httpClient.setResponse('GET', '/v3/issues/TEST-1/links', createLinkListFixture(1));
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/links?perPage=50', createLinkListFixture(1));
 
       await operation.execute(['TEST-1']);
 

@@ -26,6 +26,7 @@ import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
 import {
   TrackerPaginator,
   DEFAULT_MAX_PER_PAGE,
+  DEFAULT_PER_PAGE,
   ItemBudget,
   DEFAULT_MAX_TOTAL_ITEMS,
   CursorCodec,
@@ -124,32 +125,41 @@ export class GetIssueChangelogOperation extends BaseOperation {
     input: GetIssueChangelogInputDto,
     budget?: ItemBudget
   ): Promise<PaginatedResult<ChangelogEntryWithUnknownFields>> {
-    // Курсор: один запрос по декодированному пути (perPage уже в нём).
+    // Курсор: один запрос по декодированному пути (perPage уже в нём — его
+    // положила туда явным query-параметром первая страница, см.
+    // DEFAULT_PER_PAGE). Извлекаем его из пути, иначе buildMeta не смог бы
+    // применить sanity-проверку (F3) ко 2-й и последующим страницам.
     if (input.cursor !== undefined) {
       const { path } = CursorCodec.decodeForIssue(input.cursor, CURSOR_TAGS.changelog, issueKey);
       const response =
         await this.httpClient.getWithResponse<ChangelogEntryWithUnknownFields[]>(path);
-      const single = TrackerPaginator.singlePage(response, { tag: CURSOR_TAGS.changelog });
+      const cursorPerPage = TrackerPaginator.perPageFromPath(path);
+      const single = TrackerPaginator.singlePage(response, {
+        tag: CURSOR_TAGS.changelog,
+        ...(cursorPerPage !== undefined ? { perPage: cursorPerPage } : {}),
+      });
       this.logger.debug(
         `История изменений для ${issueKey} (cursor): ${single.items.length} записей`
       );
       return single;
     }
 
-    // В режиме fetchAll поднимаем perPage к рекомендуемому максимуму (меньше round-trip'ов).
+    // В режиме fetchAll поднимаем perPage к рекомендуемому максимуму (меньше
+    // round-trip'ов). Вне fetchAll — НАШ явный дефолт DEFAULT_PER_PAGE (см.
+    // JSDoc константы): без него perPage остаётся неизвестен buildMeta, и
+    // sanity-проверка (F3) не может отличить «следующей страницы нет» от
+    // «Трекер всегда шлёт Link rel=next на курсорных ручках».
     const effectivePerPage =
-      input.fetchAll === true ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
+      input.perPage ?? (input.fetchAll === true ? DEFAULT_MAX_PER_PAGE : DEFAULT_PER_PAGE);
 
-    const path = this.buildPath(issueKey, {
-      ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
-    });
+    const path = this.buildPath(issueKey, { perPage: effectivePerPage });
 
     const first = await this.httpClient.getWithResponse<ChangelogEntryWithUnknownFields[]>(path);
 
     if (input.fetchAll !== true) {
       const single = TrackerPaginator.singlePage(first, {
         tag: CURSOR_TAGS.changelog,
-        ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+        perPage: effectivePerPage,
       });
       this.logger.debug(`История изменений для ${issueKey}: ${single.items.length} записей`);
       return single;
@@ -160,7 +170,7 @@ export class GetIssueChangelogOperation extends BaseOperation {
       requestNext: (p) => this.httpClient.getWithResponse<ChangelogEntryWithUnknownFields[]>(p),
       tag: CURSOR_TAGS.changelog,
       ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-      ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+      perPage: effectivePerPage,
       ...(budget !== undefined ? { budget } : {}),
       onError: (error, pagesFetched) =>
         this.logger.warn(`Частичный отказ при обходе истории ${issueKey}`, {

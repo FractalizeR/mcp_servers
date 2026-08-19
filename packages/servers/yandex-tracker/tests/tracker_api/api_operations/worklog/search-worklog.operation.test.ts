@@ -54,7 +54,9 @@ describe('SearchWorklogOperation', () => {
     });
 
     expect(mockHttpClient.postWithResponse).toHaveBeenCalledWith(
-      '/v3/worklog/_search',
+      // Без явного perPage операция шлёт НАШ явный дефолт DEFAULT_PER_PAGE=50
+      // (см. tracker-paginator.util.ts), чтобы perPage был известен buildMeta.
+      '/v3/worklog/_search?perPage=50',
       {
         createdBy: 'ivanov',
         createdAt: { from: '2026-08-01T00:00:00.000+0000', to: '2026-08-14T00:00:00.000+0000' },
@@ -71,7 +73,7 @@ describe('SearchWorklogOperation', () => {
     await operation.execute({});
 
     expect(mockHttpClient.postWithResponse).toHaveBeenCalledWith(
-      '/v3/worklog/_search',
+      '/v3/worklog/_search?perPage=50',
       {},
       undefined,
       true

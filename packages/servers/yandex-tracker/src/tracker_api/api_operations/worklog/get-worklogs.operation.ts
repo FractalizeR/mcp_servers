@@ -15,6 +15,7 @@ import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
 import {
   TrackerPaginator,
   DEFAULT_MAX_PER_PAGE,
+  DEFAULT_PER_PAGE,
   ItemBudget,
   DEFAULT_MAX_TOTAL_ITEMS,
   CursorCodec,
@@ -69,8 +70,10 @@ export class GetWorklogsOperation extends BaseOperation {
     if (input.cursor !== undefined) {
       const { path } = CursorCodec.decodeForIssue(input.cursor, CURSOR_TAGS.worklog, issueId);
       const resp = await this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(path);
+      const cursorPerPage = TrackerPaginator.perPageFromPath(path);
       const cursorResult = TrackerPaginator.singlePage<WorklogWithUnknownFields>(resp, {
         tag: CURSOR_TAGS.worklog,
+        ...(cursorPerPage !== undefined ? { perPage: cursorPerPage } : {}),
       });
       this.logger.info(
         `Получено ${cursorResult.items.length} записей времени для задачи ${issueId} (cursor)`
@@ -79,7 +82,9 @@ export class GetWorklogsOperation extends BaseOperation {
     }
 
     const fetchAll = input.fetchAll === true;
-    const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
+    // Вне fetchAll — НАШ явный дефолт DEFAULT_PER_PAGE, чтобы perPage всегда
+    // был известен buildMeta (F3-sanity-check).
+    const effectivePerPage = input.perPage ?? (fetchAll ? DEFAULT_MAX_PER_PAGE : DEFAULT_PER_PAGE);
     const path = this.buildPath(issueId, effectivePerPage);
 
     const first = await this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(path);
@@ -90,12 +95,12 @@ export class GetWorklogsOperation extends BaseOperation {
           requestNext: (p) => this.httpClient.getWithResponse<WorklogWithUnknownFields[]>(p),
           tag: CURSOR_TAGS.worklog,
           ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-          ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+          perPage: effectivePerPage,
           ...(budget !== undefined ? { budget } : {}),
         })
       : TrackerPaginator.singlePage<WorklogWithUnknownFields>(first, {
           tag: CURSOR_TAGS.worklog,
-          ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
+          perPage: effectivePerPage,
         });
 
     this.logger.info(`Получено ${result.items.length} записей времени для задачи ${issueId}`);

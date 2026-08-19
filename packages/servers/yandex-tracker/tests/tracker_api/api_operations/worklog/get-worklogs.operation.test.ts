@@ -65,7 +65,7 @@ describe('GetWorklogsOperation', () => {
 
   describe('execute (single page)', () => {
     it('возвращает одну страницу без Link → hasNextPage=false, fetchedAll=true', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')]);
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?perPage=50', [makeWorklog('1')]);
 
       const result = await operation.execute('TEST-1');
 
@@ -75,8 +75,20 @@ describe('GetWorklogsOperation', () => {
       expect(result.pagination.pagesFetched).toBe(1);
     });
 
-    it('при наличии Link rel=next → hasNextPage=true', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')], {
+    it('РЕГРЕССИЯ (план 3.3/3.4): без явного perPage, одна запись, Link rel=next всё равно есть → hasNextPage=false', async () => {
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?perPage=50', [makeWorklog('1')], {
+        link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/worklog?page=2>; rel="next"',
+      });
+
+      const result = await operation.execute('TEST-1');
+
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+    });
+
+    it('при заполненной ровно до perPage странице + Link rel=next → hasNextPage=true', async () => {
+      const fullPage = Array.from({ length: 50 }, (_, i) => makeWorklog(String(i + 1)));
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?perPage=50', fullPage, {
         link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/worklog?page=2>; rel="next"',
       });
 
@@ -143,8 +155,8 @@ describe('GetWorklogsOperation', () => {
 
   describe('executeMany', () => {
     it('возвращает BatchResult с PaginatedResult в value', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')]);
-      httpClient.setResponse('GET', '/v2/issues/TEST-2/worklog', [makeWorklog('2')]);
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?perPage=50', [makeWorklog('1')]);
+      httpClient.setResponse('GET', '/v2/issues/TEST-2/worklog?perPage=50', [makeWorklog('2')]);
 
       const results = await operation.executeMany(['TEST-1', 'TEST-2']);
 
@@ -157,7 +169,7 @@ describe('GetWorklogsOperation', () => {
     });
 
     it('обрабатывает частичные ошибки', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')]);
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?perPage=50', [makeWorklog('1')]);
       // TEST-2 не замокан → reject
 
       const results = await operation.executeMany(['TEST-1', 'TEST-2']);
@@ -179,12 +191,14 @@ describe('GetWorklogsOperation', () => {
 
   describe('cursor pagination', () => {
     it('single-page выдаёт nextCursor, декодирование ведёт по next-пути', async () => {
-      // Первая страница: есть Link rel=next → nextCursor определён.
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog', [makeWorklog('1')], {
+      // Первая страница: есть Link rel=next → nextCursor определён. perPage=1
+      // явно передан и совпадает с числом элементов — sanity-check (F3) не
+      // гасит hasNextPage/nextCursor.
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/worklog?perPage=1', [makeWorklog('1')], {
         link: '<https://api.tracker.yandex.net/v2/issues/TEST-1/worklog?id=NEXT>; rel="next"',
       });
 
-      const first = await operation.execute('TEST-1');
+      const first = await operation.execute('TEST-1', { perPage: 1 });
       const nextCursor = first.pagination.nextCursor;
       expect(nextCursor).toBeDefined();
 

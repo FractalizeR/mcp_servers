@@ -353,6 +353,104 @@ describe('TrackerPaginator', () => {
     });
   });
 
+  // --- sanity-check hasNextPage (F3): Трекер на курсорных ручках отдаёт
+  // Link rel="next" ВСЕГДА, даже когда следующая страница пуста. См. симптом
+  // в плане 3.3: get_comments стабильно возвращал count:1, hasNextPage:true. ---
+  describe('singlePage sanity-check hasNextPage vs perPage (F3)', () => {
+    it('элементов меньше perPage + есть Link → hasNextPage=false, но nextCursor ВСЁ РАВНО присутствует (находка №3)', () => {
+      // Находка №3 (MAJOR, внешнее ревью 2026-08): инвариант "nextCursor ⟺
+      // hasNextPage" ЗАМЕНЁН на "nextCursor присутствует при реальном Link
+      // rel=next, независимо от sanity-эвристики hasNextPage". Раньше этот
+      // тест фиксировал старое (ошибочное) поведение — подавление курсора
+      // вместе с hasNextPage делало потерю данных необнаружимой, если
+      // эвристика perPage-сравнения ошиблась (сервер клампит perPage или
+      // отдаёт неполную страницу из-за прав — подтверждено вживую на
+      // /v2/issues/{id}/checklistItems). Курсору можно доверять — он от
+      // сервера, а не из эвристики.
+      const result = TrackerPaginator.singlePage(
+        envelope([{ id: 1 }], linkNext('/v3/issues/A-1/comments?id=5&perPage=50')),
+        { perPage: 50, tag: CURSOR_TAGS.comments }
+      );
+
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+      expect(result.pagination.nextCursor).toBeDefined();
+      expect(
+        CursorCodec.decode(result.pagination.nextCursor as string, CURSOR_TAGS.comments).path
+      ).toBe('/v3/issues/A-1/comments?id=5&perPage=50');
+    });
+
+    it('элементов ровно perPage + есть Link → hasNextPage=true, nextCursor есть', () => {
+      const data = Array.from({ length: 50 }, (_, i) => ({ id: i }));
+      const result = TrackerPaginator.singlePage(
+        envelope(data, linkNext('/v3/issues/A-1/comments?id=50&perPage=50')),
+        { perPage: 50, tag: CURSOR_TAGS.comments }
+      );
+
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(result.pagination.fetchedAll).toBe(false);
+      expect(result.pagination.nextCursor).toBeDefined();
+    });
+
+    it('truncated=true держит hasNextPage=true независимо от числа элементов страницы', async () => {
+      // budget=1 режет первую же страницу из 1 элемента (< perPage) —
+      // truncated обязан переопределить sanity-check, это обрыв по лимиту,
+      // а не признак «страница неполная сама по себе».
+      const budget = new ItemBudget(1);
+      const result = await TrackerPaginator.fetchAllPages({
+        firstResponse: envelope([{ id: 1 }], linkNext('/v3/issues/A-1/comments?id=5')),
+        requestNext: vi.fn(),
+        perPage: 50,
+        budget,
+      });
+
+      expect(result.pagination.truncated).toBe(true);
+      expect(result.pagination.hasNextPage).toBe(true);
+    });
+
+    it('perPage не задан (дефолт API неизвестен) → sanity-check не применяется, legacy-поведение сохраняется', () => {
+      // ВАЖНО: это не «исправлено», а зафиксированное текущее поведение.
+      // Настоящий дефолт perPage у Яндекс.Трекера для /v3/issues/{id}/comments
+      // НЕ задокументирован ни в этом клиенте, ни в референсном
+      // yandex_tracker_client/ (проверено — per_page/perPage там всегда
+      // опциональны, без значения по умолчанию), и WebFetch-проверка внешней
+      // документации дала противоречивые ответы (одна попытка сообщила «50 по
+      // умолчанию», повторный дословный запрос той же страницы это не
+      // подтвердил) — считать недостоверным. Без реального numeric perPage
+      // sanity-check (F3) сравнивать не с чем: применяется прежняя логика
+      // (только Link/truncated). Это ЗНАЧИТ, что для вызовов без явного
+      // perPage (ветка по умолчанию в GetCommentsOperation.execute и её
+      // курсорная ветка) симптом из плана 3.3 (count:1, hasNextPage:true)
+      // сохраняется — фикс требует правки вне границ этого пакета
+      // (см. отчёт агента).
+      const result = TrackerPaginator.singlePage(
+        envelope([{ id: 1 }], linkNext('/v3/issues/A-1/comments?id=5')),
+        { tag: CURSOR_TAGS.comments }
+      );
+
+      expect(result.pagination.perPage).toBeUndefined();
+      expect(result.pagination.hasNextPage).toBe(true);
+      expect(result.pagination.nextCursor).toBeDefined();
+    });
+
+    it('РЕГРЕССИЯ (план 3.3): одна страница из одного элемента при наличии Link — get_comments без perPage', () => {
+      // Точное воспроизведение живого симптома: get_comments вызван без
+      // perPage (перПейдж не передан агентом), у задачи один комментарий,
+      // Трекер всё равно отдаёт Link rel="next". Тест документирует, что
+      // simple in-file sanity-check (F3) эту ветку НЕ закрывает — см.
+      // комментарий в тесте выше и отчёт агента с предложением, что менять
+      // вне границ пакета (передача эффективного perPage со стороны
+      // GetCommentsOperation).
+      const result = TrackerPaginator.singlePage(
+        envelope([{ id: 'COMMENT-1' }], linkNext('/v3/issues/PROJ-1/comments?id=1')),
+        { tag: CURSOR_TAGS.comments }
+      );
+
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.hasNextPage).toBe(true); // симптом сохраняется без perPage
+    });
+  });
+
   // --- cursor-режим (этап 1.1): включается передачей tag ---
 
   describe('buildMeta cursor-режим (tag)', () => {
@@ -453,9 +551,11 @@ describe('TrackerPaginator', () => {
 
   describe('singlePage cursor-режим (tag)', () => {
     it('nextCursor из Link rel=next с id= (id-cursor эндпоинт)', () => {
+      // perPage=2 совпадает с числом элементов страницы — sanity-check (F3)
+      // не должен погасить hasNextPage/nextCursor (страница полная).
       const result = TrackerPaginator.singlePage(
         envelope([1, 2], linkNext('/v3/issues/A-1/comments?id=99&perPage=50')),
-        { perPage: 50, tag: CURSOR_TAGS.comments }
+        { perPage: 2, tag: CURSOR_TAGS.comments }
       );
 
       expect(result.pagination.hasNextPage).toBe(true);
@@ -486,9 +586,12 @@ describe('TrackerPaginator', () => {
 
   describe('cursorExtra (хеш тела для find_issues, R2)', () => {
     it('cursorExtra вшивается в nextCursor и извлекается при decode', () => {
+      // perPage=1 совпадает с числом элементов страницы, чтобы sanity-check
+      // (F3) не погасил hasNextPage/nextCursor — тест проверяет cursorExtra,
+      // а не sanity-логику.
       const result = TrackerPaginator.singlePage(
         envelope([1], linkNext('/v3/issues/_search?page=2')),
-        { perPage: 50, tag: CURSOR_TAGS.findIssues, cursorExtra: 'hash-abc' }
+        { perPage: 1, tag: CURSOR_TAGS.findIssues, cursorExtra: 'hash-abc' }
       );
 
       expect(result.pagination.nextCursor).toBeDefined();

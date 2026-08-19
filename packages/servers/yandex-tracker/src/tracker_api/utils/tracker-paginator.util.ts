@@ -37,6 +37,28 @@ export const DEFAULT_MAX_PAGES = 100;
 export const DEFAULT_MAX_PER_PAGE = 100;
 
 /**
+ * НАШ явный дефолт `perPage` для курсорных (не-seek) list-эндпоинтов
+ * (`comments`/`changelog`/`links`/`worklog`/`checklist`/`users`/`worklogSearch`)
+ * в single-page режиме (`fetchAll` не задан), когда агент не передал `perPage`
+ * сам.
+ *
+ * ВАЖНО: это НЕ задокументированный дефолт API Яндекс.Трекера — настоящий
+ * серверный дефолт не подтверждён ни референсным клиентом
+ * (`yandex_tracker_client/`, там `per_page`/`perPage` всегда опциональны без
+ * значения по умолчанию), ни официальной документацией (повторный запрос той
+ * же страницы дал противоречивый ответ — недостоверно, см. план
+ * `.agentic-planning/plan_tracker_tool_fixes/3.3_pagination_sanity_parallel.md`
+ * и пакет 3.4 того же плана). Раз угадать нельзя, значение — наш осознанный
+ * выбор, и операции ОБЯЗАНЫ слать его ЯВНО в каждом запросе (а не полагаться
+ * на дефолт сервера), чтобы `perPage` был всегда известен `buildMeta` для
+ * sanity-проверки `hasNextPage` (F3, см. `buildMeta` ниже) — без этого при
+ * одном элементе на странице Трекер всё равно шлёт `Link rel="next"`, и
+ * `hasNextPage` ложно остаётся `true` (симптом плана 3.3/3.4: `get_comments`
+ * без явного `perPage` стабильно отдавал `count:1, hasNextPage:true`).
+ */
+export const DEFAULT_PER_PAGE = 50;
+
+/**
  * Входные данные для сборки `PaginationMeta`.
  */
 export interface BuildMetaInput {
@@ -52,6 +74,22 @@ export interface BuildMetaInput {
   readonly nextUrl?: string | undefined;
   /** Размер страницы (если применимо к запросу). */
   readonly perPage?: number | undefined;
+  /**
+   * Число элементов на последней фактически загруженной странице.
+   *
+   * Используется для sanity-проверки `hasNextPage` (F3): Трекер на
+   * курсорных ручках (`comments` и т.п.) отдаёт `Link rel="next"` ВСЕГДА,
+   * даже когда следующая страница пуста. Если известен запрошенный
+   * `perPage` и страница вернула меньше элементов — следующей страницы
+   * нет, что бы ни говорил заголовок. Без `perPage` сравнивать не с чем,
+   * применяется легаси-логика (только `Link`/`truncated`).
+   *
+   * Опционален ради обратной совместимости прямых вызовов `buildMeta` (в
+   * первую очередь тестовых): без него sanity-проверка не применяется
+   * (эквивалентно «страница не короче perPage»), что сохраняет прежнее
+   * поведение до миграции конкретного вызывающего кода.
+   */
+  readonly pageItemCount?: number | undefined;
   /**
    * Тег семейства эндпоинта. При наличии в `nextCursor` кодируется путь
    * следующей страницы (`CursorCodec.encode(path, tag, cursorExtra)`).
@@ -134,18 +172,51 @@ export class TrackerPaginator {
   /**
    * Собрать `PaginationMeta` из заголовков и состояния обхода.
    *
-   * - `hasNextPage`/`nextCursor` выводятся ИСКЛЮЧИТЕЛЬНО из `Link rel="next"`
-   *   (+ `truncated` при срабатывании защитного лимита);
+   * - `hasNextPage` выводится из `Link rel="next"` (+ `truncated` при
+   *   срабатывании защитного лимита) с sanity-поправкой (F3) для НЕ-seek
+   *   курсорных ручек Трекера (`comments`/`changelog`/`links`/`worklog`/
+   *   `checklist`): такие ручки отдают `Link rel="next"` ВСЕГДА, даже когда
+   *   следующая страница пуста. Если известен запрошенный `perPage` и
+   *   страница вернула меньше элементов — следующей страницы нет, что бы ни
+   *   говорил заголовок (`truncated=true` всё равно держит
+   *   `hasNextPage=true` — это обрыв по защитному лимиту, другой смысл).
+   *   Без `perPage` сравнивать не с чем (истинный дефолт API методом самого
+   *   Трекера нам неизвестен и не задокументирован ни в клиенте, ни в
+   *   `yandex_tracker_client/` — легаси-поведение (только `Link`/`truncated`)
+   *   сохраняется без изменений).
+   *   На seekable-эндпоинтах (`rel="seek"` присутствует — queues/projects/
+   *   `_search`) sanity-поправка НЕ применяется: там `X-Total-Count` —
+   *   авторитетный источник (см. seek-gating ниже), и `Link rel="next"` при
+   *   `total > возвращено` корректно сигналит о данных дальше, даже если
+   *   страница короче `perPage` (пример: R8-тест `get-queues.operation` —
+   *   2 записи из 42 при `perPage=50`, но следующая страница реально есть);
    * - `total`/`totalPages` отдаются ТОЛЬКО при `rel="seek"` (seek-gating против
    *   ложного `totalPages` у cursor-эндпоинтов вроде comments);
-   * - `nextCursor` кодируется лишь при наличии `tag` (непагинируемые его не дают).
+   * - `nextCursor` кодируется при наличии `tag` И реального `Link rel="next"`
+   *   в ответе (независимо от sanity-поправки `hasNextPage` — находка №3,
+   *   внешнее ревью 2026-08). Инвариант ИЗМЕНЁН: раньше было `nextCursor` ⟺
+   *   `hasNextPage`, теперь `nextCursor` присутствует ⊇ `hasNextPage`
+   *   (курсор может быть выдан и когда `hasNextPage=false` благодаря
+   *   sanity-поправке). Курсору можно доверять — он приходит от сервера;
+   *   `hasNextPage` — это НАША догадка на основе эвристики perPage-сравнения,
+   *   которая может ошибаться в обе стороны (подтверждено вживую:
+   *   `/v2/issues/{id}/checklistItems` игнорирует `perPage`). Подавлять
+   *   курсор вместе с ложным `hasNextPage=false` означало бы необнаружимую
+   *   потерю данных — агент физически не смог бы дочитать остаток. См.
+   *   обновлённый JSDoc `PaginationMeta.nextCursor`/`hasNextPage`.
    */
   public static buildMeta(input: BuildMetaInput): PaginationMeta {
     const path = input.nextUrl !== undefined ? stripTrackerHost(input.nextUrl) : undefined;
-    const hasNextPage = Boolean(path) || input.truncated;
+    const linkSuggestsNext = Boolean(path);
+    const hasSeek = parseLinkHeader(input.headers['link'])['seek'] !== undefined;
+    const belowRequestedPerPage =
+      !hasSeek &&
+      input.perPage !== undefined &&
+      input.pageItemCount !== undefined &&
+      input.pageItemCount < input.perPage;
+    const hasNextPage = input.truncated || (linkSuggestsNext && !belowRequestedPerPage);
     const fetchedAll = !hasNextPage && !input.hasError;
 
-    const hasSeek = parseLinkHeader(input.headers['link'])['seek'] !== undefined;
     const total = hasSeek
       ? TrackerPaginator.parseIntHeader(input.headers['x-total-count'])
       : undefined;
@@ -153,6 +224,23 @@ export class TrackerPaginator {
       ? TrackerPaginator.parseIntHeader(input.headers['x-total-pages'])
       : undefined;
 
+    // Находка №3 (MAJOR, внешнее ревью 2026-08): `nextCursor` кодируется при
+    // РЕАЛЬНОМ наличии `Link rel="next"` (`path !== undefined`), НЕЗАВИСИМО
+    // от sanity-поправки `hasNextPage` выше. Курсор не врёт — он приходит от
+    // сервера; `hasNextPage`/`belowRequestedPerPage` — это лишь НАША догадка
+    // "следующая страница, вероятно, пуста", основанная на эвристике
+    // perPage-сравнения. Если эвристика ошиблась (сервер клампит perPage
+    // своим потолком, либо отдал неполную страницу из-за прав доступа —
+    // подтверждено вживую: `/v2/issues/{id}/checklistItems` игнорирует
+    // `perPage`, при запрошенном `perPage=1` вернул 4 элемента), старое
+    // поведение (`nextCursor` только при `hasNextPage===true`) молча гасило
+    // курсор ВМЕСТЕ с признаком «есть данные», и агент не мог физически
+    // дочитать остаток — необнаружимая потеря данных ценой дороже одного
+    // лишнего пустого запроса, которым раньше расплачивались за ложный
+    // `hasNextPage:true`. Инвариант "nextCursor ⟺ hasNextPage" ИЗМЕНЁН:
+    // `hasNextPage` — «мы уверены, что дальше есть данные», `nextCursor` —
+    // «вот чем дочитать, если хочешь проверить сам» (см. обновлённый JSDoc
+    // `PaginationMeta.nextCursor` в `pagination.entity.ts`).
     const nextCursor =
       path !== undefined && input.tag !== undefined
         ? CursorCodec.encode(path, input.tag, input.cursorExtra)
@@ -201,6 +289,7 @@ export class TrackerPaginator {
       truncated: false,
       hasError: false,
       nextUrl: next,
+      pageItemCount: response.data.length,
       ...(opts.perPage !== undefined ? { perPage: opts.perPage } : {}),
       ...(opts.tag !== undefined ? { tag: opts.tag } : {}),
       ...(opts.cursorExtra !== undefined ? { cursorExtra: opts.cursorExtra } : {}),
@@ -246,6 +335,11 @@ export class TrackerPaginator {
     let headers = opts.firstResponse.headers;
     let next = TrackerPaginator.nextUrl(headers);
     let hasError = false;
+    // Число элементов последней ФАКТИЧЕСКИ загруженной страницы (для buildMeta,
+    // см. F3-sanity-check). fetchAllPages уже физически проходит страницы до
+    // исчезновения Link, поэтому здесь это в основном для консистентности
+    // сигнатуры buildMeta — hasNextPage тут и так корректен через `truncated`.
+    let lastPageItemCount = opts.firstResponse.data.length;
 
     const limitReached = (): boolean =>
       items.length >= maxItems || (budget !== undefined && budget.remaining <= 0);
@@ -270,6 +364,7 @@ export class TrackerPaginator {
       pagesFetched += 1;
       headers = response.headers;
       next = TrackerPaginator.nextUrl(headers);
+      lastPageItemCount = response.data.length;
     }
 
     // truncated, если остались данные (next) или мы отбросили часть страницы
@@ -289,6 +384,7 @@ export class TrackerPaginator {
       truncated,
       hasError,
       nextUrl: safeNextUrl,
+      pageItemCount: lastPageItemCount,
       ...(opts.perPage !== undefined ? { perPage: opts.perPage } : {}),
       ...(opts.tag !== undefined ? { tag: opts.tag } : {}),
       ...(opts.cursorExtra !== undefined ? { cursorExtra: opts.cursorExtra } : {}),
@@ -302,6 +398,29 @@ export class TrackerPaginator {
    */
   private static nextUrl(headers: ResponseHeaders): string | undefined {
     return parseLinkHeader(headers['link'])['next'];
+  }
+
+  /**
+   * Извлечь `perPage` из query-строки относительного пути (обычно —
+   * декодированный курсор, т.е. путь из `Link rel="next"` предыдущего
+   * ответа).
+   *
+   * Используется в курсорных ветках операций (2-я и последующие страницы),
+   * чтобы `buildMeta` знал `perPage` для sanity-проверки (F3) даже когда сам
+   * вызывающий код явного `perPage` на эту страницу не передавал — путь уже
+   * несёт РЕАЛЬНО применённый API размер страницы (мы сами кладём `perPage`
+   * в запрос первой страницы, см. {@link DEFAULT_PER_PAGE}, и Трекер
+   * сохраняет query-параметры в `Link`). Если параметра нет — `undefined`
+   * (деградация без ошибки: sanity-проверка на этой странице не применяется).
+   */
+  public static perPageFromPath(path: string): number | undefined {
+    const queryString = path.split('?')[1];
+    if (queryString === undefined) {
+      return undefined;
+    }
+    return TrackerPaginator.parseIntHeader(
+      new URLSearchParams(queryString).get('perPage') ?? undefined
+    );
   }
 
   /**

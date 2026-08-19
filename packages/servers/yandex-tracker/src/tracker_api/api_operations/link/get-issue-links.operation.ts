@@ -22,6 +22,7 @@ import { EntityCacheKey, EntityType, ParallelExecutor } from '@fractalizer/mcp-i
 import {
   TrackerPaginator,
   DEFAULT_MAX_PER_PAGE,
+  DEFAULT_PER_PAGE,
   ItemBudget,
   DEFAULT_MAX_TOTAL_ITEMS,
   CursorCodec,
@@ -138,15 +139,19 @@ export class GetIssueLinksOperation extends BaseOperation {
     if (input.cursor !== undefined) {
       const { path } = CursorCodec.decodeForIssue(input.cursor, CURSOR_TAGS.links, issueId);
       const resp = await this.httpClient.getWithResponse<LinkWithUnknownFields[]>(path);
+      const cursorPerPage = TrackerPaginator.perPageFromPath(path);
       const result = TrackerPaginator.singlePage<LinkWithUnknownFields>(resp, {
         tag: CURSOR_TAGS.links,
+        ...(cursorPerPage !== undefined ? { perPage: cursorPerPage } : {}),
       });
       this.logger.debug(`Получено ${result.items.length} связей для задачи ${issueId} (cursor)`);
       return result;
     }
 
     const fetchAll = input.fetchAll === true;
-    const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
+    // Вне fetchAll — НАШ явный дефолт DEFAULT_PER_PAGE (см. JSDoc константы),
+    // чтобы perPage всегда был известен buildMeta (F3-sanity-check).
+    const effectivePerPage = input.perPage ?? (fetchAll ? DEFAULT_MAX_PER_PAGE : DEFAULT_PER_PAGE);
 
     const path = this.buildPath(issueId, effectivePerPage);
     const first = await this.httpClient.getWithResponse<LinkWithUnknownFields[]>(path);
@@ -157,12 +162,12 @@ export class GetIssueLinksOperation extends BaseOperation {
           requestNext: (p) => this.httpClient.getWithResponse<LinkWithUnknownFields[]>(p),
           tag: CURSOR_TAGS.links,
           ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-          ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+          perPage: effectivePerPage,
           ...(budget !== undefined ? { budget } : {}),
         })
       : TrackerPaginator.singlePage<LinkWithUnknownFields>(first, {
           tag: CURSOR_TAGS.links,
-          ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
+          perPage: effectivePerPage,
         });
 
     this.logger.debug(`Получено ${result.items.length} связей для задачи ${issueId}`);

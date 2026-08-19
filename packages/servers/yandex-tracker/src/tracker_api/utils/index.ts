@@ -7,6 +7,7 @@ export {
   DEFAULT_MAX_ITEMS,
   DEFAULT_MAX_PAGES,
   DEFAULT_MAX_PER_PAGE,
+  DEFAULT_PER_PAGE,
 } from './tracker-paginator.util.js';
 export type { BuildMetaInput, FetchAllPagesOptions } from './tracker-paginator.util.js';
 export {

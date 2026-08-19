@@ -16,6 +16,7 @@ import {
   TrackerPaginator,
   ItemBudget,
   DEFAULT_MAX_TOTAL_ITEMS,
+  DEFAULT_PER_PAGE,
   CursorCodec,
   CURSOR_TAGS,
 } from '#tracker_api/utils/index.js';
@@ -67,12 +68,17 @@ export class GetCommentsOperation extends BaseOperation {
     this.logger.info(`Получение комментариев задачи ${issueId}`);
 
     // Курсор: один запрос по декодированному пути (perPage/expand уже в нём).
+    // perPage на этой странице извлекаем из самого пути (его туда положила
+    // первая страница явно, см. DEFAULT_PER_PAGE) — иначе buildMeta не смог
+    // бы применить sanity-проверку (F3) ко 2-й и последующим страницам.
     if (input.cursor !== undefined) {
       const { path } = CursorCodec.decodeForIssue(input.cursor, CURSOR_TAGS.comments, issueId);
       const response = await this.httpClient.getWithResponse<CommentWithUnknownFields[]>(path);
       const normalizedCursor = this.normalizeEnvelope(response);
+      const cursorPerPage = TrackerPaginator.perPageFromPath(path);
       const single = TrackerPaginator.singlePage<CommentWithUnknownFields>(normalizedCursor, {
         tag: CURSOR_TAGS.comments,
+        ...(cursorPerPage !== undefined ? { perPage: cursorPerPage } : {}),
       });
       this.logger.info(
         `Получено ${single.items.length} комментариев для задачи ${issueId} (cursor)`
@@ -82,9 +88,12 @@ export class GetCommentsOperation extends BaseOperation {
 
     // В fetchAll perPage поднимаем к максимуму endpoint'а (comments допускает
     // до 500) ради меньшего числа round-trip'ов; maxItems всё равно режет
-    // финальную выдачу.
+    // финальную выдачу. Вне fetchAll — НАШ явный дефолт DEFAULT_PER_PAGE
+    // (см. JSDoc константы), чтобы perPage всегда был известен buildMeta
+    // (F3-sanity-check) — без этого get_comments без явного perPage ложно
+    // держит hasNextPage=true даже на единственном элементе (план 3.3/3.4).
     const effectivePerPage =
-      input.fetchAll === true ? (input.perPage ?? COMMENTS_MAX_PER_PAGE) : input.perPage;
+      input.perPage ?? (input.fetchAll === true ? COMMENTS_MAX_PER_PAGE : DEFAULT_PER_PAGE);
 
     const path = this.buildPath(issueId, {
       perPage: effectivePerPage,
@@ -106,7 +115,7 @@ export class GetCommentsOperation extends BaseOperation {
               ),
             tag: CURSOR_TAGS.comments,
             ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-            ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+            perPage: effectivePerPage,
             ...(budget !== undefined ? { budget } : {}),
             onError: (error, pagesFetched) => {
               this.logger.warn(
@@ -117,7 +126,7 @@ export class GetCommentsOperation extends BaseOperation {
           })
         : TrackerPaginator.singlePage<CommentWithUnknownFields>(normalized, {
             tag: CURSOR_TAGS.comments,
-            ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
+            perPage: effectivePerPage,
           });
 
     this.logger.info(`Получено ${result.items.length} комментариев для задачи ${issueId}`);

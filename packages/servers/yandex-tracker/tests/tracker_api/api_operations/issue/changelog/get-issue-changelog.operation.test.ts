@@ -73,7 +73,9 @@ describe('GetIssueChangelogOperation (pagination)', () => {
   });
 
   it('single-page без Link → hasNextPage=false, fetchedAll=true', async () => {
-    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog', [makeEntry('1', 'TEST-1')]);
+    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog?perPage=50', [
+      makeEntry('1', 'TEST-1'),
+    ]);
 
     const result = await operation.execute(['TEST-1']);
 
@@ -88,8 +90,35 @@ describe('GetIssueChangelogOperation (pagination)', () => {
     }
   });
 
-  it('single-page с Link rel=next → hasNextPage=true', async () => {
-    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog', [makeEntry('1', 'TEST-1')], {
+  it('РЕГРЕССИЯ (план 3.3/3.4): без явного perPage, одна запись, Link rel=next всё равно есть → hasNextPage=false', async () => {
+    // До пакета 3.4 операция не слала perPage сама, buildMeta не мог свериться
+    // с числом элементов, и hasNextPage ложно оставался true. Теперь операция
+    // всегда шлёт DEFAULT_PER_PAGE=50 явно, поэтому 1 запись < 50 гасит
+    // hasNextPage несмотря на Link — тот же F3-механизм, что и в get_comments.
+    httpClient.setResponse(
+      'GET',
+      '/v3/issues/TEST-1/changelog?perPage=50',
+      [makeEntry('1', 'TEST-1')],
+      {
+        link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/changelog?page=2>; rel="next"',
+      }
+    );
+
+    const result = await operation.execute(['TEST-1']);
+
+    const first = result[0];
+    if (first?.status === 'fulfilled') {
+      expect(first.value.items).toHaveLength(1);
+      expect(first.value.pagination.hasNextPage).toBe(false);
+      expect(first.value.pagination.fetchedAll).toBe(true);
+    } else {
+      throw new Error('expected fulfilled');
+    }
+  });
+
+  it('single-page: страница заполнена ровно до perPage + Link rel=next → hasNextPage=true', async () => {
+    const fullPage = Array.from({ length: 50 }, (_, i) => makeEntry(String(i + 1), 'TEST-1'));
+    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog?perPage=50', fullPage, {
       link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/changelog?page=2>; rel="next"',
     });
 
@@ -124,11 +153,18 @@ describe('GetIssueChangelogOperation (pagination)', () => {
   });
 
   it('single-page с rel=next отдаёт nextCursor, декодируемый в next-путь', async () => {
-    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog', [makeEntry('1', 'TEST-1')], {
-      link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/changelog?id=NEXT>; rel="next"',
-    });
+    // perPage=1 явно передан агентом и совпадает с числом элементов
+    // страницы — sanity-check (F3) не гасит hasNextPage/nextCursor.
+    httpClient.setResponse(
+      'GET',
+      '/v3/issues/TEST-1/changelog?perPage=1',
+      [makeEntry('1', 'TEST-1')],
+      {
+        link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/changelog?id=NEXT>; rel="next"',
+      }
+    );
 
-    const result = await operation.execute(['TEST-1']);
+    const result = await operation.execute(['TEST-1'], { perPage: 1 });
 
     const first = result[0];
     if (first?.status !== 'fulfilled') {
@@ -142,14 +178,21 @@ describe('GetIssueChangelogOperation (pagination)', () => {
   });
 
   it('cursor-режим: листание по nextCursor возвращает следующие записи', async () => {
-    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog', [makeEntry('1', 'TEST-1')], {
-      link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/changelog?id=NEXT>; rel="next"',
-    });
+    // perPage=1 явно передан агентом и совпадает с числом элементов первой
+    // страницы — sanity-check (F3) не гасит hasNextPage/nextCursor.
+    httpClient.setResponse(
+      'GET',
+      '/v3/issues/TEST-1/changelog?perPage=1',
+      [makeEntry('1', 'TEST-1')],
+      {
+        link: '<https://api.tracker.yandex.net/v3/issues/TEST-1/changelog?id=NEXT>; rel="next"',
+      }
+    );
     httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog?id=NEXT', [
       makeEntry('2', 'TEST-1'),
     ]);
 
-    const firstBatch = await operation.execute(['TEST-1']);
+    const firstBatch = await operation.execute(['TEST-1'], { perPage: 1 });
     const first = firstBatch[0];
     if (first?.status !== 'fulfilled') {
       throw new Error('expected fulfilled');
@@ -231,7 +274,9 @@ describe('GetIssueChangelogOperation (pagination)', () => {
   });
 
   it('обрабатывает частичные ошибки (одна задача падает)', async () => {
-    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog', [makeEntry('1', 'TEST-1')]);
+    httpClient.setResponse('GET', '/v3/issues/TEST-1/changelog?perPage=50', [
+      makeEntry('1', 'TEST-1'),
+    ]);
     // Для INVALID-999 мок-ответ не настроен → reject
 
     const result = await operation.execute(['TEST-1', 'INVALID-999']);
@@ -242,13 +287,15 @@ describe('GetIssueChangelogOperation (pagination)', () => {
   });
 
   it('использует getWithResponse по корректному пути', async () => {
-    httpClient.setResponse('GET', '/v3/issues/TEST-123/changelog', []);
+    httpClient.setResponse('GET', '/v3/issues/TEST-123/changelog?perPage=50', []);
 
     await operation.execute(['TEST-123']);
 
     const history = httpClient.getRequestHistory();
     expect(
-      history.some((r) => r.method === 'GET' && r.path === '/v3/issues/TEST-123/changelog')
+      history.some(
+        (r) => r.method === 'GET' && r.path === '/v3/issues/TEST-123/changelog?perPage=50'
+      )
     ).toBe(true);
   });
 });

@@ -10,7 +10,12 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
-import { TrackerPaginator, CursorCodec, CURSOR_TAGS } from '#tracker_api/utils/index.js';
+import {
+  TrackerPaginator,
+  CursorCodec,
+  CURSOR_TAGS,
+  DEFAULT_PER_PAGE,
+} from '#tracker_api/utils/index.js';
 import type { SearchWorklogDto } from '#tracker_api/dto/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
@@ -28,7 +33,10 @@ export class SearchWorklogOperation extends BaseOperation {
     });
 
     const body = this.buildRequestBody(params);
-    const endpoint = this.buildEndpoint(params.perPage);
+    // НАШ явный дефолт DEFAULT_PER_PAGE, когда агент не передал perPage —
+    // чтобы perPage всегда был известен buildMeta (F3-sanity-check).
+    const effectivePerPage = params.perPage ?? DEFAULT_PER_PAGE;
+    const endpoint = this.buildEndpoint(effectivePerPage);
 
     // idempotencyDeclared: true — POST `_search` только читает.
     const first = await this.httpClient.postWithResponse<WorklogWithUnknownFields[]>(
@@ -41,7 +49,7 @@ export class SearchWorklogOperation extends BaseOperation {
     if (params.fetchAll !== true) {
       return TrackerPaginator.singlePage(first, {
         tag: CURSOR_TAGS.worklogSearch,
-        ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+        perPage: effectivePerPage,
       });
     }
 
@@ -51,7 +59,7 @@ export class SearchWorklogOperation extends BaseOperation {
         this.httpClient.postWithResponse<WorklogWithUnknownFields[]>(path, body, undefined, true),
       tag: CURSOR_TAGS.worklogSearch,
       ...(params.maxItems !== undefined ? { maxItems: params.maxItems } : {}),
-      ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+      perPage: effectivePerPage,
       onError: (error, pagesFetched) =>
         this.logger.warn('Частичный отказ при обходе страниц поиска worklog', {
           error,
@@ -73,7 +81,11 @@ export class SearchWorklogOperation extends BaseOperation {
       true
     );
 
-    return TrackerPaginator.singlePage(resp, { tag: CURSOR_TAGS.worklogSearch });
+    const cursorPerPage = TrackerPaginator.perPageFromPath(path);
+    return TrackerPaginator.singlePage(resp, {
+      tag: CURSOR_TAGS.worklogSearch,
+      ...(cursorPerPage !== undefined ? { perPage: cursorPerPage } : {}),
+    });
   }
 
   private buildRequestBody(params: SearchWorklogDto): Record<string, unknown> {
