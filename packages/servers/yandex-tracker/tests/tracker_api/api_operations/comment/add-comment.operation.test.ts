@@ -101,7 +101,7 @@ describe('AddCommentOperation', () => {
       const result = await operation.execute('PROJ-10', input);
 
       expect(result.attachments).toHaveLength(2);
-      expect(result.attachments?.[0].id).toBe('att-1');
+      expect(at(result.attachments ?? []).id).toBe('att-1');
     });
 
     it('should handle API errors', async () => {

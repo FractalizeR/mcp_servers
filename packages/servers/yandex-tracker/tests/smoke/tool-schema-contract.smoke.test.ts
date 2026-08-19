@@ -17,7 +17,7 @@
  */
 
 import { describe, it, expect, beforeAll, vi, afterEach } from 'vitest';
-import Ajv2020 from 'ajv/dist/2020.js';
+import ajv2020Module from 'ajv/dist/2020.js';
 import { TOOL_CLASSES } from '#composition-root/definitions/tool-definitions.js';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
@@ -29,6 +29,7 @@ import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-
 import type { ServerConfig } from '#config';
 import { getTextContent } from '#helpers/tool-result.helper.js';
 
+const Ajv2020 = ajv2020Module.default;
 const ajv = new Ajv2020({ strict: false });
 
 describe('Tool Schema Contract (Smoke) — JSON Schema 2020-12', () => {

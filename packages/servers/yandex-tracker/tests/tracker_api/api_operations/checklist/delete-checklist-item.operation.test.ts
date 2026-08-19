@@ -1,9 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { MockInstance } from 'vitest';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import type { ServerConfig } from '#config';
 import { DeleteChecklistItemOperation } from '#tracker_api/api_operations/checklist/delete-checklist-item.operation.js';
+
+/** Носитель protected-метода deleteRequest, который подменяется в тестах. */
+interface DeleteRequestHost {
+  deleteRequest(endpoint: string): Promise<void>;
+}
+
+/**
+ * Приведение прототипа к носителю deleteRequest. Метод объявлен protected —
+ * структурно выразить его снаружи нельзя; приведение стоит за проверкой
+ * фактического наличия метода, поэтому опечатка в имени падает здесь, а не
+ * превращается в молча не подменённый вызов.
+ */
+function asDeleteRequestHost(value: object): DeleteRequestHost {
+  if (typeof Reflect.get(value, 'deleteRequest') !== 'function') {
+    throw new Error('прототип операции не содержит deleteRequest');
+  }
+  return value as DeleteRequestHost;
+}
 
 describe('DeleteChecklistItemOperation', () => {
   let operation: DeleteChecklistItemOperation;
@@ -13,7 +32,7 @@ describe('DeleteChecklistItemOperation', () => {
   let mockConfig: ServerConfig;
 
   // Mock для deleteRequest через прототип
-  let deleteRequestSpy: ReturnType<typeof vi.spyOn>;
+  let deleteRequestSpy: MockInstance<DeleteRequestHost['deleteRequest']>;
 
   beforeEach(() => {
     mockHttpClient = {
@@ -53,9 +72,10 @@ describe('DeleteChecklistItemOperation', () => {
     );
 
     // Мокаем protected метод deleteRequest
-    deleteRequestSpy = vi
-      .spyOn(DeleteChecklistItemOperation.prototype as never, 'deleteRequest')
-      .mockResolvedValue(undefined);
+    // deleteRequest объявлен protected: снаружи он не виден по имени, поэтому
+    // прототип рассматривается через структурный тип с этим методом.
+    const prototype = asDeleteRequestHost(DeleteChecklistItemOperation.prototype);
+    deleteRequestSpy = vi.spyOn(prototype, 'deleteRequest').mockResolvedValue(undefined);
   });
 
   afterEach(() => {

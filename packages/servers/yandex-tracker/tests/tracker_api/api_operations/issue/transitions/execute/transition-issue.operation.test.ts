@@ -114,7 +114,7 @@ describe('TransitionIssueOperation', () => {
 
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/issues/PROJ-456');
       expect(result).toEqual(mockUpdatedIssue);
-      expect(result.status.key).toBe('closed');
+      expect(result.status?.key).toBe('closed');
     });
 
     it('должен возвращать полный набор полей задачи (регрессия: ранее возвращался Transition вместо Issue)', async () => {

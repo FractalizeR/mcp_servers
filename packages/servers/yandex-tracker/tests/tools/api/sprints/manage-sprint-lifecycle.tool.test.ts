@@ -7,6 +7,7 @@ import { ManageSprintLifecycleTool } from '#tools/api/sprints/manage-sprint-life
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createSprintFixture } from '#helpers/agile.fixture.js';
 
 describe('ManageSprintLifecycleTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -30,7 +31,12 @@ describe('ManageSprintLifecycleTool', () => {
   });
 
   it('запустит спринт (start)', async () => {
-    const sprint = { id: '1', self: 'url', version: 2, name: 'Sprint 1', status: 'in_progress' };
+    const sprint = createSprintFixture({
+      id: '1',
+      version: 2,
+      name: 'Sprint 1',
+      status: 'in_progress',
+    });
     vi.mocked(mockTrackerFacade.manageSprintLifecycle).mockResolvedValue(sprint);
 
     const result = await tool.execute({ sprintId: '1', action: 'start' });

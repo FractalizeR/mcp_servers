@@ -7,6 +7,7 @@ import { GetUsersTool } from '#tools/api/users/get-users.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createUserFixture } from '#helpers/common-fixtures.js';
 
 describe('GetUsersTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -31,7 +32,12 @@ describe('GetUsersTool', () => {
 
   it('вернёт batch-результат с успешными и упавшими', async () => {
     vi.mocked(mockTrackerFacade.getUsers).mockResolvedValue([
-      { status: 'fulfilled', key: 'ivanov', index: 0, value: { uid: '1', login: 'ivanov' } },
+      {
+        status: 'fulfilled',
+        key: 'ivanov',
+        index: 0,
+        value: createUserFixture({ uid: '1', login: 'ivanov' }),
+      },
       { status: 'rejected', key: 'unknown-user', index: 1, reason: new Error('Not found') },
     ]);
 

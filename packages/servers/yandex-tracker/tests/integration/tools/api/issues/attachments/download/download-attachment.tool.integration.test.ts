@@ -41,9 +41,9 @@ describe('download-attachment integration tests', () => {
 
     // Сбрасываем мок writeFile и используем реальную реализацию по умолчанию
     writeFileMock.mockReset();
-    writeFileMock.mockImplementation(async (...args) => {
+    writeFileMock.mockImplementation(async (path, data) => {
       const fs = await import('node:fs/promises');
-      return fs.writeFile(...args);
+      return fs.writeFile(path, data);
     });
   });
 

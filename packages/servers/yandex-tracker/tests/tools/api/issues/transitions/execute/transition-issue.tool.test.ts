@@ -189,7 +189,7 @@ describe('TransitionIssueTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.issueKey).toBe('QUEUE-123');
       expect(parsed.data.transitionId).toBe('start-progress');
-      expect(parsed.data.issue.status.key).toBe('in-progress');
+      expect(parsed.data.issue.status?.key).toBe('in-progress');
     });
   });
 

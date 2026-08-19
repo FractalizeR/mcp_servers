@@ -146,7 +146,7 @@ describe('buildYtServerLaunch: logLevel', () => {
       token: 't',
       orgType: 'yandex360',
       orgId: 'org',
-      logLevel: '  info  ' as YandexTrackerMCPConfig['logLevel'],
+      logLevel: '  info  ' as NonNullable<YandexTrackerMCPConfig['logLevel']>,
     };
 
     const spec = buildYtServerLaunch(config, fakeResolver);

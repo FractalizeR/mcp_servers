@@ -208,7 +208,7 @@ describe('IssueService', () => {
       const mockResult: BatchChangelogResult[] = [
         {
           status: 'fulfilled',
-          value: [
+          value: createPaginatedFixture([
             {
               id: '1',
               self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/changelog/1',
@@ -218,7 +218,7 @@ describe('IssueService', () => {
               type: 'IssueUpdated',
               fields: [],
             },
-          ],
+          ]),
           key: 'TEST-1',
           index: 0,
         },
