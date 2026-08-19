@@ -80,6 +80,7 @@
     "test:verbose": "vitest run --reporter=verbose",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
+    "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
     "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke && npm run test:smoke:server && npm run test:raw-wire && npm run cpd && npm run depcruise && npm run validate:docs && npm run validate:tools",
     "validate:docs": "tsx ../../../scripts/validate-docs-size.ts",
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run test:quiet && npm run test:smoke && npm run test:smoke:server && npm run test:raw-wire && npm run cpd:quiet && npm run depcruise && npm run validate:docs && npm run validate:tools",
