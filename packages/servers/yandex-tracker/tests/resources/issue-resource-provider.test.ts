@@ -4,19 +4,19 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+import { createQueueRef } from '#helpers/common-fixtures.js';
 import { ApiErrorClass } from '@fractalizer/mcp-infrastructure';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import { IssueResourceProvider } from '#resources/issue-resource-provider.js';
 import { buildIssueResourceUri } from '#resources/tracker-resource-uri.js';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 import { createIssueFixture } from '#helpers/issue.fixture.js';
 
 const mockIssue: IssueWithUnknownFields = createIssueFixture({
   id: '1',
   key: 'QUEUE-1',
   summary: 'Test Issue',
-  queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
+  queue: createQueueRef({ id: '1', key: 'QUEUE', display: 'Queue' }),
   status: { id: '1', key: 'open', display: 'Open' },
 });
 

@@ -77,7 +77,7 @@ export function createQueueIssueTypeConfig(
  */
 export function createQueueFixture(overrides?: Partial<Queue>): QueueWithUnknownFields {
   const key = overrides?.key || 'TEST';
-  const id = overrides?.id || 'queue123';
+  const id = overrides?.id ?? 1;
 
   return {
     id,
@@ -104,7 +104,9 @@ export function createQueueFixture(overrides?: Partial<Queue>): QueueWithUnknown
  */
 export function createMinimalQueueFixture(key = 'TEST'): Queue {
   return {
-    id: `queue-${key.toLowerCase()}`,
+    // Числовой id выводим из ключа, чтобы две «разные» минимальные очереди
+    // оставались различимы по id (Queue.id — число, см. queue.entity.ts).
+    id: key.length,
     self: `https://api.tracker.yandex.net/v3/queues/${key}`,
     key,
     version: 1,
@@ -167,7 +169,7 @@ export function createQueueListFixture(
   return Array.from({ length: count }, (_, index) => {
     const key = `Q${index + 1}`;
     return createQueueFixture({
-      id: `queue${index + 1}`,
+      id: index + 1,
       key,
       name: `Queue ${index + 1}`,
       ...baseOverrides,

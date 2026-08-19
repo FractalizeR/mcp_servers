@@ -144,7 +144,7 @@ describe('CreateComponentTool', () => {
     describe('создание компонента', () => {
       it('должен создать компонент с минимальными обязательными полями', async () => {
         const mockComponent = createComponentFixture({
-          id: '123',
+          id: 123,
           name: 'Test Component',
         });
         vi.mocked(mockTrackerFacade.createComponent).mockResolvedValue(mockComponent);
@@ -171,7 +171,7 @@ describe('CreateComponentTool', () => {
           assignAuto: false,
         });
         expect(mockLogger.info).toHaveBeenCalledWith('Компонент создан', {
-          componentId: '123',
+          componentId: 123,
           name: 'Test Component',
         });
 
@@ -184,7 +184,7 @@ describe('CreateComponentTool', () => {
           };
         };
         expect(parsed.success).toBe(true);
-        expect(parsed.data.component.id).toBe('123');
+        expect(parsed.data.component.id).toBe(123);
         expect(parsed.data.component.name).toBe('Test Component');
         expect(parsed.data.message).toContain('успешно создан');
         expect(parsed.data.fieldsReturned).toEqual(['id', 'name']);

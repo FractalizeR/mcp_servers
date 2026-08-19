@@ -49,7 +49,7 @@ export const AddChecklistItemParamsSchema = z.object({
 
   /**
    * Массив полей для возврата в результате (обязательный)
-   * Примеры: ['id', 'text', 'checked'], ['id', 'text', 'assignee.login']
+   * Примеры: ['id', 'text', 'checked'], ['id', 'text', 'assignee.display']
    * Применяется ко всем созданным элементам
    */
   fields: FieldsSchema,

@@ -37,7 +37,7 @@ export class BulkUpdateIssuesOperation extends BaseOperation {
    *     tags: { add: ['bug'] }
    *   }
    * });
-   * // operation = { id: '12345', status: 'PENDING', self: 'https://...' }
+   * // operation = { id: '12345', status: 'CREATED', self: 'https://...' }
    * ```
    */
   async execute(params: BulkUpdateIssuesInputDto): Promise<BulkChangeOperationWithUnknownFields> {

@@ -45,7 +45,7 @@ export const GetChecklistParamsSchema = z
 
     /**
      * Массив полей для возврата (обязательный)
-     * Примеры: ['id', 'text'], ['id', 'text', 'checked', 'assignee.login']
+     * Примеры: ['id', 'text'], ['id', 'text', 'checked', 'assignee.display']
      */
     fields: FieldsSchema,
 

@@ -3,6 +3,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createQueueRef } from '#helpers/common-fixtures.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -14,7 +15,6 @@ import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/comm
 import { successEnvelopeSchema } from '#common/schemas/index.js';
 import { FindIssuesOutputDataSchema } from '#tools/api/issues/find/find-issues.schema.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 /**
  * Метаданные пагинации по умолчанию (одна полная страница).
@@ -44,10 +44,10 @@ describe('FindIssuesTool', () => {
     key: 'QUEUE-123',
     summary: 'Test Issue 1',
     description: 'Test Description 1',
-    queue: createQueueFixture({
+    queue: createQueueRef({
       id: '1',
       key: 'QUEUE',
-      name: 'Test Queue',
+      display: 'Test Queue',
     }),
     status: {
       id: '1',
@@ -55,10 +55,9 @@ describe('FindIssuesTool', () => {
       display: 'Open',
     },
     createdBy: {
-      uid: 'uid-creator',
+      self: 'https://api.tracker.yandex.net/v3/users/creator',
+      id: 'creator',
       display: 'Creator',
-      login: 'creator',
-      isActive: true,
     },
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-02T12:00:00Z',
@@ -69,10 +68,10 @@ describe('FindIssuesTool', () => {
     key: 'QUEUE-456',
     summary: 'Test Issue 2',
     description: 'Test Description 2',
-    queue: createQueueFixture({
+    queue: createQueueRef({
       id: '1',
       key: 'QUEUE',
-      name: 'Test Queue',
+      display: 'Test Queue',
     }),
     status: {
       id: '2',
@@ -80,10 +79,9 @@ describe('FindIssuesTool', () => {
       display: 'Closed',
     },
     createdBy: {
-      uid: 'uid-creator2',
+      self: 'https://api.tracker.yandex.net/v3/users/creator2',
+      id: 'creator2',
       display: 'Creator 2',
-      login: 'creator2',
-      isActive: true,
     },
     createdAt: '2025-01-03T10:00:00Z',
     updatedAt: '2025-01-04T12:00:00Z',
@@ -815,13 +813,12 @@ describe('FindIssuesTool', () => {
           'элемента был сопоставим с реальным ответом API Яндекс.Трекера (типичная ' +
           'сводка одной сущности — примерно 150–400 токенов), а не тривиальной ' +
           `строкой-заглушкой. Итерация ${index}.`.repeat(6),
-        queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Test Queue' }),
+        queue: createQueueRef({ id: '1', key: 'QUEUE', display: 'Test Queue' }),
         status: { id: '1', key: 'open', display: 'Open' },
         createdBy: {
-          uid: `uid-${index}`,
+          self: `https://api.tracker.yandex.net/v3/users/${index}`,
+          id: `${index}`,
           display: `User ${index}`,
-          login: `user${index}`,
-          isActive: true,
         },
         createdAt: '2025-01-01T10:00:00Z',
         updatedAt: '2025-01-02T12:00:00Z',

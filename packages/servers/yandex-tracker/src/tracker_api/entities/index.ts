@@ -12,6 +12,7 @@ export type {
   PaginatedResult,
 } from './common/pagination.entity.js';
 export type { UserRef, UserRefWithUnknownFields } from './common/user-ref.entity.js';
+export type { QueueRef, QueueRefWithUnknownFields } from './common/queue-ref.entity.js';
 export type { TimestampFields } from './common/timestamp.entity.js';
 
 // User
@@ -92,21 +93,15 @@ export type { Comment, CommentWithUnknownFields, CommentAttachment } from './com
 export type { Worklog, WorklogWithUnknownFields } from './worklog.entity.js';
 
 // Project
-export type {
-  Project,
-  ProjectWithUnknownFields,
-  ProjectStatus,
-  QueueRef,
-} from './project.entity.js';
+export type { Project, ProjectWithUnknownFields, ProjectStatus } from './project.entity.js';
 
 // Bulk Change
 export type {
   BulkChangeOperation,
   BulkChangeOperationWithUnknownFields,
   BulkChangeStatus,
-  BulkChangeType,
-  BulkChangeError,
 } from './bulk-change.entity.js';
+export { TERMINAL_BULK_CHANGE_STATUSES, isTerminalBulkChangeStatus } from './bulk-change.entity.js';
 
 // Board
 export type {

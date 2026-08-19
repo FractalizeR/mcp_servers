@@ -46,7 +46,7 @@ describe('UpdateComponentOperation', () => {
     it('should call httpClient.patch with correct endpoint and data', async () => {
       const updates = createUpdateComponentDto({ name: 'Updated Name' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         name: 'Updated Name',
         queue: createQueueRef({ id: 'queue-1' }),
       });
@@ -61,7 +61,7 @@ describe('UpdateComponentOperation', () => {
     it('should update component name', async () => {
       const updates = createUpdateComponentDto({ name: 'New Component Name' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         name: 'New Component Name',
         queue: createQueueRef({ id: 'queue-1' }),
       });
@@ -75,7 +75,7 @@ describe('UpdateComponentOperation', () => {
     it('should update component description', async () => {
       const updates = createUpdateComponentDto({ description: 'New description' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         description: 'New description',
         queue: createQueueRef({ id: 'queue-1' }),
       });
@@ -89,7 +89,7 @@ describe('UpdateComponentOperation', () => {
     it('should update component lead', async () => {
       const updates = createUpdateComponentDto({ lead: 'new-user-login' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockComponent);
@@ -102,7 +102,7 @@ describe('UpdateComponentOperation', () => {
     it('should update assignAuto flag', async () => {
       const updates = createUpdateComponentDto({ assignAuto: true });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         assignAuto: true,
         queue: createQueueRef({ id: 'queue-1' }),
       });
@@ -120,7 +120,7 @@ describe('UpdateComponentOperation', () => {
         assignAuto: false,
       });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         name: 'Updated Name',
         description: 'Updated Description',
         assignAuto: false,
@@ -140,7 +140,7 @@ describe('UpdateComponentOperation', () => {
     it('should invalidate component cache after update', async () => {
       const updates = createUpdateComponentDto({ name: 'Updated' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockComponent);
@@ -154,7 +154,7 @@ describe('UpdateComponentOperation', () => {
     it('should invalidate components list cache after update', async () => {
       const updates = createUpdateComponentDto({ name: 'Updated' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-123' }),
       });
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockComponent);
@@ -176,7 +176,7 @@ describe('UpdateComponentOperation', () => {
     it('should log info messages', async () => {
       const updates = createUpdateComponentDto({ name: 'Updated Component' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         name: 'Updated Component',
         queue: createQueueRef({ id: 'queue-1' }),
       });
@@ -191,7 +191,7 @@ describe('UpdateComponentOperation', () => {
     it('should log debug messages about cache invalidation', async () => {
       const updates = createUpdateComponentDto({ name: 'Test' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockComponent);
@@ -207,7 +207,7 @@ describe('UpdateComponentOperation', () => {
     it('should handle empty updates object', async () => {
       const updates = {};
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockComponent);

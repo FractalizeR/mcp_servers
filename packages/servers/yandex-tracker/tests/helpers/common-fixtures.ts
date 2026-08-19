@@ -5,28 +5,17 @@
  */
 
 import type {
-  UserRef,
   PaginationParams,
   TimestampFields,
 } from '../../src/tracker_api/entities/common/index.js';
 import type { User, UserWithUnknownFields } from '../../src/tracker_api/entities/user.entity.js';
 
 /**
- * Создать UserRef для тестов
- *
- * @example
- * ```typescript
- * const userRef = createUserRef({ id: '123', display: 'John Doe' });
- * ```
+ * Фабрики ref-ов живут в одном месте — `entity.factories`. Здесь только реэкспорт:
+ * форма ref-а обязана правиться ровно в одной точке, иначе расхождение двух копий
+ * воспроизводит ровно тот класс дефекта, ради которого эти типы и чинились.
  */
-export function createUserRef(overrides?: Partial<UserRef>): UserRef {
-  return {
-    self: 'https://api.tracker.yandex.net/v3/users/1234567890',
-    id: '1234567890',
-    display: 'Test User',
-    ...overrides,
-  };
-}
+export { createUserRef, createQueueRef } from '#tracker_api/entities/entity.factories.js';
 
 /**
  * Создать PaginationParams для тестов
@@ -65,20 +54,14 @@ export function createTimestampFields(overrides?: Partial<TimestampFields>): Tim
   };
 }
 
-/**
- * Форма продиктована типом `User` (`uid`/`login`/`isActive`), который объявлен в
- * `Issue.createdBy`. Живой API отдаёт там ref `{self, id, display}` — расхождение
- * в типах сущностей, не в фикстуре; см. раздел про расхождения в
- * `.agentic-planning/typecheck_tests_debt/README.md`.
- */
 export function createUserFixture(
   overrides?: Partial<User> & Record<string, unknown>
 ): UserWithUnknownFields {
   return {
-    uid: '1234567890',
+    uid: 1234567890,
     display: 'Test User',
     login: 'test.user',
-    isActive: true,
+    dismissed: false,
     ...overrides,
   };
 }

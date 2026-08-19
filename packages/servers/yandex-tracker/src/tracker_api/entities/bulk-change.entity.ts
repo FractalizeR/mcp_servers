@@ -13,35 +13,44 @@
  */
 
 import type { WithUnknownFields } from './types.js';
+import type { UserRef } from './common/user-ref.entity.js';
 
 /**
  * Статус bulk операции
+ *
+ * Union намеренно открытый. Перечень статусов не удалось снять живой пробой:
+ * `GET /v2/bulkchange/{id}` требует уже существующей операции, а её создание — запись
+ * в боевой сервис. Перечисленные три подтверждены документацией и референсным
+ * клиентом (`collections.py:1573` ждёт `COMPLETE`/`FAILED`, фикстура заводится с
+ * `CREATED`), но это подтверждённый минимум, а не гарантированно полный список —
+ * промежуточный статус мог не попасть ни в доки, ни в клиент.
+ *
+ * Закрытый union уже подводил: прежние `PENDING`/`RUNNING`/`COMPLETED`/`CANCELLED`
+ * не существуют, и из пяти объявленных совпадал только `FAILED`.
  */
-export type BulkChangeStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type BulkChangeStatus = 'CREATED' | 'COMPLETE' | 'FAILED' | (string & {});
 
 /**
- * Тип bulk операции
+ * Терминальные статусы: операция дальше не изменится.
+ *
+ * Вынесено в предикат, чтобы литералы не растекались по коду: открытый union их
+ * не проверяет, и опечатка в сравнении `status === 'COMPLETED'` не будет поймана
+ * ни компилятором, ни тестом — именно так и появились прежние несуществующие
+ * статусы.
  */
-export type BulkChangeType = 'UPDATE' | 'TRANSITION' | 'MOVE';
+export const TERMINAL_BULK_CHANGE_STATUSES = ['COMPLETE', 'FAILED'] as const;
 
-/**
- * Информация об ошибке при выполнении bulk операции
- */
-export interface BulkChangeError {
-  /** Код ошибки */
-  readonly errorCode?: string;
-
-  /** Сообщение об ошибке */
-  readonly message?: string;
-
-  /** Ключ задачи, на которой произошла ошибка */
-  readonly issueKey?: string;
+export function isTerminalBulkChangeStatus(status: BulkChangeStatus): boolean {
+  return (TERMINAL_BULK_CHANGE_STATUSES as readonly string[]).includes(status);
 }
 
 /**
  * Результат выполнения bulk операции
  *
- * ВАЖНО: Типизация основана на документации API v2 и Python клиента.
+ * Форма — по официальной документации (раздел «Статус и детали массовой операции»).
+ * Полей `type`, `progress`, `processedIssues`, `failedIssues`, `startedAt`,
+ * `completedAt`, `errors`, `parameters` в ответе нет: они были объявлены здесь
+ * умозрительно и убраны 2026-08-19.
  */
 export interface BulkChangeOperation {
   /** Идентификатор операции (используется для проверки статуса) */
@@ -53,44 +62,33 @@ export interface BulkChangeOperation {
   /** Статус выполнения операции */
   readonly status: BulkChangeStatus;
 
-  /** Тип операции */
-  readonly type?: BulkChangeType;
+  /** Человекочитаемое пояснение к статусу, например «Массовое изменение выполнено» */
+  readonly statusText?: string;
 
-  /** Общее количество задач в операции */
-  readonly totalIssues?: number;
-
-  /** Количество успешно обработанных задач */
-  readonly processedIssues?: number;
-
-  /** Количество задач с ошибками */
-  readonly failedIssues?: number;
-
-  /** Прогресс выполнения в процентах (0-100) */
-  readonly progress?: number;
+  /** Автор операции */
+  readonly createdBy?: UserRef;
 
   /** Дата создания операции (ISO 8601) */
   readonly createdAt?: string;
 
-  /** Дата начала выполнения операции (ISO 8601) */
-  readonly startedAt?: string;
+  /** Доля обработанных пачек задач, 0–100 */
+  readonly executionChunkPercent?: number;
 
-  /** Дата завершения операции (ISO 8601) */
-  readonly completedAt?: string;
+  /** Доля обработанных задач, 0–100 */
+  readonly executionIssuePercent?: number;
 
-  /** Ошибки, возникшие при обработке задач */
-  readonly errors?: BulkChangeError[];
+  /**
+   * Общее количество задач в операции
+   *
+   * Источник — официальная документация, раздел «Статус и детали массовой
+   * операции» (yandex.ru/support/tracker, concepts/bulkchange/bulk-move-info):
+   * поле есть в таблице ответа и в примере JSON. В референсном клиенте его нет —
+   * клиент отстаёт, поэтому по нему одному поле удалять нельзя.
+   */
+  readonly totalIssues?: number;
 
-  /** Дополнительная информация о параметрах операции */
-  readonly parameters?: {
-    /** Очередь назначения (для MOVE операций) */
-    readonly queue?: string;
-
-    /** ID перехода (для TRANSITION операций) */
-    readonly transition?: string;
-
-    /** Обновляемые поля (для UPDATE операций) */
-    readonly values?: Record<string, unknown>;
-  };
+  /** Количество задач, обработанных успешно. Источник — тот же, что у `totalIssues`. */
+  readonly totalCompletedIssues?: number;
 }
 
 /**

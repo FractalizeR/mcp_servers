@@ -477,7 +477,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         issues: ['TEST-1', 'TEST-2'],
         values: { priority: 'minor' },
       };
-      const mockResult = createBulkChangeOperationFixture({ id: 'op1', status: 'RUNNING' });
+      const mockResult = createBulkChangeOperationFixture({ id: 'op1', status: 'CREATED' });
 
       vi.mocked(mockProjectAgileContainer.bulkChange.bulkUpdateIssues).mockResolvedValue(
         mockResult
@@ -497,7 +497,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         transition: 'close',
         values: { resolution: 'fixed' },
       };
-      const mockResult = createBulkChangeOperationFixture({ id: 'op2', status: 'RUNNING' });
+      const mockResult = createBulkChangeOperationFixture({ id: 'op2', status: 'CREATED' });
 
       vi.mocked(mockProjectAgileContainer.bulkChange.bulkTransitionIssues).mockResolvedValue(
         mockResult
@@ -519,7 +519,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         queue: 'QUEUE2',
         moveAllFields: true,
       };
-      const mockResult = createBulkChangeOperationFixture({ id: 'op3', status: 'RUNNING' });
+      const mockResult = createBulkChangeOperationFixture({ id: 'op3', status: 'CREATED' });
 
       vi.mocked(mockProjectAgileContainer.bulkChange.bulkMoveIssues).mockResolvedValue(mockResult);
 
@@ -535,8 +535,8 @@ describe('YandexTrackerFacade - Batch Methods', () => {
       const operationId = 'op1';
       const mockResult = createBulkChangeOperationFixture({
         id: 'op1',
-        status: 'COMPLETED',
-        processedIssues: 10,
+        status: 'COMPLETE',
+        totalCompletedIssues: 10,
         totalIssues: 10,
       });
 
@@ -557,7 +557,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
       const mockResult = createBulkChangeOperationFixture({
         id: 'op-failed',
         status: 'FAILED',
-        processedIssues: 5,
+        totalCompletedIssues: 5,
         totalIssues: 10,
       });
 

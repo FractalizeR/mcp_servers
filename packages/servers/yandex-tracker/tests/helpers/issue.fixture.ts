@@ -1,6 +1,5 @@
 import type { Issue, IssueWithUnknownFields } from '#tracker_api/entities/issue.entity.js';
-import { createUserFixture } from './common-fixtures.js';
-import { createQueueFixture } from './queue.fixture.js';
+import { createUserRef, createQueueRef } from './common-fixtures.js';
 
 export function createIssueFixture(
   overrides?: Partial<Issue> & Record<string, unknown>
@@ -10,8 +9,8 @@ export function createIssueFixture(
     id: '1',
     key,
     summary: 'Test Issue',
-    queue: createQueueFixture(),
-    createdBy: createUserFixture(),
+    queue: createQueueRef(),
+    createdBy: createUserRef(),
     createdAt: '2024-01-01T00:00:00.000+0000',
     updatedAt: '2024-01-01T00:00:00.000+0000',
     ...overrides,

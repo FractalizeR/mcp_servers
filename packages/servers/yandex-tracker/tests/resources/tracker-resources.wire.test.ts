@@ -18,6 +18,7 @@
  */
 
 import { describe, it, expect, afterEach, vi } from 'vitest';
+import { createQueueRef } from '#helpers/common-fixtures.js';
 import { Container } from 'inversify';
 import type { Logger } from '@fractalizer/mcp-infrastructure';
 import { ApiErrorClass } from '@fractalizer/mcp-infrastructure';
@@ -34,7 +35,6 @@ import { buildIssueResourceUri, buildQueueResourceUri } from '#resources/tracker
 import { createQueueListFixture } from '#helpers/queue.fixture.js';
 import { createProjectListFixture } from '#helpers/project.fixture.js';
 import type { IssueWithUnknownFields, PaginatedResult } from '#tracker_api/entities/index.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 import { createIssueFixture } from '#helpers/issue.fixture.js';
 
 function page<T>(items: T[]): PaginatedResult<T> {
@@ -54,7 +54,7 @@ const mockIssue: IssueWithUnknownFields = createIssueFixture({
   id: '1',
   key: 'QUEUE-1',
   summary: 'Задача, не попавшая в listResources',
-  queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
+  queue: createQueueRef({ id: '1', key: 'QUEUE', display: 'Queue' }),
   status: { id: '1', key: 'open', display: 'Open' },
 });
 
@@ -65,7 +65,7 @@ function makeMockFacade(): YandexTrackerFacade {
   return {
     getQueues: vi.fn().mockResolvedValue(page(queues)),
     getQueue: vi.fn().mockImplementation(({ queueId }: { queueId: string }) => {
-      const found = queues.find((q) => q.key === queueId || q.id === queueId);
+      const found = queues.find((q) => q.key === queueId || String(q.id) === queueId);
       if (found === undefined) {
         return Promise.reject(new ApiErrorClass(404, 'Not found'));
       }

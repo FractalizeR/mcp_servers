@@ -19,8 +19,7 @@ import { DemoTool } from '#tools/helpers/demo/index.js';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { getTextContent } from '#helpers/tool-result.helper.js';
 import { createIssueFixture } from '#helpers/issue.fixture.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
-import { createUserFixture } from '#helpers/common-fixtures.js';
+import { createQueueRef, createUserRef } from '#helpers/common-fixtures.js';
 
 describe('ToolRegistry', () => {
   let registry: ToolRegistry;
@@ -238,9 +237,9 @@ describe('ToolRegistry', () => {
             statusStartTime: '2023-01-01T00:00:00.000+0000',
             updatedAt: '2023-01-01T00:00:00.000+0000',
             createdAt: '2023-01-01T00:00:00.000+0000',
-            queue: createQueueFixture({ id: '1', key: 'Q', name: 'Queue' }),
+            queue: createQueueRef({ id: '1', key: 'Q', display: 'Queue' }),
             status: { id: '1', key: 'open', display: 'Open' },
-            createdBy: createUserFixture({ uid: 'user1', display: 'User', login: 'user1' }),
+            createdBy: createUserRef({ id: 'user1', display: 'User' }),
           }),
         },
       ];

@@ -430,8 +430,8 @@ import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 const fullIssue = { key, summary, description, ..., assignee: {...}, followers: [...] };
 
 // С фильтрацией: 1KB данных
-const filtered = ResponseFieldFilter.filter(fullIssue, ['key', 'summary', 'assignee.login']);
-// Результат: { key, summary, assignee: { login } }
+const filtered = ResponseFieldFilter.filter(fullIssue, ['key', 'summary', 'assignee.display']);
+// Результат: { key, summary, assignee: { display } }
 ```
 
 **⚠️ ВСЕГДА фильтруй перед возвратом!**

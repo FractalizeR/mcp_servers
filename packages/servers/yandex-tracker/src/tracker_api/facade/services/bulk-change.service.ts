@@ -147,8 +147,8 @@ export class BulkChangeService {
    * @example
    * ```typescript
    * const status = await bulkChangeService.getBulkChangeStatus('12345');
-   * console.log(`Статус: ${status.status}, прогресс: ${status.progress}%`);
-   * console.log(`Обработано: ${status.processedIssues}/${status.totalIssues}`);
+   * console.log(`Статус: ${status.status} (${status.statusText})`);
+   * console.log(`Обработано: ${status.totalCompletedIssues}/${status.totalIssues}`);
    * ```
    */
   async getBulkChangeStatus(operationId: string): Promise<BulkChangeOperationWithUnknownFields> {

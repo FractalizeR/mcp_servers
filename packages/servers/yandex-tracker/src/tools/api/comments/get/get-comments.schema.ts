@@ -66,7 +66,7 @@ export const GetCommentsParamsSchema = z
 
     /**
      * Массив полей для возврата в результате (обязательный)
-     * Примеры: ['id', 'text', 'createdAt'], ['id', 'text', 'createdBy.login']
+     * Примеры: ['id', 'text', 'createdAt'], ['id', 'text', 'createdBy.display']
      */
     fields: FieldsSchema,
   })

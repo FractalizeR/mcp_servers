@@ -20,6 +20,7 @@ src/tracker_api/entities/
 ├── common/                  # Общие типы (v2.0+)
 │   ├── pagination.entity.ts # PaginationParams, PaginationMeta, PaginatedResult
 │   ├── user-ref.entity.ts   # UserRef (облегченная версия User)
+│   ├── queue-ref.entity.ts  # QueueRef (облегченная версия Queue)
 │   ├── timestamp.entity.ts  # TimestampFields (createdAt, updatedAt)
 │   └── index.ts             # Экспорты common types
 ├── issue.entity.ts          # Issue + IssueWithUnknownFields
@@ -44,10 +45,36 @@ interface UserRef {
 }
 ```
 
-**Используй вместо `User`:**
+**Используй вместо `User` везде, где сущность лишь ссылается на пользователя:**
+- `Issue.createdBy` / `Issue.assignee` — автор и исполнитель задачи
+- `ChangelogEntry.updatedBy` — кто внёс изменение
 - `Comment.createdBy` — автор комментария
 - `Attachment.createdBy` — кто прикрепил файл
 - `Worklog.createdBy` — кто записал время
+
+Полный `User` (`uid`, `login`, `email`) приходит только из `/v3/users/{id}` и
+`/v3/myself`. Внутри других сущностей его нет — за логином нужен отдельный запрос.
+
+### QueueRef — Референс на очередь
+
+```typescript
+interface QueueRef {
+  readonly self: string;    // URL в API
+  readonly id: string;      // ID очереди (строка — это ref)
+  readonly key: string;     // Ключ очереди
+  readonly display: string; // Отображаемое имя
+}
+```
+
+**Используй вместо `Queue`:** `Issue.queue`, `Component.queue`, `Project.queues`.
+Настройки очереди (`version`, `lead`, `defaultType`) здесь не приходят.
+
+### Правило: числовой id у сущности, строковый у ref
+
+Полная сущность отдаёт **числовой** `id`, ref на неё — **строковый**. Снято живой
+пробой 2026-08-19 с `Queue` (`1` против `"5"`), `Component` (`4` против `"4"`),
+`User` (`uid` число против строкового `UserRef.id`). Только с этих трёх: заводя
+новую entity, снимай форму пробой, а не переноси правило по аналогии.
 
 ### PaginationParams — Параметры пагинации
 
@@ -115,14 +142,14 @@ export interface Issue {
   /** Краткое описание */
   readonly summary: string;
 
-  /** Очередь задачи */
-  readonly queue: Queue;
+  /** Очередь задачи (ref, а не полная Queue) */
+  readonly queue: QueueRef;
 
   /** Текущий статус */
   readonly status: Status;
 
-  /** Автор задачи */
-  readonly createdBy: User;
+  /** Автор задачи (ref, а не полный User) */
+  readonly createdBy: UserRef;
 
   /** Дата создания (ISO 8601) */
   readonly createdAt: string;
@@ -281,8 +308,8 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 ✅ **Правильно:**
 ```typescript
 export interface Issue {
-  assignee?: User;          // Переиспользуем User
-  queue: Queue;             // Переиспользуем Queue
+  assignee?: UserRef;       // API отдаёт ref, а не полный User
+  queue: QueueRef;          // API отдаёт ref, а не полную Queue
   status: Status;           // Переиспользуем Status
 }
 ```
@@ -327,7 +354,7 @@ export type StatusWithUnknownFields = WithUnknownFields<Status>;
 
 **Файл:** `src/tracker_api/entities/issue.entity.ts`
 
-Использует вложенные entities (`Queue`, `Status`, `User`) для связанных объектов.
+Использует вложенные entities (`QueueRef`, `Status`, `UserRef`) для связанных объектов.
 См. полный код в файле выше.
 
 ### Entity для файловых вложений
@@ -354,7 +381,7 @@ export type StatusWithUnknownFields = WithUnknownFields<Status>;
 
 ```typescript
 export interface Queue {
-  readonly id: string;           // ID очереди
+  readonly id: number;           // ID очереди (число — см. правило ниже)
   readonly key: string;          // Ключ очереди (A-Z, 2-10 символов)
   readonly name: string;         // Название очереди
   readonly lead: UserRef;        // Руководитель очереди
@@ -423,7 +450,7 @@ export type QueuePermissionWithUnknownFields = WithUnknownFields<QueuePermission
 
 ```typescript
 export interface Component {
-  readonly id: string;           // ID компонента
+  readonly id: number;           // ID компонента (число — см. правило ниже)
   readonly self: string;         // URL в API
   readonly name: string;         // Название компонента
   readonly queue: QueueRef;      // Очередь компонента

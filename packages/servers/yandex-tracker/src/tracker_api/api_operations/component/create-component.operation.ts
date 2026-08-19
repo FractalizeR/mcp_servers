@@ -60,7 +60,10 @@ export class CreateComponentOperation extends BaseOperation {
     );
 
     // Кешируем созданный компонент по его ID
-    const componentCacheKey = EntityCacheKey.createKey(EntityType.COMPONENT, createdComponent.id);
+    const componentCacheKey = EntityCacheKey.createKey(
+      EntityType.COMPONENT,
+      String(createdComponent.id)
+    );
     await this.cacheManager.set(componentCacheKey, createdComponent);
 
     // Инвалидируем кеш списка компонентов очереди

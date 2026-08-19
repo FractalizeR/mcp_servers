@@ -43,7 +43,7 @@ describe('FindUsersTool', () => {
   });
 
   it('вернёт список пользователей', async () => {
-    const users = [{ uid: '1', display: 'Ivan Ivanov', login: 'ivanov', isActive: true }];
+    const users = [{ uid: 1, display: 'Ivan Ivanov', login: 'ivanov' }];
     vi.mocked(mockTrackerFacade.findUsers).mockResolvedValue(paginated(users));
 
     const result = await tool.execute({ fields: ['uid', 'login'] });

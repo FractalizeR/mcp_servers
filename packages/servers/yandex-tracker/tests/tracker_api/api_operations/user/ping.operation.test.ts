@@ -68,13 +68,13 @@ describe('PingOperation', () => {
     it('должна успешно выполнить проверку подключения', async () => {
       // Arrange
       const mockUser: User = {
-        uid: '123',
+        uid: 123,
         display: 'Test User',
         login: 'testuser',
         email: 'test@example.com',
         firstName: 'Test',
         lastName: 'User',
-        isActive: true,
+        dismissed: false,
       };
 
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockUser);
@@ -96,13 +96,13 @@ describe('PingOperation', () => {
     it('должна использовать кеш при повторном вызове', async () => {
       // Arrange
       const mockUser: User = {
-        uid: '456',
+        uid: 456,
         display: 'Cached User',
         login: 'cacheduser',
         email: 'cached@example.com',
         firstName: 'Cached',
         lastName: 'User',
-        isActive: true,
+        dismissed: false,
       };
 
       // Первый раз кеша нет

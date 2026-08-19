@@ -8,26 +8,8 @@ import type {
   Project,
   ProjectWithUnknownFields,
   ProjectStatus,
-  QueueRef,
 } from '../../src/tracker_api/entities/index.js';
-import { createUserRef } from './common-fixtures.js';
-
-/**
- * Создать QueueRef для тестов
- *
- * @example
- * ```typescript
- * const queueRef = createQueueRef({ key: 'QUEUE1', display: 'My Queue' });
- * ```
- */
-export function createQueueRefForProject(overrides?: Partial<QueueRef>): QueueRef {
-  return {
-    id: '1',
-    key: 'QUEUE',
-    display: 'Test Queue',
-    ...overrides,
-  };
-}
+import { createUserRef, createQueueRef } from './common-fixtures.js';
 
 /**
  * Создать Project для тестов
@@ -48,8 +30,8 @@ export function createQueueRefForProject(overrides?: Partial<QueueRef>): QueueRe
  * const project = createProjectFixture({
  *   key: 'PROJ',
  *   queues: [
- *     createQueueRefForProject({ key: 'QUEUE1', display: 'Queue 1' }),
- *     createQueueRefForProject({ key: 'QUEUE2', display: 'Queue 2' })
+ *     createQueueRef({ key: 'QUEUE1', display: 'Queue 1' }),
+ *     createQueueRef({ key: 'QUEUE2', display: 'Queue 2' })
  *   ]
  * });
  * ```
@@ -108,8 +90,8 @@ export function createFullProjectFixture(overrides?: Partial<Project>): ProjectW
     startDate: '2024-01-01',
     endDate: '2024-12-31',
     queues: [
-      createQueueRefForProject({ id: '1', key: 'QUEUE1', display: 'Queue 1' }),
-      createQueueRefForProject({ id: '2', key: 'QUEUE2', display: 'Queue 2' }),
+      createQueueRef({ id: '1', key: 'QUEUE1', display: 'Queue 1' }),
+      createQueueRef({ id: '2', key: 'QUEUE2', display: 'Queue 2' }),
     ],
     ...overrides,
   });

@@ -948,14 +948,14 @@ export class YandexTrackerFacade implements RawApiCapable {
    * @example
    * ```typescript
    * const status = await facade.getBulkChangeStatus('12345');
-   * console.log(`Статус: ${status.status}, прогресс: ${status.progress}%`);
-   * console.log(`Обработано: ${status.processedIssues}/${status.totalIssues}`);
+   * console.log(`Статус: ${status.status} (${status.statusText})`);
+   * console.log(`Обработано: ${status.totalCompletedIssues}/${status.totalIssues}`);
    *
    * // Polling с ожиданием завершения
    * async function waitForCompletion(operationId: string) {
    *   while (true) {
    *     const status = await facade.getBulkChangeStatus(operationId);
-   *     if (status.status === 'COMPLETED' || status.status === 'FAILED') {
+   *     if (isTerminalBulkChangeStatus(status.status)) {
    *       return status;
    *     }
    *     await new Promise(resolve => setTimeout(resolve, 2000));

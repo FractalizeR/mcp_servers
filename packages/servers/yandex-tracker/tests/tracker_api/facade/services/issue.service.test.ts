@@ -16,9 +16,8 @@ import type {
   IssueWithUnknownFields,
   TransitionWithUnknownFields,
 } from '#tracker_api/entities/index.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 import { createPaginatedFixture } from '#helpers/pagination.fixture.js';
-import { createUserFixture } from '#helpers/common-fixtures.js';
+import { createQueueRef, createUserRef } from '#helpers/common-fixtures.js';
 
 // Fixtures
 function createIssueFixture(overrides = {}): IssueWithUnknownFields {
@@ -26,9 +25,9 @@ function createIssueFixture(overrides = {}): IssueWithUnknownFields {
     id: '1',
     key: 'TEST-1',
     summary: 'Test Issue',
-    queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
+    queue: createQueueRef({ id: '1', key: 'TEST', display: 'Test Queue' }),
     status: { id: '1', key: 'open', display: 'Open' },
-    createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+    createdBy: { self: 'https://api.tracker.yandex.net/v3/users/1', id: '1', display: 'User' },
     createdAt: '2024-01-01',
     updatedAt: '2024-01-01',
     ...overrides,
@@ -214,7 +213,7 @@ describe('IssueService', () => {
               self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/changelog/1',
               issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
               updatedAt: '2024-01-01',
-              updatedBy: createUserFixture({ uid: '1', display: 'User', login: 'user' }),
+              updatedBy: createUserRef({ id: '1', display: 'User' }),
               type: 'IssueUpdated',
               fields: [],
             },

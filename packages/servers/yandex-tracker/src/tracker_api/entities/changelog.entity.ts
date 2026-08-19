@@ -5,7 +5,7 @@
  */
 
 import type { WithUnknownFields } from './types.js';
-import type { User } from './user.entity.js';
+import type { UserRef } from './common/user-ref.entity.js';
 
 /**
  * Изменённое поле в истории
@@ -47,8 +47,12 @@ export interface ChangelogEntry {
   /** Дата и время изменения (ISO 8601) */
   readonly updatedAt: string;
 
-  /** Пользователь, внёсший изменение */
-  readonly updatedBy: User;
+  /**
+   * Пользователь, внёсший изменение
+   *
+   * Ref, а не полный `User` (живой GET `/v3/issues/{key}/changelog` 2026-08-19).
+   */
+  readonly updatedBy: UserRef;
 
   /** Тип изменения (IssueUpdated, IssueCreated, IssueMoved и т.д.) */
   readonly type: string;

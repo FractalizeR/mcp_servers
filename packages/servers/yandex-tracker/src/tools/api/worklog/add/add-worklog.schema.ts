@@ -58,7 +58,7 @@ export const AddWorklogParamsSchema = z.object({
 
   /**
    * Массив полей для возврата в результате (обязательный)
-   * Примеры: ['id', 'duration', 'createdAt'], ['id', 'createdBy.login']
+   * Примеры: ['id', 'duration', 'createdAt'], ['id', 'createdBy.display']
    * Применяется ко всем созданным записям времени
    */
   fields: FieldsSchema,

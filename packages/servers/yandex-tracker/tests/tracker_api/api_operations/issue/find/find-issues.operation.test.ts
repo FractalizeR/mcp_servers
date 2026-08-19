@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createQueueRef } from '#helpers/common-fixtures.js';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import { MockHttpClient } from '@fractalizer/mcp-infrastructure';
@@ -6,7 +7,6 @@ import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { FindIssuesInputDto } from '#tracker_api/dto/index.js';
 import { FindIssuesOperation } from '#tracker_api/api_operations/issue/find/find-issues.operation.js';
 import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('FindIssuesOperation (pagination)', () => {
   let operation: FindIssuesOperation;
@@ -18,9 +18,13 @@ describe('FindIssuesOperation (pagination)', () => {
     id: '1',
     key: 'TEST-123',
     summary: 'Test Issue',
-    queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
+    queue: createQueueRef({ id: '1', key: 'TEST', display: 'Test Queue' }),
     status: { id: '1', key: 'open', display: 'Open' },
-    createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+    createdBy: {
+      self: 'https://api.tracker.yandex.net/v3/users/user1',
+      id: 'user1',
+      display: 'User 1',
+    },
     createdAt: '2024-01-01T10:00:00.000Z',
     updatedAt: '2024-01-01T10:00:00.000Z',
   };

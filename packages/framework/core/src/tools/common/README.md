@@ -64,7 +64,7 @@ src/mcp/tools/base/             # Базовые классы
 
 **Файл:** `src/mcp/utils/response-field-filter.ts`
 
-**Поддержка:** Dot-notation (`assignee.login`), массивы, типобезопасность
+**Поддержка:** Dot-notation (`assignee.display`), массивы, типобезопасность
 
 **Критически важно:** ✅ ВСЕГДА фильтруй перед возвратом
 

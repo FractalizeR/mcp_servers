@@ -6,6 +6,7 @@
 
 import type { WithUnknownFields } from './types.js';
 import type { UserRef } from './common/user-ref.entity.js';
+import type { QueueRef } from './common/queue-ref.entity.js';
 
 /**
  * Статус проекта в Яндекс.Трекере
@@ -17,22 +18,6 @@ import type { UserRef } from './common/user-ref.entity.js';
  * - at_risk - Под угрозой срыва
  */
 export type ProjectStatus = 'draft' | 'in_progress' | 'launched' | 'postponed' | 'at_risk';
-
-/**
- * Референс на очередь (облегченная версия Queue)
- *
- * Используется в Project.queues для отображения связанных очередей
- */
-export interface QueueRef {
-  /** Идентификатор очереди */
-  readonly id: string;
-
-  /** Ключ очереди (например, QUEUE) */
-  readonly key: string;
-
-  /** Отображаемое имя очереди */
-  readonly display: string;
-}
 
 /**
  * Проект в Яндекс.Трекере
@@ -78,7 +63,14 @@ export interface Project {
   /** Дата окончания проекта в формате ISO 8601 (может отсутствовать) */
   readonly endDate?: string;
 
-  /** Очереди, связанные с проектом (может отсутствовать) */
+  /**
+   * Очереди, связанные с проектом (может отсутствовать)
+   *
+   * НЕ ПОДТВЕРЖДЕНО живой пробой: у доступных проектов поле не пришло даже с
+   * `expand=queues` (проверялось 2026-08-19). Форма взята по правилу, снятому с
+   * подтверждённых `Issue.queue` и `Component.queue`. Если API отдаст здесь ref без
+   * `self` — вернуть проектам отдельный тип.
+   */
   readonly queues?: ReadonlyArray<QueueRef>;
 }
 

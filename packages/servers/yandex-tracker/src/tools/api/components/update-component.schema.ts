@@ -41,7 +41,7 @@ export const UpdateComponentParamsSchema = z.object({
 
   /**
    * Массив полей для возврата в результате (обязательный)
-   * Примеры: ['id', 'name'], ['id', 'name', 'description', 'lead.login']
+   * Примеры: ['id', 'name'], ['id', 'name', 'description', 'lead.display']
    */
   fields: FieldsSchema,
 });

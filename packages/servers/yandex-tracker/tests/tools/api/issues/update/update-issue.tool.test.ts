@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { createQueueRef } from '#helpers/common-fixtures.js';
 import { UpdateIssueTool } from '#tools/api/issues/update/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
@@ -11,7 +12,6 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('UpdateIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -23,10 +23,10 @@ describe('UpdateIssueTool', () => {
     key: 'QUEUE-123',
     summary: 'Updated Summary',
     description: 'Updated Description',
-    queue: createQueueFixture({
+    queue: createQueueRef({
       id: '1',
       key: 'QUEUE',
-      name: 'Test Queue',
+      display: 'Test Queue',
     }),
     status: {
       id: '2',
@@ -34,10 +34,9 @@ describe('UpdateIssueTool', () => {
       display: 'In Progress',
     },
     createdBy: {
-      uid: 'uid-creator',
+      self: 'https://api.tracker.yandex.net/v3/users/creator',
+      id: 'creator',
       display: 'Creator',
-      login: 'creator',
-      isActive: true,
     },
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-02T12:00:00Z',

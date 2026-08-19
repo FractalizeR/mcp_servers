@@ -27,35 +27,16 @@ export class GetBulkChangeStatusOperation extends BaseOperation {
    * - Возвращает мгновенный снапшот состояния
    * - Для ожидания завершения реализуй polling в вызывающем коде
    *
-   * Возможные статусы:
-   * - PENDING: операция в очереди
-   * - RUNNING: операция выполняется
-   * - COMPLETED: операция завершена успешно
-   * - FAILED: операция завершена с ошибками
-   * - CANCELLED: операция отменена
+   * Подтверждённые статусы — `CREATED`, `COMPLETE`, `FAILED`; перечень официально
+   * не опубликован и полным не считается (см. `BulkChangeStatus`). Терминальными
+   * при ожидании завершения считай `COMPLETE` и `FAILED` — так делает референсный
+   * клиент (`yandex_tracker_client/collections.py:1573`).
    *
    * @example
    * ```typescript
    * const status = await getBulkStatus.execute('12345');
-   * console.log(`Статус: ${status.status}, прогресс: ${status.progress}%`);
-   * console.log(`Обработано: ${status.processedIssues}/${status.totalIssues}`);
-   * ```
-   *
-   * @example
-   * // Polling с ожиданием завершения
-   * ```typescript
-   * async function waitForCompletion(operationId: string): Promise<BulkChangeOperation> {
-   *   while (true) {
-   *     const status = await getBulkStatus.execute(operationId);
-   *
-   *     if (status.status === 'COMPLETED' || status.status === 'FAILED') {
-   *       return status;
-   *     }
-   *
-   *     // Ждём 2 секунды перед следующей проверкой
-   *     await new Promise(resolve => setTimeout(resolve, 2000));
-   *   }
-   * }
+   * console.log(`Статус: ${status.status} (${status.statusText})`);
+   * console.log(`Обработано: ${status.totalCompletedIssues}/${status.totalIssues}`);
    * ```
    */
   async execute(operationId: string): Promise<BulkChangeOperationWithUnknownFields> {
@@ -66,7 +47,8 @@ export class GetBulkChangeStatusOperation extends BaseOperation {
     const response = await this.httpClient.get<BulkChangeOperationWithUnknownFields>(endpoint);
 
     this.logger.debug(
-      `Bulk операция ${operationId}: статус ${response.status}, прогресс ${response.progress ?? 'N/A'}%`
+      `Bulk операция ${operationId}: статус ${response.status}, ` +
+        `обработано задач ${response.executionIssuePercent ?? 'N/A'}%`
     );
 
     return response;

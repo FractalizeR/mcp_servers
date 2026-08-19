@@ -91,8 +91,8 @@ describe('GetComponentsTool', () => {
 
       it('должен принимать корректный queueId', async () => {
         const mockComponents = [
-          createComponentFixture({ id: '1', name: 'Component 1' }),
-          createComponentFixture({ id: '2', name: 'Component 2' }),
+          createComponentFixture({ id: 1, name: 'Component 1' }),
+          createComponentFixture({ id: 2, name: 'Component 2' }),
         ];
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
 
@@ -108,9 +108,9 @@ describe('GetComponentsTool', () => {
     describe('получение списка компонентов', () => {
       it('должен получить список компонентов по queueId', async () => {
         const mockComponents = [
-          createComponentFixture({ id: '1', name: 'Component 1' }),
-          createComponentFixture({ id: '2', name: 'Component 2' }),
-          createComponentFixture({ id: '3', name: 'Component 3' }),
+          createComponentFixture({ id: 1, name: 'Component 1' }),
+          createComponentFixture({ id: 2, name: 'Component 2' }),
+          createComponentFixture({ id: 3, name: 'Component 3' }),
         ];
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
 
@@ -173,12 +173,12 @@ describe('GetComponentsTool', () => {
       it('должен получить компоненты с разными свойствами', async () => {
         const mockComponents = [
           createComponentFixture({
-            id: '1',
+            id: 1,
             name: 'Backend',
             description: 'Backend services',
           }),
           createComponentFixture({
-            id: '2',
+            id: 2,
             name: 'Frontend',
             assignAuto: true,
           }),
@@ -200,7 +200,7 @@ describe('GetComponentsTool', () => {
       });
 
       it('должен получить один компонент', async () => {
-        const mockComponents = [createComponentFixture({ id: '1', name: 'Single Component' })];
+        const mockComponents = [createComponentFixture({ id: 1, name: 'Single Component' })];
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
 
         const result = await tool.execute({ queueId: 'SINGLE', fields: ['id', 'name'] });
@@ -220,7 +220,7 @@ describe('GetComponentsTool', () => {
 
       it('должен обработать большое количество компонентов', async () => {
         const mockComponents = Array.from({ length: 50 }, (_, i) =>
-          createComponentFixture({ id: `${i + 1}`, name: `Component ${i + 1}` })
+          createComponentFixture({ id: i + 1, name: `Component ${i + 1}` })
         );
         vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
 

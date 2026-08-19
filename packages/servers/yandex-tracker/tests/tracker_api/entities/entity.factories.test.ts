@@ -25,10 +25,10 @@ describe('Entity Factories', () => {
       const user = createUser();
 
       expect(user).toMatchObject({
-        uid: '1234567890',
+        uid: 1234567890,
         display: 'Test User',
         login: 'testuser',
-        isActive: true,
+        dismissed: false,
         email: 'testuser@example.com',
       });
     });
@@ -41,7 +41,7 @@ describe('Entity Factories', () => {
 
       expect(user.login).toBe('customuser');
       expect(user.email).toBe('custom@example.com');
-      expect(user.uid).toBe('1234567890');
+      expect(user.uid).toBe(1234567890);
     });
   });
 
@@ -50,10 +50,9 @@ describe('Entity Factories', () => {
       const user = createMinimalUser();
 
       expect(user).toEqual({
-        uid: '1234567890',
+        uid: 1234567890,
         display: 'Test User',
         login: 'testuser',
-        isActive: true,
       });
       expect(user.email).toBeUndefined();
       expect(user.firstName).toBeUndefined();
@@ -62,10 +61,10 @@ describe('Entity Factories', () => {
 
     test('поддерживает overrides', () => {
       const user = createMinimalUser({
-        isActive: false,
+        dismissed: true,
       });
 
-      expect(user.isActive).toBe(false);
+      expect(user.dismissed).toBe(true);
     });
   });
 
@@ -74,7 +73,7 @@ describe('Entity Factories', () => {
       const queue = createQueue();
 
       expect(queue).toEqual({
-        id: '1',
+        id: 1,
         self: 'https://api.tracker.yandex.net/v3/queues/TEST',
         key: 'TEST',
         version: 1,
@@ -229,8 +228,8 @@ describe('Entity Factories', () => {
     test('assignee отличается от createdBy', () => {
       const issue = createFullIssue();
 
-      expect(issue.assignee?.login).toBe('assignee');
-      expect(issue.createdBy.login).toBe('testuser');
+      expect(issue.assignee?.display).toBe('Assignee');
+      expect(issue.createdBy.display).toBe('Test User');
     });
 
     test('поддерживает overrides', () => {

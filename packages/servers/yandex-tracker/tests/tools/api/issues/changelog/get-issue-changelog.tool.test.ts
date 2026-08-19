@@ -48,10 +48,9 @@ describe('GetIssueChangelogTool (batch mode)', () => {
     issue: { id: '123', key: 'QUEUE-123', display: 'Test Issue' },
     updatedAt: '2025-01-01T10:00:00Z',
     updatedBy: {
-      uid: 'uid-user1',
+      self: 'https://api.tracker.yandex.net/v3/users/user1',
+      id: 'user1',
       display: 'User One',
-      login: 'user1',
-      isActive: true,
     },
     type: 'IssueUpdated',
     fields: [

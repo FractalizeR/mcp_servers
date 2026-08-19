@@ -44,7 +44,7 @@ describe('DeleteComponentOperation', () => {
   describe('execute', () => {
     it('should fetch component before deletion and then delete it', async () => {
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponent);
@@ -60,7 +60,7 @@ describe('DeleteComponentOperation', () => {
 
     it('should invalidate component cache after deletion', async () => {
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponent);
@@ -74,7 +74,7 @@ describe('DeleteComponentOperation', () => {
 
     it('should invalidate components list cache after deletion', async () => {
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-123' }),
       });
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponent);
@@ -123,7 +123,7 @@ describe('DeleteComponentOperation', () => {
 
     it('should handle DELETE API errors', async () => {
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponent);
@@ -134,7 +134,7 @@ describe('DeleteComponentOperation', () => {
 
     it('should log info messages', async () => {
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponent);
@@ -148,7 +148,7 @@ describe('DeleteComponentOperation', () => {
 
     it('should log debug messages about cache invalidation', async () => {
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponent);
@@ -164,7 +164,7 @@ describe('DeleteComponentOperation', () => {
 
     it('should work with numeric component ID', async () => {
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '123',
+        id: 123,
         queue: createQueueRef({ id: 'queue-1' }),
       });
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockComponent);
