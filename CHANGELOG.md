@@ -1,3 +1,18 @@
+## [1.9.0](https://github.com/FractalizeR/mcp_servers/compare/v1.8.1...v1.9.0) (2026-08-19)
+
+### Features
+
+* **tools:** обогащение описаний инструментов для поиска на стороне клиента ([4c70d77](https://github.com/FractalizeR/mcp_servers/commit/4c70d7792a506cee8b78dc51d0d36c233e2ba042))
+
+### Bug Fixes
+
+* **core:** проекция полей больше не оставляет пустые объекты ([adb99f9](https://github.com/FractalizeR/mcp_servers/commit/adb99f93df333e3a4931fd1b2d5526c1848d3b26))
+* **infra:** внятная трансляция 409 и честный тип поля errors ([ddfda4c](https://github.com/FractalizeR/mcp_servers/commit/ddfda4c79f18a68a8be0dbf12d7a94bee7062211))
+* **tracker:** add/update_checklist_item больше не падают на deadline ([9075f4f](https://github.com/FractalizeR/mcp_servers/commit/9075f4f2f7419e91bdcebd570333daf7cf120d69))
+* **tracker:** batch-ответ с частичным отказом больше не отбраковывается клиентом ([4288d80](https://github.com/FractalizeR/mcp_servers/commit/4288d80822248cf90dc92132bc7d074de58e115b))
+* **tracker:** find_issues теряла ключи, transition_issue возвращал не ту сущность ([01f3a98](https://github.com/FractalizeR/mcp_servers/commit/01f3a98506e302532db44768d796faef2ac7a088))
+* **tracker:** ложный hasNextPage на курсорных эндпоинтах ([072e395](https://github.com/FractalizeR/mcp_servers/commit/072e395988fa63eaebc14405ef912783e5d60309))
+
 ## [1.8.1](https://github.com/FractalizeR/mcp_servers/compare/v1.8.0...v1.8.1) (2026-08-16)
 
 ### Bug Fixes
