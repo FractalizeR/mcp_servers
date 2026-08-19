@@ -6,10 +6,18 @@ import {
 } from '../../src/utils/zod-error-formatter.js';
 import type { ZodIssueMinimal } from '../../src/utils/zod-error-formatter.js';
 
+/**
+ * Состав issue сверх обязательной тройки зависит от `code` (expected, minimum,
+ * options, ...) и в `ZodIssueMinimal` намеренно не назван. Настоящие issue от
+ * Zod эти поля несут, и форматтер их читает, поэтому фикстуре нужна форма
+ * пошире — иначе литерал не собрать.
+ */
+type ZodIssueFixture = ZodIssueMinimal & Record<string, unknown>;
+
 describe('ZodErrorFormatter', () => {
   describe('formatZodErrors', () => {
     it('должен форматировать invalid_type (integer)', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'invalid_type',
           expected: 'integer',
@@ -30,7 +38,7 @@ describe('ZodErrorFormatter', () => {
     });
 
     it('должен форматировать invalid_type (undefined = обязательное поле)', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'invalid_type',
           expected: 'string',
@@ -51,7 +59,7 @@ describe('ZodErrorFormatter', () => {
     });
 
     it('должен форматировать invalid_enum_value', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'invalid_enum_value',
           options: ['a', 'b', 'c'],
@@ -72,7 +80,7 @@ describe('ZodErrorFormatter', () => {
     });
 
     it('должен форматировать too_small (inclusive)', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'too_small',
           minimum: 1,
@@ -94,7 +102,7 @@ describe('ZodErrorFormatter', () => {
     });
 
     it('должен форматировать too_small (exclusive)', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'too_small',
           minimum: 0,
@@ -116,7 +124,7 @@ describe('ZodErrorFormatter', () => {
     });
 
     it('должен форматировать too_big', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'too_big',
           maximum: 100,
@@ -138,7 +146,7 @@ describe('ZodErrorFormatter', () => {
     });
 
     it('должен форматировать invalid_string (email)', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'invalid_string',
           validation: 'email',
@@ -158,7 +166,7 @@ describe('ZodErrorFormatter', () => {
     });
 
     it('должен форматировать ошибку без path', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'invalid_type',
           expected: 'integer',
@@ -179,7 +187,7 @@ describe('ZodErrorFormatter', () => {
     });
 
     it('должен форматировать несколько ошибок', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'invalid_type',
           expected: 'string',
@@ -207,7 +215,7 @@ describe('ZodErrorFormatter', () => {
 
   describe('formatZodErrorsToString', () => {
     it('должен объединять ошибки через разделитель', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'invalid_type',
           expected: 'string',
@@ -231,7 +239,7 @@ describe('ZodErrorFormatter', () => {
     });
 
     it('должен поддерживать кастомный разделитель', () => {
-      const issues: ZodIssueMinimal[] = [
+      const issues: ZodIssueFixture[] = [
         {
           code: 'invalid_enum_value',
           options: ['a', 'b'],

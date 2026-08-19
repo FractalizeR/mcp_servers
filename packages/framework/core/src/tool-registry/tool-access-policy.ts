@@ -93,11 +93,11 @@ export class ConfiguredToolAccessPolicy implements ToolAccessPolicy {
  * (например, в unit-тестах ToolRegistry, не связанных с access control).
  */
 export class AllowAllToolAccessPolicy implements ToolAccessPolicy {
-  isVisible(): boolean {
+  isVisible(_tool: BaseTool): boolean {
     return true;
   }
 
-  isCallable(): boolean {
+  isCallable(_tool: BaseTool): boolean {
     return true;
   }
 

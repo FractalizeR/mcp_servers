@@ -10,14 +10,23 @@ import { ToolRegistry, type ToolConstructor } from '../src/tool-registry/index.j
 import { BaseTool } from '../src/tools/base/base-tool.js';
 import type { Container } from 'inversify';
 import type { Logger, ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import type { ToolDefinition } from '../src/tools/base/index.js';
+import {
+  ToolCategory,
+  ToolPriority,
+  type StaticToolMetadata,
+  type ToolDefinition,
+} from '../src/tools/base/index.js';
 
 // Mock tool для тестирования
 class MockTool extends BaseTool<void> {
-  static override METADATA = {
-    category: 'test',
+  static override METADATA: StaticToolMetadata = {
+    name: 'tool1',
+    description: 'Mock tool',
+    category: ToolCategory.SYSTEM,
     subcategory: 'mock',
-    priority: 'normal' as const,
+    priority: ToolPriority.NORMAL,
+    tags: [],
+    isHelper: false,
   };
 
   constructor(
@@ -51,31 +60,31 @@ class MockTool extends BaseTool<void> {
 
 // Mock tool с priority
 class CriticalMockTool extends MockTool {
-  static override METADATA = {
-    category: 'test',
-    priority: 'critical' as const,
+  static override METADATA: StaticToolMetadata = {
+    ...MockTool.METADATA,
+    priority: ToolPriority.CRITICAL,
   };
 }
 
 class HighPriorityMockTool extends MockTool {
-  static override METADATA = {
-    category: 'test',
-    priority: 'high' as const,
+  static override METADATA: StaticToolMetadata = {
+    ...MockTool.METADATA,
+    priority: ToolPriority.HIGH,
   };
 }
 
 class LowPriorityMockTool extends MockTool {
-  static override METADATA = {
-    category: 'test',
-    priority: 'low' as const,
+  static override METADATA: StaticToolMetadata = {
+    ...MockTool.METADATA,
+    priority: ToolPriority.LOW,
   };
 }
 
 // Mock tool с другой категорией
 class OtherCategoryMockTool extends MockTool {
-  static override METADATA = {
-    category: 'other',
-    priority: 'normal' as const,
+  static override METADATA: StaticToolMetadata = {
+    ...MockTool.METADATA,
+    category: ToolCategory.HELPERS,
   };
 }
 
@@ -142,14 +151,14 @@ describe('ToolRegistry - Contract Tests', () => {
         }
         if (symbolStr.includes('ToolA')) {
           const tool = new (class ToolA extends MockTool {
-            static override METADATA = { category: 'test', priority: 'normal' as const };
+            static override METADATA: StaticToolMetadata = { ...MockTool.METADATA };
           })('a_tool', mockLogger);
           classToInstance.set(symbol, tool);
           return tool;
         }
         if (symbolStr.includes('ToolB')) {
           const tool = new (class ToolB extends MockTool {
-            static override METADATA = { category: 'test', priority: 'normal' as const };
+            static override METADATA: StaticToolMetadata = { ...MockTool.METADATA };
           })('z_tool', mockLogger);
           classToInstance.set(symbol, tool);
           return tool;
@@ -230,10 +239,10 @@ describe('ToolRegistry - Contract Tests', () => {
     it('сортировка по алфавиту внутри одного priority', () => {
       // Создаем два tool с одинаковым priority
       class ToolA extends MockTool {
-        static override METADATA = { category: 'test', priority: 'normal' as const };
+        static override METADATA: StaticToolMetadata = { ...MockTool.METADATA };
       }
       class ToolB extends MockTool {
-        static override METADATA = { category: 'test', priority: 'normal' as const };
+        static override METADATA: StaticToolMetadata = { ...MockTool.METADATA };
       }
 
       toolInstances.set('a_tool', new ToolA('a_tool', mockLogger));
@@ -255,18 +264,18 @@ describe('ToolRegistry - Contract Tests', () => {
   describe('Инвариант 4: Негативный фильтр (disabled groups)', () => {
     it('disabledFilter исключает инструменты отключенной категории', () => {
       const registry = new ToolRegistry(mockContainer, mockLogger, [
-        MockTool as unknown as ToolConstructor, // category: 'test'
-        OtherCategoryMockTool as unknown as ToolConstructor, // category: 'other'
+        MockTool as unknown as ToolConstructor, // category: system
+        OtherCategoryMockTool as unknown as ToolConstructor, // category: helpers
       ]);
 
       const definitions = registry.getDefinitions({
         includeAll: false,
-        categories: new Set(['test']),
+        categories: new Set([ToolCategory.SYSTEM]),
         categoriesWithSubcategories: new Map(),
       });
 
       expect(definitions.length).toBe(1);
-      expect(definitions[0].name).toBe('other_tool');
+      expect(definitions[0]?.name).toBe('other_tool');
     });
 
     it('без disabledFilter возвращает все tools (эквивалентно getDefinitions())', () => {
@@ -302,10 +311,10 @@ describe('ToolRegistry - Contract Tests', () => {
       // beforeEach), оба priority: normal — порядок внутри одного приоритета
       // не должен зависеть от порядка регистрации в DI.
       class ToolA extends MockTool {
-        static override METADATA = { category: 'test', priority: 'normal' as const };
+        static override METADATA: StaticToolMetadata = { ...MockTool.METADATA };
       }
       class ToolB extends MockTool {
-        static override METADATA = { category: 'test', priority: 'normal' as const };
+        static override METADATA: StaticToolMetadata = { ...MockTool.METADATA };
       }
 
       // Регистрируем в "неправильном" порядке (B раньше A) — сортировка должна
@@ -352,7 +361,7 @@ describe('ToolRegistry - Contract Tests', () => {
       const result = await registry.execute('tool1', {});
 
       expect(result.isError).toBe(false);
-      expect(result.content[0].text).toContain('Mock result from tool1');
+      expect(result.content[0]?.text).toContain('Mock result from tool1');
     });
 
     it('execute(name) возвращает ошибку для несуществующего tool', async () => {
@@ -363,7 +372,7 @@ describe('ToolRegistry - Contract Tests', () => {
       const result = await registry.execute('nonexistent', {});
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('не найден');
+      expect(result.content[0]?.text).toContain('не найден');
     });
   });
 

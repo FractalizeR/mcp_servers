@@ -26,13 +26,22 @@ import {
 } from '../src/tool-registry/tool-access-policy.js';
 import { ToolFilterService } from '../src/tool-registry/tool-filter.service.js';
 import { BaseTool } from '../src/tools/base/base-tool.js';
-import type { ToolDefinition } from '../src/tools/base/index.js';
+import {
+  ToolCategory,
+  ToolPriority,
+  type StaticToolMetadata,
+  type ToolDefinition,
+} from '../src/tools/base/index.js';
 
 class MockTool extends BaseTool<void> {
-  static override METADATA = {
-    category: 'issues',
+  static override METADATA: StaticToolMetadata = {
+    name: 'mock_tool',
+    description: 'Mock tool',
+    category: ToolCategory.ISSUES,
     subcategory: 'read',
-    priority: 'normal' as const,
+    priority: ToolPriority.NORMAL,
+    tags: [],
+    isHelper: false,
   };
 
   constructor(
@@ -60,15 +69,14 @@ class MockTool extends BaseTool<void> {
 }
 
 class DisabledCategoryMockTool extends MockTool {
-  static override METADATA = {
-    category: 'issues',
-    subcategory: 'read',
-    priority: 'normal' as const,
-  };
+  static override METADATA: StaticToolMetadata = { ...MockTool.METADATA };
 }
 
 class AllowedCategoryMockTool extends MockTool {
-  static override METADATA = { category: 'system', priority: 'normal' as const };
+  static override METADATA: StaticToolMetadata = {
+    ...MockTool.METADATA,
+    category: ToolCategory.SYSTEM,
+  };
 }
 
 function buildMockContainer(): Container {

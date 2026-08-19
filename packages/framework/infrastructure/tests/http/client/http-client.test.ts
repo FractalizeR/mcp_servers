@@ -39,6 +39,32 @@ function createMockRetryStrategy(): RetryStrategy {
 }
 
 /**
+ * Значение, которое request-interceptor получает и логирует
+ * (см. setupInterceptors в axios-http-client.ts).
+ */
+interface LoggedRequestConfig {
+  readonly method?: string;
+  readonly url?: string;
+}
+
+/** Значение, которое логирует response-interceptor. */
+interface LoggedResponse {
+  readonly status: number;
+  readonly config: { readonly url?: string };
+  readonly data: unknown;
+}
+
+/**
+ * Сигнатура `interceptors.*.use`. Без неё `vi.fn()` выводится как функция без
+ * параметров, `mock.calls[0]` вырождается в пустой кортеж, и зарегистрированный
+ * колбэк из мока не достать.
+ */
+type InterceptorUse<TValue> = (
+  onFulfilled: (value: TValue) => TValue,
+  onRejected: (error: unknown) => unknown
+) => number;
+
+/**
  * Создаёт мок AxiosInstance
  */
 function createMockAxiosInstance() {
@@ -49,10 +75,10 @@ function createMockAxiosInstance() {
     delete: vi.fn(),
     interceptors: {
       request: {
-        use: vi.fn(() => 0),
+        use: vi.fn<InterceptorUse<LoggedRequestConfig>>(() => 0),
       },
       response: {
-        use: vi.fn(() => 0),
+        use: vi.fn<InterceptorUse<LoggedResponse>>(() => 0),
       },
     },
   };

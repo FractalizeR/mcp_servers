@@ -193,7 +193,7 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - `test:watch` — `vitest watch`
 - `typecheck` — `tsc --noEmit`
 - `typecheck:scripts` — `tsc --noEmit -p tsconfig.scripts.json` (где есть `scripts`)
-- `typecheck:tests` — `tsc --noEmit -p tsconfig.tests.json` (пока только `packages/servers/*`; во `framework` нет `tsconfig.tests.json`, их тесты типами не проверяются)
+- `typecheck:tests` — `tsc --noEmit -p tsconfig.tests.json` (во всех пакетах)
 - `validate` — полная валидация (все шаги, полный вывод)
 - `validate:quiet` — те же шаги, минимальный вывод (для ИИ агентов)
 

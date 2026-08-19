@@ -54,10 +54,10 @@ describe('generateDefinitionFromSchema', () => {
       const inputSchema = generateDefinitionFromSchema(BasicSchema);
 
       const issueKeyProperty = inputSchema.properties['issueKey'] as Record<string, unknown>;
-      expect(issueKeyProperty.description).toBe('Ключ задачи в формате QUEUE-123');
+      expect(issueKeyProperty['description']).toBe('Ключ задачи в формате QUEUE-123');
 
       const fieldsProperty = inputSchema.properties['fields'] as Record<string, unknown>;
-      expect(fieldsProperty.description).toBe('Поля для возврата');
+      expect(fieldsProperty['description']).toBe('Поля для возврата');
     });
 
     it('должен поддерживать additionalProperties: false по умолчанию', () => {
@@ -71,13 +71,13 @@ describe('generateDefinitionFromSchema', () => {
     it('должен конвертировать string, number, boolean', () => {
       const inputSchema = generateDefinitionFromSchema(PrimitiveTypesSchema);
 
-      expect((inputSchema.properties['stringField'] as Record<string, unknown>).type).toBe(
+      expect((inputSchema.properties['stringField'] as Record<string, unknown>)['type']).toBe(
         'string'
       );
-      expect((inputSchema.properties['numberField'] as Record<string, unknown>).type).toBe(
+      expect((inputSchema.properties['numberField'] as Record<string, unknown>)['type']).toBe(
         'number'
       );
-      expect((inputSchema.properties['booleanField'] as Record<string, unknown>).type).toBe(
+      expect((inputSchema.properties['booleanField'] as Record<string, unknown>)['type']).toBe(
         'boolean'
       );
     });
@@ -101,12 +101,12 @@ describe('generateDefinitionFromSchema', () => {
       const inputSchema = generateDefinitionFromSchema(EnumSchema);
 
       const priorityProperty = inputSchema.properties['priority'] as Record<string, unknown>;
-      expect(priorityProperty.type).toBe('string');
-      expect(priorityProperty.enum).toEqual(['low', 'medium', 'high']);
-      expect(priorityProperty.description).toBe('Приоритет задачи');
+      expect(priorityProperty['type']).toBe('string');
+      expect(priorityProperty['enum']).toEqual(['low', 'medium', 'high']);
+      expect(priorityProperty['description']).toBe('Приоритет задачи');
 
       const statusProperty = inputSchema.properties['status'] as Record<string, unknown>;
-      expect(statusProperty.enum).toEqual(['open', 'in-progress', 'closed']);
+      expect(statusProperty['enum']).toEqual(['open', 'in-progress', 'closed']);
     });
   });
 
@@ -115,16 +115,16 @@ describe('generateDefinitionFromSchema', () => {
       const inputSchema = generateDefinitionFromSchema(ValidationSchema);
 
       const usernameProperty = inputSchema.properties['username'] as Record<string, unknown>;
-      expect(usernameProperty.minLength).toBe(3);
-      expect(usernameProperty.maxLength).toBe(20);
+      expect(usernameProperty['minLength']).toBe(3);
+      expect(usernameProperty['maxLength']).toBe(20);
 
       const ageProperty = inputSchema.properties['age'] as Record<string, unknown>;
-      expect(ageProperty.minimum).toBe(0);
-      expect(ageProperty.maximum).toBe(120);
+      expect(ageProperty['minimum']).toBe(0);
+      expect(ageProperty['maximum']).toBe(120);
 
       const tagsProperty = inputSchema.properties['tags'] as Record<string, unknown>;
-      expect(tagsProperty.minItems).toBe(1);
-      expect(tagsProperty.maxItems).toBe(10);
+      expect(tagsProperty['minItems']).toBe(1);
+      expect(tagsProperty['maxItems']).toBe(10);
     });
   });
 
@@ -133,14 +133,14 @@ describe('generateDefinitionFromSchema', () => {
       const inputSchema = generateDefinitionFromSchema(DefaultValuesSchema);
 
       const perPageProperty = inputSchema.properties['perPage'] as Record<string, unknown>;
-      expect(perPageProperty.default).toBe(50);
-      expect(perPageProperty.description).toBe('Количество элементов на странице');
+      expect(perPageProperty['default']).toBe(50);
+      expect(perPageProperty['description']).toBe('Количество элементов на странице');
 
       const includeArchivedProperty = inputSchema.properties['includeArchived'] as Record<
         string,
         unknown
       >;
-      expect(includeArchivedProperty.default).toBe(false);
+      expect(includeArchivedProperty['default']).toBe(false);
     });
   });
 
@@ -151,8 +151,8 @@ describe('generateDefinitionFromSchema', () => {
       // assignee - nullable (обязательное, но может быть null)
       // Zod v4 использует anyOf для nullable полей
       const assigneeProperty = inputSchema.properties['assignee'] as Record<string, unknown>;
-      expect(assigneeProperty.anyOf).toBeDefined();
-      expect(assigneeProperty.anyOf).toEqual([{ type: 'string' }, { type: 'null' }]);
+      expect(assigneeProperty['anyOf']).toBeDefined();
+      expect(assigneeProperty['anyOf']).toEqual([{ type: 'string' }, { type: 'null' }]);
       expect(inputSchema.required).toContain('assignee');
 
       // dueDate - optional.nullable (может отсутствовать или быть null)
@@ -168,33 +168,33 @@ describe('generateDefinitionFromSchema', () => {
         string,
         unknown
       >;
-      expect(customFieldsProperty.type).toBe('object');
-      expect(customFieldsProperty.properties).toHaveProperty('resolution');
-      expect(customFieldsProperty.properties).toHaveProperty('assignee');
+      expect(customFieldsProperty['type']).toBe('object');
+      expect(customFieldsProperty['properties']).toHaveProperty('resolution');
+      expect(customFieldsProperty['properties']).toHaveProperty('assignee');
 
       // Проверяем required внутри nested object
-      expect((customFieldsProperty.required as string[]) || []).toContain('resolution');
-      expect((customFieldsProperty.required as string[]) || []).not.toContain('assignee');
+      expect((customFieldsProperty['required'] as string[]) || []).toContain('resolution');
+      expect((customFieldsProperty['required'] as string[]) || []).not.toContain('assignee');
     });
 
     it('должен обрабатывать глубоко вложенные объекты', () => {
       const inputSchema = generateDefinitionFromSchema(DeeplyNestedSchema);
 
       const level1 = inputSchema.properties['level1'] as Record<string, unknown>;
-      expect(level1.type).toBe('object');
+      expect(level1['type']).toBe('object');
 
-      const level2 = (level1.properties as Record<string, unknown>)['level2'] as Record<
+      const level2 = (level1['properties'] as Record<string, unknown>)['level2'] as Record<
         string,
         unknown
       >;
-      expect(level2.type).toBe('object');
+      expect(level2['type']).toBe('object');
 
-      const level3 = (level2.properties as Record<string, unknown>)['level3'] as Record<
+      const level3 = (level2['properties'] as Record<string, unknown>)['level3'] as Record<
         string,
         unknown
       >;
-      expect(level3.type).toBe('object');
-      expect(level3.properties).toHaveProperty('value');
+      expect(level3['type']).toBe('object');
+      expect(level3['properties']).toHaveProperty('value');
     });
   });
 
@@ -203,22 +203,22 @@ describe('generateDefinitionFromSchema', () => {
       const inputSchema = generateDefinitionFromSchema(ArrayOfObjectsSchema);
 
       const issueKeysProperty = inputSchema.properties['issueKeys'] as Record<string, unknown>;
-      expect(issueKeysProperty.type).toBe('array');
-      expect((issueKeysProperty.items as Record<string, unknown>).type).toBe('string');
-      expect(issueKeysProperty.minItems).toBe(1);
+      expect(issueKeysProperty['type']).toBe('array');
+      expect((issueKeysProperty['items'] as Record<string, unknown>)['type']).toBe('string');
+      expect(issueKeysProperty['minItems']).toBe(1);
     });
 
     it('должен обрабатывать массивы объектов', () => {
       const inputSchema = generateDefinitionFromSchema(ArrayOfObjectsSchema);
 
       const filtersProperty = inputSchema.properties['filters'] as Record<string, unknown>;
-      expect(filtersProperty.type).toBe('array');
+      expect(filtersProperty['type']).toBe('array');
 
-      const itemsSchema = filtersProperty.items as Record<string, unknown>;
-      expect(itemsSchema.type).toBe('object');
-      expect(itemsSchema.properties).toHaveProperty('field');
-      expect(itemsSchema.properties).toHaveProperty('operator');
-      expect(itemsSchema.properties).toHaveProperty('value');
+      const itemsSchema = filtersProperty['items'] as Record<string, unknown>;
+      expect(itemsSchema['type']).toBe('object');
+      expect(itemsSchema['properties']).toHaveProperty('field');
+      expect(itemsSchema['properties']).toHaveProperty('operator');
+      expect(itemsSchema['properties']).toHaveProperty('value');
     });
   });
 
@@ -230,12 +230,12 @@ describe('generateDefinitionFromSchema', () => {
         string,
         unknown
       >;
-      expect(customFieldsProperty.type).toBe('object');
+      expect(customFieldsProperty['type']).toBe('object');
       // z.record() должен позволять additionalProperties
-      expect(customFieldsProperty.additionalProperties).toBeTruthy();
+      expect(customFieldsProperty['additionalProperties']).toBeTruthy();
 
       const metadataProperty = inputSchema.properties['metadata'] as Record<string, unknown>;
-      expect(metadataProperty.type).toBe('object');
+      expect(metadataProperty['type']).toBe('object');
     });
   });
 
@@ -248,7 +248,7 @@ describe('generateDefinitionFromSchema', () => {
       });
 
       const idProperty = inputSchema.properties['id'] as Record<string, unknown>;
-      expect(idProperty.description).toBe('Уникальный идентификатор');
+      expect(idProperty['description']).toBe('Уникальный идентификатор');
     });
 
     it('не должен перезаписывать существующий description из .describe()', () => {
@@ -260,7 +260,7 @@ describe('generateDefinitionFromSchema', () => {
 
       const issueKeyProperty = inputSchema.properties['issueKey'] as Record<string, unknown>;
       // .describe() имеет приоритет
-      expect(issueKeyProperty.description).toBe('Ключ задачи в формате QUEUE-123');
+      expect(issueKeyProperty['description']).toBe('Ключ задачи в формате QUEUE-123');
     });
 
     it('должен применять customTransforms', () => {
@@ -276,9 +276,9 @@ describe('generateDefinitionFromSchema', () => {
       });
 
       const idProperty = inputSchema.properties['id'] as Record<string, unknown>;
-      expect(idProperty.description).toBe('⚠️ КРИТИЧНО: Уникальный ID');
-      expect(idProperty.pattern).toBe('^[A-Z]+-\\d+$');
-      expect(idProperty.examples).toEqual(['QUEUE-123', 'PROJECT-456']);
+      expect(idProperty['description']).toBe('⚠️ КРИТИЧНО: Уникальный ID');
+      expect(idProperty['pattern']).toBe('^[A-Z]+-\\d+$');
+      expect(idProperty['examples']).toEqual(['QUEUE-123', 'PROJECT-456']);
     });
 
     it('должен поддерживать includeDescriptions: false', () => {
@@ -318,10 +318,10 @@ describe('generateDefinitionFromSchema', () => {
 
       // Проверяем descriptions
       const issueKeyProperty = inputSchema.properties['issueKey'] as Record<string, unknown>;
-      expect(issueKeyProperty.description).toBe('Ключ задачи');
+      expect(issueKeyProperty['description']).toBe('Ключ задачи');
 
       const commentProperty = inputSchema.properties['comment'] as Record<string, unknown>;
-      expect(commentProperty.description).toBe('Комментарий при переходе');
+      expect(commentProperty['description']).toBe('Комментарий при переходе');
     });
 
     it('должен работать для схемы с несколькими кастомными опциями', () => {
@@ -346,11 +346,11 @@ describe('generateDefinitionFromSchema', () => {
         string,
         unknown
       >;
-      expect(transitionIdProperty.description).toBe(
+      expect(transitionIdProperty['description']).toBe(
         '⚠️ ОБЯЗАТЕЛЬНО: ID перехода из get_transitions'
       );
-      expect(transitionIdProperty.pattern).toBe('^[0-9]+$');
-      expect(transitionIdProperty.examples).toEqual(['1', '2', '10']);
+      expect(transitionIdProperty['pattern']).toBe('^[0-9]+$');
+      expect(transitionIdProperty['examples']).toEqual(['1', '2', '10']);
     });
   });
 

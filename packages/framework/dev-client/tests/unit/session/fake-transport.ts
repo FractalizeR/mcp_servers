@@ -7,7 +7,7 @@
  * процессе — это и есть требование пакета «фабрика транспорта инъецируется».
  */
 
-import type { Transport } from '@modelcontextprotocol/client';
+import type { JSONRPCMessage, MessageExtraInfo, Transport } from '@modelcontextprotocol/client';
 import { PassThrough } from 'node:stream';
 
 const LEGACY_PROTOCOL_VERSION = '2025-11-25';
@@ -27,7 +27,7 @@ export interface FakeTransportHandlers {
 export class FakeTransport implements Transport {
   onclose?: () => void;
   onerror?: (error: Error) => void;
-  onmessage?: (message: JsonRpcRequest) => void;
+  onmessage?: <T extends JSONRPCMessage>(message: T, extra?: MessageExtraInfo) => void;
 
   readonly sent: JsonRpcRequest[] = [];
   /** Поток, эмулирующий stderr дочернего процесса (для тестов захвата stderr). */
@@ -40,11 +40,15 @@ export class FakeTransport implements Transport {
     return Promise.resolve();
   }
 
-  send(message: JsonRpcRequest): Promise<void> {
+  send(message: JSONRPCMessage): Promise<void> {
+    if (!('method' in message)) {
+      // Клиент шлёт только запросы и уведомления; ответ сюда прийти не может.
+      return Promise.resolve();
+    }
     this.sent.push(message);
     const response = this.buildResponse(message);
     if (response) {
-      queueMicrotask(() => this.onmessage?.(response as JsonRpcRequest));
+      queueMicrotask(() => this.onmessage?.(response as JSONRPCMessage));
     }
     return Promise.resolve();
   }
@@ -55,6 +59,12 @@ export class FakeTransport implements Transport {
     return Promise.resolve();
   }
 
+  /**
+   * Обработчики намеренно отдают `unknown` — тесты подсовывают в том числе
+   * заведомо неправильные payload'ы, поэтому результат не типизируется здесь,
+   * а приводится на выходе (см. `send`): это и есть граница «сервер вернул
+   * что угодно», которую фейк изображает.
+   */
   private buildResponse(message: JsonRpcRequest): unknown {
     if (message.id === undefined) return undefined; // notification — без ответа
     switch (message.method) {
