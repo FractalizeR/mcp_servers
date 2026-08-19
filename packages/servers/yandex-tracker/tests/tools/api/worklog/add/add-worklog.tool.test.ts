@@ -9,7 +9,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import { getTextContent, at } from '#helpers/tool-result.helper.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('AddWorklogTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -63,8 +63,8 @@ describe('AddWorklogTool', () => {
         success: boolean;
         data: { worklogs: Array<{ issueId: string; worklogId: string }> };
       };
-      expect(at(parsed.data.worklogs).issueId).toBe('TEST-1');
-      expect(at(parsed.data.worklogs).worklogId).toBe('12345');
+      expect(itemAt(parsed.data.worklogs).issueId).toBe('TEST-1');
+      expect(itemAt(parsed.data.worklogs).worklogId).toBe('12345');
     });
   });
 });

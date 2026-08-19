@@ -5,6 +5,18 @@ import { MCP_TOOL_PREFIX } from '#constants';
 import { getTextContent } from '#helpers/tool-result.helper.js';
 
 /**
+ * Текст ошибки для диагностики: не бросает, даже если блок не текстовый —
+ * иначе исходная причина падения воркфлоу теряется под исключением хелпера.
+ */
+function describeFailure(result: { readonly content: ReadonlyArray<unknown> }): string {
+  try {
+    return getTextContent(result);
+  } catch {
+    return JSON.stringify(result.content);
+  }
+}
+
+/**
  * Helper для E2E workflows с автоматическим извлечением данных
  * Используется в Фазе 2 для упрощения multi-step сценариев
  */
@@ -25,7 +37,7 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to create issue: ${getTextContent(result)}`);
+      throw new Error(`Failed to create issue: ${describeFailure(result)}`);
     }
 
     const response = JSON.parse(getTextContent(result));
@@ -42,7 +54,7 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to get issue: ${getTextContent(result)}`);
+      throw new Error(`Failed to get issue: ${describeFailure(result)}`);
     }
 
     const response = JSON.parse(getTextContent(result));
@@ -60,7 +72,7 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to update issue: ${getTextContent(result)}`);
+      throw new Error(`Failed to update issue: ${describeFailure(result)}`);
     }
   }
 
@@ -75,7 +87,7 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to transition issue: ${getTextContent(result)}`);
+      throw new Error(`Failed to transition issue: ${describeFailure(result)}`);
     }
   }
 
@@ -89,7 +101,7 @@ export class WorkflowClient {
     });
 
     if (result.isError) {
-      throw new Error(`Failed to find issues: ${getTextContent(result)}`);
+      throw new Error(`Failed to find issues: ${describeFailure(result)}`);
     }
 
     const response = JSON.parse(getTextContent(result));
@@ -112,7 +124,7 @@ export class WorkflowClient {
     );
 
     if (result.isError) {
-      throw new Error(`Failed to get changelog: ${getTextContent(result)}`);
+      throw new Error(`Failed to get changelog: ${describeFailure(result)}`);
     }
 
     const response = JSON.parse(getTextContent(result));
@@ -136,7 +148,7 @@ export class WorkflowClient {
     );
 
     if (result.isError) {
-      throw new Error(`Failed to get transitions: ${getTextContent(result)}`);
+      throw new Error(`Failed to get transitions: ${describeFailure(result)}`);
     }
 
     const response = JSON.parse(getTextContent(result));

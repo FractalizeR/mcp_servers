@@ -11,7 +11,7 @@ import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createLinkFixture, createSubtaskLinkFixture } from '#helpers/link.fixture.js';
 import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
-import { getTextContent, at } from '#helpers/tool-result.helper.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('CreateLinkTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -274,7 +274,7 @@ describe('CreateLinkTool', () => {
       expect(parsed.data.failed).toBe(1);
       expect(parsed.data.links).toHaveLength(1);
       expect(parsed.data.errors).toHaveLength(1);
-      expect(at(parsed.data.errors).error).toContain('Issue not found');
+      expect(itemAt(parsed.data.errors).error).toContain('Issue not found');
     });
 
     it('должен фильтровать поля для всех созданных связей', async () => {
@@ -318,11 +318,11 @@ describe('CreateLinkTool', () => {
         };
       };
       // Проверяем, что в результате только запрошенные поля
-      expect(at(parsed.data.links).link.id).toBeDefined();
-      expect(at(parsed.data.links).link.type).toBeDefined();
+      expect(itemAt(parsed.data.links).link.id).toBeDefined();
+      expect(itemAt(parsed.data.links).link.type).toBeDefined();
       // object и direction не должны быть в результате, т.к. не запрошены
-      expect(at(parsed.data.links).link.object).toBeUndefined();
-      expect(at(parsed.data.links).link.direction).toBeUndefined();
+      expect(itemAt(parsed.data.links).link.object).toBeUndefined();
+      expect(itemAt(parsed.data.links).link.direction).toBeUndefined();
     });
 
     it('должен обработать общую ошибку от facade', async () => {
@@ -425,7 +425,7 @@ describe('CreateLinkTool', () => {
         success: boolean;
         data: { links: Array<{ issueId: string; linkId: string }> };
       };
-      expect(at(parsed.data.links).linkId).toBe('12345');
+      expect(itemAt(parsed.data.links).linkId).toBe('12345');
     });
   });
 });

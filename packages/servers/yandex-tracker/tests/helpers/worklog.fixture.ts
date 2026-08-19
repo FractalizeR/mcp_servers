@@ -1,8 +1,4 @@
 import type { Worklog, WorklogWithUnknownFields } from '#tracker_api/entities/worklog.entity.js';
-import type {
-  BulkChangeOperation,
-  BulkChangeOperationWithUnknownFields,
-} from '#tracker_api/entities/bulk-change.entity.js';
 import { createUserRef } from './common-fixtures.js';
 
 export function createWorklogFixture(
@@ -17,18 +13,6 @@ export function createWorklogFixture(
     createdAt: '2024-01-01T10:00:00.000+0000',
     start: '2024-01-01T10:00:00.000+0000',
     duration: 'PT1H',
-    ...overrides,
-  };
-}
-
-export function createBulkChangeOperationFixture(
-  overrides?: Partial<BulkChangeOperation> & Record<string, unknown>
-): BulkChangeOperationWithUnknownFields {
-  const id = overrides?.id ?? 'bulk-1';
-  return {
-    id,
-    self: `https://api.tracker.yandex.net/v2/bulkchange/${id}`,
-    status: 'COMPLETED',
     ...overrides,
   };
 }

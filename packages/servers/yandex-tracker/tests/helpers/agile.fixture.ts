@@ -7,7 +7,7 @@ export function createBoardFixture(
   const id = overrides?.id ?? '1';
   return {
     id,
-    self: `https://api.tracker.yandex.net/v3/boards/${id}`,
+    self: `https://api.tracker.yandex.net/v2/boards/${id}`,
     version: 1,
     name: 'Test Board',
     ...overrides,
@@ -20,7 +20,7 @@ export function createSprintFixture(
   const id = overrides?.id ?? '1';
   return {
     id,
-    self: `https://api.tracker.yandex.net/v3/sprints/${id}`,
+    self: `https://api.tracker.yandex.net/v2/sprints/${id}`,
     version: 1,
     name: 'Test Sprint',
     ...overrides,

@@ -10,7 +10,7 @@ import type { ServerConfig } from '#config';
 import { GetIssueLinksOperation } from '#tracker_api/api_operations/link/get-issue-links.operation.js';
 import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
 import { createLinkListFixture } from '#helpers/link.fixture.js';
-import { at } from '#helpers/tool-result.helper.js';
+import { itemAt } from '#helpers/tool-result.helper.js';
 
 describe('GetIssueLinksOperation', () => {
   let operation: GetIssueLinksOperation;
@@ -58,7 +58,7 @@ describe('GetIssueLinksOperation', () => {
       const results = await operation.execute(['TEST-1']);
 
       expect(results).toHaveLength(1);
-      const results0 = at(results);
+      const results0 = itemAt(results);
       expect(results0.status).toBe('fulfilled');
       if (results0.status === 'fulfilled') {
         expect(results0.value.items).toHaveLength(3);
@@ -79,7 +79,7 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1']);
 
-      const results0 = at(results);
+      const results0 = itemAt(results);
       if (results0.status === 'fulfilled') {
         expect(results0.value.pagination.hasNextPage).toBe(false);
         expect(results0.value.pagination.fetchedAll).toBe(true);
@@ -100,7 +100,7 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1']);
 
-      const results0 = at(results);
+      const results0 = itemAt(results);
       if (results0.status === 'fulfilled') {
         expect(results0.value.pagination.hasNextPage).toBe(true);
       } else {
@@ -115,8 +115,8 @@ describe('GetIssueLinksOperation', () => {
       const results = await operation.execute(['TEST-1', 'TEST-2']);
 
       expect(results).toHaveLength(2);
-      expect(at(results).status).toBe('fulfilled');
-      expect(at(results, 1).status).toBe('rejected');
+      expect(itemAt(results).status).toBe('fulfilled');
+      expect(itemAt(results, 1).status).toBe('rejected');
     });
 
     it('возвращает пустой массив для пустого входа', async () => {
@@ -143,11 +143,13 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1'], { fetchAll: true });
 
-      const results0 = at(results);
+      const results0 = itemAt(results);
       if (results0.status === 'fulfilled') {
         expect(results0.value.items).toHaveLength(2);
         expect(results0.value.pagination.fetchedAll).toBe(true);
         expect(results0.value.pagination.pagesFetched).toBe(2);
+      } else {
+        throw new Error('ожидался fulfilled, получен rejected');
       }
     });
 
@@ -163,10 +165,12 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1'], { fetchAll: true, maxItems: 2 });
 
-      const results0 = at(results);
+      const results0 = itemAt(results);
       if (results0.status === 'fulfilled') {
         expect(results0.value.items).toHaveLength(2);
         expect(results0.value.pagination.truncated).toBe(true);
+      } else {
+        throw new Error('ожидался fulfilled, получен rejected');
       }
     });
   });
@@ -181,7 +185,7 @@ describe('GetIssueLinksOperation', () => {
       });
 
       const first = await operation.execute(['TEST-1'], { perPage: 1 });
-      const first0 = at(first);
+      const first0 = itemAt(first);
       expect(first0.status).toBe('fulfilled');
       if (first0.status !== 'fulfilled') {
         return;
@@ -198,7 +202,7 @@ describe('GetIssueLinksOperation', () => {
       httpClient.setResponse('GET', '/v3/issues/TEST-1/links?id=NEXT', createLinkListFixture(2));
 
       const second = await operation.execute(['TEST-1'], { cursor: nextCursor });
-      const second0 = at(second);
+      const second0 = itemAt(second);
       expect(second0.status).toBe('fulfilled');
       if (second0.status === 'fulfilled') {
         expect(second0.value.items).toHaveLength(2);
@@ -210,7 +214,7 @@ describe('GetIssueLinksOperation', () => {
     it('битый курсор → InvalidCursorError (без тихого fallback)', async () => {
       const results = await operation.execute(['TEST-1'], { cursor: 'broken-cursor' });
 
-      const results0 = at(results);
+      const results0 = itemAt(results);
       expect(results0.status).toBe('rejected');
       if (results0.status === 'rejected') {
         expect(results0.reason).toBeInstanceOf(InvalidCursorError);
@@ -222,7 +226,7 @@ describe('GetIssueLinksOperation', () => {
 
       const results = await operation.execute(['TEST-1'], { cursor: alien });
 
-      const results0 = at(results);
+      const results0 = itemAt(results);
       expect(results0.status).toBe('rejected');
       if (results0.status === 'rejected') {
         expect(results0.reason).toBeInstanceOf(InvalidCursorError);

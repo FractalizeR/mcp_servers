@@ -31,17 +31,12 @@ export function getTextContent(result: WithContent, index = 0): string {
   return block.text;
 }
 
-/** Разобранный JSON из текстового блока `content[index]`. */
-export function parseTextContent<T>(result: WithContent, index = 0): T {
-  return JSON.parse(getTextContent(result, index)) as T;
-}
-
 /**
  * Элемент массива по индексу. `noUncheckedIndexedAccess` делает `items[i]`
  * возможно-`undefined`; молчаливое чтение поля у отсутствующего элемента даёт
  * проверку, которая проходит при пустом ответе. Здесь отсутствие — провал.
  */
-export function at<T>(items: readonly T[], index = 0): T {
+export function itemAt<T>(items: readonly T[], index = 0): T {
   const item = items[index];
   if (item === undefined) {
     throw new Error(

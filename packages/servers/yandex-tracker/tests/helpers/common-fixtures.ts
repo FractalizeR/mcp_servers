@@ -65,7 +65,12 @@ export function createTimestampFields(overrides?: Partial<TimestampFields>): Tim
   };
 }
 
-/** Пользователь в полях сущностей (`createdBy`, `updatedBy`) — не `UserRef`. */
+/**
+ * Форма продиктована типом `User` (`uid`/`login`/`isActive`), который объявлен в
+ * `Issue.createdBy`. Живой API отдаёт там ref `{self, id, display}` — расхождение
+ * в типах сущностей, не в фикстуре; см. раздел про расхождения в
+ * `.agentic-planning/typecheck_tests_debt/README.md`.
+ */
 export function createUserFixture(
   overrides?: Partial<User> & Record<string, unknown>
 ): UserWithUnknownFields {

@@ -935,8 +935,8 @@ describe('FindIssuesTool', () => {
         responseMode: 'links',
       });
 
-      const fullSize = getTextContent(fullResult).length ?? 0;
-      const linksSize = getTextContent(linksResult).length ?? 0;
+      const fullSize = getTextContent(fullResult).length;
+      const linksSize = getTextContent(linksResult).length;
 
       expect(fullSize).toBeGreaterThan(0);
       expect(linksSize).toBeGreaterThan(0);

@@ -6,7 +6,7 @@ import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { AddWorklogInput } from '#tracker_api/dto/index.js';
 import type { ServerConfig } from '#config';
 import { AddWorklogOperation } from '#tracker_api/api_operations/worklog/add-worklog.operation.js';
-import { at } from '#helpers/tool-result.helper.js';
+import { itemAt } from '#helpers/tool-result.helper.js';
 
 describe('AddWorklogOperation', () => {
   let operation: AddWorklogOperation;
@@ -300,13 +300,13 @@ describe('AddWorklogOperation', () => {
       const result = await operation.executeMany(worklogs);
 
       expect(result).toHaveLength(2);
-      const result0 = at(result);
+      const result0 = itemAt(result);
       expect(result0.status).toBe('fulfilled');
       expect(result0.key).toBe('TEST-1');
       if (result0.status === 'fulfilled') {
         expect(result0.value).toEqual(mockWorklog1);
       }
-      const result1 = at(result, 1);
+      const result1 = itemAt(result, 1);
       expect(result1.status).toBe('fulfilled');
       expect(result1.key).toBe('TEST-2');
       if (result1.status === 'fulfilled') {
@@ -337,9 +337,9 @@ describe('AddWorklogOperation', () => {
       const result = await operation.executeMany(worklogs);
 
       expect(result).toHaveLength(2);
-      expect(at(result).status).toBe('fulfilled');
-      expect(at(result).key).toBe('TEST-1');
-      const result1 = at(result, 1);
+      expect(itemAt(result).status).toBe('fulfilled');
+      expect(itemAt(result).key).toBe('TEST-1');
+      const result1 = itemAt(result, 1);
       expect(result1.status).toBe('rejected');
       expect(result1.key).toBe('TEST-2');
       if (result1.status === 'rejected') {

@@ -7,7 +7,7 @@ import type { CreateLinkDto } from '#tracker_api/dto/index.js';
 import type { ServerConfig } from '#config';
 import { CreateLinkOperation } from '#tracker_api/api_operations/link/create-link.operation.js';
 import { createLinkFixture, createSubtaskLinkFixture } from '#helpers/link.fixture.js';
-import { at } from '#helpers/tool-result.helper.js';
+import { itemAt } from '#helpers/tool-result.helper.js';
 import type { LinkRelationship } from '#tracker_api/entities/link.entity.js';
 
 describe('CreateLinkOperation', () => {
@@ -249,8 +249,8 @@ describe('CreateLinkOperation', () => {
       const results = await operation.executeMany(links);
 
       expect(results).toHaveLength(2);
-      expect(at(results).status).toBe('fulfilled');
-      expect(at(results, 1).status).toBe('fulfilled');
+      expect(itemAt(results).status).toBe('fulfilled');
+      expect(itemAt(results, 1).status).toBe('fulfilled');
       expect(mockHttpClient.post).toHaveBeenCalledTimes(2);
     });
 

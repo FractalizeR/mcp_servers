@@ -1184,7 +1184,7 @@ export class MockServer {
    * Mock успешного создания очереди
    */
   mockCreateQueueSuccess(queueData?: Record<string, unknown>): this {
-    const queue = generateQueue({ overrides: queueData });
+    const queue = generateQueue(queueData ? { overrides: queueData } : {});
     const mockKey = `POST ${TRACKER_API_V3}/queues/`;
     this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);

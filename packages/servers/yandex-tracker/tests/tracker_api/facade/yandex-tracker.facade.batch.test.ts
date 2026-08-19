@@ -34,10 +34,8 @@ import type {
 } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/common/pagination.entity.js';
 import type { LinkRelationship } from '#tracker_api/entities/link.entity.js';
-import {
-  createWorklogFixture,
-  createBulkChangeOperationFixture,
-} from '#helpers/worklog.fixture.js';
+import { createWorklogFixture } from '#helpers/worklog.fixture.js';
+import { createBulkChangeOperationFixture } from '#helpers/bulk-change.fixture.js';
 
 describe('YandexTrackerFacade - Batch Methods', () => {
   let facade: YandexTrackerFacade;

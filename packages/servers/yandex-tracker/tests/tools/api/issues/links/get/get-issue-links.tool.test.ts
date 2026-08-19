@@ -11,7 +11,7 @@ import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/inde
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createLinkListFixture } from '#helpers/link.fixture.js';
-import { getTextContent, at } from '#helpers/tool-result.helper.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 /** Метаданные пагинации по умолчанию (одна страница, всё получено). */
 const META: PaginationMeta = {
@@ -229,12 +229,12 @@ describe('GetIssueLinksTool', () => {
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toHaveLength(1);
       expect(parsed.data.failed).toHaveLength(0);
-      expect(at(parsed.data.successful).issueId).toBe('TEST-123');
-      expect(at(parsed.data.successful).count).toBe(3);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).count).toBe(3);
       expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
       // Регрессия: прежние ключи (links/count) на месте + добавлено поле pagination
-      expect(at(parsed.data.successful).links).toHaveLength(3);
-      expect(at(parsed.data.successful).pagination).toMatchObject({
+      expect(itemAt(parsed.data.successful).links).toHaveLength(3);
+      expect(itemAt(parsed.data.successful).pagination).toMatchObject({
         hasNextPage: false,
         fetchedAll: true,
       });
@@ -270,7 +270,7 @@ describe('GetIssueLinksTool', () => {
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toHaveLength(1);
       expect(parsed.data.failed).toHaveLength(0);
-      expect(at(parsed.data.successful).count).toBe(0);
+      expect(itemAt(parsed.data.successful).count).toBe(0);
     });
 
     it('должен обработать batch результаты для нескольких задач', async () => {
@@ -308,10 +308,10 @@ describe('GetIssueLinksTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(2);
-      expect(at(parsed.data.successful).issueId).toBe('TEST-123');
-      expect(at(parsed.data.successful).count).toBe(3);
-      expect(at(parsed.data.successful, 1).issueId).toBe('TEST-456');
-      expect(at(parsed.data.successful, 1).count).toBe(0);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).count).toBe(3);
+      expect(itemAt(parsed.data.successful, 1).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.successful, 1).count).toBe(0);
     });
 
     it('должен фильтровать поля в результатах', async () => {
@@ -342,9 +342,9 @@ describe('GetIssueLinksTool', () => {
           fieldsReturned: string[];
         };
       };
-      expect(at(parsed.data.successful).links[0]).toHaveProperty('id');
-      expect(at(parsed.data.successful).links[0]).toHaveProperty('type');
-      expect(at(parsed.data.successful).links[0]).not.toHaveProperty('createdBy');
+      expect(itemAt(parsed.data.successful).links[0]).toHaveProperty('id');
+      expect(itemAt(parsed.data.successful).links[0]).toHaveProperty('type');
+      expect(itemAt(parsed.data.successful).links[0]).not.toHaveProperty('createdBy');
       expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
     });
   });

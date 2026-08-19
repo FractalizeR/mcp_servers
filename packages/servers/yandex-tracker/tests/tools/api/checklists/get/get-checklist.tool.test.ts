@@ -12,7 +12,7 @@ import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createChecklistOutputFixture } from '#helpers/checklist-dto.fixture.js';
-import { getTextContent, at } from '#helpers/tool-result.helper.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 /** Обернуть массив элементов чеклиста в PaginatedResult (single-page). */
 function paginated(
@@ -192,11 +192,11 @@ describe('GetChecklistTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
       expect(parsed.data.successful).toHaveLength(1);
-      expect(at(parsed.data.successful).issueId).toBe('TEST-123');
-      expect(at(parsed.data.successful).itemsCount).toBe(3);
-      expect(at(parsed.data.successful).checklist).toHaveLength(3);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).itemsCount).toBe(3);
+      expect(itemAt(parsed.data.successful).checklist).toHaveLength(3);
       // Регрессия: прежние ключи сохранены + добавлен pagination
-      expect(at(parsed.data.successful).pagination).toEqual({
+      expect(itemAt(parsed.data.successful).pagination).toEqual({
         hasNextPage: false,
         fetchedAll: true,
         truncated: false,
@@ -292,8 +292,8 @@ describe('GetChecklistTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(2);
-      expect(at(parsed.data.successful).itemsCount).toBe(2);
-      expect(at(parsed.data.successful, 1).itemsCount).toBe(4);
+      expect(itemAt(parsed.data.successful).itemsCount).toBe(2);
+      expect(itemAt(parsed.data.successful, 1).itemsCount).toBe(4);
     });
 
     it('должен вернуть пустой чеклист', async () => {
@@ -320,8 +320,8 @@ describe('GetChecklistTool', () => {
         };
       };
       expect(parsed.success).toBe(true);
-      expect(at(parsed.data.successful).itemsCount).toBe(0);
-      expect(at(parsed.data.successful).checklist).toHaveLength(0);
+      expect(itemAt(parsed.data.successful).itemsCount).toBe(0);
+      expect(itemAt(parsed.data.successful).checklist).toHaveLength(0);
     });
   });
 
@@ -350,10 +350,10 @@ describe('GetChecklistTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(1);
-      expect(at(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
       expect(parsed.data.failed).toHaveLength(1);
-      expect(at(parsed.data.failed).issueId).toBe('TEST-456');
-      expect(at(parsed.data.failed).error).toContain('Issue not found');
+      expect(itemAt(parsed.data.failed).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.failed).error).toContain('Issue not found');
     });
 
     it('должен обработать полный провал batch операции', async () => {

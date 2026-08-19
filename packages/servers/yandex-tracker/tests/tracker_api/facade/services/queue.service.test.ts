@@ -74,7 +74,7 @@ describe('QueueService', () => {
 
   describe('getQueues', () => {
     it('должен делегировать вызов ops.getQueues.execute без параметров', async () => {
-      const mockResult = paginatedQueues([createQueueFixture() as QueueWithUnknownFields]);
+      const mockResult = paginatedQueues([createQueueFixture()]);
 
       vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);
 
@@ -85,8 +85,8 @@ describe('QueueService', () => {
     });
 
     it('должен делегировать вызов ops.getQueues.execute с параметрами', async () => {
-      const params: GetQueuesDto = { perPage: 50 };
-      const mockResult = paginatedQueues([createQueueFixture() as QueueWithUnknownFields]);
+      const params: GetQueuesDto = { perPage: 50, cursor: 'next-page-token' };
+      const mockResult = paginatedQueues([createQueueFixture()]);
 
       vi.mocked(mockOpsContainer.getQueues.execute).mockResolvedValue(mockResult);
 

@@ -10,7 +10,7 @@ import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
 import { createCommentFixture } from '#helpers/comment.fixture.js';
-import { getTextContent, at } from '#helpers/tool-result.helper.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('AddCommentTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -264,10 +264,10 @@ describe('AddCommentTool', () => {
       expect(parsed.data.failed).toBe(0);
       expect(parsed.data.comments).toHaveLength(2);
       expect(parsed.data.errors).toHaveLength(0);
-      expect(at(parsed.data.comments).issueId).toBe('TEST-1');
-      expect(at(parsed.data.comments).commentId).toBe('12345');
-      expect(at(parsed.data.comments, 1).issueId).toBe('TEST-2');
-      expect(at(parsed.data.comments, 1).commentId).toBe('67890');
+      expect(itemAt(parsed.data.comments).issueId).toBe('TEST-1');
+      expect(itemAt(parsed.data.comments).commentId).toBe('12345');
+      expect(itemAt(parsed.data.comments, 1).issueId).toBe('TEST-2');
+      expect(itemAt(parsed.data.comments, 1).commentId).toBe('67890');
       expect(parsed.data.fieldsReturned).toEqual(['id', 'text']);
     });
 
@@ -317,8 +317,8 @@ describe('AddCommentTool', () => {
       expect(parsed.data.failed).toBe(1);
       expect(parsed.data.comments).toHaveLength(1);
       expect(parsed.data.errors).toHaveLength(1);
-      expect(at(parsed.data.errors).issueId).toBe('TEST-2');
-      expect(at(parsed.data.errors).error).toContain('Not found');
+      expect(itemAt(parsed.data.errors).issueId).toBe('TEST-2');
+      expect(itemAt(parsed.data.errors).error).toContain('Not found');
     });
 
     it('должен фильтровать поля для всех созданных комментариев', async () => {
@@ -352,7 +352,7 @@ describe('AddCommentTool', () => {
       };
 
       // Проверяем, что вернулись только указанные поля
-      const returnedComment = at(parsed.data.comments).comment;
+      const returnedComment = itemAt(parsed.data.comments).comment;
       expect(returnedComment).toHaveProperty('id');
       expect(returnedComment).toHaveProperty('text');
       // Другие поля должны быть отфильтрованы
@@ -388,7 +388,7 @@ describe('AddCommentTool', () => {
           comments: Array<{ issueId: string; commentId: string }>;
         };
       };
-      expect(at(parsed.data.comments).commentId).toBe('12345');
+      expect(itemAt(parsed.data.comments).commentId).toBe('12345');
     });
   });
 

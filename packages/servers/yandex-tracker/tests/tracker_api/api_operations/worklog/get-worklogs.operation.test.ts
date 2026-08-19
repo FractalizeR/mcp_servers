@@ -6,7 +6,7 @@ import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ServerConfig } from '#config';
 import { GetWorklogsOperation } from '#tracker_api/api_operations/worklog/get-worklogs.operation.js';
 import { CursorCodec, CURSOR_TAGS, InvalidCursorError } from '#tracker_api/utils/index.js';
-import { at } from '#helpers/tool-result.helper.js';
+import { itemAt } from '#helpers/tool-result.helper.js';
 
 /** Фабрика записи времени для тестов. */
 function makeWorklog(id: string): WorklogWithUnknownFields {
@@ -162,7 +162,7 @@ describe('GetWorklogsOperation', () => {
       const results = await operation.executeMany(['TEST-1', 'TEST-2']);
 
       expect(results).toHaveLength(2);
-      const results0 = at(results);
+      const results0 = itemAt(results);
       expect(results0.status).toBe('fulfilled');
       if (results0.status === 'fulfilled') {
         expect(results0.value.items).toHaveLength(1);
@@ -177,8 +177,8 @@ describe('GetWorklogsOperation', () => {
       const results = await operation.executeMany(['TEST-1', 'TEST-2']);
 
       expect(results).toHaveLength(2);
-      expect(at(results).status).toBe('fulfilled');
-      expect(at(results, 1).status).toBe('rejected');
+      expect(itemAt(results).status).toBe('fulfilled');
+      expect(itemAt(results, 1).status).toBe('rejected');
     });
 
     it('возвращает пустой массив для пустого входа', async () => {
@@ -239,7 +239,7 @@ describe('GetWorklogsOperation', () => {
       const results = await operation.executeMany(['TEST-1'], { cursor });
 
       expect(results).toHaveLength(1);
-      const results0 = at(results);
+      const results0 = itemAt(results);
       expect(results0.status).toBe('fulfilled');
       if (results0.status === 'fulfilled') {
         expect(results0.value.items).toHaveLength(1);

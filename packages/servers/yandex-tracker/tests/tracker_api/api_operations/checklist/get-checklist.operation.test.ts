@@ -6,7 +6,7 @@ import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index
 import type { ServerConfig } from '#config';
 import { GetChecklistOperation } from '#tracker_api/api_operations/checklist/get-checklist.operation.js';
 import { InvalidCursorError } from '#tracker_api/utils/cursor-codec.util.js';
-import { at } from '#helpers/tool-result.helper.js';
+import { itemAt } from '#helpers/tool-result.helper.js';
 
 const NEXT_LINK =
   '<https://api.tracker.yandex.net/v2/issues/TEST-1/checklistItems?id=ID2>; rel="next"';
@@ -175,7 +175,7 @@ describe('GetChecklistOperation', () => {
       const result = await operation.executeMany(['TEST-1', 'TEST-2']);
 
       expect(result).toHaveLength(2);
-      const result0 = at(result);
+      const result0 = itemAt(result);
       expect(result0.status).toBe('fulfilled');
       if (result0.status === 'fulfilled') {
         expect(result0.value.items).toHaveLength(1);
@@ -190,8 +190,8 @@ describe('GetChecklistOperation', () => {
       const result = await operation.executeMany(['TEST-1', 'TEST-2']);
 
       expect(result).toHaveLength(2);
-      expect(at(result).status).toBe('fulfilled');
-      expect(at(result, 1).status).toBe('rejected');
+      expect(itemAt(result).status).toBe('fulfilled');
+      expect(itemAt(result, 1).status).toBe('rejected');
     });
 
     it('возвращает пустой результат для пустого массива', async () => {

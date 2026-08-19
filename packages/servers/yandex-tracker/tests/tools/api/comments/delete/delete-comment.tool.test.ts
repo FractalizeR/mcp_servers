@@ -8,7 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import { getTextContent, at } from '#helpers/tool-result.helper.js';
+import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
 describe('DeleteCommentTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -217,9 +217,9 @@ describe('DeleteCommentTool', () => {
       expect(parsed.success).toBe(true);
       expect(parsed.data.successful).toHaveLength(1);
       expect(parsed.data.failed).toHaveLength(1);
-      expect(at(parsed.data.failed).issueId).toBe('TEST-456');
-      expect(at(parsed.data.failed).commentId).toBe('67890');
-      expect(at(parsed.data.failed).error).toContain('Comment not found');
+      expect(itemAt(parsed.data.failed).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.failed).commentId).toBe('67890');
+      expect(itemAt(parsed.data.failed).error).toContain('Comment not found');
     });
 
     it('должен обработать полную ошибку batch', async () => {
@@ -256,7 +256,7 @@ describe('DeleteCommentTool', () => {
         };
       };
       expect(parsed.data.failed).toHaveLength(1);
-      expect(at(parsed.data.failed).error).toContain('Comment not found');
+      expect(itemAt(parsed.data.failed).error).toContain('Comment not found');
     });
 
     it('должен обработать ошибку доступа (403)', async () => {
@@ -281,7 +281,7 @@ describe('DeleteCommentTool', () => {
         };
       };
       expect(parsed.data.failed).toHaveLength(1);
-      expect(at(parsed.data.failed).error).toContain('Access denied');
+      expect(itemAt(parsed.data.failed).error).toContain('Access denied');
     });
 
     it('должен обработать ошибку попытки удалить чужой комментарий', async () => {
@@ -306,7 +306,7 @@ describe('DeleteCommentTool', () => {
         };
       };
       expect(parsed.data.failed).toHaveLength(1);
-      expect(at(parsed.data.failed).error).toContain('Cannot delete comment of another user');
+      expect(itemAt(parsed.data.failed).error).toContain('Cannot delete comment of another user');
     });
   });
 });
