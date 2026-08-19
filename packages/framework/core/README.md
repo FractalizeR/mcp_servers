@@ -176,8 +176,8 @@ class ToolRegistry {
 
 ### createMcpServerAdapter()
 
-**MCP server lifecycle + transport**, shared by all three servers (yandex-tracker, yandex-wiki,
-ticktick) instead of near-identical `server.ts` code. Serves **both** protocol eras over stdio
+**MCP server lifecycle + transport**, shared by all servers (yandex-tracker,
+yandex-wiki) instead of near-identical `server.ts` code. Serves **both** protocol eras over stdio
 (`serveStdio`, legacy 2025-06-18 `initialize` handshake and 2026-07-28 `server/discover`) from the
 same `tools/list`/`tools/call` handlers — no `initialize` handler of our own: the SDK's built-in one
 negotiates `protocolVersion` and stamps `serverInfo`/`resultType`/`_meta`/cache hints, so there is no

@@ -81,15 +81,15 @@ module.exports = {
 
     // ================================================
     // 2. MCP SERVERS INTERNAL ARCHITECTURE
-    // (applies to all servers: yandex-tracker, yandex-wiki, ticktick)
+    // (applies to all servers: yandex-tracker, yandex-wiki)
     // ================================================
 
     {
       name: 'server-api-no-mcp',
       severity: 'error',
-      comment: 'API слой серверов (tracker_api, wiki_api, ticktick_api) не должен знать о MCP/tools layer',
+      comment: 'API слой серверов (tracker_api, wiki_api) не должен знать о MCP/tools layer',
       from: {
-        path: '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/',
+        path: '^packages/servers/[^/]+/src/(tracker_api|wiki_api)/',
       },
       to: {
         path: '^packages/servers/[^/]+/src/(mcp|tools)/',
@@ -104,12 +104,12 @@ module.exports = {
         path: '^packages/servers/[^/]+/src/(mcp|tools)/',
       },
       to: {
-        path: '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/',
+        path: '^packages/servers/[^/]+/src/(tracker_api|wiki_api)/',
         pathNot: [
           // Разрешены:
-          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/facade/',     // Facade (основной интерфейс)
-          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/entities/',   // Entity типы
-          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/dto/',        // DTO типы
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api)/facade/',     // Facade (основной интерфейс)
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api)/entities/',   // Entity типы
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api)/dto/',        // DTO типы
         ],
       },
     },
@@ -122,14 +122,14 @@ module.exports = {
         path: '^packages/servers/[^/]+/src/',
         pathNot: [
           // Исключения (разрешено импортировать operations):
-          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/facade/',                           // Facade координирует operations
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api)/facade/',                           // Facade координирует operations
           '^packages/servers/[^/]+/src/composition-root/container\\.ts$',                                       // DI контейнер регистрирует все зависимости
           '^packages/servers/[^/]+/src/composition-root/definitions/operation-definitions\\.ts$',              // Автоматическая регистрация операций
-          '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/api_operations/',                   // Operations могут импортировать друг друга
+          '^packages/servers/[^/]+/src/(tracker_api|wiki_api)/api_operations/',                   // Operations могут импортировать друг друга
         ],
       },
       to: {
-        path: '^packages/servers/[^/]+/src/(tracker_api|wiki_api|ticktick_api)/api_operations/',
+        path: '^packages/servers/[^/]+/src/(tracker_api|wiki_api)/api_operations/',
       },
     },
 

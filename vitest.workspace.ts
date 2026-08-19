@@ -17,5 +17,4 @@ export default defineWorkspace([
   // Server packages
   'packages/servers/yandex-tracker',
   'packages/servers/yandex-wiki',
-  'packages/servers/ticktick',
 ]);

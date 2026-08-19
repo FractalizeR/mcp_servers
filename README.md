@@ -6,7 +6,7 @@
 **Monorepo с MCP Framework пакетами и MCP серверами для различных сервисов**
 
 Этот репозиторий содержит:
-- **MCP Серверы** — готовые серверы для Yandex Tracker, Yandex Wiki, TickTick
+- **MCP Серверы** — готовые серверы для Yandex Tracker, Yandex Wiki
 - **MCP Framework** — переиспользуемые пакеты для создания MCP инструментов
 
 ---
@@ -19,7 +19,6 @@
 |--------|----------|---------|
 | **Yandex Tracker** | Интеграция с Yandex.Tracker API | [⬇️ mcp-server-yandex-tracker.mcpb](https://github.com/FractalizeR/mcp_servers/releases/latest/download/mcp-server-yandex-tracker.mcpb) |
 | **Yandex Wiki** | Интеграция с Yandex Wiki API | [⬇️ mcp-server-yandex-wiki.mcpb](https://github.com/FractalizeR/mcp_servers/releases/latest/download/mcp-server-yandex-wiki.mcpb) |
-| **TickTick** | Интеграция с TickTick API | [⬇️ mcp-server-ticktick.mcpb](https://github.com/FractalizeR/mcp_servers/releases/latest/download/mcp-server-ticktick.mcpb) |
 
 > 💡 Все бандлы также доступны на странице [GitHub Releases](https://github.com/FractalizeR/mcp_servers/releases/latest)
 
@@ -39,12 +38,10 @@
 # Установи нужный сервер глобально
 npm install -g @fractalizer/mcp-server-yandex-tracker  # Yandex Tracker
 npm install -g @fractalizer/mcp-server-yandex-wiki     # Yandex Wiki
-npm install -g @fractalizer/mcp-server-ticktick        # TickTick
 
 # Запусти интерактивную настройку
 mcp-tracker-connect connect
 mcp-wiki-connect connect
-mcp-ticktick-connect connect
 ```
 
 CLI проведёт через настройку и автоматически добавит сервер в конфигурацию выбранного клиента.
@@ -65,7 +62,6 @@ CLI проведёт через настройку и автоматически
 |-------|----------|
 | [@fractalizer/mcp-server-yandex-tracker](packages/servers/yandex-tracker) | MCP сервер для Yandex.Tracker API (v2/v3) |
 | [@fractalizer/mcp-server-yandex-wiki](packages/servers/yandex-wiki) | MCP сервер для Yandex Wiki API |
-| [@fractalizer/mcp-server-ticktick](packages/servers/ticktick) | MCP сервер для TickTick API |
 
 ### Framework пакеты
 
@@ -87,8 +83,7 @@ packages/
 │   └── core/              → @fractalizer/mcp-core
 └── servers/
     ├── yandex-tracker/    → @fractalizer/mcp-server-yandex-tracker
-    ├── yandex-wiki/       → @fractalizer/mcp-server-yandex-wiki
-    └── ticktick/          → @fractalizer/mcp-server-ticktick
+    └── yandex-wiki/       → @fractalizer/mcp-server-yandex-wiki
 ```
 
 **Граф зависимостей:**

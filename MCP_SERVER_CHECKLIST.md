@@ -69,7 +69,6 @@ export const MCP_TOOL_PREFIX = 'prefix';             // ❌ неправильн
 
 // Примеры:
 export const MCP_TOOL_PREFIX = 'fr_yandex_tracker_' as const;
-export const MCP_TOOL_PREFIX = 'fr_ticktick_' as const;
 export const MCP_TOOL_PREFIX = 'yw_' as const;
 ```
 
