@@ -80,7 +80,7 @@
     "typecheck:tests": {
       "dependsOn": ["^build"],
       "cache": true,
-      "inputs": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts", "tsconfig*.json"],
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "tsconfig*.json"],
       "outputs": []
     },
     "cpd": {

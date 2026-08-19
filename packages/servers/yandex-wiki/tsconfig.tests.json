@@ -1,3 +1,7 @@
+// Типизация тестов. scripts/** сюда НЕ входит: скрипты импортируют общий
+// проводной харнесс из ../scripts/mcp-wire-harness/, который лежит выше
+// rootDir этого конфига, и tsc валится с TS6059. Их покрывает
+// tsconfig.scripts.json с rootDir "..".
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -7,6 +11,6 @@
     "declarationMap": false,
     "noEmit": true
   },
-  "include": ["src/**/*", "tests/**/*", "scripts/**/*"],
+  "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]
 }
