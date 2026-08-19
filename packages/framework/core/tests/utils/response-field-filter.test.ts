@@ -274,8 +274,9 @@ describe('ResponseFieldFilter', () => {
 
       const result = ResponseFieldFilter.filter(data, ['assignee.nonExistent.deep']);
 
-      // Должен вернуть объект с пустым assignee (т.к. nonExistent не существует)
-      expect(result).toEqual({ assignee: {} });
+      // Проекция внутри assignee ничего не извлекла (nonExistent не существует) —
+      // ключ assignee не создаётся вовсе, а не превращается в пустой объект-мусор.
+      expect(result).toEqual({});
     });
 
     it('должен обрабатывать примитивное значение как данные', () => {
@@ -448,15 +449,103 @@ describe('ResponseFieldFilter', () => {
         });
       });
 
-      it('должен игнорировать несуществующие поля внутри элементов массива', () => {
+      it('должен опускать ключ-обёртку массива целиком, если путь не извлёк ничего ни у одного элемента', () => {
         const data = {
           fields: [{ field: { id: 'status' } }],
         };
 
         const result = ResponseFieldFilter.filter(data, ['fields.nonexistent']);
 
+        // Находка 4 внешнего ревью: путь, ничего не извлёкший ни у одного элемента
+        // массива, не оставляет пустышку "fields: []" — ключ-обёртка не создаётся вовсе.
+        // (Раньше, до находки 2/4, тот же эффект достигался ДРУГИМ способом — удалением
+        // всех элементов массива внутри compact(), что попутно молча меняло длину массива
+        // и в смешанных случаях, где часть элементов совпадала. Теперь длина массива
+        // сохраняется всегда — см. следующий тест — а пустышка убирается только когда
+        // из массива в принципе нечего вернуть.)
+        expect(result).toEqual({});
+      });
+
+      it('элемент массива без запрошенного вложенного поля заменяется на {}, а не выбрасывается (regression, находка 2)', () => {
+        // Реальный сценарий из бага: у части элементов changelog.fields нет display в "to"
+        // (например sla, boards), у части — есть.
+        //
+        // Находка 2 внешнего ревью (MAJOR, проверено исполнением ревьюером): раньше
+        // элемент, для которого проекция ничего не извлекла, ВЫБРАСЫВАЛСЯ из массива —
+        // array.length менялся молча относительно исходных данных (3 элемента источника →
+        // 1 элемент результата), и агент, считающий количество по длине массива, получал
+        // неверное число. Теперь элемент заменяется на "{}" (честно: "у элемента нет
+        // запрошенных полей"), позиционное соответствие и длина сохраняются.
+        const data = {
+          fields: [
+            { field: { id: 'status' }, to: { key: 'closed', display: 'Closed' } },
+            { field: { id: 'sla' }, to: { value: 42 } }, // нет display
+            { field: { id: 'boards' }, to: { ids: [1, 2] } }, // нет display
+          ],
+        };
+
+        const result = ResponseFieldFilter.filter(data, ['fields.to.display']);
+
+        expect(result.fields).toHaveLength(3);
         expect(result).toEqual({
-          fields: [{}],
+          fields: [{ to: { display: 'Closed' } }, {}, {}],
+        });
+      });
+
+      it('должен сохранять {} как результат запроса заведомо несуществующего поля на корневом уровне (контракт)', () => {
+        // Это НЕ мусор от неудачной вложенной проекции внутри массива, а законный ответ
+        // фильтрации верхнего уровня: filterObject всегда возвращает объект.
+        const data = { key: 'QUEUE-1', summary: 'Test' };
+
+        const result = ResponseFieldFilter.filter(data, ['nosuchfield']);
+
+        expect(result).toEqual({});
+      });
+
+      it('должен сохранять пустое значение, реально пришедшее из API (null/{}/[])', () => {
+        const data = {
+          key: 'QUEUE-1',
+          assignee: null,
+          meta: {},
+          tags: [] as string[],
+        };
+
+        const result = ResponseFieldFilter.filter(data, ['key', 'assignee', 'meta', 'tags']);
+
+        expect(result).toEqual({
+          key: 'QUEUE-1',
+          assignee: null,
+          meta: {},
+          tags: [],
+        });
+      });
+
+      it('должен сохранять поэлементное соответствие при мерже нескольких проекций одного массива, когда часть элементов не имеет ни одного из полей (mergeArrayResults)', () => {
+        const data = {
+          fields: [
+            {
+              field: { id: 'status', display: 'Status' },
+              to: { key: 'closed', display: 'Closed' },
+            },
+            { field: { id: 'sla' }, to: { value: 42 } }, // ни field.display, ни to.display
+            { field: { id: 'priority', display: 'Priority' }, to: { key: 'high' } }, // есть field.display, нет to.display
+          ],
+        };
+
+        const result = ResponseFieldFilter.filter(data, [
+          'fields.field.display',
+          'fields.to.display',
+        ]);
+
+        // Находка 2: элемент с id 'sla' раньше выпадал целиком (ни одна из двух проекций
+        // ничего не извлекла); теперь остаётся на своей позиции как {}, длина сохраняется.
+        expect(result.fields).toHaveLength(3);
+        expect(result).toEqual({
+          fields: [
+            { field: { display: 'Status' }, to: { display: 'Closed' } },
+            {},
+            { field: { display: 'Priority' } },
+          ],
         });
       });
 
@@ -498,6 +587,83 @@ describe('ResponseFieldFilter', () => {
             },
           ],
         });
+      });
+    });
+
+    // Регрессия находки 2 внешнего ревью (BLOCKER/MAJOR): `compact()` пересобирал
+    // КАЖДЫЙ объект по Object.keys(), включая Date/Map/Set — у них нет собственных
+    // enumerable-ключей, поэтому они превращались в "{}", теряя значение целиком.
+    // Раньше значения копировались по ссылке и Date корректно сериализовался в ISO.
+    describe('находка 2: значения без собственных enumerable-ключей (Date/Map/Set) не теряются', () => {
+      it('Date сохраняется как Date-инстанс (сериализуется в ISO при JSON.stringify)', () => {
+        const date = new Date('2020-01-01T00:00:00.000Z');
+        const result = ResponseFieldFilter.filter({ d: date, n: 1 }, ['d', 'n']);
+
+        expect(result.d).toBeInstanceOf(Date);
+        expect((result.d as Date).toISOString()).toBe('2020-01-01T00:00:00.000Z');
+        expect(result.n).toBe(1);
+        // Доказательство "как раньше" — JSON.stringify выдаёт ISO-строку, а не "{}"
+        expect(JSON.parse(JSON.stringify(result))).toEqual({
+          d: '2020-01-01T00:00:00.000Z',
+          n: 1,
+        });
+      });
+
+      it('Map сохраняется как Map-инстанс, а не превращается в plain object "{}"', () => {
+        const map = new Map([['a', 1]]);
+        const result = ResponseFieldFilter.filter({ m: map }, ['m']);
+
+        expect(result.m).toBeInstanceOf(Map);
+        expect(result.m).toBe(map);
+      });
+
+      it('Set сохраняется как Set-инстанс, а не превращается в plain object "{}"', () => {
+        const set = new Set([1, 2, 3]);
+        const result = ResponseFieldFilter.filter({ s: set }, ['s']);
+
+        expect(result.s).toBeInstanceOf(Set);
+        expect(result.s).toBe(set);
+      });
+    });
+
+    // Регрессия находки 2 внешнего ревью: элемент массива, у которого проекция не
+    // извлекла ни одного из запрошенных полей, раньше ВЫБРАСЫВАЛСЯ из результата —
+    // длина массива менялась молча относительно исходных данных. Теперь такой
+    // элемент заменяется на "{}" (честно: "у элемента нет запрошенных полей"),
+    // а длина и позиционное соответствие сохраняются.
+    describe('находка 2: проекция не усекает длину массива', () => {
+      it('элемент без совпавшего поля заменяется на {}, а не выбрасывается', () => {
+        const result = ResponseFieldFilter.filter({ c: [{ a: 1 }, { b: 8 }] }, ['c.a']);
+
+        expect(result.c).toHaveLength(2);
+        expect(result.c).toEqual([{ a: 1 }, {}]);
+      });
+    });
+
+    // Регрессия находки 4 внешнего ревью (MINOR): ветка массива в extractField
+    // возвращала true безусловно, поэтому путь, не извлёкший НИ ОДНОГО поля ни у
+    // одного элемента массива, всё равно оставлял в результате пустышку "поле: []".
+    // Не конфликтует с находкой 2: пустышка убирается только когда ключ-обёртка
+    // массива целиком ничего не извлёк, а не когда отдельные элементы разнородны.
+    describe('находка 4: путь, ничего не извлёкший ни у одного элемента, не оставляет пустышку', () => {
+      it('несуществующее вложенное поле во всех элементах массива — ключ массива отсутствует', () => {
+        const result = ResponseFieldFilter.filter({ items: [{ tags: [{ y: 1 }] }] }, [
+          'items.tags.x',
+        ]);
+
+        expect(result).toEqual({});
+      });
+
+      it('легитимно пустой вложенный массив — ключ сохраняется как []', () => {
+        const result = ResponseFieldFilter.filter({ items: [{ tags: [] }] }, ['items.tags.x']);
+
+        expect(result).toEqual({ items: [{ tags: [] }] });
+      });
+
+      it('смешанный случай: часть элементов даёт данные — пустышка для остальных не появляется на уровне массива-обёртки', () => {
+        const result = ResponseFieldFilter.filter({ items: [{ a: 1 }, { b: 2 }] }, ['items.a']);
+
+        expect(result).toEqual({ items: [{ a: 1 }, {}] });
       });
     });
   });
