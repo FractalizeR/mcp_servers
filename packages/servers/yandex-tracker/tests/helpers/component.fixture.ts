@@ -7,26 +7,10 @@
 import type {
   Component,
   ComponentWithUnknownFields,
-  QueueRef,
 } from '../../src/tracker_api/entities/component.entity.js';
-import { createUserRef } from './common-fixtures.js';
+import { createUserRef, createQueueRef } from './common-fixtures.js';
 
-/**
- * Создать QueueRef для тестов
- *
- * @example
- * ```typescript
- * const queueRef = createQueueRef({ key: 'MYQUEUE', display: 'My Queue' });
- * ```
- */
-export function createQueueRef(overrides?: Partial<QueueRef>): QueueRef {
-  return {
-    id: '1',
-    key: 'TEST',
-    display: 'Test Queue',
-    ...overrides,
-  };
-}
+export { createQueueRef };
 
 /**
  * Создать Component для тестов
@@ -50,7 +34,7 @@ export function createQueueRef(overrides?: Partial<QueueRef>): QueueRef {
  * ```
  */
 export function createComponentFixture(overrides?: Partial<Component>): ComponentWithUnknownFields {
-  const id = overrides?.id || '1';
+  const id = overrides?.id ?? 1;
   const name = overrides?.name || 'Test Component';
 
   return {

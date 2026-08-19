@@ -14,31 +14,7 @@
 
 import type { WithUnknownFields } from './types.js';
 import type { UserRef } from './common/user-ref.entity.js';
-
-/**
- * Референс на очередь (упрощенная версия)
- *
- * Используется в компоненте для указания на родительскую очередь.
- */
-export interface QueueRef {
-  /**
-   * Идентификатор очереди
-   * @example "1"
-   */
-  readonly id: string;
-
-  /**
-   * Ключ очереди
-   * @example "QUEUE"
-   */
-  readonly key: string;
-
-  /**
-   * Отображаемое имя очереди
-   * @example "My Queue"
-   */
-  readonly display: string;
-}
+import type { QueueRef } from './common/queue-ref.entity.js';
 
 /**
  * Компонент очереди в Яндекс.Трекере
@@ -50,9 +26,11 @@ export interface QueueRef {
 export interface Component {
   /**
    * Уникальный идентификатор компонента
-   * @example "1"
+   *
+   * Число, а не строка: живой GET `/v3/components` 2026-08-19 отдаёт `4`, `5`, `16`.
+   * @example 4
    */
-  readonly id: string;
+  readonly id: number;
 
   /**
    * URL ссылка на компонент в API

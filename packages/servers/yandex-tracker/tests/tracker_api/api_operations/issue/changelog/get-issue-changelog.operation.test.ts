@@ -16,7 +16,11 @@ function makeEntry(id: string, issueKey: string): ChangelogEntryWithUnknownField
     self: `https://api.tracker.yandex.net/v3/issues/${issueKey}/changelog/${id}`,
     issue: { id: id, key: issueKey, display: 'Test Issue' },
     updatedAt: '2024-01-01T10:00:00.000Z',
-    updatedBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+    updatedBy: {
+      self: 'https://api.tracker.yandex.net/v3/users/user1',
+      id: 'user1',
+      display: 'User 1',
+    },
     type: 'IssueUpdated',
     fields: [],
   };

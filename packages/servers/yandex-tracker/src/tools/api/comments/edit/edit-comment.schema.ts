@@ -48,7 +48,7 @@ export const EditCommentParamsSchema = z.object({
   /**
    * Массив полей для возврата в результате (обязательный)
    * Применяется ко всем комментариям
-   * Примеры: ['id', 'text', 'updatedAt'], ['id', 'text', 'updatedBy.login']
+   * Примеры: ['id', 'text', 'updatedAt'], ['id', 'text', 'updatedBy.display']
    */
   fields: FieldsSchema,
 });

@@ -5,8 +5,8 @@
  */
 
 import type { WithUnknownFields } from './types.js';
-import type { User } from './user.entity.js';
-import type { Queue } from './queue.entity.js';
+import type { UserRef } from './common/user-ref.entity.js';
+import type { QueueRef } from './common/queue-ref.entity.js';
 import type { Status } from './status.entity.js';
 import type { Priority } from './priority.entity.js';
 import type { IssueType } from './issue-type.entity.js';
@@ -28,8 +28,14 @@ export interface Issue {
   /** Краткое описание задачи (всегда присутствует) */
   readonly summary: string;
 
-  /** Очередь, к которой относится задача (всегда присутствует) */
-  readonly queue: Queue;
+  /**
+   * Очередь, к которой относится задача (всегда присутствует)
+   *
+   * Ref, а не полная `Queue`: API отдаёт здесь только `{self, id, key, display}`
+   * (живой GET `/v3/issues/{key}` 2026-08-19). За настройками очереди — отдельный
+   * запрос к `/v3/queues/{key}`.
+   */
+  readonly queue: QueueRef;
 
   /**
    * Статус задачи
@@ -37,8 +43,13 @@ export interface Issue {
    */
   readonly status?: Status;
 
-  /** Автор задачи (всегда присутствует) */
-  readonly createdBy: User;
+  /**
+   * Автор задачи (всегда присутствует)
+   *
+   * Ref, а не полный `User`: ни `login`, ни `uid`, ни `email` здесь не приходят
+   * (живой GET `/v3/issues/{key}` 2026-08-19). За ними — `get_users` по `id`.
+   */
+  readonly createdBy: UserRef;
 
   /** Дата создания (ISO 8601) (всегда присутствует) */
   readonly createdAt: string;
@@ -49,8 +60,8 @@ export interface Issue {
   /** Подробное описание задачи (может отсутствовать) */
   readonly description?: string;
 
-  /** Исполнитель задачи (может быть не назначен) */
-  readonly assignee?: User;
+  /** Исполнитель задачи (может быть не назначен). Ref, как и `createdBy`. */
+  readonly assignee?: UserRef;
 
   /** Приоритет задачи (может быть не указан) */
   readonly priority?: Priority;

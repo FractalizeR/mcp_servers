@@ -87,7 +87,7 @@ export const AddCommentParamsSchema = z.object({
 
   /**
    * Массив полей для возврата в результате (обязательный)
-   * Примеры: ['id', 'text', 'createdAt'], ['id', 'text', 'createdBy.login']
+   * Примеры: ['id', 'text', 'createdAt'], ['id', 'text', 'createdBy.display']
    * Применяется ко всем созданным комментариям
    */
   fields: FieldsSchema,

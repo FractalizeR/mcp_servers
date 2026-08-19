@@ -18,6 +18,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+import { createQueueRef } from '#helpers/common-fixtures.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import { successEnvelopeSchema } from '#common/schemas/index.js';
@@ -48,7 +49,6 @@ import { IssueUrlTool } from '#tools/helpers/issue-url/index.js';
 import { IssueUrlOutputDataSchema } from '#tools/helpers/issue-url/issue-url.schema.js';
 
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 import type { ToolResult } from '@fractalizer/mcp-infrastructure';
 import { createIssueFixture } from '#helpers/issue.fixture.js';
 
@@ -105,7 +105,7 @@ describe('DoD 2: structuredContent валиден по outputSchema (предс�
       id: '1',
       key: 'QUEUE-1',
       summary: 'Test',
-      queue: createQueueFixture({ id: '1', key: 'QUEUE', name: 'Queue' }),
+      queue: createQueueRef({ id: '1', key: 'QUEUE', display: 'Queue' }),
       status: { id: '1', key: 'open', display: 'Open' },
     });
     const facade = {

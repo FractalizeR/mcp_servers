@@ -121,7 +121,7 @@ describe('GetQueueTool', () => {
       });
 
       it('должен получить очередь по ID без expand', async () => {
-        const mockQueue = createQueueFixture({ id: 'queue123', key: 'PROJ' });
+        const mockQueue = createQueueFixture({ id: 123, key: 'PROJ' });
         vi.mocked(mockTrackerFacade.getQueue).mockResolvedValue(mockQueue);
 
         const result = await tool.execute({ queueId: 'queue123', fields: ['id', 'key', 'name'] });
@@ -136,12 +136,12 @@ describe('GetQueueTool', () => {
           success: boolean;
           data: {
             queue: {
-              id: string;
+              id: number;
               key: string;
             };
           };
         };
-        expect(parsed.data.queue.id).toBe('queue123');
+        expect(parsed.data.queue.id).toBe(123);
         expect(parsed.data.queue.key).toBe('PROJ');
       });
 

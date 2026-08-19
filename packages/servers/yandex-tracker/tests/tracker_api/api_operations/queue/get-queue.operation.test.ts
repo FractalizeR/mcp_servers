@@ -145,7 +145,7 @@ describe('GetQueueOperation', () => {
     });
 
     it('should work with queue ID instead of key', async () => {
-      const mockQueue: QueueWithUnknownFields = createQueueFixture({ id: 'queue-123', key: 'Q1' });
+      const mockQueue: QueueWithUnknownFields = createQueueFixture({ id: 123, key: 'Q1' });
       vi.mocked(mockHttpClient.get).mockResolvedValue(mockQueue);
 
       await operation.execute({ queueId: 'queue-123' });

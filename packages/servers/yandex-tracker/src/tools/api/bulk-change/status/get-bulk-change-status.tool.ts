@@ -9,6 +9,7 @@
 
 import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
+import type { BulkChangeStatus } from '#tracker_api/entities/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { GetBulkChangeStatusParamsSchema } from './get-bulk-change-status.schema.js';
 
@@ -58,38 +59,25 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
 
       // 4. Логирование результата
       this.logger.info(
-        `Статус операции ${operationId}: ${operation.status}. Прогресс: ${operation.progress ?? 0}%`
+        `Статус операции ${operationId}: ${operation.status}. ` +
+          `Обработано задач: ${operation.executionIssuePercent ?? 0}%`
       );
 
-      // 5. Формирование ответа
+      // 5. Формирование ответа. Все опциональные поля кладутся по одному правилу:
+      // отсутствующие в ответе API исчезают при сериализации, а не превращаются
+      // в null или в подставленный дефолт.
       const response: Record<string, unknown> = {
         operationId: operation.id,
         status: operation.status,
-        type: operation.type,
-        progress: operation.progress ?? 0,
+        statusText: operation.statusText,
         totalIssues: operation.totalIssues,
-        processedIssues: operation.processedIssues,
-        failedIssues: operation.failedIssues,
+        totalCompletedIssues: operation.totalCompletedIssues,
+        executionChunkPercent: operation.executionChunkPercent,
+        executionIssuePercent: operation.executionIssuePercent,
+        createdAt: operation.createdAt,
+        createdBy: operation.createdBy,
+        message: this.buildStatusMessage(operation.status, operation.statusText),
       };
-
-      // Добавить временные метки если есть
-      if (operation.createdAt) response['createdAt'] = operation.createdAt;
-      if (operation.startedAt) response['startedAt'] = operation.startedAt;
-      if (operation.completedAt) response['completedAt'] = operation.completedAt;
-
-      // Добавить ошибки если есть
-      if (operation.errors && operation.errors.length > 0) {
-        response['errors'] = operation.errors;
-        response['errorsCount'] = operation.errors.length;
-      }
-
-      // Добавить параметры операции если есть
-      if (operation.parameters) {
-        response['parameters'] = operation.parameters;
-      }
-
-      // Добавить статусное сообщение
-      response['message'] = this.buildStatusMessage(operation.status, operation.progress ?? 0);
 
       return this.formatSuccess(response);
     } catch (error: unknown) {
@@ -99,21 +87,23 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
 
   /**
    * Построить статусное сообщение
+   *
+   * Ветка `default` — штатный исход, а не ошибка: перечень статусов bulkchange
+   * официально не опубликован, подтверждены только три (см. `BulkChangeStatus`).
+   * Для нераспознанного статуса ориентир — `statusText` из ответа API.
    */
-  private buildStatusMessage(status: string, progress: number): string {
+  private buildStatusMessage(status: BulkChangeStatus, statusText?: string): string {
+    const details = statusText === undefined ? '' : `. Детали: ${statusText}`;
+
     switch (status) {
-      case 'PENDING':
-        return 'Операция в очереди на выполнение';
-      case 'RUNNING':
-        return `Операция выполняется. Прогресс: ${progress}%`;
-      case 'COMPLETED':
-        return 'Операция успешно завершена';
+      case 'CREATED':
+        return `Операция создана и ожидает выполнения${details}`;
+      case 'COMPLETE':
+        return `Операция успешно завершена${details}`;
       case 'FAILED':
-        return 'Операция завершена с ошибкой. Проверьте поле errors для деталей';
-      case 'CANCELLED':
-        return 'Операция отменена';
+        return `Операция завершена с ошибкой${details}`;
       default:
-        return `Неизвестный статус: ${status}`;
+        return `Статус "${status}" не описан в документации API${details}`;
     }
   }
 }

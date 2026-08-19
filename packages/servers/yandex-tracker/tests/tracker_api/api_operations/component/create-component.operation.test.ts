@@ -51,7 +51,7 @@ describe('CreateComponentOperation', () => {
     it('should call httpClient.post with correct endpoint and data', async () => {
       const dto = createCreateComponentDto({ name: 'Backend' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         name: 'Backend',
       });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
@@ -65,7 +65,7 @@ describe('CreateComponentOperation', () => {
     it('should create component with minimal fields', async () => {
       const dto = createMinimalCreateComponentDto({ name: 'Minimal Component' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         name: 'Minimal Component',
       });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
@@ -84,7 +84,7 @@ describe('CreateComponentOperation', () => {
         assignAuto: true,
       });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         name: 'Full Component',
         description: 'Full description',
       });
@@ -118,18 +118,18 @@ describe('CreateComponentOperation', () => {
 
     it('should cache created component by its ID', async () => {
       const dto = createCreateComponentDto({ name: 'Backend' });
-      const mockComponent: ComponentOutput = createComponentFixture({ id: 'comp-123' });
+      const mockComponent: ComponentOutput = createComponentFixture({ id: 123 });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
       await operation.execute('QUEUE', dto);
 
-      const componentCacheKey = EntityCacheKey.createKey(EntityType.COMPONENT, 'comp-123');
+      const componentCacheKey = EntityCacheKey.createKey(EntityType.COMPONENT, '123');
       expect(mockCacheManager.set).toHaveBeenCalledWith(componentCacheKey, mockComponent);
     });
 
     it('should invalidate components list cache after creation', async () => {
       const dto = createCreateComponentDto({ name: 'Backend' });
-      const mockComponent: ComponentOutput = createComponentFixture({ id: '1' });
+      const mockComponent: ComponentOutput = createComponentFixture({ id: 1 });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
       await operation.execute('QUEUE', dto);
@@ -149,7 +149,7 @@ describe('CreateComponentOperation', () => {
     it('should log info messages', async () => {
       const dto = createCreateComponentDto({ name: 'Backend' });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         name: 'Backend',
       });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
@@ -162,7 +162,7 @@ describe('CreateComponentOperation', () => {
 
     it('should log debug message about cache invalidation', async () => {
       const dto = createCreateComponentDto({ name: 'Test' });
-      const mockComponent: ComponentOutput = createComponentFixture({ id: '1' });
+      const mockComponent: ComponentOutput = createComponentFixture({ id: 1 });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
       await operation.execute('QUEUE', dto);
@@ -174,7 +174,7 @@ describe('CreateComponentOperation', () => {
 
     it('should work with queue ID instead of key', async () => {
       const dto = createCreateComponentDto({ name: 'Component' });
-      const mockComponent: ComponentOutput = createComponentFixture({ id: '1' });
+      const mockComponent: ComponentOutput = createComponentFixture({ id: 1 });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
       await operation.execute('queue-123', dto);
@@ -189,7 +189,7 @@ describe('CreateComponentOperation', () => {
         lead: 'user-login',
       });
       const mockComponent: ComponentOutput = createComponentFixture({
-        id: '1',
+        id: 1,
         name: 'Auto-assign Component',
         assignAuto: true,
       });

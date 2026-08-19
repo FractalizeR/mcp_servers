@@ -36,7 +36,7 @@ describe('GetUsersTool', () => {
         status: 'fulfilled',
         key: 'ivanov',
         index: 0,
-        value: createUserFixture({ uid: '1', login: 'ivanov' }),
+        value: createUserFixture({ uid: 1, login: 'ivanov' }),
       },
       { status: 'rejected', key: 'unknown-user', index: 1, reason: new Error('Not found') },
     ]);

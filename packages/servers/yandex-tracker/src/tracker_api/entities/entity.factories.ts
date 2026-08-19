@@ -17,17 +17,18 @@ import type { Issue } from './issue.entity.js';
 import type { Transition } from './transition.entity.js';
 import type { ChangelogEntry, ChangelogField } from './changelog.entity.js';
 import type { Attachment } from './attachment.entity.js';
-import type { Project, ProjectStatus, QueueRef } from './project.entity.js';
+import type { Project, ProjectStatus } from './project.entity.js';
+import type { QueueRef } from './common/queue-ref.entity.js';
 
 /**
  * Создает валидный User entity
  */
 export function createUser(overrides?: Partial<User>): User {
   return {
-    uid: '1234567890',
+    uid: 1234567890,
     display: 'Test User',
     login: 'testuser',
-    isActive: true,
+    dismissed: false,
     email: 'testuser@example.com',
     ...overrides,
   };
@@ -38,10 +39,9 @@ export function createUser(overrides?: Partial<User>): User {
  */
 export function createMinimalUser(overrides?: Partial<User>): User {
   return {
-    uid: '1234567890',
+    uid: 1234567890,
     display: 'Test User',
     login: 'testuser',
-    isActive: true,
     ...overrides,
   };
 }
@@ -77,7 +77,7 @@ export function createQueueDictionaryRef(
  */
 export function createQueue(overrides?: Partial<Queue>): Queue {
   return {
-    id: '1',
+    id: 1,
     self: 'https://api.tracker.yandex.net/v3/queues/TEST',
     key: 'TEST',
     version: 1,
@@ -95,7 +95,7 @@ export function createQueue(overrides?: Partial<Queue>): Queue {
  */
 export function createFullQueue(overrides?: Partial<Queue>): Queue {
   return {
-    id: '1',
+    id: 1,
     self: 'https://api.tracker.yandex.net/v3/queues/TEST',
     key: 'TEST',
     version: 1,
@@ -205,9 +205,9 @@ export function createMinimalIssue(overrides?: Partial<Issue>): Issue {
     id: '1',
     key: 'TEST-1',
     summary: 'Test issue',
-    queue: createQueue(),
+    queue: createQueueRef(),
     status: createStatus(),
-    createdBy: createUser(),
+    createdBy: createUserRef(),
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z',
     ...overrides,
@@ -223,10 +223,14 @@ export function createFullIssue(overrides?: Partial<Issue>): Issue {
     key: 'TEST-1',
     summary: 'Test issue',
     description: 'Test description',
-    queue: createQueue(),
+    queue: createQueueRef(),
     status: createStatus(),
-    createdBy: createUser(),
-    assignee: createUser({ login: 'assignee' }),
+    createdBy: createUserRef(),
+    assignee: createUserRef({
+      self: 'https://api.tracker.yandex.net/v3/users/9876543210',
+      id: '9876543210',
+      display: 'Assignee',
+    }),
     priority: createPriority(),
     type: createIssueType(),
     createdAt: '2024-01-01T00:00:00.000Z',
@@ -291,7 +295,7 @@ export function createMinimalChangelogEntry(overrides?: Partial<ChangelogEntry>)
       display: 'Test issue',
     },
     updatedAt: '2024-01-01T00:00:00.000Z',
-    updatedBy: createUser(),
+    updatedBy: createUserRef(),
     type: 'IssueUpdated',
     ...overrides,
   };
@@ -310,7 +314,7 @@ export function createFullChangelogEntry(overrides?: Partial<ChangelogEntry>): C
       display: 'Test issue',
     },
     updatedAt: '2024-01-01T00:00:00.000Z',
-    updatedBy: createUser(),
+    updatedBy: createUserRef(),
     type: 'IssueUpdated',
     transport: 'web',
     fields: [createChangelogField()],
@@ -354,12 +358,13 @@ export function createAttachmentWithThumbnail(overrides?: Partial<Attachment>): 
 }
 
 /**
- * Создает валидный QueueRef (облегченная версия Queue для Project)
+ * Создает валидный QueueRef (облегченная версия Queue)
  */
 export function createQueueRef(overrides?: Partial<QueueRef>): QueueRef {
   return {
+    self: 'https://api.tracker.yandex.net/v3/queues/TEST',
     id: '1',
-    key: 'QUEUE',
+    key: 'TEST',
     display: 'Test Queue',
     ...overrides,
   };

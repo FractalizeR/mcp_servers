@@ -37,8 +37,8 @@ describe('GetComponentsOperation', () => {
   describe('execute (без пагинации)', () => {
     it('запрашивает корректный endpoint без query-параметров и возвращает все компоненты', async () => {
       const components = [
-        createComponentFixture({ id: '1', name: 'Backend' }),
-        createComponentFixture({ id: '2', name: 'Frontend' }),
+        createComponentFixture({ id: 1, name: 'Backend' }),
+        createComponentFixture({ id: 2, name: 'Frontend' }),
       ];
       httpClient.setResponse('GET', '/v2/queues/QUEUE/components', components);
 
@@ -57,7 +57,7 @@ describe('GetComponentsOperation', () => {
 
     it('возвращает кеш для запроса', async () => {
       const cached = {
-        items: [createComponentFixture({ id: '1' })],
+        items: [createComponentFixture({ id: 1 })],
         pagination: {
           hasNextPage: false,
           fetchedAll: true,
@@ -78,7 +78,7 @@ describe('GetComponentsOperation', () => {
 
     it('кеширует запрос после загрузки из API', async () => {
       httpClient.setResponse('GET', '/v2/queues/TEST/components', [
-        createComponentFixture({ id: '1' }),
+        createComponentFixture({ id: 1 }),
       ]);
 
       await operation.execute({ queueId: 'TEST' });

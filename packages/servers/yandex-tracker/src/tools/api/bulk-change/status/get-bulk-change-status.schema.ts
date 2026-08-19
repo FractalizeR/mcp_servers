@@ -29,29 +29,17 @@ export type GetBulkChangeStatusParams = z.infer<typeof GetBulkChangeStatusParams
 export const GetBulkChangeStatusOutputDataSchema = z.object({
   operationId: z.string(),
   status: z.string(),
-  type: z.string().optional(),
-  progress: z.number(),
+  statusText: z.string().optional(),
   totalIssues: z.number().optional(),
-  processedIssues: z.number().optional(),
-  failedIssues: z.number().optional(),
+  totalCompletedIssues: z.number().optional(),
+  executionChunkPercent: z.number().optional(),
+  executionIssuePercent: z.number().optional(),
   createdAt: z.string().optional(),
-  startedAt: z.string().optional(),
-  completedAt: z.string().optional(),
-  errors: z
-    .array(
-      z.object({
-        errorCode: z.string().optional(),
-        message: z.string().optional(),
-        issueKey: z.string().optional(),
-      })
-    )
-    .optional(),
-  errorsCount: z.number().optional(),
-  parameters: z
+  createdBy: z
     .object({
-      queue: z.string().optional(),
-      transition: z.string().optional(),
-      values: z.record(z.string(), z.unknown()).optional(),
+      self: z.string(),
+      id: z.string(),
+      display: z.string(),
     })
     .optional(),
   message: z.string(),

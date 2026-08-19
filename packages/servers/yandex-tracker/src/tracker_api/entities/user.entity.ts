@@ -11,8 +11,13 @@
 import type { WithUnknownFields } from './types.js';
 
 export interface User {
-  /** Уникальный идентификатор пользователя (всегда присутствует) */
-  readonly uid: string;
+  /**
+   * Уникальный идентификатор пользователя (всегда присутствует)
+   *
+   * Число, а не строка: подтверждено живым GET `/v3/myself` и `/v3/users/{uid}`
+   * 2026-08-19. Строковый id отдают только ref-ы на пользователя (см. `UserRef`).
+   */
+  readonly uid: number;
 
   /** Отображаемое имя пользователя (всегда присутствует) */
   readonly display: string;
@@ -29,8 +34,14 @@ export interface User {
   /** Фамилия пользователя (может отсутствовать) */
   readonly lastName?: string;
 
-  /** Признак активности пользователя (всегда присутствует) */
-  readonly isActive: boolean;
+  /**
+   * Признак того, что пользователь уволен
+   *
+   * Заменил несуществовавшее `isActive`: запрос `/v3/users/{uid}` с явным
+   * `fields=["isActive"]` 2026-08-19 вернул только `uid` и `dismissed` — поля
+   * `isActive` в API нет. Обрати внимание на инверсию смысла при чтении.
+   */
+  readonly dismissed?: boolean;
 }
 
 /**

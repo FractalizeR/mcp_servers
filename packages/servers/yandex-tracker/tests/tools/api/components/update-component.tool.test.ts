@@ -76,7 +76,7 @@ describe('UpdateComponentTool', () => {
       });
 
       it('должен принимать только componentId без обновлений', async () => {
-        const mockComponent = createComponentFixture({ id: '123' });
+        const mockComponent = createComponentFixture({ id: 123 });
         vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(mockComponent);
 
         const result = await tool.execute({ componentId: '123', fields: ['id', 'name'] });
@@ -111,7 +111,7 @@ describe('UpdateComponentTool', () => {
     describe('обновление компонента', () => {
       it('должен обновить только name', async () => {
         const mockComponent = createComponentFixture({
-          id: '123',
+          id: 123,
           name: 'Updated Component',
         });
         vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(mockComponent);
@@ -138,7 +138,7 @@ describe('UpdateComponentTool', () => {
           hasAssignAuto: false,
         });
         expect(mockLogger.info).toHaveBeenCalledWith('Компонент обновлен', {
-          componentId: '123',
+          componentId: 123,
           name: 'Updated Component',
         });
 
@@ -156,7 +156,7 @@ describe('UpdateComponentTool', () => {
 
       it('должен обновить только description', async () => {
         const mockComponent = createComponentFixture({
-          id: '123',
+          id: 123,
           description: 'New description',
         });
         vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(mockComponent);
@@ -185,7 +185,7 @@ describe('UpdateComponentTool', () => {
       });
 
       it('должен обновить только lead', async () => {
-        const mockComponent = createComponentFixture({ id: '123' });
+        const mockComponent = createComponentFixture({ id: 123 });
         vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(mockComponent);
 
         const result = await tool.execute({
@@ -213,7 +213,7 @@ describe('UpdateComponentTool', () => {
 
       it('должен обновить только assignAuto', async () => {
         const mockComponent = createComponentFixture({
-          id: '123',
+          id: 123,
           assignAuto: true,
         });
         vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(mockComponent);
@@ -243,7 +243,7 @@ describe('UpdateComponentTool', () => {
 
       it('должен обновить несколько полей одновременно', async () => {
         const mockComponent = createComponentFixture({
-          id: '123',
+          id: 123,
           name: 'Updated',
           description: 'Updated description',
         });
@@ -276,7 +276,7 @@ describe('UpdateComponentTool', () => {
 
       it('должен обновить все возможные поля', async () => {
         const mockComponent = createComponentFixture({
-          id: '123',
+          id: 123,
           name: 'Full Update',
           description: 'Full description',
           assignAuto: true,
@@ -311,7 +311,7 @@ describe('UpdateComponentTool', () => {
 
       it('должен обновить assignAuto на false', async () => {
         const mockComponent = createComponentFixture({
-          id: '123',
+          id: 123,
           assignAuto: false,
         });
         vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(mockComponent);
@@ -334,7 +334,7 @@ describe('UpdateComponentTool', () => {
 
       it('должен обновить description на пустую строку', async () => {
         const mockComponent = createComponentFixture({
-          id: '123',
+          id: 123,
           description: '',
         });
         vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(mockComponent);

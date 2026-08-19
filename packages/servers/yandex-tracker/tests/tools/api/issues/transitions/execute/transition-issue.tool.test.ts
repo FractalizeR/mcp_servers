@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { createQueueRef } from '#helpers/common-fixtures.js';
 import { TransitionIssueTool } from '#tools/api/issues/transitions/execute/index.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
@@ -12,7 +13,6 @@ import { MCP_TOOL_PREFIX } from '#constants';
 import { STANDARD_ISSUE_FIELDS } from '#helpers/test-fields.js';
 import { IssueRefetchAfterTransitionError } from '#tracker_api/api_operations/issue/transitions/transition-issue.operation.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('TransitionIssueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -23,10 +23,10 @@ describe('TransitionIssueTool', () => {
     id: '1',
     key: 'QUEUE-123',
     summary: 'Test Issue',
-    queue: createQueueFixture({
+    queue: createQueueRef({
       id: '1',
       key: 'QUEUE',
-      name: 'Test Queue',
+      display: 'Test Queue',
     }),
     status: {
       id: '2',
@@ -34,10 +34,9 @@ describe('TransitionIssueTool', () => {
       display: 'In Progress',
     },
     createdBy: {
-      uid: 'uid-creator',
+      self: 'https://api.tracker.yandex.net/v3/users/creator',
+      id: 'creator',
       display: 'Creator',
-      login: 'creator',
-      isActive: true,
     },
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-02T12:00:00Z',

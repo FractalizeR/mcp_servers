@@ -15,7 +15,7 @@ describe('BulkMoveIssuesOperation', () => {
   const mockBulkChangeResult: BulkChangeOperationWithUnknownFields = {
     id: 'op-1',
     self: 'https://api.tracker.yandex.net/v2/bulkchange/op-1',
-    status: 'PENDING',
+    status: 'CREATED',
   };
 
   beforeEach(() => {

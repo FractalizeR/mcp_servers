@@ -10,7 +10,7 @@ import type {
 import type { PingResult } from '#tracker_api/api_operations/user/ping.operation.js';
 import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-issues.operation.js';
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
-import type { User } from '#tracker_api/entities/user.entity.js';
+import type { UserRef } from '#tracker_api/entities/common/user-ref.entity.js';
 import type { Issue, IssueWithUnknownFields } from '#tracker_api/entities/issue.entity.js';
 
 import type { Status } from '#tracker_api/entities/status.entity.js';
@@ -37,9 +37,8 @@ import type {
   TransitionWithUnknownFields,
   WorklogWithUnknownFields,
 } from '#tracker_api/entities/index.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 import { createBoardFixture, createSprintFixture } from '#helpers/agile.fixture.js';
-import { createUserFixture } from '#helpers/common-fixtures.js';
+import { createQueueRef, createUserRef } from '#helpers/common-fixtures.js';
 import { createIssueFixture } from '#helpers/issue.fixture.js';
 import { createPaginatedFixture } from '#helpers/pagination.fixture.js';
 import { createWorklogFixture } from '#helpers/worklog.fixture.js';
@@ -240,7 +239,7 @@ describe('YandexTrackerFacade', () => {
       // Arrange
       const issueKeys = ['TEST-1', 'TEST-2'];
 
-      const mockQueue = createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' });
+      const mockQueue = createQueueRef({ id: '1', key: 'TEST', display: 'Test Queue' });
 
       const mockStatus: Status = {
         id: '1',
@@ -248,11 +247,10 @@ describe('YandexTrackerFacade', () => {
         display: 'Open',
       };
 
-      const mockUser: User = {
-        uid: '123',
+      const mockUser: UserRef = {
+        self: 'https://api.tracker.yandex.net/v3/users/123',
+        id: '123',
         display: 'Test User',
-        login: 'testuser',
-        isActive: true,
       };
 
       const mockIssue1: Issue = {
@@ -316,7 +314,7 @@ describe('YandexTrackerFacade', () => {
       // Arrange
       const issueKeys = ['TEST-1', 'INVALID'];
 
-      const mockQueue = createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' });
+      const mockQueue = createQueueRef({ id: '1', key: 'TEST', display: 'Test Queue' });
 
       const mockStatus: Status = {
         id: '1',
@@ -324,11 +322,10 @@ describe('YandexTrackerFacade', () => {
         display: 'Open',
       };
 
-      const mockUser: User = {
-        uid: '123',
+      const mockUser: UserRef = {
+        self: 'https://api.tracker.yandex.net/v3/users/123',
+        id: '123',
         display: 'Test User',
-        login: 'testuser',
-        isActive: true,
       };
 
       const mockIssue: Issue = {
@@ -407,9 +404,9 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-1',
         summary: 'New Issue',
-        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
+        queue: createQueueRef({ id: '1', key: 'TEST', display: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: createUserFixture({ uid: '1', display: 'User' }),
+        createdBy: createUserRef({ id: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
       };
@@ -439,9 +436,9 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Updated',
-        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
+        queue: createQueueRef({ id: '1', key: 'TEST', display: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: createUserFixture({ uid: '1', display: 'User' }),
+        createdBy: createUserRef({ id: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-02',
       };
@@ -465,9 +462,9 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Updated',
-        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
+        queue: createQueueRef({ id: '1', key: 'TEST', display: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: createUserFixture({ uid: '1', display: 'User' }),
+        createdBy: createUserRef({ id: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-02',
       };
@@ -503,7 +500,7 @@ describe('YandexTrackerFacade', () => {
               self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/changelog/1',
               issue: { id: '123', key: 'TEST-123', display: 'Test Issue' },
               updatedAt: '2024-01-01',
-              updatedBy: createUserFixture({ uid: '1', display: 'User' }),
+              updatedBy: createUserRef({ id: '1', display: 'User' }),
               type: 'IssueUpdated',
               fields: [],
             },
@@ -565,9 +562,9 @@ describe('YandexTrackerFacade', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test',
-        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
+        queue: createQueueRef({ id: '1', key: 'TEST', display: 'Test' }),
         status: { id: '2', key: 'inProgress', display: 'In Progress' },
-        createdBy: createUserFixture({ uid: '1', display: 'User' }),
+        createdBy: createUserRef({ id: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-02',
       };

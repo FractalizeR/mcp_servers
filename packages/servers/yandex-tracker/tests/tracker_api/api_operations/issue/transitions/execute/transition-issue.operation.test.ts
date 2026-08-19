@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createQueueRef } from '#helpers/common-fixtures.js';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
@@ -12,7 +13,6 @@ import {
   EntityCacheKey,
   EntityType,
 } from '@fractalizer/mcp-infrastructure/cache/entity-cache-key.js';
-import { createQueueFixture } from '#helpers/queue.fixture.js';
 
 describe('TransitionIssueOperation', () => {
   let operation: TransitionIssueOperation;
@@ -73,9 +73,13 @@ describe('TransitionIssueOperation', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test Issue',
-        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
+        queue: createQueueRef({ id: '1', key: 'TEST', display: 'Test Queue' }),
         status: { id: '2', key: 'inProgress', display: 'In Progress' },
-        createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+        createdBy: {
+          self: 'https://api.tracker.yandex.net/v3/users/user1',
+          id: 'user1',
+          display: 'User 1',
+        },
         createdAt: '2024-01-01T10:00:00.000Z',
         updatedAt: '2024-01-02T10:00:00.000Z',
       };
@@ -100,9 +104,13 @@ describe('TransitionIssueOperation', () => {
         id: '2',
         key: 'PROJ-456',
         summary: 'Completed Task',
-        queue: createQueueFixture({ id: '2', key: 'PROJ', name: 'Project' }),
+        queue: createQueueRef({ id: '2', key: 'PROJ', display: 'Project' }),
         status: { id: '3', key: 'closed', display: 'Closed' },
-        createdBy: { uid: 'user2', display: 'User 2', login: 'user2', isActive: true },
+        createdBy: {
+          self: 'https://api.tracker.yandex.net/v3/users/user2',
+          id: 'user2',
+          display: 'User 2',
+        },
         createdAt: '2024-01-01T10:00:00.000Z',
         updatedAt: '2024-01-02T10:00:00.000Z',
       };
@@ -125,9 +133,13 @@ describe('TransitionIssueOperation', () => {
         id: '3',
         key: 'PROJ-789',
         summary: 'Some task',
-        queue: createQueueFixture({ id: '2', key: 'PROJ', name: 'Project' }),
+        queue: createQueueRef({ id: '2', key: 'PROJ', display: 'Project' }),
         status: { id: '4', key: 'inProgress', display: 'In Progress' },
-        createdBy: { uid: 'user3', display: 'User 3', login: 'user3', isActive: true },
+        createdBy: {
+          self: 'https://api.tracker.yandex.net/v3/users/user3',
+          id: 'user3',
+          display: 'User 3',
+        },
         createdAt: '2024-01-01T10:00:00.000Z',
         updatedAt: '2024-01-02T10:00:00.000Z',
       };
@@ -154,9 +166,13 @@ describe('TransitionIssueOperation', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test Issue',
-        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
+        queue: createQueueRef({ id: '1', key: 'TEST', display: 'Test Queue' }),
         status: { id: '2', key: 'inProgress', display: 'In Progress' },
-        createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+        createdBy: {
+          self: 'https://api.tracker.yandex.net/v3/users/user1',
+          id: 'user1',
+          display: 'User 1',
+        },
         createdAt: '2024-01-01T10:00:00.000Z',
         updatedAt: '2024-01-02T10:00:00.000Z',
       };
@@ -249,9 +265,13 @@ describe('TransitionIssueOperation', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test Issue',
-        queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' }),
+        queue: createQueueRef({ id: '1', key: 'TEST', display: 'Test Queue' }),
         status: { id: '2', key: 'inProgress', display: 'In Progress' },
-        createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+        createdBy: {
+          self: 'https://api.tracker.yandex.net/v3/users/user1',
+          id: 'user1',
+          display: 'User 1',
+        },
         createdAt: '2024-01-01T10:00:00.000Z',
         updatedAt: '2024-01-02T10:00:00.000Z',
       };
@@ -283,8 +303,17 @@ describe('TransitionIssueOperation', () => {
         id: '1',
         key: 'TEST-123',
         summary: 'Test Issue',
-        queue: { id: '1', key: 'TEST', name: 'Test Queue' },
-        createdBy: { uid: 'user1', display: 'User 1', login: 'user1', isActive: true },
+        queue: {
+          self: 'https://api.tracker.yandex.net/v3/queues/TEST',
+          id: '1',
+          key: 'TEST',
+          display: 'Test Queue',
+        },
+        createdBy: {
+          self: 'https://api.tracker.yandex.net/v3/users/user1',
+          id: 'user1',
+          display: 'User 1',
+        },
         createdAt: '2024-01-01T10:00:00.000Z',
         updatedAt: '2024-01-02T10:00:00.000Z',
       } as IssueWithUnknownFields;

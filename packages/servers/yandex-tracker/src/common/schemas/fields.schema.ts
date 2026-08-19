@@ -16,11 +16,11 @@ import { z } from 'zod';
  * - key, summary, description, status, assignee
  * - createdAt, updatedAt, dueDate
  * - queue, project, epic
- * - assignee.login, status.key (вложенные поля через dot-notation)
+ * - assignee.display, status.key (вложенные поля через dot-notation)
  *
  * @example
  * // Правильно
- * fields: ['key', 'summary', 'assignee.login']
+ * fields: ['key', 'summary', 'assignee.display']
  *
  * // ОШИБКА - пустой массив
  * fields: []

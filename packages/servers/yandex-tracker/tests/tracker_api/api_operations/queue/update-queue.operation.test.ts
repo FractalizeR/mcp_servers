@@ -151,7 +151,7 @@ describe('UpdateQueueOperation', () => {
 
     it('should work with queue ID instead of key', async () => {
       const updates = createUpdateQueueDto({ name: 'Updated' });
-      const mockQueue: QueueWithUnknownFields = createQueueFixture({ id: 'queue-123', key: 'Q1' });
+      const mockQueue: QueueWithUnknownFields = createQueueFixture({ id: 123, key: 'Q1' });
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockQueue);
 
       await operation.execute({ queueId: 'queue-123', updates });
