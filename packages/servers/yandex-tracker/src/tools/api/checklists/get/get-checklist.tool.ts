@@ -10,7 +10,7 @@
 import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
-import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
+import { paginatedFieldFilter } from '#common/index.js';
 import { GetChecklistParamsSchema } from '#tools/api/checklists/get/get-checklist.schema.js';
 
 import { GET_CHECKLIST_TOOL_METADATA } from './get-checklist.metadata.js';

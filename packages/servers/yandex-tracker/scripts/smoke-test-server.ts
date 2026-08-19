@@ -41,7 +41,6 @@
  */
 
 import { spawn } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
 
 interface JSONRPCRequest {
   jsonrpc: string;
@@ -62,9 +61,19 @@ interface JSONRPCResponse {
   };
 }
 
-const TIMEOUT_MS = 40000; // 40 секунд на весь тест (основной сценарий + отдельный процесс для DoD 2.1.A)
+// 55с: 4 события внутри теста (2×RESPONSE_WAIT_TIMEOUT_MS в runSmokeTest +
+// STDERR_PATTERN_TIMEOUT_MS и RESPONSE_WAIT_TIMEOUT_MS в
+// runDeprecatedEnvVarSmokeTest) дают ровно 40000 без запаса на два spawn и
+// разбор бандла — раньше при полном исчерпании всех четырёх окон глобальный
+// таймаут срабатывал первым и подменял диагностируемое сообщение
+// конкретного окна безадресным "Тест превысил таймаут". 15с (37.5%) запаса.
+const TIMEOUT_MS = 55000;
 const RESPONSE_WAIT_TIMEOUT_MS = 10000; // событийное ожидание JSON-RPC ответа
 const STDERR_PATTERN_TIMEOUT_MS = 10000; // событийное ожидание подстроки в stderr
+// Запас перед SIGKILL при штатном SIGTERM-остановe дочернего процесса —
+// событие 'exit' обычно приходит почти мгновенно, таймер лишь страховка.
+const SHUTDOWN_GRACE_MS = 2000;
+const SHUTDOWN_GRACE_MS_SECONDARY = 1000;
 
 /**
  * Ожидание JSON-RPC ответа с `expectedId` в stdout процесса `proc`.
@@ -96,8 +105,8 @@ async function waitForJSONRPCResponse(
       fn();
     };
 
-    const onData = (data: Buffer): void => {
-      buffer += data.toString();
+    const onData = (chunk: unknown): void => {
+      buffer += assertUtf8Chunk(chunk);
 
       // Пытаемся найти JSON-RPC ответ в буфере
       const lines = buffer.split('\n');
@@ -229,6 +238,179 @@ async function waitForStderrSubstring(
 }
 
 /**
+ * Останов процесса по событию 'exit' вместо фиксированной паузы: SIGTERM →
+ * ждём 'exit' → SIGKILL по истечении `fallbackMs`, если процесс не отреагировал.
+ * В обычном случае резолвится почти мгновенно после реального завершения
+ * процесса, а не после произвольно выбранной паузы. Возвращает `true`, если
+ * потребовался принудительный SIGKILL (для лога вызывающей стороны).
+ */
+async function stopGracefully(
+  proc: ReturnType<typeof spawn>,
+  fallbackMs: number
+): Promise<boolean> {
+  if (proc.exitCode !== null || proc.signalCode !== null) {
+    return false;
+  }
+  return new Promise<boolean>((resolve) => {
+    let settled = false;
+    const finish = (forcedKill: boolean): void => {
+      if (settled) return;
+      settled = true;
+      proc.off('exit', onExit);
+      clearTimeout(timer);
+      resolve(forcedKill);
+    };
+    const onExit = (): void => finish(false);
+
+    proc.on('exit', onExit);
+    proc.kill('SIGTERM');
+    const timer = setTimeout(() => {
+      proc.kill('SIGKILL');
+      finish(true);
+    }, fallbackMs);
+  });
+}
+
+const MISMATCH_CONTEXT_CHARS = 120;
+
+/**
+ * Единственный разрешённый способ превратить чанк потока в строку.
+ *
+ * Наивный `chunk.toString()` декодирует каждый чанк независимо и рвёт
+ * многобайтный UTF-8 на границе чанка: буква превращается в два U+FFFD, длина
+ * ответа меняется на символ. Именно это давало «два последовательных
+ * tools/list вернули разные списки» в релизном CI (4 падения из 6). Поэтому
+ * потоки переводятся в `setEncoding('utf8')` — один разделяемый декодер на
+ * поток, корректно склеивающий последовательность через границу чанка, — а
+ * эта проверка не даёт молча вернуться к побайтовому декодированию.
+ */
+function assertUtf8Chunk(chunk: unknown): string {
+  if (typeof chunk !== 'string') {
+    throw new Error(
+      'Поток дочернего процесса не переведён в setEncoding("utf8") — пришёл Buffer. ' +
+        'Декодирование чанка по отдельности рвёт многобайтный UTF-8 на границе чанка.'
+    );
+  }
+  return chunk;
+}
+
+/**
+ * U+FFFD в ответе сервера означает не баг сервера, а испорченное чтение на
+ * стороне теста. Проверка стоит на зелёном пути специально: порча,
+ * случившаяся одинаково в обоих ответах, расхождения не даёт и иначе прошла
+ * бы молча.
+ */
+function assertNoDecodingDamage(label: string, json: string): void {
+  const at = json.indexOf('\uFFFD');
+  if (at < 0) {
+    return;
+  }
+  const window = json.slice(Math.max(0, at - MISMATCH_CONTEXT_CHARS), at + MISMATCH_CONTEXT_CHARS);
+  throw new Error(
+    `${label}: в ответе найден U+FFFD на индексе ${at}. Это ДЕФЕКТ ЧТЕНИЯ на стороне ` +
+      'теста, а не сервера: многобайтный UTF-8 порвался на границе чанка. Проверь, что ' +
+      `поток переведён в setEncoding("utf8") и чанки не декодируются поштучно.\n  ${JSON.stringify(window)}`
+  );
+}
+
+function toolNamesForDiagnostics(tools: unknown): string[] {
+  if (!Array.isArray(tools)) {
+    return [];
+  }
+  return tools.map((tool, index) => {
+    const name = (tool as { name?: unknown } | null)?.name;
+    return typeof name === 'string' ? name : `<no-name@${index}>`;
+  });
+}
+
+function duplicatedNames(names: string[]): string[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const name of names) {
+    if (seen.has(name)) {
+      duplicates.add(name);
+    }
+    seen.add(name);
+  }
+  return [...duplicates];
+}
+
+/**
+ * Отчёт о расхождении двух ответов `tools/list`; `undefined`, когда списки
+ * побайтово совпадают.
+ *
+ * Единственный источник данных о четырёх падениях релиза — лог GitHub Actions,
+ * поэтому отчёт должен быть самодостаточным: по нему решают, что именно
+ * разошлось, без повторного прогона (который локально не воспроизводится).
+ */
+function describeToolsListMismatch(first: unknown, second: unknown): string | undefined {
+  const firstJson = JSON.stringify(first ?? []);
+  const secondJson = JSON.stringify(second ?? []);
+  if (firstJson === secondJson) {
+    return undefined;
+  }
+
+  const lines: string[] = ['===== tools/list mismatch diagnostics ====='];
+  lines.push(`json length: first=${firstJson.length}, second=${secondJson.length} (UTF-16 units)`);
+
+  let diffAt = 0;
+  while (
+    diffAt < firstJson.length &&
+    diffAt < secondJson.length &&
+    firstJson[diffAt] === secondJson[diffAt]
+  ) {
+    diffAt += 1;
+  }
+  const from = Math.max(0, diffAt - MISMATCH_CONTEXT_CHARS);
+  const to = diffAt + MISMATCH_CONTEXT_CHARS;
+  lines.push(`first difference at index ${diffAt}; window [${from}, ${to}):`);
+  lines.push(`  first : ${JSON.stringify(firstJson.slice(from, to))}`);
+  lines.push(`  second: ${JSON.stringify(secondJson.slice(from, to))}`);
+
+  const firstNames = toolNamesForDiagnostics(first);
+  const secondNames = toolNamesForDiagnostics(second);
+  lines.push(`tool count: first=${firstNames.length}, second=${secondNames.length}`);
+  if (firstJson.includes('\uFFFD') || secondJson.includes('\uFFFD')) {
+    lines.push(
+      'ВЕРДИКТ: в ответе есть U+FFFD — это дефект ЧТЕНИЯ на стороне теста ' +
+        '(многобайтный UTF-8 порван на границе чанка), а не расхождение на стороне сервера.'
+    );
+  }
+
+  const firstSet = new Set(firstNames);
+  const secondSet = new Set(secondNames);
+  const onlyInFirst = [...firstSet].filter((name) => !secondSet.has(name));
+  const onlyInSecond = [...secondSet].filter((name) => !firstSet.has(name));
+  lines.push(`only in first (${onlyInFirst.length}): ${onlyInFirst.join(', ') || '-'}`);
+  lines.push(`only in second (${onlyInSecond.length}): ${onlyInSecond.join(', ') || '-'}`);
+
+  const firstDuplicates = duplicatedNames(firstNames);
+  const secondDuplicates = duplicatedNames(secondNames);
+  if (firstDuplicates.length > 0 || secondDuplicates.length > 0) {
+    lines.push(
+      `duplicate names: first=[${firstDuplicates.join(', ')}], second=[${secondDuplicates.join(', ')}]`
+    );
+  }
+
+  if (onlyInFirst.length === 0 && onlyInSecond.length === 0) {
+    const reordered = firstNames
+      .map((name, index) =>
+        secondNames[index] === name
+          ? undefined
+          : `#${index}: ${name} -> ${secondNames[index] ?? '<missing>'}`
+      )
+      .filter((entry): entry is string => entry !== undefined);
+    lines.push(
+      reordered.length === 0
+        ? 'name order: identical (names and order match, so the difference is inside tool definitions - see the window above)'
+        : `name order differs at ${reordered.length} position(s), first 20: ${reordered.slice(0, 20).join('; ')}`
+    );
+  }
+
+  return lines.join('\n');
+}
+
+/**
  * Главная функция smoke-теста
  */
 async function main(): Promise<void> {
@@ -272,16 +454,11 @@ async function main(): Promise<void> {
     // до `never`). Рантайм-поведение корректно (одна и та же переменная
     // захвачена замыканием), это чисто сигнатурное ограничение компилятора.
     const proc = serverProcess as ReturnType<typeof spawn> | null;
-    if (proc && !proc.killed) {
+    if (proc) {
       console.log('\n🛑 Останавливаем сервер...');
-      proc.kill('SIGTERM');
-
-      // Даём 2 секунды на graceful shutdown
-      await sleep(2000);
-
-      if (!proc.killed) {
+      const forcedKill = await stopGracefully(proc, SHUTDOWN_GRACE_MS);
+      if (forcedKill) {
         console.log('⚠️  Сервер не ответил на SIGTERM, отправляем SIGKILL...');
-        proc.kill('SIGKILL');
       }
     }
   }
@@ -307,12 +484,18 @@ async function main(): Promise<void> {
     let stdoutData = '';
     let stderrData = '';
 
-    serverProcess.stdout?.on('data', (data) => {
-      stdoutData += data.toString();
+    // Один разделяемый декодер на поток (см. assertUtf8Chunk): и stdout, и
+    // stderr читают несколько слушателей, побайтовое декодирование каждым из
+    // них рвало бы кириллицу на границе чанка.
+    serverProcess.stdout?.setEncoding('utf8');
+    serverProcess.stderr?.setEncoding('utf8');
+
+    serverProcess.stdout?.on('data', (chunk: unknown) => {
+      stdoutData += assertUtf8Chunk(chunk);
     });
 
-    serverProcess.stderr?.on('data', (data) => {
-      stderrData += data.toString();
+    serverProcess.stderr?.on('data', (chunk: unknown) => {
+      stderrData += assertUtf8Chunk(chunk);
     });
 
     // Обработка ошибок запуска
@@ -373,12 +556,16 @@ async function main(): Promise<void> {
       RESPONSE_WAIT_TIMEOUT_MS
     );
 
-    const firstToolsJson = JSON.stringify(response.result?.tools ?? []);
-    const secondToolsJson = JSON.stringify(secondResponse.result?.tools ?? []);
-    if (firstToolsJson !== secondToolsJson) {
+    assertNoDecodingDamage('tools/list', JSON.stringify(response.result?.tools));
+    const mismatch = describeToolsListMismatch(
+      response.result?.tools,
+      secondResponse.result?.tools
+    );
+    if (mismatch !== undefined) {
+      console.log(mismatch);
       throw new Error(
         'Два последовательных tools/list вернули РАЗНЫЙ список — нарушен контракт ' +
-          'детерминированного порядка (см. ToolSorter.sortByPriority).'
+          `детерминированного порядка (см. ToolSorter.sortByPriority).\n${mismatch}`
       );
     }
     console.log('   ✓ Список побайтово идентичен');
@@ -478,11 +665,13 @@ async function runDeprecatedEnvVarSmokeTest(): Promise<void> {
 
   let stdoutData = '';
   let stderrData = '';
-  child.stdout?.on('data', (data) => {
-    stdoutData += data.toString();
+  child.stdout?.setEncoding('utf8');
+  child.stderr?.setEncoding('utf8');
+  child.stdout?.on('data', (chunk: unknown) => {
+    stdoutData += assertUtf8Chunk(chunk);
   });
-  child.stderr?.on('data', (data) => {
-    stderrData += data.toString();
+  child.stderr?.on('data', (chunk: unknown) => {
+    stderrData += assertUtf8Chunk(chunk);
   });
 
   try {
@@ -517,12 +706,9 @@ async function runDeprecatedEnvVarSmokeTest(): Promise<void> {
       `   ✓ tools/list продолжает работать (${response.result.tools.length} инструментов)`
     );
   } finally {
-    if (!child.killed) {
-      child.kill('SIGTERM');
-      await sleep(1000);
-      if (!child.killed) {
-        child.kill('SIGKILL');
-      }
+    const forcedKill = await stopGracefully(child, SHUTDOWN_GRACE_MS_SECONDARY);
+    if (forcedKill) {
+      console.log('   ⚠️  Дочерний процесс не ответил на SIGTERM, отправляем SIGKILL...');
     }
   }
 }

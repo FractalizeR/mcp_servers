@@ -15,7 +15,6 @@ export * from './entities/index.js';
 export * from './dto/index.js';
 
 // API Operations
-export * from './api_operations/index.js';
 
 // Facade
 export * from './facade/index.js';

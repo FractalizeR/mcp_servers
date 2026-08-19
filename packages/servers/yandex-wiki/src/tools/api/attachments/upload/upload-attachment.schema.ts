@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PageIdSchema, AttachmentOutputSchema } from '#common/schemas/index.js';
-import { MAX_ATTACHMENT_SIZE } from '#wiki_api/api_operations/index.js';
+import { MAX_ATTACHMENT_SIZE } from '#constants';
 
 export const UploadAttachmentParamsSchema = z.object({
   idx: PageIdSchema.describe('ID страницы, к которой прикрепляется файл'),

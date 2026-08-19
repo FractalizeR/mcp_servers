@@ -11,7 +11,7 @@ import { BaseTool } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
-import { paginatedFieldFilter } from '#tracker_api/utils/index.js';
+import { paginatedFieldFilter } from '#common/index.js';
 import type { ChangelogEntryWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetIssueChangelogParamsSchema } from '#tools/api/issues/changelog/get-issue-changelog.schema.js';
 

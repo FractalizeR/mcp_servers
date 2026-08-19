@@ -32,3 +32,13 @@ export const MCP_SERVER_DISPLAY_NAME = "FractalizeR's Yandex Wiki MCP" as const;
  * Уровень логирования по умолчанию
  */
 export const DEFAULT_LOG_LEVEL = 'info';
+
+/**
+ * Потолок размера вложения для `yw_upload_attachment` (10 МБ).
+ *
+ * Живёт здесь, а не рядом с операцией: значение — часть контракта инструмента.
+ * Операция его проверяет, а схема и метаданные инструмента его декларируют
+ * агенту; общий источник должен быть доступен обеим сторонам, не заставляя
+ * слой tools импортировать api_operations.
+ */
+export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
