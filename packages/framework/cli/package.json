@@ -1,6 +1,6 @@
 {
   "name": "@fractalizer/mcp-cli",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Generic CLI for MCP server connection management",
   "keywords": [
     "mcp",
@@ -74,7 +74,7 @@
     "validate:quiet": "npm run lint:quiet && npm run typecheck && npm run typecheck:tests && npm run test:quiet && npm run cpd:quiet && npm run depcruise && npm run validate:docs"
   },
   "dependencies": {
-    "@fractalizer/mcp-infrastructure": "^2.4.0",
+    "@fractalizer/mcp-infrastructure": "^2.4.1",
     "@iarna/toml": "^2.2.5",
     "chalk": "^5.6.2",
     "commander": "^14.0.3",

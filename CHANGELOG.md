@@ -1,3 +1,9 @@
+## [2.4.1](https://github.com/FractalizeR/mcp_servers/compare/v2.4.0...v2.4.1) (2026-08-19)
+
+### Bug Fixes
+
+* **entities:** привести типы сущностей к реальной форме API Трекера ([#398](https://github.com/FractalizeR/mcp_servers/issues/398)) ([b23d8a2](https://github.com/FractalizeR/mcp_servers/commit/b23d8a23d4b55abb412b257d53289c0ab0cf65de))
+
 ## [2.4.0](https://github.com/FractalizeR/mcp_servers/compare/v2.3.0...v2.4.0) (2026-08-19)
 
 ### Features
