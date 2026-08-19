@@ -1,3 +1,9 @@
+## [2.1.0](https://github.com/FractalizeR/mcp_servers/compare/v2.0.0...v2.1.0) (2026-08-19)
+
+### Features
+
+* **quality:** scripts/ вышли из слепой зоны — линт и typecheck ([#392](https://github.com/FractalizeR/mcp_servers/issues/392)) ([9060bab](https://github.com/FractalizeR/mcp_servers/commit/9060bab4ff908c02676cf579a6b89a241d874e56))
+
 ## [2.0.0](https://github.com/FractalizeR/mcp_servers/compare/v1.9.1...v2.0.0) (2026-08-19)
 
 ### ⚠ BREAKING CHANGES
