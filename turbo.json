@@ -119,6 +119,6 @@
       "outputs": ["knip-report.json"]
     }
   },
-  "globalDependencies": [".npmrc", "package-lock.json", ".jscpd.json", ".dependency-cruiser.cjs", "eslint.shared.config.js"],
+  "globalDependencies": [".npmrc", "package-lock.json", ".jscpd.json", ".dependency-cruiser.cjs", "eslint.shared.config.js", "tsconfig.base.json", "packages/framework/tsconfig.base.json", "packages/servers/tsconfig.base.json"],
   "globalEnv": ["NODE_ENV"]
 }

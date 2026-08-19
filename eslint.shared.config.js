@@ -58,9 +58,18 @@ const COMMON_UNUSED_VARS = [
  * побайтовое сравнение двух ответов tools/list расходилось, хотя сервер отдавал
  * один и тот же список (исправлено в d5de3d88).
  *
- * Правило нужно именно потому, что защита из d5de3d88 (setEncoding + guard'ы)
+ * Правило нужно потому, что защита из d5de3d88 (setEncoding + guard'ы)
  * привязана к существующим точкам приёма: новый spawn с новым слушателем
  * никакой guard не поймает.
+ *
+ * ГРАНИЦА ПРИМЕНИМОСТИ, о которой надо знать. Селекторы синтаксические: они
+ * видят форму записи, а не типы и не поток управления. Полностью закрыт только
+ * инлайновый обработчик — там ловится любая форма декодирования. Обработчик,
+ * переданный по имени (`on('data', onData)`) или делегирующий
+ * (`on('data', (c) => this.onData(c))`), проверяется лишь эвристикой по имени
+ * переменной (CHUNK_NAMES): тело такого обработчика лежит вне узла регистрации,
+ * и связать их без анализа областей видимости `no-restricted-syntax` не умеет.
+ * Полное покрытие требует собственного ESLint-правила со scope-анализом.
  */
 const CHUNK_DECODE_MESSAGE =
   'Декодирование чанка по одному рвёт многобайтный UTF-8 на границе чанка ' +
@@ -68,18 +77,40 @@ const CHUNK_DECODE_MESSAGE =
   'один разделяемый декодер на весь поток — и принимай чанк через assertUtf8Chunk(). ' +
   'История дефекта: коммит d5de3d88.';
 
+// Все способы подписаться на 'data', а не только .on().
+const DATA_LISTENER =
+  "CallExpression[callee.property.name=/^(on|once|addListener|prependListener|prependOnceListener)$/][arguments.0.value='data']";
+const INLINE_HANDLER = '> :matches(ArrowFunctionExpression, FunctionExpression)';
+
+// Имена, по которым опознаётся чанк вне инлайнового обработчика.
+const CHUNK_NAMES = '/^(chunk|chunks|data|buf|buffer|part|piece)$/i';
+
 const NO_NAIVE_CHUNK_DECODE = [
   'error',
   {
-    // .toString() где угодно внутри инлайнового обработчика .on('data', ...)
-    selector:
-      "CallExpression[callee.property.name='on'][arguments.0.value='data'] > :matches(ArrowFunctionExpression, FunctionExpression) CallExpression[callee.property.name='toString']",
+    // Любое декодирование внутри инлайнового обработчика 'data':
+    // .toString(), String(), TextDecoder().decode().
+    selector: `${DATA_LISTENER} ${INLINE_HANDLER} :matches(CallExpression[callee.property.name='toString'], CallExpression[callee.name='String'], CallExpression[callee.property.name='decode'])`,
     message: CHUNK_DECODE_MESSAGE,
   },
   {
-    // Обработчик, переданный по имени, под первый селектор не попадает,
-    // поэтому ловим сам идиом накопления: `buffer += chunk.toString()`.
-    selector: "AssignmentExpression[operator='+='][right.callee.property.name='toString']",
+    // Неявное приведение внутри инлайнового обработчика: `out += chunk`.
+    // Движок сам зовёт toString — .toString() в коде не написан.
+    selector: `${DATA_LISTENER} ${INLINE_HANDLER} :matches(AssignmentExpression[operator='+='][right.type='Identifier'], TemplateLiteral > Identifier)`,
+    message: CHUNK_DECODE_MESSAGE,
+  },
+  {
+    // Обработчик по имени: связать его с регистрацией синтаксически нельзя,
+    // поэтому опознаём чанк по имени переменной. Ловит `buffer += chunk.toString()`,
+    // `chunks.push(chunk.toString())`, `chunk.toString() + '\n'` — любую позицию.
+    // Legit `Buffer.concat(chunks).toString('utf8')` не задет: там callee.object
+    // это вызов, а не идентификатор.
+    selector: `CallExpression[callee.property.name='toString'][callee.object.name=${CHUNK_NAMES}]`,
+    message: CHUNK_DECODE_MESSAGE,
+  },
+  {
+    // То же для String(chunk).
+    selector: `CallExpression[callee.name='String'] > Identifier[name=${CHUNK_NAMES}]`,
     message: CHUNK_DECODE_MESSAGE,
   },
 ];
