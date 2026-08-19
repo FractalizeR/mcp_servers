@@ -78,7 +78,7 @@
       "outputs": []
     },
     "typecheck:tests": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["build"],
       "cache": true,
       "inputs": ["src/**/*.ts", "tests/**/*.ts", "tsconfig*.json"],
       "outputs": []
