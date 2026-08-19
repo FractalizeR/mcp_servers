@@ -118,7 +118,7 @@ describe('BaseTool.formatCollectionResult', () => {
 
       const result = await tool.execute({ responseMode: 'links' });
 
-      const structured = result.structuredContent as {
+      const structured = result['structuredContent'] as {
         data: { mode: string; resourceLinks?: unknown[] };
       };
       expect(structured.data.mode).toBe('links');
@@ -143,7 +143,7 @@ describe('BaseTool.formatCollectionResult', () => {
 
       const result = await tool.execute({ responseMode: 'full' });
 
-      const structured = result.structuredContent as {
+      const structured = result['structuredContent'] as {
         data: { mode: string; items?: FakeItem[] };
       };
       expect(structured.data.mode).toBe('full');
@@ -163,7 +163,7 @@ describe('BaseTool.formatCollectionResult', () => {
 
       const result = await tool.execute({ responseMode: 'auto' });
 
-      const structured = result.structuredContent as { data: { mode: string } };
+      const structured = result['structuredContent'] as { data: { mode: string } };
       expect(structured.data.mode).toBe('full');
       expect(result.content.filter((c) => c['type'] === 'resource_link')).toHaveLength(0);
     });
@@ -174,7 +174,7 @@ describe('BaseTool.formatCollectionResult', () => {
 
       const result = await tool.execute({ responseMode: 'auto' });
 
-      const structured = result.structuredContent as { data: { mode: string } };
+      const structured = result['structuredContent'] as { data: { mode: string } };
       expect(structured.data.mode).toBe('full');
       expect(result.content.filter((c) => c['type'] === 'resource_link')).toHaveLength(0);
     });
@@ -185,7 +185,7 @@ describe('BaseTool.formatCollectionResult', () => {
 
       const result = await tool.execute({ responseMode: 'auto' });
 
-      const structured = result.structuredContent as { data: { mode: string } };
+      const structured = result['structuredContent'] as { data: { mode: string } };
       expect(structured.data.mode).toBe('links');
       expect(result.content.filter((c) => c['type'] === 'resource_link')).toHaveLength(
         DEFAULT_COLLECTION_LINKS_THRESHOLD + 1
@@ -198,7 +198,7 @@ describe('BaseTool.formatCollectionResult', () => {
 
       const result = await tool.execute({});
 
-      const structured = result.structuredContent as { data: { mode: string } };
+      const structured = result['structuredContent'] as { data: { mode: string } };
       expect(structured.data.mode).toBe('full');
     });
   });
@@ -211,13 +211,13 @@ describe('BaseTool.formatCollectionResult', () => {
       const fullTool = new FakeCollectionTool(items, buildLogger(), summary);
       const fullResult = await fullTool.execute({ responseMode: 'full' });
       expect(
-        (fullResult.structuredContent as { data: { summary?: unknown } }).data.summary
+        (fullResult['structuredContent'] as { data: { summary?: unknown } }).data.summary
       ).toEqual(summary);
 
       const linksTool = new FakeCollectionTool(items, buildLogger(), summary);
       const linksResult = await linksTool.execute({ responseMode: 'links' });
       expect(
-        (linksResult.structuredContent as { data: { summary?: unknown } }).data.summary
+        (linksResult['structuredContent'] as { data: { summary?: unknown } }).data.summary
       ).toEqual(summary);
     });
 
@@ -227,7 +227,7 @@ describe('BaseTool.formatCollectionResult', () => {
 
       const result = await tool.execute({ responseMode: 'full' });
 
-      const data = (result.structuredContent as { data: object }).data;
+      const data = (result['structuredContent'] as { data: object }).data;
       expect('summary' in data).toBe(false);
     });
   });

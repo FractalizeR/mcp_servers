@@ -92,19 +92,21 @@ describe('zodToMcpInputSchema', () => {
     it('должен конвертировать string', () => {
       const result = zodToMcpInputSchema(MinimalSchema);
 
-      expect((result.properties['id'] as Record<string, unknown>).type).toBe('string');
+      expect((result.properties['id'] as Record<string, unknown>)['type']).toBe('string');
     });
 
     it('должен конвертировать number', () => {
       const result = zodToMcpInputSchema(PrimitiveTypesSchema);
 
-      expect((result.properties['numberField'] as Record<string, unknown>).type).toBe('number');
+      expect((result.properties['numberField'] as Record<string, unknown>)['type']).toBe('number');
     });
 
     it('должен конвертировать boolean', () => {
       const result = zodToMcpInputSchema(PrimitiveTypesSchema);
 
-      expect((result.properties['booleanField'] as Record<string, unknown>).type).toBe('boolean');
+      expect((result.properties['booleanField'] as Record<string, unknown>)['type']).toBe(
+        'boolean'
+      );
     });
   });
 
@@ -113,8 +115,8 @@ describe('zodToMcpInputSchema', () => {
       const result = zodToMcpInputSchema(EnumSchema);
 
       const priorityProperty = result.properties['priority'] as Record<string, unknown>;
-      expect(priorityProperty.type).toBe('string');
-      expect(priorityProperty.enum).toEqual(['low', 'medium', 'high']);
+      expect(priorityProperty['type']).toBe('string');
+      expect(priorityProperty['enum']).toEqual(['low', 'medium', 'high']);
     });
   });
 
@@ -123,24 +125,24 @@ describe('zodToMcpInputSchema', () => {
       const result = zodToMcpInputSchema(ValidationSchema);
 
       const usernameProperty = result.properties['username'] as Record<string, unknown>;
-      expect(usernameProperty.minLength).toBe(3);
-      expect(usernameProperty.maxLength).toBe(20);
+      expect(usernameProperty['minLength']).toBe(3);
+      expect(usernameProperty['maxLength']).toBe(20);
     });
 
     it('должен сохранять minimum/maximum', () => {
       const result = zodToMcpInputSchema(ValidationSchema);
 
       const ageProperty = result.properties['age'] as Record<string, unknown>;
-      expect(ageProperty.minimum).toBe(0);
-      expect(ageProperty.maximum).toBe(120);
+      expect(ageProperty['minimum']).toBe(0);
+      expect(ageProperty['maximum']).toBe(120);
     });
 
     it('должен сохранять minItems/maxItems', () => {
       const result = zodToMcpInputSchema(ValidationSchema);
 
       const tagsProperty = result.properties['tags'] as Record<string, unknown>;
-      expect(tagsProperty.minItems).toBe(1);
-      expect(tagsProperty.maxItems).toBe(10);
+      expect(tagsProperty['minItems']).toBe(1);
+      expect(tagsProperty['maxItems']).toBe(10);
     });
   });
 
@@ -149,13 +151,13 @@ describe('zodToMcpInputSchema', () => {
       const result = zodToMcpInputSchema(DefaultValuesSchema);
 
       const perPageProperty = result.properties['perPage'] as Record<string, unknown>;
-      expect(perPageProperty.default).toBe(50);
+      expect(perPageProperty['default']).toBe(50);
 
       const includeArchivedProperty = result.properties['includeArchived'] as Record<
         string,
         unknown
       >;
-      expect(includeArchivedProperty.default).toBe(false);
+      expect(includeArchivedProperty['default']).toBe(false);
     });
   });
 
@@ -165,8 +167,8 @@ describe('zodToMcpInputSchema', () => {
 
       const assigneeProperty = result.properties['assignee'] as Record<string, unknown>;
       // Zod v4 использует anyOf для nullable полей
-      expect(assigneeProperty.anyOf).toBeDefined();
-      expect(assigneeProperty.anyOf).toEqual([{ type: 'string' }, { type: 'null' }]);
+      expect(assigneeProperty['anyOf']).toBeDefined();
+      expect(assigneeProperty['anyOf']).toEqual([{ type: 'string' }, { type: 'null' }]);
     });
   });
 
@@ -175,22 +177,22 @@ describe('zodToMcpInputSchema', () => {
       const result = zodToMcpInputSchema(NestedObjectSchema);
 
       const customFieldsProperty = result.properties['customFields'] as Record<string, unknown>;
-      expect(customFieldsProperty.type).toBe('object');
-      expect(customFieldsProperty.properties).toHaveProperty('resolution');
-      expect(customFieldsProperty.properties).toHaveProperty('assignee');
+      expect(customFieldsProperty['type']).toBe('object');
+      expect(customFieldsProperty['properties']).toHaveProperty('resolution');
+      expect(customFieldsProperty['properties']).toHaveProperty('assignee');
     });
 
     it('должен обрабатывать глубоко вложенные объекты', () => {
       const result = zodToMcpInputSchema(DeeplyNestedSchema);
 
       const level1 = result.properties['level1'] as Record<string, unknown>;
-      expect(level1.type).toBe('object');
+      expect(level1['type']).toBe('object');
 
-      const level2 = (level1.properties as Record<string, unknown>)['level2'] as Record<
+      const level2 = (level1['properties'] as Record<string, unknown>)['level2'] as Record<
         string,
         unknown
       >;
-      expect(level2.type).toBe('object');
+      expect(level2['type']).toBe('object');
     });
   });
 
@@ -199,21 +201,21 @@ describe('zodToMcpInputSchema', () => {
       const result = zodToMcpInputSchema(ArrayOfObjectsSchema);
 
       const issueKeysProperty = result.properties['issueKeys'] as Record<string, unknown>;
-      expect(issueKeysProperty.type).toBe('array');
-      expect((issueKeysProperty.items as Record<string, unknown>).type).toBe('string');
+      expect(issueKeysProperty['type']).toBe('array');
+      expect((issueKeysProperty['items'] as Record<string, unknown>)['type']).toBe('string');
     });
 
     it('должен обрабатывать массивы объектов', () => {
       const result = zodToMcpInputSchema(ArrayOfObjectsSchema);
 
       const filtersProperty = result.properties['filters'] as Record<string, unknown>;
-      expect(filtersProperty.type).toBe('array');
+      expect(filtersProperty['type']).toBe('array');
 
-      const itemsSchema = filtersProperty.items as Record<string, unknown>;
-      expect(itemsSchema.type).toBe('object');
-      expect(itemsSchema.properties).toHaveProperty('field');
-      expect(itemsSchema.properties).toHaveProperty('operator');
-      expect(itemsSchema.properties).toHaveProperty('value');
+      const itemsSchema = filtersProperty['items'] as Record<string, unknown>;
+      expect(itemsSchema['type']).toBe('object');
+      expect(itemsSchema['properties']).toHaveProperty('field');
+      expect(itemsSchema['properties']).toHaveProperty('operator');
+      expect(itemsSchema['properties']).toHaveProperty('value');
     });
   });
 
@@ -222,8 +224,8 @@ describe('zodToMcpInputSchema', () => {
       const result = zodToMcpInputSchema(RecordSchema);
 
       const customFieldsProperty = result.properties['customFields'] as Record<string, unknown>;
-      expect(customFieldsProperty.type).toBe('object');
-      expect(customFieldsProperty.additionalProperties).toBeTruthy();
+      expect(customFieldsProperty['type']).toBe('object');
+      expect(customFieldsProperty['additionalProperties']).toBeTruthy();
     });
   });
 
@@ -234,7 +236,7 @@ describe('zodToMcpInputSchema', () => {
       });
 
       const issueKeyProperty = result.properties['issueKey'] as Record<string, unknown>;
-      expect(issueKeyProperty.description).toBe('Ключ задачи в формате QUEUE-123');
+      expect(issueKeyProperty['description']).toBe('Ключ задачи в формате QUEUE-123');
     });
 
     it('должен поддерживать strict: true (default)', () => {
@@ -346,9 +348,9 @@ describe('zodToMcpInputSchema', () => {
       expect(result.properties).toHaveProperty('user');
 
       const userProp = result.properties['user'] as Record<string, unknown>;
-      expect(userProp.type).toBe('object');
-      expect(userProp.properties).toHaveProperty('name');
-      expect(userProp.properties).toHaveProperty('contact');
+      expect(userProp['type']).toBe('object');
+      expect(userProp['properties']).toHaveProperty('name');
+      expect(userProp['properties']).toHaveProperty('contact');
     });
 
     it('должен удалять examples из массивов', () => {
@@ -372,10 +374,10 @@ describe('zodToMcpInputSchema', () => {
       expect(result.properties).toHaveProperty('items');
 
       const tagsProp = result.properties['tags'] as Record<string, unknown>;
-      expect(tagsProp.type).toBe('array');
+      expect(tagsProp['type']).toBe('array');
 
       const itemsProp = result.properties['items'] as Record<string, unknown>;
-      expect(itemsProp.type).toBe('array');
+      expect(itemsProp['type']).toBe('array');
     });
   });
 });

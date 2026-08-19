@@ -213,7 +213,7 @@ describe('BaseTool', () => {
       const result = await tool.execute({ id: 'TASK-1' });
 
       const expectedPayload = { success: true, data: { id: 'TASK-1' } };
-      expect(result.structuredContent).toEqual(expectedPayload);
+      expect(result['structuredContent']).toEqual(expectedPayload);
       expect(result.content).toHaveLength(1);
       expect(result.content[0]?.['type']).toBe('text');
       expect(JSON.parse(result.content[0]?.['text'] as string)).toEqual(expectedPayload);
@@ -228,10 +228,10 @@ describe('BaseTool', () => {
       const result = tool.callFormatError('Просто сообщение');
 
       const expectedPayload = { success: false, message: 'Просто сообщение' };
-      expect(result.structuredContent).toEqual(expectedPayload);
+      expect(result['structuredContent']).toEqual(expectedPayload);
       expect(JSON.parse(result.content[0]?.['text'] as string)).toEqual(expectedPayload);
       expect(result.isError).toBe(true);
-      expect('error' in (result.structuredContent as object)).toBe(false);
+      expect('error' in (result['structuredContent'] as object)).toBe(false);
     });
 
     it('обычный Error: error-поле — только message', () => {
@@ -239,7 +239,7 @@ describe('BaseTool', () => {
 
       const result = tool.callFormatError('Что-то сломалось', new Error('boom'));
 
-      expect(result.structuredContent).toMatchObject({
+      expect(result['structuredContent']).toMatchObject({
         success: false,
         message: 'Что-то сломалось',
         error: 'boom',
@@ -258,7 +258,7 @@ describe('BaseTool', () => {
 
       const result = tool.callFormatError('Ошибка API', apiError);
 
-      expect(result.structuredContent).toMatchObject({
+      expect(result['structuredContent']).toMatchObject({
         success: false,
         message: 'Ошибка API',
         error: apiError.toJSON(),
@@ -270,7 +270,7 @@ describe('BaseTool', () => {
 
       const result = tool.callFormatError('Странная ошибка', { unexpected: true });
 
-      expect('error' in (result.structuredContent as object)).toBe(false);
+      expect('error' in (result['structuredContent'] as object)).toBe(false);
     });
 
     it('логирует message и исходный error через this.logger.error', () => {
@@ -291,7 +291,7 @@ describe('BaseTool', () => {
       const result = await tool.execute({ id: 'TASK-1' });
 
       expect(result.isError).toBeUndefined();
-      expect(result.structuredContent).toEqual({ success: true, data: { id: 'TASK-1' } });
+      expect(result['structuredContent']).toEqual({ success: true, data: { id: 'TASK-1' } });
     });
 
     it('невалидные параметры: execute() делегирует в formatError() с текстом ошибки валидации', async () => {
@@ -300,7 +300,7 @@ describe('BaseTool', () => {
       const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
-      const payload = result.structuredContent as {
+      const payload = result['structuredContent'] as {
         success: false;
         message: string;
         error?: string;
