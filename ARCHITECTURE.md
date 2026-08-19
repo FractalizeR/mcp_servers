@@ -30,9 +30,12 @@ packages/
 │   │   └── 0 dependencies
 │   ├── cli/               → @fractalizer/mcp-cli
 │   │   └── depends on: infrastructure
-│   └── core/              → @fractalizer/mcp-core
-│       ├── tools/base/, utils/, tool-registry
-│       └── depends on: infrastructure
+│   ├── core/              → @fractalizer/mcp-core
+│   │   ├── tools/base/, utils/, tool-registry
+│   │   └── depends on: infrastructure
+│   └── dev-client/        → @fractalizer/mcp-dev-client (private, devDependency-only)
+│       ├── session/, launch/, secrets/, write-policy/, batch/, cli/
+│       └── depends on: infrastructure, cli, core
 └── servers/
     └── yandex-tracker/    → mcp-server-yandex-tracker
         ├── api_operations/, entities/, tools/, composition-root/
@@ -58,6 +61,10 @@ packages/
 │ yandex-tracker  │ ← Application (Yandex.Tracker integration)
 └─────────────────┘
 ```
+
+`@fractalizer/mcp-dev-client` (private, dev-only) hangs off the same base layer — depends on
+infrastructure, cli, core — but nothing in `servers/` depends on it at runtime; servers pull it
+in only as a `devDependency` for the `tools:list`/`tools:call`/`tools:batch` npm scripts.
 
 **Rules:**
 - ❌ No reverse dependencies (core → infrastructure)
@@ -101,6 +108,17 @@ npm run depcruise  # Validates dependency graph
 **Key Principle:** Generic `BaseTool<TFacade>` — facade-agnostic design
 
 **Details:** [packages/framework/core/README.md](packages/framework/core/README.md)
+
+### @fractalizer/mcp-dev-client
+
+**Purpose:** Thin dev interface — call a server's MCP tools exactly as a real MCP client would,
+without registering the developing agent as another client and without restarting between calls.
+`private: true`, not published; servers add it as a `devDependency`.
+
+**Components:** local bundle resolution + freshness check, stdio session, env-secret masking,
+read/write/local-side-effect classification, JSONL batch runner, `mcp-dev` CLI.
+
+**Details:** [packages/framework/dev-client/README.md](packages/framework/dev-client/README.md)
 
 ### mcp-server-yandex-tracker
 

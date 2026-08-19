@@ -2,8 +2,6 @@
 
 **MCP Framework & Yandex Tracker Server**
 
----
-
 ## 🎯 МЕТА: Правила ведения документации
 
 **Cohesion/Coupling:** Документация рядом с кодом, который она описывает.
@@ -75,16 +73,12 @@ npm run validate:docs
 **НЕ обновляй при:**
 - Рефакторинге без изменения API, исправлении багов, обновлении комментариев
 
----
-
 ## ⚡ ОБЯЗАТЕЛЬНО ПРОЧИТАЙ
 
 **Перед началом работы:**
 1. 📖 **Этот файл** (CLAUDE.md) — правила monorepo
 2. 📖 **[ARCHITECTURE.md](./ARCHITECTURE.md)** — понимание архитектуры monorepo
 3. 📖 **@DOCS.md** — навигация по всей документации проекта
-
----
 
 ## 📦 Структура monorepo
 
@@ -107,8 +101,6 @@ packages/
 - **CLI** — [packages/framework/cli/README.md](packages/framework/cli/README.md)
 - **Core** — [packages/framework/core/README.md](packages/framework/core/README.md)
 - **Yandex Tracker** — [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
-
----
 
 ## 🚨 КРИТИЧЕСКИЕ ПРАВИЛА MONOREPO
 
@@ -226,8 +218,6 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
   - ✅ **МОЖНО** только читать для справки при разработке API
   - Если submodule не инициализирован: `git submodule update --init`
 
----
-
 ## 📋 Процесс работы с большими задачами
 
 **Критерии "большой задачи":**
@@ -255,8 +245,6 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
    5. Пуш в репозиторий
    6. Предложить пользователю продолжить в новой сессии для экономии токенов, дать короткий промпт с указанием названия плана и шага плана для этого. Коротко описать, какие шаги можно дальше выполнять параллельно или только последовательно.
 
----
-
 ## 🚀 Turborepo
 
 Проект использует **Turborepo** — автоматический порядок задач, кэширование, параллелизация.
@@ -267,8 +255,6 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - `turbo run build --filter=@fractalizer/mcp-server-yandex-tracker` — только пакет и зависимости
 - `turbo run build --graph` — показать граф
 - `turbo run build --force` — без кэша
-
----
 
 ## 🛠️ Команды (Workspace)
 
@@ -307,7 +293,30 @@ npm run test:quiet  # для ИИ агентов
 
 **ВАЖНО:** Команды `npm run` теперь используют Turborepo автоматически!
 
----
+## 🔧 Dev-интерфейс вызова инструментов (`mcp-dev`)
+
+Доработал инструмент сервера — вызови его как настоящий MCP-клиент, без переподключения MCP к
+себе как к агенту и без перезапуска сессии. Команды запускаются из каталога пакета сервера:
+
+```bash
+npm run tools:list -- --json
+npm run tools:call -- fr_yandex_tracker_get_issues '{"issueIds":["PROJ-1"]}'
+npm run tools:batch -- calls.jsonl --dangerously-allow-write
+```
+
+Имена инструментов всегда с префиксом сервера (`fr_yandex_tracker_`, `yw_`, `fr_ticktick_` —
+`MCP_TOOL_PREFIX` в `src/constants.ts` сервера); список актуальных имён — `npm run tools:list`.
+
+После доработки — обязательно прогони `tools:batch` по кейсам из того, что менял: сами
+затронутые инструменты, их граничные значения аргументов и хотя бы один заведомо ошибочный вход.
+
+Запись (`write`/`local-side-effect`) по умолчанию заблокирована; `--dangerously-allow-write`
+ставь осознанно и только на время конкретного прогона. Устаревший относительно `src/**` бандл —
+это отказ с подсказкой `npm run build`, а не молчаливый неверный результат.
+
+**Вызовы идут в боевой сервис под реальным токеном.** Два агента в разных worktree с этим флагом
+бьют по одному и тому же боевому сервису — координируйся с пользователем. Подробности:
+[packages/framework/dev-client/README.md](packages/framework/dev-client/README.md).
 
 ## 📊 Инструменты качества кода
 
@@ -341,8 +350,6 @@ npm run cpd:report
 - `error` — блокирует коммит/CI
 - `warn` — показывает предупреждение, но не блокирует
 
----
-
 ## 📖 Работа с конкретными компонентами
 
 **Framework пакеты (infrastructure, core):**
@@ -354,8 +361,6 @@ npm run cpd:report
 - Доменная логика Яндекс.Трекера
 - MCP tools, API operations, entities, DTO
 - **ОБЯЗАТЕЛЬНО прочитай:** [packages/servers/yandex-tracker/CLAUDE.md](packages/servers/yandex-tracker/CLAUDE.md)
-
----
 
 ## 📋 Автоматический коммит
 
@@ -376,8 +381,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Лимиты:** body ≤100 символов на строку, заголовок ≤72 символа
-
----
 
 ## 🔗 ДОПОЛНИТЕЛЬНО
 
