@@ -7,6 +7,7 @@ import { FindEntitiesTool } from '#tools/api/entities/find-entities.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
+import { createEntityApiRecordFixture } from '#helpers/entity-api.fixture.js';
 
 function paginated<T>(items: T[]) {
   return {
@@ -43,7 +44,7 @@ describe('FindEntitiesTool', () => {
   });
 
   it('найдёт записи по entityType=goal', async () => {
-    const entities = [{ id: '1', self: 'url', version: 1, shortId: 'G-1', entityType: 'goal' }];
+    const entities = [createEntityApiRecordFixture()];
     vi.mocked(mockTrackerFacade.findEntities).mockResolvedValue(paginated(entities));
 
     const result = await tool.execute({ entityType: 'goal', fields: ['id', 'shortId'] });

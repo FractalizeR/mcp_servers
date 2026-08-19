@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AddGoalKeyResultTool } from '#tools/api/entities/add-goal-key-result.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { createKeyResultItemFixture } from '#helpers/entity-api.fixture.js';
 
 describe('AddGoalKeyResultTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -29,7 +30,7 @@ describe('AddGoalKeyResultTool', () => {
   });
 
   it('добавит key result', async () => {
-    const items = [{ id: 'kr1', type: 'binary', text: 'Ship X' }];
+    const items = [createKeyResultItemFixture({ type: 'binary', text: 'Ship X' })];
     vi.mocked(mockTrackerFacade.addGoalKeyResult).mockResolvedValue(items);
 
     const result = await tool.execute({

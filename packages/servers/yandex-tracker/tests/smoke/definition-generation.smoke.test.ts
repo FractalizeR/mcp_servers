@@ -16,6 +16,23 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { validateGeneratedDefinition } from '#helpers/schema-definition-matcher.js';
 
+/**
+ * Читает `getParamsSchema` у инструмента. Метод объявлен protected — снаружи
+ * его не видно ни по имени, ни по индексу; Reflect обходит проверку доступа,
+ * не подменяя тип.
+ */
+function readParamsSchema(tool: object): unknown {
+  if (!('getParamsSchema' in tool)) return undefined;
+  const fn: unknown = Reflect.get(tool, 'getParamsSchema');
+  return typeof fn === 'function' ? (fn as () => unknown).call(tool) : undefined;
+}
+
+function hasParamsSchema(tool: object): boolean {
+  if (!('getParamsSchema' in tool)) return false;
+  const fn: unknown = Reflect.get(tool, 'getParamsSchema');
+  return typeof fn === 'function';
+}
+
 describe('Definition Generation - Smoke Tests', () => {
   let mockFacade: YandexTrackerFacade;
   let mockLogger: Logger;
@@ -70,8 +87,11 @@ describe('Definition Generation - Smoke Tests', () => {
         // Каждое property должно быть объектом с type
         if (definition.inputSchema.properties) {
           Object.entries(definition.inputSchema.properties).forEach(([_propName, propSchema]) => {
-            expect(propSchema).toBeDefined();
-            expect(typeof propSchema).toBe('object');
+            if (typeof propSchema !== 'object' || propSchema === null) {
+              throw new Error(
+                `property ${_propName}: ожидался объект, получено ${typeof propSchema}`
+              );
+            }
             // JSON Schema требует наличия type или anyOf/oneOf/allOf
             const hasType = 'type' in propSchema;
             const hasComposition =
@@ -188,13 +208,13 @@ describe('Definition Generation - Smoke Tests', () => {
     it('инструменты с getParamsSchema() должны возвращать Zod schema', () => {
       const toolsWithSchema = TOOL_CLASSES.filter((ToolClass) => {
         const tool = new ToolClass(mockFacade, mockLogger);
-        return 'getParamsSchema' in tool && typeof tool.getParamsSchema === 'function';
+        return hasParamsSchema(tool);
       });
 
       // Проверяем только инструменты, у которых есть метод
       toolsWithSchema.forEach((ToolClass) => {
         const tool = new ToolClass(mockFacade, mockLogger);
-        const schema = (tool as { getParamsSchema: () => unknown }).getParamsSchema();
+        const schema = readParamsSchema(tool);
 
         // Zod schema должен иметь метод _def
         expect(schema).toBeDefined();

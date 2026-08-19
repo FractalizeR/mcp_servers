@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UpdateEntityTool } from '#tools/api/entities/update-entity.tool.js';
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+import { createEntityApiRecordFixture } from '#helpers/entity-api.fixture.js';
 
 describe('UpdateEntityTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
@@ -29,7 +30,7 @@ describe('UpdateEntityTool', () => {
   });
 
   it('обновит запись', async () => {
-    const entity = { id: '1', self: 'url', version: 2, shortId: 1, entityType: 'goal' };
+    const entity = createEntityApiRecordFixture({ version: 2 });
     vi.mocked(mockTrackerFacade.updateEntity).mockResolvedValue(entity);
 
     const result = await tool.execute({
