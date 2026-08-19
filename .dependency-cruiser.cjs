@@ -20,10 +20,10 @@ module.exports = {
       severity: 'error',
       comment: 'Запрет обратных зависимостей в графе пакетов (infrastructure <- core <- servers)',
       from: {
-        path: '^packages/(infrastructure|core|framework/(infrastructure|core))/',
+        path: '^packages/framework/(infrastructure|core)/',
       },
       to: {
-        path: '^packages/(yandex-tracker|servers/)/',
+        path: '^packages/servers/',
       },
     },
 
@@ -32,10 +32,10 @@ module.exports = {
       severity: 'error',
       comment: 'Infrastructure — базовый слой, не зависит от других framework пакетов',
       from: {
-        path: '^packages/(infrastructure|framework/infrastructure)/',
+        path: '^packages/framework/infrastructure/',
       },
       to: {
-        path: '^packages/(core|cli|yandex-tracker|framework/core|servers/)/',
+        path: '^packages/(framework/(core|cli)|servers)/',
       },
     },
 
@@ -44,10 +44,10 @@ module.exports = {
       severity: 'error',
       comment: 'Core может зависеть только от infrastructure',
       from: {
-        path: '^packages/(core|framework/core)/',
+        path: '^packages/framework/core/',
       },
       to: {
-        path: '^packages/(cli|yandex-tracker|servers/)/',
+        path: '^packages/(framework/cli|servers)/',
       },
     },
 
@@ -178,14 +178,21 @@ module.exports = {
   ],
 
   options: {
-    // Не следовать в node_modules
+    // dist/ не исключён, а только не обходится вглубь: межпакетный импорт
+    // `@fractalizer/mcp-core` резолвится через симлинк workspace в
+    // packages/framework/core/dist/index.js, и пока dist был в `exclude`,
+    // ребро выбрасывалось из графа целиком — правила графа пакетов не могли
+    // сработать на канонической форме импорта (см. CLAUDE.md §2). Как узел
+    // dist нужен, как поддерево — нет. Цена: гейт видит межпакетные рёбра
+    // только после сборки зависимостей, поэтому turbo-задача depcruise
+    // объявляет dependsOn: ["^build"].
     doNotFollow: {
-      path: 'node_modules',
+      path: '(node_modules|/dist/)',
     },
 
     // Исключить из анализа
     exclude: {
-      path: ['\\.test\\.ts$', '\\.spec\\.ts$', 'dist/', 'tests/', 'scripts/', '\\.agentic-planning/'],
+      path: ['\\.test\\.ts$', '\\.spec\\.ts$', 'tests/', 'scripts/', '\\.agentic-planning/'],
     },
 
     // Использовать TypeScript для разрешения путей

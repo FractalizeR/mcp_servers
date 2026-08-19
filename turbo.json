@@ -88,6 +88,7 @@
     },
     "depcruise": {
       "cache": true,
+      "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts", "tsconfig*.json"],
       "outputs": []
     },
