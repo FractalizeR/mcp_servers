@@ -8,6 +8,7 @@ import {
   FieldsSchema,
   FilteredEntitySchema,
   FieldsReturnedSchema,
+  BatchErrorValueSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
 import { BaseChecklistItemFieldsSchema } from '../base-checklist-item.schema.js';
@@ -76,7 +77,7 @@ export const AddChecklistItemOutputDataSchema = z.object({
   errors: z.array(
     z.object({
       issueId: z.string(),
-      error: z.string(),
+      error: BatchErrorValueSchema,
     })
   ),
   fieldsReturned: FieldsReturnedSchema,

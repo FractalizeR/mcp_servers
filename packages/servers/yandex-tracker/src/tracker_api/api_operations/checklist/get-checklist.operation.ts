@@ -17,6 +17,7 @@ import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import {
   TrackerPaginator,
   DEFAULT_MAX_PER_PAGE,
+  DEFAULT_PER_PAGE,
 } from '#tracker_api/utils/tracker-paginator.util.js';
 import { CursorCodec, CURSOR_TAGS } from '#tracker_api/utils/cursor-codec.util.js';
 import { ItemBudget, DEFAULT_MAX_TOTAL_ITEMS } from '#tracker_api/utils/item-budget.util.js';
@@ -69,8 +70,10 @@ export class GetChecklistOperation extends BaseOperation {
       );
       const resp =
         await this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(cursorPath);
+      const cursorPerPage = TrackerPaginator.perPageFromPath(cursorPath);
       const cursorResult = TrackerPaginator.singlePage<ChecklistItemWithUnknownFields>(resp, {
         tag: CURSOR_TAGS.checklist,
+        ...(cursorPerPage !== undefined ? { perPage: cursorPerPage } : {}),
       });
       this.logger.info(
         `Получено ${cursorResult.items.length} элементов чеклиста для задачи ${issueId}`
@@ -81,7 +84,9 @@ export class GetChecklistOperation extends BaseOperation {
     const fetchAll = input.fetchAll === true;
     // В режиме fetchAll поднимаем perPage к рекомендуемому максимуму ради
     // меньшего числа round-trip'ов (maxItems всё равно режет финальную выдачу).
-    const effectivePerPage = fetchAll ? (input.perPage ?? DEFAULT_MAX_PER_PAGE) : input.perPage;
+    // Вне fetchAll — НАШ явный дефолт DEFAULT_PER_PAGE, чтобы perPage всегда
+    // был известен buildMeta (F3-sanity-check).
+    const effectivePerPage = input.perPage ?? (fetchAll ? DEFAULT_MAX_PER_PAGE : DEFAULT_PER_PAGE);
 
     const path = `/v2/issues/${issueId}/checklistItems`;
     const params = this.buildParams(effectivePerPage);
@@ -97,7 +102,7 @@ export class GetChecklistOperation extends BaseOperation {
           requestNext: (p) => this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(p),
           tag: CURSOR_TAGS.checklist,
           ...(input.maxItems !== undefined ? { maxItems: input.maxItems } : {}),
-          ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
+          perPage: effectivePerPage,
           ...(budget !== undefined ? { budget } : {}),
           onError: (error, pagesFetched) =>
             this.logger.warn(
@@ -107,7 +112,7 @@ export class GetChecklistOperation extends BaseOperation {
         })
       : TrackerPaginator.singlePage<ChecklistItemWithUnknownFields>(first, {
           tag: CURSOR_TAGS.checklist,
-          ...(input.perPage !== undefined ? { perPage: input.perPage } : {}),
+          perPage: effectivePerPage,
         });
 
     this.logger.info(`Получено ${result.items.length} элементов чеклиста для задачи ${issueId}`);

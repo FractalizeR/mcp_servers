@@ -68,7 +68,9 @@ describe('AddChecklistItemOperation', () => {
 
       const result = await operation.execute('TEST-1', input);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems', input);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems', {
+        text: 'New checklist item',
+      });
       expect(result).toEqual(mockItem);
     });
 
@@ -249,8 +251,28 @@ describe('AddChecklistItemOperation', () => {
         text: 'Item 1',
         checked: true,
         assignee: 'user1',
-        deadline: '2025-12-31',
+        deadline: { date: '2025-12-31', deadlineType: 'date' },
       });
+    });
+
+    it('регрессия: строковый deadline (баг Tool execution failed) оборачивается в {date, deadlineType}', async () => {
+      const mockItem: ChecklistItemWithUnknownFields = {
+        id: 'item-1',
+        text: 'Item 1',
+        checked: false,
+        deadline: '2026-08-25',
+      };
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue({ checklistItems: [mockItem] });
+
+      await operation.executeMany([{ issueId: 'TEST-1', text: 'Item 1', deadline: '2026-08-25' }]);
+
+      const [, body] = vi.mocked(mockHttpClient.post).mock.calls[0] as [
+        string,
+        Record<string, unknown>,
+      ];
+      expect(body['deadline']).toEqual({ date: '2026-08-25', deadlineType: 'date' });
+      expect(typeof body['deadline']).toBe('object');
     });
 
     it('should log batch operation start', async () => {

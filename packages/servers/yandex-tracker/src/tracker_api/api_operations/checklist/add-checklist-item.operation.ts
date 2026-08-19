@@ -11,6 +11,7 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
+import { buildChecklistItemBody } from '#tracker_api/api_operations/checklist/checklist-item-body.util.js';
 import type { AddChecklistItemInput } from '#tracker_api/dto/index.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
@@ -65,7 +66,7 @@ export class AddChecklistItemOperation extends BaseOperation {
     // баг «itemId ≠ id элемента чеклиста»). Новый элемент — последний в массиве.
     const response = await this.httpClient.post<AddChecklistItemResponse>(
       `/v2/issues/${issueId}/checklistItems`,
-      input
+      buildChecklistItemBody(input)
     );
 
     const items = response.checklistItems ?? [];

@@ -68,10 +68,9 @@ describe('UpdateChecklistItemOperation', () => {
 
       const result = await operation.execute('TEST-1', '123', input);
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith(
-        '/v2/issues/TEST-1/checklistItems/123',
-        input
-      );
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems/123', {
+        text: 'Updated item text',
+      });
       expect(result).toEqual(mockItem);
     });
 
@@ -256,8 +255,57 @@ describe('UpdateChecklistItemOperation', () => {
         text: 'Item 1',
         checked: true,
         assignee: 'user1',
-        deadline: '2025-12-31',
+        deadline: { date: '2025-12-31', deadlineType: 'date' },
       });
+    });
+
+    it('регрессия: строковый deadline (баг Tool execution failed) оборачивается в {date, deadlineType}', async () => {
+      const mockItem: ChecklistItemWithUnknownFields = {
+        id: 'item-1',
+        text: 'Item 1',
+        checked: false,
+        deadline: '2026-08-25T00:00:00.000+0000',
+      };
+
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+
+      await operation.executeMany([
+        {
+          issueId: 'TEST-1',
+          checklistItemId: 'item-1',
+          deadline: '2026-08-25T00:00:00.000+0000',
+        },
+      ]);
+
+      const [, body] = vi.mocked(mockHttpClient.patch).mock.calls[0] as [
+        string,
+        Record<string, unknown>,
+      ];
+      expect(body['deadline']).toEqual({
+        date: '2026-08-25T00:00:00.000+0000',
+        deadlineType: 'date',
+      });
+    });
+
+    it('update без deadline: ключ deadline отсутствует в теле (существующее значение не затирается)', async () => {
+      const mockItem: ChecklistItemWithUnknownFields = {
+        id: 'item-1',
+        text: 'Renamed',
+        checked: false,
+      };
+
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+
+      await operation.executeMany([
+        { issueId: 'TEST-1', checklistItemId: 'item-1', text: 'Renamed' },
+      ]);
+
+      const [, body] = vi.mocked(mockHttpClient.patch).mock.calls[0] as [
+        string,
+        Record<string, unknown>,
+      ];
+      expect(body).not.toHaveProperty('deadline');
+      expect(body).toEqual({ text: 'Renamed' });
     });
 
     it('should log batch operation start', async () => {

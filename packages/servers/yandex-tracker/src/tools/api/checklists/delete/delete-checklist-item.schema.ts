@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, buildOutputSchema } from '#common/schemas/index.js';
+import { IssueKeySchema, BatchErrorValueSchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема элемента чеклиста для удаления
@@ -59,7 +59,7 @@ export const DeleteChecklistItemOutputDataSchema = z.object({
     z.object({
       issueId: z.string(),
       itemId: z.string(),
-      error: z.string(),
+      error: BatchErrorValueSchema,
     })
   ),
 });

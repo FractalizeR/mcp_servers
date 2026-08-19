@@ -60,8 +60,20 @@ describe('GetChecklistOperation', () => {
       expect(result.pagination.fetchedAll).toBe(true);
     });
 
-    it('выставляет hasNextPage=true при наличии Link rel="next"', async () => {
+    it('РЕГРЕССИЯ (план 3.3/3.4): без явного perPage, один элемент, Link rel="next" всё равно есть → hasNextPage=false', async () => {
       httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
+        link: NEXT_LINK,
+      });
+
+      const result = await operation.execute({ issueId: 'TEST-1' });
+
+      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.pagination.fetchedAll).toBe(true);
+    });
+
+    it('при заполненной ровно до perPage странице + Link rel="next" → hasNextPage=true', async () => {
+      const fullPage = Array.from({ length: 50 }, (_, i) => item(String(i + 1)));
+      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', fullPage, {
         link: NEXT_LINK,
       });
 
@@ -79,11 +91,13 @@ describe('GetChecklistOperation', () => {
     });
 
     it('выдаёт nextCursor при наличии Link rel="next"', async () => {
+      // perPage=1 явно передан и совпадает с числом элементов — sanity-check
+      // (F3) не гасит hasNextPage/nextCursor.
       httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
         link: NEXT_LINK,
       });
 
-      const result = await operation.execute({ issueId: 'TEST-1' });
+      const result = await operation.execute({ issueId: 'TEST-1', perPage: 1 });
 
       expect(result.pagination.nextCursor).toBeDefined();
       expect(result.pagination.hasNextPage).toBe(true);
@@ -123,14 +137,16 @@ describe('GetChecklistOperation', () => {
 
   describe('execute (cursor)', () => {
     it('курсорная регрессия: nextCursor → повторный вызов отдаёт следующие записи', async () => {
-      // Первая страница отдаёт Link rel="next" с ?id=ID2 → nextCursor
+      // Первая страница отдаёт Link rel="next" с ?id=ID2 → nextCursor.
+      // perPage=1 явно передан и совпадает с числом элементов — sanity-check
+      // (F3) не гасит hasNextPage/nextCursor.
       httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
         link: NEXT_LINK,
       });
       // Декодированный путь курсора (stripHost от next) отдаёт следующую запись
       httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems?id=ID2', [item('2')]);
 
-      const firstPage = await operation.execute({ issueId: 'TEST-1' });
+      const firstPage = await operation.execute({ issueId: 'TEST-1', perPage: 1 });
       const cursor = firstPage.pagination.nextCursor;
       expect(cursor).toBeDefined();
 

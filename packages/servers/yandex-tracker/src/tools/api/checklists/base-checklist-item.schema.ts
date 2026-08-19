@@ -28,7 +28,10 @@ export const BaseChecklistItemFieldsSchema = z.object({
   assignee: z.string(),
 
   /**
-   * Дедлайн в формате ISO 8601
+   * Дедлайн: строка `YYYY-MM-DD` или полный ISO 8601
+   * (например, `2026-08-25T00:00:00.000+0000`). На границе с API Трекера
+   * автоматически оборачивается в объект `{date, deadlineType: 'date'}`,
+   * которого требует API — агенту передавать объект не нужно.
    */
   deadline: z.string(),
 });

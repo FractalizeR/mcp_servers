@@ -18,6 +18,7 @@ import {
   FilteredEntitySchema,
   FieldsReturnedSchema,
   PaginationMetaSchema,
+  BatchErrorValueSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
 
@@ -93,7 +94,7 @@ export const GetChecklistOutputDataSchema = z.object({
   failed: z.array(
     z.object({
       issueId: z.string(),
-      error: z.string(),
+      error: BatchErrorValueSchema,
     })
   ),
   fieldsReturned: FieldsReturnedSchema,

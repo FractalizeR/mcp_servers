@@ -17,6 +17,10 @@ export interface UpdateChecklistItemInput {
   /** ID назначенного лица */
   assignee?: string | undefined;
 
-  /** Дедлайн в формате ISO 8601 */
+  /**
+   * Дедлайн: `YYYY-MM-DD` или полный ISO 8601. Оборачивается в
+   * `{date, deadlineType: 'date'}` в `buildChecklistItemBody()` на границе
+   * с API — см. `checklist-item-body.util.ts`.
+   */
   deadline?: string | undefined;
 }

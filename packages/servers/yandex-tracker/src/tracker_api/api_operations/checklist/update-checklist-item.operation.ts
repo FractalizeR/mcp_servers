@@ -11,6 +11,7 @@
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
+import { buildChecklistItemBody } from '#tracker_api/api_operations/checklist/checklist-item-body.util.js';
 import type { UpdateChecklistItemInput } from '#tracker_api/dto/index.js';
 import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
@@ -55,7 +56,7 @@ export class UpdateChecklistItemOperation extends BaseOperation {
 
     const item = await this.httpClient.patch<ChecklistItemWithUnknownFields>(
       `/v2/issues/${issueId}/checklistItems/${checklistItemId}`,
-      input
+      buildChecklistItemBody(input)
     );
 
     this.logger.info(`Элемент ${checklistItemId} чеклиста задачи ${issueId} успешно обновлён`);
