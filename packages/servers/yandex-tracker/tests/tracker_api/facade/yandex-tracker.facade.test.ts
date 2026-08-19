@@ -12,7 +12,7 @@ import type { BatchIssueResult } from '#tracker_api/api_operations/issue/get-iss
 import type { FindIssuesResult } from '#tracker_api/api_operations/issue/find/index.js';
 import type { User } from '#tracker_api/entities/user.entity.js';
 import type { Issue, IssueWithUnknownFields } from '#tracker_api/entities/issue.entity.js';
-import type { Queue } from '#tracker_api/entities/queue.entity.js';
+
 import type { Status } from '#tracker_api/entities/status.entity.js';
 import type {
   FindIssuesInputDto,
@@ -34,13 +34,16 @@ import type {
   SprintsListOutput,
 } from '#tracker_api/dto/index.js';
 import type {
-  ChangelogEntryWithUnknownFields,
   TransitionWithUnknownFields,
   WorklogWithUnknownFields,
 } from '#tracker_api/entities/index.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
 import { createBoardFixture, createSprintFixture } from '#helpers/agile.fixture.js';
-import { createUserRef, createUserFixture } from '#helpers/common-fixtures.js';
+import { createUserFixture } from '#helpers/common-fixtures.js';
+import { createIssueFixture } from '#helpers/issue.fixture.js';
+import { createPaginatedFixture } from '#helpers/pagination.fixture.js';
+import { createWorklogFixture } from '#helpers/worklog.fixture.js';
+import type { BatchChangelogResult } from '#tracker_api/api_operations/issue/changelog/get-issue-changelog.operation.js';
 
 describe('YandexTrackerFacade', () => {
   let facade: YandexTrackerFacade;
@@ -237,11 +240,7 @@ describe('YandexTrackerFacade', () => {
       // Arrange
       const issueKeys = ['TEST-1', 'TEST-2'];
 
-      const mockQueue: Queue = {
-        id: '1',
-        key: 'TEST',
-        name: 'Test Queue',
-      };
+      const mockQueue = createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' });
 
       const mockStatus: Status = {
         id: '1',
@@ -317,11 +316,7 @@ describe('YandexTrackerFacade', () => {
       // Arrange
       const issueKeys = ['TEST-1', 'INVALID'];
 
-      const mockQueue: Queue = {
-        id: '1',
-        key: 'TEST',
-        name: 'Test Queue',
-      };
+      const mockQueue = createQueueFixture({ id: '1', key: 'TEST', name: 'Test Queue' });
 
       const mockStatus: Status = {
         id: '1',
@@ -384,18 +379,9 @@ describe('YandexTrackerFacade', () => {
   describe('findIssues', () => {
     it('должна делегировать вызов IssueService.findIssues', async () => {
       const params: FindIssuesInputDto = { query: 'status: open', perPage: 50 };
-      const mockResult: FindIssuesResult = [
-        {
-          id: '1',
-          key: 'TEST-1',
-          summary: 'Test',
-          queue: { id: '1', key: 'TEST', name: 'Test' },
-          status: { id: '1', key: 'open', display: 'Open' },
-          createdBy: createUserRef({ id: '1', display: 'User' }),
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01',
-        },
-      ];
+      const mockResult: FindIssuesResult = createPaginatedFixture([
+        createIssueFixture({ id: '1', key: 'TEST-1', summary: 'Test' }),
+      ]);
 
       vi.mocked(mockIssuesContainer.issue.findIssues).mockResolvedValue(mockResult);
 
@@ -505,33 +491,40 @@ describe('YandexTrackerFacade', () => {
 
   describe('getIssueChangelog', () => {
     it('должна делегировать вызов IssueService.getIssueChangelog', async () => {
-      const issueKey = 'TEST-123';
-      const mockResult: ChangelogEntryWithUnknownFields[] = [
+      const issueKeys = ['TEST-123'];
+      const mockResult: BatchChangelogResult[] = [
         {
-          id: '1',
-          self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/changelog/1',
-          issue: { id: '123', key: 'TEST-123', display: 'Test Issue' },
-          updatedAt: '2024-01-01',
-          updatedBy: createUserFixture({ uid: '1', display: 'User' }),
-          type: 'IssueUpdated',
-          fields: [],
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: createPaginatedFixture([
+            {
+              id: '1',
+              self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/changelog/1',
+              issue: { id: '123', key: 'TEST-123', display: 'Test Issue' },
+              updatedAt: '2024-01-01',
+              updatedBy: createUserFixture({ uid: '1', display: 'User' }),
+              type: 'IssueUpdated',
+              fields: [],
+            },
+          ]),
         },
       ];
 
       vi.mocked(mockIssuesContainer.issue.getIssueChangelog).mockResolvedValue(mockResult);
 
-      const result = await facade.getIssueChangelog(issueKey);
+      const result = await facade.getIssueChangelog(issueKeys);
 
-      expect(mockIssuesContainer.issue.getIssueChangelog).toHaveBeenCalledWith(issueKey, {});
+      expect(mockIssuesContainer.issue.getIssueChangelog).toHaveBeenCalledWith(issueKeys, {});
       expect(result).toEqual(mockResult);
     });
 
     it('должна обрабатывать ошибки от IssueService.getIssueChangelog', async () => {
-      const issueKey = 'TEST-123';
+      const issueKeys = ['TEST-123'];
       const error = new Error('Changelog failed');
       vi.mocked(mockIssuesContainer.issue.getIssueChangelog).mockRejectedValue(error);
 
-      await expect(facade.getIssueChangelog(issueKey)).rejects.toThrow('Changelog failed');
+      await expect(facade.getIssueChangelog(issueKeys)).rejects.toThrow('Changelog failed');
     });
   });
 
@@ -626,16 +619,9 @@ describe('YandexTrackerFacade', () => {
     describe('getWorklogs', () => {
       it('должна делегировать вызов WorklogService.getWorklogs', async () => {
         const issueId = 'TEST-1';
-        const mockResult: WorklogWithUnknownFields[] = [
-          {
-            id: '1',
-            self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
-            issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
-            createdBy: createUserRef({ id: '1', display: 'User' }),
-            createdAt: '2024-01-01',
-            duration: 'PT1H',
-          },
-        ];
+        const mockResult = createPaginatedFixture([
+          createWorklogFixture({ id: '1', duration: 'PT1H' }),
+        ]);
 
         vi.mocked(mockIssuesContainer.worklog.getWorklogs).mockResolvedValue(mockResult);
 
@@ -654,14 +640,10 @@ describe('YandexTrackerFacade', () => {
           duration: 'PT1H',
           comment: 'Work done',
         };
-        const mockResult: WorklogWithUnknownFields = {
+        const mockResult: WorklogWithUnknownFields = createWorklogFixture({
           id: '1',
-          self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
-          issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
-          createdBy: createUserRef({ id: '1', display: 'User' }),
-          createdAt: '2024-01-01',
           duration: 'PT1H',
-        };
+        });
 
         vi.mocked(mockIssuesContainer.worklog.addWorklog).mockResolvedValue(mockResult);
 
@@ -677,14 +659,10 @@ describe('YandexTrackerFacade', () => {
         const issueId = 'TEST-1';
         const worklogId = '123';
         const input: UpdateWorklogInput = { duration: 'PT2H' };
-        const mockResult: WorklogWithUnknownFields = {
+        const mockResult: WorklogWithUnknownFields = createWorklogFixture({
           id: '123',
-          self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/123',
-          issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
-          createdBy: createUserRef({ id: '1', display: 'User' }),
-          createdAt: '2024-01-01',
           duration: 'PT2H',
-        };
+        });
 
         vi.mocked(mockIssuesContainer.worklog.updateWorklog).mockResolvedValue(mockResult);
 
