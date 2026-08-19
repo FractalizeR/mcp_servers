@@ -1,10 +1,13 @@
 {
+  // rootDir — packages/servers, а не каталог пакета: скрипты импортируют общий
+  // проводной харнесс из ../scripts/mcp-wire-harness/, и при rootDir "." tsc
+  // валится с TS6059 «file is not under rootDir».
   // Типизация CLI-утилит из scripts/. Отдельный конфиг, а не tsconfig.tests.json:
   // тот включает tests/**, где накоплен завал тайп-эроров, и гейт был бы красным
   // с рождения. src/** нужен, потому что скрипты импортируют исходники.
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": ".",
+    "rootDir": "..",
     "composite": false,
     "declaration": false,
     "declarationMap": false,

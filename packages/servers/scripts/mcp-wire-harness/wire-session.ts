@@ -16,7 +16,13 @@ import { stopGracefully, waitForStderrSubstring, SHUTDOWN_GRACE_MS } from './pro
 export interface JsonRpcError {
   code: number;
   message: string;
-  data?: unknown;
+  /**
+   * Свободная форма по спецификации JSON-RPC: состав полей задаёт сервер.
+   * Индексируемый тип, а не `unknown`, — сценарии обращаются к конкретным
+   * ключам (например `supported` у -32022), и `unknown` заставлял бы каждый
+   * такой доступ приводить типы вручную.
+   */
+  data?: Record<string, unknown>;
 }
 
 export interface JsonRpcResponse {
@@ -56,10 +62,7 @@ export class ServerHarness {
   private readonly readStderr: () => string;
   private readonly waiters = new Map<number, PendingRequest>();
 
-  constructor(
-    private readonly config: WireServerConfig,
-    envOverrides: Record<string, string> = {}
-  ) {
+  constructor(config: WireServerConfig, envOverrides: Record<string, string> = {}) {
     this.child = spawn('node', [config.bundlePath], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, LOG_LEVEL: 'error', ...config.baseEnv, ...envOverrides },
