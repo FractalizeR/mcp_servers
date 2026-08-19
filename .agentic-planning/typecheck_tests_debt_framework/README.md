@@ -1,4 +1,7 @@
-# Долг `typecheck:tests` во framework-пакетах — стартовый замер
+# Долг `typecheck:tests` во framework-пакетах — итог
+
+**Результат: 0 ошибок во всех четырёх пакетах, гейт включён и проверен делом.**
+Ниже — стартовый замер и разбор по причинам.
 
 Дата замера: 2026-08-19. Конфиг: `packages/framework/*/tsconfig.tests.json`
 (`extends ./tsconfig.json`, `include: src+tests`, `noEmit`), команда
@@ -81,3 +84,54 @@
 | `tests/unit/session/dev-session.test.ts` | TS2322 | 5 |
 | `tests/unit/secrets/canary.test.ts` | TS2322 | 3 |
 | `tests/unit/session/fake-transport.ts` | TS2416 | 2 |
+
+
+## Что чинилось, по причинам
+
+| Причина | Где | Снято |
+|---|---|---:|
+| Поле индексной сигнатуры читается через точку (TS4111) | core, 109 обращений в 4 файлах | 149 → 40 |
+| `METADATA` тестовых tool-классов не удовлетворял `StaticToolMetadata`: нет `name`/`description`/`tags`/`isHelper`, в `category` строки вне `ToolCategory`. Наследники давали каскад TS2417 | core, 6 файлов | 40 → 25 |
+| Индексный доступ без проверки (`noUncheckedIndexedAccess`) | core, 4 места | там же |
+| Фикстуры `ZodIssue`: состав сверх обязательной тройки зависит от `code` и в `ZodIssueMinimal` намеренно не назван | core, 14 литералов | 25 → 11 |
+| `AllowAllToolAccessPolicy` сужал сигнатуру `ToolAccessPolicy` до 0 аргументов — вызов через конкретный тип не компилировался | core, `src/` | 11 → … |
+| Прочее в core: мёртвое поле `serverTransport` в двух wire-харнессах, лишний `@ts-expect-error`, приведение спаев логгера → `vi.mocked` | core, 4 файла | … → 0 |
+| `vi.fn()` без типа у `interceptors.*.use`: `mock.calls[0]` вырождался в пустой кортеж, колбэк — `never` | infrastructure, 1 файл | 8 → 0 |
+| `FakeTransport.onmessage`/`send` сужали сигнатуры `Transport`, из-за чего фейк не подходил под фабрику транспорта | dev-client, 4 файла (правка в одном) | 23 → 0 |
+
+Две правки пришлись на `src/`, обе — исправление типа, расходящегося с
+поведением, а не подгонка под тест:
+
+- `AllowAllToolAccessPolicy.isVisible()/isCallable()` объявляли 0 параметров
+  при интерфейсе с одним;
+- (отклонено) индексная сигнатура в `ZodIssueMinimal` — она чинит тесты, но
+  ломает приём настоящих `$ZodIssue[]` от Zod в `base-tool.ts`. Вместо неё
+  расширена форма фикстуры в тесте.
+
+## Non-null assertions и приведения
+
+Требование «не глушить через `!` и `as`» выполнено: подавлений не добавлено,
+общий счёт приведений снизился.
+
+| Пакет | `!` до → после | `as X` до → после | `as unknown as` до → после |
+|---|---|---|---|
+| core | 3 → 3 | 133 → 132 | 69 → 69 |
+| infrastructure | 0 → 0 | 24 → 24 | 3 → 3 |
+| cli | 3 → 3 | 45 → 45 | 12 → 12 |
+| dev-client | 0 → 0 | 19 → 19 | 1 → 1 |
+| **всего** | **6 → 6** | **221 → 220** | **85 → 85** |
+
+В `dev-client` число приведений то же, но одно из них стало правдивым:
+было `response as JsonRpcRequest` на ответе сервера (ответ запросом не
+является), стало `as JSONRPCMessage` на границе «сервер вернул что угодно».
+
+## Проверка гейта делом
+
+В `packages/framework/cli/tests/gate-probe.test.ts` внесена намеренная ошибка
+(`const n: number = 'строка'`). `npm run validate:quiet` упал с
+`ERROR @fractalizer/mcp-cli#typecheck:tests ... exited (2)` и текстом
+`error TS2322`. После удаления пробы — 58 задач turbo, 0 ошибок.
+
+`turbo run typecheck:tests` после подключения — 12 задач вместо 8: задача в
+`turbo.json` и шаг в `scripts/validate.sh` уже были, новые пакеты подхватились
+без правки этих файлов.
