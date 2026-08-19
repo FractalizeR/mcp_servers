@@ -39,6 +39,7 @@ import type {
   UpdateQueueParams,
   ManageQueueAccessParams,
 } from '#tracker_api/api_operations/index.js';
+import { createUserRef } from '#helpers/common-fixtures.js';
 
 // Fixtures
 function createQueueFixture(overrides = {}): QueueOutput {
@@ -47,7 +48,7 @@ function createQueueFixture(overrides = {}): QueueOutput {
     self: 'https://api.tracker.yandex.net/v3/queues/TEST',
     key: 'TEST',
     name: 'Test Queue',
-    lead: { uid: '1', display: 'Lead User', login: 'lead', isActive: true },
+    lead: createUserRef({ id: '1', display: 'Lead User' }),
     ...overrides,
   };
 }
@@ -232,7 +233,7 @@ describe('QueueService', () => {
         {
           self: 'https://api.tracker.yandex.net/v3/queues/TEST/permissions/create',
           type: 'create',
-          users: [{ uid: 'user1', display: 'User 1', login: 'user1', isActive: true }],
+          users: [createUserRef({ id: 'user1', display: 'User 1' })],
           groups: [],
         },
       ];

@@ -40,6 +40,7 @@ import type {
 } from '#tracker_api/entities/index.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
 import { createBoardFixture, createSprintFixture } from '#helpers/agile.fixture.js';
+import { createUserRef, createUserFixture } from '#helpers/common-fixtures.js';
 
 describe('YandexTrackerFacade', () => {
   let facade: YandexTrackerFacade;
@@ -390,7 +391,7 @@ describe('YandexTrackerFacade', () => {
           summary: 'Test',
           queue: { id: '1', key: 'TEST', name: 'Test' },
           status: { id: '1', key: 'open', display: 'Open' },
-          createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+          createdBy: createUserRef({ id: '1', display: 'User' }),
           createdAt: '2024-01-01',
           updatedAt: '2024-01-01',
         },
@@ -422,7 +423,7 @@ describe('YandexTrackerFacade', () => {
         summary: 'New Issue',
         queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+        createdBy: createUserFixture({ uid: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
       };
@@ -454,7 +455,7 @@ describe('YandexTrackerFacade', () => {
         summary: 'Updated',
         queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+        createdBy: createUserFixture({ uid: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-02',
       };
@@ -480,7 +481,7 @@ describe('YandexTrackerFacade', () => {
         summary: 'Updated',
         queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '1', key: 'open', display: 'Open' },
-        createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+        createdBy: createUserFixture({ uid: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-02',
       };
@@ -511,7 +512,7 @@ describe('YandexTrackerFacade', () => {
           self: 'https://api.tracker.yandex.net/v3/issues/TEST-123/changelog/1',
           issue: { id: '123', key: 'TEST-123', display: 'Test Issue' },
           updatedAt: '2024-01-01',
-          updatedBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+          updatedBy: createUserFixture({ uid: '1', display: 'User' }),
           type: 'IssueUpdated',
           fields: [],
         },
@@ -573,7 +574,7 @@ describe('YandexTrackerFacade', () => {
         summary: 'Test',
         queue: createQueueFixture({ id: '1', key: 'TEST', name: 'Test' }),
         status: { id: '2', key: 'inProgress', display: 'In Progress' },
-        createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+        createdBy: createUserFixture({ uid: '1', display: 'User' }),
         createdAt: '2024-01-01',
         updatedAt: '2024-01-02',
       };
@@ -630,7 +631,7 @@ describe('YandexTrackerFacade', () => {
             id: '1',
             self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
             issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
-            createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+            createdBy: createUserRef({ id: '1', display: 'User' }),
             createdAt: '2024-01-01',
             duration: 'PT1H',
           },
@@ -648,12 +649,16 @@ describe('YandexTrackerFacade', () => {
     describe('addWorklog', () => {
       it('должна делегировать вызов WorklogService.addWorklog', async () => {
         const issueId = 'TEST-1';
-        const input: AddWorklogInput = { duration: 'PT1H', comment: 'Work done' };
+        const input: AddWorklogInput = {
+          start: '2024-01-01T10:00:00.000+0000',
+          duration: 'PT1H',
+          comment: 'Work done',
+        };
         const mockResult: WorklogWithUnknownFields = {
           id: '1',
           self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
           issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
-          createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+          createdBy: createUserRef({ id: '1', display: 'User' }),
           createdAt: '2024-01-01',
           duration: 'PT1H',
         };
@@ -676,7 +681,7 @@ describe('YandexTrackerFacade', () => {
           id: '123',
           self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/123',
           issue: { id: '1', key: 'TEST-1', display: 'Test Issue' },
-          createdBy: { uid: '1', display: 'User', login: 'user', isActive: true },
+          createdBy: createUserRef({ id: '1', display: 'User' }),
           createdAt: '2024-01-01',
           duration: 'PT2H',
         };
@@ -750,7 +755,7 @@ describe('YandexTrackerFacade', () => {
 
     describe('createField', () => {
       it('должна делегировать вызов FieldService.createField', async () => {
-        const input: CreateFieldDto = { name: 'Custom Field', type: 'string' };
+        const input: CreateFieldDto = { name: 'Custom Field', schema: { type: 'string' } };
         const mockResult: FieldOutput = {
           id: 'newField',
           self: 'https://api.tracker.yandex.net/v3/fields/newField',
@@ -966,7 +971,7 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов SprintService.createSprint', async () => {
         const input: CreateSprintDto = {
           name: 'Sprint 1',
-          boardId: '1',
+          board: '1',
           startDate: '2024-01-01',
           endDate: '2024-01-14',
         };

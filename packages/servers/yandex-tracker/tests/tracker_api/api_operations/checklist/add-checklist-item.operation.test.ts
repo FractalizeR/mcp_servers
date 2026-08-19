@@ -6,6 +6,7 @@ import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index
 import type { AddChecklistItemInput } from '#tracker_api/dto/index.js';
 import type { ServerConfig } from '#config';
 import { AddChecklistItemOperation } from '#tracker_api/api_operations/checklist/add-checklist-item.operation.js';
+import { createUserRef } from '#helpers/common-fixtures.js';
 
 describe('AddChecklistItemOperation', () => {
   let operation: AddChecklistItemOperation;
@@ -231,7 +232,7 @@ describe('AddChecklistItemOperation', () => {
         id: 'item-1',
         text: 'Item 1',
         checked: true,
-        assignee: { id: 'user1', display: 'User 1' },
+        assignee: createUserRef({ id: 'user1', display: 'User 1' }),
         deadline: '2025-12-31',
       };
 

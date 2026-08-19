@@ -9,6 +9,7 @@ import type {
   PaginationParams,
   TimestampFields,
 } from '../../src/tracker_api/entities/common/index.js';
+import type { User } from '../../src/tracker_api/entities/user.entity.js';
 
 /**
  * Создать UserRef для тестов
@@ -61,6 +62,17 @@ export function createTimestampFields(overrides?: Partial<TimestampFields>): Tim
   return {
     createdAt: now,
     updatedAt: now,
+    ...overrides,
+  };
+}
+
+/** Пользователь в полях сущностей (`createdBy`, `updatedBy`) — не `UserRef`. */
+export function createUserFixture(overrides?: Partial<User>): User {
+  return {
+    uid: '1234567890',
+    display: 'Test User',
+    login: 'test.user',
+    isActive: true,
     ...overrides,
   };
 }
