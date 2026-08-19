@@ -228,6 +228,38 @@ npm run test:quiet --workspace=@fractalizer/mcp-server-ticktick
 
 ---
 
+## 🧰 Dev-интерфейс вызова инструментов
+
+Тонкий CLI (`mcp-dev` из `@fractalizer/mcp-dev-client`, devDependency) вызывает
+инструменты этого сервера так же, как их вызвал бы настоящий MCP-клиент —
+без регистрации агента как ещё одного клиента и без перезапуска сессии между
+вызовами. Полное описание формата и классификации read/write —
+[`packages/framework/dev-client/README.md`](../../framework/dev-client/README.md).
+
+```bash
+npm run tools:list                                    # список инструментов + класс read/write/local-side-effect
+npm run tools:call -- fr_ticktick_ping '{}'            # один вызов
+npm run tools:batch -- dev-calls.example.jsonl         # несколько вызовов из JSONL
+```
+
+**После доработки инструмента** прогони соответствующие ему строки из
+`dev-calls.example.jsonl` (или добавь временный батч рядом, не коммитя его),
+чтобы увидеть реальный ответ API, а не только зелёные unit-тесты.
+
+**Важно:**
+
+- Сервер должен быть подключён в MCP-клиенте (`npm run mcp:connect`) — иначе
+  `tools:list`/`tools:call`/`tools:batch` завершаются кодом `2` с отказом
+  `notConnected`.
+- Вызовы идут в **боевой** TickTick под **реальным** токеном из записи
+  клиента (`TICKTICK_ACCESS_TOKEN` и т. п.) — это не песочница.
+- Запись (`write`/`local-side-effect` инструменты) заблокирована по
+  умолчанию и требует явного `--dangerously-allow-write`; без флага такие
+  вызовы не отправляются вовсе. `dev-calls.example.jsonl` содержит только
+  `read`-вызовы и ничего не меняет в боевых данных.
+
+---
+
 ## 📋 Чек-лист перед коммитом
 
 - [ ] `npm run validate:quiet` проходит

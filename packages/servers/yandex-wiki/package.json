@@ -79,6 +79,9 @@
     "test:smoke:server": "tsx scripts/smoke-test-server.ts",
     "test:verbose": "vitest run --reporter=verbose",
     "test:watch": "vitest watch",
+    "tools:batch": "mcp-dev batch --server-name fractalizer_mcp_yandex_wiki --package-dir .",
+    "tools:call": "mcp-dev call --server-name fractalizer_mcp_yandex_wiki --package-dir .",
+    "tools:list": "mcp-dev list --server-name fractalizer_mcp_yandex_wiki --package-dir . --json",
     "typecheck": "tsc --noEmit",
     "validate": "npm run lint && npm run typecheck && npm run test && npm run test:smoke && npm run test:smoke:server && npm run test:raw-wire && npm run cpd && npm run depcruise && npm run validate:docs && npm run validate:tools",
     "validate:docs": "tsx ../../../scripts/validate-docs-size.ts",
@@ -100,6 +103,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@fractalizer/mcp-dev-client": "^1.9.0",
     "@types/inquirer": "^9.0.9",
     "ajv": "^8.18.0",
     "axios-mock-adapter": "^2.1.0",

@@ -1,0 +1,3 @@
+{"tool": "fr_ticktick_ping", "args": {}, "label": "ping", "expect": {"isError": false}}
+{"tool": "fr_ticktick_get_projects", "args": {"fields": ["id", "name"]}, "label": "list-projects", "expect": {"isError": false}}
+{"tool": "fr_ticktick_get_tasks_due_today", "args": {"fields": ["id", "title", "dueDate"]}, "label": "tasks-due-today", "expect": {"isError": false}}

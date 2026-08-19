@@ -91,6 +91,32 @@ npm run test
 npm run test:coverage
 ```
 
+## Тестирование инструментов в dev-интерфейсе
+
+Для локального тестирования инструментов MCP-сервера используй интерфейс `mcp-dev`:
+
+```bash
+# Список всех доступных инструментов (ожидаемо ~36)
+npm run tools:list
+
+# Вызов конкретного инструмента (read-only, безопасно)
+npm run tools:call -- yw_ping '{}'
+
+# Батч-вызовы из файла JSONL
+npm run tools:batch -- dev-calls.example.jsonl
+```
+
+**Важно:**
+- `dev-calls.example.jsonl` содержит только read-only вызовы (yw_ping, yw_get_page, yw_get_descendants)
+- Вызовы идут в боевой сервис Yandex Wiki с реальным токеном из подключения MCP-клиента
+- Для write-операций добавь флаг `--dangerously-allow-write` (например: `npm run tools:batch -- file.jsonl --dangerously-allow-write`)
+- Если сервер не подключён в MCP-клиенте — вернёт `notConnected` (проверь `mcp:status`)
+
+**Классификация инструментов:**
+- **read** — безопасны без флага (получение данных, read-only)
+- **write** — требуют `--dangerously-allow-write` (изменение данных)
+- **local-side-effect** — требуют флага (read-only API, но пишут на диск, например download_attachment)
+
 ## Текущий статус реализации
 
 ### Фаза 1: Pages API (завершена)
