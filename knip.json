@@ -50,27 +50,11 @@
         "zod"
       ]
     },
-    "packages/servers/ticktick": {
-      "entry": ["src/index.ts", "src/cli/bin/*.ts"],
-      "project": ["src/**/*.ts"],
-      "ignoreDependencies": [
-        "@modelcontextprotocol/server",
-        "axios",
-        "chalk",
-        "inquirer",
-        "ora",
-        "pino",
-        "zod"
-      ]
-    },
     "packages/wrappers/mcp-server-yandex-tracker": {
       "ignoreDependencies": ["@fractalizer/mcp-server-yandex-tracker"]
     },
     "packages/wrappers/mcp-server-yandex-wiki": {
       "ignoreDependencies": ["@fractalizer/mcp-server-yandex-wiki"]
-    },
-    "packages/wrappers/mcp-server-ticktick": {
-      "ignoreDependencies": ["@fractalizer/mcp-server-ticktick"]
     }
   },
   "ignore": [
