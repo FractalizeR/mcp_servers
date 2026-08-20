@@ -20,7 +20,7 @@
  * ПАГИНАЦИЯ: НЕ РЕАЛИЗОВАНА НАМЕРЕННО. В отличие от `resources/list`
  * (сотни задач/страниц), состав промптов одной установки — единицы,
  * максимум пара десятков слэш-команд на сервер (см. план, раздел 5.1.C:
- * triage/daily/sprint/epic — Трекер, 2 — Wiki, 2-3 — TickTick). Спека
+ * triage/daily/sprint/epic — Трекер, 2 — Wiki). Спека
  * допускает `prompts/list` без `nextCursor` (курсор в `PaginatedResult`
  * опционален). Если состав вырастет на порядок, `PromptRegistry` можно
  * расширить тем же `OpaqueCursorCodec`, что уже применяет `ResourceRegistry`

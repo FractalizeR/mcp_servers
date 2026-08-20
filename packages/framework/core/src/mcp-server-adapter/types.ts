@@ -10,7 +10,7 @@ import type { PromptRegistry } from '../prompts/index.js';
 /**
  * Параметры создания адаптера. Идентичность сервера (имя/версия) и
  * ToolRegistry/Logger передаёт composition root конкретного сервера —
- * сам адаптер не знает, Трекер это, Вики или TickTick.
+ * сам адаптер не знает, Трекер это или Вики.
  */
 export interface McpServerAdapterOptions {
   /**

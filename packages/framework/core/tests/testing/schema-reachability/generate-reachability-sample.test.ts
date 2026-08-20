@@ -119,12 +119,12 @@ describe('generateReachabilitySample', () => {
       expect((value as { duration: string }).duration).toBe('PT1H30M');
     });
 
-    it('knownFieldSamples с числовым значением подставляется в число, ограниченное .refine() (регрессия TickTick priority)', () => {
+    it('knownFieldSamples с числовым значением подставляется в число, ограниченное .refine() (регрессия priority)', () => {
       // .refine() ограничивает значения дискретным множеством, которое
       // z.toJSONSchema не выражает — без knownFieldSamples generic-генератор
       // выдал бы произвольное число, отклонённое ЭТИМ ЖЕ refine при
       // validateParams() тула ДО похода в HTTP (найдено эмпирически на
-      // TickTick GetTasksByPriorityTool: priority ∈ {0,1,3,5}).
+      // инструменте с priority ∈ {0,1,3,5}).
       const prioritySchema = z
         .number()
         .int()
