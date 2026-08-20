@@ -24,6 +24,7 @@ import { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.j
 
 // Tool Registry
 import { ToolRegistry, ConfiguredToolAccessPolicy } from '@fractalizer/mcp-core';
+import { createLiveScopeGuardFromEnv } from '#live_scope';
 
 // Resource Registry (пакет 5.1.C.tracker) — provider'ы issue/queue/project
 import type { ResourceRegistry } from '@fractalizer/mcp-core';
@@ -87,6 +88,17 @@ function bindHttpLayer(container: Container): void {
     const configInstance = container.get<ServerConfig>(TYPES.ServerConfig);
     const retryStrategy = container.get<RetryStrategy>(TYPES.RetryStrategy);
 
+    // Рубеж области действия живого прогона. Включён только когда задана очередь
+    // песочницы; иначе `undefined` и поведение сервера прежнее. Живёт здесь, а не
+    // в тестовой оснастке, потому что живые прогоны идут через собранный бандл
+    // (`mcp-dev`) — оснастка тот путь не покрывает.
+    const trafficGuard = createLiveScopeGuardFromEnv();
+    if (trafficGuard) {
+      loggerInstance.warn(
+        'Включён рубеж области действия живого прогона: мутации вне песочницы будут отклонены'
+      );
+    }
+
     return new AxiosHttpClient(
       {
         baseURL: configInstance.apiBase,
@@ -94,6 +106,7 @@ function bindHttpLayer(container: Container): void {
         token: configInstance.token,
         ...(configInstance.orgId && { orgId: configInstance.orgId }),
         ...(configInstance.cloudOrgId && { cloudOrgId: configInstance.cloudOrgId }),
+        ...(trafficGuard && { trafficGuard }),
       },
       loggerInstance,
       retryStrategy

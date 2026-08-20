@@ -32,6 +32,8 @@
     "#cli/*": "./src/cli/*",
     "#constants": "./src/constants.ts",
     "#common/*": "./src/common/*",
+    "#live_scope": "./src/live_scope/index.ts",
+    "#live_scope/*": "./src/live_scope/*",
     "#integration/*": "./tests/integration/*",
     "#helpers/*": "./tests/helpers/*"
   },
