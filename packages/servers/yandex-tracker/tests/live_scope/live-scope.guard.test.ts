@@ -10,6 +10,8 @@ import { join } from 'node:path';
 import { ScopeViolationError } from '@fractalizer/mcp-infrastructure';
 import { LiveScopeGuard, RunJournal, createLiveScopeGuardFromEnv } from '#live_scope';
 
+const RUN_ID = 'run-under-test';
+
 let workDir: string;
 let journalPath: string;
 
@@ -23,7 +25,7 @@ afterEach(() => {
 });
 
 function createGuard(): LiveScopeGuard {
-  return new LiveScopeGuard({ sandboxQueue: 'TEST', journal: new RunJournal(journalPath) });
+  return new LiveScopeGuard({ sandboxQueue: 'TEST', journal: new RunJournal(journalPath, RUN_ID) });
 }
 
 describe('LiveScopeGuard', () => {
@@ -130,7 +132,7 @@ describe('LiveScopeGuard', () => {
       data: { id: 'p1' },
     });
 
-    expect(new RunJournal(journalPath).list()).toHaveLength(0);
+    expect(new RunJournal(journalPath, RUN_ID).list()).toHaveLength(0);
   });
 });
 
@@ -149,6 +151,7 @@ describe('Включение рубежа', () => {
     const guard = createLiveScopeGuardFromEnv({
       YANDEX_TRACKER_LIVE_SCOPE_QUEUE: 'TEST',
       YANDEX_TRACKER_LIVE_SCOPE_JOURNAL: journalPath,
+      YANDEX_TRACKER_LIVE_SCOPE_RUN_ID: RUN_ID,
     });
 
     expect(guard).toBeDefined();

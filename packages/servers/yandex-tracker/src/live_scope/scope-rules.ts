@@ -162,7 +162,7 @@ export const SCOPE_RULES: readonly ScopeRule[] = [
   // A: задача песочницы и всё вложенное в неё — комментарии, чек-листы,
   // вложения, worklog, переходы, связи.
   {
-    pattern: /^\/v[23]\/issues\/([A-Z][A-Z0-9]*-\d+|[0-9a-f]{24})(\/(?<nested>[^/?]+))?/,
+    pattern: /^\/v[23]\/issues\/([A-Z][A-Z0-9]*-\d+|[0-9a-f]{24})(?=\/|$)(\/(?<nested>[^/?]+))?/,
     methods: 'any',
     decide: (match, request, context): ScopeDecision => {
       const issueDecision = decideIssueScope(match[1] ?? '', context);
@@ -171,6 +171,9 @@ export const SCOPE_RULES: readonly ScopeRule[] = [
       if (nested === 'links' && request.method === 'post') {
         return decideLinkCounterpart(request, context);
       }
+      // Удаление связи (DELETE .../links/{id}) проверяется только по своей стороне:
+      // второй конец в запросе не назван. Осознанно — удаление обратимо и не меняет
+      // содержимого чужой задачи, в отличие от создания связи.
       return issueDecision;
     },
   },
@@ -227,14 +230,30 @@ export const SCOPE_RULES: readonly ScopeRule[] = [
           ),
   },
 
-  // A': локальные поля очереди — по имени и по действию локальны для неё.
+  // A': локальные поля очереди. Создание ограничено очередью, а правка и удаление
+  // существующего — журналом: очередь `TEST` общая, и её поля мог завести кто-то
+  // другой. Поймано ревью: правило по одному имени очереди позволяло испортить
+  // чужое поле песочницы.
   {
-    pattern: /^\/v3\/queues\/([^/?]+)\/localFields(\/[^/?]+)?\/?$/,
-    methods: 'any',
-    decide: (match, _request, context) =>
+    pattern: /^\/v3\/queues\/([^/?]+)\/localFields\/?$/,
+    methods: ['post'],
+    decide: (match, _request, context): ScopeDecision =>
       match[1] === context.sandboxQueue
-        ? allow(`локальное поле песочной очереди ${context.sandboxQueue}`)
+        ? allow(`создание локального поля в песочной очереди ${context.sandboxQueue}`)
         : deny(`локальное поле очереди ${match[1] ?? '?'} вне песочницы`),
+  },
+  {
+    pattern: /^\/v3\/queues\/([^/?]+)\/localFields\/([^/?]+)/,
+    methods: 'any',
+    decide: (match, _request, context): ScopeDecision => {
+      if (match[1] !== context.sandboxQueue) {
+        return deny(`локальное поле очереди ${match[1] ?? '?'} вне песочницы`);
+      }
+      const field = match[2] ?? '';
+      return context.journal.has('queueLocalField', field)
+        ? allow('локальное поле создано этим прогоном')
+        : deny(`локальное поле ${field} не создано этим прогоном`);
+    },
   },
 
   // E и D: всё, что видно за пределами очереди. Отдельными строками — чтобы

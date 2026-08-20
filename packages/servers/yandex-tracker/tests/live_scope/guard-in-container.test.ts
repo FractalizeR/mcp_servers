@@ -42,6 +42,7 @@ beforeAll(async () => {
   workDir = mkdtempSync(join(tmpdir(), 'live-scope-container-'));
   process.env['YANDEX_TRACKER_LIVE_SCOPE_QUEUE'] = SANDBOX_QUEUE;
   process.env['YANDEX_TRACKER_LIVE_SCOPE_JOURNAL'] = join(workDir, 'journal.jsonl');
+  process.env['YANDEX_TRACKER_LIVE_SCOPE_RUN_ID'] = 'run-under-test';
 
   const container = await createContainer(fakeConfig);
   registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
@@ -56,6 +57,7 @@ beforeAll(async () => {
 afterAll(() => {
   delete process.env['YANDEX_TRACKER_LIVE_SCOPE_QUEUE'];
   delete process.env['YANDEX_TRACKER_LIVE_SCOPE_JOURNAL'];
+  delete process.env['YANDEX_TRACKER_LIVE_SCOPE_RUN_ID'];
   rmSync(workDir, { recursive: true, force: true });
 });
 
@@ -97,14 +99,20 @@ describe('Рубеж в собранном контейнере', () => {
   it('загрузка вложения перехвачена, хотя идёт мимо IHttpClient', async () => {
     // upload_attachment отправляет multipart через getAxiosInstance(): рубеж на
     // уровне методов IHttpClient не увидел бы именно этот мутирующий запрос.
+    //
+    // Параметры обязаны быть ВАЛИДНЫМИ. Прежняя версия теста опускала обязательный
+    // `filename`, инструмент падал на валидации, и «запрос не ушёл» выполнялось
+    // независимо от рубежа — тест был зелёным при полностью отключённом guard.
+    // Найдено ревью; отсюда же проверка ниже, что отказ пришёл именно от рубежа.
     const message = await callTool('upload_attachment', {
       issueId: 'PROD-1',
-      filePath: join(workDir, 'nonexistent.txt'),
+      filename: 'evidence.txt',
+      fileContent: Buffer.from('содержимое').toString('base64'),
       fields: ['id'],
     });
 
-    expect(requestsSent).toBe(0);
-    expect(message).not.toBe('<без ошибки>');
+    expect(requestsSent, message).toBe(0);
+    expect(message).toContain('Живой прогон ограничен очередью');
   });
 
   it('создание задачи в песочной очереди проходит — рубеж не парализует прогон', async () => {

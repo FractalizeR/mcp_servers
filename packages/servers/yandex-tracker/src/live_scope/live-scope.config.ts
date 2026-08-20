@@ -18,6 +18,12 @@ const QUEUE_VAR = 'YANDEX_TRACKER_LIVE_SCOPE_QUEUE';
 /** Файл журнала прогона; общий для всех процессов одного прогона. */
 const JOURNAL_VAR = 'YANDEX_TRACKER_LIVE_SCOPE_JOURNAL';
 
+/**
+ * Метка прогона. Ею подписан журнал, и файл с чужой меткой не принимается:
+ * забытый журнал прошлого запуска иначе выдавал бы права на его сущности.
+ */
+const RUN_ID_VAR = 'YANDEX_TRACKER_LIVE_SCOPE_RUN_ID';
+
 export function createLiveScopeGuardFromEnv(
   env: NodeJS.ProcessEnv = process.env
 ): LiveScopeGuard | undefined {
@@ -35,5 +41,13 @@ export function createLiveScopeGuardFromEnv(
     );
   }
 
-  return new LiveScopeGuard({ sandboxQueue, journal: new RunJournal(journalPath) });
+  const runId = env[RUN_ID_VAR]?.trim();
+  if (runId === undefined || runId === '') {
+    throw new Error(
+      `${QUEUE_VAR} задана (${sandboxQueue}), но ${RUN_ID_VAR} — нет. ` +
+        'Без метки прогона журнал прошлого запуска считался бы своим.'
+    );
+  }
+
+  return new LiveScopeGuard({ sandboxQueue, journal: new RunJournal(journalPath, runId) });
 }

@@ -29,6 +29,8 @@ export const SANDBOX_ISSUE = 'TEST-1';
 export const SANDBOX_QUEUE = 'TEST';
 /** Компонент, созданный этим прогоном. */
 export const SANDBOX_COMPONENT = 'component-of-this-run';
+/** Локальное поле очереди, созданное этим прогоном. */
+export const SANDBOX_LOCAL_FIELD = 'field-of-this-run';
 
 export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
   // Класс A — ключ задачи в пути (15 запросов).
@@ -184,7 +186,7 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
   {
     tool: 'update_queue_local_field',
     method: 'patch',
-    path: `/v3/queues/${SANDBOX_QUEUE}/localFields/myField`,
+    path: `/v3/queues/${SANDBOX_QUEUE}/localFields/${SANDBOX_LOCAL_FIELD}`,
     expectation: 'allowed-in-sandbox',
   },
   {

@@ -62,11 +62,16 @@ export class AxiosHttpClient implements IHttpClient {
       headers['X-Cloud-Org-ID'] = config.cloudOrgId;
     }
 
-    // Создаём Axios instance с конфигурацией
+    // Создаём Axios instance с конфигурацией.
+    //
+    // maxRedirects под guard: переход по редиректу выполняет http-адаптер, минуя
+    // request-интерцептор, — рубеж не увидел бы конечного адреса и решал бы по
+    // исходному. Поймано ревью; без guard поведение прежнее.
     this.client = axios.create({
       baseURL: config.baseURL,
       timeout: config.timeout,
       headers,
+      ...(config.trafficGuard && { maxRedirects: 0 }),
     });
 
     // Настраиваем interceptors

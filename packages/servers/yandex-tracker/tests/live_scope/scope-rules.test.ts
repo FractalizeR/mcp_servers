@@ -18,16 +18,20 @@ import {
   SANDBOX_ISSUE,
   SANDBOX_QUEUE,
   SANDBOX_COMPONENT,
+  SANDBOX_LOCAL_FIELD,
 } from './known-mutating-requests.js';
+
+const RUN_ID = 'run-under-test';
 
 let workDir: string;
 let context: ScopeContext;
 
 beforeEach(() => {
   workDir = mkdtempSync(join(tmpdir(), 'live-scope-'));
-  const journal = new RunJournal(join(workDir, 'journal.jsonl'));
+  const journal = new RunJournal(join(workDir, 'journal.jsonl'), RUN_ID);
   journal.register('issue', SANDBOX_ISSUE);
   journal.register('component', SANDBOX_COMPONENT);
+  journal.register('queueLocalField', SANDBOX_LOCAL_FIELD);
   context = { sandboxQueue: SANDBOX_QUEUE, journal };
 });
 
@@ -118,6 +122,38 @@ describe('Область действия живого прогона', () => {
     it('компонент в чужой очереди', () => {
       const decision = decide('post', '/v2/queues/PROD/components');
       expect(decision.allowed).toBe(false);
+    });
+
+    it('правка локального поля, созданного не этим прогоном', () => {
+      // Очередь TEST общая: её поля мог завести кто-то другой.
+      const decision = decide('patch', `/v3/queues/${SANDBOX_QUEUE}/localFields/foreignField`);
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('не создано этим прогоном');
+    });
+  });
+
+  describe('путь, адресующий не то, что показывает', () => {
+    // Найдено ревью: axios канонизирует путь ПОСЛЕ интерцептора, поэтому
+    // `/v3/issues/TEST-1/../../v2/projects/11` доходил до правил как путь к задаче
+    // прогона, а до сети — как путь к чужому проекту.
+    const traversals = [
+      `/v3/issues/${SANDBOX_ISSUE}/../../v2/projects/11`,
+      `/v3/issues/${SANDBOX_ISSUE}/..%2F..%2Fprojects%2F11`,
+      `/v2/components/${SANDBOX_COMPONENT}/../../projects/1`,
+      `/v3/issues/${SANDBOX_ISSUE}/./comments`,
+      `/v3/issues/${SANDBOX_ISSUE}//comments`,
+      `/v3/issues/${SANDBOX_ISSUE}\\..\\projects`,
+    ];
+
+    traversals.forEach((path) => {
+      it(`отклоняет ${path}`, () => {
+        expect(decide('delete', path).allowed).toBe(false);
+      });
+    });
+
+    it('ключ задачи должен занимать сегмент целиком', () => {
+      // `TEST-1extra` — не задача прогона, хотя начинается с её ключа.
+      expect(decide('delete', `/v3/issues/${SANDBOX_ISSUE}extra`).allowed).toBe(false);
     });
   });
 

@@ -12,22 +12,32 @@ import type {
 import type { ScopeContext, ScopeDecision } from './scope-rules.js';
 import { SCOPE_RULES } from './scope-rules.js';
 import type { EntityKind } from './run-journal.js';
+import { canonicalRequestPath } from './request-path.js';
 
 /** Методы, которые ничего не меняют, — их область действия проверять незачем. */
 const SAFE_METHODS: ReadonlySet<string> = new Set(['get', 'head', 'options']);
 
-/** Путь без query: правила рассуждают о ресурсе, а не о его параметрах. */
-function pathOf(url: string): string {
-  const queryStart = url.indexOf('?');
-  return queryStart === -1 ? url : url.slice(0, queryStart);
-}
+export function decideRequest(incoming: OutgoingRequest, context: ScopeContext): ScopeDecision {
+  // Регистр метода приводим сами: `describeRequest` в клиенте это делает, но
+  // рубеж не должен зависеть от аккуратности вызывающего — «DELETE» мимо
+  // SAFE_METHODS прошёл бы как незнакомый метод.
+  const request: OutgoingRequest = { ...incoming, method: incoming.method.toLowerCase() };
 
-export function decideRequest(request: OutgoingRequest, context: ScopeContext): ScopeDecision {
   if (SAFE_METHODS.has(request.method)) {
     return { allowed: true, reason: 'метод не меняет данные' };
   }
 
-  const path = pathOf(request.url);
+  const breakage = context.journal.breakage();
+  if (breakage !== undefined) {
+    return { allowed: false, reason: `журнал прогона потерял достоверность: ${breakage}` };
+  }
+
+  const verdict = canonicalRequestPath(request.url);
+  if (verdict.path === undefined) {
+    return { allowed: false, reason: verdict.rejection ?? 'путь непригоден для сопоставления' };
+  }
+  const path = verdict.path;
+
   for (const rule of SCOPE_RULES) {
     if (rule.methods !== 'any' && !rule.methods.includes(request.method)) continue;
     const match = rule.pattern.exec(path);
@@ -44,7 +54,8 @@ export function decideRequest(request: OutgoingRequest, context: ScopeContext): 
 /** Что за сущность создана — определяется по пути запроса, породившего ответ. */
 function createdEntityOf(request: OutgoingRequest): EntityKind | undefined {
   if (request.method !== 'post') return undefined;
-  const path = pathOf(request.url);
+  const path = canonicalRequestPath(request.url).path;
+  if (path === undefined) return undefined;
   if (/^\/v3\/issues\/?$/.test(path)) return 'issue';
   if (/^\/v2\/queues\/[^/]+\/components\/?$/.test(path)) return 'component';
   if (/^\/v3\/queues\/[^/]+\/localFields\/?$/.test(path)) return 'queueLocalField';
