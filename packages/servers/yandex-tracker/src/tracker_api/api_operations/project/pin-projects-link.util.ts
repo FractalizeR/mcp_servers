@@ -36,7 +36,8 @@ function buildOwnUrl(
     query.set('page', page);
   }
   const queryString = query.toString();
-  return `${PROJECTS_PATH}${queryString.length > 0 ? `?${queryString}` : ''}${pageTemplate}`;
+  const search = queryString.length > 0 ? `?${queryString}` : '';
+  return `${PROJECTS_PATH}${search}${pageTemplate}`;
 }
 
 /** Переписать одну ссылку из `Link` на наш путь, сохранив только номер страницы. */
