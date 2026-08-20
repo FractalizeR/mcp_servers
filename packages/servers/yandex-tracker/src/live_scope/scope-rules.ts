@@ -69,6 +69,17 @@ function queueKeyOf(value: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Задачу адресуют двояко: ключом (`TEST-1`) и 24-символьным hex-идентификатором.
+ * По идентификатору очередь не восстанавливается — принадлежность решает только
+ * журнал. Не понимать эту форму нельзя: защита обходилась бы сменой формы записи.
+ */
+const OPAQUE_ISSUE_ID = /^[0-9a-f]{24}$/;
+
+function isOpaqueIssueId(reference: string): boolean {
+  return OPAQUE_ISSUE_ID.test(reference);
+}
+
 function issueBelongsToSandbox(issueKey: string, sandboxQueue: string): boolean {
   return issueKey.startsWith(`${sandboxQueue}-`);
 }
@@ -89,17 +100,17 @@ function issueKeyOf(value: unknown): string | undefined {
  * Одной принадлежности очереди мало: очередь `TEST` — общая, в ней лежат чужие
  * задачи и задачи прошлых прогонов.
  */
-function decideIssueScope(issueKey: string, context: ScopeContext): ScopeDecision {
-  if (!issueBelongsToSandbox(issueKey, context.sandboxQueue)) {
-    return deny(`задача ${issueKey} вне песочной очереди ${context.sandboxQueue}`);
+function decideIssueScope(reference: string, context: ScopeContext): ScopeDecision {
+  if (!isOpaqueIssueId(reference) && !issueBelongsToSandbox(reference, context.sandboxQueue)) {
+    return deny(`задача ${reference} вне песочной очереди ${context.sandboxQueue}`);
   }
-  if (!context.journal.has('issue', issueKey)) {
+  if (!context.journal.has('issue', reference)) {
     return deny(
-      `задача ${issueKey} не создана этим прогоном: очередь ${context.sandboxQueue} общая, ` +
+      `задача ${reference} не создана этим прогоном: очередь ${context.sandboxQueue} общая, ` +
         `в ней лежат чужие задачи и задачи прошлых прогонов`
     );
   }
-  return allow(`задача ${issueKey} создана этим прогоном`);
+  return allow(`задача ${reference} создана этим прогоном`);
 }
 
 /**
@@ -151,7 +162,7 @@ export const SCOPE_RULES: readonly ScopeRule[] = [
   // A: задача песочницы и всё вложенное в неё — комментарии, чек-листы,
   // вложения, worklog, переходы, связи.
   {
-    pattern: /^\/v[23]\/issues\/([A-Z][A-Z0-9]*-\d+)(\/(?<nested>[^/?]+))?/,
+    pattern: /^\/v[23]\/issues\/([A-Z][A-Z0-9]*-\d+|[0-9a-f]{24})(\/(?<nested>[^/?]+))?/,
     methods: 'any',
     decide: (match, request, context): ScopeDecision => {
       const issueDecision = decideIssueScope(match[1] ?? '', context);

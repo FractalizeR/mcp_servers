@@ -67,8 +67,9 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
   const tool = registry.getTool(`fr_yandex_tracker_${name}`);
   expect(tool, `инструмент ${name} не найден в реестре`).toBeDefined();
   try {
+    // Инструмент не бросает: контрактная ошибка приезжает в структуре ответа.
     const result = await (tool as BaseTool).execute(params);
-    return `<без throw> ${JSON.stringify(result).slice(0, 1200)}`;
+    return JSON.stringify(result);
   } catch (error) {
     return (error as Error).message;
   }
@@ -84,7 +85,8 @@ describe('Рубеж в собранном контейнере', () => {
 
   it('правка задачи чужой очереди не доходит до сети', async () => {
     const message = await callTool('update_issue', {
-      issues: [{ issueId: 'PROD-1', summary: 'взлом' }],
+      issueId: 'PROD-1',
+      summary: 'взлом',
       fields: ['id'],
     });
 
@@ -103,6 +105,18 @@ describe('Рубеж в собранном контейнере', () => {
 
     expect(requestsSent).toBe(0);
     expect(message).not.toBe('<без ошибки>');
+  });
+
+  it('создание задачи в песочной очереди проходит — рубеж не парализует прогон', async () => {
+    // Половина ценности рубежа в том, что он пропускает законное: защита,
+    // отклоняющая всё, неотличима от неработающего прогона.
+    const message = await callTool('create_issue', {
+      queue: SANDBOX_QUEUE,
+      summary: 'проверка рубежа',
+      fields: ['id'],
+    });
+
+    expect(requestsSent, message).toBeGreaterThan(0);
   });
 
   it('чтение чужой очереди рубежом не ограничено', async () => {

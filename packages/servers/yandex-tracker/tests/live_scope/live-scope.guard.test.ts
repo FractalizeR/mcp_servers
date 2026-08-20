@@ -83,6 +83,44 @@ describe('LiveScopeGuard', () => {
     ).not.toThrow();
   });
 
+  it('задача, созданная прогоном, доступна и по ключу, и по 24-hex идентификатору', () => {
+    // API принимает обе формы адресации. Записать только одну значит отклонить
+    // собственный законный запрос, стоит инструменту выбрать другую.
+    const guard = createGuard();
+    const create = { method: 'post', url: '/v3/issues', data: { queue: 'TEST' } };
+
+    guard.observeResponse({
+      request: create,
+      status: 201,
+      data: { key: 'TEST-100', id: '0123456789abcdef01234567' },
+    });
+
+    expect(() =>
+      guard.inspectRequest({ method: 'patch', url: '/v3/issues/TEST-100', data: {} })
+    ).not.toThrow();
+    expect(() =>
+      guard.inspectRequest({
+        method: 'patch',
+        url: '/v3/issues/0123456789abcdef01234567',
+        data: {},
+      })
+    ).not.toThrow();
+  });
+
+  it('чужая задача по 24-hex идентификатору отклоняется', () => {
+    // Форма записи не должна работать как обход: по id очередь не определить,
+    // значит решает журнал.
+    const guard = createGuard();
+
+    expect(() =>
+      guard.inspectRequest({
+        method: 'delete',
+        url: '/v3/issues/ffffffffffffffffffffffff/comments/1',
+        data: undefined,
+      })
+    ).toThrow(ScopeViolationError);
+  });
+
   it('ответ на чужой запрос журнал не пополняет', () => {
     const guard = createGuard();
 

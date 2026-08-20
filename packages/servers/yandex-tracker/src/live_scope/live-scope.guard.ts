@@ -51,13 +51,23 @@ function createdEntityOf(request: OutgoingRequest): EntityKind | undefined {
   return undefined;
 }
 
-/** Идентификатор созданной сущности: у задачи — ключ, у остальных — id. */
-function identifierOf(kind: EntityKind, data: unknown): string | undefined {
-  if (typeof data !== 'object' || data === null) return undefined;
-  const record = data as { key?: unknown; id?: unknown };
-  const raw = kind === 'issue' ? record.key : record.id;
+function asIdentifier(raw: unknown): string | undefined {
   if (typeof raw === 'string') return raw;
   return typeof raw === 'number' ? String(raw) : undefined;
+}
+
+/**
+ * Идентификаторы созданной сущности — все, какими её потом адресуют.
+ *
+ * У задачи их два: ключ (`TEST-1`) и 24-hex id, и API принимает оба. Записать
+ * только один значит отклонить собственный законный запрос, стоит инструменту
+ * выбрать другую форму.
+ */
+function identifiersOf(kind: EntityKind, data: unknown): readonly string[] {
+  if (typeof data !== 'object' || data === null) return [];
+  const record = data as { key?: unknown; id?: unknown };
+  const candidates = kind === 'issue' ? [record.key, record.id] : [record.id];
+  return candidates.map(asIdentifier).filter((value): value is string => value !== undefined);
 }
 
 export class LiveScopeGuard implements HttpTrafficGuard {
@@ -75,8 +85,8 @@ export class LiveScopeGuard implements HttpTrafficGuard {
   observeResponse(response: ObservedResponse): void {
     const kind = createdEntityOf(response.request);
     if (kind === undefined) return;
-    const id = identifierOf(kind, response.data);
-    if (id === undefined) return;
-    this.context.journal.register(kind, id);
+    for (const identifier of identifiersOf(kind, response.data)) {
+      this.context.journal.register(kind, identifier);
+    }
   }
 }
