@@ -63,6 +63,8 @@
     "build:bundle": "tsup",
     "build:mcpb": "npm run build && tsx ../scripts/increment-build.ts && tsx ../scripts/build-mcpb.ts",
     "clean": "rimraf dist",
+    "coverage:check": "tsx scripts/build-coverage-matrix.ts --check",
+    "coverage:matrix": "tsx scripts/build-coverage-matrix.ts",
     "cpd": "jscpd src",
     "cpd:quiet": "jscpd src --silent",
     "cpd:report": "jscpd src --reporters html,console",

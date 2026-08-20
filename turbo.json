@@ -83,6 +83,23 @@
       "inputs": ["src/**/*.ts", "tests/**/*.ts", "tsconfig*.json"],
       "outputs": []
     },
+    "coverage:matrix": {
+      "dependsOn": ["^build"],
+      "cache": true,
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "scripts/build-coverage-matrix.ts"],
+      "outputs": ["tests/COVERAGE_MATRIX.md"]
+    },
+    "coverage:check": {
+      "dependsOn": ["^build"],
+      "cache": true,
+      "inputs": [
+        "src/**/*.ts",
+        "tests/**/*.ts",
+        "tests/COVERAGE_MATRIX.md",
+        "scripts/build-coverage-matrix.ts"
+      ],
+      "outputs": []
+    },
     "cpd": {
       "cache": true,
       "inputs": ["src/**/*.ts"],
