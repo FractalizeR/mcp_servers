@@ -17,6 +17,16 @@ import type { ChecklistItemWithUnknownFields } from '#tracker_api/entities/index
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 
+/**
+ * Ответ API v2 на PATCH /v2/issues/{id}/checklistItems/{itemId}: возвращается
+ * ОБНОВЛЁННАЯ задача (issue), а не обновлённый элемент — тот лежит в массиве
+ * `checklistItems` этой задачи. Тот же капкан, что и у POST (см.
+ * `add-checklist-item.operation.ts`).
+ */
+interface UpdateChecklistItemResponse {
+  readonly checklistItems?: ChecklistItemWithUnknownFields[];
+}
+
 export class UpdateChecklistItemOperation extends BaseOperation {
   private readonly parallelExecutor: ParallelExecutor;
 
@@ -44,7 +54,9 @@ export class UpdateChecklistItemOperation extends BaseOperation {
    *
    * ВАЖНО:
    * - Retry делается автоматически в HttpClient.patch
-   * - API возвращает полный объект обновлённого элемента
+   * - API возвращает задачу целиком, обновлённый элемент ищется в
+   *   `checklistItems` по его id (поймано живой пробой: инструмент отдавал
+   *   агенту id ЗАДАЧИ вместо id элемента и терял text/checked/deadline)
    * - Поддерживает partial update (все поля опциональны)
    */
   async execute(
@@ -54,14 +66,23 @@ export class UpdateChecklistItemOperation extends BaseOperation {
   ): Promise<ChecklistItemWithUnknownFields> {
     this.logger.info(`Обновление элемента ${checklistItemId} чеклиста задачи ${issueId}`);
 
-    const item = await this.httpClient.patch<ChecklistItemWithUnknownFields>(
+    const response = await this.httpClient.patch<UpdateChecklistItemResponse>(
       `/v2/issues/${issueId}/checklistItems/${checklistItemId}`,
       buildChecklistItemBody(input)
     );
 
+    const updated = (response.checklistItems ?? []).find(
+      (item) => String(item.id) === checklistItemId
+    );
+    if (updated === undefined) {
+      throw new Error(
+        `API не вернул обновлённый элемент ${checklistItemId} в чеклисте задачи ${issueId}`
+      );
+    }
+
     this.logger.info(`Элемент ${checklistItemId} чеклиста задачи ${issueId} успешно обновлён`);
 
-    return item;
+    return updated;
   }
 
   /**

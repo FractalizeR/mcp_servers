@@ -1629,7 +1629,13 @@ export class MockServer {
         if (index !== -1) {
           this.pendingMocks.splice(index, 1);
         }
-        return [200, item];
+        // Реальный API v2 возвращает ОБНОВЛЁННУЮ задачу с массивом
+        // checklistItems, а не сам элемент (см. UpdateChecklistItemOperation).
+        // Операция ищет элемент по id, поэтому id проставляется здесь явно —
+        // иначе рассинхрон фикстуры с `checklistItemId` уводил бы диагностику
+        // в мок ("API не вернул обновлённый элемент") вместо ассерта теста.
+        const body = { ...(item as Record<string, unknown>), id: checklistItemId };
+        return [200, { id: 'issue-id', checklistItems: [body] }];
       });
     this.pendingMocks.push(mockKey);
     return this;
