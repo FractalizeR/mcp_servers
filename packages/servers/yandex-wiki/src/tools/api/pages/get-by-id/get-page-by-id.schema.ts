@@ -15,5 +15,4 @@ export type GetPageByIdParams = z.infer<typeof GetPageByIdParamsSchema>;
 
 export const GetPageByIdOutputDataSchema = z.object({
   page: PageOutputSchema,
-  fieldsReturned: z.array(z.string()),
 });
