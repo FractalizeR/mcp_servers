@@ -1,3 +1,14 @@
+## [2.5.0](https://github.com/FractalizeR/mcp_servers/compare/v2.4.1...v2.5.0) (2026-08-20)
+
+### Features
+
+* **quality:** корневой scripts/ под воротами, храповик на warn ([31b05f0](https://github.com/FractalizeR/mcp_servers/commit/31b05f037f51112b1e9a1665561e5705ee515c0e))
+
+### Bug Fixes
+
+* **benchmarks:** бенчмарки CLI мерили не то ([a3722ef](https://github.com/FractalizeR/mcp_servers/commit/a3722efeec857e953fc5e697b00de571923b20e8))
+* **cli:** статус Claude Code не распознавал ✔ (U+2714) ([76be31b](https://github.com/FractalizeR/mcp_servers/commit/76be31b66c3651ba1bfd4db8ea9cacb45ee440c3))
+
 ## [2.4.1](https://github.com/FractalizeR/mcp_servers/compare/v2.4.0...v2.4.1) (2026-08-19)
 
 ### Bug Fixes
