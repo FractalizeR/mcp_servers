@@ -202,9 +202,9 @@ function makeTestConfig({ complexity, maxDepth, maxLines, maxLinesPerFunction, m
  * цель: запланирован вынос транспортного низа харнессов в общий компонент,
  * после него пороги нужно опустить.
  */
-function makeScriptsConfig({ complexity, maxDepth, maxLines, maxLinesPerFunction, maxParams, cognitiveComplexity }) {
+function makeScriptsConfig({ complexity, maxDepth, maxLines, maxLinesPerFunction, maxParams, cognitiveComplexity, files = ['scripts/**/*.ts'] }) {
   return {
-    files: ['scripts/**/*.ts'],
+    files,
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -332,4 +332,30 @@ export function serverConfig() {
  */
 export function serversScriptsConfig() {
   return [COMMON_IGNORES, makeScriptsConfig(SERVER_SCRIPTS_THRESHOLDS), prettierConfig];
+}
+
+/**
+ * Пороги для корневого scripts/ — замер по факту (максимумы на 2026-08-20:
+ * файл 317 строк, функция 68, complexity 12, cognitive 11, depth 4, params 3)
+ * плюс небольшой запас. Заметно строже серверных: здесь нет транспортных
+ * харнесcов, из-за которых те подняты до 1100/550.
+ */
+const ROOT_SCRIPTS_THRESHOLDS = {
+  complexity: 15,
+  maxDepth: 4,
+  maxLines: 400,
+  maxLinesPerFunction: 80,
+  maxParams: 4,
+  cognitiveComplexity: 15,
+  // Конфиг лежит внутри scripts/, поэтому глоб считается от него, а не от корня.
+  files: ['**/*.ts'],
+};
+
+/**
+ * Root scripts config — для корневого scripts/ (cloc-summary,
+ * validate-docs-size). Каталог не является npm-workspace, turbo его не видит;
+ * подключается корневыми шагами lint:root-scripts / typecheck:scripts:root.
+ */
+export function rootScriptsConfig() {
+  return [COMMON_IGNORES, makeScriptsConfig(ROOT_SCRIPTS_THRESHOLDS), prettierConfig];
 }

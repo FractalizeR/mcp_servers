@@ -65,13 +65,21 @@ turbo run $TURBO_TASKS $TURBO_FLAGS
 # не является npm-workspace — у него нет package.json, поэтому turbo run lint
 # его не видит. Без этого шага каталог остаётся вне линта, как и весь
 # scripts/** до этого изменения.
+# lint:root-scripts / typecheck:scripts:root: корневой scripts/ тоже не workspace.
+# lint:servers-scripts закрыл только packages/servers/scripts, а cloc-summary.ts и
+# validate-docs-size.ts — последний исполняется прямо в этом пайплайне ниже —
+# оставались вне линта и вне tsc. Оба шага сразу нашли по дефекту.
 if $QUIET; then
   npm run lint:servers-scripts --silent
+  npm run lint:root-scripts --silent
+  npm run typecheck:scripts:root --silent
   npm run knip:root --silent 2>&1 | tail -1
   npm run validate:docs:root --silent 2>/dev/null | grep -v '^$' | tail -1
   npm run format:check --silent
 else
   npm run lint:servers-scripts
+  npm run lint:root-scripts
+  npm run typecheck:scripts:root
   npm run knip:root
   npm run validate:docs:root
   npm run format:check

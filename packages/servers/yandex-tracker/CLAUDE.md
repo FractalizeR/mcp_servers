@@ -371,7 +371,8 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
 
 **Code complexity:**
 - ESLint правила: `max-params` (≤5), `complexity` (≤15), `max-depth` (≤5)
-- Режим `warn` — не блокирует build, но предупреждает
+- Уровень `warn`, но `lint` несёт бюджет `--max-warnings` — новый warn роняет
+  сборку. Детали и текущие бюджеты: корневой CLAUDE.md, «Уровни правил»
 
 **Build hash (MCPB):**
 - `manifest.json` — производный артефакт, в git не хранится (`.gitignore`)
@@ -397,7 +398,6 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
 
 - ✅ Использует `@fractalizer/mcp-cli` для универсального управления подключениями
 - ✅ YT-специфичная конфигурация в `src/cli/types.ts` и `src/cli/prompts.ts`
-- ✅ Feature flags для миграции (USE_FRAMEWORK_CLI, DEBUG_CLI_MIGRATION)
 - 📖 Детали архитектуры: [packages/framework/cli/README.md](../../framework/cli/README.md)
 - 📖 Адаптер YT: [src/cli/README.md](src/cli/README.md)
 
