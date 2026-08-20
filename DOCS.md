@@ -23,6 +23,12 @@
 
 ---
 
+## 🧪 Тестирование
+
+- **[packages/servers/TESTING_STRATEGY.md](./packages/servers/TESTING_STRATEGY.md)** — что проверяем, чтобы утверждать «инструмент работает» (канон для всех серверов)
+
+---
+
 ## 📦 Framework Packages
 
 - **[Infrastructure](./packages/framework/infrastructure/README.md)** — HTTP, cache, logging, async utilities
@@ -37,6 +43,7 @@
 - **[README.md](./packages/servers/yandex-tracker/README.md)** — пользовательская документация
 - **[CLAUDE.md](./packages/servers/yandex-tracker/CLAUDE.md)** — правила для разработчиков
 - **[tests/README.md](./packages/servers/yandex-tracker/tests/README.md)** — архитектура тестирования
+- **[tests/TESTING_STRATEGY.md](./packages/servers/yandex-tracker/tests/TESTING_STRATEGY.md)** — специфика тестирования Трекера (песочница, версии API, известные дефекты)
 
 **Module-level:**
 - **[MCP Tools](./packages/servers/yandex-tracker/src/tools/README.md)** — конвенции разработки tools
