@@ -32,6 +32,8 @@
     "#cli/*": "./src/cli/*",
     "#constants": "./src/constants.ts",
     "#common/*": "./src/common/*",
+    "#live_scope": "./src/live_scope/index.ts",
+    "#live_scope/*": "./src/live_scope/*",
     "#integration/*": "./tests/integration/*",
     "#helpers/*": "./tests/helpers/*"
   },
@@ -66,6 +68,7 @@
     "cpd:report": "jscpd src --reporters html,console",
     "depcruise": "cd ../../.. && depcruise packages/servers/yandex-tracker/src -c .dependency-cruiser.cjs",
     "dev": "npm run build && node dist/yandex-tracker.bundle.cjs",
+    "enumerate:requests": "tsx scripts/enumerate-outgoing-requests.ts",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.ts\"",
     "lint": "eslint src scripts --ext .ts --max-warnings=30",

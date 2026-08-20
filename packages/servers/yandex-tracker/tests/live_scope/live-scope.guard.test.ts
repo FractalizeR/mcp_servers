@@ -1,0 +1,200 @@
+/**
+ * Рубеж как объект: отказ, пополнение журнала из ответов, переживание журнала
+ * между процессами.
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { ScopeViolationError } from '@fractalizer/mcp-infrastructure';
+import { LiveScopeGuard, RunJournal, createLiveScopeGuardFromEnv } from '#live_scope';
+
+const RUN_ID = 'run-under-test';
+
+let workDir: string;
+let journalPath: string;
+
+beforeEach(() => {
+  workDir = mkdtempSync(join(tmpdir(), 'live-scope-guard-'));
+  journalPath = join(workDir, 'journal.jsonl');
+});
+
+afterEach(() => {
+  rmSync(workDir, { recursive: true, force: true });
+});
+
+function createGuard(): LiveScopeGuard {
+  return new LiveScopeGuard({ sandboxQueue: 'TEST', journal: new RunJournal(journalPath, RUN_ID) });
+}
+
+describe('LiveScopeGuard', () => {
+  it('отклоняет запрос вне области действия с названной причиной', () => {
+    const guard = createGuard();
+
+    expect(() =>
+      guard.inspectRequest({ method: 'delete', url: '/v2/projects/11', data: undefined })
+    ).toThrow(ScopeViolationError);
+    expect(() =>
+      guard.inspectRequest({ method: 'delete', url: '/v2/projects/11', data: undefined })
+    ).toThrow(/проекты принадлежат организации целиком/);
+  });
+
+  it('созданная задача попадает в журнал и становится доступной для правки', () => {
+    const guard = createGuard();
+    const create = { method: 'post', url: '/v3/issues', data: { queue: 'TEST' } };
+
+    // До создания правка запрещена: задачи в журнале нет.
+    expect(() =>
+      guard.inspectRequest({ method: 'patch', url: '/v3/issues/TEST-42', data: {} })
+    ).toThrow(ScopeViolationError);
+
+    guard.inspectRequest(create);
+    guard.observeResponse({ request: create, status: 201, data: { key: 'TEST-42', id: 'x' } });
+
+    expect(() =>
+      guard.inspectRequest({ method: 'patch', url: '/v3/issues/TEST-42', data: {} })
+    ).not.toThrow();
+  });
+
+  it('созданный компонент опознаётся по идентификатору из ответа', () => {
+    const guard = createGuard();
+    const create = { method: 'post', url: '/v2/queues/TEST/components', data: { name: 'c' } };
+
+    guard.observeResponse({ request: create, status: 201, data: { id: 555, name: 'c' } });
+
+    expect(() =>
+      guard.inspectRequest({ method: 'delete', url: '/v2/components/555', data: undefined })
+    ).not.toThrow();
+  });
+
+  it('журнал переживает перезапуск процесса', () => {
+    // Прогон через `tools:call` поднимает сервер заново на каждый вызов: журнал
+    // в памяти был бы пуст к моменту уборки.
+    const first = createGuard();
+    const create = { method: 'post', url: '/v3/issues', data: { queue: 'TEST' } };
+    first.observeResponse({ request: create, status: 201, data: { key: 'TEST-77' } });
+
+    const second = createGuard();
+    expect(() =>
+      second.inspectRequest({
+        method: 'delete',
+        url: '/v3/issues/TEST-77/comments/1',
+        data: undefined,
+      })
+    ).not.toThrow();
+  });
+
+  it('задача, созданная прогоном, доступна и по ключу, и по 24-hex идентификатору', () => {
+    // API принимает обе формы адресации. Записать только одну значит отклонить
+    // собственный законный запрос, стоит инструменту выбрать другую.
+    const guard = createGuard();
+    const create = { method: 'post', url: '/v3/issues', data: { queue: 'TEST' } };
+
+    guard.observeResponse({
+      request: create,
+      status: 201,
+      data: { key: 'TEST-100', id: '0123456789abcdef01234567' },
+    });
+
+    expect(() =>
+      guard.inspectRequest({ method: 'patch', url: '/v3/issues/TEST-100', data: {} })
+    ).not.toThrow();
+    expect(() =>
+      guard.inspectRequest({
+        method: 'patch',
+        url: '/v3/issues/0123456789abcdef01234567',
+        data: {},
+      })
+    ).not.toThrow();
+  });
+
+  it('чужая задача по 24-hex идентификатору отклоняется', () => {
+    // Форма записи не должна работать как обход: по id очередь не определить,
+    // значит решает журнал.
+    const guard = createGuard();
+
+    expect(() =>
+      guard.inspectRequest({
+        method: 'delete',
+        url: '/v3/issues/ffffffffffffffffffffffff/comments/1',
+        data: undefined,
+      })
+    ).toThrow(ScopeViolationError);
+  });
+
+  it('ответ на чужой запрос журнал не пополняет', () => {
+    const guard = createGuard();
+
+    guard.observeResponse({
+      request: { method: 'post', url: '/v2/projects', data: {} },
+      status: 201,
+      data: { id: 'p1' },
+    });
+
+    expect(new RunJournal(journalPath, RUN_ID).list()).toHaveLength(0);
+  });
+});
+
+describe('Включение рубежа', () => {
+  it('без переменной очереди рубеж не создаётся', () => {
+    expect(createLiveScopeGuardFromEnv({})).toBeUndefined();
+  });
+
+  it('пишущий прогон без объявленной области отклоняет мутации, но читает', () => {
+    // Иначе рубеж — то, что легко забыть включить, а значит снова аккуратность
+    // ведущего прогон, а не свойство системы (найдено ревью).
+    //
+    // Отказ на вызове, а не падение на старте: stdio не доносит stderr сервера,
+    // и упавший процесс виден клиенту как «Connection closed» — транспортный сбой
+    // вместо причины (проверено вживую).
+    const guard = createLiveScopeGuardFromEnv({ MCP_DEV_WRITE_ALLOWED: '1' });
+
+    expect(guard).toBeDefined();
+    expect(() =>
+      guard?.inspectRequest({ method: 'patch', url: '/v3/issues/TEST-1', data: {} })
+    ).toThrow(/область действия не объявлена/i);
+    expect(() =>
+      guard?.inspectRequest({ method: 'get', url: '/v3/issues/TEST-1', data: undefined })
+    ).not.toThrow();
+  });
+
+  it('осознанный отказ от рубежа возможен только точным значением', () => {
+    const halfHearted = createLiveScopeGuardFromEnv({
+      MCP_DEV_WRITE_ALLOWED: '1',
+      YANDEX_TRACKER_LIVE_SCOPE_OFF: 'true',
+    });
+    expect(halfHearted).toBeDefined();
+
+    expect(
+      createLiveScopeGuardFromEnv({
+        MCP_DEV_WRITE_ALLOWED: '1',
+        YANDEX_TRACKER_LIVE_SCOPE_OFF: 'i-am-writing-to-production',
+      })
+    ).toBeUndefined();
+  });
+
+  it('читающий прогон рубежа не требует', () => {
+    // mcp-dev без --dangerously-allow-write маркер не ставит: чтение безопасно.
+    expect(createLiveScopeGuardFromEnv({ MCP_DEV_WRITE_ALLOWED: undefined })).toBeUndefined();
+  });
+
+  it('очередь без журнала — отказ на старте, а не половина рубежа', () => {
+    expect(() => createLiveScopeGuardFromEnv({ YANDEX_TRACKER_LIVE_SCOPE_QUEUE: 'TEST' })).toThrow(
+      /журнал прогона обязателен/i
+    );
+  });
+
+  it('обе переменные заданы — рубеж работает', () => {
+    const guard = createLiveScopeGuardFromEnv({
+      YANDEX_TRACKER_LIVE_SCOPE_QUEUE: 'TEST',
+      YANDEX_TRACKER_LIVE_SCOPE_JOURNAL: journalPath,
+      YANDEX_TRACKER_LIVE_SCOPE_RUN_ID: RUN_ID,
+    });
+
+    expect(guard).toBeDefined();
+    expect(() => guard?.inspectRequest({ method: 'post', url: '/v2/fields', data: {} })).toThrow(
+      ScopeViolationError
+    );
+  });
+});

@@ -4,6 +4,8 @@
  * Содержит параметры для инициализации Axios instance
  */
 
+import type { HttpTrafficGuard } from './http-traffic-guard.interface.js';
+
 export interface HttpConfig {
   /** Базовый URL API (например, 'https://api.tracker.yandex.net') */
   baseURL: string;
@@ -19,4 +21,10 @@ export interface HttpConfig {
 
   /** ID организации (Yandex Cloud Organization) */
   cloudOrgId?: string;
+
+  /**
+   * Надзор за исходящим трафиком: отклоняет запросы вне разрешённой области
+   * действия до сети. Отсутствие поля оставляет поведение без изменений.
+   */
+  trafficGuard?: HttpTrafficGuard;
 }

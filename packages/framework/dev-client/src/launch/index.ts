@@ -10,3 +10,8 @@ export {
   type ResolveSecretsEnvOptions,
 } from './resolve-secrets-env.js';
 export { composeEnv } from './compose-env.js';
+export {
+  declareWriteRun,
+  WRITE_DECLARATION_VAR,
+  WRITE_DECLARATION_VALUE,
+} from './write-declaration.js';

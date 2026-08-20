@@ -12,6 +12,11 @@ export type { IHttpClient } from './client/i-http-client.interface.js';
 export { AxiosHttpClient } from './client/axios-http-client.js';
 export { MockHttpClient } from './client/mock-http-client.js';
 export type { HttpConfig } from './client/http-config.interface.js';
+export type {
+  HttpTrafficGuard,
+  OutgoingRequest,
+  ObservedResponse,
+} from './client/http-traffic-guard.interface.js';
 
 /**
  * @deprecated Use AxiosHttpClient instead
@@ -27,6 +32,7 @@ export { RetryHandler } from './retry/retry-handler.js';
 // Error
 export { ErrorMapper } from './error/error-mapper.js';
 export { ApiErrorClass } from './error/api-error.class.js';
+export { ScopeViolationError } from './error/scope-violation.error.js';
 export type { ApiErrorDetails } from './error/api-error.class.js';
 
 // Response utilities (header normalization, Link header parsing)

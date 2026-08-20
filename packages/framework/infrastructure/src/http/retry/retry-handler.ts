@@ -44,6 +44,13 @@ export class RetryHandler {
     try {
       return await fn();
     } catch (error) {
+      // Ошибка, объявившая себя неповторяемой, до стратегии не доходит: та судит
+      // по статус-коду, а у отказа собственного рубежа (ScopeViolationError)
+      // статус-кода нет — он был бы прочитан как сетевой сбой и повторён.
+      if ((error as { retryable?: boolean }).retryable === false) {
+        throw error;
+      }
+
       const apiError = error as ApiError;
 
       // Проверяем, нужно ли повторять запрос

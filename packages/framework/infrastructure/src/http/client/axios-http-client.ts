@@ -16,10 +16,11 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import type { HttpConfig } from './http-config.interface.js';
+import type { HttpTrafficGuard, OutgoingRequest } from './http-traffic-guard.interface.js';
 import type { IHttpClient } from './i-http-client.interface.js';
 import type { Logger } from '../../logging/index.js';
 import type { QueryParams, HttpResponseEnvelope } from '../../types.js';
-import { ErrorMapper } from '../error/index.js';
+import { ErrorMapper, ScopeViolationError } from '../error/index.js';
 import { normalizeHeaders } from '../response/index.js';
 import { RetryHandler } from '../retry/index.js';
 import type { RetryStrategy, RetryContext } from '../retry/index.js';
@@ -27,13 +28,24 @@ import type { RetryStrategy, RetryContext } from '../retry/index.js';
 /** HTTP-методы, поддерживающие возврат конверта с заголовками. */
 type EnvelopeMethod = 'get' | 'post';
 
+/** Приводит конфиг axios к виду, в котором запрос видит guard. */
+function describeRequest(config: {
+  method?: string | undefined;
+  url?: string | undefined;
+  data?: unknown;
+}): OutgoingRequest {
+  return { method: (config.method ?? '').toLowerCase(), url: config.url ?? '', data: config.data };
+}
+
 export class AxiosHttpClient implements IHttpClient {
   private readonly client: AxiosInstance;
   private readonly logger: Logger;
   private readonly retryHandler: RetryHandler;
+  private readonly trafficGuard: HttpTrafficGuard | undefined;
 
   constructor(config: HttpConfig, logger: Logger, retryStrategy: RetryStrategy) {
     this.logger = logger;
+    this.trafficGuard = config.trafficGuard;
     this.retryHandler = new RetryHandler(retryStrategy, logger);
 
     // Формируем базовые заголовки
@@ -50,11 +62,16 @@ export class AxiosHttpClient implements IHttpClient {
       headers['X-Cloud-Org-ID'] = config.cloudOrgId;
     }
 
-    // Создаём Axios instance с конфигурацией
+    // Создаём Axios instance с конфигурацией.
+    //
+    // maxRedirects под guard: переход по редиректу выполняет http-адаптер, минуя
+    // request-интерцептор, — рубеж не увидел бы конечного адреса и решал бы по
+    // исходному. Поймано ревью; без guard поведение прежнее.
     this.client = axios.create({
       baseURL: config.baseURL,
       timeout: config.timeout,
       headers,
+      ...(config.trafficGuard && { maxRedirects: 0 }),
     });
 
     // Настраиваем interceptors
@@ -65,10 +82,14 @@ export class AxiosHttpClient implements IHttpClient {
    * Настройка interceptors для логирования
    */
   private setupInterceptors(): void {
-    // Interceptor для логирования запросов
+    // Interceptor для логирования запросов и надзора за областью действия.
+    // Guard стоит здесь, а не в методах класса: операции с multipart и бинарными
+    // телами берут axios instance напрямую (`getAxiosInstance()`) и рубеж на уровне
+    // методов их не увидел бы.
     this.client.interceptors.request.use(
       (config) => {
         this.logger.debug(`HTTP Request: ${config.method?.toUpperCase()} ${config.url}`);
+        this.trafficGuard?.inspectRequest(describeRequest(config));
         return config;
       },
       (error) => {
@@ -81,9 +102,21 @@ export class AxiosHttpClient implements IHttpClient {
     this.client.interceptors.response.use(
       (response) => {
         this.logger.debug(`HTTP Response: ${response.status} ${response.config.url}`);
+        this.trafficGuard?.observeResponse({
+          request: describeRequest(response.config),
+          status: response.status,
+          data: response.data,
+        });
         return response;
       },
       (error: AxiosError) => {
+        // Отказ собственного рубежа проходит насквозь: ErrorMapper отнёс бы его
+        // к сетевым ошибкам (запроса не было — значит «нет ответа от сервера»),
+        // и отказ стал бы повторяемым и неотличимым от сбоя сети.
+        if (error instanceof ScopeViolationError) {
+          this.logger.error('Запрос отклонён надзором за областью действия:', error);
+          return Promise.reject(error);
+        }
         const apiError = ErrorMapper.mapAxiosError(error);
         this.logger.error('HTTP Response Error:', apiError);
         return Promise.reject(apiError);

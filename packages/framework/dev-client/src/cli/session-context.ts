@@ -43,9 +43,11 @@ async function safeClose(session: DevSession): Promise<void> {
 /** Открыть сессию против резолвнутого запуска и перечислить инструменты. */
 export async function openSessionContext(
   global: GlobalCliOptions,
-  deps: RunCliDeps
+  deps: RunCliDeps,
+  /** Прогон разрешает запись — объявляется серверу при запуске (см. `write-declaration.ts`). */
+  allowWrite = false
 ): Promise<OpenContextResult> {
-  const launchResult = await resolveLaunch(global, deps);
+  const launchResult = await resolveLaunch(global, deps, allowWrite);
   if (launchResult.outcome === 'failed') {
     return { outcome: 'failed', exitCode: launchResult.exitCode, message: launchResult.message };
   }
