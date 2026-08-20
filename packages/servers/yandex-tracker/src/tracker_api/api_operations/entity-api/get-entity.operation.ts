@@ -24,13 +24,16 @@ import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import type { GetEntityDto } from '#tracker_api/dto/entity-api/index.js';
 import type { EntityApiOutput } from '#tracker_api/dto/entity-api/index.js';
 import { assertEntityRecordShape } from './assert-entity-record-shape.util.js';
+import { buildEntityQuery } from './entity-query.util.js';
 
 export class GetEntityOperation extends BaseOperation {
   async execute(dto: GetEntityDto): Promise<EntityApiOutput> {
-    const { entityType, entityId } = dto;
+    const { entityType, entityId, entityFields } = dto;
     this.logger.info(`Получение записи Entity API: ${entityType}/${entityId}`);
 
-    const data = await this.httpClient.get<unknown>(`/v3/entities/${entityType}/${entityId}`);
+    const data = await this.httpClient.get<unknown>(
+      `/v3/entities/${entityType}/${entityId}${buildEntityQuery({ entityFields })}`
+    );
     return assertEntityRecordShape<EntityApiOutput>(data, `get_entity ${entityType}/${entityId}`);
   }
 }

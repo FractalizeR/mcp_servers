@@ -56,4 +56,30 @@ describe('GetEntityOperation', () => {
       /конверт поиска/
     );
   });
+  describe('регрессия: содержательные поля надо запрашивать явно', () => {
+    // Живая проба 2026-08-20: без `?fields=` Entity API не отдаёт объект
+    // `fields` вовсе, поэтому `fields.summary` у агента всегда был пустым,
+    // а цели и проекты — безымянными.
+    it('переносит запрошенные поля в query `fields`', async () => {
+      vi.mocked(mockHttpClient.get).mockResolvedValue({ id: '1', fields: { summary: 'S' } });
+
+      await operation.execute({
+        entityType: 'project',
+        entityId: '1',
+        entityFields: ['summary', 'teamAccess'],
+      });
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/v3/entities/project/1?fields=summary%2CteamAccess'
+      );
+    });
+
+    it('без запрошенных полей query не добавляется', async () => {
+      vi.mocked(mockHttpClient.get).mockResolvedValue({ id: '1' });
+
+      await operation.execute({ entityType: 'project', entityId: '1', entityFields: [] });
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/entities/project/1');
+    });
+  });
 });

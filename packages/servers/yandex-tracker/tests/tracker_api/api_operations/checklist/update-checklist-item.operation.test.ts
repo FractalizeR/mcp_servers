@@ -8,6 +8,16 @@ import type { ServerConfig } from '#config';
 import { UpdateChecklistItemOperation } from '#tracker_api/api_operations/checklist/update-checklist-item.operation.js';
 import { createUserRef } from '#helpers/common-fixtures.js';
 
+/**
+ * Ответ API v2 на PATCH элемента чеклиста — это ЗАДАЧА целиком, элемент лежит
+ * в `checklistItems` (живая проба 2026-08-20). Прежние моки отдавали голый
+ * элемент, поэтому тесты были зелёными, пока продакшн возвращал агенту id
+ * задачи вместо id элемента.
+ */
+function issueResponse(...items: ChecklistItemWithUnknownFields[]): unknown {
+  return { id: 'issue-internal-id', key: 'TEST-1', checklistItems: items };
+}
+
 describe('UpdateChecklistItemOperation', () => {
   let operation: UpdateChecklistItemOperation;
   let mockHttpClient: IHttpClient;
@@ -65,7 +75,7 @@ describe('UpdateChecklistItemOperation', () => {
         checked: false,
       };
 
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(issueResponse(mockItem));
 
       const result = await operation.execute('TEST-1', '123', input);
 
@@ -86,7 +96,7 @@ describe('UpdateChecklistItemOperation', () => {
         checked: true,
       };
 
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(issueResponse(mockItem));
 
       const result = await operation.execute('PROJ-10', '456', input);
 
@@ -114,7 +124,7 @@ describe('UpdateChecklistItemOperation', () => {
         deadline: '2026-01-01T00:00:00.000Z',
       };
 
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(issueResponse(mockItem));
 
       const result = await operation.execute('TEST-5', '789', input);
 
@@ -146,7 +156,7 @@ describe('UpdateChecklistItemOperation', () => {
         checked: true,
       };
 
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(issueResponse(mockItem));
 
       await operation.execute('TEST-3', '999', input);
 
@@ -155,6 +165,44 @@ describe('UpdateChecklistItemOperation', () => {
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Элемент 999 чеклиста задачи TEST-3 успешно обновлён'
+      );
+    });
+  });
+
+  describe('регрессия: ответ PATCH — задача, а не элемент', () => {
+    // Живая проба 2026-08-20: инструмент отдавал агенту id ЗАДАЧИ вместо id
+    // элемента и терял text/checked/deadline.
+    it('возвращает элемент по его id, а не корень ответа', async () => {
+      const target: ChecklistItemWithUnknownFields = {
+        id: 'item-2',
+        text: 'Пункт 2 обновлён',
+        checked: true,
+      };
+      const other: ChecklistItemWithUnknownFields = {
+        id: 'item-1',
+        text: 'Пункт 1',
+        checked: false,
+      };
+      vi.mocked(mockHttpClient.patch).mockResolvedValue({
+        id: 'issue-internal-id',
+        key: 'TEST-1',
+        checklistItems: [other, target],
+      });
+
+      const result = await operation.execute('TEST-1', 'item-2', { checked: true });
+
+      expect(result).toEqual(target);
+      expect(result.id).not.toBe('issue-internal-id');
+    });
+
+    it('падает явно, если элемента нет в ответе', async () => {
+      vi.mocked(mockHttpClient.patch).mockResolvedValue({
+        id: 'issue-internal-id',
+        checklistItems: [],
+      });
+
+      await expect(operation.execute('TEST-1', 'item-2', { checked: true })).rejects.toThrow(
+        /не вернул обновлённый элемент item-2/
       );
     });
   });
@@ -182,8 +230,8 @@ describe('UpdateChecklistItemOperation', () => {
       };
 
       vi.mocked(mockHttpClient.patch)
-        .mockResolvedValueOnce(mockItem1)
-        .mockResolvedValueOnce(mockItem2);
+        .mockResolvedValueOnce(issueResponse(mockItem1))
+        .mockResolvedValueOnce(issueResponse(mockItem2));
 
       const result = await operation.executeMany([
         { issueId: 'TEST-1', checklistItemId: 'item-1', text: 'Updated Item 1' },
@@ -211,7 +259,7 @@ describe('UpdateChecklistItemOperation', () => {
       };
 
       vi.mocked(mockHttpClient.patch)
-        .mockResolvedValueOnce(mockItem)
+        .mockResolvedValueOnce(issueResponse(mockItem))
         .mockRejectedValueOnce(new Error('Item not found'));
 
       const result = await operation.executeMany([
@@ -239,7 +287,7 @@ describe('UpdateChecklistItemOperation', () => {
         deadline: '2025-12-31',
       };
 
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(issueResponse(mockItem));
 
       await operation.executeMany([
         {
@@ -268,7 +316,7 @@ describe('UpdateChecklistItemOperation', () => {
         deadline: '2026-08-25T00:00:00.000+0000',
       };
 
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(issueResponse(mockItem));
 
       await operation.executeMany([
         {
@@ -295,7 +343,7 @@ describe('UpdateChecklistItemOperation', () => {
         checked: false,
       };
 
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(issueResponse(mockItem));
 
       await operation.executeMany([
         { issueId: 'TEST-1', checklistItemId: 'item-1', text: 'Renamed' },
@@ -316,7 +364,7 @@ describe('UpdateChecklistItemOperation', () => {
         checked: false,
       };
 
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockItem);
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(issueResponse(mockItem));
 
       await operation.executeMany([
         { issueId: 'TEST-1', checklistItemId: 'item-1', text: 'Item 1' },

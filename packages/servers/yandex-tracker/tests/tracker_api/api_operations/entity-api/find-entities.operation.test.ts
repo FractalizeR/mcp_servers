@@ -3,6 +3,7 @@ import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
 import { FindEntitiesOperation } from '#tracker_api/api_operations/entity-api/find-entities.operation.js';
+import { CursorCodec, CURSOR_TAGS } from '#tracker_api/utils/index.js';
 
 describe('FindEntitiesOperation', () => {
   let operation: FindEntitiesOperation;
@@ -232,5 +233,71 @@ describe('FindEntitiesOperation', () => {
     expect(result.pagination.truncated).toBe(true);
     expect(result.pagination.nextCursor).toBeUndefined();
     expect(mockHttpClient.post).toHaveBeenCalledTimes(1);
+  });
+  describe('регрессия: содержательные поля надо запрашивать явно', () => {
+    // Та же причина, что и у get_entity: без `?fields=` конверт `_search`
+    // приходит без объекта `fields` записей (живая проба 2026-08-20).
+    it('переносит запрошенные поля в query `fields` и сохраняет их в nextCursor', async () => {
+      vi.mocked(mockHttpClient.post).mockResolvedValue({
+        hits: 10,
+        pages: 5,
+        values: [{ id: '1', fields: { summary: 'S' } }],
+      });
+
+      const result = await operation.execute({
+        entityType: 'project',
+        perPage: 2,
+        entityFields: ['summary'],
+      });
+
+      const [path] = vi.mocked(mockHttpClient.post).mock.calls[0] as [string, unknown, boolean];
+      expect(path).toContain('fields=summary');
+
+      const decoded = CursorCodec.decode(
+        result.pagination.nextCursor as string,
+        CURSOR_TAGS.findEntities
+      );
+      expect(decoded.path).toContain('fields=summary');
+    });
+
+    it('курсор отклоняется, если проекция изменилась между вызовами', async () => {
+      vi.mocked(mockHttpClient.post).mockResolvedValue({
+        hits: 10,
+        pages: 5,
+        values: [{ id: '1', fields: { summary: 'S' } }],
+      });
+
+      const first = await operation.execute({
+        entityType: 'project',
+        perPage: 2,
+        entityFields: ['summary'],
+      });
+      const cursor = first.pagination.nextCursor as string;
+
+      // Путь следующей страницы вшит в курсор вместе с `fields`. Если бы
+      // проекция не входила в хеш, запрос ушёл бы со старым набором полей,
+      // а ответ был бы отфильтрован и подписан новым — агент получил бы
+      // пустоту под видом запрошенных полей.
+      await expect(
+        operation.execute({
+          entityType: 'project',
+          cursor,
+          entityFields: ['description'],
+        })
+      ).rejects.toThrow(/не совпадают с курсором/);
+    });
+
+    it('без запрошенных полей query `fields` не добавляется', async () => {
+      vi.mocked(mockHttpClient.post).mockResolvedValue({
+        hits: 1,
+        pages: 1,
+        values: [{ id: '1' }],
+      });
+
+      await operation.execute({ entityType: 'project', perPage: 2, entityFields: [] });
+
+      const [path] = vi.mocked(mockHttpClient.post).mock.calls[0] as [string, unknown, boolean];
+      expect(path).not.toContain('fields=');
+    });
   });
 });

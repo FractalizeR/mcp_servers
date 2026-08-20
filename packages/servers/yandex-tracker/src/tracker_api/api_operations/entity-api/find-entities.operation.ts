@@ -53,72 +53,9 @@ import {
 import type { FindEntitiesDto } from '#tracker_api/dto/entity-api/index.js';
 import type { EntityApiRecordWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/common/index.js';
+import { parseSearchEnvelope, type ParsedSearchEnvelope } from './search-envelope.util.js';
 
 export type FindEntitiesResult = PaginatedResult<EntityApiRecordWithUnknownFields>;
-
-/** Разобранный конверт `_search`: элементы страницы + счётчики API. */
-interface ParsedSearchEnvelope {
-  readonly items: EntityApiRecordWithUnknownFields[];
-  readonly hits: number | undefined;
-  readonly pages: number | undefined;
-}
-
-/**
- * Разобрать тело ответа `_search` в форму `{ hits, pages, values }`
- * (подтверждено живыми пробами — см. JSDoc модуля).
- *
- * Терпимо к двум крайним случаям без риска тихой потери данных:
- * - `values` отсутствует целиком → пустая страница (наблюдалось живьём на
- *   `goal` с нулевой выдачей);
- * - тело — «голый» массив (форма, которую предполагает референсный клиент;
- *   живьём НЕ наблюдалась, оставлена как forward-compat, не как догадка).
- *
- * Любая ДРУГАЯ форма — explicit-ошибка с дампом формы, а не тихая догадка
- * об имени поля.
- */
-function parseSearchEnvelope(data: unknown): ParsedSearchEnvelope {
-  if (Array.isArray(data)) {
-    return {
-      items: data as EntityApiRecordWithUnknownFields[],
-      hits: undefined,
-      pages: undefined,
-    };
-  }
-
-  if (data !== null && typeof data === 'object') {
-    const obj = data as Record<string, unknown>;
-    if ('values' in obj || 'hits' in obj || 'pages' in obj) {
-      const rawValues = obj['values'];
-      if (rawValues !== undefined && !Array.isArray(rawValues)) {
-        throw unexpectedShapeError(data, "поле 'values' присутствует, но не является массивом");
-      }
-      return {
-        items: Array.isArray(rawValues) ? (rawValues as EntityApiRecordWithUnknownFields[]) : [],
-        hits: typeof obj['hits'] === 'number' ? obj['hits'] : undefined,
-        pages: typeof obj['pages'] === 'number' ? obj['pages'] : undefined,
-      };
-    }
-  }
-
-  if (data === null || data === undefined) {
-    return { items: [], hits: undefined, pages: undefined };
-  }
-
-  throw unexpectedShapeError(data, 'ни массив, ни конверт {hits, pages, values}');
-}
-
-function unexpectedShapeError(data: unknown, reason: string): Error {
-  const shapeHint =
-    data !== null && typeof data === 'object'
-      ? `объект с полями [${Object.keys(data).join(', ')}]`
-      : typeof data;
-  return new Error(
-    `Entity API вернул неожиданную форму ответа для _search (${reason}): получено — ${shapeHint}. ` +
-      'Ожидался конверт {hits, pages, values} (подтверждено живыми пробами) или, как fallback, ' +
-      'голый JSON-массив. Нужна повторная живая проверка сырого тела ответа, прежде чем ' +
-      'предполагать иную форму.'
-  );
-}
 
 /** Разобрать `page`/`perPage` из query-строки самостоятельно построенного пути. */
 function parsePageParams(path: string): { readonly page: number; readonly perPage: number } {
@@ -155,7 +92,7 @@ export class FindEntitiesOperation extends BaseOperation {
     // idempotencyDeclared: true — POST `_search` только читает.
     const firstEnvelope = parseSearchEnvelope(
       await this.httpClient.post<unknown>(
-        this.buildEndpoint(params.entityType, effectivePerPage, 1),
+        this.buildEndpoint(params.entityType, effectivePerPage, 1, params.entityFields),
         requestBody,
         true
       )
@@ -166,6 +103,7 @@ export class FindEntitiesOperation extends BaseOperation {
         items: firstEnvelope.items,
         pagination: this.buildMeta({
           entityType: params.entityType,
+          entityFields: params.entityFields,
           effectivePerPage,
           currentPage: 1,
           pagesFetched: 1,
@@ -224,7 +162,7 @@ export class FindEntitiesOperation extends BaseOperation {
       try {
         envelope = parseSearchEnvelope(
           await this.httpClient.post<unknown>(
-            this.buildEndpoint(params.entityType, effectivePerPage, nextPage),
+            this.buildEndpoint(params.entityType, effectivePerPage, nextPage, params.entityFields),
             requestBody,
             true
           )
@@ -252,6 +190,7 @@ export class FindEntitiesOperation extends BaseOperation {
       items,
       pagination: this.buildMeta({
         entityType: params.entityType,
+        entityFields: params.entityFields,
         effectivePerPage,
         currentPage,
         pagesFetched,
@@ -273,8 +212,8 @@ export class FindEntitiesOperation extends BaseOperation {
 
     if (extra !== bodyHash) {
       throw new Error(
-        'Критерии поиска не совпадают с курсором: searchString/filter/orderBy/rootOnly должны ' +
-          'быть переданы повторно в том же виде, что и при первой выборке.'
+        'Критерии поиска не совпадают с курсором: searchString/filter/orderBy/rootOnly и ' +
+          'состав fields должны быть переданы повторно в том же виде, что и при первой выборке.'
       );
     }
 
@@ -289,6 +228,7 @@ export class FindEntitiesOperation extends BaseOperation {
       items: envelope.items,
       pagination: this.buildMeta({
         entityType: params.entityType,
+        entityFields: params.entityFields,
         effectivePerPage,
         currentPage,
         pagesFetched: 1,
@@ -317,6 +257,7 @@ export class FindEntitiesOperation extends BaseOperation {
     readonly truncated: boolean;
     readonly hasError: boolean;
     readonly offerNextCursor?: boolean;
+    readonly entityFields?: readonly string[] | undefined;
   }): PaginationMeta {
     const offerNextCursor = input.offerNextCursor ?? true;
     const hasMorePages = input.pages !== undefined && input.currentPage < input.pages;
@@ -326,7 +267,12 @@ export class FindEntitiesOperation extends BaseOperation {
     const nextCursor =
       hasMorePages && offerNextCursor
         ? CursorCodec.encode(
-            this.buildEndpoint(input.entityType, input.effectivePerPage, input.currentPage + 1),
+            this.buildEndpoint(
+              input.entityType,
+              input.effectivePerPage,
+              input.currentPage + 1,
+              input.entityFields
+            ),
             CURSOR_TAGS.findEntities,
             input.bodyHash
           )
@@ -355,8 +301,20 @@ export class FindEntitiesOperation extends BaseOperation {
     return body;
   }
 
+  /**
+   * Хеш, которым верифицируется курсор. Включает НЕ ТОЛЬКО критерии поиска, но
+   * и проекцию: путь следующей страницы вшивается в курсор вместе с `fields`,
+   * поэтому при смене проекции между вызовами запрос ушёл бы со старым набором
+   * полей, а ответ был бы отфильтрован и подписан новым — агент получил бы
+   * пустоту под видом запрошенных полей. Пусть лучше падает явной ошибкой.
+   */
   private hashRequestBody(params: FindEntitiesDto): string {
-    const json = JSON.stringify(FindEntitiesOperation.canonicalize(this.buildRequestBody(params)));
+    const json = JSON.stringify(
+      FindEntitiesOperation.canonicalize({
+        body: this.buildRequestBody(params),
+        entityFields: [...(params.entityFields ?? [])].sort(),
+      })
+    );
     return createHash('sha256').update(json, 'utf8').digest('base64url');
   }
 
@@ -375,8 +333,19 @@ export class FindEntitiesOperation extends BaseOperation {
     return value;
   }
 
-  private buildEndpoint(entityType: string, perPage: number, page: number): string {
+  private buildEndpoint(
+    entityType: string,
+    perPage: number,
+    page: number,
+    entityFields?: readonly string[] | undefined
+  ): string {
     const query = new URLSearchParams({ perPage: String(perPage), page: String(page) });
+    // Без `?fields=` API не отдаёт объект `fields` записей вовсе — см.
+    // `tools/api/entities/entity-api-fields.util.ts`. Параметр входит в путь,
+    // поэтому переживает и курсор, и обход fetchAll.
+    if (entityFields !== undefined && entityFields.length > 0) {
+      query.set('fields', entityFields.join(','));
+    }
     return `/v3/entities/${entityType}/_search?${query.toString()}`;
   }
 }

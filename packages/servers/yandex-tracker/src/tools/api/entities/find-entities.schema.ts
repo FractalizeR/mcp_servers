@@ -62,7 +62,12 @@ export const FindEntitiesParamsSchema = z
     maxItems: MaxItemsSchema,
 
     /** Список полей для возврата (обязательно) */
-    fields: FieldsSchema,
+    fields: FieldsSchema.describe(
+      'Список полей для возврата (ОБЯЗАТЕЛЬНЫЙ). Содержательные поля записи запрашиваются как ' +
+        '"fields.<имя>", где имя — реальный идентификатор поля Трекера (см. get_global_fields): ' +
+        'например "fields.summary". Несуществующее имя API отклоняет целиком (422), а проекция ' +
+        '"fields" без имени не поддерживается — Entity API не умеет отдавать все поля разом.'
+    ),
   })
   .refine(noCursorWithBulkParams, {
     message: PAGINATION_CURSOR_CONFLICT_MESSAGE,

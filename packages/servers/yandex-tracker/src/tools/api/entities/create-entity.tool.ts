@@ -9,6 +9,7 @@ import type { EntityApiRecordWithUnknownFields } from '#tracker_api/entities/ind
 import { CreateEntityParamsSchema } from './create-entity.schema.js';
 
 import { CREATE_ENTITY_TOOL_METADATA } from './create-entity.metadata.js';
+import { extractEntityApiFields } from './entity-api-fields.util.js';
 
 export class CreateEntityTool extends BaseTool<YandexTrackerFacade> {
   static override readonly METADATA = CREATE_ENTITY_TOOL_METADATA;
@@ -31,6 +32,7 @@ export class CreateEntityTool extends BaseTool<YandexTrackerFacade> {
       const entity = await this.facade.createEntity({
         entityType,
         extraFields,
+        entityFields: extractEntityApiFields(fields),
       });
 
       const filtered = ResponseFieldFilter.filter<EntityApiRecordWithUnknownFields>(entity, fields);

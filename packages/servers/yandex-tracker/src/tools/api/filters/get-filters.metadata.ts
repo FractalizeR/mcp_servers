@@ -9,15 +9,16 @@ import { GetFiltersOutputSchema } from './get-filters.schema.js';
 
 export const GET_FILTERS_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_filters', MCP_TOOL_PREFIX),
-  description: '[Filters/Read] Получить список сохранённых фильтров',
+  description:
+    '[Filters/Read] Избранные фильтры пользователя (filter, favorites, list) — неизбранные не вернутся',
   category: ToolCategory.ISSUES,
   subcategory: 'read',
   priority: ToolPriority.NORMAL,
-  tags: ['filters', 'saved', 'list', 'read'],
+  tags: ['filters', 'favorites', 'saved', 'list', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
   redactionAllowlist: ['fields'],
-  title: 'Сохранённые фильтры',
+  title: 'Избранные фильтры',
   outputSchema: GetFiltersOutputSchema,
   annotations: {
     readOnlyHint: true,

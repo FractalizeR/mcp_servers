@@ -13,20 +13,19 @@
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
 import type { UpdateEntityDto, EntityApiOutput } from '#tracker_api/dto/entity-api/index.js';
 import { assertEntityRecordShape } from './assert-entity-record-shape.util.js';
+import { buildEntityQuery } from './entity-query.util.js';
 
 export class UpdateEntityOperation extends BaseOperation {
   async execute(dto: UpdateEntityDto): Promise<EntityApiOutput> {
-    const { entityType, entityId, version, extraFields } = dto;
+    const { entityType, entityId, version, extraFields, entityFields } = dto;
 
     // Подтверждено живой пробой: тело — `{ fields: {...} }`, а не name/description.
     const body: Record<string, unknown> = extraFields !== undefined ? { fields: extraFields } : {};
 
     this.logger.info(`Обновление записи Entity API: ${entityType}/${entityId}`);
 
-    const query = version !== undefined ? `?version=${encodeURIComponent(String(version))}` : '';
-
     const data = await this.httpClient.patch<unknown>(
-      `/v3/entities/${entityType}/${entityId}${query}`,
+      `/v3/entities/${entityType}/${entityId}${buildEntityQuery({ entityFields, version })}`,
       body
     );
     return assertEntityRecordShape<EntityApiOutput>(

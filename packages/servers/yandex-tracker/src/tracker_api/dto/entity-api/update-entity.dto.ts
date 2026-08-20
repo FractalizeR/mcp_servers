@@ -22,4 +22,11 @@ export interface UpdateEntityDto {
    * при пустом PATCH тело можно не слать).
    */
   extraFields?: Record<string, unknown> | undefined;
+
+  /**
+   * Имена содержательных полей записи для query-параметра `fields` API.
+   * Без них ответ приходит без объекта `fields` (см.
+   * `tools/api/entities/entity-api-fields.util.ts`).
+   */
+  entityFields?: readonly string[] | undefined;
 }

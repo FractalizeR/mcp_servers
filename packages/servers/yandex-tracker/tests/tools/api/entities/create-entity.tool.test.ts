@@ -43,6 +43,7 @@ describe('CreateEntityTool', () => {
     expect(mockTrackerFacade.createEntity).toHaveBeenCalledWith({
       entityType: 'goal',
       extraFields: { summary: 'Increase revenue', author: 'user1' },
+      entityFields: [],
     });
   });
 

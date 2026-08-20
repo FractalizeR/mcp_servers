@@ -9,6 +9,7 @@ import type { EntityApiRecordWithUnknownFields } from '#tracker_api/entities/ind
 import { UpdateEntityParamsSchema } from './update-entity.schema.js';
 
 import { UPDATE_ENTITY_TOOL_METADATA } from './update-entity.metadata.js';
+import { extractEntityApiFields } from './entity-api-fields.util.js';
 
 export class UpdateEntityTool extends BaseTool<YandexTrackerFacade> {
   static override readonly METADATA = UPDATE_ENTITY_TOOL_METADATA;
@@ -28,7 +29,12 @@ export class UpdateEntityTool extends BaseTool<YandexTrackerFacade> {
     try {
       this.logger.info('Обновление записи Entity API', { entityType, entityId });
 
-      const entity = await this.facade.updateEntity({ entityType, entityId, ...updateData });
+      const entity = await this.facade.updateEntity({
+        entityType,
+        entityId,
+        ...updateData,
+        entityFields: extractEntityApiFields(fields),
+      });
 
       const filtered = ResponseFieldFilter.filter<EntityApiRecordWithUnknownFields>(entity, fields);
 
