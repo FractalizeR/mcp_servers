@@ -1,3 +1,9 @@
+## [2.5.1](https://github.com/FractalizeR/mcp_servers/compare/v2.5.0...v2.5.1) (2026-08-20)
+
+### Bug Fixes
+
+* **tracker:** четыре дефекта, найденных живым тестированием MCP-сервера ([#400](https://github.com/FractalizeR/mcp_servers/issues/400)) ([8a9a51e](https://github.com/FractalizeR/mcp_servers/commit/8a9a51e9d0ac7be151eb1a3b4c6c1f31b1ff3509))
+
 ## [2.5.0](https://github.com/FractalizeR/mcp_servers/compare/v2.4.1...v2.5.0) (2026-08-20)
 
 ### Features
