@@ -1,3 +1,31 @@
+## [Unreleased] — унификация контракта MCP-инструментов Yandex Tracker (BREAKING CHANGE)
+
+> Раздел добавлен вручную планом `plan_tool_contract_unification` (этап 3.1) как справочная
+> таблица переименований для владельца репозитория — единственного живого потребителя
+> (совместимость через алиасы сознательно не сохранена). При фактическом релизе
+> semantic-release сгенерирует свою запись из `BREAKING CHANGE:` футера коммита; эта таблица —
+> человекочитаемое дополнение к ней, а не замена.
+
+### ⚠ BREAKING CHANGES — было → стало
+
+| Канал | Было | Стало | Почему |
+|---|---|---|---|
+| Вход, одиночная задача (`update_issue`, `transition_issue`, …) | `issueKey` | `issueId` | единое имя идентификатора вход/выход (словарь API `<issue-id>`) |
+| Вход, batch (`get_issues`, `get_issue_changelog`, …) | `issueKeys` | `issueIds` | обобщаемость контракта между инструментами |
+| Вход, bulk-операции (`bulk_update_issues`, `bulk_move_issues`) | `issues` | `issueIds` | обобщаемость важнее зеркалирования тела API |
+| Вход, `bulk_transition_issues` | `transition` | `transitionId` | единообразие с `transition_issue` |
+| Вход, `create_link` | `targetIssue` | `targetIssueId` | шестой вариант имени, снят ревью |
+| Вход, `find_issues` | `keys` | `issueIds` | седьмой вариант имени, снят ревью |
+| Выход, элемент успеха batch (`get-issues.schema.ts` и аналоги) | `issueKey` | `issueId` | то же имя, что и на входе |
+| Выход, элемент ошибки batch | `key` | `issueId` | тот же ключ у успеха и отказа (единая форма) |
+| Выход, `successful` (10 инструментов: `get_comments`, `add_comment`, `get_worklogs`, `add_worklog`, `get_issues`, `create_link`, `add/update/delete_checklist_item`, `get_users`) | `number` | `Array<{ issueId, ...data }>` | канон batch-формы `{ total, successful[], failed[] }` (было расхождение с остальными 7 инструментами, где уже был массив) |
+| Выход, список фактически вернувшихся полей | `fieldsReturned` (эхо входного `fields`, символ `FieldsReturnedSchema` удалён) | — (удалено) | чистое эхо входа, не несло новой информации |
+| Success envelope (все инструменты) | — | `warnings?: ToolWarning[]` (новое опциональное поле; коды `FIELDS_WITHOUT_VALUE`, `UNKNOWN_PARAMETER`) | канал честного предупреждения вместо молчаливого несоответствия |
+
+**Полная раскладка по пакетам-исполнителям:**
+[.agentic-planning/plan_tool_contract_unification/2.0_packages_common.md](.agentic-planning/plan_tool_contract_unification/2.0_packages_common.md).
+**Обоснование решений:** [.agentic-planning/plan_tool_contract_unification/README.md](.agentic-planning/plan_tool_contract_unification/README.md).
+
 ## [2.5.1](https://github.com/FractalizeR/mcp_servers/compare/v2.5.0...v2.5.1) (2026-08-20)
 
 ### Bug Fixes

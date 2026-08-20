@@ -244,7 +244,7 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 
 ```bash
 npm run tools:list -- --json
-npm run tools:call -- fr_yandex_tracker_get_issues '{"issueIds":["PROJ-1"]}'
+npm run tools:call -- fr_yandex_tracker_get_issues '{"issueIds":["TEST-1"],"fields":["key","summary"]}'
 npm run tools:batch -- calls.jsonl --dangerously-allow-write
 ```
 
