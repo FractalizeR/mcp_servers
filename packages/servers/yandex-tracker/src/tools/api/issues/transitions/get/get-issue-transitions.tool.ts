@@ -52,40 +52,41 @@ export class GetIssueTransitionsTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueKey, fields } = validation.data;
+    const { issueId, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(
         this.logger,
-        `Получение доступных переходов для ${issueKey}`,
+        `Получение доступных переходов для ${issueId}`,
         1,
         fields
       );
 
       // 3. API v3: получение доступных переходов
-      const transitions = await this.facade.getIssueTransitions(issueKey);
+      const transitions = await this.facade.getIssueTransitions(issueId);
 
       // 4. Фильтрация полей ответа
-      const filteredTransitions = transitions.map((transition: TransitionWithUnknownFields) =>
-        ResponseFieldFilter.filter<TransitionWithUnknownFields>(transition, fields)
-      );
+      const { result: filteredTransitions, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<TransitionWithUnknownFields[]>(transitions, fields);
 
       // 5. Логирование результатов
-      this.logger.info(`Переходы получены для ${issueKey}`, {
-        issueKey,
+      this.logger.info(`Переходы получены для ${issueId}`, {
+        issueId,
         transitionsCount: filteredTransitions.length,
         fieldsCount: fields.length,
       });
 
-      return this.formatSuccess({
-        issueKey,
-        transitionsCount: filteredTransitions.length,
-        transitions: filteredTransitions,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          issueId,
+          transitionsCount: filteredTransitions.length,
+          transitions: filteredTransitions,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при получении переходов для задачи ${issueKey}`, error);
+      return this.formatError(`Ошибка при получении переходов для задачи ${issueId}`, error);
     }
   }
 }

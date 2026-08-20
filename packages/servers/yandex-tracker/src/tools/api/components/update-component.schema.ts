@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для обновления компонента
@@ -57,7 +52,6 @@ export type UpdateComponentParams = z.infer<typeof UpdateComponentParamsSchema>;
 export const UpdateComponentOutputDataSchema = z.object({
   component: FilteredEntitySchema,
   message: z.string(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

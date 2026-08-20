@@ -30,15 +30,17 @@ export class GetIssueTypesTool extends BaseTool<YandexTrackerFacade> {
 
       const result = await this.facade.getIssueTypes();
 
-      const filtered = result.items.map((item) =>
-        ResponseFieldFilter.filter<IssueTypeWithUnknownFields>(item, fields)
-      );
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        IssueTypeWithUnknownFields[]
+      >(result.items, fields);
 
-      return this.formatSuccess({
-        issueTypes: filtered,
-        count: filtered.length,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          issueTypes: filtered,
+          count: filtered.length,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении справочника типов задач', error);
     }

@@ -3,7 +3,12 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, BatchErrorValueSchema, buildOutputSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  buildOutputSchema,
+  makeBatchSuccessItemSchema,
+  makeBatchErrorItemSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема элемента чеклиста для удаления
@@ -46,22 +51,13 @@ export type DeleteChecklistItemParams = z.infer<typeof DeleteChecklistItemParams
  */
 export const DeleteChecklistItemOutputDataSchema = z.object({
   total: z.number(),
-  successful: z.number(),
-  failed: z.number(),
-  items: z.array(
-    z.object({
-      issueId: z.string(),
-      itemId: z.string(),
-      success: z.literal(true),
-    })
+  successful: z.array(
+    makeBatchSuccessItemSchema(
+      'issueId',
+      z.object({ itemId: z.string(), success: z.literal(true) })
+    )
   ),
-  errors: z.array(
-    z.object({
-      issueId: z.string(),
-      itemId: z.string(),
-      error: BatchErrorValueSchema,
-    })
-  ),
+  failed: z.array(makeBatchErrorItemSchema('issueId').extend({ itemId: z.string() })),
 });
 
 /**

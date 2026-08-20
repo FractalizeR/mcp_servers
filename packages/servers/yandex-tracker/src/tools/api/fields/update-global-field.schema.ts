@@ -9,12 +9,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 import { FieldOptionValueSchema, FieldOptionsProviderValueSchema } from './field-value.schema.js';
 
 export const UpdateGlobalFieldParamsSchema = z.object({
@@ -47,7 +42,6 @@ export type UpdateGlobalFieldParams = z.infer<typeof UpdateGlobalFieldParamsSche
 
 export const UpdateGlobalFieldOutputDataSchema = z.object({
   globalField: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const UpdateGlobalFieldOutputSchema = buildOutputSchema(UpdateGlobalFieldOutputDataSchema);

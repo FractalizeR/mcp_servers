@@ -53,7 +53,7 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
     }
 
     const {
-      issueKey,
+      issueId,
       summary,
       description,
       assignee,
@@ -78,34 +78,34 @@ export class UpdateIssueTool extends BaseTool<YandexTrackerFacade> {
       // 3. Логирование начала операции
       ResultLogger.logOperationStart(
         this.logger,
-        `Обновление задачи ${issueKey}`,
+        `Обновление задачи ${issueId}`,
         Object.keys(updateData).length,
         fields
       );
 
       // 4. API v3: обновление задачи (version — optimistic locking, query-параметр PATCH)
-      const updatedIssue = await this.facade.updateIssue(issueKey, updateData, version);
+      const updatedIssue = await this.facade.updateIssue(issueId, updateData, version);
 
       // 5. Фильтрация полей
-      const filteredIssue = ResponseFieldFilter.filter<IssueWithUnknownFields>(
-        updatedIssue,
-        fields
-      );
+      const { result: filteredIssue, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<IssueWithUnknownFields>(updatedIssue, fields);
 
       // 6. Логирование результата
-      this.logger.info(`Задача ${issueKey} обновлена`, {
+      this.logger.info(`Задача ${issueId} обновлена`, {
         updatedFields: Object.keys(updateData),
         fieldsCount: fields.length,
       });
 
-      return this.formatSuccess({
-        issueKey,
-        updatedFields: Object.keys(updateData),
-        issue: filteredIssue,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          issueId,
+          updatedFields: Object.keys(updateData),
+          issue: filteredIssue,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при обновлении задачи ${issueKey}`, error);
+      return this.formatError(`Ошибка при обновлении задачи ${issueId}`, error);
     }
   }
 }

@@ -5,6 +5,7 @@
 import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
+import { paginatedFieldFilter } from '#common/index.js';
 import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import { SearchWorklogParamsSchema } from './search-worklog.schema.js';
 
@@ -32,16 +33,17 @@ export class SearchWorklogTool extends BaseTool<YandexTrackerFacade> {
 
       const result = await this.facade.searchWorklog(searchParams);
 
-      const filtered = result.items.map((item) =>
-        ResponseFieldFilter.filter<WorklogWithUnknownFields>(item, fields)
-      );
+      const filter = paginatedFieldFilter<WorklogWithUnknownFields>(fields);
+      const filtered = filter(result);
 
-      return this.formatSuccess({
-        worklog: filtered,
-        count: filtered.length,
-        pagination: result.pagination,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          worklog: filtered.items,
+          count: filtered.items.length,
+          pagination: filtered.pagination,
+        },
+        ResponseFieldFilter.toWarnings(filter.getReport().fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при поиске worklog по организации', error);
     }

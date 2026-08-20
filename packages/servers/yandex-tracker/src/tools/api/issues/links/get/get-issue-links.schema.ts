@@ -15,7 +15,6 @@ import {
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   PAGINATION_CURSOR_BATCH_MESSAGE,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
   BatchErrorValueSchema,
@@ -87,7 +86,6 @@ export const GetIssueLinksOutputDataSchema = z.object({
       error: BatchErrorValueSchema,
     })
   ),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

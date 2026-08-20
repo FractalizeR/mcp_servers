@@ -39,15 +39,13 @@ export class UpdateFilterTool extends BaseTool<YandexTrackerFacade> {
         groupBy,
       });
 
-      const filteredResult = ResponseFieldFilter.filter<SavedFilterWithUnknownFields>(
-        updated,
-        fields
-      );
+      const { result: filteredResult, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<SavedFilterWithUnknownFields>(updated, fields);
 
-      return this.formatSuccess({
-        filter: filteredResult,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        { filter: filteredResult },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при обновлении сохранённого фильтра ${filterId}`, error);
     }

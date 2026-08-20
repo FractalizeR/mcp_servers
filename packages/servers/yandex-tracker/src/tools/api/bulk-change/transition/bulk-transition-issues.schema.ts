@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { buildOutputSchema } from '#common/schemas/index.js';
+import { buildOutputSchema, IssueKeysSchema } from '#common/schemas/index.js';
 
 /**
  * Схема для опциональных полей при переходе
@@ -23,17 +23,14 @@ const BulkTransitionValuesSchema = z
  */
 export const BulkTransitionIssuesParamsSchema = z.object({
   /**
-   * Массив ключей задач для перевода
+   * Массив идентификаторов задач для перевода (ключ или внутренний id)
    */
-  issues: z
-    .array(z.string().regex(/^[A-Z][A-Z0-9]+-\d+$/, 'Неверный формат ключа задачи'))
-    .min(1, 'Должна быть указана хотя бы одна задача')
-    .describe('Массив ключей задач (например, ["PROJ-123", "PROJ-456"])'),
+  issueIds: IssueKeysSchema,
 
   /**
    * ID или ключ перехода
    */
-  transition: z
+  transitionId: z
     .string()
     .min(1)
     .describe('ID или ключ перехода (например, "start_progress", "close")'),
@@ -57,7 +54,7 @@ export const BulkTransitionIssuesOutputDataSchema = z.object({
   operationId: z.string(),
   status: z.string(),
   totalIssues: z.number(),
-  transition: z.string(),
+  transitionId: z.string(),
   additionalFields: z.array(z.string()),
   note: z.string(),
 });

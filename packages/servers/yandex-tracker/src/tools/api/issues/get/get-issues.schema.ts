@@ -7,9 +7,8 @@ import {
   IssueKeysSchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   buildOutputSchema,
-  BatchErrorValueSchema,
+  makeBatchResultSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -19,7 +18,7 @@ export const GetIssuesParamsSchema = z.object({
   /**
    * Массив ключей задач для получения
    */
-  issueKeys: IssueKeysSchema,
+  issueIds: IssueKeysSchema,
 
   /**
    * Опциональный массив полей для фильтрации ответа
@@ -33,26 +32,17 @@ export const GetIssuesParamsSchema = z.object({
 export type GetIssuesParams = z.infer<typeof GetIssuesParamsSchema>;
 
 /**
- * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
+ * Схема данных успешного результата (поле `data` envelope `formatSuccess()`).
+ *
+ * Канон `{ total, successful[], failed[] }` (`makeBatchResultSchema`,
+ * `#common/schemas`) — раньше `successful`/`failed` были числами, а элементы
+ * успеха/отказа звали идентификатор задачи по-разному (`issueKey` у успеха,
+ * `key` у отказа). См. README §1/2.0 плана `plan_tool_contract_unification`.
  */
-export const GetIssuesOutputDataSchema = z.object({
-  total: z.number(),
-  successful: z.number(),
-  failed: z.number(),
-  issues: z.array(
-    z.object({
-      issueKey: z.string(),
-      issue: FilteredEntitySchema,
-    })
-  ),
-  errors: z.array(
-    z.object({
-      key: z.string(),
-      error: BatchErrorValueSchema,
-    })
-  ),
-  fieldsReturned: FieldsReturnedSchema,
-});
+export const GetIssuesOutputDataSchema = makeBatchResultSchema(
+  'issueId',
+  z.object({ issue: FilteredEntitySchema })
+);
 
 /**
  * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)

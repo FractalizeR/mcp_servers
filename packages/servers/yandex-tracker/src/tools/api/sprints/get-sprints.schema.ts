@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения списка спринтов доски.
@@ -30,7 +25,6 @@ export const GetSprintsOutputDataSchema = z.object({
   sprints: z.array(FilteredEntitySchema),
   count: z.number(),
   boardId: z.string(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const GetSprintsOutputSchema = buildOutputSchema(GetSprintsOutputDataSchema);

@@ -32,12 +32,15 @@ export class UpdateBoardTool extends BaseTool<YandexTrackerFacade> {
 
       this.logger.info('Доска обновлена', { boardId: board.id });
 
-      const filtered = ResponseFieldFilter.filter<BoardWithUnknownFields>(board, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<BoardWithUnknownFields>(board, fields);
 
-      return this.formatSuccess({
-        board: filtered,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          board: filtered,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при обновлении доски ${boardId}`, error);
     }

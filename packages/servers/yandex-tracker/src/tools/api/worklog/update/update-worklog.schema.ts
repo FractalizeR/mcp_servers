@@ -7,7 +7,6 @@ import {
   IssueKeySchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
 
@@ -62,7 +61,6 @@ export type UpdateWorklogParams = z.infer<typeof UpdateWorklogParamsSchema>;
  */
 export const UpdateWorklogOutputDataSchema = z.object({
   data: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

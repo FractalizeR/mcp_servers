@@ -12,7 +12,7 @@ export const IssueUrlParamsSchema = z.object({
   /**
    * Массив ключей задач в формате QUEUE-123
    */
-  issueKeys: IssueKeysSchema,
+  issueIds: IssueKeysSchema,
 });
 
 /**
@@ -27,7 +27,7 @@ export const IssueUrlOutputDataSchema = z.object({
   count: z.number(),
   urls: z.array(
     z.object({
-      issueKey: z.string(),
+      issueId: z.string(),
       url: z.string(),
       description: z.string(),
     })

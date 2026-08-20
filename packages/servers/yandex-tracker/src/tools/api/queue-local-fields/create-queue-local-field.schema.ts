@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 export const CreateQueueLocalFieldParamsSchema = z.object({
   /** Идентификатор или ключ очереди (обязательно) */
@@ -43,7 +38,6 @@ export type CreateQueueLocalFieldParams = z.infer<typeof CreateQueueLocalFieldPa
 export const CreateQueueLocalFieldOutputDataSchema = z.object({
   localField: FilteredEntitySchema,
   message: z.string(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const CreateQueueLocalFieldOutputSchema = buildOutputSchema(

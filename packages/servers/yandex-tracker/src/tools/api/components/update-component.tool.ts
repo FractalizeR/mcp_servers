@@ -50,18 +50,21 @@ export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
       });
 
       // Фильтрация полей ответа
-      const filtered = ResponseFieldFilter.filter<ComponentWithUnknownFields>(component, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<ComponentWithUnknownFields>(component, fields);
 
       this.logger.info('Компонент обновлен', {
         componentId: component.id,
         name: component.name,
       });
 
-      return this.formatSuccess({
-        component: filtered,
-        message: `Компонент ${componentId} успешно обновлен`,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          component: filtered,
+          message: `Компонент ${componentId} успешно обновлен`,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при обновлении компонента', error);
     }

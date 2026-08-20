@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения списка досок.
@@ -40,7 +35,6 @@ export type GetBoardsParams = z.infer<typeof GetBoardsParamsSchema>;
 export const GetBoardsOutputDataSchema = z.object({
   boards: z.array(FilteredEntitySchema),
   count: z.number(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

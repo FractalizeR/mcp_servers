@@ -15,10 +15,9 @@ import {
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   PAGINATION_CURSOR_BATCH_MESSAGE,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
-  BatchErrorValueSchema,
+  makeBatchResultSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -72,26 +71,14 @@ export type GetWorklogsParams = z.infer<typeof GetWorklogsParamsSchema>;
 /**
  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
  */
-export const GetWorklogsOutputDataSchema = z.object({
-  total: z.number(),
-  successful: z.number(),
-  failed: z.number(),
-  worklogs: z.array(
-    z.object({
-      issueId: z.string(),
-      worklogs: z.array(FilteredEntitySchema),
-      count: z.number(),
-      pagination: PaginationMetaSchema,
-    })
-  ),
-  errors: z.array(
-    z.object({
-      issueId: z.string(),
-      error: BatchErrorValueSchema,
-    })
-  ),
-  fieldsReturned: FieldsReturnedSchema,
-});
+export const GetWorklogsOutputDataSchema = makeBatchResultSchema(
+  'issueId',
+  z.object({
+    worklogs: z.array(FilteredEntitySchema),
+    count: z.number(),
+    pagination: PaginationMetaSchema,
+  })
+);
 
 /**
  * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)

@@ -66,7 +66,8 @@ export class UpdateWorklogTool extends BaseTool<YandexTrackerFacade> {
       });
 
       // 4. Фильтрация полей ответа
-      const filteredWorklog = ResponseFieldFilter.filter<WorklogWithUnknownFields>(worklog, fields);
+      const { result: filteredWorklog, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<WorklogWithUnknownFields>(worklog, fields);
 
       // 5. Логирование результата
       this.logger.info('Запись времени успешно обновлена', {
@@ -75,10 +76,10 @@ export class UpdateWorklogTool extends BaseTool<YandexTrackerFacade> {
         duration: worklog.duration,
       });
 
-      return this.formatSuccess({
-        data: filteredWorklog,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        { data: filteredWorklog },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при обновлении записи времени ${worklogId} задачи ${issueId}`,

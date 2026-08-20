@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для управления доступом к очереди
@@ -54,7 +49,6 @@ export const ManageQueueAccessOutputDataSchema = z.object({
   action: z.enum(['add', 'remove']),
   subjectsProcessed: z.number(),
   permissions: z.array(FilteredEntitySchema),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

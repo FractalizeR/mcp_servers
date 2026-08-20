@@ -15,9 +15,15 @@ import {
   ResultLogger,
   resolveCollectionResponseMode,
 } from '@fractalizer/mcp-core';
-import type { ResourceLinkDescriptor } from '@fractalizer/mcp-core';
+import type {
+  CollectionResponseMode,
+  ResourceLinkDescriptor,
+  ToolWarning,
+} from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { PaginatedResult } from '#tracker_api/entities/common/index.js';
 import { FindIssuesParamsSchema } from '#tools/api/issues/find/find-issues.schema.js';
+import type { FindIssuesParams } from '#tools/api/issues/find/find-issues.schema.js';
 import { buildIssueResourceUri } from '#resources/tracker-resource-uri.js';
 
 import { FIND_ISSUES_TOOL_METADATA } from './find-issues.metadata.js';
@@ -57,6 +63,159 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
     return FindIssuesParamsSchema;
   }
 
+  /**
+   * Вписывает предупреждения в уже построенный `ToolResult` — тот же приём,
+   * что `BaseTool.formatSuccess()` (framework, не в наборе этого пакета):
+   * JSON.stringify текстового дубля + поле `warnings` в `structuredContent`.
+   * Нужен здесь отдельно, потому что `formatCollectionResult()` не принимает
+   * `warnings` параметром (см. границы плана `plan_tool_contract_unification`,
+   * 2.0 — framework трогать нельзя).
+   */
+  private injectWarnings(result: ToolResult, warnings: ToolWarning[]): ToolResult {
+    if (warnings.length === 0 || result.content[0]?.type !== 'text') {
+      return result;
+    }
+
+    const structuredContent = {
+      ...(result['structuredContent'] as Record<string, unknown>),
+      warnings,
+    };
+    const [firstBlock, ...restBlocks] = result.content;
+
+    return {
+      ...result,
+      content: [{ ...firstBlock, text: JSON.stringify(structuredContent, null, 2) }, ...restBlocks],
+      structuredContent,
+    };
+  }
+
+  /**
+   * Строит параметры вызова фасада (не трогаем контракт, см. границы плана
+   * `plan_tool_contract_unification`) — фасад ждёт поле `keys`, а схема
+   * инструмента — `issueIds`. Условное добавление свойств — совместимость с
+   * `exactOptionalPropertyTypes`.
+   */
+  private buildFacadeParams(
+    searchParams: Omit<FindIssuesParams, 'fields' | 'responseMode'>
+  ): Parameters<YandexTrackerFacade['findIssues']>[0] {
+    return {
+      ...(searchParams.query && { query: searchParams.query }),
+      ...(searchParams.filter && { filter: searchParams.filter }),
+      ...(searchParams.issueIds && { keys: searchParams.issueIds }),
+      ...(searchParams.queue && { queue: searchParams.queue }),
+      ...(searchParams.filterId && { filterId: searchParams.filterId }),
+      ...(searchParams.order && { order: searchParams.order }),
+      ...(searchParams.perPage !== undefined && { perPage: searchParams.perPage }),
+      ...(searchParams.cursor !== undefined && { cursor: searchParams.cursor }),
+      ...(searchParams.expand && { expand: searchParams.expand }),
+      ...(searchParams.fetchAll !== undefined && { fetchAll: searchParams.fetchAll }),
+      ...(searchParams.maxItems !== undefined && { maxItems: searchParams.maxItems }),
+    };
+  }
+
+  /**
+   * Режим ответа и фильтрация полей: `key`/`summary` добавляются ТОЛЬКО в
+   * режиме `links` (нужны для resource_link uri/title). В `full` — ровно
+   * `fields`, и только там же считается отчёт детектора незаполненных полей
+   * (ГРАНИЧНЫЙ СЛУЧАЙ плана: в `links` тела задач заменены на resource_link
+   * целиком — НИ ОДНО запрошенное поле не присутствует в ответе, поэтому
+   * включённый там детектор дал бы предупреждение на весь список fields даже
+   * у полностью корректного вызова; детектор должен быть выключен в этом
+   * режиме).
+   */
+  private filterIssuesForResponse(
+    items: IssueWithUnknownFields[],
+    fields: string[],
+    resolvedMode: 'links' | 'full'
+  ): { filteredIssues: IssueWithUnknownFields[]; fieldsWithoutValue: string[] } {
+    if (resolvedMode === 'links') {
+      const identityFieldsForFilter = Array.from(
+        new Set([...fields, ...RESOURCE_LINK_IDENTITY_FIELDS])
+      );
+      const filteredIssues = items.map((issue) =>
+        ResponseFieldFilter.filter<IssueWithUnknownFields>(issue, identityFieldsForFilter)
+      );
+      return { filteredIssues, fieldsWithoutValue: [] };
+    }
+
+    const report = ResponseFieldFilter.filterWithReport<IssueWithUnknownFields[]>(items, fields);
+    return { filteredIssues: report.result, fieldsWithoutValue: report.fieldsWithoutValue };
+  }
+
+  /**
+   * Дефект №3 (тихая потеря данных): при поиске по `issueIds` Трекер молча
+   * опускает ненайденные элементы в ответе — единственным намёком раньше было
+   * расхождение issueIdsCount/itemsOnPage. Сравнение регистрозависимое (см.
+   * find-issues.schema.ts): Трекер не считает "test-15" == "TEST-15".
+   *
+   * Находка №2 (MAJOR, внешнее ревью 2026-08): `result.items` — это ОДНА
+   * страница (или обрезанная цепочка при `truncated`), а не гарантированно
+   * полная выдача. Раньше `notFoundIssueIds` считался по ней всегда — если
+   * запрошенных элементов больше, чем влезает на страницу, все со второй и
+   * далее страниц ошибочно попадали в notFoundIssueIds, и агент читал «задачи
+   * не существует» там, где она просто не поместилась на странице (риск дубля
+   * выше исходного дефекта тихой потери). `notFoundIssueIds` теперь считается
+   * ТОЛЬКО когда выдача заведомо полная (`pagination.fetchedAll === true` —
+   * полный обход завершён без обрыва по лимиту и без незагруженной следующей
+   * страницы); иначе поле не отдаётся вовсе — семантика «не могу утверждать»,
+   * а не ложное «не найдено».
+   */
+  private computeNotFoundIssueIds(
+    requestedIssueIds: string[] | undefined,
+    result: PaginatedResult<IssueWithUnknownFields>
+  ): string[] | undefined {
+    if (!requestedIssueIds || !result.pagination.fetchedAll) {
+      return undefined;
+    }
+    return requestedIssueIds.filter(
+      (requestedId) => !result.items.some((issue) => issue.key === requestedId)
+    );
+  }
+
+  /**
+   * Коллекция: полные тела (full) либо resource_link + сводка (links) —
+   * пакет 5.1.B/5.1.C.tracker. Режим — параметр запроса (responseMode), порог
+   * по умолчанию — DEFAULT_COLLECTION_LINKS_THRESHOLD (см. схему).
+   *
+   * БЕЗ явного type argument: `formatCollectionResult<TItem, TSummary =
+   * undefined>` — при частичном списке явных type argument'ов
+   * (`<IssueWithUnknownFields>`, без второго) TS контекстно типизирует
+   * `summary` ПО ДЕФОЛТУ (`undefined`) до вывода типа из аргументов, а не
+   * выводит TSummary из фактически переданного объекта — сборка падала на
+   * TS2322 ровно на этом (summary был объектом, контекстный тип —
+   * `undefined`). Без explicit type argument TS выводит и TItem, и TSummary
+   * из формы аргументов (`items`/`toResourceLink`/`summary`) целиком, без
+   * участия дефолта — типобезопасно и без `as`.
+   */
+  private buildCollectionResult(
+    filteredIssues: IssueWithUnknownFields[],
+    responseMode: CollectionResponseMode,
+    result: PaginatedResult<IssueWithUnknownFields>,
+    searchParams: Omit<FindIssuesParams, 'fields' | 'responseMode'>,
+    notFoundIssueIds: string[] | undefined
+  ): ToolResult {
+    return this.formatCollectionResult({
+      items: filteredIssues,
+      mode: responseMode,
+      toResourceLink: (issue): ResourceLinkDescriptor => ({
+        uri: buildIssueResourceUri(issue.key),
+        name: issue.key,
+        title: issue.summary,
+        mimeType: 'application/json',
+      }),
+      summary: {
+        pagination: result.pagination,
+        searchCriteria: {
+          hasQuery: !!searchParams.query,
+          hasFilter: !!searchParams.filter,
+          issueIdsCount: searchParams.issueIds?.length ?? 0,
+          hasQueue: !!searchParams.queue,
+          ...(notFoundIssueIds !== undefined ? { notFoundIssueIds } : {}),
+        },
+      },
+    });
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, FindIssuesParamsSchema);
@@ -71,67 +230,29 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
       ResultLogger.logOperationStart(
         this.logger,
         'Поиск задач',
-        searchParams.keys?.length ?? 0,
+        searchParams.issueIds?.length ?? 0,
         fields
       );
       this.logger.debug('Параметры поиска:', {
         hasQuery: !!searchParams.query,
         hasFilter: !!searchParams.filter,
-        keysCount: searchParams.keys?.length,
+        issueIdsCount: searchParams.issueIds?.length,
         hasQueue: !!searchParams.queue,
         hasFilterId: !!searchParams.filterId,
         perPage: searchParams.perPage,
       });
 
       // 3. API v3: поиск задач через findIssues
-      // Строим объект с условным добавлением свойств для совместимости с exactOptionalPropertyTypes
-      const result = await this.facade.findIssues({
-        ...(searchParams.query && { query: searchParams.query }),
-        ...(searchParams.filter && { filter: searchParams.filter }),
-        ...(searchParams.keys && { keys: searchParams.keys }),
-        ...(searchParams.queue && { queue: searchParams.queue }),
-        ...(searchParams.filterId && { filterId: searchParams.filterId }),
-        ...(searchParams.order && { order: searchParams.order }),
-        ...(searchParams.perPage !== undefined && { perPage: searchParams.perPage }),
-        ...(searchParams.cursor !== undefined && { cursor: searchParams.cursor }),
-        ...(searchParams.expand && { expand: searchParams.expand }),
-        ...(searchParams.fetchAll !== undefined && { fetchAll: searchParams.fetchAll }),
-        ...(searchParams.maxItems !== undefined && { maxItems: searchParams.maxItems }),
-      });
+      const result = await this.facade.findIssues(this.buildFacadeParams(searchParams));
 
-      // 4. Фильтрация полей: `key`/`summary` добавляются ТОЛЬКО в режиме
-      // `links` (нужны для resource_link uri/title). В `full` — ровно `fields`.
+      // 4. Режим ответа, фильтрация полей и ненайденные элементы (см. приватные методы)
       const resolvedMode = resolveCollectionResponseMode(responseMode, result.items.length);
-      const identityFields = resolvedMode === 'links' ? RESOURCE_LINK_IDENTITY_FIELDS : [];
-      const fieldsForFilter = Array.from(new Set([...fields, ...identityFields]));
-
-      const filteredIssues = result.items.map((issue) =>
-        ResponseFieldFilter.filter<IssueWithUnknownFields>(issue, fieldsForFilter)
+      const { filteredIssues, fieldsWithoutValue } = this.filterIssuesForResponse(
+        result.items,
+        fields,
+        resolvedMode
       );
-
-      // Дефект №3 (тихая потеря данных): при поиске по `keys` Трекер молча
-      // опускает ненайденные ключи в ответе — единственным намёком раньше
-      // было расхождение keysCount/itemsOnPage. Сравнение регистрозависимое
-      // (см. find-issues.schema.ts): Трекер не считает "test-15" == "TEST-15".
-      //
-      // Находка №2 (MAJOR, внешнее ревью 2026-08): `result.items` — это ОДНА
-      // страница (или обрезанная цепочка при `truncated`), а не гарантированно
-      // полная выдача. Раньше `notFoundKeys` считался по ней всегда — если
-      // запрошенных ключей больше, чем влезает на страницу, все ключи со
-      // второй и далее страниц ошибочно попадали в notFoundKeys, и агент
-      // читал «задачи не существует» там, где она просто не поместилась на
-      // странице (риск дубля выше исходного дефекта тихой потери).
-      // `notFoundKeys` теперь считается ТОЛЬКО когда выдача заведомо полная
-      // (`pagination.fetchedAll === true` — полный обход завершён без обрыва
-      // по лимиту и без незагруженной следующей страницы); иначе поле не
-      // отдаётся вовсе — семантика «не могу утверждать», а не ложное «не
-      // найдено».
-      const notFoundKeys =
-        searchParams.keys && result.pagination.fetchedAll
-          ? searchParams.keys.filter(
-              (requestedKey) => !result.items.some((issue) => issue.key === requestedKey)
-            )
-          : undefined;
+      const notFoundIssueIds = this.computeNotFoundIssueIds(searchParams.issueIds, result);
 
       // 5. Логирование результатов
       this.logger.info('Задачи найдены', {
@@ -139,40 +260,19 @@ export class FindIssuesTool extends BaseTool<YandexTrackerFacade> {
         fieldsCount: fields.length,
       });
 
-      // 6. Коллекция: полные тела (full) либо resource_link + сводка (links) —
-      //    пакет 5.1.B/5.1.C.tracker. Режим — параметр запроса (responseMode),
-      //    порог по умолчанию — DEFAULT_COLLECTION_LINKS_THRESHOLD (см. схему).
-      //
-      //    БЕЗ явного type argument: `formatCollectionResult<TItem, TSummary =
-      //    undefined>` — при частичном списке явных type argument'ов
-      //    (`<IssueWithUnknownFields>`, без второго) TS контекстно типизирует
-      //    `summary` ПО ДЕФОЛТУ (`undefined`) до вывода типа из аргументов, а
-      //    не выводит TSummary из фактически переданного объекта — сборка
-      //    падала на TS2322 ровно на этом (summary был объектом, контекстный
-      //    тип — `undefined`). Без explicit type argument TS выводит и TItem,
-      //    и TSummary из формы аргументов (`items`/`toResourceLink`/`summary`)
-      //    целиком, без участия дефолта — типобезопасно и без `as`.
-      return this.formatCollectionResult({
-        items: filteredIssues,
-        mode: responseMode,
-        toResourceLink: (issue): ResourceLinkDescriptor => ({
-          uri: buildIssueResourceUri(issue.key),
-          name: issue.key,
-          title: issue.summary,
-          mimeType: 'application/json',
-        }),
-        summary: {
-          pagination: result.pagination,
-          fieldsReturned: fieldsForFilter,
-          searchCriteria: {
-            hasQuery: !!searchParams.query,
-            hasFilter: !!searchParams.filter,
-            keysCount: searchParams.keys?.length ?? 0,
-            hasQueue: !!searchParams.queue,
-            ...(notFoundKeys !== undefined ? { notFoundKeys } : {}),
-          },
-        },
-      });
+      // 6. Коллекция: полные тела (full) либо resource_link + сводка (links)
+      const collectionResult = this.buildCollectionResult(
+        filteredIssues,
+        responseMode,
+        result,
+        searchParams,
+        notFoundIssueIds
+      );
+
+      return this.injectWarnings(
+        collectionResult,
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при поиске задач', error);
     }

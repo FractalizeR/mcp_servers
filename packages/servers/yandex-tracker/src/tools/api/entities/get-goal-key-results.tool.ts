@@ -30,15 +30,18 @@ export class GetGoalKeyResultsTool extends BaseTool<YandexTrackerFacade> {
 
       const keyResults = await this.facade.getGoalKeyResults({ goalId });
 
-      const filtered = keyResults.map((item) =>
-        ResponseFieldFilter.filter<KeyResultItemWithUnknownFields>(item, fields)
-      );
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        readonly KeyResultItemWithUnknownFields[]
+      >(keyResults, fields);
 
-      return this.formatSuccess({
-        goalId,
-        keyResults: filtered,
-        count: filtered.length,
-      });
+      return this.formatSuccess(
+        {
+          goalId,
+          keyResults: filtered,
+          count: filtered.length,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении Key Results цели ${goalId}`, error);
     }

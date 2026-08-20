@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения одной доски
@@ -40,7 +35,6 @@ export type GetBoardParams = z.infer<typeof GetBoardParamsSchema>;
  */
 export const GetBoardOutputDataSchema = z.object({
   board: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

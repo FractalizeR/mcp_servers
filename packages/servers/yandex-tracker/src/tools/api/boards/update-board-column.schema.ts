@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 export const UpdateBoardColumnParamsSchema = z.object({
   /** Идентификатор доски (обязательно) */
@@ -34,7 +29,6 @@ export type UpdateBoardColumnParams = z.infer<typeof UpdateBoardColumnParamsSche
 
 export const UpdateBoardColumnOutputDataSchema = z.object({
   column: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const UpdateBoardColumnOutputSchema = buildOutputSchema(UpdateBoardColumnOutputDataSchema);

@@ -30,18 +30,20 @@ export class GetSprintsTool extends BaseTool<YandexTrackerFacade> {
 
       const sprints = await this.facade.getSprints(boardId);
 
-      const filteredSprints = sprints.map((sprint) =>
-        ResponseFieldFilter.filter<SprintWithUnknownFields>(sprint, fields)
-      );
+      const { result: filteredSprints, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        readonly SprintWithUnknownFields[]
+      >(sprints, fields);
 
       this.logger.info('Список спринтов получен', { boardId, count: sprints.length });
 
-      return this.formatSuccess({
-        sprints: filteredSprints,
-        count: filteredSprints.length,
-        boardId,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          sprints: filteredSprints,
+          count: filteredSprints.length,
+          boardId,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении спринтов доски ${boardId}`, error);
     }

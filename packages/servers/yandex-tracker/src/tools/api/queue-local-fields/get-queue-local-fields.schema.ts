@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * ВАЖНО: эндпоинт не пагинируется (небольшой набор локальных полей очереди)
@@ -28,7 +23,6 @@ export const GetQueueLocalFieldsOutputDataSchema = z.object({
   localFields: z.array(FilteredEntitySchema),
   count: z.number(),
   queueId: z.string(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const GetQueueLocalFieldsOutputSchema = buildOutputSchema(

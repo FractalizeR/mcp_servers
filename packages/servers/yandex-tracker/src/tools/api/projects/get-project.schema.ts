@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения одного проекта
@@ -40,7 +35,6 @@ export type GetProjectParams = z.infer<typeof GetProjectParamsSchema>;
  */
 export const GetProjectOutputDataSchema = z.object({
   project: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

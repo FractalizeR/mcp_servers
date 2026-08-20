@@ -25,7 +25,7 @@ export const GET_ISSUE_CHANGELOG_TOOL_METADATA: StaticToolMetadata = {
   tags: ['history', 'changelog', 'audit', 'read', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['issueKeys', 'fields', 'cursor', 'perPage'],
+  redactionAllowlist: ['issueIds', 'fields', 'cursor', 'perPage'],
   title: 'История изменений задач',
   outputSchema: GetIssueChangelogOutputSchema,
   annotations: {

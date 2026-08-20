@@ -7,10 +7,16 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
+import {
+  BaseTool,
+  BatchResultProcessor,
+  ResultLogger,
+  ResponseFieldFilter,
+} from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { paginatedFieldFilter } from '#common/index.js';
+import type { WorklogWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetWorklogsParamsSchema } from '#tools/api/worklog/get/get-worklogs.schema.js';
 
 import { GET_WORKLOGS_TOOL_METADATA } from './get-worklogs.metadata.js';
@@ -67,8 +73,14 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
         maxTotalItems,
       });
 
-      // 4. Обработка результатов через BatchResultProcessor (с пагинацией)
-      const processedResults = BatchResultProcessor.process(results, paginatedFieldFilter(fields));
+      // 4. Обработка результатов через BatchResultProcessor. Отчёт детектора
+      // незаполненных полей копится внутри filter по ВСЕМ успешным задачам
+      // батча сразу — задача без какого-то поля в единственной записи не
+      // породит шум там, где у других задач это поле есть (план
+      // `plan_tool_contract_unification`, 1.1 «граничные случаи», 2.8).
+      const filter = paginatedFieldFilter<WorklogWithUnknownFields>(fields);
+      const processedResults = BatchResultProcessor.process(results, filter);
+      const { fieldsWithoutValue } = filter.getReport();
 
       // 5. Логирование результатов
       ResultLogger.logBatchResults(
@@ -83,22 +95,22 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
         processedResults
       );
 
-      return this.formatSuccess({
-        total: issueIds.length,
-        successful: processedResults.successful.length,
-        failed: processedResults.failed.length,
-        worklogs: processedResults.successful.map((item) => ({
-          issueId: item.key,
-          worklogs: item.data.items,
-          count: item.data.items.length,
-          pagination: item.data.pagination,
-        })),
-        errors: processedResults.failed.map((item) => ({
-          issueId: item.key,
-          error: item.error,
-        })),
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          total: issueIds.length,
+          successful: processedResults.successful.map((item) => ({
+            issueId: item.key,
+            worklogs: item.data.items,
+            count: item.data.items.length,
+            pagination: item.data.pagination,
+          })),
+          failed: processedResults.failed.map((item) => ({
+            issueId: item.key,
+            error: item.error,
+          })),
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при получении записей времени (${issueIds.length} задач)`,

@@ -30,13 +30,16 @@ export class CreateGlobalFieldTool extends BaseTool<YandexTrackerFacade> {
 
       const created = await this.facade.createField(input);
 
-      const filtered = ResponseFieldFilter.filter<FieldWithUnknownFields>(created, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<FieldWithUnknownFields>(created, fields);
 
-      return this.formatSuccess({
-        globalField: filtered,
-        message: `Глобальное поле "${created.id}" успешно создано`,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          globalField: filtered,
+          message: `Глобальное поле "${created.id}" успешно создано`,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при создании глобального поля трекера', error);
     }

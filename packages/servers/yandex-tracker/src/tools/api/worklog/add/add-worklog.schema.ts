@@ -10,9 +10,8 @@ import {
   IssueKeySchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   buildOutputSchema,
-  BatchErrorValueSchema,
+  makeBatchResultSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -72,25 +71,13 @@ export type AddWorklogParams = z.infer<typeof AddWorklogParamsSchema>;
 /**
  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
  */
-export const AddWorklogOutputDataSchema = z.object({
-  total: z.number(),
-  successful: z.number(),
-  failed: z.number(),
-  worklogs: z.array(
-    z.object({
-      issueId: z.string(),
-      worklogId: z.string(),
-      worklog: FilteredEntitySchema,
-    })
-  ),
-  errors: z.array(
-    z.object({
-      issueId: z.string(),
-      error: BatchErrorValueSchema,
-    })
-  ),
-  fieldsReturned: FieldsReturnedSchema,
-});
+export const AddWorklogOutputDataSchema = makeBatchResultSchema(
+  'issueId',
+  z.object({
+    worklogId: z.string(),
+    worklog: FilteredEntitySchema,
+  })
+);
 
 /**
  * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)

@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 export const GetSprintParamsSchema = z.object({
   /** Идентификатор спринта (обязательно) */
@@ -22,7 +17,6 @@ export type GetSprintParams = z.infer<typeof GetSprintParamsSchema>;
 
 export const GetSprintOutputDataSchema = z.object({
   sprint: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const GetSprintOutputSchema = buildOutputSchema(GetSprintOutputDataSchema);

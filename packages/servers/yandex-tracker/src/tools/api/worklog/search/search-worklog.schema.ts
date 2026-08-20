@@ -12,7 +12,6 @@ import {
   noCursorWithBulkParams,
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
@@ -65,7 +64,6 @@ export const SearchWorklogOutputDataSchema = z.object({
   worklog: z.array(FilteredEntitySchema),
   count: z.number(),
   pagination: PaginationMetaSchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const SearchWorklogOutputSchema = buildOutputSchema(SearchWorklogOutputDataSchema);

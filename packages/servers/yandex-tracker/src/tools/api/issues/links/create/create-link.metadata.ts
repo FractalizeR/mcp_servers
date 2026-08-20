@@ -25,7 +25,7 @@ export const CREATE_LINK_TOOL_METADATA: StaticToolMetadata = {
   tags: ['links', 'write', 'create', 'relationships', 'subtasks', 'batch'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['issueId', 'relationship', 'targetIssue', 'fields'],
+  redactionAllowlist: ['issueId', 'relationship', 'targetIssueId', 'fields'],
   title: 'Создать связи между задачами',
   outputSchema: CreateLinkOutputSchema,
   annotations: {

@@ -35,22 +35,24 @@ export class FindEntitiesTool extends BaseTool<YandexTrackerFacade> {
         entityFields: extractEntityApiFields(fields),
       });
 
-      const filteredEntities = result.items.map((entity) =>
-        ResponseFieldFilter.filter<EntityApiRecordWithUnknownFields>(entity, fields)
-      );
+      const { result: filteredEntities, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        EntityApiRecordWithUnknownFields[]
+      >(result.items, fields);
 
       this.logger.info('Записи Entity API найдены', {
         entityType,
         count: filteredEntities.length,
       });
 
-      return this.formatSuccess({
-        entities: filteredEntities,
-        count: filteredEntities.length,
-        entityType,
-        pagination: result.pagination,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          entities: filteredEntities,
+          count: filteredEntities.length,
+          entityType,
+          pagination: result.pagination,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при поиске записей Entity API (${entityType})`, error);
     }

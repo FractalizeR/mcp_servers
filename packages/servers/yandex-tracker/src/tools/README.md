@@ -310,15 +310,19 @@ export const GetCommentsSchema = z
 ```
 
 **Tool (batch):** распаковывай `PaginatedResult` хелпером `paginatedFieldFilter`
-(`#tracker_api/utils`), сохраняя прежний ключ + добавляя `pagination`:
+(`#common`), сохраняя прежний ключ + добавляя `pagination`. `filter.getReport()` — отчёт
+детектора незаполненных полей, агрегированный по ВСЕМ успешным задачам батча сразу
+(вызывай после `BatchResultProcessor.process()`, не раньше):
 ```typescript
-const processed = BatchResultProcessor.process(results, paginatedFieldFilter(fields));
+const filter = paginatedFieldFilter<CommentWithUnknownFields>(fields);
+const processed = BatchResultProcessor.process(results, filter);
 const successful = processed.successful.map((i) => ({
   issueId: i.key,
   comments: i.data.items,
   count: i.data.items.length,
   pagination: i.data.pagination,  // ← аддитивно (с nextCursor, если есть ещё страница)
 }));
+const warnings = ResponseFieldFilter.toWarnings(filter.getReport().fieldsWithoutValue);
 ```
 
 **Tool (single):** отфильтруй `result.items` через `ResponseFieldFilter`, верни прежний ключ

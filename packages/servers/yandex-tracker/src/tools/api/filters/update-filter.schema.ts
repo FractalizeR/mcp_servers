@@ -7,12 +7,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 import { FilterSortInputSchema } from './filter-sort.schema.js';
 
 export const UpdateFilterParamsSchema = z.object({
@@ -45,7 +40,6 @@ export type UpdateFilterParams = z.infer<typeof UpdateFilterParamsSchema>;
 
 export const UpdateFilterOutputDataSchema = z.object({
   filter: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const UpdateFilterOutputSchema = buildOutputSchema(UpdateFilterOutputDataSchema);

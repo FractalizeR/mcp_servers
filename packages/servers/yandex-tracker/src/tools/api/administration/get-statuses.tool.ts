@@ -30,15 +30,17 @@ export class GetStatusesTool extends BaseTool<YandexTrackerFacade> {
 
       const result = await this.facade.getStatuses();
 
-      const filtered = result.items.map((item) =>
-        ResponseFieldFilter.filter<StatusWithUnknownFields>(item, fields)
-      );
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        StatusWithUnknownFields[]
+      >(result.items, fields);
 
-      return this.formatSuccess({
-        statuses: filtered,
-        count: filtered.length,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          statuses: filtered,
+          count: filtered.length,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении справочника статусов задач', error);
     }

@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { buildOutputSchema } from '#common/schemas/index.js';
+import { buildOutputSchema, IssueKeysSchema } from '#common/schemas/index.js';
 
 /**
  * Схема для опциональных полей при перемещении
@@ -22,12 +22,9 @@ const BulkMoveValuesSchema = z
  */
 export const BulkMoveIssuesParamsSchema = z.object({
   /**
-   * Массив ключей задач для перемещения
+   * Массив идентификаторов задач для перемещения (ключ или внутренний id)
    */
-  issues: z
-    .array(z.string().regex(/^[A-Z][A-Z0-9]+-\d+$/, 'Неверный формат ключа задачи'))
-    .min(1, 'Должна быть указана хотя бы одна задача')
-    .describe('Массив ключей задач (например, ["PROJ-123", "PROJ-456"])'),
+  issueIds: IssueKeysSchema,
 
   /**
    * Ключ целевой очереди

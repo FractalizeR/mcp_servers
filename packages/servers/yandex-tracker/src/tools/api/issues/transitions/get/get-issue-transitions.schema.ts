@@ -7,7 +7,6 @@ import {
   IssueKeySchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
 
@@ -18,7 +17,7 @@ export const GetIssueTransitionsParamsSchema = z.object({
   /**
    * Ключ задачи для получения доступных переходов
    */
-  issueKey: IssueKeySchema,
+  issueId: IssueKeySchema,
 
   /**
    * Опциональный массив полей для фильтрации ответа
@@ -35,10 +34,9 @@ export type GetIssueTransitionsParams = z.infer<typeof GetIssueTransitionsParams
  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
  */
 export const GetIssueTransitionsOutputDataSchema = z.object({
-  issueKey: z.string(),
+  issueId: z.string(),
   transitionsCount: z.number(),
   transitions: z.array(FilteredEntitySchema),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

@@ -65,7 +65,7 @@ export const ISSUE_DESCRIPTION_EDITOR_HTML = `<!doctype html>
 (function () {
   "use strict";
 
-  var state = { issueKey: null, version: undefined };
+  var state = { issueId: null, version: undefined };
   var nextId = 1;
   var pending = {};
 
@@ -104,7 +104,7 @@ export const ISSUE_DESCRIPTION_EDITOR_HTML = `<!doctype html>
     }
     if (msg.method === "ui/notifications/tool-input") {
       var args = msg.params && msg.params.arguments;
-      if (args && args.issueKey) { state.issueKey = args.issueKey; }
+      if (args && args.issueId) { state.issueId = args.issueId; }
     }
   });
 
@@ -114,9 +114,9 @@ export const ISSUE_DESCRIPTION_EDITOR_HTML = `<!doctype html>
   }
 
   function render(data) {
-    state.issueKey = data.issueKey || state.issueKey;
+    state.issueId = data.issueId || state.issueId;
     state.version = data.version;
-    document.getElementById("issue").textContent = "Задача: " + (state.issueKey || "?");
+    document.getElementById("issue").textContent = "Задача: " + (state.issueId || "?");
     setValue(document.getElementById("current"), data.currentDescription);
     setValue(document.getElementById("suggested"), data.suggestedDescription);
     var notes = document.getElementById("notes");
@@ -126,7 +126,7 @@ export const ISSUE_DESCRIPTION_EDITOR_HTML = `<!doctype html>
       li.textContent = String(note);
       notes.appendChild(li);
     });
-    document.getElementById("apply").disabled = !state.issueKey;
+    document.getElementById("apply").disabled = !state.issueId;
     notify("ui/notifications/size-changed", {
       width: document.body.scrollWidth,
       height: document.body.scrollHeight
@@ -136,12 +136,12 @@ export const ISSUE_DESCRIPTION_EDITOR_HTML = `<!doctype html>
   document.getElementById("apply").addEventListener("click", function () {
     var statusEl = document.getElementById("status");
     var applyBtn = document.getElementById("apply");
-    if (!state.issueKey) { return; }
+    if (!state.issueId) { return; }
     var description = document.getElementById("suggested").value;
     applyBtn.disabled = true;
     statusEl.className = "status";
     statusEl.textContent = "Сохраняем…";
-    var args = { issueKey: state.issueKey, description: description, fields: ["key"] };
+    var args = { issueId: state.issueId, description: description, fields: ["key"] };
     if (typeof state.version === "number") { args.version = state.version; }
     request("tools/call", { name: "update_issue", arguments: args })
       .then(function () {

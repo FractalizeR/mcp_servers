@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 const SprintStatusSchema = z.enum(['draft', 'in_progress', 'released']);
 
@@ -46,7 +41,6 @@ export type CreateSprintParams = z.infer<typeof CreateSprintParamsSchema>;
 export const CreateSprintOutputDataSchema = z.object({
   sprint: FilteredEntitySchema,
   message: z.string(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const CreateSprintOutputSchema = buildOutputSchema(CreateSprintOutputDataSchema);

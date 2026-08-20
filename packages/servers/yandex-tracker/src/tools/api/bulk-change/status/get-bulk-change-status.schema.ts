@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { buildOutputSchema } from '#common/schemas/index.js';
+import { buildOutputSchema, FieldsSchema, FilteredEntitySchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения статуса bulk операции
@@ -13,6 +13,15 @@ export const GetBulkChangeStatusParamsSchema = z.object({
    * ID операции (возвращается при создании bulk операции)
    */
   operationId: z.string().min(1).describe('ID операции массового изменения'),
+
+  /**
+   * Список полей поддерева `operation` для возврата (обязательно). Живая
+   * проверка 2026-08-20 нашла: без фильтрации `createdBy` тащит полный
+   * объект пользователя (включая `cloudUid`/`passportUid`) безусловно —
+   * `fields` даёт вызывающему контроль над этим так же, как у остальных
+   * инструментов, читающих сущности API.
+   */
+  fields: FieldsSchema,
 });
 
 /**
@@ -23,26 +32,18 @@ export type GetBulkChangeStatusParams = z.infer<typeof GetBulkChangeStatusParams
 /**
  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
  *
- * Зеркалирует `BulkChangeOperation` (см. `tracker_api/entities/bulk-change.entity.ts`)
- * плюс вычисляемое `message`. Опциональные поля API v2 остаются опциональными.
+ * `operationId`/`message` — всегда присутствуют (эхо запроса и вычисляемый
+ * человекочитаемый статус), фильтрации не подлежат. `operation` — сырой
+ * `BulkChangeOperation` (см. `tracker_api/entities/bulk-change.entity.ts`),
+ * отфильтрованный по `fields` — то самое поддерево, где явно запрошенные
+ * поля (`status`, `createdBy.display`, ...) экономят контекст так же, как у
+ * инструментов чтения сущностей (`get_queue` и т.п.), а не безусловно тащат
+ * весь `createdBy`.
  */
 export const GetBulkChangeStatusOutputDataSchema = z.object({
   operationId: z.string(),
-  status: z.string(),
-  statusText: z.string().optional(),
-  totalIssues: z.number().optional(),
-  totalCompletedIssues: z.number().optional(),
-  executionChunkPercent: z.number().optional(),
-  executionIssuePercent: z.number().optional(),
-  createdAt: z.string().optional(),
-  createdBy: z
-    .object({
-      self: z.string(),
-      id: z.string(),
-      display: z.string(),
-    })
-    .optional(),
   message: z.string(),
+  operation: FilteredEntitySchema,
 });
 
 /**

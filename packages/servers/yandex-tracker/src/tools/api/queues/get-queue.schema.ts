@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения одной очереди
@@ -40,7 +35,6 @@ export type GetQueueParams = z.infer<typeof GetQueueParamsSchema>;
  */
 export const GetQueueOutputDataSchema = z.object({
   queue: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

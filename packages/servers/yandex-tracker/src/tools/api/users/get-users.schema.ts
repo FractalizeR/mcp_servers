@@ -6,8 +6,7 @@ import { z } from 'zod';
 import {
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
-  makeBatchErrorItemSchema,
+  makeBatchResultSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
 
@@ -21,18 +20,14 @@ export const GetUsersParamsSchema = z.object({
 
 export type GetUsersParams = z.infer<typeof GetUsersParamsSchema>;
 
-export const GetUsersOutputDataSchema = z.object({
-  total: z.number(),
-  successful: z.number(),
-  failed: z.number(),
-  users: z.array(
-    z.object({
-      userId: z.string(),
-      user: FilteredEntitySchema,
-    })
-  ),
-  errors: z.array(makeBatchErrorItemSchema('userId')),
-  fieldsReturned: FieldsReturnedSchema,
-});
+/**
+ * Канон batch-ответа (`total`/`successful[]`/`failed[]`, план
+ * `plan_tool_contract_unification`, 1.1 п.4): `successful`/`failed` — массивы,
+ * не счётчики (раньше здесь были `z.number()`).
+ */
+export const GetUsersOutputDataSchema = makeBatchResultSchema(
+  'userId',
+  z.object({ user: FilteredEntitySchema })
+);
 
 export const GetUsersOutputSchema = buildOutputSchema(GetUsersOutputDataSchema);

@@ -32,13 +32,16 @@ export class CreateSprintTool extends BaseTool<YandexTrackerFacade> {
 
       this.logger.info('Спринт создан', { sprintId: sprint.id, name: sprint.name });
 
-      const filtered = ResponseFieldFilter.filter<SprintWithUnknownFields>(sprint, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<SprintWithUnknownFields>(sprint, fields);
 
-      return this.formatSuccess({
-        sprint: filtered,
-        message: `Спринт "${sprintData.name}" успешно создан`,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          sprint: filtered,
+          message: `Спринт "${sprintData.name}" успешно создан`,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при создании спринта', error);
     }

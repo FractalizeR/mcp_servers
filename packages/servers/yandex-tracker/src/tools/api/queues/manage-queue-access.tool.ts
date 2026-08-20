@@ -43,18 +43,22 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
         subjectsCount: subjects.length,
       });
 
-      const filteredPermissions = permissions.map((permission) =>
-        ResponseFieldFilter.filter<QueuePermissionWithUnknownFields>(permission, fields)
-      );
+      const { result: filteredPermissions, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<readonly QueuePermissionWithUnknownFields[]>(
+          permissions,
+          fields
+        );
 
-      return this.formatSuccess({
-        queueId,
-        role,
-        action,
-        subjectsProcessed: subjects.length,
-        permissions: filteredPermissions,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          queueId,
+          role,
+          action,
+          subjectsProcessed: subjects.length,
+          permissions: filteredPermissions,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при управлении доступом к очереди ${queueId}`, error);
     }

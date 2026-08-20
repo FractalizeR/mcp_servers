@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 const UpdateBoardColumnSchema = z.object({
   name: z.string().min(1, 'Название колонки обязательно'),
@@ -67,7 +62,6 @@ export type UpdateBoardParams = z.infer<typeof UpdateBoardParamsSchema>;
  */
 export const UpdateBoardOutputDataSchema = z.object({
   board: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

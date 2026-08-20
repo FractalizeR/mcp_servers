@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /** ВАЖНО: эндпоинт не пагинируется (небольшой набор колонок доски). */
 export const GetBoardColumnsParamsSchema = z.object({
@@ -25,7 +20,6 @@ export const GetBoardColumnsOutputDataSchema = z.object({
   columns: z.array(FilteredEntitySchema),
   count: z.number(),
   boardId: z.string(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const GetBoardColumnsOutputSchema = buildOutputSchema(GetBoardColumnsOutputDataSchema);

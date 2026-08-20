@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { buildOutputSchema } from '#common/schemas/index.js';
+import { buildOutputSchema, IssueKeysSchema } from '#common/schemas/index.js';
 
 /**
  * Схема для тегов (add/remove)
@@ -42,12 +42,9 @@ const BulkUpdateValuesSchema = z
  */
 export const BulkUpdateIssuesParamsSchema = z.object({
   /**
-   * Массив ключей задач для обновления
+   * Массив идентификаторов задач для обновления (ключ или внутренний id)
    */
-  issues: z
-    .array(z.string().regex(/^[A-Z][A-Z0-9]+-\d+$/, 'Неверный формат ключа задачи'))
-    .min(1, 'Должна быть указана хотя бы одна задача')
-    .describe('Массив ключей задач (например, ["PROJ-123", "PROJ-456"])'),
+  issueIds: IssueKeysSchema,
 
   /**
    * Объект с обновляемыми полями

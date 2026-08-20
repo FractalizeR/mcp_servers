@@ -31,12 +31,16 @@ export class UpdateBoardColumnTool extends BaseTool<YandexTrackerFacade> {
 
       const updated = await this.facade.updateBoardColumn({ boardId, columnId, ...updateData });
 
-      const filtered = ResponseFieldFilter.filter<WithUnknownFields<BoardColumn>>(updated, fields);
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        WithUnknownFields<BoardColumn>
+      >(updated, fields);
 
-      return this.formatSuccess({
-        column: filtered,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          column: filtered,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при обновлении колонки ${columnId} доски ${boardId}`, error);
     }

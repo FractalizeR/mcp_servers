@@ -37,13 +37,16 @@ export class CreateFilterTool extends BaseTool<YandexTrackerFacade> {
         groupBy,
       });
 
-      const filtered = ResponseFieldFilter.filter<SavedFilterWithUnknownFields>(created, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<SavedFilterWithUnknownFields>(created, fields);
 
-      return this.formatSuccess({
-        filter: filtered,
-        message: `Фильтр "${name}" успешно создан`,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          filter: filtered,
+          message: `Фильтр "${name}" успешно создан`,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при создании сохранённого фильтра', error);
     }

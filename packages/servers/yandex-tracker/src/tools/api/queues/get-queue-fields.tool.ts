@@ -41,15 +41,17 @@ export class GetQueueFieldsTool extends BaseTool<YandexTrackerFacade> {
         count: queueFields.length,
       });
 
-      const filteredFields = queueFields.map((field) =>
-        ResponseFieldFilter.filter<QueueFieldWithUnknownFields>(field, fieldsParam)
-      );
+      const { result: filteredFields, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        readonly QueueFieldWithUnknownFields[]
+      >(queueFields, fieldsParam);
 
-      return this.formatSuccess({
-        fields: filteredFields,
-        count: filteredFields.length,
-        fieldsReturned: fieldsParam,
-      });
+      return this.formatSuccess(
+        {
+          fields: filteredFields,
+          count: filteredFields.length,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении полей очереди ${queueId}`, error);
     }

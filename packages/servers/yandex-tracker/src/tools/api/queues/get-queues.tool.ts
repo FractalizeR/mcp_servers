@@ -43,16 +43,18 @@ export class GetQueuesTool extends BaseTool<YandexTrackerFacade> {
         count: result.items.length,
       });
 
-      const filteredQueues = result.items.map((queue) =>
-        ResponseFieldFilter.filter<QueueWithUnknownFields>(queue, fields)
-      );
+      const { result: filteredQueues, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        QueueWithUnknownFields[]
+      >(result.items, fields);
 
-      return this.formatSuccess({
-        queues: filteredQueues,
-        count: filteredQueues.length,
-        pagination: result.pagination,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          queues: filteredQueues,
+          count: filteredQueues.length,
+          pagination: result.pagination,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка очередей', error);
     }

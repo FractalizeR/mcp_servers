@@ -7,7 +7,6 @@ import {
   IssueKeySchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
 
@@ -62,7 +61,6 @@ export type UploadAttachmentParams = z.infer<typeof UploadAttachmentParamsSchema
 export const UploadAttachmentOutputDataSchema = z.object({
   issueId: z.string(),
   attachment: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

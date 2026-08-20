@@ -26,7 +26,7 @@ export const GET_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   tags: ['read', 'get', 'fetch', 'issue'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['issueKeys', 'fields'],
+  redactionAllowlist: ['issueIds', 'fields'],
   title: 'Задачи по ключам',
   outputSchema: GetIssuesOutputSchema,
   annotations: {

@@ -7,9 +7,9 @@ import {
   IssueKeySchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   buildOutputSchema,
-  BatchErrorValueSchema,
+  makeBatchSuccessItemSchema,
+  makeBatchErrorItemSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -64,20 +64,12 @@ export type EditCommentParams = z.infer<typeof EditCommentParamsSchema>;
 export const EditCommentOutputDataSchema = z.object({
   total: z.number().describe('Всего запрошено комментариев к редактированию'),
   successful: z.array(
-    z.object({
-      issueId: z.string(),
-      commentId: z.string(),
-      comment: FilteredEntitySchema,
-    })
+    makeBatchSuccessItemSchema(
+      'issueId',
+      z.object({ commentId: z.string(), comment: FilteredEntitySchema })
+    )
   ),
-  failed: z.array(
-    z.object({
-      issueId: z.string(),
-      commentId: z.string(),
-      error: BatchErrorValueSchema,
-    })
-  ),
-  fieldsReturned: FieldsReturnedSchema,
+  failed: z.array(makeBatchErrorItemSchema('issueId').extend({ commentId: z.string() })),
 });
 
 /**

@@ -42,12 +42,15 @@ export class GetProjectTool extends BaseTool<YandexTrackerFacade> {
         projectName: project.name,
       });
 
-      const filteredProject = ResponseFieldFilter.filter<ProjectWithUnknownFields>(project, fields);
+      const { result: filteredProject, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<ProjectWithUnknownFields>(project, fields);
 
-      return this.formatSuccess({
-        project: filteredProject,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          project: filteredProject,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении проекта ${projectId}`, error);
     }

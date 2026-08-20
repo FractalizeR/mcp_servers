@@ -7,9 +7,8 @@ import {
   IssueKeySchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   buildOutputSchema,
-  BatchErrorValueSchema,
+  makeBatchResultSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -101,25 +100,13 @@ export type AddCommentParams = z.infer<typeof AddCommentParamsSchema>;
 /**
  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
  */
-export const AddCommentOutputDataSchema = z.object({
-  total: z.number().describe('Всего запрошено комментариев к добавлению'),
-  successful: z.number().describe('Количество успешно добавленных комментариев'),
-  failed: z.number().describe('Количество комментариев, добавить которые не удалось'),
-  comments: z.array(
-    z.object({
-      issueId: z.string(),
-      commentId: z.string(),
-      comment: FilteredEntitySchema,
-    })
-  ),
-  errors: z.array(
-    z.object({
-      issueId: z.string(),
-      error: BatchErrorValueSchema,
-    })
-  ),
-  fieldsReturned: FieldsReturnedSchema,
-});
+export const AddCommentOutputDataSchema = makeBatchResultSchema(
+  'issueId',
+  z.object({
+    commentId: z.string(),
+    comment: FilteredEntitySchema,
+  })
+);
 
 /**
  * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)

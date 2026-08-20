@@ -7,9 +7,9 @@ import {
   IssueKeySchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
-  BatchErrorValueSchema,
   buildOutputSchema,
+  makeBatchSuccessItemSchema,
+  makeBatchErrorItemSchema,
 } from '#common/schemas/index.js';
 import { BaseChecklistItemFieldsSchema } from '../base-checklist-item.schema.js';
 
@@ -67,23 +67,13 @@ export type UpdateChecklistItemParams = z.infer<typeof UpdateChecklistItemParams
  */
 export const UpdateChecklistItemOutputDataSchema = z.object({
   total: z.number(),
-  successful: z.number(),
-  failed: z.number(),
-  items: z.array(
-    z.object({
-      issueId: z.string(),
-      checklistItemId: z.string(),
-      item: FilteredEntitySchema,
-    })
+  successful: z.array(
+    makeBatchSuccessItemSchema(
+      'issueId',
+      z.object({ checklistItemId: z.string(), item: FilteredEntitySchema })
+    )
   ),
-  errors: z.array(
-    z.object({
-      issueId: z.string(),
-      checklistItemId: z.string(),
-      error: BatchErrorValueSchema,
-    })
-  ),
-  fieldsReturned: FieldsReturnedSchema,
+  failed: z.array(makeBatchErrorItemSchema('issueId').extend({ checklistItemId: z.string() })),
 });
 
 /**

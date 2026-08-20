@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 import { createRawApiRequestSchema } from '@fractalizer/mcp-core';
-import { FieldsSchema, FieldsReturnedSchema, buildOutputSchema } from '#common/schemas/index.js';
+import { FieldsSchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров прямого (raw) запроса к API Яндекс.Трекера.
@@ -44,7 +44,6 @@ export const RawApiRequestOutputDataSchema = z.object({
   method: z.literal('GET'),
   path: z.string(),
   data: z.unknown(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

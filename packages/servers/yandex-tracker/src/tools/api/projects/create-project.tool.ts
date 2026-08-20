@@ -70,16 +70,16 @@ export class CreateProjectTool extends BaseTool<YandexTrackerFacade> {
         projectId: createdProject.id,
       });
 
-      const filteredProject = ResponseFieldFilter.filter<ProjectWithUnknownFields>(
-        createdProject,
-        fields
-      );
+      const { result: filteredProject, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<ProjectWithUnknownFields>(createdProject, fields);
 
-      return this.formatSuccess({
-        projectKey: createdProject.key,
-        project: filteredProject,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          projectKey: createdProject.key,
+          project: filteredProject,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при создании проекта ${key}`, error);
     }

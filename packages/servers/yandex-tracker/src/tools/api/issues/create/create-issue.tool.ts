@@ -96,23 +96,23 @@ export class CreateIssueTool extends BaseTool<YandexTrackerFacade> {
       const createdIssue = await this.facade.createIssue(issueData);
 
       // 5. Фильтрация полей ответа
-      const filteredIssue = ResponseFieldFilter.filter<IssueWithUnknownFields>(
-        createdIssue,
-        fields
-      );
+      const { result: filteredIssue, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<IssueWithUnknownFields>(createdIssue, fields);
 
       // 6. Логирование результата
       this.logger.info('Задача успешно создана', {
-        issueKey: createdIssue.key,
+        issueId: createdIssue.key,
         queue: createdIssue.queue,
-        fieldsReturned: fields.length,
+        fieldsCount: fields.length,
       });
 
-      return this.formatSuccess({
-        issueKey: createdIssue.key,
-        issue: filteredIssue,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          issueId: createdIssue.key,
+          issue: filteredIssue,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при создании задачи в очереди ${queue}`, error);
     }

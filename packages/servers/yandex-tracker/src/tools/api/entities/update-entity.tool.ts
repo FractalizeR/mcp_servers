@@ -36,12 +36,15 @@ export class UpdateEntityTool extends BaseTool<YandexTrackerFacade> {
         entityFields: extractEntityApiFields(fields),
       });
 
-      const filtered = ResponseFieldFilter.filter<EntityApiRecordWithUnknownFields>(entity, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<EntityApiRecordWithUnknownFields>(entity, fields);
 
-      return this.formatSuccess({
-        entity: filtered,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          entity: filtered,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при обновлении записи Entity API ${entityType}/${entityId}`,

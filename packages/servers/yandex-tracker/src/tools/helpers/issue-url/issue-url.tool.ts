@@ -48,16 +48,16 @@ export class IssueUrlTool extends BaseTool<YandexTrackerFacade> {
       return Promise.resolve(validation.error);
     }
 
-    const { issueKeys } = validation.data;
+    const { issueIds } = validation.data;
 
     // 2. Формирование URL для каждой задачи (без API запросов)
-    const results = issueKeys.map((issueKey: string) => ({
-      issueKey,
-      url: `${this.TRACKER_BASE_URL}/${issueKey}`,
-      description: `Открыть задачу ${issueKey} в браузере`,
+    const results = issueIds.map((issueId: string) => ({
+      issueId,
+      url: `${this.TRACKER_BASE_URL}/${issueId}`,
+      description: `Открыть задачу ${issueId} в браузере`,
     }));
 
-    this.logger.info(`URL сформированы для ${issueKeys.length} задач: ${issueKeys.join(', ')}`);
+    this.logger.info(`URL сформированы для ${issueIds.length} задач: ${issueIds.join(', ')}`);
 
     // 3. Возврат результата
     return Promise.resolve(

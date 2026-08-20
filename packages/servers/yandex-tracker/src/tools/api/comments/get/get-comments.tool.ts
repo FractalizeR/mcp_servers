@@ -7,10 +7,15 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
-import { paginatedFieldFilter } from '#common/index.js';
+import {
+  BaseTool,
+  BatchResultProcessor,
+  ResultLogger,
+  ResponseFieldFilter,
+} from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
+import { paginatedFieldFilter } from '#common/index.js';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetCommentsParamsSchema } from '#tools/api/comments/get/get-comments.schema.js';
 
@@ -68,12 +73,14 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
         expand: expand?.join(','),
       });
 
-      // 4. Обработка результатов через BatchResultProcessor
-      // paginatedFieldFilter фильтрует items и прокидывает pagination без изменений
-      const processedResults = BatchResultProcessor.process(
-        results,
-        paginatedFieldFilter<CommentWithUnknownFields>(fields)
-      );
+      // 4. Обработка результатов через BatchResultProcessor. Отчёт детектора
+      // незаполненных полей копится внутри filter по ВСЕМ успешным задачам
+      // батча сразу — задача без какого-то поля в единственном комментарии
+      // не породит шум там, где у других задач это поле есть (план
+      // `plan_tool_contract_unification`, 1.1 «граничные случаи», 2.8).
+      const filter = paginatedFieldFilter<CommentWithUnknownFields>(fields);
+      const processedResults = BatchResultProcessor.process(results, filter);
+      const { fieldsWithoutValue } = filter.getReport();
 
       // 5. Логирование результатов
       ResultLogger.logBatchResults(
@@ -88,22 +95,22 @@ export class GetCommentsTool extends BaseTool<YandexTrackerFacade> {
         processedResults
       );
 
-      return this.formatSuccess({
-        total: issueIds.length,
-        successful: processedResults.successful.length,
-        failed: processedResults.failed.length,
-        comments: processedResults.successful.map((item) => ({
-          issueId: item.key,
-          comments: item.data.items,
-          count: item.data.items.length,
-          pagination: item.data.pagination,
-        })),
-        errors: processedResults.failed.map((item) => ({
-          issueId: item.key,
-          error: item.error,
-        })),
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          total: issueIds.length,
+          successful: processedResults.successful.map((item) => ({
+            issueId: item.key,
+            comments: item.data.items,
+            count: item.data.items.length,
+            pagination: item.data.pagination,
+          })),
+          failed: processedResults.failed.map((item) => ({
+            issueId: item.key,
+            error: item.error,
+          })),
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при получении комментариев (${issueIds.length} задач)`,
