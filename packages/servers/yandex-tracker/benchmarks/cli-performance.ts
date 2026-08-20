@@ -3,180 +3,138 @@
 /**
  * CLI Performance Benchmarks
  *
- * Измеряет производительность framework-based CLI vs legacy CLI:
- * - Startup time (--help)
- * - Command execution time (list, status)
+ * Измеряет абсолютное время выполнения команд собранного CLI и сравнивает
+ * с потолками из ABSOLUTE_THRESHOLDS_MS.
  *
- * Использует feature flag USE_FRAMEWORK_CLI для переключения между версиями.
+ * Почему абсолютные пороги, а не сравнение двух версий: прежняя редакция
+ * гоняла один и тот же бинарник дважды под флагом USE_FRAMEWORK_CLI и
+ * сравнивала половины между собой. Флаг перестал читаться кодом после
+ * завершения миграции на @fractalizer/mcp-cli, так что «legacy» и
+ * «framework» исполняли одно и то же, дельта колебалась около нуля, и гейт
+ * не мог сработать ни при какой регрессии.
+ *
+ * Почему здесь нет команды status: она опрашивает внешние CLI (claude,
+ * gemini, qwen, codex) через дочерние процессы, поэтому её время — свойство
+ * машины разработчика, а не измеряемого кода. На машине с установленным,
+ * но неотвечающим `claude` она упирается в CLAUDE_MCP_LIST_TIMEOUT_MS и
+ * занимает ~5 с. Прежняя редакция мерила её с execSync({timeout: 5000}) и
+ * пустым catch — процесс убивался по таймауту, время фиксировалось как
+ * ~5000 мс для обеих «версий», и бенчмарк рапортовал «✅ OK».
  */
 
 import { performance } from 'perf_hooks';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-interface BenchmarkResult {
-  name: string;
-  legacy: number;
-  framework: number;
-  diff: number;
-  diffPercent: number;
-  status: '✅ OK' | '⚠️  WARN' | '❌ FAIL';
-}
-
 const CLI_PATH = resolve(__dirname, '../dist/cli/bin/mcp-connect.js');
-const ITERATIONS = 5; // Среднее из 5 запусков
-const STARTUP_THRESHOLD = 20; // %
-const COMMAND_THRESHOLD = 15; // %
+const ITERATIONS = 7;
 
 /**
- * Измеряет время выполнения команды CLI
+ * Потолки «дальше не расти», а не цель. Замер на Apple Silicon, Node 22
+ * (медианы: --help 114 мс, list 196 мс) плюс запас под более медленный
+ * агент CI. Опускать по факту улучшения, поднимать — только вместе с
+ * объяснением, почему команда стала дороже.
  */
-function measureCommand(args: string, useFramework: boolean): number {
-  const env = {
-    ...process.env,
-    USE_FRAMEWORK_CLI: useFramework ? 'true' : 'false',
-    DEBUG_CLI_MIGRATION: 'false', // Отключаем debug для чистых измерений
-  };
+const ABSOLUTE_THRESHOLDS_MS: Record<string, number> = {
+  '--help': 400,
+  list: 600,
+};
 
-  const start = performance.now();
-
-  try {
-    execSync(`node ${CLI_PATH} ${args}`, {
-      env,
-      stdio: 'ignore',
-      timeout: 5000, // 5 секунд максимум
-    });
-  } catch (error) {
-    // Некоторые команды могут завершиться с ошибкой (например, если нет клиентов)
-    // Но мы все равно измеряем время до ошибки
-  }
-
-  const end = performance.now();
-  return end - start;
+interface BenchmarkResult {
+  command: string;
+  median: number;
+  min: number;
+  max: number;
+  threshold: number;
+  passed: boolean;
 }
 
 /**
- * Запускает benchmark несколько раз и возвращает среднее значение
+ * Одиночный запуск команды. Ненулевой код возврата — это провал замера, а не
+ * повод молча зачесть время: команда, падающая на старте, «выполняется»
+ * быстро и без этой проверки выглядела бы как отличный результат.
  */
-function runBenchmark(name: string, args: string): BenchmarkResult {
-  console.log(`\n📊 Benchmarking: ${name}...`);
+function measureOnce(command: string): number {
+  const start = performance.now();
+  execFileSync('node', [CLI_PATH, command], { stdio: 'ignore', timeout: 30_000 });
+  return performance.now() - start;
+}
 
-  // Legacy (warmup + measurements)
-  console.log('  Measuring legacy...');
-  measureCommand(args, false); // warmup
-  const legacyTimes: number[] = [];
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? ((sorted[mid - 1] ?? 0) + (sorted[mid] ?? 0)) / 2
+    : (sorted[mid] ?? 0);
+}
+
+function runBenchmark(command: string, threshold: number): BenchmarkResult {
+  console.log(`📊 Benchmarking: ${command}...`);
+
+  measureOnce(command); // прогрев: первый запуск платит за холодный дисковый кеш
+
+  const times: number[] = [];
   for (let i = 0; i < ITERATIONS; i++) {
-    legacyTimes.push(measureCommand(args, false));
+    times.push(measureOnce(command));
   }
-  const legacyAvg = legacyTimes.reduce((a, b) => a + b, 0) / ITERATIONS;
 
-  // Framework (warmup + measurements)
-  console.log('  Measuring framework...');
-  measureCommand(args, true); // warmup
-  const frameworkTimes: number[] = [];
-  for (let i = 0; i < ITERATIONS; i++) {
-    frameworkTimes.push(measureCommand(args, true));
-  }
-  const frameworkAvg = frameworkTimes.reduce((a, b) => a + b, 0) / ITERATIONS;
-
-  const diff = frameworkAvg - legacyAvg;
-  const diffPercent = (diff / legacyAvg) * 100;
-
-  // Определяем статус
-  let status: BenchmarkResult['status'];
-  const threshold = args.includes('--help') ? STARTUP_THRESHOLD : COMMAND_THRESHOLD;
-
-  if (diffPercent > threshold) {
-    status = '❌ FAIL';
-  } else if (diffPercent > threshold / 2) {
-    status = '⚠️  WARN';
-  } else {
-    status = '✅ OK';
-  }
+  const med = median(times);
 
   return {
-    name,
-    legacy: legacyAvg,
-    framework: frameworkAvg,
-    diff,
-    diffPercent,
-    status,
+    command,
+    median: med,
+    min: Math.min(...times),
+    max: Math.max(...times),
+    threshold,
+    passed: med <= threshold,
   };
 }
 
-async function main() {
+function main(): void {
   console.log('🔬 CLI Performance Benchmarks');
   console.log('===============================\n');
   console.log(`CLI Path: ${CLI_PATH}`);
-  console.log(`Iterations per test: ${ITERATIONS}`);
-  console.log(`Thresholds: Startup ≤${STARTUP_THRESHOLD}%, Commands ≤${COMMAND_THRESHOLD}%`);
-
-  // Проверяем что CLI собран
-  try {
-    execSync(`test -f ${CLI_PATH}`, { stdio: 'ignore' });
-  } catch {
-    console.error('❌ CLI not built! Run: npm run build');
-    process.exit(1);
-  }
+  console.log(`Iterations per command: ${ITERATIONS} (+1 прогрев)\n`);
 
   const results: BenchmarkResult[] = [];
 
-  // Benchmark 1: Startup time (--help)
-  results.push(runBenchmark('Startup time (--help)', '--help'));
+  for (const [command, threshold] of Object.entries(ABSOLUTE_THRESHOLDS_MS)) {
+    try {
+      results.push(runBenchmark(command, threshold));
+    } catch (error) {
+      console.error(`\n❌ Команда "${command}" не выполнилась — замер недействителен.`);
+      console.error(error);
+      process.exit(1);
+    }
+  }
 
-  // Benchmark 2: List command
-  results.push(runBenchmark('List command', 'list'));
-
-  // Benchmark 3: Status command
-  results.push(runBenchmark('Status command', 'status'));
-
-  // Показываем результаты
-  console.log('\n\n📈 Results:');
-  console.log('===========\n');
-
+  console.log('\n📈 Results:\n');
   console.table(
     results.map((r) => ({
-      Command: r.name,
-      'Legacy (ms)': r.legacy.toFixed(2),
-      'Framework (ms)': r.framework.toFixed(2),
-      'Diff (ms)': r.diff.toFixed(2),
-      'Diff (%)': r.diffPercent.toFixed(2) + '%',
-      Status: r.status,
+      Command: r.command,
+      'Median (ms)': r.median.toFixed(1),
+      'Min (ms)': r.min.toFixed(1),
+      'Max (ms)': r.max.toFixed(1),
+      'Threshold (ms)': r.threshold,
+      Status: r.passed ? '✅ OK' : '❌ FAIL',
     }))
   );
 
-  // Проверяем failures
-  const failures = results.filter((r) => r.status === '❌ FAIL');
-  const warnings = results.filter((r) => r.status === '⚠️  WARN');
-
-  console.log('\n');
+  const failures = results.filter((r) => !r.passed);
 
   if (failures.length > 0) {
-    console.error('❌ Performance regression detected!\n');
-    console.error('Commands exceeding threshold:');
+    console.error('\n❌ Превышен порог времени выполнения:\n');
     failures.forEach((f) => {
-      const threshold = f.name.includes('--help') ? STARTUP_THRESHOLD : COMMAND_THRESHOLD;
-      console.error(`  - ${f.name}: +${f.diffPercent.toFixed(2)}% (threshold: ${threshold}%)`);
+      console.error(`  - ${f.command}: ${f.median.toFixed(1)} мс при пороге ${f.threshold} мс`);
     });
-    console.error('\n⚠️  Action required: Optimize before release!');
     process.exit(1);
   }
 
-  if (warnings.length > 0) {
-    console.warn('⚠️  Minor regressions detected:\n');
-    warnings.forEach((w) => {
-      console.warn(`  - ${w.name}: +${w.diffPercent.toFixed(2)}%`);
-    });
-    console.warn('\n⚡ Consider optimization, but acceptable for release.');
-  } else {
-    console.log('✅ All benchmarks passed with excellent performance!');
-  }
-
-  process.exit(0);
+  console.log('\n✅ Все команды укладываются в пороги.');
 }
 
 main();
