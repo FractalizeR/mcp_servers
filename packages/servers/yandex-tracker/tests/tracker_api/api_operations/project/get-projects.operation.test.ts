@@ -165,6 +165,48 @@ describe('GetProjectsOperation', () => {
     });
   });
 
+  describe('регрессия: Link указывает на /v2/queues', () => {
+    // Живая проба 2026-08-20: API на GET /v2/projects отдаёт Link со ссылками
+    // на /v2/queues. Без починки заголовка листание уводило на чужую коллекцию,
+    // и агент получал очереди под видом проектов.
+    const QUEUES_LINK =
+      '<https://api.tracker.yandex.net/v2/queues?expand=&page=2&perPage=3>; rel="next", ' +
+      '<https://api.tracker.yandex.net/v2/queues?expand=&perPage=3{&page}>; rel="seek"';
+
+    it('nextCursor ведёт на /v2/projects, а не на /v2/queues', async () => {
+      httpClient.setResponse('GET', '/v2/projects?perPage=3', createProjectListFixture(3), {
+        link: QUEUES_LINK,
+        'x-total-count': '43',
+      });
+
+      const result = await operation.execute({ perPage: 3 });
+
+      const decoded = CursorCodec.decode(
+        result.pagination.nextCursor as string,
+        CURSOR_TAGS.projects
+      );
+      // Из чужой ссылки берётся только `page`; query — наш собственный,
+      // поэтому фантомного `expand=` от хендлера очередей в пути нет.
+      expect(decoded.path).toBe('/v2/projects?perPage=3&page=2');
+      expect(decoded.path).not.toContain('/v2/queues');
+    });
+
+    it('fetchAll обходит страницы проектов, а не очередей', async () => {
+      httpClient.setResponseQueue('GET', '/v2/projects?perPage=3', [
+        { data: createProjectListFixture(3), headers: { link: QUEUES_LINK } },
+      ]);
+      httpClient.setResponseQueue('GET', '/v2/projects?perPage=3&page=2', [
+        { data: createProjectListFixture(2) },
+      ]);
+
+      const result = await operation.execute({ perPage: 3, fetchAll: true });
+
+      expect(result.items).toHaveLength(5);
+      const paths = httpClient.getRequestHistory().map((entry) => entry.path);
+      expect(paths.every((path) => path.startsWith('/v2/projects'))).toBe(true);
+    });
+  });
+
   describe('execute (fetchAll)', () => {
     it('поднимает perPage к 100 и обходит несколько страниц', async () => {
       const page1 = createProjectListFixture(2);

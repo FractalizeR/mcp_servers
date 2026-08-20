@@ -8,6 +8,10 @@
  * - НЕТ создания/обновления/удаления
  *
  * API: GET /v2/projects (seekable v2: Link rel="seek" → total из X-Total-Count)
+ *
+ * ВНИМАНИЕ: `Link` в ответах этой ручки указывает на `/v2/queues` — см.
+ * `pin-projects-link.util.ts`; каждый конверт прогоняется через починку
+ * ДО пагинатора, иначе листание уводит на чужую коллекцию.
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -16,12 +20,26 @@ import {
   DEFAULT_MAX_PER_PAGE,
   CursorCodec,
   CURSOR_TAGS,
+  InvalidCursorError,
 } from '#tracker_api/utils/index.js';
+import {
+  pinProjectsLinkHeader,
+  isProjectsPath,
+} from '#tracker_api/api_operations/project/pin-projects-link.util.js';
 import type { GetProjectsDto } from '#tracker_api/dto/index.js';
 import type { ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { PaginatedResult } from '#tracker_api/entities/index.js';
+import type { HttpResponseEnvelope } from '@fractalizer/mcp-infrastructure';
 
 export class GetProjectsOperation extends BaseOperation {
+  /** Запросить страницу проектов, вернув конверт с починенным `Link`. */
+  private async requestPage(
+    path: string
+  ): Promise<HttpResponseEnvelope<ProjectWithUnknownFields[]>> {
+    const response = await this.httpClient.getWithResponse<ProjectWithUnknownFields[]>(path);
+    return { data: response.data, headers: pinProjectsLinkHeader(response.headers, path) };
+  }
+
   /**
    * Получает список проектов с поддержкой курсорной пагинации и фильтрации
    *
@@ -41,8 +59,14 @@ export class GetProjectsOperation extends BaseOperation {
     // Курсор: один запрос по декодированному пути (perPage зафиксирован в нём).
     if (cursor !== undefined) {
       const { path } = CursorCodec.decode(cursor, CURSOR_TAGS.projects);
+      if (!isProjectsPath(path)) {
+        throw new InvalidCursorError(
+          'Курсор адресует не коллекцию проектов. Такой курсор мог быть выдан версией сервера, ' +
+            'доверявшей чужому заголовку Link, — запросите первую страницу заново.'
+        );
+      }
       this.logger.info('Получение списка проектов (cursor)');
-      const response = await this.httpClient.getWithResponse<ProjectWithUnknownFields[]>(path);
+      const response = await this.requestPage(path);
       return TrackerPaginator.singlePage<ProjectWithUnknownFields>(response, {
         tag: CURSOR_TAGS.projects,
       });
@@ -57,12 +81,12 @@ export class GetProjectsOperation extends BaseOperation {
 
     const endpoint = this.buildEndpoint({ perPage: effectivePerPage, expand, queueId });
 
-    const first = await this.httpClient.getWithResponse<ProjectWithUnknownFields[]>(endpoint);
+    const first = await this.requestPage(endpoint);
 
     if (fetchAll === true) {
       return TrackerPaginator.fetchAllPages<ProjectWithUnknownFields>({
         firstResponse: first,
-        requestNext: (path) => this.httpClient.getWithResponse<ProjectWithUnknownFields[]>(path),
+        requestNext: (path) => this.requestPage(path),
         tag: CURSOR_TAGS.projects,
         ...(maxItems !== undefined ? { maxItems } : {}),
         ...(effectivePerPage !== undefined ? { perPage: effectivePerPage } : {}),
