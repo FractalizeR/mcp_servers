@@ -122,6 +122,20 @@ describe('ClaudeCodeConnector', () => {
       expect(status.details?.scope).toBe('user');
     });
 
+    it('сценарий 1a: ✔ (U+2714) Connected → connected: true', async () => {
+      // Именно это начертание печатает Claude Code 2.x. Пока принимался только
+      // U+2713, рабочее подключение уходило в «Unknown state» и `status`
+      // показывал ошибку. Остальные фикстуры здесь используют U+2713, поэтому
+      // расхождение с реальным CLI ловится только этой проверкой.
+      mockExecFileSplit({
+        listOutput: `\n${SERVER_NAME}: node /abs/script.cjs - \u2714 Connected\n`,
+        getOutput: buildGetOutput({ scope: 'user' }),
+      });
+      const status = await connector.getStatus();
+      expect(status.connected).toBe(true);
+      expect(status.error).toBeUndefined();
+    });
+
     it('сценарий 1b: ✓ Connected + get без Scope-строки → scope undefined', async () => {
       mockExecFileSplit({
         listOutput: `\n${SERVER_NAME}: cmd - ✓ Connected\n`,
