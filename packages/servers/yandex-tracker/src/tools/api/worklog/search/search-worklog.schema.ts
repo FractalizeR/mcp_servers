@@ -23,8 +23,15 @@ import {
  */
 export const SearchWorklogParamsSchema = z
   .object({
-    /** Логин или UID автора записи времени (опционально) */
-    createdBy: z.string().optional(),
+    /** UID автора записи времени (опционально) */
+    createdBy: z
+      .string()
+      .optional()
+      .describe(
+        'UID автора записи времени (например, 1130000048722754). ЛОГИН НЕ РАБОТАЕТ: ' +
+          'API не отдаёт ошибку на логин, а молча возвращает пустой список — UID можно ' +
+          'получить через find_users/get_users.'
+      ),
 
     /** Начало диапазона дат создания, ISO 8601 (опционально) */
     createdAtFrom: z.string().optional(),
