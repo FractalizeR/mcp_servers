@@ -33,9 +33,8 @@ describe('delete-checklist-item integration tests (batch)', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
-    expect(response.data.successful).toBe(1);
-    expect(response.data.items).toHaveLength(1);
-    expect(response.data.items[0].success).toBe(true);
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].success).toBe(true);
     mockServer.assertAllRequestsDone();
   });
 
@@ -53,8 +52,7 @@ describe('delete-checklist-item integration tests (batch)', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
-    expect(response.data.failed).toBe(1);
-    expect(response.data.errors).toHaveLength(1);
+    expect(response.data.failed).toHaveLength(1);
     mockServer.assertAllRequestsDone();
   });
 
@@ -79,10 +77,8 @@ describe('delete-checklist-item integration tests (batch)', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(2);
-    expect(response.data.successful).toBe(2);
-    expect(response.data.failed).toBe(0);
-    expect(response.data.items).toHaveLength(2);
-    expect(response.data.errors).toHaveLength(0);
+    expect(response.data.successful).toHaveLength(2);
+    expect(response.data.failed).toHaveLength(0);
     mockServer.assertAllRequestsDone();
   });
 
@@ -107,10 +103,8 @@ describe('delete-checklist-item integration tests (batch)', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(2);
-    expect(response.data.successful).toBe(1);
-    expect(response.data.failed).toBe(1);
-    expect(response.data.items).toHaveLength(1);
-    expect(response.data.errors).toHaveLength(1);
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.failed).toHaveLength(1);
     mockServer.assertAllRequestsDone();
   });
 });

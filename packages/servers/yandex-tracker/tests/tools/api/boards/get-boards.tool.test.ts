@@ -73,4 +73,51 @@ describe('GetBoardsTool', () => {
     const parsed = JSON.parse(getTextContent(result)) as { error: string };
     expect(parsed.error).toBe('Network error');
   });
+
+  describe('Предупреждения о полях без значения (FIELDS_WITHOUT_VALUE)', () => {
+    it('добавляет warning, когда поле не пришло ни у одной доски', async () => {
+      const boards = [
+        { id: '1', self: 'url', version: 1, name: 'Board 1' },
+        { id: '2', self: 'url', version: 1, name: 'Board 2' },
+      ];
+      vi.mocked(mockTrackerFacade.getBoards).mockResolvedValue(boards);
+
+      const result = await tool.execute({ fields: ['id', 'bogusField'] });
+
+      const parsed = JSON.parse(getTextContent(result)) as {
+        success: boolean;
+        warnings?: Array<{ code: string; details?: { fields: string[] } }>;
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.warnings).toHaveLength(1);
+      expect(parsed.warnings?.[0]?.code).toBe('FIELDS_WITHOUT_VALUE');
+      expect(parsed.warnings?.[0]?.details?.fields).toEqual(['bogusField']);
+    });
+
+    it('НЕ предупреждает, если поле пришло хотя бы у одной доски из списка', async () => {
+      const boards = [
+        { id: '1', self: 'url', version: 1, name: 'Board 1' },
+        { id: '2', self: 'url', version: 1, name: 'Board 2', description: 'has description' },
+      ];
+      vi.mocked(mockTrackerFacade.getBoards).mockResolvedValue(boards);
+
+      const result = await tool.execute({ fields: ['id', 'description'] });
+
+      const parsed = JSON.parse(getTextContent(result)) as { warnings?: unknown[] };
+      expect(parsed.warnings).toBeUndefined();
+    });
+
+    it('ответ без предупреждений не содержит ключа warnings ни в одной из проекций', async () => {
+      const boards = [{ id: '1', self: 'url', version: 1, name: 'Board 1' }];
+      vi.mocked(mockTrackerFacade.getBoards).mockResolvedValue(boards);
+
+      const result = await tool.execute({ fields: ['id', 'name'] });
+
+      const parsed = JSON.parse(getTextContent(result)) as Record<string, unknown>;
+      expect('warnings' in parsed).toBe(false);
+      expect(
+        result['structuredContent'] && 'warnings' in (result['structuredContent'] as object)
+      ).toBe(false);
+    });
+  });
 });

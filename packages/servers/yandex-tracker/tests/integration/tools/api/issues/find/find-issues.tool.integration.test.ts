@@ -43,7 +43,7 @@ describe('find-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_find_issues', {
-        keys: issueKeys,
+        issueIds: issueKeys,
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -56,11 +56,10 @@ describe('find-issues integration tests', () => {
 
       expect(response.itemsOnPage).toBe(2);
       expect(response.items).toHaveLength(2);
-      expect(response.summary.fieldsReturned).toEqual(STANDARD_ISSUE_FIELDS);
       expect(response.summary.searchCriteria).toMatchObject({
         hasQuery: false,
         hasFilter: false,
-        keysCount: 2,
+        issueIdsCount: 2,
         hasQueue: false,
       });
       // perPage не задавали → не подделываем дефолтом
@@ -224,7 +223,7 @@ describe('find-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_find_issues', {
-        keys: issueKeys,
+        issueIds: issueKeys,
         fields,
       });
 
@@ -234,7 +233,6 @@ describe('find-issues integration tests', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response.summary.fieldsReturned).toEqual(fields);
       expect(response.items).toHaveLength(1);
 
       const issue = response.items[0];
@@ -261,7 +259,7 @@ describe('find-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_find_issues', {
-        keys: issueKeys,
+        issueIds: issueKeys,
         fields,
       });
 
@@ -339,7 +337,7 @@ describe('find-issues integration tests', () => {
       expect(result.isError).toBe(true);
       expect(getTextContent(result)).toContain('Ошибка валидации параметров');
       expect(getTextContent(result)).toContain(
-        'хотя бы один способ поиска: query, filter, keys, queue или filterId'
+        'хотя бы один способ поиска: query, filter, issueIds, queue или filterId'
       );
     });
 

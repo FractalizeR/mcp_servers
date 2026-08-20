@@ -64,15 +64,15 @@ describe('UpdateIssueTool', () => {
       expect(definition.name).toBe(buildToolName('update_issue', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('Обновить');
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueKey', 'fields']);
-      expect(definition.inputSchema.properties?.['issueKey']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['issueId', 'fields']);
+      expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['summary']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
   describe('Validation', () => {
-    it('должен требовать параметр issueKey', async () => {
+    it('должен требовать параметр issueId', async () => {
       const result = await tool.execute({ summary: 'Test' });
 
       expect(result.isError).toBe(true);
@@ -88,7 +88,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         summary: 'New Summary',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -109,7 +109,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         summary: 'New Summary',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -127,7 +127,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         summary: 'New Summary',
         description: 'New Description',
         assignee: 'user1',
@@ -151,7 +151,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         customFields: {
           customField1: 'value1',
         },
@@ -171,7 +171,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         summary: 'New Summary',
         version: 5,
         fields: STANDARD_ISSUE_FIELDS,
@@ -195,7 +195,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         summary: 'New Summary',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -204,17 +204,15 @@ describe('UpdateIssueTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          issueKey: string;
+          issueId: string;
           updatedFields: string[];
           issue: IssueWithUnknownFields;
-          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.issueKey).toBe('QUEUE-123');
+      expect(parsed.data.issueId).toBe('QUEUE-123');
       expect(parsed.data.updatedFields).toContain('summary');
       expect(parsed.data.issue.summary).toBe('Updated Summary');
-      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
   });
 
@@ -223,7 +221,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         summary: 'New Summary',
         fields: ['id', 'key', 'summary'],
       });
@@ -247,7 +245,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         summary: 'New Summary',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -257,14 +255,12 @@ describe('UpdateIssueTool', () => {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
-          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.issue).toHaveProperty('id');
       expect(parsed.data.issue).toHaveProperty('summary');
       expect(parsed.data.issue).toHaveProperty('queue');
-      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
   });
 
@@ -273,7 +269,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockResolvedValue(mockUpdatedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         summary: 'New Summary',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -297,7 +293,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockRejectedValue(error);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         summary: 'New Summary',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -312,7 +308,7 @@ describe('UpdateIssueTool', () => {
       vi.mocked(mockTrackerFacade.updateIssue).mockRejectedValue(notFoundError);
 
       const result = await tool.execute({
-        issueKey: 'NOTFOUND-999',
+        issueId: 'NOTFOUND-999',
         summary: 'New Summary',
         fields: STANDARD_ISSUE_FIELDS,
       });

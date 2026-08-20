@@ -200,6 +200,34 @@ describe('GetProjectTool', () => {
         expect(parsed.data.project.name).toBe('Full Project');
         expect(parsed.data.project.description).toBe('Full description');
         expect(parsed.data.project.status).toBe('in_progress');
+
+        const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+          .structuredContent;
+        expect(structured?.warnings).toBeUndefined();
+      });
+
+      // Регрессионный тест ядра находки 1 отчёта: неверное имя поля → warning, не ошибка.
+      it('предупреждает, когда запрошенное поле не вернуло значения', async () => {
+        const mockProject = createProjectFixture({ key: 'PROJ' });
+        vi.mocked(mockTrackerFacade.getProject).mockResolvedValue(mockProject);
+
+        const result = await tool.execute({
+          projectId: 'PROJ',
+          fields: ['key', 'totallyBogusField'],
+        });
+
+        expect(result.isError).toBeUndefined();
+        const structured = (
+          result as {
+            structuredContent?: { warnings?: Array<{ code: string; details?: unknown }> };
+          }
+        ).structuredContent;
+        expect(structured?.warnings).toEqual([
+          expect.objectContaining({
+            code: 'FIELDS_WITHOUT_VALUE',
+            details: { fields: ['totallyBogusField'] },
+          }),
+        ]);
       });
     });
 

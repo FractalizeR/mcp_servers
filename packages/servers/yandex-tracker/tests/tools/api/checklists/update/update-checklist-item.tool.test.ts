@@ -248,22 +248,20 @@ describe('UpdateChecklistItemTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          items: Array<{
+          successful: Array<{
             issueId: string;
             checklistItemId: string;
             item: ChecklistItemWithUnknownFields;
           }>;
+          failed: Array<{ issueId: string; checklistItemId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
-      expect(parsed.data.successful).toBe(1);
-      expect(parsed.data.failed).toBe(0);
-      expect(parsed.data.items).toHaveLength(1);
-      expect(itemAt(parsed.data.items).issueId).toBe('TEST-123');
-      expect(itemAt(parsed.data.items).checklistItemId).toBe('item-1');
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(parsed.data.failed).toHaveLength(0);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).checklistItemId).toBe('item-1');
     });
 
     it('должен вернуть несколько обновлённых элементов', async () => {
@@ -287,15 +285,13 @@ describe('UpdateChecklistItemTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          items: Array<{ issueId: string; checklistItemId: string }>;
+          successful: Array<{ issueId: string; checklistItemId: string }>;
+          failed: Array<{ issueId: string; checklistItemId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(2);
-      expect(parsed.data.items).toHaveLength(2);
+      expect(parsed.data.successful).toHaveLength(2);
     });
   });
 
@@ -325,21 +321,17 @@ describe('UpdateChecklistItemTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          items: Array<{ issueId: string; checklistItemId: string }>;
-          errors: Array<{ issueId: string; checklistItemId: string; error: string }>;
+          successful: Array<{ issueId: string; checklistItemId: string }>;
+          failed: Array<{ issueId: string; checklistItemId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(1);
-      expect(parsed.data.failed).toBe(1);
-      expect(parsed.data.items).toHaveLength(1);
-      expect(itemAt(parsed.data.items).issueId).toBe('TEST-123');
-      expect(parsed.data.errors).toHaveLength(1);
-      expect(itemAt(parsed.data.errors).issueId).toBe('TEST-456');
-      expect(itemAt(parsed.data.errors).error).toContain('Item not found');
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.failed).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.failed).error).toContain('Item not found');
     });
 
     it('должен обработать полный провал batch операции', async () => {
@@ -358,16 +350,14 @@ describe('UpdateChecklistItemTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          items: Array<{ issueId: string }>;
-          errors: Array<{ issueId: string; error: string }>;
+          successful: Array<{ issueId: string }>;
+          failed: Array<{ issueId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
-      expect(parsed.data.successful).toBe(0);
-      expect(parsed.data.failed).toBe(1);
+      expect(parsed.data.successful).toHaveLength(0);
+      expect(parsed.data.failed).toHaveLength(1);
     });
   });
 

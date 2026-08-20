@@ -7,6 +7,7 @@ import { GetIssueTypesTool } from '#tools/api/administration/get-issue-types.too
 import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
+import type { IssueTypeWithUnknownFields } from '#tracker_api/entities/index.js';
 
 function paginated<T>(items: T[]) {
   return {
@@ -58,5 +59,53 @@ describe('GetIssueTypesTool', () => {
     vi.mocked(mockTrackerFacade.getIssueTypes).mockRejectedValue(new Error('Network error'));
     const result = await tool.execute({ fields: ['id'] });
     expect(result.isError).toBe(true);
+  });
+
+  it('не выдаёт предупреждений, когда все запрошенные поля пришли', async () => {
+    vi.mocked(mockTrackerFacade.getIssueTypes).mockResolvedValue(
+      paginated([{ id: '1', key: 'bug', display: 'Bug' }])
+    );
+
+    const result = await tool.execute({ fields: ['id', 'key'] });
+
+    const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+      .structuredContent;
+    expect(structured?.warnings).toBeUndefined();
+  });
+
+  // Регрессионный тест ядра находки 1 отчёта: неверное имя поля → warning, не ошибка.
+  it('предупреждает, когда запрошенное поле не вернуло значения ни у одного элемента', async () => {
+    vi.mocked(mockTrackerFacade.getIssueTypes).mockResolvedValue(
+      paginated([{ id: '1', key: 'bug', display: 'Bug' }])
+    );
+
+    const result = await tool.execute({ fields: ['id', 'totallyBogusField'] });
+
+    expect(result.isError).toBeUndefined();
+    const structured = (
+      result as { structuredContent?: { warnings?: Array<{ code: string; details?: unknown }> } }
+    ).structuredContent;
+    expect(structured?.warnings).toEqual([
+      expect.objectContaining({
+        code: 'FIELDS_WITHOUT_VALUE',
+        details: { fields: ['totallyBogusField'] },
+      }),
+    ]);
+  });
+
+  // Защита от шумного предупреждения: поле пустое лишь у части элементов — не повод предупреждать.
+  it('не предупреждает, когда поле заполнено хотя бы у одного элемента', async () => {
+    vi.mocked(mockTrackerFacade.getIssueTypes).mockResolvedValue(
+      paginated<IssueTypeWithUnknownFields>([
+        { id: '1', key: 'bug', display: 'Bug' },
+        { id: '2', key: 'task' } as IssueTypeWithUnknownFields,
+      ])
+    );
+
+    const result = await tool.execute({ fields: ['id', 'display'] });
+
+    const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+      .structuredContent;
+    expect(structured?.warnings).toBeUndefined();
   });
 });

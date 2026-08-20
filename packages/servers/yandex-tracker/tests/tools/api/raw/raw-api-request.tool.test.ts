@@ -12,8 +12,9 @@ import { getTextContent } from '#helpers/tool-result.helper.js';
 
 interface ParsedResult {
   success: boolean;
-  data?: { method: string; path: string; data: unknown; fieldsReturned: string[] };
+  data?: { method: string; path: string; data: unknown };
   message?: string;
+  warnings?: unknown[];
 }
 
 describe('RawApiRequestTool', () => {
@@ -73,7 +74,39 @@ describe('RawApiRequestTool', () => {
       const parsed = parse(getTextContent(result));
       expect(parsed.success).toBe(true);
       expect(parsed.data?.data).toEqual({ key: 'QUEUE-1', summary: 'Test' });
-      expect(parsed.data?.fieldsReturned).toEqual(['key', 'summary']);
+      // Boundary case (план plan_tool_contract_unification, 1.1): raw_api_request
+      // не гоняет ответ через детектор FIELDS_WITHOUT_VALUE — форма data заранее
+      // не известна (объект/массив/скаляр).
+      expect(parsed.warnings).toBeUndefined();
+    });
+
+    it('не должен выдавать предупреждений, даже если запрошенное поле отсутствует в ответе', async () => {
+      vi.mocked(mockFacade.rawApiRequest).mockResolvedValue({ key: 'QUEUE-1' });
+
+      const result = await tool.execute({
+        method: 'GET',
+        path: '/v3/issues/QUEUE-1',
+        fields: ['key', 'totallyBogusField'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = parse(getTextContent(result));
+      expect(parsed.warnings).toBeUndefined();
+    });
+
+    it('не должен выдавать предупреждений для скалярного ответа API', async () => {
+      vi.mocked(mockFacade.rawApiRequest).mockResolvedValue(42);
+
+      const result = await tool.execute({
+        method: 'GET',
+        path: '/v3/myself',
+        fields: ['login'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = parse(getTextContent(result));
+      expect(parsed.data?.data).toBe(42);
+      expect(parsed.warnings).toBeUndefined();
     });
 
     it('должен передавать input без query, если query не задан', async () => {

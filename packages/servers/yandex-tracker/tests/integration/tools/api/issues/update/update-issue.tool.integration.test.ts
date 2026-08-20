@@ -29,7 +29,7 @@ describe('update-issue integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_update_issue', {
-      issueKey,
+      issueId: issueKey,
       summary: 'Updated summary',
       fields: STANDARD_ISSUE_FIELDS,
     });
@@ -53,7 +53,7 @@ describe('update-issue integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_update_issue', {
-      issueKey,
+      issueId: issueKey,
       summary: 'New summary',
       description: 'New description',
       priority: 'critical',
@@ -74,7 +74,7 @@ describe('update-issue integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_update_issue', {
-      issueKey,
+      issueId: issueKey,
       summary: 'Test',
       fields: STANDARD_ISSUE_FIELDS,
     });
@@ -91,7 +91,7 @@ describe('update-issue integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_update_issue', {
-      issueKey,
+      issueId: issueKey,
       summary: 'Updated',
       fields: ['key', 'summary'],
     });

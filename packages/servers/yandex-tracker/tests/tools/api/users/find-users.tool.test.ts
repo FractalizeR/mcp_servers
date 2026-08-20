@@ -61,4 +61,28 @@ describe('FindUsersTool', () => {
     const result = await tool.execute({ fields: ['uid'] });
     expect(result.isError).toBe(true);
   });
+
+  it('предупреждает, когда поле не вернуло значения ни у одного пользователя', async () => {
+    const users = [{ uid: 1, display: 'Ivan Ivanov', login: 'ivanov' }];
+    vi.mocked(mockTrackerFacade.findUsers).mockResolvedValue(paginated(users));
+
+    const result = await tool.execute({ fields: ['uid', 'totallyBogusField'] });
+
+    expect(result.isError).toBeUndefined();
+    const structured = (result as { structuredContent?: { warnings?: Array<{ code: string }> } })
+      .structuredContent;
+    expect(structured?.warnings).toEqual([
+      expect.objectContaining({ code: 'FIELDS_WITHOUT_VALUE' }),
+    ]);
+  });
+
+  it('не выдаёт предупреждений на пустой коллекции', async () => {
+    vi.mocked(mockTrackerFacade.findUsers).mockResolvedValue(paginated([]));
+
+    const result = await tool.execute({ fields: ['uid'] });
+
+    const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+      .structuredContent;
+    expect(structured?.warnings).toBeUndefined();
+  });
 });

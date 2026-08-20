@@ -49,4 +49,35 @@ describe('GetBoardTool', () => {
     const result = await tool.execute({ boardId: '999', fields: ['id'] });
     expect(result.isError).toBe(true);
   });
+
+  describe('Предупреждения о полях без значения (FIELDS_WITHOUT_VALUE)', () => {
+    it('добавляет warning при запросе несуществующего поля', async () => {
+      const board = { id: '1', self: 'url', version: 1, name: 'Board 1' };
+      vi.mocked(mockTrackerFacade.getBoard).mockResolvedValue(board);
+
+      const result = await tool.execute({ boardId: '1', fields: ['id', 'bogusField'] });
+
+      const parsed = JSON.parse(getTextContent(result)) as {
+        success: boolean;
+        warnings?: Array<{ code: string; details?: { fields: string[] } }>;
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.warnings).toHaveLength(1);
+      expect(parsed.warnings?.[0]?.code).toBe('FIELDS_WITHOUT_VALUE');
+      expect(parsed.warnings?.[0]?.details?.fields).toEqual(['bogusField']);
+    });
+
+    it('ответ без предупреждений не содержит ключа warnings ни в одной из проекций', async () => {
+      const board = { id: '1', self: 'url', version: 1, name: 'Board 1' };
+      vi.mocked(mockTrackerFacade.getBoard).mockResolvedValue(board);
+
+      const result = await tool.execute({ boardId: '1', fields: ['id', 'name'] });
+
+      const parsed = JSON.parse(getTextContent(result)) as Record<string, unknown>;
+      expect('warnings' in parsed).toBe(false);
+      expect(
+        result['structuredContent'] && 'warnings' in (result['structuredContent'] as object)
+      ).toBe(false);
+    });
+  });
 });

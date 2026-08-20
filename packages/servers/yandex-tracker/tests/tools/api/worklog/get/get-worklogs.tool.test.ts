@@ -137,7 +137,7 @@ describe('GetWorklogsTool', () => {
         success: boolean;
         data: {
           total: number;
-          worklogs: Array<{
+          successful: Array<{
             issueId: string;
             worklogs: WorklogWithUnknownFields[];
             count: number;
@@ -147,10 +147,10 @@ describe('GetWorklogsTool', () => {
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
-      expect(itemAt(parsed.data.worklogs).issueId).toBe('TEST-1');
-      expect(itemAt(parsed.data.worklogs).count).toBe(2);
-      expect(itemAt(parsed.data.worklogs).worklogs).toHaveLength(2);
-      expect(itemAt(parsed.data.worklogs).pagination).toMatchObject({
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-1');
+      expect(itemAt(parsed.data.successful).count).toBe(2);
+      expect(itemAt(parsed.data.successful).worklogs).toHaveLength(2);
+      expect(itemAt(parsed.data.successful).pagination).toMatchObject({
         hasNextPage: false,
         fetchedAll: true,
       });
@@ -164,10 +164,10 @@ describe('GetWorklogsTool', () => {
       const result = await tool.execute({ issueIds: ['TEST-1'], fields: ['id'] });
 
       const parsed = JSON.parse(getTextContent(result)) as {
-        data: { worklogs: Array<{ worklogs: Array<Record<string, unknown>> }> };
+        data: { successful: Array<{ worklogs: Array<Record<string, unknown>> }> };
       };
-      expect(itemAt(parsed.data.worklogs).worklogs[0]).toHaveProperty('id');
-      expect(itemAt(parsed.data.worklogs).worklogs[0]).not.toHaveProperty('duration');
+      expect(itemAt(parsed.data.successful).worklogs[0]).toHaveProperty('id');
+      expect(itemAt(parsed.data.successful).worklogs[0]).not.toHaveProperty('duration');
     });
   });
 

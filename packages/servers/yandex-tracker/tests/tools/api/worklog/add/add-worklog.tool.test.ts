@@ -61,10 +61,10 @@ describe('AddWorklogTool', () => {
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
-        data: { worklogs: Array<{ issueId: string; worklogId: string }> };
+        data: { successful: Array<{ issueId: string; worklogId: string }> };
       };
-      expect(itemAt(parsed.data.worklogs).issueId).toBe('TEST-1');
-      expect(itemAt(parsed.data.worklogs).worklogId).toBe('12345');
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-1');
+      expect(itemAt(parsed.data.successful).worklogId).toBe('12345');
     });
   });
 });

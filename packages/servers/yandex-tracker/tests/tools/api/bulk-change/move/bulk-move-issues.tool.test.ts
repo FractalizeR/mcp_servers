@@ -37,7 +37,7 @@ describe('BulkMoveIssuesTool', () => {
   });
 
   describe('Validation', () => {
-    it('должен требовать параметры issues и queue', async () => {
+    it('должен требовать параметры issueIds и queue', async () => {
       const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
@@ -49,7 +49,7 @@ describe('BulkMoveIssuesTool', () => {
       vi.mocked(mockTrackerFacade.bulkMoveIssues).mockResolvedValue(mockOperation);
 
       await tool.execute({
-        issues: ['QUEUE1-1', 'QUEUE1-2'],
+        issueIds: ['QUEUE1-1', 'QUEUE1-2'],
         queue: 'QUEUE2',
       });
 
@@ -65,7 +65,7 @@ describe('BulkMoveIssuesTool', () => {
       vi.mocked(mockTrackerFacade.bulkMoveIssues).mockResolvedValue(mockOperation);
 
       await tool.execute({
-        issues: ['QUEUE1-1', 'QUEUE1-2'],
+        issueIds: ['QUEUE1-1', 'QUEUE1-2'],
         queue: 'QUEUE2',
         initialStatus: true,
       });
@@ -81,7 +81,7 @@ describe('BulkMoveIssuesTool', () => {
       vi.mocked(mockTrackerFacade.bulkMoveIssues).mockResolvedValue(mockOperation);
 
       await tool.execute({
-        issues: ['QUEUE1-1'],
+        issueIds: ['QUEUE1-1'],
         queue: 'QUEUE2',
         initialStatus: false,
       });
@@ -97,7 +97,7 @@ describe('BulkMoveIssuesTool', () => {
       vi.mocked(mockTrackerFacade.bulkMoveIssues).mockResolvedValue(mockOperation);
 
       const result = await tool.execute({
-        issues: ['QUEUE1-1'],
+        issueIds: ['QUEUE1-1'],
         queue: 'QUEUE2',
         initialStatus: true,
       });
@@ -118,7 +118,7 @@ describe('BulkMoveIssuesTool', () => {
       vi.mocked(mockTrackerFacade.bulkMoveIssues).mockRejectedValue(error);
 
       const result = await tool.execute({
-        issues: ['QUEUE1-1'],
+        issueIds: ['QUEUE1-1'],
         queue: 'QUEUE2',
       });
 

@@ -96,7 +96,7 @@ describe('CreateLinkTool', () => {
           {
             issueId: 'TEST-1',
             relationship: 'invalid_relationship',
-            targetIssue: 'TEST-2',
+            targetIssueId: 'TEST-2',
           },
         ],
         fields: ['id', 'type'],
@@ -134,7 +134,7 @@ describe('CreateLinkTool', () => {
             {
               issueId: 'TEST-1',
               relationship,
-              targetIssue: 'TEST-2',
+              targetIssueId: 'TEST-2',
             },
           ],
           fields: ['id', 'type'],
@@ -158,12 +158,12 @@ describe('CreateLinkTool', () => {
           {
             issueId: 'TEST-1',
             relationship: 'relates',
-            targetIssue: 'TEST-2',
+            targetIssueId: 'TEST-2',
           },
           {
             issueId: 'TEST-3',
             relationship: 'has subtasks',
-            targetIssue: 'TEST-4',
+            targetIssueId: 'TEST-4',
           },
         ],
         fields: ['id', 'type', 'object'],
@@ -197,12 +197,12 @@ describe('CreateLinkTool', () => {
           {
             issueId: 'TEST-1',
             relationship: 'relates',
-            targetIssue: 'TEST-2',
+            targetIssueId: 'TEST-2',
           },
           {
             issueId: 'TEST-3',
             relationship: 'has subtasks',
-            targetIssue: 'TEST-4',
+            targetIssueId: 'TEST-4',
           },
         ],
         fields: ['id', 'type'],
@@ -213,20 +213,14 @@ describe('CreateLinkTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          links: Array<{ issueId: string; linkId: string; link: LinkWithUnknownFields }>;
-          errors: Array<{ issueId: string; error: string }>;
-          fieldsReturned: string[];
+          successful: Array<{ issueId: string; linkId: string; link: LinkWithUnknownFields }>;
+          failed: Array<{ issueId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(2);
-      expect(parsed.data.failed).toBe(0);
-      expect(parsed.data.links).toHaveLength(2);
-      expect(parsed.data.errors).toHaveLength(0);
-      expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
+      expect(parsed.data.successful).toHaveLength(2);
+      expect(parsed.data.failed).toHaveLength(0);
     });
 
     it('должен обработать частичные ошибки', async () => {
@@ -247,12 +241,12 @@ describe('CreateLinkTool', () => {
           {
             issueId: 'TEST-1',
             relationship: 'relates',
-            targetIssue: 'TEST-2',
+            targetIssueId: 'TEST-2',
           },
           {
             issueId: 'TEST-3',
             relationship: 'relates',
-            targetIssue: 'TEST-99', // Эта задача не существует - вызовет ошибку
+            targetIssueId: 'TEST-99', // Эта задача не существует - вызовет ошибку
           },
         ],
         fields: ['id', 'type'],
@@ -263,18 +257,14 @@ describe('CreateLinkTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          links: Array<{ issueId: string; linkId: string; link: LinkWithUnknownFields }>;
-          errors: Array<{ issueId: string; error: string }>;
+          successful: Array<{ issueId: string; linkId: string; link: LinkWithUnknownFields }>;
+          failed: Array<{ issueId: string; error: string }>;
         };
       };
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(1);
-      expect(parsed.data.failed).toBe(1);
-      expect(parsed.data.links).toHaveLength(1);
-      expect(parsed.data.errors).toHaveLength(1);
-      expect(itemAt(parsed.data.errors).error).toContain('Issue not found');
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(itemAt(parsed.data.failed).error).toContain('Issue not found');
     });
 
     it('должен фильтровать поля для всех созданных связей', async () => {
@@ -301,12 +291,12 @@ describe('CreateLinkTool', () => {
           {
             issueId: 'TEST-1',
             relationship: 'relates',
-            targetIssue: 'TEST-2',
+            targetIssueId: 'TEST-2',
           },
           {
             issueId: 'TEST-3',
             relationship: 'has subtasks',
-            targetIssue: 'TEST-4',
+            targetIssueId: 'TEST-4',
           },
         ],
         fields: ['id', 'type'],
@@ -314,15 +304,15 @@ describe('CreateLinkTool', () => {
 
       const parsed = JSON.parse(getTextContent(result)) as {
         data: {
-          links: Array<{ link: LinkWithUnknownFields }>;
+          successful: Array<{ link: LinkWithUnknownFields }>;
         };
       };
       // Проверяем, что в результате только запрошенные поля
-      expect(itemAt(parsed.data.links).link.id).toBeDefined();
-      expect(itemAt(parsed.data.links).link.type).toBeDefined();
+      expect(itemAt(parsed.data.successful).link.id).toBeDefined();
+      expect(itemAt(parsed.data.successful).link.type).toBeDefined();
       // object и direction не должны быть в результате, т.к. не запрошены
-      expect(itemAt(parsed.data.links).link.object).toBeUndefined();
-      expect(itemAt(parsed.data.links).link.direction).toBeUndefined();
+      expect(itemAt(parsed.data.successful).link.object).toBeUndefined();
+      expect(itemAt(parsed.data.successful).link.direction).toBeUndefined();
     });
 
     it('должен обработать общую ошибку от facade', async () => {
@@ -334,7 +324,7 @@ describe('CreateLinkTool', () => {
           {
             issueId: 'TEST-1',
             relationship: 'relates',
-            targetIssue: 'TEST-2',
+            targetIssueId: 'TEST-2',
           },
         ],
         fields: ['id', 'type'],
@@ -375,17 +365,17 @@ describe('CreateLinkTool', () => {
           {
             issueId: 'TEST-1',
             relationship: 'relates',
-            targetIssue: 'TEST-2',
+            targetIssueId: 'TEST-2',
           },
           {
             issueId: 'TEST-3',
             relationship: 'has subtasks',
-            targetIssue: 'TEST-4',
+            targetIssueId: 'TEST-4',
           },
           {
             issueId: 'TEST-5',
             relationship: 'depends on',
-            targetIssue: 'TEST-6',
+            targetIssueId: 'TEST-6',
           },
         ],
         fields: ['id', 'type'],
@@ -395,12 +385,11 @@ describe('CreateLinkTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         data: {
           total: number;
-          successful: number;
-          links: Array<{ link: LinkWithUnknownFields }>;
+          successful: Array<{ link: LinkWithUnknownFields }>;
         };
       };
       expect(parsed.data.total).toBe(3);
-      expect(parsed.data.successful).toBe(3);
+      expect(parsed.data.successful).toHaveLength(3);
     });
 
     it('должен привести linkId к строке, когда API вернул id числом (регрессия -32602)', async () => {
@@ -416,16 +405,16 @@ describe('CreateLinkTool', () => {
 
       // id НЕ запрошен в fields — инструмент обязан вернуть его для linkId.
       const result = await tool.execute({
-        links: [{ issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-2' }],
+        links: [{ issueId: 'TEST-1', relationship: 'relates', targetIssueId: 'TEST-2' }],
         fields: ['type'],
       });
 
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
-        data: { links: Array<{ issueId: string; linkId: string }> };
+        data: { successful: Array<{ issueId: string; linkId: string }> };
       };
-      expect(itemAt(parsed.data.links).linkId).toBe('12345');
+      expect(itemAt(parsed.data.successful).linkId).toBe('12345');
     });
   });
 });

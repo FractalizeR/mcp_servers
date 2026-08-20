@@ -246,29 +246,23 @@ describe('AddCommentTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          comments: Array<{
+          successful: Array<{
             issueId: string;
             commentId: string;
             comment: CommentWithUnknownFields;
           }>;
-          errors: Array<{ issueId: string; error: string }>;
-          fieldsReturned: string[];
+          failed: Array<{ issueId: string; error: string }>;
         };
       };
 
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(2);
-      expect(parsed.data.failed).toBe(0);
-      expect(parsed.data.comments).toHaveLength(2);
-      expect(parsed.data.errors).toHaveLength(0);
-      expect(itemAt(parsed.data.comments).issueId).toBe('TEST-1');
-      expect(itemAt(parsed.data.comments).commentId).toBe('12345');
-      expect(itemAt(parsed.data.comments, 1).issueId).toBe('TEST-2');
-      expect(itemAt(parsed.data.comments, 1).commentId).toBe('67890');
-      expect(parsed.data.fieldsReturned).toEqual(['id', 'text']);
+      expect(parsed.data.successful).toHaveLength(2);
+      expect(parsed.data.failed).toHaveLength(0);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-1');
+      expect(itemAt(parsed.data.successful).commentId).toBe('12345');
+      expect(itemAt(parsed.data.successful, 1).issueId).toBe('TEST-2');
+      expect(itemAt(parsed.data.successful, 1).commentId).toBe('67890');
     });
 
     it('должен обработать частичные ошибки', async () => {
@@ -300,25 +294,21 @@ describe('AddCommentTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          comments: Array<{
+          successful: Array<{
             issueId: string;
             commentId: string;
             comment: CommentWithUnknownFields;
           }>;
-          errors: Array<{ issueId: string; error: string }>;
+          failed: Array<{ issueId: string; error: string }>;
         };
       };
 
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(1);
-      expect(parsed.data.failed).toBe(1);
-      expect(parsed.data.comments).toHaveLength(1);
-      expect(parsed.data.errors).toHaveLength(1);
-      expect(itemAt(parsed.data.errors).issueId).toBe('TEST-2');
-      expect(itemAt(parsed.data.errors).error).toContain('Not found');
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(itemAt(parsed.data.failed).issueId).toBe('TEST-2');
+      expect(itemAt(parsed.data.failed).error).toContain('Not found');
     });
 
     it('должен фильтровать поля для всех созданных комментариев', async () => {
@@ -345,14 +335,14 @@ describe('AddCommentTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          comments: Array<{
+          successful: Array<{
             comment: CommentWithUnknownFields;
           }>;
         };
       };
 
       // Проверяем, что вернулись только указанные поля
-      const returnedComment = itemAt(parsed.data.comments).comment;
+      const returnedComment = itemAt(parsed.data.successful).comment;
       expect(returnedComment).toHaveProperty('id');
       expect(returnedComment).toHaveProperty('text');
       // Другие поля должны быть отфильтрованы
@@ -385,10 +375,10 @@ describe('AddCommentTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          comments: Array<{ issueId: string; commentId: string }>;
+          successful: Array<{ issueId: string; commentId: string }>;
         };
       };
-      expect(itemAt(parsed.data.comments).commentId).toBe('12345');
+      expect(itemAt(parsed.data.successful).commentId).toBe('12345');
     });
   });
 

@@ -28,7 +28,7 @@ describe('transition-issue integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_transition_issue', {
-      issueKey,
+      issueId: issueKey,
       transitionId,
       fields: STANDARD_ISSUE_FIELDS,
     });
@@ -48,7 +48,7 @@ describe('transition-issue integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_transition_issue', {
-      issueKey,
+      issueId: issueKey,
       transitionId,
       comment: 'Closing as completed',
       fields: STANDARD_ISSUE_FIELDS,
@@ -67,7 +67,7 @@ describe('transition-issue integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_transition_issue', {
-      issueKey,
+      issueId: issueKey,
       transitionId,
       fields: STANDARD_ISSUE_FIELDS,
     });
@@ -85,7 +85,7 @@ describe('transition-issue integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_transition_issue', {
-      issueKey,
+      issueId: issueKey,
       transitionId,
       fields: ['key', 'status'],
     });
@@ -109,7 +109,7 @@ describe('transition-issue integration tests', () => {
     });
 
     const result = await client.callTool('fr_yandex_tracker_transition_issue', {
-      issueKey,
+      issueId: issueKey,
       transitionId,
       fields: ['key', 'status.display'],
     });
@@ -131,7 +131,7 @@ describe('transition-issue integration tests', () => {
     mockServer.mockTransitionIssueSuccess(issueKey, transitionId);
 
     const result = await client.callTool('fr_yandex_tracker_transition_issue', {
-      issueKey,
+      issueId: issueKey,
       transitionId,
       fields: ['noSuchField'],
     });

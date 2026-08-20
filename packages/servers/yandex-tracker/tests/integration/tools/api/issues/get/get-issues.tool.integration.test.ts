@@ -40,7 +40,7 @@ describe('get-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: [issueKey],
+        issueIds: [issueKey],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -51,24 +51,18 @@ describe('get-issues integration tests', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response).toMatchObject({
-        total: 1,
-        successful: 1,
-        failed: 0,
-      });
-      expect(response.fieldsReturned).toEqual(STANDARD_ISSUE_FIELDS);
+      expect(response.total).toBe(1);
+      expect(response.successful).toHaveLength(1);
+      expect(response.failed).toHaveLength(0);
 
-      expect(response.issues).toHaveLength(1);
-      expect(response.issues[0].issueKey).toBe(issueKey);
+      expect(response.successful[0].issueId).toBe(issueKey);
 
-      const issue = response.issues[0].issue;
+      const issue = response.successful[0].issue;
       expect(issue).toHaveProperty('key', issueKey);
       expect(issue).toHaveProperty('summary');
       expect(issue).toHaveProperty('status');
       expect(issue.status).toHaveProperty('key');
       expect(issue.status).toHaveProperty('display');
-
-      expect(response.errors).toHaveLength(0);
 
       // Проверяем, что все замоканные запросы были выполнены
       mockServer.assertAllRequestsDone();
@@ -85,7 +79,7 @@ describe('get-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys,
+        issueIds: issueKeys,
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -95,19 +89,14 @@ describe('get-issues integration tests', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response).toMatchObject({
-        total: 3,
-        successful: 3,
-        failed: 0,
-      });
-
-      expect(response.issues).toHaveLength(3);
-      expect(response.errors).toHaveLength(0);
+      expect(response.total).toBe(3);
+      expect(response.successful).toHaveLength(3);
+      expect(response.failed).toHaveLength(0);
 
       // Проверяем порядок задач (должен совпадать с issueKeys)
-      expect(response.issues[0].issueKey).toBe('QUEUE-1');
-      expect(response.issues[1].issueKey).toBe('QUEUE-2');
-      expect(response.issues[2].issueKey).toBe('QUEUE-3');
+      expect(response.successful[0].issueId).toBe('QUEUE-1');
+      expect(response.successful[1].issueId).toBe('QUEUE-2');
+      expect(response.successful[2].issueId).toBe('QUEUE-3');
 
       mockServer.assertAllRequestsDone();
     });
@@ -123,7 +112,7 @@ describe('get-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: [issueKey],
+        issueIds: [issueKey],
         fields,
       });
 
@@ -133,10 +122,9 @@ describe('get-issues integration tests', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response.fieldsReturned).toEqual(fields);
-      expect(response.issues).toHaveLength(1);
+      expect(response.successful).toHaveLength(1);
 
-      const issue = response.issues[0].issue;
+      const issue = response.successful[0].issue;
 
       // Должны быть только запрошенные поля
       expect(issue).toHaveProperty('key');
@@ -161,7 +149,7 @@ describe('get-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: [issueKey],
+        issueIds: [issueKey],
         fields,
       });
 
@@ -170,7 +158,7 @@ describe('get-issues integration tests', () => {
 
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
-      const issue = response.issues[0].issue;
+      const issue = response.successful[0].issue;
 
       expect(issue).toHaveProperty('key');
       expect(issue).toHaveProperty('status');
@@ -193,7 +181,7 @@ describe('get-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: [issueKey],
+        issueIds: [issueKey],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -203,17 +191,12 @@ describe('get-issues integration tests', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response).toMatchObject({
-        total: 1,
-        successful: 0,
-        failed: 1,
-      });
+      expect(response.total).toBe(1);
+      expect(response.successful).toHaveLength(0);
+      expect(response.failed).toHaveLength(1);
 
-      expect(response.issues).toHaveLength(0);
-      expect(response.errors).toHaveLength(1);
-
-      const error = response.errors[0];
-      expect(error.key).toBe(issueKey);
+      const error = response.failed[0];
+      expect(error.issueId).toBe(issueKey);
       // Просто проверяем, что ошибка есть (Error объект не JSON.stringify-able)
       expect(error.error).toBeDefined();
 
@@ -227,7 +210,7 @@ describe('get-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: [issueKey],
+        issueIds: [issueKey],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -237,8 +220,8 @@ describe('get-issues integration tests', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response.failed).toBe(1);
-      expect(response.errors[0].error).toBeDefined();
+      expect(response.failed).toHaveLength(1);
+      expect(response.failed[0].error).toBeDefined();
 
       mockServer.assertAllRequestsDone();
     });
@@ -250,7 +233,7 @@ describe('get-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: [issueKey],
+        issueIds: [issueKey],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -260,8 +243,8 @@ describe('get-issues integration tests', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response.failed).toBe(1);
-      expect(response.errors[0].error).toBeDefined();
+      expect(response.failed).toHaveLength(1);
+      expect(response.failed[0].error).toBeDefined();
 
       mockServer.assertAllRequestsDone();
     });
@@ -280,7 +263,7 @@ describe('get-issues integration tests', () => {
 
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: ['QUEUE-1', 'QUEUE-2', 'QUEUE-3'],
+        issueIds: ['QUEUE-1', 'QUEUE-2', 'QUEUE-3'],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -290,31 +273,26 @@ describe('get-issues integration tests', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response).toMatchObject({
-        total: 3,
-        successful: 2,
-        failed: 1,
-      });
-
-      expect(response.issues).toHaveLength(2);
-      expect(response.errors).toHaveLength(1);
+      expect(response.total).toBe(3);
+      expect(response.successful).toHaveLength(2);
+      expect(response.failed).toHaveLength(1);
 
       // Проверяем успешные задачи
-      expect(response.issues[0].issueKey).toBe('QUEUE-1');
-      expect(response.issues[1].issueKey).toBe('QUEUE-3');
+      expect(response.successful[0].issueId).toBe('QUEUE-1');
+      expect(response.successful[1].issueId).toBe('QUEUE-3');
 
       // Проверяем ошибки
-      expect(response.errors[0].key).toBe('QUEUE-2');
+      expect(response.failed[0].issueId).toBe('QUEUE-2');
 
       mockServer.assertAllRequestsDone();
     });
   });
 
   describe('Validation', () => {
-    it('должен вернуть ошибку при пустом массиве issueKeys', async () => {
+    it('должен вернуть ошибку при пустом массиве issueIds', async () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: [],
+        issueIds: [],
       });
 
       // Assert
@@ -325,7 +303,7 @@ describe('get-issues integration tests', () => {
     it('должен вернуть ошибку при невалидном формате ключа', async () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: ['invalid-key'], // нет дефиса или формат не соответствует QUEUE-123
+        issueIds: ['invalid-key'], // не ключ QUEUE-123 и не 24-символьный hex id
       });
 
       // Assert
@@ -333,10 +311,10 @@ describe('get-issues integration tests', () => {
       expect(getTextContent(result)).toContain('Ошибка валидации параметров');
     });
 
-    it('должен вернуть ошибку если issueKeys не массив', async () => {
+    it('должен вернуть ошибку если issueIds не массив', async () => {
       // Act
       const result = await client.callTool('fr_yandex_tracker_get_issues', {
-        issueKeys: 'QUEUE-1', // строка вместо массива
+        issueIds: 'QUEUE-1', // строка вместо массива
       });
 
       // Assert

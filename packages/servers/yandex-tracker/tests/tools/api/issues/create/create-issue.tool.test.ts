@@ -185,19 +185,17 @@ describe('CreateIssueTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          issueKey: string;
+          issueId: string;
           issue: IssueWithUnknownFields;
-          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.issueKey).toBe('TESTQUEUE-1');
+      expect(parsed.data.issueId).toBe('TESTQUEUE-1');
       expect(parsed.data.issue).toMatchObject({
         id: '1',
         key: 'TESTQUEUE-1',
         summary: 'Test Issue',
       });
-      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
   });
 
@@ -216,7 +214,6 @@ describe('CreateIssueTool', () => {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
-          fieldsReturned: string | string[];
         };
       };
       expect(parsed.success).toBe(true);
@@ -242,7 +239,6 @@ describe('CreateIssueTool', () => {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
-          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
@@ -252,7 +248,6 @@ describe('CreateIssueTool', () => {
       expect(parsed.data.issue).toHaveProperty('description');
       expect(parsed.data.issue).toHaveProperty('queue');
       expect(parsed.data.issue).toHaveProperty('status');
-      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
 
     it('должен фильтровать вложенные поля', async () => {
@@ -314,7 +309,7 @@ describe('CreateIssueTool', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Задача успешно создана',
         expect.objectContaining({
-          issueKey: 'TESTQUEUE-1',
+          issueId: 'TESTQUEUE-1',
         })
       );
     });

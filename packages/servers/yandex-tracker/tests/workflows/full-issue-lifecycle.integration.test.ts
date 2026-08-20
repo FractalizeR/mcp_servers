@@ -61,7 +61,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
     );
     expect(createIssueResult.isError).toBeFalsy();
     const issueData = JSON.parse(getTextContent(createIssueResult));
-    const issueKey = issueData.data.issueKey;
+    const issueKey = issueData.data.issueId;
     expect(issueKey).toBe('TEST-1');
 
     // 2. Добавить комментарий
@@ -81,8 +81,8 @@ describe('Full Issue Lifecycle (Integration)', () => {
     });
     expect(addCommentResult.isError).toBeFalsy();
     const commentData = JSON.parse(getTextContent(addCommentResult));
-    expect(commentData.data.comments).toBeDefined();
-    expect(commentData.data.comments[0].comment).toBeDefined();
+    expect(commentData.data.successful).toBeDefined();
+    expect(commentData.data.successful[0].comment).toBeDefined();
 
     // 3. Прикрепить файл
     mockServer.mockUploadAttachmentSuccess(issueKey, {
@@ -146,7 +146,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
     );
     expect(createIssue2Result.isError).toBeFalsy();
     const issue2Data = JSON.parse(getTextContent(createIssue2Result));
-    const issueKey2 = issue2Data.data.issueKey;
+    const issueKey2 = issue2Data.data.issueId;
 
     // 6. Создать связь между задачами
     mockServer.mockCreateLinkSuccess(issueKey, issueKey2, {
@@ -160,7 +160,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
         {
           issueId: issueKey,
           relationship: 'relates',
-          targetIssue: issueKey2,
+          targetIssueId: issueKey2,
         },
       ],
       fields: ['id', 'type', 'object'],
@@ -168,8 +168,8 @@ describe('Full Issue Lifecycle (Integration)', () => {
     expect(createLinkResult.isError).toBeFalsy();
     const linkData = JSON.parse(getTextContent(createLinkResult));
     expect(linkData.success).toBe(true);
-    expect(linkData.data.links).toBeDefined();
-    expect(linkData.data.links[0].link.id).toBe('link-1');
+    expect(linkData.data.successful).toBeDefined();
+    expect(linkData.data.successful[0].link.id).toBe('link-1');
 
     // 7. Изменить статус задачи
     mockServer.mockTransitionIssueSuccess(issueKey, 'inProgress');
@@ -177,7 +177,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
     const transitionResult = await client.callTool(
       buildToolName('transition_issue', MCP_TOOL_PREFIX),
       {
-        issueKey: issueKey,
+        issueId: issueKey,
         transitionId: 'inProgress',
         fields: ['key', 'status'],
       }
@@ -190,7 +190,7 @@ describe('Full Issue Lifecycle (Integration)', () => {
     const changelogResult = await client.callTool(
       buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
       {
-        issueKeys: [issueKey],
+        issueIds: [issueKey],
         fields: ['id', 'updatedAt', 'updatedBy'],
       }
     );
@@ -267,8 +267,8 @@ describe('Full Issue Lifecycle (Integration)', () => {
     });
     expect(commentsResult.isError).toBeFalsy();
     const commentsData = JSON.parse(getTextContent(commentsResult));
-    expect(commentsData.data.comments).toHaveLength(1);
-    expect(commentsData.data.comments[0].count).toBe(3);
+    expect(commentsData.data.successful).toHaveLength(1);
+    expect(commentsData.data.successful[0].count).toBe(3);
 
     // Получить чеклист (batch API)
     mockServer.mockGetChecklistSuccess(issueKey, [

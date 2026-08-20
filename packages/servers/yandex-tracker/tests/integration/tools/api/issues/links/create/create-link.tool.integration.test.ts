@@ -41,7 +41,7 @@ describe('create-link integration tests', () => {
         {
           issueId: issueKey,
           relationship: 'has subtasks',
-          targetIssue,
+          targetIssueId: targetIssue,
         },
       ],
       fields: ['id', 'type', 'object'],
@@ -52,12 +52,12 @@ describe('create-link integration tests', () => {
     const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
-    expect(response.data.successful).toBe(1);
-    expect(response.data.failed).toBe(0);
-    expect(response.data.links).toHaveLength(1);
-    expect(response.data.links[0].issueId).toBe(issueKey);
-    expect(response.data.links[0].link).toHaveProperty('id');
-    expect(response.data.links[0].link.type.id).toBe('subtask');
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.failed).toHaveLength(0);
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].issueId).toBe(issueKey);
+    expect(response.data.successful[0].link).toHaveProperty('id');
+    expect(response.data.successful[0].link.type.id).toBe('subtask');
     mockServer.assertAllRequestsDone();
   });
 
@@ -82,7 +82,7 @@ describe('create-link integration tests', () => {
         {
           issueId: issueKey,
           relationship: 'relates',
-          targetIssue,
+          targetIssueId: targetIssue,
         },
       ],
       fields: ['id', 'type', 'object'],
@@ -93,8 +93,8 @@ describe('create-link integration tests', () => {
     const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
-    expect(response.data.successful).toBe(1);
-    expect(response.data.links[0].link.type.id).toBe('relates');
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].link.type.id).toBe('relates');
     mockServer.assertAllRequestsDone();
   });
 
@@ -125,7 +125,7 @@ describe('create-link integration tests', () => {
         {
           issueId: issueKey,
           relationship: 'depends on',
-          targetIssue,
+          targetIssueId: targetIssue,
         },
       ],
       fields: ['id', 'type', 'object'],
@@ -136,8 +136,8 @@ describe('create-link integration tests', () => {
     const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
-    expect(response.data.successful).toBe(1);
-    expect(response.data.links[0].link.type.id).toBe('depends');
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].link.type.id).toBe('depends');
     mockServer.assertAllRequestsDone();
   });
 
@@ -152,7 +152,7 @@ describe('create-link integration tests', () => {
         {
           issueId: issueKey,
           relationship: 'relates',
-          targetIssue: 'TEST-100',
+          targetIssueId: 'TEST-100',
         },
       ],
       fields: ['id', 'type'],
@@ -163,10 +163,10 @@ describe('create-link integration tests', () => {
     const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
     expect(response.data.total).toBe(1);
-    expect(response.data.successful).toBe(0);
-    expect(response.data.failed).toBe(1);
-    expect(response.data.errors).toHaveLength(1);
-    expect(response.data.errors[0].issueId).toBe(issueKey);
+    expect(response.data.successful).toHaveLength(0);
+    expect(response.data.failed).toHaveLength(1);
+    expect(response.data.failed).toHaveLength(1);
+    expect(response.data.failed[0].issueId).toBe(issueKey);
     mockServer.assertAllRequestsDone();
   });
 
@@ -191,7 +191,7 @@ describe('create-link integration tests', () => {
         {
           issueId: issueKey,
           relationship: 'has subtasks',
-          targetIssue,
+          targetIssueId: targetIssue,
         },
       ],
       fields: ['id', 'type', 'object'],
@@ -201,10 +201,9 @@ describe('create-link integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
     expect(response.success).toBe(true);
-    expect(response.data.links[0].link).toHaveProperty('id');
-    expect(response.data.links[0].link).toHaveProperty('type');
-    expect(response.data.links[0].link).toHaveProperty('object');
-    expect(response.data.fieldsReturned).toEqual(['id', 'type', 'object']);
+    expect(response.data.successful[0].link).toHaveProperty('id');
+    expect(response.data.successful[0].link).toHaveProperty('type');
+    expect(response.data.successful[0].link).toHaveProperty('object');
     mockServer.assertAllRequestsDone();
   });
 });

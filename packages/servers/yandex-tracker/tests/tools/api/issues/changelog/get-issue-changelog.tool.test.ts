@@ -87,14 +87,14 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       expect(definition.name).toBe(buildToolName('get_issue_changelog', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('История изменений');
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueKeys', 'fields']);
-      expect(definition.inputSchema.properties?.['issueKeys']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['issueIds', 'fields']);
+      expect(definition.inputSchema.properties?.['issueIds']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
   describe('Validation', () => {
-    it('должен требовать параметр issueKeys', async () => {
+    it('должен требовать параметр issueIds', async () => {
       const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
@@ -106,9 +106,9 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       expect(parsed.message).toContain('валидации');
     });
 
-    it('должен требовать непустой массив issueKeys', async () => {
+    it('должен требовать непустой массив issueIds', async () => {
       const result = await tool.execute({
-        issueKeys: [],
+        issueIds: [],
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
@@ -130,7 +130,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
 
       await tool.execute({
-        issueKeys: ['QUEUE-123'],
+        issueIds: ['QUEUE-123'],
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
@@ -156,7 +156,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
 
       const result = await tool.execute({
-        issueKeys: ['QUEUE-123', 'QUEUE-456'],
+        issueIds: ['QUEUE-123', 'QUEUE-456'],
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
@@ -165,15 +165,15 @@ describe('GetIssueChangelogTool (batch mode)', () => {
         success: boolean;
         data: {
           total: number;
-          successful: Array<{ issueKey: string; changelog: unknown[]; totalEntries: number }>;
-          failed: Array<{ key: string; error: string }>;
+          successful: Array<{ issueId: string; changelog: unknown[]; totalEntries: number }>;
+          failed: Array<{ issueId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(2);
       expect(parsed.data.failed).toHaveLength(0);
-      expect(parsed.data.successful[0]?.issueKey).toBe('QUEUE-123');
+      expect(parsed.data.successful[0]?.issueId).toBe('QUEUE-123');
       expect(parsed.data.successful[0]?.totalEntries).toBe(1);
     });
 
@@ -196,7 +196,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
 
       const result = await tool.execute({
-        issueKeys: ['QUEUE-123', 'INVALID-999'],
+        issueIds: ['QUEUE-123', 'INVALID-999'],
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
@@ -206,14 +206,14 @@ describe('GetIssueChangelogTool (batch mode)', () => {
         data: {
           total: number;
           successful: unknown[];
-          failed: Array<{ key: string; error: string }>;
+          failed: Array<{ issueId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
       expect(parsed.data.successful).toHaveLength(1);
       expect(parsed.data.failed).toHaveLength(1);
-      expect(parsed.data.failed[0]?.key).toBe('INVALID-999');
+      expect(parsed.data.failed[0]?.issueId).toBe('INVALID-999');
     });
   });
 
@@ -231,7 +231,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
 
       const result = await tool.execute({
-        issueKeys: ['QUEUE-123'],
+        issueIds: ['QUEUE-123'],
         fields: ['id', 'updatedAt'],
       });
 
@@ -240,14 +240,14 @@ describe('GetIssueChangelogTool (batch mode)', () => {
         success: boolean;
         data: {
           successful: Array<{ changelog: ChangelogEntryWithUnknownFields[] }>;
-          fieldsReturned: string[];
+          warnings?: Array<{ code: string; message: string }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.successful[0]?.changelog[0]).toHaveProperty('id');
       expect(parsed.data.successful[0]?.changelog[0]).toHaveProperty('updatedAt');
       expect(parsed.data.successful[0]?.changelog[0]).not.toHaveProperty('updatedBy');
-      expect(parsed.data.fieldsReturned).toEqual(['id', 'updatedAt']);
+      expect(parsed.data.warnings).toBeUndefined();
     });
   });
 
@@ -265,7 +265,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
 
       await tool.execute({
-        issueKeys: ['QUEUE-123'],
+        issueIds: ['QUEUE-123'],
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
@@ -286,7 +286,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockRejectedValue(error);
 
       const result = await tool.execute({
-        issueKeys: ['QUEUE-123'],
+        issueIds: ['QUEUE-123'],
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
@@ -303,14 +303,14 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
 
       const result = await tool.execute({
-        issueKeys: ['QUEUE-123'],
+        issueIds: ['QUEUE-123'],
         fields: STANDARD_CHANGELOG_FIELDS,
       });
 
       const parsed = JSON.parse(getTextContent(result)) as {
         data: {
           successful: Array<{
-            issueKey: string;
+            issueId: string;
             changelog: unknown[];
             totalEntries: number;
             pagination: { hasNextPage: boolean };
@@ -318,7 +318,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
         };
       };
       const item = parsed.data.successful[0];
-      expect(item?.issueKey).toBe('QUEUE-123');
+      expect(item?.issueId).toBe('QUEUE-123');
       expect(item?.changelog).toHaveLength(1);
       expect(item?.totalEntries).toBe(1);
       expect(item?.pagination).toBeDefined();
@@ -332,7 +332,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
 
       await tool.execute({
-        issueKeys: ['QUEUE-123'],
+        issueIds: ['QUEUE-123'],
         fetchAll: true,
         maxItems: 300,
         perPage: 50,
@@ -347,7 +347,7 @@ describe('GetIssueChangelogTool (batch mode)', () => {
 
     it('должен отклонить конфликт cursor + fetchAll', async () => {
       const result = await tool.execute({
-        issueKeys: ['QUEUE-123'],
+        issueIds: ['QUEUE-123'],
         cursor: 'c1:abc',
         fetchAll: true,
         fields: STANDARD_CHANGELOG_FIELDS,
@@ -356,9 +356,9 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       expect(result.isError).toBe(true);
     });
 
-    it('должен отклонить cursor при нескольких issueKeys (batch-ограничение)', async () => {
+    it('должен отклонить cursor при нескольких issueIds (batch-ограничение)', async () => {
       const result = await tool.execute({
-        issueKeys: ['QUEUE-123', 'QUEUE-456'],
+        issueIds: ['QUEUE-123', 'QUEUE-456'],
         cursor: 'c1:abc',
         fields: STANDARD_CHANGELOG_FIELDS,
       });
@@ -366,14 +366,14 @@ describe('GetIssueChangelogTool (batch mode)', () => {
       expect(result.isError).toBe(true);
     });
 
-    it('должен прокинуть cursor в фасад (single issueKey)', async () => {
+    it('должен прокинуть cursor в фасад (single issueId)', async () => {
       const mockBatchResult: ChangelogBatch = [
         { status: 'fulfilled', key: 'QUEUE-123', value: page([]), index: 0 },
       ];
       vi.mocked(mockTrackerFacade.getIssueChangelog).mockResolvedValue(mockBatchResult);
 
       await tool.execute({
-        issueKeys: ['QUEUE-123'],
+        issueIds: ['QUEUE-123'],
         cursor: 'c1:abc',
         fields: STANDARD_CHANGELOG_FIELDS,
       });

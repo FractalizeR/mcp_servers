@@ -7,8 +7,14 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { z } from 'zod';
 import { ApiErrorClass } from '@fractalizer/mcp-infrastructure';
-import { BatchErrorValueSchema, makeBatchErrorItemSchema } from '#common/schemas/output.schema.js';
+import {
+  BatchErrorValueSchema,
+  makeBatchErrorItemSchema,
+  makeBatchSuccessItemSchema,
+  makeBatchResultSchema,
+} from '#common/schemas/output.schema.js';
 
 describe('BatchErrorValueSchema', () => {
   it('принимает строку (message обычного Error)', () => {
@@ -85,5 +91,69 @@ describe('makeBatchErrorItemSchema', () => {
     const result = schema.safeParse({ userId: '123', error: 'boom' });
 
     expect(result.success).toBe(true);
+  });
+});
+
+/**
+ * DoD 1.1 п.4/5 плана plan_tool_contract_unification: `successful[]` несёт
+ * идентификатор сущности на верхнем уровне элемента (не во вложенном `data`,
+ * см. CLAUDE.md §2.1) — под тем же именем ключа, что и `failed[]`.
+ */
+describe('makeBatchSuccessItemSchema', () => {
+  it('идентификатор лежит на верхнем уровне элемента рядом с данными (не data.*)', () => {
+    const schema = makeBatchSuccessItemSchema('issueId', z.object({ summary: z.string() }));
+
+    const result = schema.safeParse({ issueId: 'TEST-1', summary: 'Заголовок' });
+
+    expect(result.success).toBe(true);
+    expect(result.success && 'data' in result.data).toBe(false);
+  });
+
+  it('использует переданное имя ключа', () => {
+    const schema = makeBatchSuccessItemSchema('userId', z.object({ login: z.string() }));
+
+    const result = schema.safeParse({ userId: '123', login: 'user' });
+
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('makeBatchResultSchema', () => {
+  const schema = makeBatchResultSchema('issueId', z.object({ summary: z.string() }));
+
+  it('успешный элемент и элемент ошибки используют ОДИН И ТОТ ЖЕ ключ идентификатора', () => {
+    const result = schema.safeParse({
+      total: 2,
+      successful: [{ issueId: 'TEST-1', summary: 'Ok' }],
+      failed: [{ issueId: 'TEST-2', error: 'not found' }],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('total — число, successful/failed — массивы даже при полном успехе', () => {
+    const result = schema.safeParse({
+      total: 1,
+      successful: [{ issueId: 'TEST-1', summary: 'Ok' }],
+      failed: [],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('total — число, successful/failed — массивы даже при полном отказе', () => {
+    const result = schema.safeParse({
+      total: 1,
+      successful: [],
+      failed: [{ issueId: 'TEST-1', error: 'boom' }],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('отклоняет legacy-форму successful: number (регрессия к отчёту)', () => {
+    const result = schema.safeParse({ total: 1, successful: 1, failed: [] });
+
+    expect(result.success).toBe(false);
   });
 });

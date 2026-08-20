@@ -35,7 +35,7 @@ function makeLogger(): Logger {
 interface AnalyzeSuccessPayload {
   success: true;
   data: {
-    issueKey: string;
+    issueId: string;
     suggestedDescription: string;
     version?: number;
   };
@@ -67,7 +67,7 @@ describe('Fallback без MCP Apps: analyze_issue_description → update_issue',
 
     // Шаг 1 — обычный tool-вызов, БЕЗ какого-либо обращения к _meta/UI.
     const analyzeTool = new AnalyzeIssueDescriptionTool(facade, logger);
-    const analyzeResult = await analyzeTool.execute({ issueKey: 'QUEUE-1' });
+    const analyzeResult = await analyzeTool.execute({ issueId: 'QUEUE-1' });
     expect(analyzeResult.isError).toBeUndefined();
 
     const analyzePayload = JSON.parse(
@@ -81,7 +81,7 @@ describe('Fallback без MCP Apps: analyze_issue_description → update_issue',
     // человеком) обычным существующим инструментом, без UI-канала.
     const updateTool = new UpdateIssueTool(facade, logger);
     const updateResult = await updateTool.execute({
-      issueKey: analyzePayload.data.issueKey,
+      issueId: analyzePayload.data.issueId,
       description: analyzePayload.data.suggestedDescription,
       version: analyzePayload.data.version,
       fields: ['key'],

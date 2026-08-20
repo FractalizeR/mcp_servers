@@ -34,12 +34,11 @@ describe('get-comments integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
-    expect(response.data.successful).toBe(1);
-    expect(response.data.comments).toBeDefined();
-    expect(Array.isArray(response.data.comments)).toBe(true);
-    expect(response.data.comments.length).toBe(1);
-    expect(response.data.comments[0].issueId).toBe(issueKey);
-    expect(response.data.comments[0].count).toBeGreaterThan(0);
+    expect(response.data.successful).toBeDefined();
+    expect(Array.isArray(response.data.successful)).toBe(true);
+    expect(response.data.successful.length).toBe(1);
+    expect(response.data.successful[0].issueId).toBe(issueKey);
+    expect(response.data.successful[0].count).toBeGreaterThan(0);
     mockServer.assertAllRequestsDone();
   });
 
@@ -58,11 +57,10 @@ describe('get-comments integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
-    expect(response.data.successful).toBe(1);
-    expect(response.data.comments).toBeDefined();
-    expect(Array.isArray(response.data.comments)).toBe(true);
-    expect(response.data.comments.length).toBe(1);
-    expect(response.data.comments[0].count).toBe(0);
+    expect(response.data.successful).toBeDefined();
+    expect(Array.isArray(response.data.successful)).toBe(true);
+    expect(response.data.successful.length).toBe(1);
+    expect(response.data.successful[0].count).toBe(0);
     mockServer.assertAllRequestsDone();
   });
 
@@ -81,9 +79,8 @@ describe('get-comments integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
-    expect(response.data.failed).toBe(1);
-    expect(response.data.errors).toBeDefined();
-    expect(response.data.errors.length).toBe(1);
+    expect(response.data.failed).toBeDefined();
+    expect(response.data.failed.length).toBe(1);
     mockServer.assertAllRequestsDone();
   });
 
@@ -103,8 +100,8 @@ describe('get-comments integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
-    expect(response.data.comments).toBeDefined();
-    expect(Array.isArray(response.data.comments)).toBe(true);
+    expect(response.data.successful).toBeDefined();
+    expect(Array.isArray(response.data.successful)).toBe(true);
     mockServer.assertAllRequestsDone();
   });
 
@@ -124,8 +121,8 @@ describe('get-comments integration tests', () => {
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
     expect(response.data.total).toBe(1);
-    expect(response.data.comments).toBeDefined();
-    expect(Array.isArray(response.data.comments)).toBe(true);
+    expect(response.data.successful).toBeDefined();
+    expect(Array.isArray(response.data.successful)).toBe(true);
     mockServer.assertAllRequestsDone();
   });
 });
