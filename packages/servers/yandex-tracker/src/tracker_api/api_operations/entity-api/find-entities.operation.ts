@@ -155,7 +155,7 @@ export class FindEntitiesOperation extends BaseOperation {
     // idempotencyDeclared: true — POST `_search` только читает.
     const firstEnvelope = parseSearchEnvelope(
       await this.httpClient.post<unknown>(
-        this.buildEndpoint(params.entityType, effectivePerPage, 1),
+        this.buildEndpoint(params.entityType, effectivePerPage, 1, params.entityFields),
         requestBody,
         true
       )
@@ -166,6 +166,7 @@ export class FindEntitiesOperation extends BaseOperation {
         items: firstEnvelope.items,
         pagination: this.buildMeta({
           entityType: params.entityType,
+          entityFields: params.entityFields,
           effectivePerPage,
           currentPage: 1,
           pagesFetched: 1,
@@ -224,7 +225,7 @@ export class FindEntitiesOperation extends BaseOperation {
       try {
         envelope = parseSearchEnvelope(
           await this.httpClient.post<unknown>(
-            this.buildEndpoint(params.entityType, effectivePerPage, nextPage),
+            this.buildEndpoint(params.entityType, effectivePerPage, nextPage, params.entityFields),
             requestBody,
             true
           )
@@ -252,6 +253,7 @@ export class FindEntitiesOperation extends BaseOperation {
       items,
       pagination: this.buildMeta({
         entityType: params.entityType,
+        entityFields: params.entityFields,
         effectivePerPage,
         currentPage,
         pagesFetched,
@@ -273,8 +275,8 @@ export class FindEntitiesOperation extends BaseOperation {
 
     if (extra !== bodyHash) {
       throw new Error(
-        'Критерии поиска не совпадают с курсором: searchString/filter/orderBy/rootOnly должны ' +
-          'быть переданы повторно в том же виде, что и при первой выборке.'
+        'Критерии поиска не совпадают с курсором: searchString/filter/orderBy/rootOnly и ' +
+          'состав fields должны быть переданы повторно в том же виде, что и при первой выборке.'
       );
     }
 
@@ -289,6 +291,7 @@ export class FindEntitiesOperation extends BaseOperation {
       items: envelope.items,
       pagination: this.buildMeta({
         entityType: params.entityType,
+        entityFields: params.entityFields,
         effectivePerPage,
         currentPage,
         pagesFetched: 1,
@@ -317,6 +320,7 @@ export class FindEntitiesOperation extends BaseOperation {
     readonly truncated: boolean;
     readonly hasError: boolean;
     readonly offerNextCursor?: boolean;
+    readonly entityFields?: readonly string[] | undefined;
   }): PaginationMeta {
     const offerNextCursor = input.offerNextCursor ?? true;
     const hasMorePages = input.pages !== undefined && input.currentPage < input.pages;
@@ -326,7 +330,12 @@ export class FindEntitiesOperation extends BaseOperation {
     const nextCursor =
       hasMorePages && offerNextCursor
         ? CursorCodec.encode(
-            this.buildEndpoint(input.entityType, input.effectivePerPage, input.currentPage + 1),
+            this.buildEndpoint(
+              input.entityType,
+              input.effectivePerPage,
+              input.currentPage + 1,
+              input.entityFields
+            ),
             CURSOR_TAGS.findEntities,
             input.bodyHash
           )
@@ -355,8 +364,20 @@ export class FindEntitiesOperation extends BaseOperation {
     return body;
   }
 
+  /**
+   * Хеш, которым верифицируется курсор. Включает НЕ ТОЛЬКО критерии поиска, но
+   * и проекцию: путь следующей страницы вшивается в курсор вместе с `fields`,
+   * поэтому при смене проекции между вызовами запрос ушёл бы со старым набором
+   * полей, а ответ был бы отфильтрован и подписан новым — агент получил бы
+   * пустоту под видом запрошенных полей. Пусть лучше падает явной ошибкой.
+   */
   private hashRequestBody(params: FindEntitiesDto): string {
-    const json = JSON.stringify(FindEntitiesOperation.canonicalize(this.buildRequestBody(params)));
+    const json = JSON.stringify(
+      FindEntitiesOperation.canonicalize({
+        body: this.buildRequestBody(params),
+        entityFields: [...(params.entityFields ?? [])].sort(),
+      })
+    );
     return createHash('sha256').update(json, 'utf8').digest('base64url');
   }
 
@@ -375,8 +396,19 @@ export class FindEntitiesOperation extends BaseOperation {
     return value;
   }
 
-  private buildEndpoint(entityType: string, perPage: number, page: number): string {
+  private buildEndpoint(
+    entityType: string,
+    perPage: number,
+    page: number,
+    entityFields?: readonly string[] | undefined
+  ): string {
     const query = new URLSearchParams({ perPage: String(perPage), page: String(page) });
+    // Без `?fields=` API не отдаёт объект `fields` записей вовсе — см.
+    // `tools/api/entities/entity-api-fields.util.ts`. Параметр входит в путь,
+    // поэтому переживает и курсор, и обход fetchAll.
+    if (entityFields !== undefined && entityFields.length > 0) {
+      query.set('fields', entityFields.join(','));
+    }
     return `/v3/entities/${entityType}/_search?${query.toString()}`;
   }
 }

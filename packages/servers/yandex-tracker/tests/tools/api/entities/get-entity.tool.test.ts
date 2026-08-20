@@ -36,7 +36,11 @@ describe('GetEntityTool', () => {
     const result = await tool.execute({ entityType: 'goal', entityId: '1', fields: ['id'] });
 
     expect(result.isError).toBeUndefined();
-    expect(mockTrackerFacade.getEntity).toHaveBeenCalledWith({ entityType: 'goal', entityId: '1' });
+    expect(mockTrackerFacade.getEntity).toHaveBeenCalledWith({
+      entityType: 'goal',
+      entityId: '1',
+      entityFields: [],
+    });
   });
 
   it('обработает ошибку facade', async () => {

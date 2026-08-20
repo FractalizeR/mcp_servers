@@ -7,6 +7,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { EntityApiRecordWithUnknownFields } from '#tracker_api/entities/index.js';
 import { FindEntitiesParamsSchema } from './find-entities.schema.js';
+import { extractEntityApiFields } from './entity-api-fields.util.js';
 
 import { FIND_ENTITIES_TOOL_METADATA } from './find-entities.metadata.js';
 
@@ -28,7 +29,11 @@ export class FindEntitiesTool extends BaseTool<YandexTrackerFacade> {
     try {
       this.logger.info('Поиск записей Entity API', { entityType });
 
-      const result = await this.facade.findEntities({ entityType, ...searchParams });
+      const result = await this.facade.findEntities({
+        entityType,
+        ...searchParams,
+        entityFields: extractEntityApiFields(fields),
+      });
 
       const filteredEntities = result.items.map((entity) =>
         ResponseFieldFilter.filter<EntityApiRecordWithUnknownFields>(entity, fields)
