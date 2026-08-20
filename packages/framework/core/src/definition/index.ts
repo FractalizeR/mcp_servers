@@ -40,3 +40,11 @@ export { detectCircularRefs, type CircularRefCheckResult } from './detect-circul
 // Единый хелпер success envelope / outputSchema (пакет 3.1.G — свод трёх
 // параллельно изобретённых серверных хелперов в один, во framework)
 export { successEnvelopeSchema, buildOutputSchema } from './output-schema.js';
+
+// Контракт предупреждений success envelope (план unify-tool-contract, 1.1)
+export {
+  ToolWarningCode,
+  ToolWarningSchema,
+  ToolWarningsSchema,
+  type ToolWarning,
+} from './tool-warning.js';

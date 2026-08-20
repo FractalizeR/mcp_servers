@@ -21,18 +21,30 @@
 import { z } from 'zod';
 import { generateDefinitionFromSchema } from './schema-to-definition.js';
 import type { JsonObjectSchema } from '../tools/base/base.types.js';
+import { ToolWarningsSchema } from './tool-warning.js';
 
 /**
  * Обернуть Zod-схему данных инструмента в единый success envelope
- * `{ success: true, data }` — форма, в которой `BaseTool.formatSuccess()`
+ * `{ success: true, data, warnings? }` — форма, в которой `BaseTool.formatSuccess()`
  * отдаёт и `structuredContent`, и текстовый дубль.
+ *
+ * `warnings` — опциональный, добавлен планом `plan_tool_contract_unification`
+ * (1.1) поверх исходного `{ success, data }`: обратная совместимость обязательна
+ * (см. README §3 плана и base-tool.ts) — существующие представители, никогда не
+ * передающие warnings в `formatSuccess()`, продолжают проходить эту же схему,
+ * потому что поле отсутствует, а не `undefined`/пусто.
  */
 export function successEnvelopeSchema<T extends z.ZodRawShape>(
   dataSchema: z.ZodObject<T>
-): z.ZodObject<{ success: z.ZodLiteral<true>; data: z.ZodObject<T> }> {
+): z.ZodObject<{
+  success: z.ZodLiteral<true>;
+  data: z.ZodObject<T>;
+  warnings: z.ZodOptional<typeof ToolWarningsSchema>;
+}> {
   return z.object({
     success: z.literal(true),
     data: dataSchema,
+    warnings: ToolWarningsSchema.optional(),
   });
 }
 

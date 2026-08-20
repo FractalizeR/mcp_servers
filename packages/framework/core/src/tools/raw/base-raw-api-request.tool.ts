@@ -61,13 +61,17 @@ export abstract class BaseRawApiRequestTool<
       const input: RawApiRequestInput = query ? { method, path, query } : { method, path };
       const data = await this.facade.rawApiRequest(input);
 
+      // ВАЖНО: fields здесь НЕ идёт через filterWithReport/детектор
+      // FIELDS_WITHOUT_VALUE (план plan_tool_contract_unification, 1.1,
+      // граничные случаи) — форма `data` заранее не известна (объект, массив
+      // или скаляр), а для скаляра понятие «путь пуст во всех элементах»
+      // неопределено. Раз детектор не запускается, предупреждать не о чем.
       const filtered = ResponseFieldFilter.filter(data, fields);
 
       return this.formatSuccess({
         method,
         path,
         data: filtered,
-        fieldsReturned: fields,
       });
     } catch (error: unknown) {
       return this.formatError(`Ошибка raw API запроса (${method} ${path})`, error);
