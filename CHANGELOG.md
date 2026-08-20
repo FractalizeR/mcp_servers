@@ -1,3 +1,9 @@
+## [3.1.0](https://github.com/FractalizeR/mcp_servers/compare/v3.0.0...v3.1.0) (2026-08-20)
+
+### Features
+
+* **live-scope:** машинная защита области действия живых прогонов ([#405](https://github.com/FractalizeR/mcp_servers/issues/405)) ([abe8fad](https://github.com/FractalizeR/mcp_servers/commit/abe8fadbe8ac1b2446c2623e625db8223be924ea))
+
 ## [3.0.0](https://github.com/FractalizeR/mcp_servers/compare/v2.5.1...v3.0.0) (2026-08-20)
 
 ### ⚠ BREAKING CHANGES
