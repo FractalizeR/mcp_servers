@@ -26,6 +26,12 @@ export interface ScopeContext {
   /** Ключ песочной очереди, например `TEST`. */
   readonly sandboxQueue: string;
   readonly journal: RunJournal;
+
+  /**
+   * Заполнена, если рубеж обязан отклонять любую мутацию независимо от правил:
+   * пишущий прогон, не объявивший область действия. Текст объясняет, что сделать.
+   */
+  readonly refuseEverything?: string;
 }
 
 interface ScopeRule {

@@ -12,6 +12,7 @@
 import type { OpenSessionOptions } from '../session/index.js';
 import {
   composeEnv,
+  declareWriteRun,
   resolveLocalBundle,
   resolveSecretsEnv,
   type ResolveSecretsEnvOptions,
@@ -84,7 +85,9 @@ function describeBundleFailure(
 /** Резолвнуть секреты + бандл и собрать {@link DevSessionLaunch}, готовый для {@link DevSession.open}. */
 export async function resolveLaunch(
   global: GlobalCliOptions,
-  deps: RunCliDeps
+  deps: RunCliDeps,
+  /** Прогон разрешает запись (`--dangerously-allow-write`) — объявляется серверу. */
+  allowWrite = false
 ): Promise<ResolveLaunchResult> {
   const secretsOutcome = await resolveSecretsEnv(
     global.serverName,
@@ -95,7 +98,7 @@ export async function resolveLaunch(
   }
 
   const parentEnv = deps.parentEnv ?? process.env;
-  const env = composeEnv(secretsOutcome.env, parentEnv);
+  const env = declareWriteRun(composeEnv(secretsOutcome.env, parentEnv), allowWrite);
   // Оба источника отбираются одной шкалой чувствительности (`secrets/sensitivity.ts`):
   // по имени ключа и по форме значения. Не «все значения окружения» — иначе
   // `HOME`/`USER`/`PWD` затирают собственную диагностику (`missing`/`stale`

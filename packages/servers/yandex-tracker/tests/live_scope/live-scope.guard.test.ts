@@ -141,6 +141,44 @@ describe('Включение рубежа', () => {
     expect(createLiveScopeGuardFromEnv({})).toBeUndefined();
   });
 
+  it('пишущий прогон без объявленной области отклоняет мутации, но читает', () => {
+    // Иначе рубеж — то, что легко забыть включить, а значит снова аккуратность
+    // ведущего прогон, а не свойство системы (найдено ревью).
+    //
+    // Отказ на вызове, а не падение на старте: stdio не доносит stderr сервера,
+    // и упавший процесс виден клиенту как «Connection closed» — транспортный сбой
+    // вместо причины (проверено вживую).
+    const guard = createLiveScopeGuardFromEnv({ MCP_DEV_WRITE_ALLOWED: '1' });
+
+    expect(guard).toBeDefined();
+    expect(() =>
+      guard?.inspectRequest({ method: 'patch', url: '/v3/issues/TEST-1', data: {} })
+    ).toThrow(/область действия не объявлена/i);
+    expect(() =>
+      guard?.inspectRequest({ method: 'get', url: '/v3/issues/TEST-1', data: undefined })
+    ).not.toThrow();
+  });
+
+  it('осознанный отказ от рубежа возможен только точным значением', () => {
+    const halfHearted = createLiveScopeGuardFromEnv({
+      MCP_DEV_WRITE_ALLOWED: '1',
+      YANDEX_TRACKER_LIVE_SCOPE_OFF: 'true',
+    });
+    expect(halfHearted).toBeDefined();
+
+    expect(
+      createLiveScopeGuardFromEnv({
+        MCP_DEV_WRITE_ALLOWED: '1',
+        YANDEX_TRACKER_LIVE_SCOPE_OFF: 'i-am-writing-to-production',
+      })
+    ).toBeUndefined();
+  });
+
+  it('читающий прогон рубежа не требует', () => {
+    // mcp-dev без --dangerously-allow-write маркер не ставит: чтение безопасно.
+    expect(createLiveScopeGuardFromEnv({ MCP_DEV_WRITE_ALLOWED: undefined })).toBeUndefined();
+  });
+
   it('очередь без журнала — отказ на старте, а не половина рубежа', () => {
     expect(() => createLiveScopeGuardFromEnv({ YANDEX_TRACKER_LIVE_SCOPE_QUEUE: 'TEST' })).toThrow(
       /журнал прогона обязателен/i

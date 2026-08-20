@@ -27,6 +27,10 @@ export function decideRequest(incoming: OutgoingRequest, context: ScopeContext):
     return { allowed: true, reason: 'метод не меняет данные' };
   }
 
+  if (context.refuseEverything !== undefined) {
+    return { allowed: false, reason: context.refuseEverything };
+  }
+
   const breakage = context.journal.breakage();
   if (breakage !== undefined) {
     return { allowed: false, reason: `журнал прогона потерял достоверность: ${breakage}` };
@@ -87,9 +91,12 @@ export class LiveScopeGuard implements HttpTrafficGuard {
   inspectRequest(request: OutgoingRequest): void {
     const decision = decideRequest(request, this.context);
     if (decision.allowed) return;
+    const preamble =
+      this.context.refuseEverything === undefined
+        ? `Живой прогон ограничен очередью ${this.context.sandboxQueue}. `
+        : '';
     throw new ScopeViolationError(
-      `Живой прогон ограничен очередью ${this.context.sandboxQueue}. ` +
-        `Запрос ${request.method.toUpperCase()} ${request.url} отклонён: ${decision.reason}.`
+      `${preamble}Запрос ${request.method.toUpperCase()} ${request.url} отклонён: ${decision.reason}.`
     );
   }
 

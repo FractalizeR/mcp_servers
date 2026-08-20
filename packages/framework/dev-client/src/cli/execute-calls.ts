@@ -107,7 +107,7 @@ function printResults(io: CliIo, results: readonly BatchCallOutcome[]): void {
  */
 export async function executeCalls(request: ExecuteCallsRequest): Promise<number> {
   const { global, calls, options, io, deps } = request;
-  const opened = await openSessionContext(global, deps);
+  const opened = await openSessionContext(global, deps, options.allowWrite);
   if (opened.outcome === 'failed') {
     io.stderr(`${opened.message}\n`);
     return opened.exitCode;
