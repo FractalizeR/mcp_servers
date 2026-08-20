@@ -94,15 +94,15 @@ describe('GetIssuesTool', () => {
       // После миграции на getParamsSchema() description берется из METADATA
       expect(definition.description).toContain('Получить задачи');
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueKeys', 'fields']);
-      expect(definition.inputSchema.properties?.['issueKeys']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['issueIds', 'fields']);
+      expect(definition.inputSchema.properties?.['issueIds']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
   describe('execute', () => {
     describe('валидация параметров (Zod)', () => {
-      it('должен вернуть ошибку если issueKeys не указан', async () => {
+      it('должен вернуть ошибку если issueIds не указан', async () => {
         const result = await tool.execute({});
 
         expect(result.isError).toBe(true);
@@ -114,8 +114,8 @@ describe('GetIssuesTool', () => {
         expect(parsed.message).toContain('валидации');
       });
 
-      it('должен вернуть ошибку если issueKeys пустой массив', async () => {
-        const result = await tool.execute({ issueKeys: [], fields: STANDARD_ISSUE_FIELDS });
+      it('должен вернуть ошибку если issueIds пустой массив', async () => {
+        const result = await tool.execute({ issueIds: [], fields: STANDARD_ISSUE_FIELDS });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -128,7 +128,7 @@ describe('GetIssuesTool', () => {
 
       it('должен вернуть ошибку для некорректного формата ключа', async () => {
         const result = await tool.execute({
-          issueKeys: ['QUEUE-123', 'invalid-key'],
+          issueIds: ['QUEUE-123', 'invalid-key'],
           fields: STANDARD_ISSUE_FIELDS,
         });
 
@@ -149,7 +149,7 @@ describe('GetIssuesTool', () => {
         ]);
 
         const result = await tool.execute({
-          issueKeys: ['QUEUE-123'],
+          issueIds: ['QUEUE-123'],
           fields: STANDARD_ISSUE_FIELDS,
         });
 
@@ -161,20 +161,15 @@ describe('GetIssuesTool', () => {
           success: boolean;
           data: {
             total: number;
-            successful: number;
-            failed: number;
-            issues: Array<{ issueKey: string; issue: IssueWithUnknownFields }>;
-            errors: Array<{ issueKey: string; error: string }>;
-            fieldsReturned: string[];
+            successful: Array<{ issueId: string; issue: IssueWithUnknownFields }>;
+            failed: Array<{ issueId: string; error: string }>;
           };
         };
         expect(parsed.success).toBe(true);
         expect(parsed.data.total).toBe(1);
-        expect(parsed.data.successful).toBe(1);
-        expect(parsed.data.failed).toBe(0);
-        expect(parsed.data.issues).toHaveLength(1);
-        expect(parsed.data.issues[0]?.issueKey).toBe('QUEUE-123');
-        expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
+        expect(parsed.data.successful).toHaveLength(1);
+        expect(parsed.data.failed).toHaveLength(0);
+        expect(parsed.data.successful[0]?.issueId).toBe('QUEUE-123');
       });
 
       it('должен получить несколько задач с фильтрацией полей', async () => {
@@ -184,7 +179,7 @@ describe('GetIssuesTool', () => {
         ]);
 
         const result = await tool.execute({
-          issueKeys: ['QUEUE-123', 'QUEUE-456'],
+          issueIds: ['QUEUE-123', 'QUEUE-456'],
           fields: STANDARD_ISSUE_FIELDS,
         });
 
@@ -195,19 +190,16 @@ describe('GetIssuesTool', () => {
           success: boolean;
           data: {
             total: number;
-            successful: number;
-            failed: number;
-            issues: Array<{ issueKey: string; issue: IssueWithUnknownFields }>;
-            errors: Array<{ issueKey: string; error: string }>;
+            successful: Array<{ issueId: string; issue: IssueWithUnknownFields }>;
+            failed: Array<{ issueId: string; error: string }>;
           };
         };
         expect(parsed.success).toBe(true);
         expect(parsed.data.total).toBe(2);
-        expect(parsed.data.successful).toBe(2);
-        expect(parsed.data.failed).toBe(0);
-        expect(parsed.data.issues).toHaveLength(2);
-        expect(parsed.data.issues[0]?.issueKey).toBe('QUEUE-123');
-        expect(parsed.data.issues[1]?.issueKey).toBe('QUEUE-456');
+        expect(parsed.data.successful).toHaveLength(2);
+        expect(parsed.data.failed).toHaveLength(0);
+        expect(parsed.data.successful[0]?.issueId).toBe('QUEUE-123');
+        expect(parsed.data.successful[1]?.issueId).toBe('QUEUE-456');
       });
 
       it('должен получить задачи с фильтрацией полей', async () => {
@@ -216,7 +208,7 @@ describe('GetIssuesTool', () => {
         ]);
 
         const result = await tool.execute({
-          issueKeys: ['QUEUE-123'],
+          issueIds: ['QUEUE-123'],
           fields: ['key', 'summary'],
         });
 
@@ -225,12 +217,11 @@ describe('GetIssuesTool', () => {
         const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
-            issues: Array<{ issueKey: string; issue: Partial<IssueWithUnknownFields> }>;
-            fieldsReturned: string[];
+            successful: Array<{ issueId: string; issue: Partial<IssueWithUnknownFields> }>;
           };
         };
         expect(parsed.success).toBe(true);
-        expect(parsed.data.issues[0]?.issue).toEqual({
+        expect(parsed.data.successful[0]?.issue).toEqual({
           key: 'QUEUE-123',
           summary: 'Test Issue 1',
         });
@@ -246,7 +237,7 @@ describe('GetIssuesTool', () => {
         ]);
 
         const result = await tool.execute({
-          issueKeys: ['QUEUE-123', 'QUEUE-999'],
+          issueIds: ['QUEUE-123', 'QUEUE-999'],
           fields: STANDARD_ISSUE_FIELDS,
         });
 
@@ -255,15 +246,14 @@ describe('GetIssuesTool', () => {
         const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
-            successful: number;
-            failed: number;
-            errors: Array<{ key: string; error: string }>;
+            successful: unknown[];
+            failed: Array<{ issueId: string; error: string }>;
           };
         };
         expect(parsed.success).toBe(true);
-        expect(parsed.data.successful).toBe(1);
-        expect(parsed.data.failed).toBe(1);
-        expect(parsed.data.errors[0]?.key).toBe('QUEUE-999');
+        expect(parsed.data.successful).toHaveLength(1);
+        expect(parsed.data.failed).toHaveLength(1);
+        expect(parsed.data.failed[0]?.issueId).toBe('QUEUE-999');
       });
 
       it('должен обработать критическую ошибку facade', async () => {
@@ -271,7 +261,7 @@ describe('GetIssuesTool', () => {
         vi.mocked(mockTrackerFacade.getIssues).mockRejectedValue(criticalError);
 
         const result = await tool.execute({
-          issueKeys: ['QUEUE-123'],
+          issueIds: ['QUEUE-123'],
           fields: STANDARD_ISSUE_FIELDS,
         });
 
@@ -286,6 +276,104 @@ describe('GetIssuesTool', () => {
         expect(parsed.error).toBe('Network timeout');
         expect(mockLogger.error).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('Контракт (plan_tool_contract_unification)', () => {
+    it('successful — пустой массив, failed — все элементы при полном отказе batch', async () => {
+      const apiError = new Error('Not found');
+      vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        { status: 'rejected', reason: apiError, key: 'QUEUE-1', index: 0 },
+        { status: 'rejected', reason: apiError, key: 'QUEUE-2', index: 1 },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: ['QUEUE-1', 'QUEUE-2'],
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(getTextContent(result)) as {
+        success: boolean;
+        data: { total: number; successful: unknown[]; failed: unknown[] };
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.data.total).toBe(2);
+      expect(Array.isArray(parsed.data.successful)).toBe(true);
+      expect(parsed.data.successful).toHaveLength(0);
+      expect(parsed.data.failed).toHaveLength(2);
+    });
+
+    it('принимает идентификатор задачи в виде внутреннего id (24-символьный hex), не только ключа', async () => {
+      const internalId = '6a86a4f94f009850c7186c67';
+      vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        { status: 'fulfilled', value: mockIssue1, key: internalId, index: 0 },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: [internalId],
+        fields: STANDARD_ISSUE_FIELDS,
+      });
+
+      expect(result.isError).toBeUndefined();
+      expect(mockTrackerFacade.getIssues).toHaveBeenCalledWith([internalId]);
+    });
+
+    it('неверное/незнакомое имя поля → warning с success:true, а не ошибка валидации', async () => {
+      vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        { status: 'fulfilled', value: mockIssue1, key: 'QUEUE-123', index: 0 },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: ['QUEUE-123'],
+        fields: ['key', 'totallyBogusFieldName'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(getTextContent(result)) as {
+        success: boolean;
+        warnings?: Array<{ code: string; message: string; details?: { fields: string[] } }>;
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.warnings).toHaveLength(1);
+      expect(parsed.warnings?.[0]?.code).toBe('FIELDS_WITHOUT_VALUE');
+      expect(parsed.warnings?.[0]?.details?.fields).toEqual(['totallyBogusFieldName']);
+    });
+
+    it('поле, пустое лишь у части задач, — предупреждения НЕТ (шумный warning не создаётся)', async () => {
+      // mockIssue1 несёт assignee, mockIssue2 — нет: путь дал значение хотя
+      // бы у одного элемента, значит по правилу детектора он НЕ "без значения".
+      vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        { status: 'fulfilled', value: mockIssue1, key: 'QUEUE-123', index: 0 },
+        { status: 'fulfilled', value: mockIssue2, key: 'QUEUE-456', index: 1 },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: ['QUEUE-123', 'QUEUE-456'],
+        fields: ['key', 'assignee'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(getTextContent(result)) as {
+        success: boolean;
+        warnings?: unknown[];
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.warnings).toBeUndefined();
+    });
+
+    it('ответ без предупреждений не содержит ключ warnings ни в content[0].text, ни в structuredContent', async () => {
+      vi.mocked(mockTrackerFacade.getIssues).mockResolvedValue([
+        { status: 'fulfilled', value: mockIssue1, key: 'QUEUE-123', index: 0 },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: ['QUEUE-123'],
+        fields: ['key'],
+      });
+
+      expect(getTextContent(result)).not.toContain('"warnings"');
+      expect(result['structuredContent']).not.toHaveProperty('warnings');
     });
   });
 });

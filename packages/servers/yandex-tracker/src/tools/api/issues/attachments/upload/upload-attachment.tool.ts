@@ -87,18 +87,21 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
       });
 
       // 5. Фильтрация полей ответа
-      const filtered = ResponseFieldFilter.filter<AttachmentWithUnknownFields>(attachment, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<AttachmentWithUnknownFields>(attachment, fields);
 
       // 6. Логирование результатов
       this.logger.info(
         `Файл ${filename} успешно загружен в задачу ${issueId}, attachmentId=${attachment.id}`
       );
 
-      return this.formatSuccess({
-        issueId,
-        attachment: filtered,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          issueId,
+          attachment: filtered,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при загрузке файла ${filename} в задачу ${issueId}`, error);
     }

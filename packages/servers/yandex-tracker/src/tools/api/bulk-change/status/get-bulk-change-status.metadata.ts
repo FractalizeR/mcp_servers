@@ -26,7 +26,7 @@ export const GET_BULK_CHANGE_STATUS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['bulk', 'status', 'progress', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['operationId'],
+  redactionAllowlist: ['operationId', 'fields'],
   title: 'Статус bulk-операции',
   outputSchema: GetBulkChangeStatusOutputSchema,
   annotations: {

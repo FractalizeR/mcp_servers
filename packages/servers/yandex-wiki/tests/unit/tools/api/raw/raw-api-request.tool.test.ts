@@ -11,8 +11,9 @@ import { MCP_TOOL_PREFIX } from '#constants';
 
 interface ParsedResult {
   success: boolean;
-  data?: { method: string; path: string; data: unknown; fieldsReturned: string[] };
+  data?: { method: string; path: string; data: unknown };
   message?: string;
+  warnings?: unknown[];
 }
 
 describe('RawApiRequestTool (wiki)', () => {
@@ -72,7 +73,39 @@ describe('RawApiRequestTool (wiki)', () => {
       const parsed = parse(result.content[0]?.text as string | undefined);
       expect(parsed.success).toBe(true);
       expect(parsed.data?.data).toEqual({ id: 123, title: 'Test' });
-      expect(parsed.data?.fieldsReturned).toEqual(['id', 'title']);
+      // Boundary case (план plan_tool_contract_unification, 1.1): raw_api_request
+      // не гоняет ответ через детектор FIELDS_WITHOUT_VALUE — форма data заранее
+      // не известна (объект/массив/скаляр).
+      expect(parsed.warnings).toBeUndefined();
+    });
+
+    it('не должен выдавать предупреждений, даже если запрошенное поле отсутствует в ответе', async () => {
+      vi.mocked(mockFacade.rawApiRequest).mockResolvedValue({ id: 123 });
+
+      const result = await tool.execute({
+        method: 'GET',
+        path: '/v1/pages/123',
+        fields: ['id', 'totallyBogusField'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = parse(result.content[0]?.text as string | undefined);
+      expect(parsed.warnings).toBeUndefined();
+    });
+
+    it('не должен выдавать предупреждений для скалярного ответа API', async () => {
+      vi.mocked(mockFacade.rawApiRequest).mockResolvedValue(42);
+
+      const result = await tool.execute({
+        method: 'GET',
+        path: '/v1/pages/123',
+        fields: ['id'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      const parsed = parse(result.content[0]?.text as string | undefined);
+      expect(parsed.data?.data).toBe(42);
+      expect(parsed.warnings).toBeUndefined();
     });
 
     it('должен передавать input без query, если query не задан', async () => {

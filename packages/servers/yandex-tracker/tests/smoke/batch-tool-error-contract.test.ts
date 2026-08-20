@@ -342,7 +342,7 @@ const BATCH_TOOL_CASES: BatchToolCase[] = [
     label: 'get_issues',
     outputDataSchema: GetIssuesOutputDataSchema,
     facadeMethod: 'getIssues',
-    buildParams: () => ({ issueKeys: ['TEST-1', 'TEST-2', 'TEST-3'], fields: ['id'] }),
+    buildParams: () => ({ issueIds: ['TEST-1', 'TEST-2', 'TEST-3'], fields: ['id'] }),
     results: [
       fulfilled('TEST-1', 0, successItem),
       rejected('TEST-2', 1, apiError404()),
@@ -358,9 +358,9 @@ const BATCH_TOOL_CASES: BatchToolCase[] = [
     facadeMethod: 'createLinksMany',
     buildParams: () => ({
       links: [
-        { issueId: 'TEST-1', relationship: 'relates', targetIssue: 'TEST-9' },
-        { issueId: 'TEST-2', relationship: 'relates', targetIssue: 'TEST-9' },
-        { issueId: 'TEST-3', relationship: 'relates', targetIssue: 'TEST-9' },
+        { issueId: 'TEST-1', relationship: 'relates', targetIssueId: 'TEST-9' },
+        { issueId: 'TEST-2', relationship: 'relates', targetIssueId: 'TEST-9' },
+        { issueId: 'TEST-3', relationship: 'relates', targetIssueId: 'TEST-9' },
       ],
       fields: ['id'],
     }),
@@ -411,7 +411,7 @@ const BATCH_TOOL_CASES: BatchToolCase[] = [
     label: 'get_issue_changelog',
     outputDataSchema: GetIssueChangelogOutputDataSchema,
     facadeMethod: 'getIssueChangelog',
-    buildParams: () => ({ issueKeys: ['TEST-1', 'TEST-2', 'TEST-3'], fields: ['id'] }),
+    buildParams: () => ({ issueIds: ['TEST-1', 'TEST-2', 'TEST-3'], fields: ['id'] }),
     results: [
       fulfilled('TEST-1', 0, paginatedValue([successItem])),
       rejected('TEST-2', 1, apiError404()),
@@ -538,7 +538,7 @@ describe('Пакет 2.4: batch-инструменты — structuredContent в�
 
 /**
  * У параметров batch-инструментов ключ массива называется по-разному
- * (issueIds/issueKeys/comments/items/links/worklogs/userIds) — но ровно один
+ * (issueIds/comments/items/links/worklogs/userIds) — но ровно один
  * ключ верхнего уровня всегда массив длины 3. Урезаем его до 1 элемента для
  * success-only сценария, оставляя остальные параметры (fields и т.п.) как есть.
  */

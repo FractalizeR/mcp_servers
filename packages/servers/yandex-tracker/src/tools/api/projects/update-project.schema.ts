@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 import { BaseProjectFieldsSchema } from './base-project.schema.js';
 
 /**
@@ -43,7 +38,6 @@ export type UpdateProjectParams = z.infer<typeof UpdateProjectParamsSchema>;
 export const UpdateProjectOutputDataSchema = z.object({
   projectKey: z.string(),
   project: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

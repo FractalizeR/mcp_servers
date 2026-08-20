@@ -7,7 +7,6 @@ import {
   IssueKeySchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
 
@@ -19,7 +18,7 @@ export const UpdateIssueParamsSchema = z
     /**
      * Ключ задачи для обновления
      */
-    issueKey: IssueKeySchema,
+    issueId: IssueKeySchema,
 
     /**
      * Краткое описание задачи
@@ -73,7 +72,7 @@ export const UpdateIssueParamsSchema = z
   })
   .describe(
     'Обновляет summary/description/assignee/priority/type/customFields существующей задачи ' +
-      '(PATCH /v3/issues/{issueKey}). Статус НЕ входит в параметры: API отклоняет прямое ' +
+      '(PATCH /v3/issues/{issueId}). Статус НЕ входит в параметры: API отклоняет прямое ' +
       'изменение статуса через этот эндпоинт (поле только для чтения) — используй ' +
       'transition_issue для смены статуса по workflow.'
   );
@@ -87,10 +86,9 @@ export type UpdateIssueParams = z.infer<typeof UpdateIssueParamsSchema>;
  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
  */
 export const UpdateIssueOutputDataSchema = z.object({
-  issueKey: z.string(),
+  issueId: z.string(),
   updatedFields: z.array(z.string()),
   issue: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

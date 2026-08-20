@@ -51,14 +51,14 @@ export class GetIssuesTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueKeys, fields } = validation.data;
+    const { issueIds, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      ResultLogger.logOperationStart(this.logger, 'Получение задач', issueKeys.length, fields);
+      ResultLogger.logOperationStart(this.logger, 'Получение задач', issueIds.length, fields);
 
       // 3. API v3: получение задач через batch-метод
-      const results = await this.facade.getIssues(issueKeys);
+      const results = await this.facade.getIssues(issueIds);
 
       // 4. Обработка результатов через BatchResultProcessor
       const processedResults = BatchResultProcessor.process(
@@ -67,12 +67,20 @@ export class GetIssuesTool extends BaseTool<YandexTrackerFacade> {
           ResponseFieldFilter.filter<IssueWithUnknownFields>(issue, fields)
       );
 
-      // 5. Логирование результатов
+      // 5. Отчёт детектора незаполненных полей — по СЫРЫМ успешно полученным
+      // задачам разом (путь считается "без значения", только если не дал
+      // результата ни у одной задачи; см. README §4 плана).
+      const rawIssues: IssueWithUnknownFields[] = results
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value);
+      const { fieldsWithoutValue } = ResponseFieldFilter.filterWithReport(rawIssues, fields);
+
+      // 6. Логирование результатов
       ResultLogger.logBatchResults(
         this.logger,
         'Задачи получены',
         {
-          totalRequested: issueKeys.length,
+          totalRequested: issueIds.length,
           successCount: processedResults.successful.length,
           failedCount: processedResults.failed.length,
           fieldsCount: fields.length,
@@ -80,22 +88,22 @@ export class GetIssuesTool extends BaseTool<YandexTrackerFacade> {
         processedResults
       );
 
-      return this.formatSuccess({
-        total: issueKeys.length,
-        successful: processedResults.successful.length,
-        failed: processedResults.failed.length,
-        issues: processedResults.successful.map((item) => ({
-          issueKey: item.key, // ← ОБНОВЛЕНО: unified формат (key вместо issueKey)
-          issue: item.data,
-        })),
-        errors: processedResults.failed.map((item) => ({
-          key: item.key,
-          error: item.error,
-        })),
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          total: issueIds.length,
+          successful: processedResults.successful.map((item) => ({
+            issueId: item.key,
+            issue: item.data,
+          })),
+          failed: processedResults.failed.map((item) => ({
+            issueId: item.key,
+            error: item.error,
+          })),
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при получении задач (${issueKeys.length} шт.)`, error);
+      return this.formatError(`Ошибка при получении задач (${issueIds.length} шт.)`, error);
     }
   }
 }

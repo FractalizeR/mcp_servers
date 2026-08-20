@@ -42,21 +42,22 @@ export class GetComponentsTool extends BaseTool<YandexTrackerFacade> {
       const result = await this.facade.getComponents({ queueId });
 
       // Фильтрация полей для каждого компонента
-      const filteredComponents = result.items.map((component) =>
-        ResponseFieldFilter.filter<ComponentWithUnknownFields>(component, fields)
-      );
+      const { result: filteredComponents, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<ComponentWithUnknownFields[]>(result.items, fields);
 
       this.logger.info('Список компонентов получен', {
         count: result.items.length,
         queueId,
       });
 
-      return this.formatSuccess({
-        components: filteredComponents,
-        count: filteredComponents.length,
-        queueId,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          components: filteredComponents,
+          count: filteredComponents.length,
+          queueId,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка компонентов', error);
     }

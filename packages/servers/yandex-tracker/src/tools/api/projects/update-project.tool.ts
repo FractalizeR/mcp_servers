@@ -69,16 +69,16 @@ export class UpdateProjectTool extends BaseTool<YandexTrackerFacade> {
         projectName: updatedProject.name,
       });
 
-      const filteredProject = ResponseFieldFilter.filter<ProjectWithUnknownFields>(
-        updatedProject,
-        fields
-      );
+      const { result: filteredProject, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<ProjectWithUnknownFields>(updatedProject, fields);
 
-      return this.formatSuccess({
-        projectKey: updatedProject.key,
-        project: filteredProject,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          projectKey: updatedProject.key,
+          project: filteredProject,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при обновлении проекта ${projectId}`, error);
     }

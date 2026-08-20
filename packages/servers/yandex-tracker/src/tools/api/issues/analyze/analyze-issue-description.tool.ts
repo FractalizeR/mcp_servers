@@ -77,21 +77,18 @@ export class AnalyzeIssueDescriptionTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueKey } = validation.data;
+    const { issueId } = validation.data;
 
     try {
-      const [result] = await this.facade.getIssues([issueKey]);
+      const [result] = await this.facade.getIssues([issueId]);
       if (result === undefined) {
         return this.formatError(
-          `Задача ${issueKey} не найдена для анализа`,
+          `Задача ${issueId} не найдена для анализа`,
           new Error('Пустой ответ API')
         );
       }
       if (result.status === 'rejected') {
-        return this.formatError(
-          `Не удалось получить задачу ${issueKey} для анализа`,
-          result.reason
-        );
+        return this.formatError(`Не удалось получить задачу ${issueId} для анализа`, result.reason);
       }
 
       const issue = result.value;
@@ -102,21 +99,21 @@ export class AnalyzeIssueDescriptionTool extends BaseTool<YandexTrackerFacade> {
       const rawVersion = issue['version'];
       const version = typeof rawVersion === 'number' ? rawVersion : undefined;
 
-      ResultLogger.logOperationStart(this.logger, `Анализ description задачи ${issueKey}`, 1, [
+      ResultLogger.logOperationStart(this.logger, `Анализ description задачи ${issueId}`, 1, [
         'description',
       ]);
 
-      this.logger.info(`Анализ задачи ${issueKey} завершён`, { notesCount: notes.length });
+      this.logger.info(`Анализ задачи ${issueId} завершён`, { notesCount: notes.length });
 
       return this.formatSuccess({
-        issueKey,
+        issueId,
         currentDescription,
         suggestedDescription,
         notes,
         ...(version !== undefined && { version }),
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка анализа задачи ${issueKey}`, error);
+      return this.formatError(`Ошибка анализа задачи ${issueId}`, error);
     }
   }
 }

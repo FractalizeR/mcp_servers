@@ -28,7 +28,15 @@ export const FIND_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   requiresExplicitUserConsent: false,
   // query/filter НЕ включены: поисковые запросы/фильтры могут нести произвольный
   // пользовательский текст.
-  redactionAllowlist: ['queue', 'keys', 'filterId', 'perPage', 'cursor', 'fields', 'responseMode'],
+  redactionAllowlist: [
+    'queue',
+    'issueIds',
+    'filterId',
+    'perPage',
+    'cursor',
+    'fields',
+    'responseMode',
+  ],
   title: 'Поиск задач',
   outputSchema: FindIssuesOutputSchema,
   annotations: {

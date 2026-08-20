@@ -145,21 +145,25 @@ const schema = z.object({
 
 #### Unified batch result format
 
-**Все batch операции ОБЯЗАНЫ возвращать:**
+**Все batch-операции ОБЯЗАНЫ возвращать** (форма зафиксирована `makeBatchResultSchema`,
+`#common/schemas/output.schema.js`; машинно проверяется контрактным тестом
+`tool-output-schema-representatives.test.ts` — см. [tests/TESTING_STRATEGY.md](tests/TESTING_STRATEGY.md) §5):
 ```typescript
 {
-  total: number,              // общее количество операций
+  total: number,               // общее количество операций
   successful: Array<{
-    issueId: string,          // ВСЕГДА присутствует
-    ...specificData           // специфичные для операции поля
+    issueId: string,           // ВСЕГДА присутствует, ВСЕГДА массив (не число)
+    ...specificData            // специфичные для операции поля
   }>,
   failed: Array<{
-    issueId: string,          // ВСЕГДА присутствует
-    error: string             // ВСЕГДА присутствует
+    issueId: string,           // тот же ключ, что и у successful
+    error: string | ApiErrorDetails
   }>,
-  fieldsReturned?: string[]   // только для GET операций
+  warnings?: ToolWarning[]     // только когда непусто — см. packages/servers/TESTING_STRATEGY.md §6
 }
 ```
+`fieldsReturned` в ответе не бывает — эхо входного параметра `fields` удалено
+(`plan_tool_contract_unification`).
 
 #### ParallelExecutor usage
 
@@ -195,14 +199,19 @@ return this.parallelExecutor.executeParallel(operations, 'add comments');
 - Использовать `BatchResultProcessor.process()` для унифицированной обработки
 
 ```typescript
-// Пример в tool:
-const batchResult = await operation.executeMany(params);
-const processed = BatchResultProcessor.process(
-  batchResult,
-  'issueId',        // ключ для группировки
-  params.fields     // поля для возврата
+// Пример в tool (см. get-comments.tool.ts):
+const filter = paginatedFieldFilter<EntityWithUnknownFields>(fields);
+const processed = BatchResultProcessor.process(batchResult, filter);
+const { fieldsWithoutValue } = filter.getReport();
+
+return this.formatSuccess(
+  {
+    total: issueIds.length,
+    successful: processed.successful.map((item) => ({ issueId: item.key, ...item.data })),
+    failed: processed.failed.map((item) => ({ issueId: item.key, error: item.error })),
+  },
+  ResponseFieldFilter.toWarnings(fieldsWithoutValue) // warnings, только когда непусто
 );
-return processed;   // { total, successful, failed, fieldsReturned }
 ```
 
 **Компоненты:**

@@ -14,6 +14,7 @@ import { ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { IssueWithUnknownFields } from '#tracker_api/entities/index.js';
 import type { ExecuteTransitionDto } from '#tracker_api/dto/index.js';
 import { IssueRefetchAfterTransitionError } from '#tracker_api/facade/index.js';
+import type { ToolWarning } from '@fractalizer/mcp-core';
 import { TransitionIssueParamsSchema } from '#tools/api/issues/transitions/execute/transition-issue.schema.js';
 
 import { TRANSITION_ISSUE_TOOL_METADATA } from './transition-issue.metadata.js';
@@ -47,6 +48,26 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
     return TransitionIssueParamsSchema;
   }
 
+  /**
+   * Фильтрует поля ответа, если `fields` передан — детектор незаполненных
+   * полей включён только тогда, иначе предупреждать не о чем (fields
+   * опционален у этого инструмента).
+   */
+  private filterIssueForResponse(
+    issue: IssueWithUnknownFields,
+    fields: string[] | undefined
+  ): { filteredIssue: IssueWithUnknownFields; warnings: ToolWarning[] } {
+    if (!fields) {
+      return { filteredIssue: issue, warnings: [] };
+    }
+
+    const report = ResponseFieldFilter.filterWithReport<IssueWithUnknownFields>(issue, fields);
+    return {
+      filteredIssue: report.result,
+      warnings: ResponseFieldFilter.toWarnings(report.fieldsWithoutValue),
+    };
+  }
+
   async execute(params: ToolCallParams): Promise<ToolResult> {
     // 1. Валидация параметров через BaseTool
     const validation = this.validateParams(params, TransitionIssueParamsSchema);
@@ -54,11 +75,11 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issueKey, transitionId, comment, customFields, fields } = validation.data;
+    const { issueId, transitionId, comment, customFields, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
-      this.logger.info(`Выполнение перехода задачи ${issueKey}`, {
+      this.logger.info(`Выполнение перехода задачи ${issueId}`, {
         transitionId,
         hasComment: !!comment,
         hasCustomFields: !!customFields,
@@ -75,26 +96,26 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
           : undefined;
 
       // 4. API v3: выполнение перехода
-      const issue = await this.facade.transitionIssue(issueKey, transitionId, transitionData);
+      const issue = await this.facade.transitionIssue(issueId, transitionId, transitionData);
 
-      // 5. Фильтрация полей если указаны
-      const filteredIssue = fields
-        ? ResponseFieldFilter.filter<IssueWithUnknownFields>(issue, fields)
-        : issue;
+      // 5. Фильтрация полей, если указаны
+      const { filteredIssue, warnings } = this.filterIssueForResponse(issue, fields);
 
       // 6. Логирование успешного результата
-      this.logger.info(`Переход выполнен для задачи ${issueKey}`, {
+      this.logger.info(`Переход выполнен для задачи ${issueId}`, {
         transitionId,
         newStatus: issue.status ?? 'unknown',
         fieldsCount: fields?.length ?? 'all',
       });
 
-      return this.formatSuccess({
-        issueKey,
-        transitionId,
-        issue: filteredIssue,
-        fieldsReturned: fields ?? 'all',
-      });
+      return this.formatSuccess(
+        {
+          issueId,
+          transitionId,
+          issue: filteredIssue,
+        },
+        warnings
+      );
     } catch (error: unknown) {
       // Находка №1 (BLOCKER, внешнее ревью 2026-08): переход УЖЕ выполнен
       // сервером (POST `_execute` отработал) — провал последующего GET не
@@ -104,19 +125,18 @@ export class TransitionIssueTool extends BaseTool<YandexTrackerFacade> {
       // `issue` — форма зафиксирована в `TransitionIssueOutputDataSchema`.
       if (error instanceof IssueRefetchAfterTransitionError) {
         this.logger.warn(
-          `Переход ${transitionId} для задачи ${issueKey} выполнен, но дочитывание задачи провалилось — отдаю success с refetchFailed`,
+          `Переход ${transitionId} для задачи ${issueId} выполнен, но дочитывание задачи провалилось — отдаю success с refetchFailed`,
           { error: error.cause }
         );
         return this.formatSuccess({
-          issueKey,
+          issueId,
           transitionId,
           refetchFailed: true,
-          fieldsReturned: fields ?? 'all',
         });
       }
 
       return this.formatError(
-        `Ошибка при выполнении перехода задачи ${issueKey} (transition: ${transitionId})`,
+        `Ошибка при выполнении перехода задачи ${issueId} (transition: ${transitionId})`,
         error
       );
     }

@@ -37,16 +37,16 @@ export class CreateQueueLocalFieldTool extends BaseTool<YandexTrackerFacade> {
         type,
       });
 
-      const filtered = ResponseFieldFilter.filter<QueueLocalFieldWithUnknownFields>(
-        created,
-        fields
-      );
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<QueueLocalFieldWithUnknownFields>(created, fields);
 
-      return this.formatSuccess({
-        localField: filtered,
-        message: `Локальное поле "${id}" очереди ${queueId} успешно создано`,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          localField: filtered,
+          message: `Локальное поле "${id}" очереди ${queueId} успешно создано`,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при создании локального поля очереди ${queueId}`, error);
     }

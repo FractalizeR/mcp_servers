@@ -790,4 +790,129 @@ describe('ResponseFieldFilter', () => {
       expect(ResponseFieldFilter.validateFields(fields)).toBeUndefined();
     });
   });
+
+  /**
+   * DoD 1.1 п.3 плана plan_tool_contract_unification: таблица случаев
+   * детектора незаполненных полей (README §4 — тот же boolean extractField
+   * уже возвращал, здесь проверяется, что filterWithReport() поднимает его
+   * наверх без второй реализации).
+   */
+  describe('filterWithReport (детектор незаполненных полей)', () => {
+    it('заполнено везде — fieldsWithoutValue пуст (одиночный объект)', () => {
+      const data = { key: 'QUEUE-1', summary: 'Test', assignee: { login: 'user' } };
+
+      const { result, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport(data, [
+        'key',
+        'summary',
+        'assignee.login',
+      ]);
+
+      expect(result).toEqual({ key: 'QUEUE-1', summary: 'Test', assignee: { login: 'user' } });
+      expect(fieldsWithoutValue).toEqual([]);
+    });
+
+    it('пусто везде — путь отсутствует у единственного элемента', () => {
+      const data = { key: 'QUEUE-1' };
+
+      const { fieldsWithoutValue } = ResponseFieldFilter.filterWithReport(data, [
+        'key',
+        'assignee.login',
+      ]);
+
+      expect(fieldsWithoutValue).toEqual(['assignee.login']);
+    });
+
+    it('пусто частично (массив элементов) — предупреждения НЕТ, если хотя бы один элемент дал значение', () => {
+      const data = [
+        { key: 'QUEUE-1', assignee: { login: 'user' } },
+        { key: 'QUEUE-2' }, // assignee.login у этого элемента отсутствует
+      ];
+
+      const { fieldsWithoutValue } = ResponseFieldFilter.filterWithReport(data, [
+        'key',
+        'assignee.login',
+      ]);
+
+      // Частичная пустота — не повод предупреждать (шум важнее сигнала).
+      expect(fieldsWithoutValue).toEqual([]);
+    });
+
+    it('пусто у ВСЕХ элементов массива — путь помечается как без значения', () => {
+      const data = [{ key: 'QUEUE-1' }, { key: 'QUEUE-2' }];
+
+      const { fieldsWithoutValue } = ResponseFieldFilter.filterWithReport(data, [
+        'key',
+        'assignee.login',
+      ]);
+
+      expect(fieldsWithoutValue).toEqual(['assignee.login']);
+    });
+
+    it('вложенный путь — null/{}/[] считаются извлечёнными, а не "без значения"', () => {
+      const data = { key: 'QUEUE-1', assignee: null, tags: [], meta: {} };
+
+      const { result, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport(data, [
+        'key',
+        'assignee',
+        'tags',
+        'meta',
+      ]);
+
+      expect(result).toEqual({ key: 'QUEUE-1', assignee: null, tags: [], meta: {} });
+      expect(fieldsWithoutValue).toEqual([]);
+    });
+
+    it('пустая коллекция (0 элементов) — предупреждений нет: сказать нечего', () => {
+      const data: Array<{ key: string }> = [];
+
+      const { result, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport(data, [
+        'key',
+        'assignee.login',
+      ]);
+
+      expect(result).toEqual([]);
+      expect(fieldsWithoutValue).toEqual([]);
+    });
+
+    it('режим links (find_issues) — тела заменены на resource_link заглушки: детектор БЕЗ явного выключения даст предупреждение на весь fields, поэтому вызывающий инструмент обязан не звать его в этом режиме', () => {
+      // Элементы этой формы — то, что реально видит filterWithReport, если
+      // ошибочно вызвать его в режиме links (заглушки вместо тел сущностей).
+      const resourceLinkStubs = [{ uri: 'issue://QUEUE-1' }, { uri: 'issue://QUEUE-2' }];
+
+      const { fieldsWithoutValue } = ResponseFieldFilter.filterWithReport(resourceLinkStubs, [
+        'key',
+        'summary',
+      ]);
+
+      // Полностью корректный вызов дал бы предупреждение на весь список —
+      // ровно граничный случай 1.1, из-за которого детектор обязан быть
+      // выключен в режиме links на стороне инструмента (не здесь).
+      expect(fieldsWithoutValue).toEqual(['key', 'summary']);
+    });
+
+    it('filter() и filterWithReport() дают идентичный result — единственная реализация фильтрации', () => {
+      const data = { key: 'QUEUE-1', summary: 'Test' };
+
+      const viaFilter = ResponseFieldFilter.filter(data, ['key', 'summary', 'missing']);
+      const viaReport = ResponseFieldFilter.filterWithReport(data, ['key', 'summary', 'missing']);
+
+      expect(viaFilter).toEqual(viaReport.result);
+    });
+  });
+
+  describe('toWarnings (сведение хелпера предупреждений, пакет 2.8)', () => {
+    it('пустой список путей даёт пустой массив предупреждений', () => {
+      expect(ResponseFieldFilter.toWarnings([])).toEqual([]);
+    });
+
+    it('непустой список путей даёт ровно одно агрегированное предупреждение', () => {
+      const warnings = ResponseFieldFilter.toWarnings(['assignee.login', 'summary']);
+
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toMatchObject({
+        code: 'FIELDS_WITHOUT_VALUE',
+        details: { fields: ['assignee.login', 'summary'] },
+      });
+    });
+  });
 });

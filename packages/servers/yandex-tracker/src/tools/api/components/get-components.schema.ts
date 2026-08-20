@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения списка компонентов очереди.
@@ -42,7 +37,6 @@ export const GetComponentsOutputDataSchema = z.object({
   components: z.array(FilteredEntitySchema),
   count: z.number(),
   queueId: z.string(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

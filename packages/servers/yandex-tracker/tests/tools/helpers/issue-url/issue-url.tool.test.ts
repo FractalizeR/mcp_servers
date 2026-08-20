@@ -35,8 +35,8 @@ describe('IssueUrlTool', () => {
       expect(definition.name).toBe(buildToolName('get_issue_urls', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('URL задачи'); // префикс+суть, см. лимит 120 в tool-metadata.test.ts
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueKeys']);
-      expect(definition.inputSchema.properties?.['issueKeys']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['issueIds']);
+      expect(definition.inputSchema.properties?.['issueIds']).toBeDefined();
     });
   });
 
@@ -54,7 +54,7 @@ describe('IssueUrlTool', () => {
 
   describe('execute', () => {
     describe('Валидация параметров (Zod)', () => {
-      it('должен вернуть ошибку если issueKeys не указан', async () => {
+      it('должен вернуть ошибку если issueIds не указан', async () => {
         const result = await tool.execute({});
 
         expect(result.isError).toBe(true);
@@ -66,8 +66,8 @@ describe('IssueUrlTool', () => {
         expect(parsed.message).toContain('валидации');
       });
 
-      it('должен вернуть ошибку если issueKeys пустой массив', async () => {
-        const result = await tool.execute({ issueKeys: [] });
+      it('должен вернуть ошибку если issueIds пустой массив', async () => {
+        const result = await tool.execute({ issueIds: [] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -79,7 +79,7 @@ describe('IssueUrlTool', () => {
       });
 
       it('должен принять корректный массив ключей', async () => {
-        const result = await tool.execute({ issueKeys: ['TEST-123'] });
+        const result = await tool.execute({ issueIds: ['TEST-123'] });
 
         expect(result.isError).toBeUndefined();
       });
@@ -87,7 +87,7 @@ describe('IssueUrlTool', () => {
 
     describe('Функциональность', () => {
       it('должен сформировать URL для одной задачи', async () => {
-        const result = await tool.execute({ issueKeys: ['TEST-123'] });
+        const result = await tool.execute({ issueIds: ['TEST-123'] });
 
         expect(result.isError).toBeUndefined();
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -95,7 +95,7 @@ describe('IssueUrlTool', () => {
           data: {
             count: number;
             urls: Array<{
-              issueKey: string;
+              issueId: string;
               url: string;
               description: string;
             }>;
@@ -104,13 +104,13 @@ describe('IssueUrlTool', () => {
         expect(parsed.success).toBe(true);
         expect(parsed.data.count).toBe(1);
         expect(parsed.data.urls).toHaveLength(1);
-        expect(parsed.data.urls[0]?.issueKey).toBe('TEST-123');
+        expect(parsed.data.urls[0]?.issueId).toBe('TEST-123');
         expect(parsed.data.urls[0]?.url).toBe('https://tracker.yandex.ru/TEST-123');
         expect(parsed.data.urls[0]?.description).toContain('TEST-123');
       });
 
       it('должен сформировать URL для нескольких задач', async () => {
-        const result = await tool.execute({ issueKeys: ['TEST-1', 'TEST-2', 'QUEUE-99'] });
+        const result = await tool.execute({ issueIds: ['TEST-1', 'TEST-2', 'QUEUE-99'] });
 
         expect(result.isError).toBeUndefined();
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -118,7 +118,7 @@ describe('IssueUrlTool', () => {
           data: {
             count: number;
             urls: Array<{
-              issueKey: string;
+              issueId: string;
               url: string;
             }>;
           };
@@ -126,16 +126,16 @@ describe('IssueUrlTool', () => {
         expect(parsed.success).toBe(true);
         expect(parsed.data.count).toBe(3);
         expect(parsed.data.urls).toHaveLength(3);
-        expect(parsed.data.urls[0]?.issueKey).toBe('TEST-1');
+        expect(parsed.data.urls[0]?.issueId).toBe('TEST-1');
         expect(parsed.data.urls[0]?.url).toBe('https://tracker.yandex.ru/TEST-1');
-        expect(parsed.data.urls[1]?.issueKey).toBe('TEST-2');
+        expect(parsed.data.urls[1]?.issueId).toBe('TEST-2');
         expect(parsed.data.urls[1]?.url).toBe('https://tracker.yandex.ru/TEST-2');
-        expect(parsed.data.urls[2]?.issueKey).toBe('QUEUE-99');
+        expect(parsed.data.urls[2]?.issueId).toBe('QUEUE-99');
         expect(parsed.data.urls[2]?.url).toBe('https://tracker.yandex.ru/QUEUE-99');
       });
 
       it('должен включить description для каждого URL', async () => {
-        const result = await tool.execute({ issueKeys: ['PROJECT-456'] });
+        const result = await tool.execute({ issueIds: ['PROJECT-456'] });
 
         expect(result.isError).toBeUndefined();
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -153,13 +153,13 @@ describe('IssueUrlTool', () => {
 
     describe('Логирование', () => {
       it('должен логировать формирование URL', async () => {
-        await tool.execute({ issueKeys: ['TEST-1', 'TEST-2'] });
+        await tool.execute({ issueIds: ['TEST-1', 'TEST-2'] });
 
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('URL сформированы'));
       });
 
       it('должен логировать количество задач', async () => {
-        await tool.execute({ issueKeys: ['ABC-1', 'DEF-2', 'GHI-3'] });
+        await tool.execute({ issueIds: ['ABC-1', 'DEF-2', 'GHI-3'] });
 
         const logCall = vi.mocked(mockLogger.info).mock.calls[0];
         expect(logCall).toBeDefined();
@@ -167,7 +167,7 @@ describe('IssueUrlTool', () => {
       });
 
       it('должен логировать ключи задач', async () => {
-        await tool.execute({ issueKeys: ['QUEUE-1', 'QUEUE-2'] });
+        await tool.execute({ issueIds: ['QUEUE-1', 'QUEUE-2'] });
 
         const logCall = vi.mocked(mockLogger.info).mock.calls[0];
         expect(logCall).toBeDefined();

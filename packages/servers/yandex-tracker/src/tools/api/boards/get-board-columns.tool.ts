@@ -31,16 +31,18 @@ export class GetBoardColumnsTool extends BaseTool<YandexTrackerFacade> {
 
       const result = await this.facade.getBoardColumns({ boardId });
 
-      const filtered = result.items.map((item) =>
-        ResponseFieldFilter.filter<WithUnknownFields<BoardColumn>>(item, fields)
-      );
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        WithUnknownFields<BoardColumn>[]
+      >(result.items, fields);
 
-      return this.formatSuccess({
-        columns: filtered,
-        count: filtered.length,
-        boardId,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          columns: filtered,
+          count: filtered.length,
+          boardId,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении колонок доски ${boardId}`, error);
     }

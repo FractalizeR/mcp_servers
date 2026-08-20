@@ -22,5 +22,4 @@ export type GetPageParams = z.infer<typeof GetPageParamsSchema>;
 /** Данные успешного результата (см. GetPageTool.execute) — вход buildOutputSchema() */
 export const GetPageOutputDataSchema = z.object({
   page: PageOutputSchema,
-  fieldsReturned: z.array(z.string()),
 });

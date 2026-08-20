@@ -30,7 +30,6 @@ export class GetPageByIdTool extends BaseTool<YandexWikiFacade> {
 
       return this.formatSuccess({
         page,
-        fieldsReturned: fields?.split(',') ?? ['id', 'slug', 'title', 'page_type'],
       });
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении страницы по ID: ${idx}`, error);

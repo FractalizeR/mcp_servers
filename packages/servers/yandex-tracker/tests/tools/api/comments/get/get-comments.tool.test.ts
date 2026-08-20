@@ -9,7 +9,7 @@ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import type { CommentWithUnknownFields } from '#tracker_api/entities/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import { createCommentListFixture } from '#helpers/comment.fixture.js';
+import { createCommentListFixture, createEditedCommentFixture } from '#helpers/comment.fixture.js';
 import type { PaginatedResult, PaginationMeta } from '#tracker_api/entities/index.js';
 import { getTextContent, itemAt } from '#helpers/tool-result.helper.js';
 
@@ -304,24 +304,20 @@ describe('GetCommentsTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          comments: Array<{
+          successful: Array<{
             issueId: string;
             comments: CommentWithUnknownFields[];
             count: number;
           }>;
-          fieldsReturned: string[];
+          failed: unknown[];
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
-      expect(parsed.data.successful).toBe(1);
-      expect(parsed.data.failed).toBe(0);
-      expect(parsed.data.comments).toHaveLength(1);
-      expect(itemAt(parsed.data.comments).issueId).toBe('TEST-123');
-      expect(itemAt(parsed.data.comments).count).toBe(3);
-      expect(parsed.data.fieldsReturned).toEqual(['id', 'text']);
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(parsed.data.failed).toHaveLength(0);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).count).toBe(3);
     });
 
     it('должен включать pagination в каждый элемент comments', async () => {
@@ -342,7 +338,7 @@ describe('GetCommentsTool', () => {
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(getTextContent(result)) as {
         data: {
-          comments: Array<{
+          successful: Array<{
             issueId: string;
             comments: CommentWithUnknownFields[];
             count: number;
@@ -351,14 +347,14 @@ describe('GetCommentsTool', () => {
         };
       };
       // Регрессия формата: прежние ключи на месте
-      expect(itemAt(parsed.data.comments).issueId).toBe('TEST-123');
-      expect(itemAt(parsed.data.comments).comments).toHaveLength(3);
-      expect(itemAt(parsed.data.comments).count).toBe(3);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).comments).toHaveLength(3);
+      expect(itemAt(parsed.data.successful).count).toBe(3);
       // Аддитивно: метаданные пагинации
-      expect(itemAt(parsed.data.comments).pagination).toBeDefined();
-      expect(itemAt(parsed.data.comments).pagination.hasNextPage).toBe(true);
-      expect(itemAt(parsed.data.comments).pagination.fetchedAll).toBe(false);
-      expect(itemAt(parsed.data.comments).pagination.total).toBe(42);
+      expect(itemAt(parsed.data.successful).pagination).toBeDefined();
+      expect(itemAt(parsed.data.successful).pagination.hasNextPage).toBe(true);
+      expect(itemAt(parsed.data.successful).pagination.fetchedAll).toBe(false);
+      expect(itemAt(parsed.data.successful).pagination.total).toBe(42);
     });
 
     it('должен передавать fetchAll и maxItems в фасад', async () => {
@@ -420,16 +416,15 @@ describe('GetCommentsTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          comments: Array<{
+          successful: Array<{
             count: number;
           }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(1);
-      expect(parsed.data.successful).toBe(1);
-      expect(itemAt(parsed.data.comments).count).toBe(0);
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(itemAt(parsed.data.successful).count).toBe(0);
     });
 
     it('должен обработать batch результаты для нескольких задач', async () => {
@@ -458,8 +453,7 @@ describe('GetCommentsTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          comments: Array<{
+          successful: Array<{
             issueId: string;
             count: number;
           }>;
@@ -467,12 +461,98 @@ describe('GetCommentsTool', () => {
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(2);
-      expect(parsed.data.comments).toHaveLength(2);
-      expect(itemAt(parsed.data.comments).issueId).toBe('TEST-123');
-      expect(itemAt(parsed.data.comments).count).toBe(3);
-      expect(itemAt(parsed.data.comments, 1).issueId).toBe('TEST-456');
-      expect(itemAt(parsed.data.comments, 1).count).toBe(0);
+      expect(parsed.data.successful).toHaveLength(2);
+      expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
+      expect(itemAt(parsed.data.successful).count).toBe(3);
+      expect(itemAt(parsed.data.successful, 1).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.successful, 1).count).toBe(0);
+    });
+  });
+
+  describe('Предупреждения о полях без значения (FIELDS_WITHOUT_VALUE)', () => {
+    it('добавляет warning, когда поле не пришло ни у одного комментария', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        {
+          status: 'fulfilled',
+          key: 'TEST-123',
+          index: 0,
+          value: paginated(mockComments),
+        },
+      ]);
+
+      // Ни у одного из mockComments нет updatedBy (не редактировались)
+      const result = await tool.execute({
+        issueIds: ['TEST-123'],
+        fields: ['id', 'updatedBy.display'],
+      });
+
+      const parsed = JSON.parse(getTextContent(result)) as {
+        success: boolean;
+        warnings?: Array<{ code: string; message: string; details?: { fields: string[] } }>;
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.warnings).toBeDefined();
+      expect(parsed.warnings).toHaveLength(1);
+      expect(parsed.warnings?.[0]?.code).toBe('FIELDS_WITHOUT_VALUE');
+      expect(parsed.warnings?.[0]?.details?.fields).toEqual(['updatedBy.display']);
+    });
+
+    it('НЕ предупреждает, если поле пришло хотя бы у одного элемента среди всех задач', async () => {
+      const editedComment = createEditedCommentFixture();
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        // TEST-123: обычные комментарии без updatedBy
+        { status: 'fulfilled', key: 'TEST-123', index: 0, value: paginated(mockComments) },
+        // TEST-456: один комментарий С updatedBy
+        { status: 'fulfilled', key: 'TEST-456', index: 1, value: paginated([editedComment]) },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: ['TEST-123', 'TEST-456'],
+        fields: ['id', 'updatedBy.display'],
+      });
+
+      const parsed = JSON.parse(getTextContent(result)) as {
+        success: boolean;
+        warnings?: unknown[];
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.warnings).toBeUndefined();
+    });
+
+    it('ответ без предупреждений не содержит ключа warnings', async () => {
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        { status: 'fulfilled', key: 'TEST-123', index: 0, value: paginated(mockComments) },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: ['TEST-123'],
+        fields: ['id', 'text'],
+      });
+
+      const parsed = JSON.parse(getTextContent(result)) as Record<string, unknown>;
+      expect('warnings' in parsed).toBe(false);
+      expect(result['structuredContent']).toBeDefined();
+      expect(
+        result['structuredContent'] && 'warnings' in (result['structuredContent'] as object)
+      ).toBe(false);
+    });
+
+    it('принимает issueId как внутренний 24-символьный hex id', async () => {
+      const internalId = '6a86a4f94f009850c7186c67';
+      vi.mocked(mockTrackerFacade.getCommentsMany).mockResolvedValue([
+        { status: 'fulfilled', key: internalId, index: 0, value: paginated(mockComments) },
+      ]);
+
+      const result = await tool.execute({
+        issueIds: [internalId],
+        fields: ['id', 'text'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      expect(mockTrackerFacade.getCommentsMany).toHaveBeenCalledWith(
+        [internalId],
+        expect.any(Object)
+      );
     });
   });
 
@@ -573,16 +653,14 @@ describe('GetCommentsTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          errors: unknown[];
+          successful: unknown[];
+          failed: unknown[];
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(1);
-      expect(parsed.data.failed).toBe(1);
-      expect(parsed.data.errors).toHaveLength(1);
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(parsed.data.failed).toHaveLength(1);
     });
 
     it('должен обработать полный провал всех запросов', async () => {
@@ -611,14 +689,14 @@ describe('GetCommentsTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
+          successful: unknown[];
+          failed: unknown[];
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(0);
-      expect(parsed.data.failed).toBe(2);
+      expect(parsed.data.successful).toHaveLength(0);
+      expect(parsed.data.failed).toHaveLength(2);
     });
   });
 });

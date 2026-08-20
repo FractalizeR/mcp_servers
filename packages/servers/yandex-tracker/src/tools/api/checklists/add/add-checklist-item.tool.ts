@@ -65,12 +65,17 @@ export class AddChecklistItemTool extends BaseTool<YandexTrackerFacade> {
       // 3. API v2: добавление элементов через batch-метод
       const results = await this.facade.addChecklistItemMany(items);
 
-      // 4. Обработка результатов через BatchResultProcessor
-      const processedResults = BatchResultProcessor.process(
-        results,
-        (item: ChecklistItemWithUnknownFields): Partial<ChecklistItemWithUnknownFields> =>
-          ResponseFieldFilter.filter<ChecklistItemWithUnknownFields>(item, fields)
+      // 4. Обработка результатов через BatchResultProcessor (без фильтрации —
+      // фильтруем ниже одним проходом, чтобы детектор незаполненных полей
+      // увидел все элементы батча сразу)
+      const processedResults = BatchResultProcessor.process(results);
+      const { fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        ChecklistItemWithUnknownFields[]
+      >(
+        processedResults.successful.map((item) => item.data),
+        fields
       );
+      const warnings = ResponseFieldFilter.toWarnings(fieldsWithoutValue);
 
       // 5. Логирование результатов
       ResultLogger.logBatchResults(
@@ -85,21 +90,21 @@ export class AddChecklistItemTool extends BaseTool<YandexTrackerFacade> {
         processedResults
       );
 
-      return this.formatSuccess({
-        total: items.length,
-        successful: processedResults.successful.length,
-        failed: processedResults.failed.length,
-        items: processedResults.successful.map((result) => ({
-          issueId: result.key,
-          itemId: result.data.id,
-          item: result.data,
-        })),
-        errors: processedResults.failed.map((result) => ({
-          issueId: result.key,
-          error: result.error,
-        })),
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          total: items.length,
+          successful: processedResults.successful.map((result) => ({
+            issueId: result.key,
+            itemId: result.data.id,
+            item: ResponseFieldFilter.filter<ChecklistItemWithUnknownFields>(result.data, fields),
+          })),
+          failed: processedResults.failed.map((result) => ({
+            issueId: result.key,
+            error: result.error,
+          })),
+        },
+        warnings
+      );
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при добавлении элементов в чеклисты (${items.length} задач)`,

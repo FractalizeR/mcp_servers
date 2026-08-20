@@ -296,7 +296,7 @@ async function main(): Promise<void> {
       // даже с фиктивным токеном. Аргументы — массив из двух ключей: доказывает,
       // что НЕТРИВИАЛЬНЫЕ аргументы сериализуются и валидируются одинаково в
       // обеих эпохах, а не только "пустой arguments: {}" из 8a.
-      const successArgs = { issueKeys: ['FRTEST-1', 'FRTEST-2'] };
+      const successArgs = { issueIds: ['FRTEST-1', 'FRTEST-2'] };
 
       const legacySuccess = await withServer(async (harness) => {
         await legacyInitialize(harness, 1);
@@ -332,7 +332,7 @@ async function main(): Promise<void> {
         typeof successText === 'string' &&
           successText.includes('FRTEST-1') &&
           successText.includes('FRTEST-2'),
-        `8b: результат должен отражать ОБА переданных issueKeys (доказывает, что аргументы дошли до tool, а не что оба вызова случайно вернули одинаковую пустышку), получено ${JSON.stringify(successText)}`
+        `8b: результат должен отражать ОБА переданных issueIds (доказывает, что аргументы дошли до tool, а не что оба вызова случайно вернули одинаковую пустышку), получено ${JSON.stringify(successText)}`
       );
     }
   );
@@ -402,7 +402,7 @@ async function main(): Promise<void> {
             await legacyInitialize(harness, 1);
             return harness.request(2, 'tools/call', {
               name: 'fr_yandex_tracker_transition_issue',
-              arguments: { issueKey: 'FRTEST-1', transitionId: 'close' },
+              arguments: { issueId: 'FRTEST-1', transitionId: 'close' },
             });
           },
           { YANDEX_TRACKER_API_BASE: apiBase }
@@ -489,7 +489,7 @@ async function main(): Promise<void> {
             await legacyInitialize(harness, 1);
             return harness.request(2, 'tools/call', {
               name: 'fr_yandex_tracker_transition_issue',
-              arguments: { issueKey: 'FRTEST-1', transitionId: 'close' },
+              arguments: { issueId: 'FRTEST-1', transitionId: 'close' },
             });
           },
           { YANDEX_TRACKER_API_BASE: apiBase }

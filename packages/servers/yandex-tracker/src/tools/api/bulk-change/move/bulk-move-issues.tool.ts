@@ -50,18 +50,18 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issues, queue, moveAllFields, initialStatus, values } = validation.data;
+    const { issueIds, queue, moveAllFields, initialStatus, values } = validation.data;
 
     try {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(
         this.logger,
-        `Массовое перемещение ${issues.length} задач в очередь "${queue}"`,
+        `Массовое перемещение ${issueIds.length} задач в очередь "${queue}"`,
         values ? Object.keys(values).length : 0
       );
 
       this.logger.info(`Целевая очередь: ${queue}`);
-      this.logger.info(`Задачи: ${issues.join(', ')}`);
+      this.logger.info(`Задачи: ${issueIds.join(', ')}`);
       this.logger.info(`Переместить все поля: ${moveAllFields ?? false}`);
       this.logger.info(`Сбросить статус на начальный: ${initialStatus ?? false}`);
       if (values) {
@@ -70,7 +70,7 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
 
       // 3. API v2: массовое перемещение задач (асинхронная операция)
       const operation = await this.facade.bulkMoveIssues({
-        issues,
+        issues: issueIds,
         queue,
         ...(moveAllFields !== undefined && { moveAllFields }),
         ...(initialStatus !== undefined && { initialStatus }),
@@ -84,10 +84,10 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
 
       // 5. Формирование ответа
       return this.formatSuccess({
-        message: `Операция массового перемещения запущена для ${issues.length} задач`,
+        message: `Операция массового перемещения запущена для ${issueIds.length} задач`,
         operationId: operation.id,
         status: operation.status,
-        totalIssues: operation.totalIssues ?? issues.length,
+        totalIssues: operation.totalIssues ?? issueIds.length,
         targetQueue: queue,
         moveAllFields: moveAllFields ?? false,
         initialStatus: initialStatus ?? false,
@@ -96,7 +96,7 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
       });
     } catch (error: unknown) {
       return this.formatError(
-        `Ошибка при массовом перемещении ${issues.length} задач в очередь "${queue}"`,
+        `Ошибка при массовом перемещении ${issueIds.length} задач в очередь "${queue}"`,
         error
       );
     }

@@ -25,7 +25,7 @@ export const GET_ISSUE_TRANSITIONS_TOOL_METADATA: StaticToolMetadata = {
   tags: ['transitions', 'statuses', 'workflow', 'read'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['issueKey', 'fields'],
+  redactionAllowlist: ['issueId', 'fields'],
   title: 'Доступные переходы задачи',
   outputSchema: GetIssueTransitionsOutputSchema,
   annotations: {

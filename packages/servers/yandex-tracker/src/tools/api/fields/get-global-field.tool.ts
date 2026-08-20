@@ -30,12 +30,13 @@ export class GetGlobalFieldTool extends BaseTool<YandexTrackerFacade> {
 
       const field = await this.facade.getField(fieldId);
 
-      const filtered = ResponseFieldFilter.filter<FieldWithUnknownFields>(field, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<FieldWithUnknownFields>(field, fields);
 
-      return this.formatSuccess({
-        globalField: filtered,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        { globalField: filtered },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении глобального поля ${fieldId}`, error);
     }

@@ -8,7 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import { createQueueListFixture } from '#helpers/queue.fixture.js';
+import { createQueueFixture, createQueueListFixture } from '#helpers/queue.fixture.js';
 import type { PaginatedResult, QueueWithUnknownFields } from '#tracker_api/entities/index.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
 
@@ -300,6 +300,43 @@ describe('GetQueuesTool', () => {
         };
         expect(parsed.success).toBe(false);
         expect(parsed.message).toContain('валидации');
+      });
+    });
+
+    describe('Предупреждения о полях без значения (FIELDS_WITHOUT_VALUE)', () => {
+      it('добавляет warning, когда поле не пришло ни у одной очереди', async () => {
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(
+          paginated(createQueueListFixture(2)) // без description
+        );
+
+        const result = await tool.execute({ fields: ['key', 'description'] });
+
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          warnings?: Array<{ code: string; details?: { fields: string[] } }>;
+        };
+        expect(parsed.success).toBe(true);
+        expect(parsed.warnings).toHaveLength(1);
+        expect(parsed.warnings?.[0]?.code).toBe('FIELDS_WITHOUT_VALUE');
+        expect(parsed.warnings?.[0]?.details?.fields).toEqual(['description']);
+      });
+
+      it('НЕ предупреждает, если поле пришло хотя бы у одной очереди из коллекции', async () => {
+        vi.mocked(mockTrackerFacade.getQueues).mockResolvedValue(
+          paginated([
+            createQueueFixture({ key: 'A' }), // без description
+            createQueueFixture({ key: 'B', description: 'Есть описание' }),
+          ])
+        );
+
+        const result = await tool.execute({ fields: ['key', 'description'] });
+
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          warnings?: unknown[];
+        };
+        expect(parsed.success).toBe(true);
+        expect(parsed.warnings).toBeUndefined();
       });
     });
   });

@@ -40,11 +40,18 @@ export class GetUsersTool extends BaseTool<YandexTrackerFacade> {
 
       const results = await this.facade.getUsers(userIds);
 
-      const processedResults = BatchResultProcessor.process(
-        results,
-        (user: UserWithUnknownFields): Partial<UserWithUnknownFields> =>
-          ResponseFieldFilter.filter<UserWithUnknownFields>(user, fields)
-      );
+      // Обрабатываем batch БЕЗ фильтрации на этом шаге — фильтрация одним
+      // вызовом ниже нужна, чтобы filterWithReport увидел все успешные
+      // элементы разом и посчитал fieldsWithoutValue корректно (поле "без
+      // значения", только если пусто у ВСЕХ успешных элементов — см. README
+      // плана `plan_tool_contract_unification` §4), а не по одному элементу
+      // за раз, что дало бы предупреждение уже на первом элементе без поля.
+      const processedResults = BatchResultProcessor.process(results);
+
+      const rawUsers = processedResults.successful.map((item) => item.data);
+      const { result: filteredUsers, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        UserWithUnknownFields[]
+      >(rawUsers, fields);
 
       ResultLogger.logBatchResults(
         this.logger,
@@ -58,20 +65,20 @@ export class GetUsersTool extends BaseTool<YandexTrackerFacade> {
         processedResults
       );
 
-      return this.formatSuccess({
-        total: userIds.length,
-        successful: processedResults.successful.length,
-        failed: processedResults.failed.length,
-        users: processedResults.successful.map((item) => ({
-          userId: item.key,
-          user: item.data,
-        })),
-        errors: processedResults.failed.map((item) => ({
-          userId: item.key,
-          error: item.error,
-        })),
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          total: userIds.length,
+          successful: processedResults.successful.map((item, index) => ({
+            userId: item.key,
+            user: filteredUsers[index],
+          })),
+          failed: processedResults.failed.map((item) => ({
+            userId: item.key,
+            error: item.error,
+          })),
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении пользователей (${userIds.length} шт.)`, error);
     }

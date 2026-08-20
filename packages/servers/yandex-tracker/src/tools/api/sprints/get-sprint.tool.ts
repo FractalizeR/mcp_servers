@@ -32,12 +32,15 @@ export class GetSprintTool extends BaseTool<YandexTrackerFacade> {
 
       this.logger.info('Спринт получен', { sprintId: sprint.id, name: sprint.name });
 
-      const filtered = ResponseFieldFilter.filter<SprintWithUnknownFields>(sprint, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<SprintWithUnknownFields>(sprint, fields);
 
-      return this.formatSuccess({
-        sprint: filtered,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          sprint: filtered,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении спринта ${sprintId}`, error);
     }

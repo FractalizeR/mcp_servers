@@ -8,7 +8,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import { createProjectListFixture } from '#helpers/project.fixture.js';
+import { createProjectFixture, createProjectListFixture } from '#helpers/project.fixture.js';
 import type { PaginatedResult, ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
 
@@ -380,6 +380,56 @@ describe('GetProjectsTool', () => {
         };
         expect(parsed.success).toBe(false);
         expect(parsed.message).toContain('валидации');
+      });
+    });
+
+    describe('предупреждения о полях без значения', () => {
+      // Регрессионный тест ядра находки 1 отчёта: неверное имя поля → warning, не ошибка.
+      it('предупреждает, когда запрошенное поле не вернуло значения ни у одного проекта', async () => {
+        const mockProjects = createProjectListFixture(2);
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects));
+
+        const result = await tool.execute({ fields: ['id', 'totallyBogusField'] });
+
+        expect(result.isError).toBeUndefined();
+        const structured = (
+          result as {
+            structuredContent?: { warnings?: Array<{ code: string; details?: unknown }> };
+          }
+        ).structuredContent;
+        expect(structured?.warnings).toEqual([
+          expect.objectContaining({
+            code: 'FIELDS_WITHOUT_VALUE',
+            details: { fields: ['totallyBogusField'] },
+          }),
+        ]);
+      });
+
+      // Защита от шумного предупреждения: поле пустое лишь у части элементов — не повод предупреждать.
+      it('не предупреждает, когда поле заполнено хотя бы у одного проекта', async () => {
+        const mockProjects = [
+          createProjectFixture({ id: 'project123', key: 'PROJ1' }),
+          createProjectFixture({ id: 'project124', key: 'PROJ2', description: 'Has description' }),
+        ];
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects));
+
+        const result = await tool.execute({ fields: ['id', 'description'] });
+
+        expect(result.isError).toBeUndefined();
+        const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+          .structuredContent;
+        expect(structured?.warnings).toBeUndefined();
+      });
+
+      it('не выдаёт предупреждений, когда все запрошенные поля пришли', async () => {
+        const mockProjects = createProjectListFixture(1);
+        vi.mocked(mockTrackerFacade.getProjects).mockResolvedValue(paginated(mockProjects));
+
+        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
+
+        const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+          .structuredContent;
+        expect(structured?.warnings).toBeUndefined();
       });
     });
   });

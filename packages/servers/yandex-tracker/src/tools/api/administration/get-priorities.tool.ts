@@ -30,15 +30,17 @@ export class GetPrioritiesTool extends BaseTool<YandexTrackerFacade> {
 
       const result = await this.facade.getPriorities();
 
-      const filtered = result.items.map((item) =>
-        ResponseFieldFilter.filter<PriorityWithUnknownFields>(item, fields)
-      );
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        PriorityWithUnknownFields[]
+      >(result.items, fields);
 
-      return this.formatSuccess({
-        priorities: filtered,
-        count: filtered.length,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          priorities: filtered,
+          count: filtered.length,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении справочника приоритетов задач', error);
     }

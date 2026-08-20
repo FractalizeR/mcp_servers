@@ -25,7 +25,7 @@ export const UPDATE_ISSUE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['update', 'edit', 'modify', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['issueKey', 'assignee', 'priority', 'type', 'version', 'fields'],
+  redactionAllowlist: ['issueId', 'assignee', 'priority', 'type', 'version', 'fields'],
   title: 'Обновить задачу',
   outputSchema: UpdateIssueOutputSchema,
   annotations: {

@@ -27,7 +27,7 @@ describe('get-issue-transitions integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_transitions', {
-      issueKey,
+      issueId: issueKey,
       fields: STANDARD_TRANSITION_FIELDS,
     });
 
@@ -51,7 +51,7 @@ describe('get-issue-transitions integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_transitions', {
-      issueKey,
+      issueId: issueKey,
       fields: STANDARD_TRANSITION_FIELDS,
     });
 
@@ -67,7 +67,7 @@ describe('get-issue-transitions integration tests', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_transitions', {
-      issueKey,
+      issueId: issueKey,
       fields: ['id', 'to'],
     });
 

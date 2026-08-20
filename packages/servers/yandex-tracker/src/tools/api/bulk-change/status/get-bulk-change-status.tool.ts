@@ -7,7 +7,7 @@
  * - Валидация через Zod
  */
 
-import { BaseTool } from '@fractalizer/mcp-core';
+import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { BulkChangeStatus } from '#tracker_api/entities/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
@@ -48,7 +48,7 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { operationId } = validation.data;
+    const { operationId, fields } = validation.data;
 
     try {
       // 2. Логирование начала операции
@@ -63,23 +63,19 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
           `Обработано задач: ${operation.executionIssuePercent ?? 0}%`
       );
 
-      // 5. Формирование ответа. Все опциональные поля кладутся по одному правилу:
-      // отсутствующие в ответе API исчезают при сериализации, а не превращаются
-      // в null или в подставленный дефолт.
-      const response: Record<string, unknown> = {
+      // 5. Фильтрация поддерева operation по fields (находка 6 живого прогона
+      // 2026-08-20: без этого createdBy безусловно тащил cloudUid/passportUid).
+      // operationId/message — вычисляемые/эхо, фильтрации не подлежат.
+      const { result: filteredOperation, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport(operation, fields);
+
+      const response = {
         operationId: operation.id,
-        status: operation.status,
-        statusText: operation.statusText,
-        totalIssues: operation.totalIssues,
-        totalCompletedIssues: operation.totalCompletedIssues,
-        executionChunkPercent: operation.executionChunkPercent,
-        executionIssuePercent: operation.executionIssuePercent,
-        createdAt: operation.createdAt,
-        createdBy: operation.createdBy,
         message: this.buildStatusMessage(operation.status, operation.statusText),
+        operation: filteredOperation,
       };
 
-      return this.formatSuccess(response);
+      return this.formatSuccess(response, ResponseFieldFilter.toWarnings(fieldsWithoutValue));
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении статуса bulk операции ${operationId}`, error);
     }

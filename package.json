@@ -17,6 +17,7 @@
     "build": "turbo run build",
     "build:mcpb": "turbo run build:mcpb --filter='./packages/servers/*'",
     "check": "turbo run lint typecheck && npm run format:check",
+    "check:tool-contract-ratchet": "tsx scripts/check-tool-contract-ratchet.ts",
     "clean": "rimraf packages/framework/*/dist packages/servers/*/dist",
     "clean:all": "npm run clean && rimraf node_modules packages/framework/*/node_modules packages/servers/*/node_modules packages/wrappers/*/node_modules",
     "clean:cache": "npm cache clean --force && rimraf node_modules/.cache .turbo",

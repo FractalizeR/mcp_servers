@@ -180,14 +180,41 @@ describe('CreateComponentTool', () => {
           data: {
             component: { id: string; name: string };
             message: string;
-            fieldsReturned: string[];
           };
         };
         expect(parsed.success).toBe(true);
         expect(parsed.data.component.id).toBe(123);
         expect(parsed.data.component.name).toBe('Test Component');
         expect(parsed.data.message).toContain('успешно создан');
-        expect(parsed.data.fieldsReturned).toEqual(['id', 'name']);
+
+        const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+          .structuredContent;
+        expect(structured?.warnings).toBeUndefined();
+      });
+
+      // Регрессионный тест ядра находки 1 отчёта: неверное имя поля → warning, не ошибка.
+      it('предупреждает, когда запрошенное поле не вернуло значения', async () => {
+        const mockComponent = createComponentFixture({ id: 123, name: 'Test Component' });
+        vi.mocked(mockTrackerFacade.createComponent).mockResolvedValue(mockComponent);
+
+        const result = await tool.execute({
+          queueId: 'TEST',
+          name: 'Test Component',
+          fields: ['id', 'totallyBogusField'],
+        });
+
+        expect(result.isError).toBeUndefined();
+        const structured = (
+          result as {
+            structuredContent?: { warnings?: Array<{ code: string; details?: unknown }> };
+          }
+        ).structuredContent;
+        expect(structured?.warnings).toEqual([
+          expect.objectContaining({
+            code: 'FIELDS_WITHOUT_VALUE',
+            details: { fields: ['totallyBogusField'] },
+          }),
+        ]);
       });
 
       it('должен создать компонент с описанием', async () => {

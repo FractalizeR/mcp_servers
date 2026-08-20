@@ -35,15 +35,18 @@ export class CreateEntityTool extends BaseTool<YandexTrackerFacade> {
         entityFields: extractEntityApiFields(fields),
       });
 
-      const filtered = ResponseFieldFilter.filter<EntityApiRecordWithUnknownFields>(entity, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<EntityApiRecordWithUnknownFields>(entity, fields);
 
       this.logger.info('Запись Entity API создана', { entityType, entityId: entity.id });
 
-      return this.formatSuccess({
-        entity: filtered,
-        message: `Запись (${entityType}) успешно создана`,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          entity: filtered,
+          message: `Запись (${entityType}) успешно создана`,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при создании записи Entity API (${entityType})`, error);
     }

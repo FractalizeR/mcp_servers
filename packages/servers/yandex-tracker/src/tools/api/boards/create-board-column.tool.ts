@@ -31,13 +31,17 @@ export class CreateBoardColumnTool extends BaseTool<YandexTrackerFacade> {
 
       const created = await this.facade.createBoardColumn({ boardId, name, statuses });
 
-      const filtered = ResponseFieldFilter.filter<WithUnknownFields<BoardColumn>>(created, fields);
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        WithUnknownFields<BoardColumn>
+      >(created, fields);
 
-      return this.formatSuccess({
-        column: filtered,
-        message: `Колонка "${name}" доски ${boardId} успешно создана`,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          column: filtered,
+          message: `Колонка "${name}" доски ${boardId} успешно создана`,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при создании колонки доски ${boardId}`, error);
     }

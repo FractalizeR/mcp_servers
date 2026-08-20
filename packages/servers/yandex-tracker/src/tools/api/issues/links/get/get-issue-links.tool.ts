@@ -7,10 +7,16 @@
  * - Валидация через Zod
  */
 
-import { BaseTool, BatchResultProcessor, ResultLogger } from '@fractalizer/mcp-core';
+import {
+  BaseTool,
+  BatchResultProcessor,
+  ResponseFieldFilter,
+  ResultLogger,
+} from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { paginatedFieldFilter } from '#common/index.js';
+import type { LinkWithUnknownFields } from '#tracker_api/entities/index.js';
 import { GetIssueLinksParamsSchema } from './get-issue-links.schema.js';
 
 import { GET_ISSUE_LINKS_TOOL_METADATA } from './get-issue-links.metadata.js';
@@ -72,10 +78,15 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
         maxTotalItems,
       });
 
-      // 4. Обработка результатов через BatchResultProcessor (с пагинацией)
-      const processedResults = BatchResultProcessor.process(results, paginatedFieldFilter(fields));
+      // 4. Обработка результатов через BatchResultProcessor (с пагинацией).
+      // Отчёт детектора незаполненных полей копится внутри filter по мере
+      // обработки батча и агрегируется по ВСЕМ успешным задачам сразу
+      // (см. paginatedFieldFilter, план `plan_tool_contract_unification`, 2.8).
+      const filter = paginatedFieldFilter<LinkWithUnknownFields>(fields);
+      const processedResults = BatchResultProcessor.process(results, filter);
+      const { fieldsWithoutValue } = filter.getReport();
 
-      // 5. Логирование результатов
+      // 6. Логирование результатов
       ResultLogger.logBatchResults(
         this.logger,
         'Связи задач получены',
@@ -88,20 +99,22 @@ export class GetIssueLinksTool extends BaseTool<YandexTrackerFacade> {
         processedResults
       );
 
-      return this.formatSuccess({
-        total: issueIds.length,
-        successful: processedResults.successful.map((item) => ({
-          issueId: item.key,
-          links: item.data.items,
-          count: item.data.items.length,
-          pagination: item.data.pagination,
-        })),
-        failed: processedResults.failed.map((item) => ({
-          issueId: item.key,
-          error: item.error,
-        })),
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          total: issueIds.length,
+          successful: processedResults.successful.map((item) => ({
+            issueId: item.key,
+            links: item.data.items,
+            count: item.data.items.length,
+            pagination: item.data.pagination,
+          })),
+          failed: processedResults.failed.map((item) => ({
+            issueId: item.key,
+            error: item.error,
+          })),
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении связей задач (${issueIds.length} шт.)`, error);
     }

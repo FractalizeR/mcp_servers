@@ -16,7 +16,6 @@ import {
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   PAGINATION_CURSOR_BATCH_MESSAGE,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
   BatchErrorValueSchema,
@@ -32,11 +31,11 @@ export const GetIssueChangelogParamsSchema = z
     /**
      * Массив ключей задач для получения истории
      */
-    issueKeys: IssueKeysSchema.describe('Массив ключей задач (например, ["QUEUE-1", "QUEUE-2"])'),
+    issueIds: IssueKeysSchema.describe('Массив ключей задач (например, ["QUEUE-1", "QUEUE-2"])'),
 
     /**
      * Непрозрачный курсор следующей страницы (из pagination.nextCursor).
-     * Допустим только при ровно одном issueKey; несовместим с bulk-параметрами.
+     * Допустим только при ровно одном issueId; несовместим с bulk-параметрами.
      */
     cursor: CursorSchema,
 
@@ -67,9 +66,7 @@ export const GetIssueChangelogParamsSchema = z
     message: PAGINATION_CURSOR_CONFLICT_MESSAGE,
     path: ['cursor'],
   })
-  // Поле задач в changelog называется issueKeys — адаптируем под предикат,
-  // который оперирует issueIds (общий контракт batch-инструментов).
-  .refine((data) => cursorRequiresSingleIssue({ cursor: data.cursor, issueIds: data.issueKeys }), {
+  .refine(cursorRequiresSingleIssue, {
     message: PAGINATION_CURSOR_BATCH_MESSAGE,
     path: ['cursor'],
   });
@@ -86,7 +83,7 @@ export const GetIssueChangelogOutputDataSchema = z.object({
   total: z.number(),
   successful: z.array(
     z.object({
-      issueKey: z.string(),
+      issueId: z.string(),
       changelog: z.array(FilteredEntitySchema),
       totalEntries: z.number(),
       pagination: PaginationMetaSchema,
@@ -94,11 +91,10 @@ export const GetIssueChangelogOutputDataSchema = z.object({
   ),
   failed: z.array(
     z.object({
-      key: z.string(),
+      issueId: z.string(),
       error: BatchErrorValueSchema,
     })
   ),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

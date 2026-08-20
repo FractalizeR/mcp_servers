@@ -27,6 +27,8 @@ import { ApiErrorClass, HttpStatusCode } from '@fractalizer/mcp-infrastructure';
 import { BaseTool } from '../../../src/tools/base/base-tool.js';
 import { ToolCategory, ToolPriority } from '../../../src/tools/base/tool-metadata.js';
 import type { StaticToolMetadata } from '../../../src/tools/base/tool-metadata.js';
+import { ToolWarningCode } from '../../../src/definition/tool-warning.js';
+import type { ToolWarning } from '../../../src/definition/tool-warning.js';
 
 function buildLogger(): Logger {
   const logger = {
@@ -72,6 +74,11 @@ class MinimalEchoTool extends BaseTool<void> {
   /** Публичный доступ к protected formatError() для прямого теста envelope ошибки. */
   public callFormatError(message: string, error?: unknown): ToolResult {
     return this.formatError(message, error);
+  }
+
+  /** Публичный доступ к protected formatSuccess() для теста envelope warnings. */
+  public callFormatSuccess(data: unknown, warnings?: ToolWarning[]): ToolResult {
+    return this.formatSuccess(data, warnings);
   }
 }
 
@@ -221,6 +228,51 @@ describe('BaseTool', () => {
     });
   });
 
+  /**
+   * DoD 1 пакета 1.1 (plan_tool_contract_unification): `warnings` отсутствует
+   * в ответе, когда предупреждений нет — проверено И в content[0].text, И в
+   * structuredContent (два разных ассерта, не один общий).
+   */
+  describe('formatSuccess(data, warnings) — инвариант «warnings только когда непусто»', () => {
+    it('без второго аргумента: ключ warnings отсутствует в обеих проекциях', () => {
+      const tool = new MinimalEchoTool(buildLogger());
+
+      const result = tool.callFormatSuccess({ id: 'TASK-1' });
+
+      const structured = result['structuredContent'] as object;
+      const fromText = JSON.parse(result.content[0]?.['text'] as string) as object;
+      expect('warnings' in structured).toBe(false);
+      expect('warnings' in fromText).toBe(false);
+    });
+
+    it('с пустым массивом warnings: ключ всё равно отсутствует (не пустой массив в ответе)', () => {
+      const tool = new MinimalEchoTool(buildLogger());
+
+      const result = tool.callFormatSuccess({ id: 'TASK-1' }, []);
+
+      const structured = result['structuredContent'] as object;
+      const fromText = JSON.parse(result.content[0]?.['text'] as string) as object;
+      expect('warnings' in structured).toBe(false);
+      expect('warnings' in fromText).toBe(false);
+    });
+
+    it('с непустым warnings: ключ присутствует и одинаков в обеих проекциях', () => {
+      const tool = new MinimalEchoTool(buildLogger());
+      const warnings: ToolWarning[] = [
+        { code: ToolWarningCode.FIELDS_WITHOUT_VALUE, message: 'assignee.login не пришёл' },
+      ];
+
+      const result = tool.callFormatSuccess({ id: 'TASK-1' }, warnings);
+
+      const structured = result['structuredContent'] as { warnings?: ToolWarning[] };
+      const fromText = JSON.parse(result.content[0]?.['text'] as string) as {
+        warnings?: ToolWarning[];
+      };
+      expect(structured.warnings).toEqual(warnings);
+      expect(fromText.warnings).toEqual(warnings);
+    });
+  });
+
   describe('formatError() — envelope ошибки', () => {
     it('без error: structuredContent не содержит ключ error, isError=true', () => {
       const tool = new MinimalEchoTool(buildLogger());
@@ -310,6 +362,21 @@ describe('BaseTool', () => {
       // Форматирование самого текста проверено в zod-error-formatter.test.ts;
       // здесь важно, что путь делегирования сохраняет имя поля в сообщении.
       expect(payload.error).toContain('id');
+    });
+
+    /**
+     * Находка 4 (README §5 плана plan_tool_contract_unification): запрос
+     * невалиден (id отсутствует) И содержит лишний параметр — сообщение
+     * обязано назвать ОБА промаха, а не только недостающий id.
+     */
+    it('невалидные параметры + лишний параметр: сообщение называет оба промаха', async () => {
+      const tool = new MinimalEchoTool(buildLogger());
+
+      const result = await tool.execute({ issueIds: ['TEST-1'] });
+
+      const payload = result['structuredContent'] as { error?: string };
+      expect(payload.error).toContain('id');
+      expect(payload.error).toContain('issueIds');
     });
   });
 });

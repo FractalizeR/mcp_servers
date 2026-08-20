@@ -49,22 +49,22 @@ export class BulkUpdateIssuesTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issues, values } = validation.data;
+    const { issueIds, values } = validation.data;
 
     try {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(
         this.logger,
-        `Массовое обновление ${issues.length} задач`,
+        `Массовое обновление ${issueIds.length} задач`,
         Object.keys(values).length
       );
 
       this.logger.info(`Обновляемые поля: ${Object.keys(values).join(', ')}`);
-      this.logger.info(`Задачи: ${issues.join(', ')}`);
+      this.logger.info(`Задачи: ${issueIds.join(', ')}`);
 
       // 3. API v2: массовое обновление задач (асинхронная операция)
       const operation = await this.facade.bulkUpdateIssues({
-        issues,
+        issues: issueIds,
         values: values as Record<string, unknown>,
       });
 
@@ -75,15 +75,15 @@ export class BulkUpdateIssuesTool extends BaseTool<YandexTrackerFacade> {
 
       // 5. Формирование ответа
       return this.formatSuccess({
-        message: `Операция массового обновления запущена для ${issues.length} задач`,
+        message: `Операция массового обновления запущена для ${issueIds.length} задач`,
         operationId: operation.id,
         status: operation.status,
-        totalIssues: operation.totalIssues ?? issues.length,
+        totalIssues: operation.totalIssues ?? issueIds.length,
         updatedFields: Object.keys(values),
         note: 'Операция выполняется асинхронно. Используй get_bulk_change_status для проверки статуса.',
       });
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при массовом обновлении ${issues.length} задач`, error);
+      return this.formatError(`Ошибка при массовом обновлении ${issueIds.length} задач`, error);
     }
   }
 }

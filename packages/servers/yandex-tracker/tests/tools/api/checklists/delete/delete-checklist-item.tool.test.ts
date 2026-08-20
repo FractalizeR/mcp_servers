@@ -140,18 +140,14 @@ describe('DeleteChecklistItemTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          items: Array<{ issueId: string; itemId: string; success: boolean }>;
-          errors: Array<{ issueId: string; itemId: string; error: string }>;
+          successful: Array<{ issueId: string; itemId: string; success: boolean }>;
+          failed: Array<{ issueId: string; itemId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.total).toBe(2);
-      expect(parsed.data.successful).toBe(2);
-      expect(parsed.data.failed).toBe(0);
-      expect(parsed.data.items).toHaveLength(2);
-      expect(parsed.data.errors).toHaveLength(0);
+      expect(parsed.data.successful).toHaveLength(2);
+      expect(parsed.data.failed).toHaveLength(0);
     });
   });
 
@@ -214,20 +210,16 @@ describe('DeleteChecklistItemTool', () => {
         success: boolean;
         data: {
           total: number;
-          successful: number;
-          failed: number;
-          items: Array<{ issueId: string; itemId: string; success: boolean }>;
-          errors: Array<{ issueId: string; itemId: string; error: string }>;
+          successful: Array<{ issueId: string; itemId: string; success: boolean }>;
+          failed: Array<{ issueId: string; itemId: string; error: string }>;
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.successful).toBe(1);
-      expect(parsed.data.failed).toBe(1);
-      expect(parsed.data.items).toHaveLength(1);
-      expect(parsed.data.errors).toHaveLength(1);
-      expect(itemAt(parsed.data.errors).issueId).toBe('TEST-456');
-      expect(itemAt(parsed.data.errors).itemId).toBe('item-456');
-      expect(itemAt(parsed.data.errors).error).toContain('Item not found');
+      expect(parsed.data.successful).toHaveLength(1);
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(itemAt(parsed.data.failed).issueId).toBe('TEST-456');
+      expect(itemAt(parsed.data.failed).itemId).toBe('item-456');
+      expect(itemAt(parsed.data.failed).error).toContain('Item not found');
     });
 
     it('должен обработать полную ошибку batch', async () => {
@@ -260,11 +252,11 @@ describe('DeleteChecklistItemTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          errors: Array<{ issueId: string; itemId: string; error: string }>;
+          failed: Array<{ issueId: string; itemId: string; error: string }>;
         };
       };
-      expect(parsed.data.errors).toHaveLength(1);
-      expect(itemAt(parsed.data.errors).error).toContain('Checklist item not found');
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(itemAt(parsed.data.failed).error).toContain('Checklist item not found');
     });
 
     it('должен обработать ошибку доступа (403)', async () => {
@@ -285,11 +277,11 @@ describe('DeleteChecklistItemTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          errors: Array<{ issueId: string; itemId: string; error: string }>;
+          failed: Array<{ issueId: string; itemId: string; error: string }>;
         };
       };
-      expect(parsed.data.errors).toHaveLength(1);
-      expect(itemAt(parsed.data.errors).error).toContain('Access denied');
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(itemAt(parsed.data.failed).error).toContain('Access denied');
     });
 
     it('должен обработать ошибку несуществующей задачи (404)', async () => {
@@ -310,11 +302,11 @@ describe('DeleteChecklistItemTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          errors: Array<{ issueId: string; itemId: string; error: string }>;
+          failed: Array<{ issueId: string; itemId: string; error: string }>;
         };
       };
-      expect(parsed.data.errors).toHaveLength(1);
-      expect(itemAt(parsed.data.errors).error).toContain('Issue not found');
+      expect(parsed.data.failed).toHaveLength(1);
+      expect(itemAt(parsed.data.failed).error).toContain('Issue not found');
     });
   });
 });

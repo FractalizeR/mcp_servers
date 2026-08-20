@@ -30,15 +30,17 @@ export class GetResolutionsTool extends BaseTool<YandexTrackerFacade> {
 
       const result = await this.facade.getResolutions();
 
-      const filtered = result.items.map((item) =>
-        ResponseFieldFilter.filter<ResolutionWithUnknownFields>(item, fields)
-      );
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        ResolutionWithUnknownFields[]
+      >(result.items, fields);
 
-      return this.formatSuccess({
-        resolutions: filtered,
-        count: filtered.length,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          resolutions: filtered,
+          count: filtered.length,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении справочника резолюций задач', error);
     }

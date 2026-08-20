@@ -46,12 +46,11 @@ describe('add-checklist-item integration tests (batch)', () => {
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
-      expect(response.successful).toBe(1);
-      expect(response.failed).toBe(0);
-      expect(response.items).toHaveLength(1);
-      expect(response.items[0].issueId).toBe(issueKey);
-      expect(response.items[0].itemId).toBe(item.id);
-      expect(response.items[0].item.text).toBe(text);
+      expect(response.successful).toHaveLength(1);
+      expect(response.failed).toHaveLength(0);
+      expect(response.successful[0].issueId).toBe(issueKey);
+      expect(response.successful[0].itemId).toBe(item.id);
+      expect(response.successful[0].item.text).toBe(text);
 
       mockServer.assertAllRequestsDone();
     });
@@ -78,9 +77,8 @@ describe('add-checklist-item integration tests (batch)', () => {
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
-      expect(response.successful).toBe(2);
-      expect(response.failed).toBe(0);
-      expect(response.items).toHaveLength(2);
+      expect(response.successful).toHaveLength(2);
+      expect(response.failed).toHaveLength(0);
 
       mockServer.assertAllRequestsDone();
     });
@@ -109,8 +107,8 @@ describe('add-checklist-item integration tests (batch)', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response.items[0].item.text).toBe(text);
-      expect(response.items[0].item.assignee).toBeDefined();
+      expect(response.successful[0].item.text).toBe(text);
+      expect(response.successful[0].item.assignee).toBeDefined();
 
       mockServer.assertAllRequestsDone();
     });
@@ -134,8 +132,8 @@ describe('add-checklist-item integration tests (batch)', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response.items[0].item.text).toBe(text);
-      expect(response.items[0].item.deadline).toBe(deadline);
+      expect(response.successful[0].item.text).toBe(text);
+      expect(response.successful[0].item.deadline).toBe(deadline);
 
       mockServer.assertAllRequestsDone();
     });
@@ -158,8 +156,8 @@ describe('add-checklist-item integration tests (batch)', () => {
       const responseWrapper = JSON.parse(getTextContent(result));
       const response = responseWrapper.data;
 
-      expect(response.items[0].item.text).toBe(text);
-      expect(response.items[0].item.checked).toBe(true);
+      expect(response.successful[0].item.text).toBe(text);
+      expect(response.successful[0].item.checked).toBe(true);
 
       mockServer.assertAllRequestsDone();
     });
@@ -187,12 +185,10 @@ describe('add-checklist-item integration tests (batch)', () => {
       const response = responseWrapper.data;
 
       expect(response.total).toBe(2);
-      expect(response.successful).toBe(1);
-      expect(response.failed).toBe(1);
-      expect(response.items).toHaveLength(1);
-      expect(response.items[0].issueId).toBe('TEST-100');
-      expect(response.errors).toHaveLength(1);
-      expect(response.errors[0].issueId).toBe('NONEXISTENT-1');
+      expect(response.successful).toHaveLength(1);
+      expect(response.failed).toHaveLength(1);
+      expect(response.successful[0].issueId).toBe('TEST-100');
+      expect(response.failed[0].issueId).toBe('NONEXISTENT-1');
 
       mockServer.assertAllRequestsDone();
     });
@@ -214,10 +210,9 @@ describe('add-checklist-item integration tests (batch)', () => {
       const response = responseWrapper.data;
 
       expect(response.total).toBe(1);
-      expect(response.successful).toBe(0);
-      expect(response.failed).toBe(1);
-      expect(response.errors).toHaveLength(1);
-      expect(response.errors[0].issueId).toBe(issueKey);
+      expect(response.successful).toHaveLength(0);
+      expect(response.failed).toHaveLength(1);
+      expect(response.failed[0].issueId).toBe(issueKey);
 
       mockServer.assertAllRequestsDone();
     });

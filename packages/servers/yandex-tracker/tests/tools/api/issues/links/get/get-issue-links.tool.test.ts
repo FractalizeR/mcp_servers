@@ -222,7 +222,6 @@ describe('GetIssueLinksTool', () => {
             pagination: PaginationMeta;
           }>;
           failed: Array<{ issueId: string; error: string }>;
-          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
@@ -231,7 +230,6 @@ describe('GetIssueLinksTool', () => {
       expect(parsed.data.failed).toHaveLength(0);
       expect(itemAt(parsed.data.successful).issueId).toBe('TEST-123');
       expect(itemAt(parsed.data.successful).count).toBe(3);
-      expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
       // Регрессия: прежние ключи (links/count) на месте + добавлено поле pagination
       expect(itemAt(parsed.data.successful).links).toHaveLength(3);
       expect(itemAt(parsed.data.successful).pagination).toMatchObject({
@@ -339,13 +337,11 @@ describe('GetIssueLinksTool', () => {
               type: unknown;
             }>;
           }>;
-          fieldsReturned: string[];
         };
       };
       expect(itemAt(parsed.data.successful).links[0]).toHaveProperty('id');
       expect(itemAt(parsed.data.successful).links[0]).toHaveProperty('type');
       expect(itemAt(parsed.data.successful).links[0]).not.toHaveProperty('createdBy');
-      expect(parsed.data.fieldsReturned).toEqual(['id', 'type']);
     });
   });
 

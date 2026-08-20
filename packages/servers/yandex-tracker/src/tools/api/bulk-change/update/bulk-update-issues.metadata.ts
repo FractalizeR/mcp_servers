@@ -29,7 +29,7 @@ export const BULK_UPDATE_ISSUES_TOOL_METADATA: StaticToolMetadata = {
   // values — passthrough-объект, смешивающий безопасные (priority/type/tags) и
   // пользовательский текст (summary/description) на одном уровне вложенности —
   // не раскрываем ни один из его ключей, чтобы не задеть текстовые поля.
-  redactionAllowlist: ['issues'],
+  redactionAllowlist: ['issueIds'],
   title: 'Массовое обновление полей задач',
   outputSchema: BulkUpdateIssuesOutputSchema,
   annotations: {

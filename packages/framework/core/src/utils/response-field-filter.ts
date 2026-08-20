@@ -8,7 +8,27 @@
  * - Обработка массивов объектов на верхнем уровне
  * - Сохранение типобезопасности
  */
+import { ToolWarningCode } from '../definition/tool-warning.js';
+import type { ToolWarning } from '../definition/tool-warning.js';
+
 const FIELDS_REQUIRED_ERROR = 'Параметр fields обязателен и должен содержать хотя бы один элемент';
+
+/**
+ * Результат фильтрации вместе с отчётом детектора незаполненных полей
+ * (план `plan_tool_contract_unification`, README §4/1.1 п.2).
+ *
+ * `fieldsWithoutValue` — пути из `fields`, которые не дали значения НИ У
+ * ОДНОГО элемента ответа. Для одиночного объекта это ровно инверсия
+ * `extractField()`; для массива — путь считается "без значения", только
+ * если извлечь его не удалось ни у одного элемента (частичная пустота —
+ * не повод предупреждать, см. граничные случаи 1.1). Пустая исходная
+ * коллекция (`data` — массив длины 0) не даёт предупреждений: сказать
+ * нечего, а шум помешал бы увидеть, что результат просто пуст.
+ */
+export interface FieldFilterReport<T> {
+  result: T;
+  fieldsWithoutValue: string[];
+}
 
 export class ResponseFieldFilter {
   /**
@@ -40,6 +60,19 @@ export class ResponseFieldFilter {
    * // Result: { updatedAt: '2024-01-01', fields: [{ field: { display: 'Status' }, to: { key: 'closed' } }] }
    */
   static filter<T>(data: T, fields: string[] | undefined | null): T {
+    return this.filterWithReport(data, fields).result;
+  }
+
+  /**
+   * То же, что {@link filter}, но дополнительно поднимает наружу отчёт
+   * детектора незаполненных полей — единственная реализация подсчёта
+   * (см. {@link FieldFilterReport}); {@link filter} — её частный случай,
+   * отбрасывающий отчёт, а не вторая независимая реализация.
+   *
+   * Считает ДО {@link compact}: после compact() "пришёл null" и "путь ничего
+   * не извлёк" неразличимы (маркер `undefined` уже заменён на `{}`).
+   */
+  static filterWithReport<T>(data: T, fields: string[] | undefined | null): FieldFilterReport<T> {
     // Валидация: fields должен содержать минимум 1 элемент
     if (!fields || fields.length === 0) {
       throw new Error(FIELDS_REQUIRED_ERROR);
@@ -47,38 +80,90 @@ export class ResponseFieldFilter {
 
     // Обработка массивов
     if (Array.isArray(data)) {
-      return data.map((item) => this.compact(this.filterObject(item, fields))) as T;
+      if (data.length === 0) {
+        return { result: data as T, fieldsWithoutValue: [] };
+      }
+
+      const perItem = data.map((item) => this.filterObjectTracked(item, fields));
+      const result = perItem.map((item) => this.compact(item.filtered)) as T;
+      const fieldsWithoutValue = fields.filter((field) =>
+        perItem.every((item) => !item.extracted.get(field))
+      );
+
+      return { result, fieldsWithoutValue };
     }
 
     // Обработка объектов
     if (typeof data === 'object' && data !== null) {
-      return this.compact(this.filterObject(data, fields)) as T;
+      const { filtered, extracted } = this.filterObjectTracked(data, fields);
+      const result = this.compact(filtered) as T;
+      const fieldsWithoutValue = fields.filter((field) => !extracted.get(field));
+
+      return { result, fieldsWithoutValue };
     }
 
-    // Примитивы возвращаем как есть
-    return data;
+    // Примитивы возвращаем как есть — детектору не с чем работать
+    return { result: data, fieldsWithoutValue: [] };
   }
 
   /**
-   * Фильтрует один объект по списку полей
+   * Превращает `fieldsWithoutValue` из {@link filterWithReport} в `ToolWarning[]`
+   * (план `plan_tool_contract_unification`, пакет 2.8: сведение хелпера).
+   *
+   * Единственная реализация во всём monorepo — точка употребления для отчёта
+   * детектора, которую фундаментный этап (1.1) не отдал вместе с самим
+   * `filterWithReport`, из-за чего десять пакетов 2.x независимо завели
+   * локальные копии, разошедшиеся формой (`details: { field }` vs
+   * `details: { fields: [...] }`). Форма здесь — ОДНО агрегированное
+   * предупреждение со списком путей: запрос с пятью промахами не должен
+   * порождать пять предупреждений, вытесняющих полезное содержимое ответа.
+   *
+   * @param fieldsWithoutValue - пути из `fields`, не давшие значения (см. {@link FieldFilterReport})
+   * @returns `[]`, если пусто; иначе массив из одного агрегированного `ToolWarning`
+   */
+  static toWarnings(fieldsWithoutValue: readonly string[]): ToolWarning[] {
+    if (fieldsWithoutValue.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        code: ToolWarningCode.FIELDS_WITHOUT_VALUE,
+        message:
+          `Поля из параметра fields не вернули значения ни у одного элемента ответа: ` +
+          fieldsWithoutValue.join(', '),
+        details: { fields: [...fieldsWithoutValue] },
+      },
+    ];
+  }
+
+  /**
+   * Фильтрует один объект по списку полей, попутно фиксируя для каждого пути,
+   * извлёк ли он хоть что-то (см. {@link FieldFilterReport}).
    *
    * @param obj - Исходный объект
    * @param fields - Массив путей к полям
-   * @returns Новый объект только с указанными полями
+   * @returns Отфильтрованный объект и карта путь → извлечён ли (boolean из
+   *   {@link extractField})
    */
-  private static filterObject(obj: unknown, fields: string[]): unknown {
+  private static filterObjectTracked(
+    obj: unknown,
+    fields: string[]
+  ): { filtered: unknown; extracted: Map<string, boolean> } {
     if (typeof obj !== 'object' || obj === null) {
-      return obj;
+      return { filtered: obj, extracted: new Map(fields.map((field) => [field, false])) };
     }
 
     const result: Record<string, unknown> = {};
+    const extracted = new Map<string, boolean>();
 
     for (const fieldPath of fields) {
       const pathParts = fieldPath.split('.');
-      this.extractField(obj as Record<string, unknown>, pathParts, result);
+      const wrote = this.extractField(obj as Record<string, unknown>, pathParts, result);
+      extracted.set(fieldPath, wrote);
     }
 
-    return result;
+    return { filtered: result, extracted };
   }
 
   /**
@@ -383,7 +468,7 @@ export class ResponseFieldFilter {
    * Проверяет, что значение — "простой" объект (создан литералом `{}`, `Object.create(null)`
    * или `new Object()`), а не экземпляр `Date`/`Map`/`Set`/`RegExp`/произвольного класса.
    *
-   * `filterObject`/`extractField` создают результирующие объекты именно так (`{}`), поэтому
+   * `filterObjectTracked`/`extractField` создают результирующие объекты именно так (`{}`), поэтому
    * рекурсивный обход {@link compact} обязан спускаться только в них. Значения листьев
    * копируются по ссылке (см. extractField, remainingPath.length === 0) и могут быть чем
    * угодно, включая `Date`/`Map`/`Set` — их прототип не `Object.prototype`, и в такие

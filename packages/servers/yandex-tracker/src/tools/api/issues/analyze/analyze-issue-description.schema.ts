@@ -18,10 +18,10 @@ import { IssueKeySchema, buildOutputSchema } from '#common/schemas/index.js';
  */
 export const AnalyzeIssueDescriptionParamsSchema = z
   .object({
-    issueKey: IssueKeySchema,
+    issueId: IssueKeySchema,
   })
   .describe(
-    'Анализирует description задачи (GET /v3/issues/{issueKey}) и предлагает правку: ' +
+    'Анализирует description задачи (GET /v3/issues/{issueId}) и предлагает правку: ' +
       'детерминированные эвристики (не внешняя LLM) проверяют пустоту/длину и наличие ' +
       'типовых разделов (Контекст/Критерии приемки). Текущее и предложенное описание ' +
       'возвращаются рядом — правку применяет update_issue (сам агент в fallback-режиме, ' +
@@ -34,7 +34,7 @@ export type AnalyzeIssueDescriptionParams = z.infer<typeof AnalyzeIssueDescripti
  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`).
  */
 export const AnalyzeIssueDescriptionOutputDataSchema = z.object({
-  issueKey: z.string(),
+  issueId: z.string(),
   currentDescription: z.string().describe('description задачи, санитайзенный (без HTML-тегов)'),
   suggestedDescription: z
     .string()

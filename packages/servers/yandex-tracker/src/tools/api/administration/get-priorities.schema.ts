@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 export const GetPrioritiesParamsSchema = z.object({
   /** Список полей для возврата (обязательно) */
@@ -20,7 +15,6 @@ export type GetPrioritiesParams = z.infer<typeof GetPrioritiesParamsSchema>;
 export const GetPrioritiesOutputDataSchema = z.object({
   priorities: z.array(FilteredEntitySchema),
   count: z.number(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const GetPrioritiesOutputSchema = buildOutputSchema(GetPrioritiesOutputDataSchema);

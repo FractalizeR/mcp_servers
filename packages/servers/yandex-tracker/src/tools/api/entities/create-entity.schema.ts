@@ -6,12 +6,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 export const CreateEntityParamsSchema = z.object({
   /** Тип создаваемой записи Entity API — goal/project/portfolio (обязательно) */
@@ -35,7 +30,6 @@ export type CreateEntityParams = z.infer<typeof CreateEntityParamsSchema>;
 export const CreateEntityOutputDataSchema = z.object({
   entity: FilteredEntitySchema,
   message: z.string(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const CreateEntityOutputSchema = buildOutputSchema(CreateEntityOutputDataSchema);

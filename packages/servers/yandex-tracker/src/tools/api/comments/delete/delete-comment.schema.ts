@@ -6,7 +6,12 @@
  */
 
 import { z } from 'zod';
-import { IssueKeySchema, buildOutputSchema, BatchErrorValueSchema } from '#common/schemas/index.js';
+import {
+  IssueKeySchema,
+  buildOutputSchema,
+  makeBatchSuccessItemSchema,
+  makeBatchErrorItemSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для удаления комментариев (batch-режим)
@@ -44,19 +49,12 @@ export type DeleteCommentParams = z.infer<typeof DeleteCommentParamsSchema>;
 export const DeleteCommentOutputDataSchema = z.object({
   total: z.number().describe('Всего запрошено комментариев к удалению'),
   successful: z.array(
-    z.object({
-      issueId: z.string(),
-      commentId: z.string(),
-      success: z.literal(true),
-    })
+    makeBatchSuccessItemSchema(
+      'issueId',
+      z.object({ commentId: z.string(), success: z.literal(true) })
+    )
   ),
-  failed: z.array(
-    z.object({
-      issueId: z.string(),
-      commentId: z.string(),
-      error: BatchErrorValueSchema,
-    })
-  ),
+  failed: z.array(makeBatchErrorItemSchema('issueId').extend({ commentId: z.string() })),
 });
 
 /**

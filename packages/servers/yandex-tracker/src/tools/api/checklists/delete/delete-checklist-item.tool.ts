@@ -86,18 +86,16 @@ export class DeleteChecklistItemTool extends BaseTool<YandexTrackerFacade> {
 
       return this.formatSuccess({
         total: items.length,
-        successful: processedResults.successful.length,
-        failed: processedResults.failed.length,
-        items: processedResults.successful.map((item) => {
+        successful: processedResults.successful.map((item) => {
           // Разбираем ключ "issueId/itemId"
           const [issueId, itemId] = item.key.split('/');
           return {
             issueId,
             itemId,
-            success: true,
+            success: true as const,
           };
         }),
-        errors: processedResults.failed.map((item) => {
+        failed: processedResults.failed.map((item) => {
           // Разбираем ключ "issueId/itemId"
           const [issueId, itemId] = item.key.split('/');
           return {

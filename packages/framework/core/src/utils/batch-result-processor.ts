@@ -25,6 +25,15 @@ import { ApiErrorClass } from '@fractalizer/mcp-infrastructure';
  * Generic параметры:
  * - TKey: тип ключа сущности (string, number, etc.)
  * - TValue: тип данных результата
+ *
+ * Рантайм-форма (`key`/`data`/`error`) — рабочая структура ЭТОГО процессора,
+ * не форма ответа инструмента наружу. Инструмент строит из неё финальный
+ * `{ total, successful[], failed[] }` (канон — `makeBatchResultSchema` в
+ * `@fractalizer/mcp-server-yandex-tracker`, `src/common/schemas/output.schema.ts`),
+ * переименовывая `key` в семантическое имя идентификатора сущности (`issueId` и
+ * т.п.) на своей стороне — единообразие имени поля `key` для успеха и отказа
+ * здесь уже гарантировано, поэтому канону остаётся зафиксировать только форму
+ * элемента, а не переизобретать сам подсчёт success/fail.
  */
 export interface ProcessedBatchResult<TKey, TValue> {
   /** Успешно обработанные элементы */

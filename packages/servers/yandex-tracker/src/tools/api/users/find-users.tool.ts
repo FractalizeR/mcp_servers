@@ -30,18 +30,20 @@ export class FindUsersTool extends BaseTool<YandexTrackerFacade> {
 
       const result = await this.facade.findUsers({ perPage, cursor, fetchAll, maxItems });
 
-      const filteredUsers = result.items.map((user) =>
-        ResponseFieldFilter.filter<UserWithUnknownFields>(user, fields)
-      );
+      const { result: filteredUsers, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        UserWithUnknownFields[]
+      >(result.items, fields);
 
       this.logger.info('Список пользователей получен', { count: filteredUsers.length });
 
-      return this.formatSuccess({
-        users: filteredUsers,
-        count: filteredUsers.length,
-        pagination: result.pagination,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          users: filteredUsers,
+          count: filteredUsers.length,
+          pagination: result.pagination,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка пользователей', error);
     }

@@ -38,13 +38,6 @@ export const FilteredEntitySchema = z
   .describe('Объект с полями, отфильтрованными по параметру fields запроса');
 
 /**
- * Список фактически возвращённых полей — эхо входного параметра `fields`.
- */
-export const FieldsReturnedSchema = z
-  .array(z.string())
-  .describe('Список полей, фактически возвращённых в ответе (эхо параметра fields)');
-
-/**
  * Метаданные пагинации list-эндпоинтов — зеркалирует `PaginationMeta`
  * (`src/tracker_api/entities/common/pagination.entity.ts`). `total`/`totalPages`
  * заполняются только у seekable-эндпоинтов, поэтому здесь они опциональны.
@@ -126,4 +119,49 @@ export function makeBatchErrorItemSchema<TKey extends string>(
   }) as unknown as z.ZodObject<
     { [K in TKey]: z.ZodString } & { error: typeof BatchErrorValueSchema }
   >;
+}
+
+/**
+ * Элемент успеха batch-операции — форма `{ <idField>: string, ...data }`
+ * (канон CLAUDE.md §2.1 «Unified batch result format»): идентификатор
+ * сущности лежит НЕ во вложенном `data`, а на верхнем уровне элемента, рядом
+ * с остальными полями результата — та же плоская форма, что и у элемента
+ * ошибки {@link makeBatchErrorItemSchema} (единое имя ключа для успеха и
+ * отказа — план `plan_tool_contract_unification`, 1.1 п.4).
+ */
+export function makeBatchSuccessItemSchema<TKey extends string, TShape extends z.ZodRawShape>(
+  keyField: TKey,
+  dataShape: z.ZodObject<TShape>
+): z.ZodObject<{ [K in TKey]: z.ZodString } & TShape> {
+  return z.object({ [keyField]: z.string() }).extend(dataShape.shape) as unknown as z.ZodObject<
+    { [K in TKey]: z.ZodString } & TShape
+  >;
+}
+
+/**
+ * Канон формы batch-ответа `{ total, successful[], failed[] }` (1.1 п.4):
+ * единственное место, фиксирующее форму элемента — `successful`/`failed`
+ * несут идентификатор сущности под ОДНИМ И ТЕМ ЖЕ именем `keyField`. Без
+ * этой фиксации шесть параллельных пакетов 2.x решили бы имя поля по-своему,
+ * и разнобой имён вернулся бы в новой форме (см. README §1 плана).
+ */
+export function makeBatchResultSchema<TKey extends string, TShape extends z.ZodRawShape>(
+  keyField: TKey,
+  dataShape: z.ZodObject<TShape>
+): z.ZodObject<{
+  total: z.ZodNumber;
+  successful: z.ZodArray<z.ZodObject<{ [K in TKey]: z.ZodString } & TShape>>;
+  failed: z.ZodArray<
+    z.ZodObject<{ [K in TKey]: z.ZodString } & { error: typeof BatchErrorValueSchema }>
+  >;
+}> {
+  return z.object({
+    total: z.number().int().nonnegative().describe('Общее количество элементов в запросе'),
+    successful: z
+      .array(makeBatchSuccessItemSchema(keyField, dataShape))
+      .describe(`Успешно обработанные элементы (идентификатор — ключ "${keyField}")`),
+    failed: z
+      .array(makeBatchErrorItemSchema(keyField))
+      .describe(`Элементы с ошибкой (тот же ключ идентификатора "${keyField}")`),
+  });
 }

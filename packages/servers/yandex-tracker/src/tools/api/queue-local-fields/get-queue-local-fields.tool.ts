@@ -30,16 +30,18 @@ export class GetQueueLocalFieldsTool extends BaseTool<YandexTrackerFacade> {
 
       const result = await this.facade.getQueueLocalFields({ queueId });
 
-      const filtered = result.items.map((item) =>
-        ResponseFieldFilter.filter<QueueLocalFieldWithUnknownFields>(item, fields)
-      );
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        QueueLocalFieldWithUnknownFields[]
+      >(result.items, fields);
 
-      return this.formatSuccess({
-        localFields: filtered,
-        count: filtered.length,
-        queueId,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          localFields: filtered,
+          count: filtered.length,
+          queueId,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении локальных полей очереди ${queueId}`, error);
     }

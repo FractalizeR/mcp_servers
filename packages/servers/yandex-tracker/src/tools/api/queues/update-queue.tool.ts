@@ -54,16 +54,16 @@ export class UpdateQueueTool extends BaseTool<YandexTrackerFacade> {
         queueName: updatedQueue.name,
       });
 
-      const filteredQueue = ResponseFieldFilter.filter<QueueWithUnknownFields>(
-        updatedQueue,
-        fields
-      );
+      const { result: filteredQueue, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<QueueWithUnknownFields>(updatedQueue, fields);
 
-      return this.formatSuccess({
-        queueKey: updatedQueue.key,
-        queue: filteredQueue,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          queueKey: updatedQueue.key,
+          queue: filteredQueue,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при обновлении очереди ${queueId}`, error);
     }

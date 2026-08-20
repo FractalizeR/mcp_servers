@@ -30,12 +30,13 @@ export class UpdateGlobalFieldTool extends BaseTool<YandexTrackerFacade> {
 
       const updated = await this.facade.updateField(fieldId, updateData);
 
-      const filtered = ResponseFieldFilter.filter<FieldWithUnknownFields>(updated, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<FieldWithUnknownFields>(updated, fields);
 
-      return this.formatSuccess({
-        globalField: filtered,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        { globalField: filtered },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при обновлении глобального поля ${fieldId}`, error);
     }

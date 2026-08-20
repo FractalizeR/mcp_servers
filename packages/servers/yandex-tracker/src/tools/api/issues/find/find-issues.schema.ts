@@ -12,7 +12,6 @@ import {
   noCursorWithBulkParams,
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
@@ -38,10 +37,10 @@ export const FindIssuesParamsSchema = z
     filter: z.record(z.string(), z.unknown()).optional(),
 
     /**
-     * Список ключей задач
+     * Список ключей или id задач
      * Пример: ["PROJ-1", "PROJ-2"]
      */
-    keys: z.array(z.string()).optional(),
+    issueIds: z.array(z.string()).optional(),
 
     /**
      * Ключ очереди
@@ -69,19 +68,19 @@ export const FindIssuesParamsSchema = z
     /**
      * Непрозрачный курсор следующей страницы (из pagination.nextCursor).
      *
-     * При курсоре критерии поиска (query/filter/keys/queue/filterId/order)
+     * При курсоре критерии поиска (query/filter/issueIds/queue/filterId/order)
      * ОБЯЗАНЫ быть переданы повторно: операция сверяет их хеш с хешем в курсоре.
      *
      * Описание переопределено локально (не трогая общую `CursorSchema` из
      * `#common/schemas`): именно у `find_issues` курсор без повторно
      * переданных критериев отклоняется тем же рефайном, что требует «хотя бы
-     * один способ поиска» (query/filter/keys/queue/filterId) — правило должно
+     * один способ поиска» (query/filter/issueIds/queue/filterId) — правило должно
      * быть видно ДО вызова, а не только в тексте рантайм-ошибки.
      */
     cursor: CursorSchema.describe(
       'Непрозрачный курсор следующей страницы из pagination.nextCursor. ' +
         'ОБЯЗАТЕЛЬНО повторно передать вместе с ним те же критерии поиска ' +
-        '(query/filter/keys/queue/filterId и, если использовался, order), которыми ' +
+        '(query/filter/issueIds/queue/filterId и, если использовался, order), которыми ' +
         'курсор был получен, — иначе вызов будет отклонён валидацией "хотя бы один ' +
         'способ поиска". Курсор сам по себе способом поиска не считается. ' +
         'Использовать ТОЛЬКО с тем же инструментом, который его выдал. ' +
@@ -122,14 +121,14 @@ export const FindIssuesParamsSchema = z
       return (
         data.query !== undefined ||
         data.filter !== undefined ||
-        (data.keys !== undefined && data.keys.length > 0) ||
+        (data.issueIds !== undefined && data.issueIds.length > 0) ||
         data.queue !== undefined ||
         data.filterId !== undefined
       );
     },
     {
       message:
-        'Должен быть указан хотя бы один способ поиска: query, filter, keys, queue или filterId',
+        'Должен быть указан хотя бы один способ поиска: query, filter, issueIds, queue или filterId',
     }
   )
   .refine(noCursorWithBulkParams, {
@@ -144,35 +143,34 @@ export type FindIssuesParams = z.infer<typeof FindIssuesParamsSchema>;
 
 /**
  * Агрегаты поиска, не зависящие от режима ответа (`links`/`full`) — пагинация
- * Трекера, эхо `fields` и флаги примененных критериев поиска. Раньше эти три
- * поля лежали на верхнем уровне `data` вместе с `issues`/`count`; теперь они
- * под `summary` — форма, заданная `BaseTool.formatCollectionResult()` (пакет
- * 5.1.B): `{ mode, itemsOnPage, threshold, summary?, items? | resourceLinks? }`.
+ * Трекера и флаги примененных критериев поиска. Раньше эти поля лежали на
+ * верхнем уровне `data` вместе с `issues`/`count`; теперь они под `summary` —
+ * форма, заданная `BaseTool.formatCollectionResult()` (пакет 5.1.B):
+ * `{ mode, itemsOnPage, threshold, summary?, items? | resourceLinks? }`.
  */
 export const FindIssuesSummarySchema = z.object({
   pagination: PaginationMetaSchema,
-  fieldsReturned: FieldsReturnedSchema,
   searchCriteria: z.object({
     hasQuery: z.boolean(),
     hasFilter: z.boolean(),
-    keysCount: z.number(),
+    issueIdsCount: z.number(),
     hasQueue: z.boolean(),
     /**
-     * Ключи из `keys`, которые не нашлись в ответе Трекера (дефект №3:
+     * Элементы `issueIds`, которые не нашлись в ответе Трекера (дефект №3:
      * `find_issues` тихо теряет ненайденные ключи, оставляя единственным
-     * намёком расхождение `keysCount` и `itemsOnPage`). Присутствует ТОЛЬКО
-     * когда поиск шёл по `keys` И выдача заведомо полная
+     * намёком расхождение `issueIdsCount` и `itemsOnPage`). Присутствует
+     * ТОЛЬКО когда поиск шёл по `issueIds` И выдача заведомо полная
      * (`pagination.fetchedAll === true`) — иначе поле опускается: находка №2
      * (MAJOR, внешнее ревью 2026-08) показала, что `result.items` может быть
      * лишь одной страницей, и подсчёт по неполной выдаче ложно записывал в
-     * notFoundKeys ключи, которые просто не поместились на странице (риск
-     * дубля при создании агентом задачи «взамен несуществующей» — цена ВЫШЕ
-     * исходной тихой потери). Пустой массив означает «все ключи найдены».
+     * notFoundIssueIds элементы, которые просто не поместились на странице
+     * (риск дубля при создании агентом задачи «взамен несуществующей» — цена
+     * ВЫШЕ исходной тихой потери). Пустой массив означает «всё найдено».
      * Сравнение регистрозависимое: Трекер не считает ключи задач
      * регистронезависимыми (queue-префикс канонически в верхнем регистре,
      * `test-15` не совпадёт с `TEST-15`).
      */
-    notFoundKeys: z.array(z.string()).optional(),
+    notFoundIssueIds: z.array(z.string()).optional(),
   }),
 });
 

@@ -30,15 +30,13 @@ export class UpdateQueueLocalFieldTool extends BaseTool<YandexTrackerFacade> {
 
       const updated = await this.facade.updateQueueLocalField({ queueId, key, ...updateData });
 
-      const filtered = ResponseFieldFilter.filter<QueueLocalFieldWithUnknownFields>(
-        updated,
-        fields
-      );
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<QueueLocalFieldWithUnknownFields>(updated, fields);
 
-      return this.formatSuccess({
-        localField: filtered,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        { localField: filtered },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при обновлении локального поля ${key} очереди ${queueId}`,

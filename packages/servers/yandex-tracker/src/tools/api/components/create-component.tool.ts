@@ -50,18 +50,21 @@ export class CreateComponentTool extends BaseTool<YandexTrackerFacade> {
       });
 
       // Фильтрация полей ответа
-      const filtered = ResponseFieldFilter.filter<ComponentWithUnknownFields>(component, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<ComponentWithUnknownFields>(component, fields);
 
       this.logger.info('Компонент создан', {
         componentId: component.id,
         name: component.name,
       });
 
-      return this.formatSuccess({
-        component: filtered,
-        message: `Компонент "${name}" успешно создан`,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          component: filtered,
+          message: `Компонент "${name}" успешно создан`,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при создании компонента', error);
     }

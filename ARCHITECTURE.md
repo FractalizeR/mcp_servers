@@ -275,7 +275,7 @@ Tool (issueIds[]) → Operation.executeMany()
     → N × API calls (parallel, with throttling)
   → BatchResult<string, Data>
   → BatchResultProcessor.process()
-    → Unified format: { total, successful, failed, fieldsReturned }
+    → Unified format: { total, successful, failed, warnings? }
 ```
 
 **POST/DELETE operations (parallel modification):**

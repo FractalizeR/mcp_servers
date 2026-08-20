@@ -28,10 +28,10 @@ export const ANALYZE_ISSUE_DESCRIPTION_TOOL_METADATA: StaticToolMetadata = {
   tags: ['issues', 'analyze', 'description', 'ui', 'apps'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  // Только issueKey безопасен для лога как есть — description/suggestedDescription/notes
+  // Только issueId безопасен для лога как есть — description/suggestedDescription/notes
   // несут произвольный пользовательский текст (см. правило redactionAllowlist в
   // tool-metadata.ts framework/core).
-  redactionAllowlist: ['issueKey'],
+  redactionAllowlist: ['issueId'],
   title: 'Анализ описания задачи',
   outputSchema: AnalyzeIssueDescriptionOutputSchema,
   annotations: {

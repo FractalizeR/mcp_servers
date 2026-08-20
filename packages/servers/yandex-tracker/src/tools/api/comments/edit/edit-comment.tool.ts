@@ -64,12 +64,21 @@ export class EditCommentTool extends BaseTool<YandexTrackerFacade> {
       // 3. API v3: редактирование комментариев через batch-метод
       const results = await this.facade.editCommentsMany(comments);
 
-      // 4. Обработка результатов через BatchResultProcessor
-      const processedResults = BatchResultProcessor.process(
-        results,
-        (comment: CommentWithUnknownFields): Partial<CommentWithUnknownFields> =>
-          ResponseFieldFilter.filter<CommentWithUnknownFields>(comment, fields)
+      // 4. Обработка результатов через BatchResultProcessor (без фильтрации —
+      // фильтруем ниже одним проходом, чтобы детектор незаполненных полей
+      // увидел все элементы батча сразу)
+      const processedResults = BatchResultProcessor.process(results);
+      // Отчёт детектора считается по `fields` над СЫРЫМИ данными успешных
+      // элементов батча сразу, а не поэлементно — иначе элемент без
+      // опционального поля порождал бы шум (см. план
+      // `plan_tool_contract_unification`, 1.1 «граничные случаи»).
+      const { fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        CommentWithUnknownFields[]
+      >(
+        processedResults.successful.map((item) => item.data),
+        fields
       );
+      const warnings = ResponseFieldFilter.toWarnings(fieldsWithoutValue);
 
       // 5. Логирование результатов
       ResultLogger.logBatchResults(
@@ -84,28 +93,30 @@ export class EditCommentTool extends BaseTool<YandexTrackerFacade> {
         processedResults
       );
 
-      return this.formatSuccess({
-        total: comments.length,
-        successful: processedResults.successful.map((item) => {
-          // Разбираем ключ "issueId:commentId"
-          const [issueId, commentId] = String(item.key).split(':');
-          return {
-            issueId,
-            commentId,
-            comment: item.data,
-          };
-        }),
-        failed: processedResults.failed.map((item) => {
-          // Разбираем ключ "issueId:commentId"
-          const [issueId, commentId] = String(item.key).split(':');
-          return {
-            issueId,
-            commentId,
-            error: item.error,
-          };
-        }),
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          total: comments.length,
+          successful: processedResults.successful.map((item) => {
+            // Разбираем ключ "issueId:commentId"
+            const [issueId, commentId] = String(item.key).split(':');
+            return {
+              issueId,
+              commentId,
+              comment: ResponseFieldFilter.filter<CommentWithUnknownFields>(item.data, fields),
+            };
+          }),
+          failed: processedResults.failed.map((item) => {
+            // Разбираем ключ "issueId:commentId"
+            const [issueId, commentId] = String(item.key).split(':');
+            return {
+              issueId,
+              commentId,
+              error: item.error,
+            };
+          }),
+        },
+        warnings
+      );
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при редактировании комментариев (${comments.length} комментариев)`,

@@ -50,26 +50,26 @@ export class BulkTransitionIssuesTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { issues, transition, values } = validation.data;
+    const { issueIds, transitionId, values } = validation.data;
 
     try {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(
         this.logger,
-        `Массовый переход ${issues.length} задач в статус через "${transition}"`,
+        `Массовый переход ${issueIds.length} задач в статус через "${transitionId}"`,
         values ? Object.keys(values).length : 0
       );
 
-      this.logger.info(`Переход: ${transition}`);
-      this.logger.info(`Задачи: ${issues.join(', ')}`);
+      this.logger.info(`Переход: ${transitionId}`);
+      this.logger.info(`Задачи: ${issueIds.join(', ')}`);
       if (values) {
         this.logger.info(`Дополнительные поля: ${Object.keys(values).join(', ')}`);
       }
 
       // 3. API v2: массовый переход статусов (асинхронная операция)
       const operation = await this.facade.bulkTransitionIssues({
-        issues,
-        transition,
+        issues: issueIds,
+        transition: transitionId,
         ...(values && { values: values as Record<string, unknown> }),
       });
 
@@ -80,17 +80,17 @@ export class BulkTransitionIssuesTool extends BaseTool<YandexTrackerFacade> {
 
       // 5. Формирование ответа
       return this.formatSuccess({
-        message: `Операция массового перехода запущена для ${issues.length} задач`,
+        message: `Операция массового перехода запущена для ${issueIds.length} задач`,
         operationId: operation.id,
         status: operation.status,
-        totalIssues: operation.totalIssues ?? issues.length,
-        transition,
+        totalIssues: operation.totalIssues ?? issueIds.length,
+        transitionId,
         additionalFields: values ? Object.keys(values) : [],
         note: 'Операция выполняется асинхронно. Используй get_bulk_change_status для проверки статуса.',
       });
     } catch (error: unknown) {
       return this.formatError(
-        `Ошибка при массовом переходе ${issues.length} задач в статус через "${transition}"`,
+        `Ошибка при массовом переходе ${issueIds.length} задач в статус через "${transitionId}"`,
         error
       );
     }

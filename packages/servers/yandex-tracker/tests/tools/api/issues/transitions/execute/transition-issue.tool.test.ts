@@ -65,8 +65,8 @@ describe('TransitionIssueTool', () => {
       // После миграции на getParamsSchema() description берется из METADATA
       expect(definition.description).toContain('Сменить статус задачи');
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueKey', 'transitionId']);
-      expect(definition.inputSchema.properties?.['issueKey']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['issueId', 'transitionId']);
+      expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['transitionId']).toBeDefined();
       expect(definition.inputSchema.properties?.['comment']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
@@ -74,7 +74,7 @@ describe('TransitionIssueTool', () => {
   });
 
   describe('Validation', () => {
-    it('должен требовать параметр issueKey', async () => {
+    it('должен требовать параметр issueId', async () => {
       const result = await tool.execute({ transitionId: 'close', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).toBe(true);
@@ -87,7 +87,7 @@ describe('TransitionIssueTool', () => {
     });
 
     it('должен требовать параметр transitionId', async () => {
-      const result = await tool.execute({ issueKey: 'QUEUE-123', fields: STANDARD_ISSUE_FIELDS });
+      const result = await tool.execute({ issueId: 'QUEUE-123', fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).toBe(true);
       const parsed = JSON.parse(getTextContent(result)) as {
@@ -104,7 +104,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockResolvedValue(mockTransitionedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'close',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -120,7 +120,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockResolvedValue(mockTransitionedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'close',
         comment: 'Closing the issue',
         fields: STANDARD_ISSUE_FIELDS,
@@ -135,7 +135,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockResolvedValue(mockTransitionedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'close',
         fields: STANDARD_ISSUE_FIELDS,
         customFields: {
@@ -152,7 +152,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockResolvedValue(mockTransitionedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'close',
         fields: STANDARD_ISSUE_FIELDS,
         comment: 'Closing',
@@ -171,7 +171,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockResolvedValue(mockTransitionedIssue);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'start-progress',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -180,13 +180,13 @@ describe('TransitionIssueTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          issueKey: string;
+          issueId: string;
           transitionId: string;
           issue: IssueWithUnknownFields;
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.issueKey).toBe('QUEUE-123');
+      expect(parsed.data.issueId).toBe('QUEUE-123');
       expect(parsed.data.transitionId).toBe('start-progress');
       expect(parsed.data.issue.status?.key).toBe('in-progress');
     });
@@ -197,7 +197,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockResolvedValue(mockTransitionedIssue);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'close',
         fields: ['id', 'key', 'status'],
       });
@@ -221,7 +221,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockResolvedValue(mockTransitionedIssue);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'close',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -231,7 +231,6 @@ describe('TransitionIssueTool', () => {
         success: boolean;
         data: {
           issue: IssueWithUnknownFields;
-          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
@@ -239,7 +238,6 @@ describe('TransitionIssueTool', () => {
       expect(parsed.data.issue).toHaveProperty('key');
       expect(parsed.data.issue).toHaveProperty('status');
       expect(parsed.data.issue).toHaveProperty('summary');
-      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
     });
   });
 
@@ -248,7 +246,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockResolvedValue(mockTransitionedIssue);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'close',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -274,7 +272,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockRejectedValue(error);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'close',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -290,7 +288,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockRejectedValue(invalidError);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'invalid-transition',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -315,7 +313,7 @@ describe('TransitionIssueTool', () => {
       vi.mocked(mockTrackerFacade.transitionIssue).mockRejectedValue(refetchError);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         transitionId: 'close',
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -324,14 +322,14 @@ describe('TransitionIssueTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          issueKey: string;
+          issueId: string;
           transitionId: string;
           issue?: IssueWithUnknownFields;
           refetchFailed?: boolean;
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.issueKey).toBe('QUEUE-123');
+      expect(parsed.data.issueId).toBe('QUEUE-123');
       expect(parsed.data.transitionId).toBe('close');
       expect(parsed.data.refetchFailed).toBe(true);
       expect(parsed.data.issue).toBeUndefined();

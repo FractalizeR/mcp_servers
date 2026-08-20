@@ -50,11 +50,63 @@ describe('GetUsersTool', () => {
     expect(mockTrackerFacade.getUsers).toHaveBeenCalledWith(['ivanov', 'unknown-user']);
 
     const parsed = JSON.parse(getTextContent(result)) as {
-      data: { total: number; successful: number; failed: number };
+      data: {
+        total: number;
+        successful: Array<{ userId: string; user: Record<string, unknown> }>;
+        failed: Array<{ userId: string; error: unknown }>;
+      };
     };
     expect(parsed.data.total).toBe(2);
-    expect(parsed.data.successful).toBe(1);
-    expect(parsed.data.failed).toBe(1);
+    expect(parsed.data.successful).toEqual([
+      { userId: 'ivanov', user: { uid: 1, login: 'ivanov' } },
+    ]);
+    expect(parsed.data.failed).toHaveLength(1);
+    expect(parsed.data.failed[0]?.userId).toBe('unknown-user');
+  });
+
+  it('не выдаёт предупреждений, когда все запрошенные поля пришли', async () => {
+    vi.mocked(mockTrackerFacade.getUsers).mockResolvedValue([
+      {
+        status: 'fulfilled',
+        key: 'ivanov',
+        index: 0,
+        value: createUserFixture({ uid: 1, login: 'ivanov' }),
+      },
+    ]);
+
+    const result = await tool.execute({ userIds: ['ivanov'], fields: ['uid', 'login'] });
+
+    const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+      .structuredContent;
+    expect(structured?.warnings).toBeUndefined();
+  });
+
+  // Регрессионный тест ядра находки 1 отчёта: неверное имя поля → warning, не ошибка.
+  it('предупреждает, когда поле не вернуло значения ни у одного элемента', async () => {
+    vi.mocked(mockTrackerFacade.getUsers).mockResolvedValue([
+      {
+        status: 'fulfilled',
+        key: 'ivanov',
+        index: 0,
+        value: createUserFixture({ uid: 1, login: 'ivanov' }),
+      },
+    ]);
+
+    const result = await tool.execute({
+      userIds: ['ivanov'],
+      fields: ['uid', 'totallyBogusField'],
+    });
+
+    expect(result.isError).toBeUndefined();
+    const structured = (
+      result as { structuredContent?: { warnings?: Array<{ code: string; details?: unknown }> } }
+    ).structuredContent;
+    expect(structured?.warnings).toEqual([
+      expect.objectContaining({
+        code: 'FIELDS_WITHOUT_VALUE',
+        details: { fields: ['totallyBogusField'] },
+      }),
+    ]);
   });
 
   it('обработает исключение facade целиком', async () => {

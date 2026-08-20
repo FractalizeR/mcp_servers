@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 export const GetGlobalFieldParamsSchema = z.object({
   /** Идентификатор глобального поля (обязательно), например 'summary' или 'customField123' */
@@ -22,7 +17,6 @@ export type GetGlobalFieldParams = z.infer<typeof GetGlobalFieldParamsSchema>;
 
 export const GetGlobalFieldOutputDataSchema = z.object({
   globalField: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const GetGlobalFieldOutputSchema = buildOutputSchema(GetGlobalFieldOutputDataSchema);

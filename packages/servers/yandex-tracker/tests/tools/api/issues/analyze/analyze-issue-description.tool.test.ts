@@ -42,7 +42,7 @@ function makeFacade(overrides?: Partial<YandexTrackerFacade>): YandexTrackerFaca
 interface SuccessPayload {
   success: true;
   data: {
-    issueKey: string;
+    issueId: string;
     currentDescription: string;
     suggestedDescription: string;
     notes: string[];
@@ -94,7 +94,7 @@ describe('AnalyzeIssueDescriptionTool', () => {
       .mockResolvedValue([{ status: 'fulfilled', key: 'QUEUE-1', index: 0, value: mockIssue }]);
     const tool = new AnalyzeIssueDescriptionTool(makeFacade({ getIssues }), makeLogger());
 
-    const result = await tool.execute({ issueKey: 'QUEUE-1' });
+    const result = await tool.execute({ issueId: 'QUEUE-1' });
 
     expect(getIssues).toHaveBeenCalledWith(['QUEUE-1']);
     const payload = JSON.parse((result.content[0] as { text: string }).text) as SuccessPayload;
@@ -121,7 +121,7 @@ describe('AnalyzeIssueDescriptionTool', () => {
       .mockResolvedValue([{ status: 'fulfilled', key: 'QUEUE-2', index: 0, value: mockIssue }]);
     const tool = new AnalyzeIssueDescriptionTool(makeFacade({ getIssues }), makeLogger());
 
-    const result = await tool.execute({ issueKey: 'QUEUE-2' });
+    const result = await tool.execute({ issueId: 'QUEUE-2' });
     const payload = JSON.parse((result.content[0] as { text: string }).text) as SuccessPayload;
 
     expect(payload.data.currentDescription).toBe('');
@@ -141,17 +141,17 @@ describe('AnalyzeIssueDescriptionTool', () => {
     ]);
     const tool = new AnalyzeIssueDescriptionTool(makeFacade({ getIssues }), makeLogger());
 
-    const result = await tool.execute({ issueKey: 'QUEUE-404' });
+    const result = await tool.execute({ issueId: 'QUEUE-404' });
 
     expect(result.isError).toBe(true);
     const payload = JSON.parse((result.content[0] as { text: string }).text) as ErrorPayload;
     expect(payload.success).toBe(false);
   });
 
-  it('невалидные параметры (issueKey неверного формата) → ошибка валидации', async () => {
+  it('невалидные параметры (issueId неверного формата) → ошибка валидации', async () => {
     const tool = new AnalyzeIssueDescriptionTool(makeFacade(), makeLogger());
 
-    const result = await tool.execute({ issueKey: 'not-a-key' });
+    const result = await tool.execute({ issueId: 'not-a-key' });
 
     expect(result.isError).toBe(true);
   });

@@ -42,12 +42,13 @@ export class GetQueueTool extends BaseTool<YandexTrackerFacade> {
         queueName: queue.name,
       });
 
-      const filteredQueue = ResponseFieldFilter.filter<QueueWithUnknownFields>(queue, fields);
+      const { result: filteredQueue, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<QueueWithUnknownFields>(queue, fields);
 
-      return this.formatSuccess({
-        queue: filteredQueue,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        { queue: filteredQueue },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении очереди ${queueId}`, error);
     }

@@ -112,7 +112,7 @@ describe('FindIssuesTool', () => {
       expect(definition.inputSchema.required).toEqual(['fields']);
       expect(definition.inputSchema.properties?.['query']).toBeDefined();
       expect(definition.inputSchema.properties?.['filter']).toBeDefined();
-      expect(definition.inputSchema.properties?.['keys']).toBeDefined();
+      expect(definition.inputSchema.properties?.['issueIds']).toBeDefined();
       expect(definition.inputSchema.properties?.['queue']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
@@ -170,10 +170,10 @@ describe('FindIssuesTool', () => {
       expect(mockTrackerFacade.findIssues).toHaveBeenCalled();
     });
 
-    it('должен принять валидный keys параметр', async () => {
+    it('должен принять валидный issueIds параметр', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
-      const result = await tool.execute({ keys: ['QUEUE-123'], fields: STANDARD_ISSUE_FIELDS });
+      const result = await tool.execute({ issueIds: ['QUEUE-123'], fields: STANDARD_ISSUE_FIELDS });
 
       expect(result.isError).not.toBe(true);
       expect(mockTrackerFacade.findIssues).toHaveBeenCalled();
@@ -212,10 +212,10 @@ describe('FindIssuesTool', () => {
       );
     });
 
-    it('должен вызвать FindIssuesOperation с keys параметром', async () => {
+    it('должен вызвать FindIssuesOperation с issueIds параметром', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1, mockIssue2]));
 
-      await tool.execute({ keys: ['QUEUE-123', 'QUEUE-456'], fields: STANDARD_ISSUE_FIELDS });
+      await tool.execute({ issueIds: ['QUEUE-123', 'QUEUE-456'], fields: STANDARD_ISSUE_FIELDS });
 
       expect(mockTrackerFacade.findIssues).toHaveBeenCalledWith(
         expect.objectContaining({ keys: ['QUEUE-123', 'QUEUE-456'] })
@@ -306,8 +306,8 @@ describe('FindIssuesTool', () => {
         success: boolean;
         data: {
           items: Array<Partial<IssueWithUnknownFields>>;
-          summary: { fieldsReturned: string[] };
         };
+        warnings?: Array<{ code: string; message: string }>;
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.items[0]).toEqual({
@@ -315,9 +315,8 @@ describe('FindIssuesTool', () => {
         summary: 'Test Issue 1',
       });
       expect(parsed.data.items[0]).not.toHaveProperty('description');
-      // 'key'/'summary' уже были в запросе — гарантия идентичности (см.
-      // RESOURCE_LINK_IDENTITY_FIELDS) здесь ничего не добавляет.
-      expect(parsed.data.summary.fieldsReturned).toEqual(['key', 'summary']);
+      // Оба запрошенных поля пришли у mockIssue1 — предупреждений нет.
+      expect(parsed.warnings).toBeUndefined();
     });
 
     it('должен вернуть поля с фильтрацией', async () => {
@@ -330,12 +329,18 @@ describe('FindIssuesTool', () => {
         success: boolean;
         data: {
           items: IssueWithUnknownFields[];
-          summary: { fieldsReturned: string[] };
         };
+        warnings?: Array<{ code: string; message: string; details?: { fields: string[] } }>;
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.items[0]).toHaveProperty('description');
-      expect(parsed.data.summary.fieldsReturned).toEqual(Array.from(STANDARD_ISSUE_FIELDS));
+      // mockIssue1 не содержит assignee/priority из STANDARD_ISSUE_FIELDS —
+      // детектор FIELDS_WITHOUT_VALUE обязан предупредить об этом.
+      expect(parsed.warnings).toHaveLength(1);
+      expect(parsed.warnings?.[0]?.code).toBe('FIELDS_WITHOUT_VALUE');
+      expect(parsed.warnings?.[0]?.details?.fields).toEqual(
+        expect.arrayContaining(['assignee', 'priority'])
+      );
     });
 
     it('должен правильно фильтровать вложенные поля', async () => {
@@ -370,11 +375,9 @@ describe('FindIssuesTool', () => {
         success: boolean;
         data: {
           items: Array<Partial<IssueWithUnknownFields>>;
-          summary: { fieldsReturned: string[] };
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.summary.fieldsReturned).toEqual(['status']);
       expect(parsed.data.items[0]).toHaveProperty('status');
       expect(parsed.data.items[0]).not.toHaveProperty('key');
       expect(parsed.data.items[0]).not.toHaveProperty('summary');
@@ -393,18 +396,36 @@ describe('FindIssuesTool', () => {
         success: boolean;
         data: {
           resourceLinks: Array<{ uri: string; name: string; title?: string }>;
-          summary: { fieldsReturned: string[] };
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.summary.fieldsReturned).toEqual(
-        expect.arrayContaining(['status', 'key', 'summary'])
-      );
       expect(parsed.data.resourceLinks[0]).toMatchObject({
         uri: 'tracker://issue/QUEUE-123',
         name: 'QUEUE-123',
         title: 'Test Issue 1',
       });
+    });
+
+    it('ГРАНИЧНЫЙ СЛУЧАЙ: в режиме links детектор FIELDS_WITHOUT_VALUE выключен (тела заменены на resource_link целиком)', async () => {
+      vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
+
+      const result = await tool.execute({
+        query: 'Author: me()',
+        // assignee/priority отсутствуют у mockIssue1 — в режиме full это
+        // предупреждение (см. тест выше); в links тела задач заменены на
+        // resource_link целиком, ни одно поле в принципе не присутствует в
+        // ответе, поэтому детектор обязан быть выключен, иначе полностью
+        // корректный вызов давал бы предупреждение на весь список fields.
+        fields: STANDARD_ISSUE_FIELDS,
+        responseMode: 'links',
+      });
+
+      const parsed = JSON.parse(getTextContent(result)) as {
+        success: boolean;
+        warnings?: Array<{ code: string; message: string }>;
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.warnings).toBeUndefined();
     });
   });
 
@@ -484,7 +505,7 @@ describe('FindIssuesTool', () => {
 
       await tool.execute({
         query: 'Status: open',
-        keys: ['TEST-1'],
+        issueIds: ['TEST-1'],
         perPage: 20,
         fields: STANDARD_ISSUE_FIELDS,
       });
@@ -493,7 +514,7 @@ describe('FindIssuesTool', () => {
         'Параметры поиска:',
         expect.objectContaining({
           hasQuery: true,
-          keysCount: 1,
+          issueIdsCount: 1,
           perPage: 20,
         })
       );
@@ -513,11 +534,10 @@ describe('FindIssuesTool', () => {
           itemsOnPage: number;
           items: IssueWithUnknownFields[];
           summary: {
-            fieldsReturned: string[];
             searchCriteria: {
               hasQuery: boolean;
               hasFilter: boolean;
-              keysCount: number;
+              issueIdsCount: number;
               hasQueue: boolean;
               perPage?: number;
             };
@@ -534,58 +554,58 @@ describe('FindIssuesTool', () => {
     });
   });
 
-  describe('notFoundKeys (дефект №3: тихая потеря ненайденных keys)', () => {
-    it('поиск по keys, все найдены → notFoundKeys пустой массив', async () => {
+  describe('notFoundIssueIds (дефект №3: тихая потеря ненайденных keys)', () => {
+    it('поиск по keys, все найдены → notFoundIssueIds пустой массив', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1, mockIssue2]));
 
       const result = await tool.execute({
-        keys: ['QUEUE-123', 'QUEUE-456'],
+        issueIds: ['QUEUE-123', 'QUEUE-456'],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
       const parsed = JSON.parse(getTextContent(result)) as {
-        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+        data: { summary: { searchCriteria: { notFoundIssueIds?: string[] } } };
       };
-      expect(parsed.data.summary.searchCriteria.notFoundKeys).toEqual([]);
+      expect(parsed.data.summary.searchCriteria.notFoundIssueIds).toEqual([]);
     });
 
-    it('часть keys не найдена → notFoundKeys перечисляет именно отсутствующие', async () => {
+    it('часть keys не найдена → notFoundIssueIds перечисляет именно отсутствующие', async () => {
       // Трекер вернул только TEST-15, TEST-999999 отсутствует в ответе.
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
-        keys: ['QUEUE-123', 'TEST-999999'],
+        issueIds: ['QUEUE-123', 'TEST-999999'],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
       const parsed = JSON.parse(getTextContent(result)) as {
         data: {
           itemsOnPage: number;
-          summary: { searchCriteria: { keysCount: number; notFoundKeys?: string[] } };
+          summary: { searchCriteria: { issueIdsCount: number; notFoundIssueIds?: string[] } };
         };
       };
       expect(parsed.data.itemsOnPage).toBe(1);
-      expect(parsed.data.summary.searchCriteria.keysCount).toBe(2);
-      expect(parsed.data.summary.searchCriteria.notFoundKeys).toEqual(['TEST-999999']);
+      expect(parsed.data.summary.searchCriteria.issueIdsCount).toBe(2);
+      expect(parsed.data.summary.searchCriteria.notFoundIssueIds).toEqual(['TEST-999999']);
     });
 
     it('регистр ключей значим: "queue-123" не считается найденным при ответе "QUEUE-123"', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
-        keys: ['queue-123'],
+        issueIds: ['queue-123'],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
       const parsed = JSON.parse(getTextContent(result)) as {
-        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+        data: { summary: { searchCriteria: { notFoundIssueIds?: string[] } } };
       };
       // Трекер не считает ключи задач регистронезависимыми (queue-префикс
       // канонически в верхнем регистре) — сравнение строго по строке.
-      expect(parsed.data.summary.searchCriteria.notFoundKeys).toEqual(['queue-123']);
+      expect(parsed.data.summary.searchCriteria.notFoundIssueIds).toEqual(['queue-123']);
     });
 
-    it('поиск НЕ по keys (query) → notFoundKeys отсутствует в ответе (не применимо)', async () => {
+    it('поиск НЕ по keys (query) → notFoundIssueIds отсутствует в ответе (не применимо)', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
@@ -594,12 +614,12 @@ describe('FindIssuesTool', () => {
       });
 
       const parsed = JSON.parse(getTextContent(result)) as {
-        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+        data: { summary: { searchCriteria: { notFoundIssueIds?: string[] } } };
       };
-      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundIssueIds');
     });
 
-    it('поиск по queue → notFoundKeys отсутствует в ответе (не применимо)', async () => {
+    it('поиск по queue → notFoundIssueIds отсутствует в ответе (не применимо)', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
@@ -608,12 +628,12 @@ describe('FindIssuesTool', () => {
       });
 
       const parsed = JSON.parse(getTextContent(result)) as {
-        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+        data: { summary: { searchCriteria: { notFoundIssueIds?: string[] } } };
       };
-      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundIssueIds');
     });
 
-    it('поиск по filter → notFoundKeys отсутствует в ответе (не применимо)', async () => {
+    it('поиск по filter → notFoundIssueIds отсутствует в ответе (не применимо)', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
@@ -622,12 +642,12 @@ describe('FindIssuesTool', () => {
       });
 
       const parsed = JSON.parse(getTextContent(result)) as {
-        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+        data: { summary: { searchCriteria: { notFoundIssueIds?: string[] } } };
       };
-      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundIssueIds');
     });
 
-    it('поиск по filterId → notFoundKeys отсутствует в ответе (не применимо)', async () => {
+    it('поиск по filterId → notFoundIssueIds отсутствует в ответе (не применимо)', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
@@ -636,21 +656,21 @@ describe('FindIssuesTool', () => {
       });
 
       const parsed = JSON.parse(getTextContent(result)) as {
-        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+        data: { summary: { searchCriteria: { notFoundIssueIds?: string[] } } };
       };
-      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundIssueIds');
     });
 
-    it('находка №2 (MAJOR): keys больше страницы (fetchedAll=false) → notFoundKeys НЕ считается вовсе, а не ложно перечисляет непоместившиеся ключи', async () => {
-      // Регрессионный тест: раньше notFoundKeys считался по result.items ОДНОЙ
+    it('находка №2 (MAJOR): keys больше страницы (fetchedAll=false) → notFoundIssueIds НЕ считается вовсе, а не ложно перечисляет непоместившиеся ключи', async () => {
+      // Регрессионный тест: раньше notFoundIssueIds считался по result.items ОДНОЙ
       // страницы всегда. Если запрошенных ключей больше, чем влезает на
       // страницу (или обход был обрезан truncated/не завершён), ключи со
-      // следующих страниц ошибочно попадали в notFoundKeys — агент читал
+      // следующих страниц ошибочно попадали в notFoundIssueIds — агент читал
       // "задачи не существует" там, где она просто не поместилась, и мог
       // создать дубль (цена ВЫШЕ исходной тихой потери). Здесь единственный
       // найденный элемент — QUEUE-123, но выдача заведомо НЕ полная
       // (fetchedAll: false, hasNextPage: true) — TEST-999999 может быть на
-      // следующей странице, а не отсутствовать. notFoundKeys обязан
+      // следующей странице, а не отсутствовать. notFoundIssueIds обязан
       // отсутствовать целиком, а не содержать TEST-999999.
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue({
         items: [mockIssue1],
@@ -665,23 +685,23 @@ describe('FindIssuesTool', () => {
       });
 
       const result = await tool.execute({
-        keys: ['QUEUE-123', 'TEST-999999'],
+        issueIds: ['QUEUE-123', 'TEST-999999'],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
       const parsed = JSON.parse(getTextContent(result)) as {
-        data: { summary: { searchCriteria: { notFoundKeys?: string[] } } };
+        data: { summary: { searchCriteria: { notFoundIssueIds?: string[] } } };
       };
-      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundKeys');
+      expect(parsed.data.summary.searchCriteria).not.toHaveProperty('notFoundIssueIds');
     });
   });
 
-  describe('outputSchema DoD (новое поле notFoundKeys описано в контракте)', () => {
-    it('structuredContent с notFoundKeys (часть keys не найдена) валиден по FindIssuesOutputDataSchema', async () => {
+  describe('outputSchema DoD (новое поле notFoundIssueIds описано в контракте)', () => {
+    it('structuredContent с notFoundIssueIds (часть keys не найдена) валиден по FindIssuesOutputDataSchema', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
-        keys: ['QUEUE-123', 'TEST-999999'],
+        issueIds: ['QUEUE-123', 'TEST-999999'],
         fields: STANDARD_ISSUE_FIELDS,
       });
 
@@ -690,7 +710,7 @@ describe('FindIssuesTool', () => {
       expect(parseResult.success).toBe(true);
     });
 
-    it('structuredContent без notFoundKeys (поиск по query) валиден по FindIssuesOutputDataSchema', async () => {
+    it('structuredContent без notFoundIssueIds (поиск по query) валиден по FindIssuesOutputDataSchema', async () => {
       vi.mocked(mockTrackerFacade.findIssues).mockResolvedValue(page([mockIssue1]));
 
       const result = await tool.execute({
@@ -714,7 +734,7 @@ describe('FindIssuesTool', () => {
       expect(cursorSchema?.description).toBeDefined();
       // Правило должно быть понятно ДО вызова, не только из текста рантайм-ошибки.
       expect(cursorSchema?.description).toMatch(/повторно/);
-      expect(cursorSchema?.description).toMatch(/keys/);
+      expect(cursorSchema?.description).toMatch(/issueIds/);
     });
 
     it('cursor без критериев поиска отклоняется тем же рефайном "хотя бы один способ поиска" (поведение остаётся защитным)', async () => {

@@ -56,4 +56,35 @@ describe('GetQueueLocalFieldsTool', () => {
     const result = await tool.execute({ queueId: 'Q1', fields: ['id'] });
     expect(result.isError).toBe(true);
   });
+
+  describe('Предупреждения о полях без значения (FIELDS_WITHOUT_VALUE)', () => {
+    it('добавляет warning, когда поле не пришло ни у одного локального поля', async () => {
+      const fields = [{ id: 'x--myField', self: 'url', key: 'myField', name: 'My Field' }]; // без description
+      vi.mocked(mockTrackerFacade.getQueueLocalFields).mockResolvedValue(paginated(fields));
+
+      const result = await tool.execute({ queueId: 'Q1', fields: ['key', 'description'] });
+
+      const parsed = result['structuredContent'] as {
+        success: boolean;
+        warnings?: Array<{ code: string; details?: { fields: string[] } }>;
+      };
+      expect(parsed.success).toBe(true);
+      expect(parsed.warnings).toHaveLength(1);
+      expect(parsed.warnings?.[0]?.code).toBe('FIELDS_WITHOUT_VALUE');
+      expect(parsed.warnings?.[0]?.details?.fields).toEqual(['description']);
+    });
+
+    it('ответ без предупреждений не содержит ключа warnings (обе проекции)', async () => {
+      const fields = [{ id: 'x--myField', self: 'url', key: 'myField', name: 'My Field' }];
+      vi.mocked(mockTrackerFacade.getQueueLocalFields).mockResolvedValue(paginated(fields));
+
+      const result = await tool.execute({ queueId: 'Q1', fields: ['key', 'name'] });
+
+      const textBlock = (result.content?.[0] as { text?: string } | undefined)?.text ?? '';
+      expect(textBlock.includes('"warnings"')).toBe(false);
+      expect(
+        result['structuredContent'] && 'warnings' in (result['structuredContent'] as object)
+      ).toBe(false);
+    });
+  });
 });

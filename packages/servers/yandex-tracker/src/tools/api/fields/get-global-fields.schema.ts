@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * ВАЖНО: эндпоинт `GET /v2/fields` не пагинируется — возвращает разом все
@@ -24,7 +19,6 @@ export type GetGlobalFieldsParams = z.infer<typeof GetGlobalFieldsParamsSchema>;
 export const GetGlobalFieldsOutputDataSchema = z.object({
   globalFields: z.array(FilteredEntitySchema),
   count: z.number(),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 export const GetGlobalFieldsOutputSchema = buildOutputSchema(GetGlobalFieldsOutputDataSchema);

@@ -41,7 +41,7 @@ export class WorkflowClient {
     }
 
     const response = JSON.parse(getTextContent(result));
-    return response.data.issueKey;
+    return response.data.issueId;
   }
 
   /**
@@ -49,7 +49,7 @@ export class WorkflowClient {
    */
   async getIssue(issueKey: string): Promise<unknown> {
     const result = await this.client.callTool(buildToolName('get_issues', MCP_TOOL_PREFIX), {
-      issueKeys: [issueKey],
+      issueIds: [issueKey],
       fields: ['key', 'summary', 'status'],
     });
 
@@ -58,7 +58,7 @@ export class WorkflowClient {
     }
 
     const response = JSON.parse(getTextContent(result));
-    return response.data.issues[0]?.issue;
+    return response.data.successful[0]?.issue;
   }
 
   /**
@@ -66,7 +66,7 @@ export class WorkflowClient {
    */
   async updateIssue(issueKey: string, updates: Record<string, unknown>): Promise<void> {
     const result = await this.client.callTool(buildToolName('update_issue', MCP_TOOL_PREFIX), {
-      issueKey,
+      issueId: issueKey,
       ...updates,
       fields: ['key'],
     });
@@ -81,7 +81,7 @@ export class WorkflowClient {
    */
   async transitionIssue(issueKey: string, transitionId: string): Promise<void> {
     const result = await this.client.callTool(buildToolName('transition_issue', MCP_TOOL_PREFIX), {
-      issueKey,
+      issueId: issueKey,
       transitionId,
       fields: ['key', 'status'],
     });
@@ -118,7 +118,7 @@ export class WorkflowClient {
     const result = await this.client.callTool(
       buildToolName('get_issue_changelog', MCP_TOOL_PREFIX),
       {
-        issueKeys: [issueKey],
+        issueIds: [issueKey],
         fields: ['id', 'updatedAt', 'updatedBy'],
       }
     );
@@ -144,7 +144,7 @@ export class WorkflowClient {
   async getTransitions(issueKey: string): Promise<unknown[]> {
     const result = await this.client.callTool(
       buildToolName('get_issue_transitions', MCP_TOOL_PREFIX),
-      { issueKey, fields: ['id', 'to'] }
+      { issueId: issueKey, fields: ['id', 'to'] }
     );
 
     if (result.isError) {

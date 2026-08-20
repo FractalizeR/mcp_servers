@@ -30,15 +30,17 @@ export class GetFiltersTool extends BaseTool<YandexTrackerFacade> {
 
       const result = await this.facade.getFilters();
 
-      const filtered = result.items.map((item) =>
-        ResponseFieldFilter.filter<SavedFilterWithUnknownFields>(item, fields)
-      );
+      const { result: filtered, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        SavedFilterWithUnknownFields[]
+      >(result.items, fields);
 
-      return this.formatSuccess({
-        filters: filtered,
-        count: filtered.length,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          filters: filtered,
+          count: filtered.length,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка сохранённых фильтров', error);
     }

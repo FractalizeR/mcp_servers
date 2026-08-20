@@ -40,17 +40,19 @@ export class GetBoardsTool extends BaseTool<YandexTrackerFacade> {
 
       const boards = await this.facade.getBoards({ localized });
 
-      const filteredBoards = boards.map((board) =>
-        ResponseFieldFilter.filter<BoardWithUnknownFields>(board, fields)
-      );
+      const { result: filteredBoards, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        readonly BoardWithUnknownFields[]
+      >(boards, fields);
 
       this.logger.info('Список досок получен', { count: boards.length });
 
-      return this.formatSuccess({
-        boards: filteredBoards,
-        count: filteredBoards.length,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          boards: filteredBoards,
+          count: filteredBoards.length,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка досок', error);
     }

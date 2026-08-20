@@ -61,8 +61,15 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(this.logger, 'Создание связей', links.length, fields);
 
-      // 3. API v3: создание связей через batch-метод
-      const results = await this.facade.createLinksMany(links);
+      // 3. API v3: создание связей через batch-метод. Фасад (не трогаем контракт,
+      // см. границы плана `plan_tool_contract_unification`) ждёт поле `targetIssue`.
+      const results = await this.facade.createLinksMany(
+        links.map((link) => ({
+          issueId: link.issueId,
+          relationship: link.relationship,
+          targetIssue: link.targetIssueId,
+        }))
+      );
 
       // 4. Обработка результатов через BatchResultProcessor
       const processedResults = BatchResultProcessor.process(
@@ -71,7 +78,15 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
           ResponseFieldFilter.filter<LinkWithUnknownFields>(link, fieldsForFilter)
       );
 
-      // 5. Логирование результатов
+      // 5. Отчёт детектора незаполненных полей — по СЫРЫМ созданным связям,
+      // ровно по запрошенным `fields` (без служебного `id`, добавленного
+      // в fieldsForFilter только для построения linkId).
+      const rawLinks: LinkWithUnknownFields[] = results
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value);
+      const { fieldsWithoutValue } = ResponseFieldFilter.filterWithReport(rawLinks, fields);
+
+      // 6. Логирование результатов
       ResultLogger.logBatchResults(
         this.logger,
         'Связи созданы',
@@ -84,21 +99,21 @@ export class CreateLinkTool extends BaseTool<YandexTrackerFacade> {
         processedResults
       );
 
-      return this.formatSuccess({
-        total: links.length,
-        successful: processedResults.successful.length,
-        failed: processedResults.failed.length,
-        links: processedResults.successful.map((item) => ({
-          issueId: item.key,
-          linkId: String(item.data.id),
-          link: item.data,
-        })),
-        errors: processedResults.failed.map((item) => ({
-          issueId: item.key,
-          error: item.error,
-        })),
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          total: links.length,
+          successful: processedResults.successful.map((item) => ({
+            issueId: item.key,
+            linkId: String(item.data.id),
+            link: item.data,
+          })),
+          failed: processedResults.failed.map((item) => ({
+            issueId: item.key,
+            error: item.error,
+          })),
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при создании связей (${links.length} задач)`, error);
     }

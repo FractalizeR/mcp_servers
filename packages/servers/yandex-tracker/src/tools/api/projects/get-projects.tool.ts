@@ -56,17 +56,19 @@ export class GetProjectsTool extends BaseTool<YandexTrackerFacade> {
         ...(total !== undefined ? { total } : {}),
       });
 
-      const filteredProjects = result.items.map((project) =>
-        ResponseFieldFilter.filter<ProjectWithUnknownFields>(project, fields)
-      );
+      const { result: filteredProjects, fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        ProjectWithUnknownFields[]
+      >(result.items, fields);
 
-      return this.formatSuccess({
-        projects: filteredProjects,
-        ...(total !== undefined ? { total } : {}),
-        count: filteredProjects.length,
-        pagination: result.pagination,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          projects: filteredProjects,
+          ...(total !== undefined ? { total } : {}),
+          count: filteredProjects.length,
+          pagination: result.pagination,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при получении списка проектов', error);
     }

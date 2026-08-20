@@ -52,12 +52,12 @@ describe('DoD 4: redactionAllowlist не раскрывает пользоват
     expect(JSON.stringify(firstComment?.properties['text'])).not.toContain('секретный');
   });
 
-  it('update_issue: issueKey раскрывается, description (произвольный текст) — не в allow-list', () => {
+  it('update_issue: issueId раскрывается, description (произвольный текст) — не в allow-list', () => {
     expect(UPDATE_ISSUE_TOOL_METADATA.redactionAllowlist).not.toContain('description');
-    expect(UPDATE_ISSUE_TOOL_METADATA.redactionAllowlist).toContain('issueKey');
+    expect(UPDATE_ISSUE_TOOL_METADATA.redactionAllowlist).toContain('issueId');
 
     const params = {
-      issueKey: 'QUEUE-1',
+      issueId: 'QUEUE-1',
       description: 'произвольное описание, которое нельзя раскрывать в логах',
       fields: ['key'],
     };
@@ -66,7 +66,7 @@ describe('DoD 4: redactionAllowlist не раскрывает пользоват
       allowedKeys: UPDATE_ISSUE_TOOL_METADATA.redactionAllowlist ?? [],
     });
 
-    expect(redacted['issueKey']).toBe('QUEUE-1');
+    expect(redacted['issueId']).toBe('QUEUE-1');
     expect(redacted['description']).toEqual({
       type: 'string',
       length: params.description.length,

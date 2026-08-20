@@ -32,12 +32,15 @@ export class GetBoardTool extends BaseTool<YandexTrackerFacade> {
 
       this.logger.info('Доска получена', { boardId: board.id, name: board.name });
 
-      const filteredBoard = ResponseFieldFilter.filter<BoardWithUnknownFields>(board, fields);
+      const { result: filteredBoard, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<BoardWithUnknownFields>(board, fields);
 
-      return this.formatSuccess({
-        board: filteredBoard,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          board: filteredBoard,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении доски ${boardId}`, error);
     }

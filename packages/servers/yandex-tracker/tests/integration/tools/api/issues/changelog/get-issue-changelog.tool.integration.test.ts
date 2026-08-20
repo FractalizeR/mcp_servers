@@ -28,7 +28,7 @@ describe('get-issue-changelog integration tests (batch mode)', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_changelog', {
-      issueKeys,
+      issueIds: issueKeys,
       fields: STANDARD_CHANGELOG_FIELDS,
     });
 
@@ -42,7 +42,7 @@ describe('get-issue-changelog integration tests (batch mode)', () => {
     expect(response.data.failed.length).toBe(0);
 
     const firstResult = response.data.successful[0];
-    expect(firstResult).toHaveProperty('issueKey');
+    expect(firstResult).toHaveProperty('issueId');
     expect(firstResult).toHaveProperty('changelog');
     expect(firstResult).toHaveProperty('totalEntries');
     expect(Array.isArray(firstResult.changelog)).toBe(true);
@@ -58,7 +58,7 @@ describe('get-issue-changelog integration tests (batch mode)', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_changelog', {
-      issueKeys,
+      issueIds: issueKeys,
       fields: STANDARD_CHANGELOG_FIELDS,
     });
 
@@ -70,7 +70,7 @@ describe('get-issue-changelog integration tests (batch mode)', () => {
     expect(response.data.failed.length).toBe(1);
 
     const failedResult = response.data.failed[0];
-    expect(failedResult).toHaveProperty('key');
+    expect(failedResult).toHaveProperty('issueId');
     expect(failedResult).toHaveProperty('error');
 
     mockServer.assertAllRequestsDone();
@@ -83,7 +83,7 @@ describe('get-issue-changelog integration tests (batch mode)', () => {
 
     // Act
     const result = await client.callTool('fr_yandex_tracker_get_issue_changelog', {
-      issueKeys,
+      issueIds: issueKeys,
       fields: ['id', 'updatedAt', 'updatedBy'],
     });
 

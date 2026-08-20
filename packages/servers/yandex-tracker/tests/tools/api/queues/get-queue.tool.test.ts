@@ -197,6 +197,41 @@ describe('GetQueueTool', () => {
       });
     });
 
+    describe('Предупреждения о полях без значения (FIELDS_WITHOUT_VALUE)', () => {
+      it('добавляет warning, когда поле не пришло у единственного элемента', async () => {
+        const mockQueue = createQueueFixture({ key: 'TEST' }); // без description
+        vi.mocked(mockTrackerFacade.getQueue).mockResolvedValue(mockQueue);
+
+        const result = await tool.execute({
+          queueId: 'TEST',
+          fields: ['key', 'description'],
+        });
+
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          warnings?: Array<{ code: string; details?: { fields: string[] } }>;
+        };
+        expect(parsed.success).toBe(true);
+        expect(parsed.warnings).toHaveLength(1);
+        expect(parsed.warnings?.[0]?.code).toBe('FIELDS_WITHOUT_VALUE');
+        expect(parsed.warnings?.[0]?.details?.fields).toEqual(['description']);
+      });
+
+      it('ответ без предупреждений не содержит ключа warnings (обе проекции)', async () => {
+        const mockQueue = createQueueFixture({ key: 'TEST', name: 'Test Queue' });
+        vi.mocked(mockTrackerFacade.getQueue).mockResolvedValue(mockQueue);
+
+        const result = await tool.execute({ queueId: 'TEST', fields: ['key', 'name'] });
+
+        const parsed = JSON.parse(getTextContent(result)) as Record<string, unknown>;
+        expect('warnings' in parsed).toBe(false);
+        expect(
+          result['structuredContent'] && 'warnings' in (result['structuredContent'] as object)
+        ).toBe(false);
+        expect('fieldsReturned' in (parsed['data'] as object)).toBe(false);
+      });
+    });
+
     describe('обработка ошибок', () => {
       it('должен обработать ошибку "очередь не найдена"', async () => {
         const error = new Error('Queue not found');

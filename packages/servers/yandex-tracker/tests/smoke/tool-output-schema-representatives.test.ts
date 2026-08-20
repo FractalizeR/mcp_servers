@@ -117,7 +117,7 @@ describe('DoD 2: structuredContent валиден по outputSchema (предс�
     const tool = new GetIssuesTool(facade, mockLogger());
 
     const result = await tool.execute({
-      issueKeys: ['QUEUE-1', 'QUEUE-2'],
+      issueIds: ['QUEUE-1', 'QUEUE-2'],
       fields: STANDARD_ISSUE_FIELDS,
     });
     const envelope = successEnvelopeSchema(GetIssuesOutputDataSchema).safeParse(
@@ -219,7 +219,7 @@ describe('DoD 2: structuredContent валиден по outputSchema (предс�
     const facade = {} as unknown as YandexTrackerFacade;
     const tool = new IssueUrlTool(facade, mockLogger());
 
-    const result = await tool.execute({ issueKeys: ['QUEUE-1', 'QUEUE-2'] });
+    const result = await tool.execute({ issueIds: ['QUEUE-1', 'QUEUE-2'] });
     const envelope = successEnvelopeSchema(IssueUrlOutputDataSchema).safeParse(
       getStructuredContent(result)
     );

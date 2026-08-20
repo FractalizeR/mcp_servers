@@ -134,7 +134,6 @@ describe('GetComponentsTool', () => {
             components: unknown[];
             count: number;
             queueId: string;
-            fieldsReturned: string[];
             pagination?: unknown;
           };
         };
@@ -142,9 +141,58 @@ describe('GetComponentsTool', () => {
         expect(parsed.data.components).toHaveLength(3);
         expect(parsed.data.count).toBe(3);
         expect(parsed.data.queueId).toBe('MYQUEUE');
-        expect(parsed.data.fieldsReturned).toEqual(['id', 'name']);
         // Эндпоинт не пагинируется → ключа pagination в ответе нет.
         expect('pagination' in parsed.data).toBe(false);
+
+        const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+          .structuredContent;
+        expect(structured?.warnings).toBeUndefined();
+      });
+
+      // Регрессионный тест ядра находки 1 отчёта: неверное имя поля → warning, не ошибка.
+      it('предупреждает, когда запрошенное поле не вернуло значения ни у одного компонента', async () => {
+        const mockComponents = [
+          createComponentFixture({ id: 1, name: 'Component 1' }),
+          createComponentFixture({ id: 2, name: 'Component 2' }),
+        ];
+        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
+
+        const result = await tool.execute({
+          queueId: 'MYQUEUE',
+          fields: ['id', 'totallyBogusField'],
+        });
+
+        expect(result.isError).toBeUndefined();
+        const structured = (
+          result as {
+            structuredContent?: { warnings?: Array<{ code: string; details?: unknown }> };
+          }
+        ).structuredContent;
+        expect(structured?.warnings).toEqual([
+          expect.objectContaining({
+            code: 'FIELDS_WITHOUT_VALUE',
+            details: { fields: ['totallyBogusField'] },
+          }),
+        ]);
+      });
+
+      // Защита от шумного предупреждения: поле пустое лишь у части элементов — не повод предупреждать.
+      it('не предупреждает, когда поле заполнено хотя бы у одного компонента', async () => {
+        const mockComponents = [
+          createComponentFixture({ id: 1, name: 'Component 1', description: 'Has description' }),
+          createComponentFixture({ id: 2, name: 'Component 2' }),
+        ];
+        vi.mocked(mockTrackerFacade.getComponents).mockResolvedValue(paginated(mockComponents));
+
+        const result = await tool.execute({
+          queueId: 'MYQUEUE',
+          fields: ['id', 'description'],
+        });
+
+        expect(result.isError).toBeUndefined();
+        const structured = (result as { structuredContent?: { warnings?: unknown[] } })
+          .structuredContent;
+        expect(structured?.warnings).toBeUndefined();
       });
 
       it('должен обработать пустой список компонентов', async () => {

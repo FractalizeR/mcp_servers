@@ -12,7 +12,6 @@ import {
   noCursorWithBulkParams,
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
 } from '#common/schemas/index.js';
@@ -78,7 +77,6 @@ export const GetProjectsOutputDataSchema = z.object({
   total: z.number().optional(),
   count: z.number(),
   pagination: PaginationMetaSchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

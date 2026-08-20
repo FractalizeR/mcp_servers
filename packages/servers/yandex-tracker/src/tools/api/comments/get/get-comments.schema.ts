@@ -17,10 +17,9 @@ import {
   PAGINATION_CURSOR_CONFLICT_MESSAGE,
   PAGINATION_CURSOR_BATCH_MESSAGE,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   PaginationMetaSchema,
   buildOutputSchema,
-  BatchErrorValueSchema,
+  makeBatchResultSchema,
 } from '#common/schemas/index.js';
 
 /**
@@ -87,26 +86,14 @@ export type GetCommentsParams = z.infer<typeof GetCommentsParamsSchema>;
 /**
  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
  */
-export const GetCommentsOutputDataSchema = z.object({
-  total: z.number().describe('Всего запрошено задач'),
-  successful: z.number().describe('Количество задач, комментарии которых получены'),
-  failed: z.number().describe('Количество задач, для которых запрос завершился ошибкой'),
-  comments: z.array(
-    z.object({
-      issueId: z.string(),
-      comments: z.array(FilteredEntitySchema),
-      count: z.number(),
-      pagination: PaginationMetaSchema,
-    })
-  ),
-  errors: z.array(
-    z.object({
-      issueId: z.string(),
-      error: BatchErrorValueSchema,
-    })
-  ),
-  fieldsReturned: FieldsReturnedSchema,
-});
+export const GetCommentsOutputDataSchema = makeBatchResultSchema(
+  'issueId',
+  z.object({
+    comments: z.array(FilteredEntitySchema),
+    count: z.number(),
+    pagination: PaginationMetaSchema,
+  })
+);
 
 /**
  * outputSchema инструмента (JSON Schema 2020-12, envelope `{ success, data }`)

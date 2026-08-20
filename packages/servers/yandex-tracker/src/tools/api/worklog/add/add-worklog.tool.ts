@@ -70,12 +70,20 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
       // 3. API v2: добавление записей времени через batch-метод
       const results = await this.facade.addWorklogsMany(worklogs);
 
-      // 4. Обработка результатов через BatchResultProcessor
-      const processedResults = BatchResultProcessor.process(
-        results,
-        (worklog: WorklogWithUnknownFields): Partial<WorklogWithUnknownFields> =>
-          ResponseFieldFilter.filter<WorklogWithUnknownFields>(worklog, fieldsForFilter)
+      // 4. Обработка результатов через BatchResultProcessor (без фильтрации —
+      // фильтруем ниже одним проходом по всему батчу, чтобы детектор
+      // незаполненных полей увидел все элементы сразу)
+      const processedResults = BatchResultProcessor.process(results);
+      // Отчёт детектора считается по `fields` (запрос агента), не по
+      // `fieldsForFilter` (внутренний технический 'id') — иначе 'id' попадал
+      // бы в предупреждение, хотя агент его не запрашивал.
+      const { fieldsWithoutValue } = ResponseFieldFilter.filterWithReport<
+        WorklogWithUnknownFields[]
+      >(
+        processedResults.successful.map((item) => item.data),
+        fields
       );
+      const warnings = ResponseFieldFilter.toWarnings(fieldsWithoutValue);
 
       // 5. Логирование результатов
       ResultLogger.logBatchResults(
@@ -90,21 +98,24 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
         processedResults
       );
 
-      return this.formatSuccess({
-        total: worklogs.length,
-        successful: processedResults.successful.length,
-        failed: processedResults.failed.length,
-        worklogs: processedResults.successful.map((item) => ({
-          issueId: item.key,
-          worklogId: String(item.data.id),
-          worklog: item.data,
-        })),
-        errors: processedResults.failed.map((item) => ({
-          issueId: item.key,
-          error: item.error,
-        })),
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          total: worklogs.length,
+          successful: processedResults.successful.map((item) => ({
+            issueId: item.key,
+            worklogId: String(item.data.id),
+            worklog: ResponseFieldFilter.filter<WorklogWithUnknownFields>(
+              item.data,
+              fieldsForFilter
+            ),
+          })),
+          failed: processedResults.failed.map((item) => ({
+            issueId: item.key,
+            error: item.error,
+          })),
+        },
+        warnings
+      );
     } catch (error: unknown) {
       return this.formatError(
         `Ошибка при добавлении записей времени (${worklogs.length} задач)`,

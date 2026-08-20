@@ -35,10 +35,6 @@ export class GetPageTool extends BaseTool<YandexWikiFacade> {
 
       return this.formatSuccess({
         page: filteredPage,
-        fieldsReturned:
-          responseFields.length > 0
-            ? responseFields
-            : (fields?.split(',') ?? ['id', 'slug', 'title', 'page_type']),
       });
     } catch (error: unknown) {
       return this.formatError(`Ошибка при получении страницы: ${slug}`, error);

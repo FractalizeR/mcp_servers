@@ -221,7 +221,7 @@ describe('ToolRegistry', () => {
 
     it('должна успешно выполнить get_issues инструмент', async () => {
       // Arrange
-      const params: ToolCallParams = { issueKeys: ['TEST-1'], fields: ['id', 'key', 'summary'] };
+      const params: ToolCallParams = { issueIds: ['TEST-1'], fields: ['id', 'key', 'summary'] };
       const toolName = buildToolName('get_issues', MCP_TOOL_PREFIX);
       const mockResults: BatchIssueResult[] = [
         {

@@ -32,13 +32,16 @@ export class CreateBoardTool extends BaseTool<YandexTrackerFacade> {
 
       this.logger.info('Доска создана', { boardId: board.id, name: board.name });
 
-      const filtered = ResponseFieldFilter.filter<BoardWithUnknownFields>(board, fields);
+      const { result: filtered, fieldsWithoutValue } =
+        ResponseFieldFilter.filterWithReport<BoardWithUnknownFields>(board, fields);
 
-      return this.formatSuccess({
-        board: filtered,
-        message: `Доска "${boardData.name}" успешно создана`,
-        fieldsReturned: fields,
-      });
+      return this.formatSuccess(
+        {
+          board: filtered,
+          message: `Доска "${boardData.name}" успешно создана`,
+        },
+        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+      );
     } catch (error: unknown) {
       return this.formatError('Ошибка при создании доски', error);
     }

@@ -69,6 +69,15 @@ turbo run $TURBO_TASKS $TURBO_FLAGS
 # lint:servers-scripts закрыл только packages/servers/scripts, а cloc-summary.ts и
 # validate-docs-size.ts — последний исполняется прямо в этом пайплайне ниже —
 # оставались вне линта и вне tsc. Оба шага сразу нашли по дефекту.
+#
+# check:tool-contract-ratchet (план plan_tool_contract_unification, 3.1): падает при
+# появлении в *.schema.ts запрещённых имён параметров (issueKey/issueKeys/keys/
+# targetIssue/issues/transition), убранного fieldsReturned или successful числом —
+# разнобой, который этот план устранял, накопился ровно так, по одному инструменту за
+# раз, и обычное ревью его не ловило. Слепое пятно: успешный элемент batch-ответа,
+# собранный на стороне *.tool.ts (не Zod-схемой), этому шагу не виден — там форму
+# держит контрактный тест tool-output-schema-representatives.test.ts, а этот шаг —
+# только дешёвое дублирование на уровне схем.
 if $QUIET; then
   npm run lint:servers-scripts --silent
   npm run lint:root-scripts --silent
@@ -76,6 +85,7 @@ if $QUIET; then
   npm run knip:root --silent 2>&1 | tail -1
   npm run validate:docs:root --silent 2>/dev/null | grep -v '^$' | tail -1
   npm run format:check --silent
+  npm run check:tool-contract-ratchet --silent
 else
   npm run lint:servers-scripts
   npm run lint:root-scripts
@@ -83,4 +93,5 @@ else
   npm run knip:root
   npm run validate:docs:root
   npm run format:check
+  npm run check:tool-contract-ratchet
 fi

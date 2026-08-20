@@ -3,12 +3,7 @@
  */
 
 import { z } from 'zod';
-import {
-  FieldsSchema,
-  FilteredEntitySchema,
-  FieldsReturnedSchema,
-  buildOutputSchema,
-} from '#common/schemas/index.js';
+import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для создания задачи
@@ -65,9 +60,8 @@ export type CreateIssueParams = z.infer<typeof CreateIssueParamsSchema>;
  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
  */
 export const CreateIssueOutputDataSchema = z.object({
-  issueKey: z.string(),
+  issueId: z.string(),
   issue: FilteredEntitySchema,
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**

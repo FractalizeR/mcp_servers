@@ -41,9 +41,9 @@ describe('add-comment integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
-    expect(response.data.comments).toBeDefined();
-    expect(response.data.comments).toHaveLength(1);
-    expect(response.data.comments[0].comment.text).toBe(commentText);
+    expect(response.data.successful).toBeDefined();
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].comment.text).toBe(commentText);
     mockServer.assertAllRequestsDone();
   });
 
@@ -71,9 +71,9 @@ describe('add-comment integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
-    expect(response.data.comments).toBeDefined();
-    expect(response.data.comments).toHaveLength(1);
-    expect(response.data.comments[0].comment.text).toBe(commentText);
+    expect(response.data.successful).toBeDefined();
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].comment.text).toBe(commentText);
     mockServer.assertAllRequestsDone();
   });
 
@@ -96,10 +96,9 @@ describe('add-comment integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
-    expect(response.data.failed).toBe(1);
-    expect(response.data.successful).toBe(0);
-    expect(response.data.errors).toHaveLength(1);
-    expect(response.data.errors[0].issueId).toBe(issueKey);
+    expect(response.data.failed).toHaveLength(1);
+    expect(response.data.successful).toHaveLength(0);
+    expect(response.data.failed[0].issueId).toBe(issueKey);
     mockServer.assertAllRequestsDone();
   });
 
@@ -125,9 +124,9 @@ describe('add-comment integration tests', () => {
     // Assert
     expect(result.isError).toBeUndefined();
     const response = JSON.parse(getTextContent(result));
-    expect(response.data.comments).toBeDefined();
-    expect(response.data.comments).toHaveLength(1);
-    expect(response.data.comments[0].comment.text).toBe(markdownText);
+    expect(response.data.successful).toBeDefined();
+    expect(response.data.successful).toHaveLength(1);
+    expect(response.data.successful[0].comment.text).toBe(markdownText);
     mockServer.assertAllRequestsDone();
   });
 });

@@ -61,14 +61,14 @@ describe('GetIssueTransitionsTool', () => {
       expect(definition.name).toBe(buildToolName('get_issue_transitions', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('Доступные переходы');
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['issueKey', 'fields']);
-      expect(definition.inputSchema.properties?.['issueKey']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['issueId', 'fields']);
+      expect(definition.inputSchema.properties?.['issueId']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
   });
 
   describe('Validation', () => {
-    it('должен требовать параметр issueKey', async () => {
+    it('должен требовать параметр issueId', async () => {
       const result = await tool.execute({});
 
       expect(result.isError).toBe(true);
@@ -82,11 +82,11 @@ describe('GetIssueTransitionsTool', () => {
   });
 
   describe('Operation calls', () => {
-    it('должен вызвать getIssueTransitions с issueKey', async () => {
+    it('должен вызвать getIssueTransitions с issueId', async () => {
       vi.mocked(mockTrackerFacade.getIssueTransitions).mockResolvedValue([mockTransition1]);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         fields: STANDARD_TRANSITION_FIELDS,
       });
 
@@ -100,7 +100,7 @@ describe('GetIssueTransitionsTool', () => {
       ]);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         fields: STANDARD_TRANSITION_FIELDS,
       });
 
@@ -108,13 +108,13 @@ describe('GetIssueTransitionsTool', () => {
       const parsed = JSON.parse(getTextContent(result)) as {
         success: boolean;
         data: {
-          issueKey: string;
+          issueId: string;
           transitionsCount: number;
           transitions: TransitionWithUnknownFields[];
         };
       };
       expect(parsed.success).toBe(true);
-      expect(parsed.data.issueKey).toBe('QUEUE-123');
+      expect(parsed.data.issueId).toBe('QUEUE-123');
       expect(parsed.data.transitionsCount).toBe(2);
       expect(parsed.data.transitions).toHaveLength(2);
       expect(parsed.data.transitions[0]?.id).toBe('close');
@@ -125,7 +125,7 @@ describe('GetIssueTransitionsTool', () => {
       vi.mocked(mockTrackerFacade.getIssueTransitions).mockResolvedValue([]);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         fields: STANDARD_TRANSITION_FIELDS,
       });
 
@@ -148,7 +148,7 @@ describe('GetIssueTransitionsTool', () => {
       vi.mocked(mockTrackerFacade.getIssueTransitions).mockResolvedValue([mockTransition1]);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         fields: ['id', 'display'],
       });
 
@@ -169,7 +169,7 @@ describe('GetIssueTransitionsTool', () => {
       vi.mocked(mockTrackerFacade.getIssueTransitions).mockResolvedValue([mockTransition1]);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         fields: STANDARD_TRANSITION_FIELDS,
       });
 
@@ -178,14 +178,12 @@ describe('GetIssueTransitionsTool', () => {
         success: boolean;
         data: {
           transitions: TransitionWithUnknownFields[];
-          fieldsReturned: string[];
         };
       };
       expect(parsed.success).toBe(true);
       expect(parsed.data.transitions[0]).toHaveProperty('id');
       expect(parsed.data.transitions[0]).toHaveProperty('display');
       expect(parsed.data.transitions[0]).toHaveProperty('to');
-      expect(parsed.data.fieldsReturned).toEqual(Array.from(STANDARD_TRANSITION_FIELDS));
     });
   });
 
@@ -194,14 +192,14 @@ describe('GetIssueTransitionsTool', () => {
       vi.mocked(mockTrackerFacade.getIssueTransitions).mockResolvedValue([mockTransition1]);
 
       await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         fields: STANDARD_TRANSITION_FIELDS,
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Переходы получены'),
         expect.objectContaining({
-          issueKey: 'QUEUE-123',
+          issueId: 'QUEUE-123',
           transitionsCount: 1,
         })
       );
@@ -214,7 +212,7 @@ describe('GetIssueTransitionsTool', () => {
       vi.mocked(mockTrackerFacade.getIssueTransitions).mockRejectedValue(error);
 
       const result = await tool.execute({
-        issueKey: 'QUEUE-123',
+        issueId: 'QUEUE-123',
         fields: STANDARD_TRANSITION_FIELDS,
       });
 
@@ -228,7 +226,7 @@ describe('GetIssueTransitionsTool', () => {
       vi.mocked(mockTrackerFacade.getIssueTransitions).mockRejectedValue(notFoundError);
 
       const result = await tool.execute({
-        issueKey: 'NOTFOUND-999',
+        issueId: 'NOTFOUND-999',
         fields: STANDARD_TRANSITION_FIELDS,
       });
 

@@ -29,15 +29,18 @@ import {
   resolveCollectionResponseMode,
 } from '../common/collection-result/collection-response-mode.js';
 import type { CollectionResponseMode } from '../common/collection-result/collection-response-mode.js';
+import type { ToolWarning } from '../../definition/tool-warning.js';
+import { describeValidationErrorWithUnrecognizedKeys } from './unrecognized-params.js';
 
 /**
  * Единый success envelope — форма и content[0].text, и structuredContent
- * результата formatSuccess(). Контракт для следующей волны (outputSchema
- * пакета 3.1.C должен описывать именно эту форму).
+ * результата formatSuccess(). `warnings` присутствует только когда
+ * предупреждения есть (план plan_tool_contract_unification, README §3).
  */
 interface SuccessEnvelope {
   success: true;
   data: unknown;
+  warnings?: ToolWarning[];
 }
 
 /**
@@ -224,7 +227,7 @@ export abstract class BaseTool<TFacade = unknown> {
     if (!validationResult.success) {
       return {
         success: false,
-        error: this.formatValidationError(validationResult.error),
+        error: this.formatValidationError(validationResult.error, params, schema),
       };
     }
 
@@ -242,9 +245,12 @@ export abstract class BaseTool<TFacade = unknown> {
    * инструмента) и как сериализованный JSON в `content[0].text` (текстовый
    * дубль для обратной совместимости с клиентами без поддержки
    * structuredContent — спека MCP 2025-06-18 требует именно это дублирование).
+   *
+   * @param warnings - см. {@link SuccessEnvelope}.
    */
-  protected formatSuccess(data: unknown): ToolResult {
-    const payload: SuccessEnvelope = { success: true, data };
+  protected formatSuccess(data: unknown, warnings?: ToolWarning[]): ToolResult {
+    const payload: SuccessEnvelope =
+      warnings && warnings.length > 0 ? { success: true, data, warnings } : { success: true, data };
 
     return {
       content: [
@@ -378,14 +384,17 @@ export abstract class BaseTool<TFacade = unknown> {
     };
   }
 
-  /**
-   * Форматирование ошибки валидации Zod
-   *
-   * Использует централизованный форматтер для стабильных сообщений,
-   * независимых от версии Zod.
-   */
-  private formatValidationError(zodError: ZodError): ToolResult {
-    const errorMessage = formatZodErrorsToString(zodError.issues);
-    return this.formatError('Ошибка валидации параметров', new Error(errorMessage));
+  /** Форматирование ошибки валидации Zod через централизованный форматтер. */
+  private formatValidationError(
+    zodError: ZodError,
+    params: ToolCallParams,
+    schema: ZodSchema<unknown>
+  ): ToolResult {
+    const message = describeValidationErrorWithUnrecognizedKeys(
+      formatZodErrorsToString(zodError.issues),
+      params,
+      schema
+    );
+    return this.formatError('Ошибка валидации параметров', new Error(message));
   }
 }

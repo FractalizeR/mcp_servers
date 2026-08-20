@@ -7,7 +7,6 @@ import {
   IssueKeySchema,
   FieldsSchema,
   FilteredEntitySchema,
-  FieldsReturnedSchema,
   buildOutputSchema,
   BatchErrorValueSchema,
 } from '#common/schemas/index.js';
@@ -62,7 +61,6 @@ export const GetAttachmentsOutputDataSchema = z.object({
       error: BatchErrorValueSchema,
     })
   ),
-  fieldsReturned: FieldsReturnedSchema,
 });
 
 /**
