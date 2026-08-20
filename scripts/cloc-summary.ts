@@ -45,6 +45,15 @@ function parseClocOutput(output: string): ClocResult[] {
 
     // CSV формат cloc: files, language, blank, comment, code
     const [files, language, blank, comment, code] = parts;
+    if (
+      files === undefined ||
+      language === undefined ||
+      blank === undefined ||
+      comment === undefined ||
+      code === undefined
+    ) {
+      continue;
+    }
 
     // Пропускаем итоговую строку SUM
     if (language.trim() === 'SUM') continue;
@@ -79,7 +88,7 @@ function runCloc(path: string): ClocResult[] {
     );
 
     return parseClocOutput(output);
-  } catch (error) {
+  } catch {
     // cloc возвращает ненулевой код, если нет файлов для подсчета
     return [];
   }

@@ -8,22 +8,11 @@
 
 ### Лимиты размера
 
-**Жёсткие лимиты (MUST):**
-- `CLAUDE.md` ≤ 400 строк
-- `ARCHITECTURE.md` ≤ 700 строк
-- Module `README.md` ≤ 600 строк
-- Package `README.md` ≤ 600 строк
-- `tests/README.md` ≤ 500 строк
-
-**Целевые значения (SHOULD):**
-- `CLAUDE.md` ~350 строк
-- `ARCHITECTURE.md` ~600 строк
-- Module `README.md` ~500 строк
-- Package `README.md` ~500 строк
-- `tests/README.md` ~400 строк
-
-**Исключение:** Превышение на 10% допустимо с `<!-- LIMIT_EXCEPTION: причина -->`
-**Проверка:** `npm run validate:docs`
+Единственный источник — `scripts/validate-docs-size.ts` (константы `DOC_LIMITS`,
+`PACKAGE_README_LIMITS`, `TEST_README_LIMITS`): жёсткий лимит и целевое значение
+на каждый тип документа. Превышение на 10% допустимо с
+`<!-- LIMIT_EXCEPTION: причина -->`. Проверка — `npm run validate:docs`.
+Типовая структура документов — [DOC_STANDARDS.md](./DOC_STANDARDS.md).
 
 ### Правила сокращения (по приоритету)
 
@@ -45,19 +34,8 @@
 
 ### Проверка лимитов
 
-**Перед коммитом документации:**
-```bash
-npm run validate:docs
-```
-
-**Если превышен лимит:**
-1. Применить правила сокращения (см. выше)
-2. Повторить проверку
-3. Коммитить только после успешной валидации
-
-**Интеграция в workflow:**
-- `npm run validate` — включает `validate:docs` автоматически
-- `npm run validate:quiet` — включает `validate:docs` (для ИИ агентов)
+`validate:docs` входит в `npm run validate` и `validate:quiet`. Превышен жёсткий
+лимит — применяй правила сокращения выше и повторяй, пока не станет зелено.
 
 ### Контекстное размещение
 
@@ -82,25 +60,17 @@ npm run validate:docs
 
 ## 📦 Структура monorepo
 
-```
-packages/
-├── framework/
-│   ├── infrastructure/     → @fractalizer/mcp-infrastructure
-│   │   └── HTTP, cache, logging, async utilities
-│   ├── cli/               → @fractalizer/mcp-cli
-│   │   └── Generic CLI для MCP подключений
-│   └── core/              → @fractalizer/mcp-core
-│       └── BaseTool, registry, type system
-└── servers/
-    └── yandex-tracker/    → mcp-server-yandex-tracker
-        └── Yandex API, tools, operations, DI
-```
+`packages/framework/*` — переиспользуемый каркас, `packages/servers/*` — MCP-серверы.
 
-**Детали:**
-- **Infrastructure** — [packages/framework/infrastructure/README.md](packages/framework/infrastructure/README.md)
-- **CLI** — [packages/framework/cli/README.md](packages/framework/cli/README.md)
-- **Core** — [packages/framework/core/README.md](packages/framework/core/README.md)
-- **Yandex Tracker** — [packages/servers/yandex-tracker/README.md](packages/servers/yandex-tracker/README.md)
+- **Infrastructure** (`@fractalizer/mcp-infrastructure`) — HTTP, кеш, логирование, async —
+  [README](packages/framework/infrastructure/README.md)
+- **CLI** (`@fractalizer/mcp-cli`) — управление MCP-подключениями —
+  [README](packages/framework/cli/README.md)
+- **Core** (`@fractalizer/mcp-core`) — BaseTool, registry, система типов —
+  [README](packages/framework/core/README.md)
+- **Dev-client** (`@fractalizer/mcp-dev-client`) — вызов инструментов из терминала
+- **Yandex Tracker** — [README](packages/servers/yandex-tracker/README.md)
+- **Yandex Wiki** — [README](packages/servers/yandex-wiki/README.md)
 
 ## 🚨 КРИТИЧЕСКИЕ ПРАВИЛА MONOREPO
 
@@ -181,9 +151,9 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 **Все workspaces ОБЯЗАНЫ иметь одинаковый набор базовых команд:**
 - `build` — `tsc -b && tsc-alias` (НЕ `tsc` без `-b`!)
 - `clean` — `rimraf dist` (только артефакты сборки)
-- `lint` — `eslint src --ext .ts` (+ `scripts`, если каталог есть)
-- `lint:fix` — то же с `--fix`
-- `lint:quiet` — то же с `--quiet`
+- `lint` — `eslint src [scripts] --ext .ts --max-warnings=N` (N — бюджет, см. «Уровни правил»)
+- `lint:fix` — то же с `--fix`, без бюджета
+- `lint:quiet` — `npm run lint -- --quiet` (бюджет живёт в одном месте на пакет)
 - `format` — `prettier --write "src/**/*.ts" "tests/**/*.ts"`
 - `format:check` — `prettier --check "src/**/*.ts" "tests/**/*.ts"`
 - `test` — `vitest run`
@@ -201,7 +171,7 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - Делегирует команды через `--workspaces --if-present`
 - `clean` — только артефакты, `clean:all` — включая node_modules
 - `validate` / `validate:quiet` — единый пайплайн через `scripts/validate.sh [--quiet]`
-  - Шаги: build, lint, typecheck, typecheck:scripts, typecheck:tests, test, test:smoke, test:smoke:server, cpd, depcruise, validate:docs, validate:tools, knip:root, lint:servers-scripts
+  - Шаги: build, lint, typecheck, typecheck:scripts, typecheck:tests, test, test:smoke, test:smoke:server, cpd, depcruise, validate:docs, validate:tools, knip:root, lint:servers-scripts, lint:root-scripts, typecheck:scripts:root
   - Quiet mode: lint:quiet, test:quiet, cpd:quiet + `--output-logs=errors-only`
   - **Добавить новый шаг:** только в `scripts/validate.sh` — оба режима обновятся автоматически
 
@@ -260,40 +230,12 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 
 ## 🛠️ Команды (Workspace)
 
-**Корень monorepo:**
-```bash
-# Установка всех зависимостей
-npm install
+Из корня `npm run <task>` раскладывается по workspace'ам через Turborepo — порядок
+сборки гарантирован. Полный набор задач — правило №7 выше и `package.json`.
 
-# Сборка всех пакетов (Turborepo гарантирует порядок)
-npm run build
-
-# Тесты всех пакетов
-npm run test
-
-# Валидация всего monorepo
-npm run validate
-
-# Валидация (quiet для ИИ агентов - экономия токенов)
-npm run validate:quiet
-
-# Очистка всех пакетов
-npm run clean
-```
-
-**Работа с отдельным пакетом:**
-```bash
-# Через Turborepo (рекомендуется)
-turbo run build --filter=@fractalizer/mcp-core
-turbo run test --filter=@fractalizer/mcp-server-yandex-tracker
-
-# Из директории пакета (работает как раньше)
-cd packages/servers/yandex-tracker
-npm test
-npm run test:quiet  # для ИИ агентов
-```
-
-**ВАЖНО:** Команды `npm run` теперь используют Turborepo автоматически!
+- Один пакет: `turbo run <task> --filter=@fractalizer/mcp-core` либо `npm run <task>`
+  из каталога пакета
+- **ИИ-агентам:** `validate:quiet` / `test:quiet` / `lint:quiet` — только ошибки, экономия токенов
 
 ## 🔧 Dev-интерфейс вызова инструментов (`mcp-dev`)
 
@@ -330,27 +272,17 @@ npm run tools:batch -- calls.jsonl --dangerously-allow-write
 - `max-lines-per-function: 50 / 75` — строк в функции
 - `max-params: 4 / 5` — параметров функции
 
-**Проверки:**
-```bash
-# Полная валидация (lint + typecheck + tests + cpd)
-npm run validate
-
-# Качество кода (cpd + depcruise + knip)
-npm run quality
-
-# Дублирование кода (jscpd, порог 5%)
-npm run cpd
-
-# HTML отчет по дублированию
-npm run cpd:report
-```
+**Проверки:** `validate` (полная), `quality` (cpd + depcruise + knip),
+`cpd` / `cpd:report` (дублирование, порог 5%).
 
 **Пороги тестового покрытия (vitest):**
 - Lines: 80%, Functions: 80%, Branches: 75%, Statements: 80%
 
 **Уровни правил:**
-- `error` — блокирует коммит/CI
-- `warn` — показывает предупреждение, но не блокирует
+- `error` — блокирует коммит/CI немедленно
+- `warn` — метрики сложности; сборку сами не роняют, поэтому `lint` несёт храповик
+  `--max-warnings=N`, считаемый и под `--quiet`. Бюджеты: infra 6, cli 17, core 27,
+  dev-client 3, tracker 30, wiki 6, корневой `scripts/` 0. **Двигать только вниз.**
 
 ## 📖 Работа с конкретными компонентами
 

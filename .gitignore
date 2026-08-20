@@ -23,6 +23,9 @@ scripts/*.js
 scripts/*.js.map
 scripts/*.d.ts
 scripts/*.d.ts.map
+# ...но flat-конфиг ESLint — исходник, а не артефакт: без этой строки
+# lint:root-scripts зелёный локально и падает в CI, где файла нет.
+!scripts/eslint.config.js
 
 # Временные файлы
 *.log

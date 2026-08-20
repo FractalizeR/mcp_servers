@@ -13,7 +13,6 @@
 |----------------|--------|-------|
 | CLI Performance | ✅ OK | All commands within thresholds |
 | Bundle Size | ⚠️  WARN | Framework CLI slightly above threshold |
-| Memory Usage | ✅ OK | No memory errors detected |
 
 ---
 
@@ -75,35 +74,6 @@
 
 ---
 
-## 💾 Memory Usage
-
-**Test:** Detect fatal memory errors in both CLI versions.
-
-**Method:** 3 iterations per version, checking for out-of-memory errors and crashes.
-
-### Results
-
-| Version | Memory Errors | Status |
-|---------|---------------|--------|
-| Legacy CLI | None detected | ✅ OK |
-| Framework CLI | None detected | ✅ OK |
-
-### Limitations
-
-**Important:** Precise memory comparison is not possible without external profiling tools (valgrind, heaptrack, etc.) due to Node.js architecture limitations. The current benchmark only verifies that:
-1. Both CLI versions complete successfully
-2. No fatal memory errors occur
-3. No out-of-memory crashes
-
-For production monitoring, consider:
-- Using external memory profilers for detailed analysis
-- Monitoring RSS/heap in production environment
-- Setting up memory alerts in deployment
-
-**Conclusion:** ✅ Both CLI versions run without memory issues.
-
----
-
 ## 🎯 Overall Conclusion
 
 ### Release Decision: ✅ **APPROVED FOR RELEASE**
@@ -111,7 +81,6 @@ For production monitoring, consider:
 **Summary:**
 - ✅ CLI performance is excellent (no regression, one improvement)
 - ⚠️  Bundle size slightly above target but acceptable
-- ✅ Memory usage healthy (no errors detected)
 
 **Confidence Level:** **HIGH**
 
@@ -144,7 +113,6 @@ npm run benchmark:all --workspace=@fractalizer/mcp-server-yandex-tracker
 # Individual benchmarks
 npm run benchmark          # CLI performance
 npm run benchmark:bundle   # Bundle size
-npm run benchmark:memory   # Memory usage
 ```
 
 ---

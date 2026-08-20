@@ -25,7 +25,7 @@
  *   - `claude mcp list` НЕ поддерживает `--json` (только `-h/--help`).
  *     Вывод парсится как текст по строкам формата:
  *       `<server-name>: <command-summary> - <status-icon> <status-text>`
- *     где status-icon — один из `✓ Connected`, `✗ Failed to connect`,
+ *     где status-icon — один из `✔`/`✓ Connected`, `✗ Failed to connect`,
  *     `! Needs authentication`. Имя сервера может содержать пробелы.
  *   - `claude mcp get <name>` даёт структурированный многострочный вывод:
  *       ```
@@ -76,6 +76,21 @@ export type ClaudeCodeScope = 'user' | 'project' | 'local';
  * застывает намертво.
  */
 const CLAUDE_MCP_LIST_TIMEOUT_MS = 5000;
+
+/**
+ * Маркеры статуса в выводе `claude mcp list`.
+ *
+ * Claude Code 2.x печатает U+2714 HEAVY CHECK MARK (`✔`), а не U+2713 (`✓`).
+ * Пока принимался только U+2713, подключённый сервер не распознавался никогда
+ * и уходил в ветку «неизвестное состояние» — `status` показывал «❗ Ошибка»
+ * при полностью рабочем подключении. Тесты повторяли ту же ошибку в фикстурах,
+ * поэтому расхождение не всплывало. Принимаем оба начертания.
+ *
+ * Кресты — по симметрии: U+2717 наблюдался в прежних сборках, U+2718 добавлен
+ * защитно (вживую не воспроизведён).
+ */
+const CONNECTED_MARKS = ['✓', '✔'] as const;
+const FAILED_MARKS = ['✗', '✘'] as const;
 
 /**
  * Лимит итераций цикла «get → remove» в {@link ClaudeCodeConnector.disconnect}.
@@ -141,7 +156,7 @@ export class ClaudeCodeConnector extends BaseConnector {
    * scope из `claude mcp get`.
    *
    * Состояния:
-   *  - `✓ Connected` → connected: true
+   *  - `✔`/`✓ Connected` → connected: true
    *  - `✗ Failed to connect` → connected: false, error: 'Failed to connect'
    *  - `! Needs authentication` → connected: false, error: 'Needs authentication'
    *  - неизвестное → connected: false, error: `Unknown state: <raw>` (для диагностики)
@@ -382,17 +397,17 @@ export class ClaudeCodeConnector extends BaseConnector {
     const sepIdx = tail.lastIndexOf(' - ');
     const statusPart = sepIdx >= 0 ? tail.slice(sepIdx + 3).trim() : tail;
 
-    if (statusPart.startsWith('✓')) {
+    if (CONNECTED_MARKS.some((mark) => statusPart.startsWith(mark))) {
       return {
         connected: true,
         details: { configPath: 'managed by claude mcp' },
       };
     }
-    if (statusPart.startsWith('✗')) {
+    if (FAILED_MARKS.some((mark) => statusPart.startsWith(mark))) {
       // распространённый вариант: `✗ Failed to connect`
       return {
         connected: false,
-        error: statusPart.replace(/^✗\s*/, ''),
+        error: statusPart.replace(/^[✗✘]\s*/u, ''),
         details: { configPath: 'managed by claude mcp' },
       };
     }
