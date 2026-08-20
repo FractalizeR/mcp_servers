@@ -1,3 +1,9 @@
+## [3.2.0](https://github.com/FractalizeR/mcp_servers/compare/v3.1.0...v3.2.0) (2026-08-20)
+
+### Features
+
+* **tests:** фабрика интеграционного теста и матрица покрытия инструментов ([#407](https://github.com/FractalizeR/mcp_servers/issues/407)) ([6396f11](https://github.com/FractalizeR/mcp_servers/commit/6396f1144f18068d1031c0dd4991d6efe5aea038))
+
 ## [3.1.0](https://github.com/FractalizeR/mcp_servers/compare/v3.0.0...v3.1.0) (2026-08-20)
 
 ### Features
