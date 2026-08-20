@@ -42,8 +42,8 @@ const RESPONSE_WAIT_TIMEOUT_MS = 10000;
 const STDERR_PATTERN_TIMEOUT_MS = 10000;
 
 /**
- * Строки отчёта задаются сервером: у ticktick они на английском, у
- * yandex-* — на русском, и прогон не должен молча менять свой вывод.
+ * Строки отчёта задаются сервером (у yandex-* — на русском), и прогон
+ * не должен молча менять свой вывод.
  */
 export interface SmokeMessages {
   readonly header: string;

@@ -42,14 +42,14 @@ describe('createRawApiRequestSchema', () => {
   it('отклоняет протокол-относительный URL (//host) — SSRF/утечка токена', () => {
     // Даже если pathPattern сервера допускает //, core-refine обязан отсечь
     const openSchema = createRawApiRequestSchema({
-      pathPattern: /^\/[\w.~/-]+$/, // «открытый» паттерн в духе ticktick
+      pathPattern: /^\/[\w.~/-]+$/, // «открытый» паттерн
       pathExample: '/project/{id}/data',
       fieldsSchema: FieldsSchema,
     });
     for (const path of ['//evil.example/steal', '//evil.example/open/v1/project']) {
       expect(openSchema.safeParse({ method: 'GET', path, fields: ['id'] }).success).toBe(false);
     }
-    // Легитимный ticktick-путь по «открытому» паттерну проходит
+    // Легитимный путь по «открытому» паттерну проходит
     expect(
       openSchema.safeParse({ method: 'GET', path: '/project/abc/data', fields: ['id'] }).success
     ).toBe(true);

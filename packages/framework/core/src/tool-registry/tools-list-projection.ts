@@ -2,9 +2,9 @@
  * Проекция ToolDefinition[] → форма ответа MCP tools/list
  *
  * Единственное место в кодовой базе, решающее, какие поля ToolDefinition
- * попадают наружу в протокольный ответ tools/list. Раньше каждый из трёх
- * серверов (yandex-tracker, yandex-wiki, ticktick) строил этот объект
- * самостоятельно в своём server.ts (`tools: definitions.map(...)`) — три
+ * попадают наружу в протокольный ответ tools/list. Раньше каждый
+ * сервер (yandex-tracker, yandex-wiki) строил этот объект
+ * самостоятельно в своём server.ts (`tools: definitions.map(...)`) —
  * копии одной и той же проекции неизбежно расходились бы при добавлении
  * новых полей ToolDefinition (title, outputSchema, annotations — пакет 3.1.B).
  * server.ts каждого сервера обязан вызывать эту функцию, а не собирать

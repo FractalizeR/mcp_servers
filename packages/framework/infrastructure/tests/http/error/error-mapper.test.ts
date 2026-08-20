@@ -364,7 +364,7 @@ describe('ErrorMapper', () => {
         expect(result.message).not.toContain('повторите операцию');
       });
 
-      it('не должен упоминать доменные понятия конкретного продукта (framework общий для Tracker/Wiki/TickTick)', () => {
+      it('не должен упоминать доменные понятия конкретного продукта (framework общий для Tracker/Wiki)', () => {
         const axiosError = createAxiosError({
           response: createAxiosResponse(409, {
             errorMessages: ['Задача: не удалось сохранить изменения, попробуйте ещё раз'],
@@ -374,7 +374,7 @@ describe('ErrorMapper', () => {
         const result = ErrorMapper.mapAxiosError(axiosError);
 
         // Подсказка не должна называть конкретное поле версионирования — у части
-        // серверов (Wiki, TickTick) такого поля может не быть вовсе. Какое поле
+        // серверов (Wiki) такого поля может не быть вовсе. Какое поле
         // перечитывать, агент видит из схемы конкретного MCP-инструмента.
         const lowerMessage = result.message.toLowerCase();
         expect(lowerMessage).not.toContain('version');
