@@ -1,3 +1,17 @@
+## [3.0.0](https://github.com/FractalizeR/mcp_servers/compare/v2.5.1...v3.0.0) (2026-08-20)
+
+### ⚠ BREAKING CHANGES
+
+* переименованы параметры инструментов Трекера
+(issueKey/issueKeys/issueId/issueIds/issues/keys → issueId/issueIds,
+targetIssue → targetIssueId, transition → transitionId); из ответов Трекера и
+Вики удалено поле fieldsReturned; successful и failed стали массивами;
+конверт ответа расширен полем warnings; formatSuccess сменил сигнатуру.
+
+### Features
+
+* единый контракт MCP-инструментов и канал предупреждений ([#403](https://github.com/FractalizeR/mcp_servers/issues/403)) ([1ac8b51](https://github.com/FractalizeR/mcp_servers/commit/1ac8b514994f14718232859d39671a1fc7a674dd))
+
 ## [Unreleased] — унификация контракта MCP-инструментов Yandex Tracker (BREAKING CHANGE)
 
 > Раздел добавлен вручную планом `plan_tool_contract_unification` (этап 3.1) как справочная
