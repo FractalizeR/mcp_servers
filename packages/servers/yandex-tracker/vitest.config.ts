@@ -16,11 +16,6 @@ export default mergeConfig(
       name: 'yandex-tracker',
       // Performance monitoring: warn about tests slower than 300ms
       slowTestThreshold: 300,
-      // Smoke-тесты импортируют весь сервер (DI + ~50 инструментов) — в CI на
-      // холодном кеше первый импорт может превысить дефолтные 10s (см. падение
-      // entry-point.smoke.test.ts «loadConfig timed out in 10000ms»). Поднимаем
-      // потолок, не трогая быстрые тесты.
-      testTimeout: 30000,
       // Исключить legacy тесты (сохранены для rollback, но не запускаются)
       exclude: [
         '**/node_modules/**',

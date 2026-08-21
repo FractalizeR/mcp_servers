@@ -9,21 +9,45 @@
  * ВАЖНО: Этот тест импортирует index.ts напрямую, что позволяет
  * обнаружить проблемы с экспортами до того, как пользователь
  * столкнётся с ними в production.
+ *
+ * Импорт статический, а не `await import()` внутри тестов. Он тянет весь граф
+ * модулей сервера (DI + все инструменты), и под полной параллельной нагрузкой
+ * монорепо это десятки секунд. На этапе сбора файла такая стоимость ничем не
+ * ограничена, а внутри тела теста она попадает под testTimeout — так первые
+ * тесты этого файла и падали по лимиту, пока остальные smoke-файлы с тем же
+ * графом и статическими импортами проходили.
  */
 
 import { describe, it, expect } from 'vitest';
+import { ToolRegistry } from '@fractalizer/mcp-core';
 import { createServerConfigFixture } from '#helpers/index.js';
+import * as entryPoint from '../../src/index.js';
+
+const {
+  loadConfig,
+  MCP_TOOL_PREFIX,
+  YANDEX_WIKI_API_BASE,
+  createContainer,
+  TYPES,
+  GetPageTool,
+  GetPageByIdTool,
+  CreatePageTool,
+  UpdatePageTool,
+  DeletePageTool,
+  ClonePageTool,
+  AppendContentTool,
+  PingTool,
+  YandexWikiFacade,
+  PageService,
+} = entryPoint;
 
 describe('Entry Point Exports (Smoke)', () => {
-  it('должен экспортировать loadConfig', async () => {
-    const { loadConfig } = await import('../../src/index.js');
+  it('должен экспортировать loadConfig', () => {
     expect(loadConfig).toBeDefined();
     expect(typeof loadConfig).toBe('function');
   });
 
-  it('должен экспортировать константы', async () => {
-    const { MCP_TOOL_PREFIX, YANDEX_WIKI_API_BASE } = await import('../../src/index.js');
-
+  it('должен экспортировать константы', () => {
     expect(MCP_TOOL_PREFIX).toBeDefined();
     expect(typeof MCP_TOOL_PREFIX).toBe('string');
 
@@ -31,9 +55,7 @@ describe('Entry Point Exports (Smoke)', () => {
     expect(typeof YANDEX_WIKI_API_BASE).toBe('string');
   });
 
-  it('должен экспортировать DI компоненты', async () => {
-    const { createContainer, TYPES } = await import('../../src/index.js');
-
+  it('должен экспортировать DI компоненты', () => {
     expect(createContainer).toBeDefined();
     expect(typeof createContainer).toBe('function');
 
@@ -44,18 +66,7 @@ describe('Entry Point Exports (Smoke)', () => {
     expect(TYPES.ToolRegistry).toBeDefined();
   });
 
-  it('должен экспортировать Tool классы', async () => {
-    const {
-      GetPageTool,
-      GetPageByIdTool,
-      CreatePageTool,
-      UpdatePageTool,
-      DeletePageTool,
-      ClonePageTool,
-      AppendContentTool,
-      PingTool,
-    } = await import('../../src/index.js');
-
+  it('должен экспортировать Tool классы', () => {
     expect(GetPageTool).toBeDefined();
     expect(GetPageByIdTool).toBeDefined();
     expect(CreatePageTool).toBeDefined();
@@ -66,40 +77,25 @@ describe('Entry Point Exports (Smoke)', () => {
     expect(PingTool).toBeDefined();
   });
 
-  it('должен экспортировать YandexWikiFacade', async () => {
-    const { YandexWikiFacade } = await import('../../src/index.js');
-
+  it('должен экспортировать YandexWikiFacade', () => {
     expect(YandexWikiFacade).toBeDefined();
     expect(typeof YandexWikiFacade).toBe('function'); // class
   });
 
-  it('должен экспортировать PageService', async () => {
-    const { PageService } = await import('../../src/index.js');
-
+  it('должен экспортировать PageService', () => {
     expect(PageService).toBeDefined();
     expect(typeof PageService).toBe('function'); // class
   });
 
-  it('не должен запускать сервер при импорте', async () => {
-    // Если index.ts содержит вызов main(), этот тест упадёт
-    // потому что сервер попытается подключиться к stdio
-    const startTime = Date.now();
-
-    // Импорт не должен блокировать выполнение
-    await import('../../src/index.js');
-
-    const elapsed = Date.now() - startTime;
-
-    // Импорт должен быть быстрым (< 5 секунд)
-    // Если бы сервер запустился, он бы завис на server.connect()
-    expect(elapsed).toBeLessThan(5000);
+  it('не должен запускать сервер при импорте', () => {
+    // Если бы index.ts дёргал main(), сервер повис бы на server.connect() ещё
+    // при сборе этого файла и до проверок дело бы не дошло. Здесь фиксируется
+    // вторая половина правила: bootstrap наружу не торчит.
+    expect(entryPoint).not.toHaveProperty('main');
+    expect(entryPoint).not.toHaveProperty('startServer');
   });
 
   it('должен работать с createContainer без реального API', async () => {
-    const { createContainer, TYPES } = await import('../../src/index.js');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { ToolRegistry } = (await import('@fractalizer/mcp-core')) as any;
-
     const fakeConfig = createServerConfigFixture({
       token: 'test-token',
       orgId: 'test-org',
