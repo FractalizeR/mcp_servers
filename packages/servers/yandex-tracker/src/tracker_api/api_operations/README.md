@@ -271,11 +271,17 @@ async execute(key: string, input: GetCommentsInput): Promise<PaginatedResult<Com
 | Transitions | v3 | `/v3/issues/{id}/transitions` |
 | Changelog | v3 | `/v3/issues/{id}/changelog` |
 | User | v3 | `/v3/myself` |
-| Attachments | v2 | `/v2/issues/{id}/attachments` |
-| Checklists | v2 | `/v2/issues/{id}/checklistItems` |
-| Components | v2 | `/v2/queues/{id}/components` |
-| Projects | v2 | `/v2/projects` |
-| Worklogs | v2 | `/v2/issues/{id}/worklog` |
+| Attachments | v2 → **v3** | `/v2/issues/{id}/attachments` |
+| Checklists | v2 → **v3** | `/v2/issues/{id}/checklistItems` |
+| Components | v2 → **v3** | `/v2/queues/{id}/components` |
+| Projects | v2 → **v3** | `/v2/projects` |
+| Worklogs | v2 → **v3** | `/v2/issues/{id}/worklog` |
+| Boards, колонки, спринты, глобальные поля, bulkchange | v2 → **v3** | в таблице ранее отсутствовали |
+
+**`v2 → v3` означает: ходим в v2 сейчас, целевая версия v3.** v2 работает на совместимости,
+документация описывает только v3; для проверенных семейств формы ответа совпадают (боевая проба
+2026-08-23). Миграция — этап 4.1 плана `plan_tracker_test_coverage`. Новая операция пишется
+сразу на v3.
 
 ✅ **Правильно:**
 ```typescript

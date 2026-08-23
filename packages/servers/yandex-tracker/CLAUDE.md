@@ -57,30 +57,31 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 - **API v3** — новая версия (issues, queues, comments, links, changelog, transitions)
 - **API v2** — старая версия (attachments, checklists, components, projects, worklogs)
 
-**Правило:** нормативный источник версии — **документация Трекера**. Таблица ниже
-**описывает версии, в которые код ходит сейчас**, и предписанием для новой операции не является:
-по четырём категориям она уже расходится с документацией (колонка «расхождение»).
+**Правило: целевая версия — v3 всюду, где v3 существует.** Решено 2026-08-23; план миграции —
+`.agentic-planning/plan_tracker_test_coverage/4.1_v3_migration_parallel.md`. Нормативный источник
+версии — **документация Трекера**, а таблица ниже **описывает текущее состояние кода**: колонка
+«цель» говорит, куда операция должна переехать. Новая операция пишется сразу на v3.
 
-| Категория | API версия | Endpoint пример | Расхождение с документацией |
-|-----------|------------|-----------------|-----------------------------|
-| Issues Core | v3 | `/v3/issues/{key}` | — |
-| Queues | v3 | `/v3/queues/{id}` | — |
-| Comments | v3 | `/v3/issues/{id}/comments` | — |
-| Links | v3 | `/v3/issues/{id}/links` | — |
-| Transitions | v3 | `/v3/issues/{id}/transitions` | — |
-| Changelog | v3 | `/v3/issues/{id}/changelog` | — |
-| User | v3 | `/v3/myself` | — |
-| Attachments | v2 | `/v2/issues/{id}/attachments` | не проверялось |
-| Checklists | v2 | `/v2/issues/{id}/checklistItems` | не проверялось |
-| Components | v2 | `/v2/queues/{id}/components` | не проверялось |
-| Projects | v2 | `/v2/projects` | **документация: v3** |
-| Worklogs | v2 | `/v2/issues/{id}/worklog` | не проверялось |
-| Boards | v2 | `/v2/boards` | **документация: v3** |
-| Board columns | v3 | `/v3/boards/{id}/columns/` | не проверялось |
-| Sprints | v2 | `/v2/sprints`, lifecycle `/v3/sprints/{id}/_start` | **документация: v3** |
-| Global fields | v2 | `/v2/fields` | **документация: v3** |
-| Entity API | v3 | `/v3/entities/{type}` | совпадает (по сообщению пакета) |
-| Filters | v3 | `POST /v3/filters/` | путь чтения документацией не описан |
+| Категория | Сейчас | Endpoint пример | Цель |
+|-----------|--------|-----------------|------|
+| Issues Core | v3 | `/v3/issues/{key}` | v3 — уже целевая |
+| Queues | v3 | `/v3/queues/{id}` | v3 — уже целевая |
+| Comments | v3 | `/v3/issues/{id}/comments` | v3 — уже целевая |
+| Links | v3 | `/v3/issues/{id}/links` | v3 — уже целевая |
+| Transitions | v3 | `/v3/issues/{id}/transitions` | v3 — уже целевая |
+| Changelog | v3 | `/v3/issues/{id}/changelog` | v3 — уже целевая |
+| User | v3 | `/v3/myself` | v3 — уже целевая |
+| Attachments | v2 | `/v2/issues/{id}/attachments` | **v3, миграция 4.1** |
+| Checklists | v2 | `/v2/issues/{id}/checklistItems` | **v3, миграция 4.1** |
+| Components | v2 | `/v2/queues/{id}/components` | **v3, миграция 4.1** |
+| Projects | v2 | `/v2/projects` | **v3, миграция 4.1** |
+| Worklogs | v2 | `/v2/issues/{id}/worklog` | **v3, миграция 4.1** |
+| Boards | v2 | `/v2/boards` | **v3, миграция 4.1** |
+| Board columns | v3 | `/v3/boards/{id}/columns/` | **v3, миграция 4.1** |
+| Sprints | v2 | `/v2/sprints`, lifecycle `/v3/sprints/{id}/_start` | **v3, миграция 4.1** |
+| Global fields | v2 | `/v2/fields` | **v3, миграция 4.1** |
+| Entity API | v3 | `/v3/entities/{type}` | v3 — уже целевая |
+| Filters | v3 | `POST /v3/filters/` | v3 — уже целевая, путь чтения не документирован |
 
 ✅ **Правильно:**
 ```typescript
@@ -101,11 +102,15 @@ this.httpClient.get('/v1/issues'); // Неверная версия
 
 **Примечание:** При появлении v3 версий для категорий на v2, приоритет отдаётся v3.
 
-⚠️ **По четырём категориям код уже расходится с документацией** (проекты, доски, спринты,
-глобальные поля — отмечены в таблице). То есть правило «приоритет v3» нарушено, а не ожидает
-наступления. Что именно прочитано в документации и что лишь сообщено — таблицы в
-[tests/TESTING_STRATEGY.md](tests/TESTING_STRATEGY.md) §2; исправление версий — работа этапа 3.1,
-а не попутная правка.
+⚠️ **v2 работает, но это совместимость, а не поддержка.** Боевая проба 2026-08-23 показала:
+v2 и v3 отдают одинаковое число элементов и одинаковый набор ключей у досок, проектов,
+глобальных полей, спринтов, очередей, worklog, чек-листов, вложений и компонентов — то есть
+миграция этих семейств есть смена версии в пути, а не переписывание парсинга. Отчёт:
+`.agentic-planning/plan_tracker_test_coverage/inventory/live-version-probe-2026-08-23.md`.
+
+⚠️ **Отдельно от версий: наши типы расходятся с боевым ответом.** `options` глобального поля —
+`boolean`, а не массив опций; `id` досок, колонок досок и спринтов — число, а объявлено `string`.
+Мок этого не поймает по построению — он отдаёт предписанное. Чинится пакетом B этапа 4.1.
 
 Новую операцию сверяй с документацией, **не** с этой таблицей и **не** с `yandex_tracker_client/`:
 у submodule версия — параметр соединения (`Connection.__init__(api_version=VERSION_V2)`), поэтому
