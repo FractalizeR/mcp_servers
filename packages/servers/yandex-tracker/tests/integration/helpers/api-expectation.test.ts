@@ -102,6 +102,39 @@ describe('ApiExpectationSet — оснастка ожиданий HTTP-запр�
     expect(String(headers['Link'])).toContain('rel="next"');
   });
 
+  it('незаявленный query роняет: параметр, попавший в запрос молча, не свидетельство', async () => {
+    api.expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' }).reply(200, []);
+
+    await expect(
+      client.getAxiosInstance().get('/v2/boards', { params: { localized: false } })
+    ).rejects.toThrow(/незаявленный query/);
+  });
+
+  it('query из строки пути наблюдается наравне с параметрами axios', async () => {
+    api
+      .expectRequest({ method: 'get', path: '/v3/entities/goal/G-1', apiVersion: 'v3' })
+      .reply(200, {});
+
+    await expect(
+      client.getAxiosInstance().get('/v3/entities/goal/G-1?fields=keyResultItems')
+    ).rejects.toThrow(/незаявленный query.*fields/s);
+  });
+
+  it('заявленный query сверяется по значению, число и строка эквивалентны', async () => {
+    api
+      .expectRequest({
+        method: 'get',
+        path: '/v2/projects',
+        apiVersion: 'v2',
+        query: { perPage: 10 },
+      })
+      .reply(200, []);
+
+    const response = await client.getAxiosInstance().get('/v2/projects?perPage=10');
+
+    expect(response.status).toBe(200);
+  });
+
   it('несовпавшее тело запроса роняет с описанием расхождения', async () => {
     api
       .expectRequest({
