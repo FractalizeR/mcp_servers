@@ -13,8 +13,10 @@
  */
 
 export const LIVE_EXEMPT_CATEGORY_FOLDERS: ReadonlySet<string> = new Set([
+  // Колонки досок лежат в `api/boards` (`create-board-column.tool.ts` и соседние),
+  // отдельной папки `api/board-columns` не существует — запись на неё была мёртвой
+  // и читалась как работающая (ревью волны 2.1.2, claude-12).
   'api/boards',
-  'api/board-columns',
   'api/sprints',
   'api/projects',
   'api/fields',

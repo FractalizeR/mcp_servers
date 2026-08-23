@@ -57,22 +57,30 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 - **API v3** — новая версия (issues, queues, comments, links, changelog, transitions)
 - **API v2** — старая версия (attachments, checklists, components, projects, worklogs)
 
-**Правило:** Используй версию API согласно таблице ниже:
+**Правило:** нормативный источник версии — **документация Трекера**. Таблица ниже
+**описывает версии, в которые код ходит сейчас**, и предписанием для новой операции не является:
+по четырём категориям она уже расходится с документацией (колонка «расхождение»).
 
-| Категория | API версия | Endpoint пример |
-|-----------|------------|-----------------|
-| Issues Core | v3 | `/v3/issues/{key}` |
-| Queues | v3 | `/v3/queues/{id}` |
-| Comments | v3 | `/v3/issues/{id}/comments` |
-| Links | v3 | `/v3/issues/{id}/links` |
-| Transitions | v3 | `/v3/issues/{id}/transitions` |
-| Changelog | v3 | `/v3/issues/{id}/changelog` |
-| User | v3 | `/v3/myself` |
-| Attachments | v2 | `/v2/issues/{id}/attachments` |
-| Checklists | v2 | `/v2/issues/{id}/checklistItems` |
-| Components | v2 | `/v2/queues/{id}/components` |
-| Projects | v2 | `/v2/projects` |
-| Worklogs | v2 | `/v2/issues/{id}/worklog` |
+| Категория | API версия | Endpoint пример | Расхождение с документацией |
+|-----------|------------|-----------------|-----------------------------|
+| Issues Core | v3 | `/v3/issues/{key}` | — |
+| Queues | v3 | `/v3/queues/{id}` | — |
+| Comments | v3 | `/v3/issues/{id}/comments` | — |
+| Links | v3 | `/v3/issues/{id}/links` | — |
+| Transitions | v3 | `/v3/issues/{id}/transitions` | — |
+| Changelog | v3 | `/v3/issues/{id}/changelog` | — |
+| User | v3 | `/v3/myself` | — |
+| Attachments | v2 | `/v2/issues/{id}/attachments` | не проверялось |
+| Checklists | v2 | `/v2/issues/{id}/checklistItems` | не проверялось |
+| Components | v2 | `/v2/queues/{id}/components` | не проверялось |
+| Projects | v2 | `/v2/projects` | **документация: v3** |
+| Worklogs | v2 | `/v2/issues/{id}/worklog` | не проверялось |
+| Boards | v2 | `/v2/boards` | **документация: v3** |
+| Board columns | v3 | `/v3/boards/{id}/columns/` | не проверялось |
+| Sprints | v2 | `/v2/sprints`, lifecycle `/v3/sprints/{id}/_start` | **документация: v3** |
+| Global fields | v2 | `/v2/fields` | **документация: v3** |
+| Entity API | v3 | `/v3/entities/{type}` | совпадает (по сообщению пакета) |
+| Filters | v3 | `POST /v3/filters/` | путь чтения документацией не описан |
 
 ✅ **Правильно:**
 ```typescript
@@ -92,6 +100,17 @@ this.httpClient.get('/v1/issues'); // Неверная версия
 ```
 
 **Примечание:** При появлении v3 версий для категорий на v2, приоритет отдаётся v3.
+
+⚠️ **По четырём категориям код уже расходится с документацией** (проекты, доски, спринты,
+глобальные поля — отмечены в таблице). То есть правило «приоритет v3» нарушено, а не ожидает
+наступления. Что именно прочитано в документации и что лишь сообщено — таблицы в
+[tests/TESTING_STRATEGY.md](tests/TESTING_STRATEGY.md) §2; исправление версий — работа этапа 3.1,
+а не попутная правка.
+
+Новую операцию сверяй с документацией, **не** с этой таблицей и **не** с `yandex_tracker_client/`:
+у submodule версия — параметр соединения (`Connection.__init__(api_version=VERSION_V2)`), поэтому
+он подтверждает нашу v2 тавтологически и источником истины по версии не является. Путь и метод
+подтверждать им можно.
 
 **Дополнительно:**
 - ✅ Batch-операции: `getIssues([keys])`, НЕ `getIssue(key)`
