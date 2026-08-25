@@ -165,6 +165,21 @@ describe('Область действия живого прогона', () => {
       expect(decide('patch', '/v3/fields/f1').allowed).toBe(false);
     });
 
+    it('неизвестный вложенный ресурс своей задачи отклоняется', () => {
+      // Белый список ISSUE_SUBRESOURCES без этой проверки неотличим от открытого
+      // хвоста: новый вложенный эндпоинт, меняющий что-то за пределами задачи,
+      // проехал бы молча — как `POST .../links`, меняющий чужую задачу телом.
+      const decision = decide('post', `/v3/issues/${SANDBOX_ISSUE}/somethingNew`);
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('somethingNew');
+    });
+
+    it('хвост известного вложенного ресурса остаётся разрешённым', () => {
+      // Якорь не должен запрещать законную глубину: `/transitions/{id}/_execute`.
+      const decision = decide('post', `/v3/issues/${SANDBOX_ISSUE}/transitions/fixed/_execute`);
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+
     it('правка локального поля, созданного не этим прогоном', () => {
       // Очередь TEST общая: её поля мог завести кто-то другой.
       const decision = decide('patch', `/v3/queues/${SANDBOX_QUEUE}/localFields/foreignField`);
