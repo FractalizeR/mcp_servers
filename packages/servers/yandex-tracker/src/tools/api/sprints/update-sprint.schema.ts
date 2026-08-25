@@ -3,7 +3,12 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  FilteredEntitySchema,
+  buildOutputSchema,
+  buildEntityIdSchema,
+} from '#common/schemas/index.js';
 
 const SprintStatusSchema = z.enum(['draft', 'in_progress', 'released']);
 
@@ -17,7 +22,7 @@ const SprintStatusSchema = z.enum(['draft', 'in_progress', 'released']);
  */
 export const UpdateSprintParamsSchema = z.object({
   /** Идентификатор спринта (обязательно) */
-  sprintId: z.string().min(1, 'Sprint ID не может быть пустым'),
+  sprintId: buildEntityIdSchema('Sprint'),
 
   /** Новое название спринта (опционально) */
   name: z.string().min(1).optional(),

@@ -45,7 +45,9 @@ describe('UpdateQueueTool', () => {
       expect(definition.inputSchema.properties?.['defaultType']).toBeDefined();
       expect(definition.inputSchema.properties?.['defaultPriority']).toBeDefined();
       expect(definition.inputSchema.properties?.['description']).toBeDefined();
-      expect(definition.inputSchema.properties?.['issueTypes']).toBeDefined();
+      // `issueTypes` в схеме нет намеренно: API отвечает на него
+      // `400 Incorrect data format` (живая проба 2026-08-25).
+      expect(definition.inputSchema.properties?.['issueTypes']).toBeUndefined();
     });
 
     it('должен включать параметр fields в inputSchema', () => {
@@ -72,6 +74,22 @@ describe('UpdateQueueTool', () => {
 
       it('должен вернуть ошибку для пустого queueId', async () => {
         const result = await tool.execute({ queueId: '', fields: ['id', 'key', 'name'] });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
+      it('должен отклонить name длиннее 40 символов', async () => {
+        const result = await tool.execute({
+          queueId: 'TEST',
+          name: 'A'.repeat(41),
+          fields: ['id', 'key', 'name'],
+        });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -203,22 +221,21 @@ describe('UpdateQueueTool', () => {
         });
       });
 
-      it('должен обновить issueTypes', async () => {
+      it('issueTypes не объявлен и до фасада не доезжает', async () => {
+        // `PATCH /v3/queues/{id}` отвечает `400 issueTypes: Incorrect data format`
+        // (живая проба 2026-08-25) — тот же ответ, что у создания очереди.
         const mockQueue = createQueueFixture({ key: 'TEST' });
         vi.mocked(mockTrackerFacade.updateQueue).mockResolvedValue(mockQueue);
 
-        const result = await tool.execute({
+        await tool.execute({
           queueId: 'TEST',
-          issueTypes: ['1', '2', '3'],
+          name: 'Renamed',
           fields: ['id', 'key', 'name'],
         });
 
-        expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.updateQueue).toHaveBeenCalledWith({
           queueId: 'TEST',
-          updates: {
-            issueTypes: ['1', '2', '3'],
-          },
+          updates: { name: 'Renamed' },
         });
       });
 
@@ -266,7 +283,6 @@ describe('UpdateQueueTool', () => {
           lead: 'newlead',
           defaultType: '2',
           defaultPriority: '3',
-          issueTypes: ['1', '2', '3', '4'],
           fields: ['id', 'key', 'name'],
         });
 
@@ -279,7 +295,6 @@ describe('UpdateQueueTool', () => {
             lead: 'newlead',
             defaultType: '2',
             defaultPriority: '3',
-            issueTypes: ['1', '2', '3', '4'],
           },
         });
       });

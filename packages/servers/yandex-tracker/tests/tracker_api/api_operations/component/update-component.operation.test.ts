@@ -16,7 +16,8 @@ describe('UpdateComponentOperation', () => {
 
   beforeEach(() => {
     mockHttpClient = {
-      get: vi.fn().mockResolvedValue(null),
+      // Операция читает текущую версию перед PATCH: без версии API отвечает 428.
+      get: vi.fn().mockResolvedValue(createComponentFixture({ id: 1, version: 7 })),
       post: vi.fn(),
       patch: vi.fn(),
       put: vi.fn(),
@@ -43,6 +44,42 @@ describe('UpdateComponentOperation', () => {
   });
 
   describe('execute', () => {
+    it('без версии от вызывающего читает текущую и шлёт её в query', async () => {
+      // Без ?version= API отвечает 428 — правка не проходит вовсе (живая проба 2026-08-25).
+      const mockComponent = createComponentFixture({ id: 1, version: 7 });
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockComponent);
+
+      await operation.execute('1', createUpdateComponentDto({ name: 'X' }));
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/components/1');
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v3/components/1?version=7',
+        expect.anything()
+      );
+    });
+
+    it('ответ без версии даёт понятный отказ, а не ?version=undefined', async () => {
+      vi.mocked(mockHttpClient.get).mockResolvedValue({ id: 1, name: 'X' });
+
+      await expect(operation.execute('1', createUpdateComponentDto({ name: 'X' }))).rejects.toThrow(
+        /версию компонента/
+      );
+      expect(mockHttpClient.patch).not.toHaveBeenCalled();
+    });
+
+    it('переданную версию берёт как есть и лишнего чтения не делает', async () => {
+      const mockComponent = createComponentFixture({ id: 1, version: 3 });
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockComponent);
+
+      await operation.execute('1', createUpdateComponentDto({ name: 'X' }), 3);
+
+      expect(mockHttpClient.get).not.toHaveBeenCalled();
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v3/components/1?version=3',
+        expect.anything()
+      );
+    });
+
     it('should call httpClient.patch with correct endpoint and data', async () => {
       const updates = createUpdateComponentDto({ name: 'Updated Name' });
       const mockComponent: ComponentOutput = createComponentFixture({
@@ -54,7 +91,7 @@ describe('UpdateComponentOperation', () => {
 
       const result = await operation.execute('1', updates);
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/components/1', updates);
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/components/1?version=7', updates);
       expect(result).toEqual(mockComponent);
     });
 
@@ -96,7 +133,7 @@ describe('UpdateComponentOperation', () => {
 
       await operation.execute('1', updates);
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/components/1', updates);
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/components/1?version=7', updates);
     });
 
     it('should update assignAuto flag', async () => {
@@ -214,7 +251,7 @@ describe('UpdateComponentOperation', () => {
 
       const result = await operation.execute('1', updates);
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/components/1', {});
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/components/1?version=7', {});
       expect(result).toEqual(mockComponent);
     });
   });

@@ -64,7 +64,7 @@ export class GetWorklogsTool extends BaseTool<YandexTrackerFacade> {
         fields
       );
 
-      // 3. API v2: получение записей времени через batch-метод
+      // 3. API v3: получение записей времени через batch-метод
       const results = await this.facade.getWorklogsMany(issueIds, {
         cursor,
         perPage,

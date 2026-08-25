@@ -1,6 +1,6 @@
 {
-  "id": "component123456789abc",
-  "self": "https://api.tracker.yandex.net/v2/components/1",
+  "id": 4,
+  "self": "https://api.tracker.yandex.net/v3/components/1",
   "name": "Test Component",
   "description": "Test component description for integration tests",
   "lead": {

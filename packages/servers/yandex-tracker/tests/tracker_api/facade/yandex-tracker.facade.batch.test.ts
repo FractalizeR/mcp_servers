@@ -56,7 +56,6 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         getField: vi.fn(),
         createField: vi.fn(),
         updateField: vi.fn(),
-        deleteField: vi.fn(),
       },
     } as unknown as CoreServicesContainer;
 
@@ -128,18 +127,11 @@ describe('YandexTrackerFacade - Batch Methods', () => {
         getComponents: vi.fn(),
         createComponent: vi.fn(),
         updateComponent: vi.fn(),
-        deleteComponent: vi.fn(),
       },
     } as unknown as QueueServicesContainer;
 
     mockProjectAgileContainer = {
-      project: {
-        getProjects: vi.fn(),
-        getProject: vi.fn(),
-        createProject: vi.fn(),
-        updateProject: vi.fn(),
-        deleteProject: vi.fn(),
-      },
+      project: {},
       board: {
         getBoards: vi.fn(),
         getBoard: vi.fn(),

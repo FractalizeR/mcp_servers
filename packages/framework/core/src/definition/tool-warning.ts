@@ -13,6 +13,11 @@
  *   одного элемента ответа (детектор — `ResponseFieldFilter`, см. README §4).
  * - `UNKNOWN_PARAMETER` — во входных параметрах есть имя, которого нет в схеме
  *   инструмента, а запрос в остальном валиден (README §5).
+ * - `AMBIGUOUS_ENTITY_ID` — операция создала сущность, чей идентификатор
+ *   совпал с идентификатором другой существующей сущности в той же области
+ *   видимости: наблюдаемый факт — коллизия id, а не гипотеза о её причине.
+ *   Домен формулирует конкретику (какая сущность, какая область видимости) в
+ *   `message`/`details` инструмента — здесь код только про сам факт коллизии.
  */
 
 import { z } from 'zod';
@@ -20,6 +25,9 @@ import { z } from 'zod';
 export const ToolWarningCode = {
   FIELDS_WITHOUT_VALUE: 'FIELDS_WITHOUT_VALUE',
   UNKNOWN_PARAMETER: 'UNKNOWN_PARAMETER',
+  AMBIGUOUS_ENTITY_ID: 'AMBIGUOUS_ENTITY_ID',
+  /** Правка прошла без токена версии: конфликт с чужой правкой не будет замечен. */
+  VERSION_NOT_PROVIDED: 'VERSION_NOT_PROVIDED',
 } as const;
 
 export type ToolWarningCode = (typeof ToolWarningCode)[keyof typeof ToolWarningCode];
@@ -38,7 +46,12 @@ export interface ToolWarning {
 
 /** Zod-схема одного предупреждения — источник для `outputSchema` инструментов. */
 export const ToolWarningSchema = z.object({
-  code: z.enum([ToolWarningCode.FIELDS_WITHOUT_VALUE, ToolWarningCode.UNKNOWN_PARAMETER]),
+  code: z.enum([
+    ToolWarningCode.FIELDS_WITHOUT_VALUE,
+    ToolWarningCode.UNKNOWN_PARAMETER,
+    ToolWarningCode.AMBIGUOUS_ENTITY_ID,
+    ToolWarningCode.VERSION_NOT_PROVIDED,
+  ]),
   message: z.string(),
   details: z.record(z.string(), z.unknown()).optional(),
 });

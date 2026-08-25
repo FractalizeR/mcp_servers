@@ -19,7 +19,14 @@ export const CREATE_BOARD_TOOL_METADATA: StaticToolMetadata = {
   tags: ['board', 'create', 'write', 'agile'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['queue', 'orderAsc', 'useRanking', 'country', 'fields'],
+  redactionAllowlist: [
+    'queue',
+    'owner',
+    'boardPermissionsTemplate',
+    'backlogAvailable',
+    'sprintsAvailable',
+    'fields',
+  ],
   title: 'Создать доску',
   outputSchema: CreateBoardOutputSchema,
   annotations: {

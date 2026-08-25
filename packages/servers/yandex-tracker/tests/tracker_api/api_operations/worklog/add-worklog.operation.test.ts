@@ -58,7 +58,7 @@ describe('AddWorklogOperation', () => {
 
       const mockWorklog: WorklogWithUnknownFields = {
         id: '123',
-        self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/123',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/123',
         issue: {
           id: 'abc123',
           key: 'TEST-1',
@@ -66,7 +66,7 @@ describe('AddWorklogOperation', () => {
         },
         comment: 'Работал над реализацией',
         createdBy: {
-          self: 'https://api.tracker.yandex.net/v2/users/1',
+          self: 'https://api.tracker.yandex.net/v3/users/1',
           id: '1',
           display: 'Test User',
         },
@@ -79,7 +79,7 @@ describe('AddWorklogOperation', () => {
 
       const result = await operation.execute('TEST-1', input);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/issues/TEST-1/worklog', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/TEST-1/worklog', {
         start: '2025-01-18T10:00:00.000+0000',
         duration: 'PT1H30M',
         comment: 'Работал над реализацией',
@@ -96,7 +96,7 @@ describe('AddWorklogOperation', () => {
 
       const mockWorklog: WorklogWithUnknownFields = {
         id: '456',
-        self: 'https://api.tracker.yandex.net/v2/issues/PROJ-10/worklog/456',
+        self: 'https://api.tracker.yandex.net/v3/issues/PROJ-10/worklog/456',
         issue: {
           id: 'xyz456',
           key: 'PROJ-10',
@@ -104,7 +104,7 @@ describe('AddWorklogOperation', () => {
         },
         comment: 'Тестирование',
         createdBy: {
-          self: 'https://api.tracker.yandex.net/v2/users/2',
+          self: 'https://api.tracker.yandex.net/v3/users/2',
           id: '2',
           display: 'User Two',
         },
@@ -118,7 +118,7 @@ describe('AddWorklogOperation', () => {
       const result = await operation.execute('PROJ-10', input);
 
       // Проверяем, что duration был конвертирован
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/issues/PROJ-10/worklog', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/PROJ-10/worklog', {
         start: '2025-01-18T10:00:00.000+0000',
         duration: 'PT1H30M',
         comment: 'Тестирование',
@@ -134,14 +134,14 @@ describe('AddWorklogOperation', () => {
 
       const mockWorklog: WorklogWithUnknownFields = {
         id: '789',
-        self: 'https://api.tracker.yandex.net/v2/issues/TEST-2/worklog/789',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-2/worklog/789',
         issue: {
           id: 'def789',
           key: 'TEST-2',
           display: 'Another task',
         },
         createdBy: {
-          self: 'https://api.tracker.yandex.net/v2/users/3',
+          self: 'https://api.tracker.yandex.net/v3/users/3',
           id: '3',
           display: 'User Three',
         },
@@ -154,7 +154,7 @@ describe('AddWorklogOperation', () => {
 
       const result = await operation.execute('TEST-2', input);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/issues/TEST-2/worklog', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/TEST-2/worklog', {
         start: '2025-01-18T14:00:00.000+0000',
         duration: 'PT2H',
       });
@@ -176,14 +176,14 @@ describe('AddWorklogOperation', () => {
 
         const mockWorklog: WorklogWithUnknownFields = {
           id: '1',
-          self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
+          self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
           issue: {
             id: 'abc123',
             key: 'TEST-1',
             display: 'Test issue',
           },
           createdBy: {
-            self: 'https://api.tracker.yandex.net/v2/users/1',
+            self: 'https://api.tracker.yandex.net/v3/users/1',
             id: '1',
             display: 'User',
           },
@@ -196,7 +196,7 @@ describe('AddWorklogOperation', () => {
 
         await operation.execute('TEST-1', input);
 
-        expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/issues/TEST-1/worklog', {
+        expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/TEST-1/worklog', {
           start: '2025-01-18T10:00:00.000+0000',
           duration: testCase.expected,
         });
@@ -226,7 +226,7 @@ describe('AddWorklogOperation', () => {
 
       const mockWorklog: WorklogWithUnknownFields = {
         id: '999',
-        self: 'https://api.tracker.yandex.net/v2/issues/TEST-3/worklog/999',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-3/worklog/999',
         issue: {
           id: 'ghi012',
           key: 'TEST-3',
@@ -234,7 +234,7 @@ describe('AddWorklogOperation', () => {
         },
         comment: 'Test worklog',
         createdBy: {
-          self: 'https://api.tracker.yandex.net/v2/users/1',
+          self: 'https://api.tracker.yandex.net/v3/users/1',
           id: '1',
           display: 'Test User',
         },
@@ -274,7 +274,7 @@ describe('AddWorklogOperation', () => {
 
       const mockWorklog1: WorklogWithUnknownFields = {
         id: '1',
-        self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
         issue: { id: 'abc', key: 'TEST-1', display: 'Task 1' },
         comment: 'Work 1',
         createdBy: { self: '', id: '1', display: 'User 1' },
@@ -285,7 +285,7 @@ describe('AddWorklogOperation', () => {
 
       const mockWorklog2: WorklogWithUnknownFields = {
         id: '2',
-        self: 'https://api.tracker.yandex.net/v2/issues/TEST-2/worklog/2',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-2/worklog/2',
         issue: { id: 'def', key: 'TEST-2', display: 'Task 2' },
         createdBy: { self: '', id: '2', display: 'User 2' },
         createdAt: '2025-01-18T11:00:00.000+0000',
@@ -322,7 +322,7 @@ describe('AddWorklogOperation', () => {
 
       const mockWorklog: WorklogWithUnknownFields = {
         id: '1',
-        self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
         issue: { id: 'abc', key: 'TEST-1', display: 'Task 1' },
         createdBy: { self: '', id: '1', display: 'User 1' },
         createdAt: '2025-01-18T10:00:00.000+0000',
@@ -362,7 +362,7 @@ describe('AddWorklogOperation', () => {
 
       const mockWorklog: WorklogWithUnknownFields = {
         id: '1',
-        self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
         issue: { id: 'abc', key: 'TEST-1', display: 'Task 1' },
         createdBy: { self: '', id: '1', display: 'User 1' },
         createdAt: '2025-01-18T10:00:00.000+0000',
@@ -386,7 +386,7 @@ describe('AddWorklogOperation', () => {
 
       const mockWorklog: WorklogWithUnknownFields = {
         id: '1',
-        self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/1',
+        self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/1',
         issue: { id: 'abc', key: 'TEST-1', display: 'Task 1' },
         createdBy: { self: '', id: '1', display: 'User 1' },
         createdAt: '2025-01-18T10:00:00.000+0000',
@@ -399,7 +399,7 @@ describe('AddWorklogOperation', () => {
       await operation.executeMany(worklogs);
 
       // Duration should be converted from "1h 30m" to "PT1H30M"
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/issues/TEST-1/worklog', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/TEST-1/worklog', {
         start: '2025-01-18T10:00:00.000+0000',
         duration: 'PT1H30M',
         comment: undefined,

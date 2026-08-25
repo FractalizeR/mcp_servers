@@ -57,7 +57,7 @@ export class UpdateWorklogTool extends BaseTool<YandexTrackerFacade> {
         hasComment: !!comment,
       });
 
-      // 3. API v2: обновление записи времени
+      // 3. API v3: обновление записи времени
       // DurationUtil автоматически конвертирует human-readable формат в ISO 8601
       const worklog = await this.facade.updateWorklog(issueId, worklogId, {
         start,

@@ -6,7 +6,7 @@
  * - Кеширование спринта по его ID
  * - НЕТ создания/обновления/удаления
  *
- * API: GET /v2/sprints/{sprintId}
+ * API: GET /v3/sprints/{sprintId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -37,7 +37,7 @@ export class GetSprintOperation extends BaseOperation {
     const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, sprintId);
 
     return this.withCache(cacheKey, async () => {
-      const endpoint = `/v2/sprints/${sprintId}`;
+      const endpoint = `/v3/sprints/${sprintId}`;
 
       const sprint = await this.httpClient.get<SprintOutput>(endpoint);
 

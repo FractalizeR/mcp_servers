@@ -5,7 +5,7 @@
  * - ТОЛЬКО получение списка компонентов конкретной очереди
  * - НЕТ создания/обновления/удаления компонентов
  *
- * API: GET /v2/queues/{queueId}/components
+ * API: GET /v3/queues/{queueId}/components
  *
  * ВАЖНО:
  * - Компоненты привязаны к очереди и всегда запрашиваются в её контексте.
@@ -56,7 +56,7 @@ export class GetComponentsOperation extends BaseOperation {
    * Выполняет один HTTP-запрос и оборачивает ответ в `PaginatedResult`.
    */
   private async fetch(queueId: string): Promise<PaginatedResult<ComponentWithUnknownFields>> {
-    const path = `/v2/queues/${queueId}/components`;
+    const path = `/v3/queues/${queueId}/components`;
     const response = await this.httpClient.getWithResponse<ComponentWithUnknownFields[]>(path);
     return TrackerPaginator.singlePage<ComponentWithUnknownFields>(response);
   }

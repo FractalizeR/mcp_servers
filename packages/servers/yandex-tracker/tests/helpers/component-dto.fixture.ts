@@ -31,6 +31,7 @@ export function createCreateComponentDto(
 ): CreateComponentDto {
   return {
     name: overrides?.name || 'Test Component',
+    queue: overrides?.queue || 'QUEUE',
     description: overrides?.description,
     lead: overrides?.lead,
     assignAuto: overrides?.assignAuto,
@@ -51,6 +52,7 @@ export function createMinimalCreateComponentDto(
 ): CreateComponentDto {
   return {
     name: overrides?.name || 'Minimal Component',
+    queue: overrides?.queue || 'QUEUE',
     ...overrides,
   };
 }
@@ -68,6 +70,7 @@ export function createFullCreateComponentDto(
 ): CreateComponentDto {
   return {
     name: overrides?.name || 'Full Component',
+    queue: overrides?.queue || 'QUEUE',
     description: overrides?.description || 'Full component description',
     lead: overrides?.lead || 'user-login',
     assignAuto: overrides?.assignAuto !== undefined ? overrides.assignAuto : true,
@@ -113,6 +116,7 @@ export function createInvalidCreateComponentDto(
 ): CreateComponentDto {
   return {
     name: '', // невалидное пустое название
+    queue: 'QUEUE',
     ...overrides,
   };
 }

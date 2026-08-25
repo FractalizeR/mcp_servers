@@ -28,7 +28,6 @@ import {
   GetComponentsTool,
   CreateComponentTool,
   UpdateComponentTool,
-  DeleteComponentTool,
 } from '#tools/api/components/index.js';
 import { GetIssueLinksTool } from '#tools/api/issues/links/get/index.js';
 import { CreateLinkTool } from '#tools/api/issues/links/create/index.js';
@@ -48,13 +47,6 @@ import {
   UpdateChecklistItemTool,
   DeleteChecklistItemTool,
 } from '#tools/api/checklists/index.js';
-import {
-  GetProjectsTool,
-  GetProjectTool,
-  CreateProjectTool,
-  UpdateProjectTool,
-  DeleteProjectTool,
-} from '#tools/api/projects/index.js';
 import {
   GetWorklogsTool,
   AddWorklogTool,
@@ -118,7 +110,6 @@ import {
   GetGlobalFieldTool,
   CreateGlobalFieldTool,
   UpdateGlobalFieldTool,
-  DeleteGlobalFieldTool,
 } from '#tools/api/fields/index.js';
 
 /**
@@ -153,7 +144,6 @@ export const TOOL_CLASSES = [
   GetComponentsTool,
   CreateComponentTool,
   UpdateComponentTool,
-  DeleteComponentTool,
   GetIssueLinksTool,
   CreateLinkTool,
   DeleteLinkTool,
@@ -170,11 +160,6 @@ export const TOOL_CLASSES = [
   AddChecklistItemTool,
   UpdateChecklistItemTool,
   DeleteChecklistItemTool,
-  GetProjectsTool,
-  GetProjectTool,
-  CreateProjectTool,
-  UpdateProjectTool,
-  DeleteProjectTool,
   GetWorklogsTool,
   AddWorklogTool,
   UpdateWorklogTool,
@@ -227,14 +212,13 @@ export const TOOL_CLASSES = [
   DeleteBoardColumnTool,
   ManageSprintLifecycleTool,
   SearchWorklogTool,
-  // Пакет 7.2.E: глобальные поля Трекера (`/v2/fields`) — Operation/Service/Facade уже
+  // Пакет 7.2.E: глобальные поля Трекера (`/v3/fields`) — Operation/Service/Facade уже
   // существовали, но не были обёрнуты ни одним Tool. НЕ путать с локальными полями
   // очереди выше (GetQueueLocalFieldsTool и др.) — разные сущности, разная адресация.
   GetGlobalFieldsTool,
   GetGlobalFieldTool,
   CreateGlobalFieldTool,
   UpdateGlobalFieldTool,
-  DeleteGlobalFieldTool,
 ] as const;
 
 /**

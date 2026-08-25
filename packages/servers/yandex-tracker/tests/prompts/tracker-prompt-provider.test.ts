@@ -1,6 +1,7 @@
 /**
  * Unit-тесты TrackerPromptProvider и отдельных промптов (пакет 5.1.C.tracker
- * плана модернизации MCP 2026-07-28).
+ * плана модернизации MCP 2026-07-28). Промпт `project_summary` удалён
+ * 2026-08-25 вместе с легаси-семейством проектов (см. tracker-prompt-provider.ts).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -28,16 +29,11 @@ describe('TrackerPromptProvider', () => {
     expect(new TrackerPromptProvider().id).toBe('tracker-prompts');
   });
 
-  it('listPrompts() отдаёт все 4 промпта плана с описаниями и аргументами', () => {
+  it('listPrompts() отдаёт все 3 промпта плана с описаниями и аргументами', () => {
     const provider = new TrackerPromptProvider();
     const prompts = provider.listPrompts();
 
-    expect(prompts.map((p) => p.name)).toEqual([
-      'triage_queue',
-      'daily_summary',
-      'project_summary',
-      'epic_links',
-    ]);
+    expect(prompts.map((p) => p.name)).toEqual(['triage_queue', 'daily_summary', 'epic_links']);
     for (const prompt of prompts) {
       expect(prompt.description).toBeTruthy();
     }
@@ -94,30 +90,6 @@ describe('TrackerPromptProvider', () => {
       const result = provider.getPrompt('daily_summary', { assignee: 'ivanov' });
       expect(result?.messages[0]?.content.text).toContain('ivanov');
       expect(result?.messages[0]?.content.text).not.toContain('me()');
-    });
-  });
-
-  describe('project_summary', () => {
-    it('required: project — без него бросает ProtocolError(-32602) с внятным сообщением', () => {
-      const provider = new TrackerPromptProvider();
-      expect(() => provider.getPrompt('project_summary', {})).toThrow(/project/);
-      const code = getProtocolErrorCode(() => provider.getPrompt('project_summary', {}));
-      expect(code).toBe(-32602);
-    });
-
-    it('required: пустая строка тоже считается отсутствующим значением (-32602)', () => {
-      const provider = new TrackerPromptProvider();
-      const code = getProtocolErrorCode(() =>
-        provider.getPrompt('project_summary', { project: '   ' })
-      );
-      expect(code).toBe(-32602);
-    });
-
-    it('подставляет project в текст сообщения', () => {
-      const provider = new TrackerPromptProvider();
-      const result = provider.getPrompt('project_summary', { project: 'MYPROJ' });
-      expect(result?.messages[0]?.content.text).toContain('MYPROJ');
-      expect(result?.messages[0]?.content.text).toContain('fr_yandex_tracker_get_project');
     });
   });
 

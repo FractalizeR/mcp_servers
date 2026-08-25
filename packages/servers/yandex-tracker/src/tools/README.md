@@ -38,7 +38,6 @@ src/tools/
 │   │       ├── download/
 │   │       ├── delete/
 │   │       └── thumbnail/
-│   ├── projects/
 │   └── queues/
 ├── helpers/                      # Вспомогательные tools
 │   ├── demo/
@@ -276,7 +275,7 @@ List-инструменты добавляют поле `pagination` к выда
   `Link rel="next"`). Агент передаёт его в параметр `cursor` **того же** инструмента для
   следующей страницы — для агента это чёрный ящик.
 - `pagination.total`/`totalPages` отдаются **только** для seekable-эндпоинтов
-  (`queues`/`projects`/`find_issues` — у них `Link rel="seek"`). У cursor-эндпоинтов
+  (`queues`/`find_issues` — у них `Link rel="seek"`). У cursor-эндпоинтов
   (`changelog`/`comments`/`links`/`worklog`/`checklist`) их нет (seek-gating).
 - Непагинируемые `components`/`attachments` возвращают все элементы за один ответ — блока
   `pagination` нет, пагин-параметры в схеме отсутствуют.

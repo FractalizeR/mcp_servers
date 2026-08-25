@@ -7,7 +7,7 @@
  * - Параллельное выполнение через ParallelExecutor (batch режим)
  * - НЕТ добавления/редактирования/удаления записей
  *
- * API: GET /v2/issues/{issueId}/worklog
+ * API: GET /v3/issues/{issueId}/worklog
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -54,7 +54,7 @@ export class GetWorklogsOperation extends BaseOperation {
    *
    * ВАЖНО:
    * - Retry делается автоматически в HttpClient
-   * - Эндпоинт из API v2 (не v3!)
+   * - Эндпоинт из API v3
    * - Link-следование no-op, если заголовка нет (контракт стабилен)
    */
   async execute(
@@ -147,7 +147,7 @@ export class GetWorklogsOperation extends BaseOperation {
    * Построить путь первой страницы с query-параметром perPage.
    */
   private buildPath(issueId: string, perPage?: number): string {
-    const base = `/v2/issues/${issueId}/worklog`;
+    const base = `/v3/issues/${issueId}/worklog`;
     const query = new URLSearchParams();
     if (perPage !== undefined) {
       query.set('perPage', String(perPage));

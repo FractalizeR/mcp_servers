@@ -12,8 +12,7 @@
  * Свойства, которые оснастка обязана гарантировать (план §D.1):
  * - незаявленный запрос роняет тест;
  * - заявленный, но не случившийся запрос роняет `assertAllExpectationsMet()`;
- * - порядок ожиданий значим (delete_component: GET → DELETE; transition_issue:
- *   `_execute` → GET);
+ * - порядок ожиданий значим (transition_issue: `_execute` → GET);
  * - несколько ответов на один и тот же путь (страница 1, затем страница 2);
  * - заголовки ответа доступны (`Link rel="next"`/`rel="seek"`);
  * - `apiVersion` сверяется с префиксом пути — типовая опечатка (v2 вместо v3) не
@@ -66,7 +65,7 @@ export interface ExpectedRequestSpec {
   /** HTTP-метод запроса. */
   readonly method: HttpMethodLower;
   /**
-   * Относительный путь запроса, ВКЛЮЧАЯ версию (например, `/v2/boards`,
+   * Относительный путь запроса, ВКЛЮЧАЯ версию (например, `/v3/boards`,
    * `/v3/filters/`). Завершающий слэш значим — часть операций Трекера
    * (`create_filter`, `create_queue`) шлёт его осознанно (см.
    * `tests/TESTING_STRATEGY.md` §2).
@@ -74,7 +73,15 @@ export interface ExpectedRequestSpec {
   readonly path: string;
   /** Версия API этого конкретного запроса — обязательна по контракту С-4. */
   readonly apiVersion: ApiVersion;
-  /** Ожидаемые query-параметры (частичное совпадение: остальные не проверяются). */
+  /**
+   * Ожидаемые query-параметры. Объявленные ключи сверяются (остальные не
+   * проверяются), но **отсутствие поля целиком — не «не проверять», а
+   * утверждение «запрос идёт без query»**: запрос, несущий незаявленный query,
+   * роняет тест. Query собирается и из строки в самом пути операции
+   * (`/v3/entities/goal/{id}?fields=keyResultItems`), и из параметров axios —
+   * раньше первая форма терялась при `url.split('?')`, и константа в URL не
+   * наблюдалась ничем (ревью волны 2.1.2: 35 кейсов молча игнорировали query).
+   */
   readonly query?: Record<string, string | number | boolean>;
   /** Ожидаемое тело запроса — точное совпадение (после JSON.parse) либо матчер. */
   readonly body?: unknown | BodyMatcher;
@@ -114,6 +121,43 @@ interface CapturedRequestConfig {
 
 function normalizeMethod(method: string | undefined): string {
   return (method ?? '').toLowerCase();
+}
+
+/**
+ * Фактический query запроса — объединение того, что операция вшила прямо в путь
+ * (`/v3/entities/goal/{id}?fields=keyResultItems`), и того, что axios получил
+ * параметрами. Раньше первая форма терялась целиком: путь сверялся как
+ * `url.split('?')[0]`, и константа в URL операции не наблюдалась ничем (ревью
+ * волны 2.1.2, claude-01/codex-03 — четыре инструмента целей).
+ */
+function mergeQuery(
+  inlineQuery: string | undefined,
+  params: Record<string, unknown> | undefined
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = {};
+  if (inlineQuery !== undefined && inlineQuery.length > 0) {
+    for (const [key, value] of new URLSearchParams(inlineQuery).entries()) {
+      merged[key] = value;
+    }
+  }
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (value !== undefined) {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
+/**
+ * Сравнение значения query-параметра: из URL значения приходят строками, из
+ * `params` — в исходном типе (число/булево), поэтому `perPage: 10` и `"10"` —
+ * одно и то же значение одного и того же запроса.
+ */
+function sameQueryValue(actual: unknown, expected: unknown): boolean {
+  if (deepEqual(actual, expected)) {
+    return true;
+  }
+  return String(actual) === String(expected);
 }
 
 function parseBody(data: unknown): unknown {
@@ -262,14 +306,24 @@ export class ApiExpectationSet {
     if (method !== spec.method) {
       return `метод ${method.toUpperCase()} ≠ ожидаемому ${spec.method.toUpperCase()}`;
     }
-    const [path] = (config.url ?? '').split('?');
+    const [path, inlineQuery] = (config.url ?? '').split('?');
     if (path !== spec.path) {
       return `путь "${String(path)}" ≠ ожидаемому "${spec.path}"`;
     }
-    if (spec.query !== undefined) {
-      const actualParams = config.params ?? {};
+    const actualParams = mergeQuery(inlineQuery, config.params);
+    if (spec.query === undefined) {
+      const actualKeys = Object.keys(actualParams);
+      if (actualKeys.length > 0) {
+        return (
+          `запрос несёт незаявленный query (${actualKeys.join(', ')} = ` +
+          `${JSON.stringify(actualParams)}), а ожидание его не объявило: ` +
+          `добавь query в ExpectedRequestSpec — параметр, попавший в запрос молча, ` +
+          `свидетельством С-2 не является`
+        );
+      }
+    } else {
       const queryMismatch = Object.entries(spec.query).find(
-        ([key, value]) => !deepEqual(actualParams[key], value)
+        ([key, value]) => !sameQueryValue(actualParams[key], value)
       );
       if (queryMismatch) {
         return `query-параметр "${queryMismatch[0]}" не совпал (ожидалось ${JSON.stringify(queryMismatch[1])}, получено ${JSON.stringify(actualParams[queryMismatch[0]])})`;

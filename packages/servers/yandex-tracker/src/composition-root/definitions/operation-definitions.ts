@@ -29,7 +29,6 @@ import {
   GetComponentsOperation,
   CreateComponentOperation,
   UpdateComponentOperation,
-  DeleteComponentOperation,
 } from '#tracker_api/api_operations/component/index.js';
 import {
   GetIssueLinksOperation,
@@ -62,13 +61,6 @@ import {
   DeleteWorklogOperation,
 } from '#tracker_api/api_operations/worklog/index.js';
 import {
-  GetProjectsOperation,
-  GetProjectOperation,
-  CreateProjectOperation,
-  UpdateProjectOperation,
-  DeleteProjectOperation,
-} from '#tracker_api/api_operations/project/index.js';
-import {
   BulkUpdateIssuesOperation,
   BulkTransitionIssuesOperation,
   BulkMoveIssuesOperation,
@@ -79,7 +71,6 @@ import {
   GetFieldOperation,
   CreateFieldOperation,
   UpdateFieldOperation,
-  DeleteFieldOperation,
 } from '#tracker_api/api_operations/field/index.js';
 import {
   GetBoardsOperation,
@@ -158,7 +149,6 @@ export const OPERATION_CLASSES = [
   GetComponentsOperation,
   CreateComponentOperation,
   UpdateComponentOperation,
-  DeleteComponentOperation,
   GetIssueLinksOperation,
   CreateLinkOperation,
   DeleteLinkOperation,
@@ -179,11 +169,6 @@ export const OPERATION_CLASSES = [
   AddWorklogOperation,
   UpdateWorklogOperation,
   DeleteWorklogOperation,
-  GetProjectsOperation,
-  GetProjectOperation,
-  CreateProjectOperation,
-  UpdateProjectOperation,
-  DeleteProjectOperation,
   BulkUpdateIssuesOperation,
   BulkTransitionIssuesOperation,
   BulkMoveIssuesOperation,
@@ -192,7 +177,6 @@ export const OPERATION_CLASSES = [
   GetFieldOperation,
   CreateFieldOperation,
   UpdateFieldOperation,
-  DeleteFieldOperation,
   GetBoardsOperation,
   GetBoardOperation,
   CreateBoardOperation,

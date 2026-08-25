@@ -6,7 +6,8 @@
  * - Инвалидация кеша после создания
  * - НЕТ получения/обновления/удаления
  *
- * API: POST /v2/boards
+ * API: POST /v3/liveBoards/ (0_CONTRACTS.md, D9). `POST /v3/boards` объявлен
+ * устаревшим и молча игнорирует тело запроса, создавая доску по умолчанию.
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -27,12 +28,12 @@ export class CreateBoardOperation extends BaseOperation {
   async execute(dto: CreateBoardDto): Promise<BoardOutput> {
     this.logger.info(`Создание доски: ${dto.name}`);
 
-    const endpoint = '/v2/boards';
+    const endpoint = '/v3/liveBoards/';
 
     const board = await this.httpClient.post<BoardOutput>(endpoint, dto);
 
     // Инвалидация кеша для новой доски
-    const cacheKey = EntityCacheKey.createKey(EntityType.BOARD, board.id);
+    const cacheKey = EntityCacheKey.createKey(EntityType.BOARD, String(board.id));
     await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Доска создана: ${board.id}`);

@@ -45,8 +45,8 @@ describe('GetBoardsTool', () => {
 
   it('вернёт список досок при успешном запросе', async () => {
     const boards = [
-      { id: '1', self: 'url', version: 1, name: 'Board 1' },
-      { id: '2', self: 'url', version: 1, name: 'Board 2' },
+      { id: 1, self: 'url', version: 1, name: 'Board 1' },
+      { id: 2, self: 'url', version: 1, name: 'Board 2' },
     ];
     vi.mocked(mockTrackerFacade.getBoards).mockResolvedValue(boards);
 
@@ -77,8 +77,8 @@ describe('GetBoardsTool', () => {
   describe('Предупреждения о полях без значения (FIELDS_WITHOUT_VALUE)', () => {
     it('добавляет warning, когда поле не пришло ни у одной доски', async () => {
       const boards = [
-        { id: '1', self: 'url', version: 1, name: 'Board 1' },
-        { id: '2', self: 'url', version: 1, name: 'Board 2' },
+        { id: 1, self: 'url', version: 1, name: 'Board 1' },
+        { id: 2, self: 'url', version: 1, name: 'Board 2' },
       ];
       vi.mocked(mockTrackerFacade.getBoards).mockResolvedValue(boards);
 
@@ -96,8 +96,8 @@ describe('GetBoardsTool', () => {
 
     it('НЕ предупреждает, если поле пришло хотя бы у одной доски из списка', async () => {
       const boards = [
-        { id: '1', self: 'url', version: 1, name: 'Board 1' },
-        { id: '2', self: 'url', version: 1, name: 'Board 2', description: 'has description' },
+        { id: 1, self: 'url', version: 1, name: 'Board 1' },
+        { id: 2, self: 'url', version: 1, name: 'Board 2', description: 'has description' },
       ];
       vi.mocked(mockTrackerFacade.getBoards).mockResolvedValue(boards);
 
@@ -108,7 +108,7 @@ describe('GetBoardsTool', () => {
     });
 
     it('ответ без предупреждений не содержит ключа warnings ни в одной из проекций', async () => {
-      const boards = [{ id: '1', self: 'url', version: 1, name: 'Board 1' }];
+      const boards = [{ id: 1, self: 'url', version: 1, name: 'Board 1' }];
       vi.mocked(mockTrackerFacade.getBoards).mockResolvedValue(boards);
 
       const result = await tool.execute({ fields: ['id', 'name'] });

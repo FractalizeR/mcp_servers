@@ -26,7 +26,7 @@ const META: PaginationMeta = {
 function makeWorklog(id: string): WorklogWithUnknownFields {
   return {
     id,
-    self: `https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/${id}`,
+    self: `https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/${id}`,
     issue: { id: 'abc', key: 'TEST-1', display: 'Test' },
     createdBy: { self: 'u', id: '1', display: 'User 1' },
     createdAt: '2025-01-18T10:00:00.000+0000',

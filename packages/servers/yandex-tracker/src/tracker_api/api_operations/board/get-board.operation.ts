@@ -6,7 +6,7 @@
  * - Кеширование доски по её ID
  * - НЕТ создания/обновления/удаления
  *
- * API: GET /v2/boards/{boardId}
+ * API: GET /v3/boards/{boardId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -45,7 +45,7 @@ export class GetBoardOperation extends BaseOperation {
         queryParams.append('localized', localized.toString());
       }
 
-      const endpoint = `/v2/boards/${boardId}${
+      const endpoint = `/v3/boards/${boardId}${
         queryParams.toString() ? `?${queryParams.toString()}` : ''
       }`;
 

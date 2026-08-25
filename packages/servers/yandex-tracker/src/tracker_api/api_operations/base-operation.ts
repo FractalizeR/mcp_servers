@@ -66,7 +66,7 @@ export abstract class BaseOperation {
    *
    * @example
    * ```typescript
-   * await this.deleteRequest<void>('/v2/issues/TEST-1/comments/123');
+   * await this.deleteRequest<void>('/v3/issues/TEST-1/comments/123');
    * ```
    */
   protected async deleteRequest<TResponse = void>(endpoint: string): Promise<TResponse> {
@@ -93,7 +93,7 @@ export abstract class BaseOperation {
    *   'document.pdf'
    * );
    * const attachment = await this.uploadFile<Attachment>(
-   *   '/v2/issues/TEST-1/attachments',
+   *   '/v3/issues/TEST-1/attachments',
    *   formData
    * );
    * ```
@@ -134,7 +134,7 @@ export abstract class BaseOperation {
    * @example
    * ```typescript
    * const fileBuffer = await this.downloadFile(
-   *   '/v2/issues/TEST-1/attachments/456'
+   *   '/v3/issues/TEST-1/attachments/456'
    * );
    * ```
    */

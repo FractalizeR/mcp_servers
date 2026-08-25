@@ -6,7 +6,7 @@
  * - НЕТ создания/обновления/удаления полей
  * - НЕТ получения конкретного поля
  *
- * API: GET /v2/fields
+ * API: GET /v3/fields
  *
  * ВАЖНО:
  * - Возвращает все поля трекера (системные + кастомные)
@@ -49,7 +49,7 @@ export class GetFieldsOperation extends BaseOperation {
     }
 
     // Получаем поля через API
-    const fields = await this.httpClient.get<FieldsListOutput>('/v2/fields');
+    const fields = await this.httpClient.get<FieldsListOutput>('/v3/fields');
 
     // Кешируем результат
     await this.cacheManager.set(cacheKey, fields);

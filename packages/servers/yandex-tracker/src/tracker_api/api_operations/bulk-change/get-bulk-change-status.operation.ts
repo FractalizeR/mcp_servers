@@ -3,12 +3,12 @@
  *
  * Ответственность (SRP):
  * - ТОЛЬКО получение статуса bulk операции по ID
- * - Отправка GET запроса на /v2/bulkchange/{operationId}
+ * - Отправка GET запроса на /v3/bulkchange/{operationId}
  * - Возврат актуального статуса операции
  * - НЕТ ожидания завершения (используется для polling)
  * - НЕТ автоматического повтора (один запрос = один статус)
  *
- * API: GET /v2/bulkchange/{operationId}
+ * API: GET /v3/bulkchange/{operationId}
  */
 
 import { BaseOperation } from '../base-operation.js';
@@ -42,7 +42,7 @@ export class GetBulkChangeStatusOperation extends BaseOperation {
   async execute(operationId: string): Promise<BulkChangeOperationWithUnknownFields> {
     this.logger.debug(`Получение статуса bulk операции: ${operationId}`);
 
-    const endpoint = `/v2/bulkchange/${operationId}`;
+    const endpoint = `/v3/bulkchange/${operationId}`;
 
     const response = await this.httpClient.get<BulkChangeOperationWithUnknownFields>(endpoint);
 

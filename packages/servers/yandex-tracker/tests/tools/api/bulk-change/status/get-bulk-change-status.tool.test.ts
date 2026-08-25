@@ -46,7 +46,7 @@ function createMockLogger(): Logger {
 
 const fullOperation: BulkChangeOperationWithUnknownFields = {
   id: 'op-1',
-  self: 'https://api.tracker.yandex.net/v2/bulkchange/op-1',
+  self: 'https://api.tracker.yandex.net/v3/bulkchange/op-1',
   status: 'COMPLETE',
   statusText: 'Массовое изменение выполнено',
   createdBy: createUserRef(),
@@ -133,7 +133,7 @@ describe('GetBulkChangeStatusTool', () => {
     it('не подставляет отсутствующие опциональные поля и предупреждает о полях без значения', async () => {
       vi.mocked(mockTrackerFacade.getBulkChangeStatus).mockResolvedValue({
         id: 'op-2',
-        self: 'https://api.tracker.yandex.net/v2/bulkchange/op-2',
+        self: 'https://api.tracker.yandex.net/v3/bulkchange/op-2',
         status: 'CREATED',
       });
 
@@ -154,7 +154,7 @@ describe('GetBulkChangeStatusTool', () => {
     it('не выдаёт предупреждений, когда все запрошенные поля пришли', async () => {
       vi.mocked(mockTrackerFacade.getBulkChangeStatus).mockResolvedValue({
         id: 'op-2b',
-        self: 'https://api.tracker.yandex.net/v2/bulkchange/op-2b',
+        self: 'https://api.tracker.yandex.net/v3/bulkchange/op-2b',
         status: 'CREATED',
       });
 
@@ -172,7 +172,7 @@ describe('GetBulkChangeStatusTool', () => {
     ])('строит сообщение для статуса %s', async (status, expected) => {
       vi.mocked(mockTrackerFacade.getBulkChangeStatus).mockResolvedValue({
         id: 'op-3',
-        self: 'https://api.tracker.yandex.net/v2/bulkchange/op-3',
+        self: 'https://api.tracker.yandex.net/v3/bulkchange/op-3',
         status,
       });
 
@@ -184,7 +184,7 @@ describe('GetBulkChangeStatusTool', () => {
     it('не считает ошибкой статус, которого нет в документации', async () => {
       vi.mocked(mockTrackerFacade.getBulkChangeStatus).mockResolvedValue({
         id: 'op-4',
-        self: 'https://api.tracker.yandex.net/v2/bulkchange/op-4',
+        self: 'https://api.tracker.yandex.net/v3/bulkchange/op-4',
         status: 'IN_PROGRESS',
         statusText: 'Выполняется',
       });

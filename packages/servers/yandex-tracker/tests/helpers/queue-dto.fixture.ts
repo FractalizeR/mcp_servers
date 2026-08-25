@@ -29,6 +29,10 @@ import type {
  * });
  * ```
  */
+const DEFAULT_ISSUE_TYPES_CONFIG: CreateQueueDto['issueTypesConfig'] = [
+  { issueType: '1', workflow: 'quickStartV2PresetWorkflow', resolutions: ['fixed', 'wontFix'] },
+];
+
 export function createCreateQueueDto(overrides?: Partial<CreateQueueDto>): CreateQueueDto {
   return {
     key: 'TEST',
@@ -36,6 +40,7 @@ export function createCreateQueueDto(overrides?: Partial<CreateQueueDto>): Creat
     lead: 'test-user',
     defaultType: '1',
     defaultPriority: '3',
+    issueTypesConfig: DEFAULT_ISSUE_TYPES_CONFIG,
     ...overrides,
   };
 }
@@ -173,6 +178,7 @@ export function createMinimalCreateQueueDto(key = 'TEST'): CreateQueueDto {
     lead: 'test-user',
     defaultType: '1',
     defaultPriority: '3',
+    issueTypesConfig: DEFAULT_ISSUE_TYPES_CONFIG,
   };
 }
 

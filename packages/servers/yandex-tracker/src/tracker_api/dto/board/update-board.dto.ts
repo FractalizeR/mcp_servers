@@ -2,7 +2,15 @@
  * DTO для обновления доски в Яндекс.Трекере
  */
 
-import type { CreateBoardColumnDto, CreateBoardFilterDto } from './create-board.dto.js';
+import type { CreateBoardColumnDto } from './create-board.dto.js';
+
+/**
+ * Фильтр доски — карта «поле задачи → значение или список значений».
+ *
+ * Форма снята чтением боевых досок 2026-08-25 (`{"queue": ["DVIZHDEV"]}`); прежняя
+ * `{query}` отвергалась API с 422.
+ */
+export type UpdateBoardFilterDto = Record<string, string | number | Array<string | number>>;
 
 export interface UpdateBoardDto {
   /** ID доски для обновления */
@@ -11,14 +19,11 @@ export interface UpdateBoardDto {
   /** Новое название доски */
   name?: string | undefined;
 
-  /** Версия доски (для оптимистичной блокировки) */
-  version?: number | undefined;
-
   /** Обновленные колонки доски */
   columns?: CreateBoardColumnDto[] | undefined;
 
   /** Обновленный фильтр доски */
-  filter?: CreateBoardFilterDto | undefined;
+  filter?: UpdateBoardFilterDto | undefined;
 
   /** Поле для сортировки задач */
   orderBy?: string | undefined;

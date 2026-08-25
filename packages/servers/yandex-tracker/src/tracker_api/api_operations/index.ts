@@ -30,9 +30,6 @@ export * from '#tracker_api/api_operations/component/index.js';
 // Worklog operations
 export * from '#tracker_api/api_operations/worklog/index.js';
 
-// Project operations
-export * from '#tracker_api/api_operations/project/index.js';
-
 // Attachment operations
 export * from '#tracker_api/api_operations/attachment/index.js';
 

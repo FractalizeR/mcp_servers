@@ -8,7 +8,7 @@
  * - create_issue (Issues/Write, единичная операция)
  * - add_comment (Comments/Write, batch create — total/successful/failed числа)
  * - delete_comment (Comments/Write, batch delete — успех/ошибка массивами)
- * - get_projects (Projects/Read, пагинация seekable)
+ * - get_queues (Queues/Read, пагинация seekable)
  * - issue_url (Helpers, БЕЗ обращения к API)
  *
  * Схема успешного envelope `{ success: true, data }` проверяется через
@@ -40,10 +40,10 @@ import { createCommentFixture } from '#helpers/comment.fixture.js';
 import { DeleteCommentTool } from '#tools/api/comments/delete/index.js';
 import { DeleteCommentOutputDataSchema } from '#tools/api/comments/delete/delete-comment.schema.js';
 
-import { GetProjectsTool } from '#tools/api/projects/get-projects.tool.js';
-import { GetProjectsOutputDataSchema } from '#tools/api/projects/get-projects.schema.js';
-import { createProjectListFixture } from '#helpers/project.fixture.js';
-import type { PaginatedResult, ProjectWithUnknownFields } from '#tracker_api/entities/index.js';
+import { GetQueuesTool } from '#tools/api/queues/get-queues.tool.js';
+import { GetQueuesOutputDataSchema } from '#tools/api/queues/get-queues.schema.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
+import type { PaginatedResult, QueueWithUnknownFields } from '#tracker_api/entities/index.js';
 
 import { IssueUrlTool } from '#tools/helpers/issue-url/index.js';
 import { IssueUrlOutputDataSchema } from '#tools/helpers/issue-url/issue-url.schema.js';
@@ -67,10 +67,10 @@ function getStructuredContent(result: ToolResult): unknown {
   return result['structuredContent'];
 }
 
-function paginatedProjects(
-  items: ProjectWithUnknownFields[],
+function paginatedQueues(
+  items: QueueWithUnknownFields[],
   total?: number
-): PaginatedResult<ProjectWithUnknownFields> {
+): PaginatedResult<QueueWithUnknownFields> {
   return {
     items,
     pagination: {
@@ -200,14 +200,16 @@ describe('DoD 2: structuredContent валиден по outputSchema (предс�
     expect(envelope.success, JSON.stringify(envelope.success ? null : envelope.error)).toBe(true);
   });
 
-  it('get_projects — Projects/Read с пагинацией (seekable, total присутствует)', async () => {
+  it('get_queues — Queues/Read с пагинацией (seekable, total присутствует)', async () => {
     const facade = {
-      getProjects: vi.fn().mockResolvedValue(paginatedProjects(createProjectListFixture(2), 2)),
+      getQueues: vi
+        .fn()
+        .mockResolvedValue(paginatedQueues([createQueueFixture(), createQueueFixture()], 2)),
     } as unknown as YandexTrackerFacade;
-    const tool = new GetProjectsTool(facade, mockLogger());
+    const tool = new GetQueuesTool(facade, mockLogger());
 
     const result = await tool.execute({ fields: ['id', 'key', 'name'] });
-    const envelope = successEnvelopeSchema(GetProjectsOutputDataSchema).safeParse(
+    const envelope = successEnvelopeSchema(GetQueuesOutputDataSchema).safeParse(
       getStructuredContent(result)
     );
 

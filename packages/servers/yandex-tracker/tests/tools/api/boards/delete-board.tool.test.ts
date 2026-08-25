@@ -40,6 +40,15 @@ describe('DeleteBoardTool', () => {
     expect(parsed.data.success).toBe(true);
   });
 
+  it('примет числовой boardId (как отдаёт get_boards) и дойдёт до того же запроса', async () => {
+    vi.mocked(mockTrackerFacade.deleteBoard).mockResolvedValue(undefined);
+
+    const result = await tool.execute({ boardId: 1 });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.deleteBoard).toHaveBeenCalledWith('1');
+  });
+
   it('обработает ошибку facade', async () => {
     vi.mocked(mockTrackerFacade.deleteBoard).mockRejectedValue(new Error('Permission denied'));
     const result = await tool.execute({ boardId: '1' });

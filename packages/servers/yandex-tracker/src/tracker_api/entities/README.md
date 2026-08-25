@@ -66,7 +66,7 @@ interface QueueRef {
 }
 ```
 
-**Используй вместо `Queue`:** `Issue.queue`, `Component.queue`, `Project.queues`.
+**Используй вместо `Queue`:** `Issue.queue`, `Component.queue`.
 Настройки очереди (`version`, `lead`, `defaultType`) здесь не приходят.
 
 ### Правило: числовой id у сущности, строковый у ref

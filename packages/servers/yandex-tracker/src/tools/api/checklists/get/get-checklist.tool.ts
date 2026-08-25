@@ -64,7 +64,7 @@ export class GetChecklistTool extends BaseTool<YandexTrackerFacade> {
         fields
       );
 
-      // 3. API v2: получение чеклистов для нескольких задач через batch-метод
+      // 3. API v3: получение чеклистов для нескольких задач через batch-метод
       const results = await this.facade.getChecklistMany(issueIds, {
         ...(cursor !== undefined ? { cursor } : {}),
         ...(perPage !== undefined ? { perPage } : {}),

@@ -3,7 +3,12 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  FilteredEntitySchema,
+  buildOutputSchema,
+  buildEntityIdSchema,
+} from '#common/schemas/index.js';
 
 const SprintStatusSchema = z.enum(['draft', 'in_progress', 'released']);
 
@@ -15,7 +20,7 @@ export const CreateSprintParamsSchema = z.object({
   name: z.string().min(1, 'Название спринта обязательно'),
 
   /** ID доски, к которой относится спринт (обязательно) */
-  board: z.string().min(1, 'Board ID обязателен'),
+  board: buildEntityIdSchema('Board'),
 
   /** Дата начала спринта YYYY-MM-DD (опционально) */
   startDate: z.string().optional(),

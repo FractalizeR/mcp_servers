@@ -62,7 +62,7 @@ export class AddChecklistItemTool extends BaseTool<YandexTrackerFacade> {
         fields
       );
 
-      // 3. API v2: добавление элементов через batch-метод
+      // 3. API v3: добавление элементов через batch-метод
       const results = await this.facade.addChecklistItemMany(items);
 
       // 4. Обработка результатов через BatchResultProcessor (без фильтрации —

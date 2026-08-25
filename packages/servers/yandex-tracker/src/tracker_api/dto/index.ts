@@ -85,16 +85,6 @@ export type {
   SearchWorklogDto,
 } from './worklog/index.js';
 
-// Project DTO
-export type {
-  GetProjectsDto,
-  GetProjectDto,
-  CreateProjectDto,
-  UpdateProjectDto,
-  ProjectOutput,
-  ProjectsListOutput,
-} from './project/index.js';
-
 // Bulk Change DTO
 export type {
   BulkUpdateIssuesInputDto,
@@ -108,8 +98,8 @@ export type {
   GetBoardDto,
   CreateBoardDto,
   CreateBoardColumnDto,
-  CreateBoardFilterDto,
   UpdateBoardDto,
+  UpdateBoardFilterDto,
   DeleteBoardDto,
   BoardOutput,
   BoardsListOutput,
@@ -189,13 +179,3 @@ export {
   createAddQueueAccessDto,
   createRemoveQueueAccessDto,
 } from './queue/index.js';
-
-export {
-  // Project factories
-  createGetProjectsDto,
-  createGetProjectDto,
-  createMinimalCreateProjectDto,
-  createFullCreateProjectDto,
-  createUpdateProjectDto,
-  createFullUpdateProjectDto,
-} from './project/index.js';

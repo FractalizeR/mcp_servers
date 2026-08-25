@@ -3,12 +3,16 @@
  *
  * Ответственность (SRP):
  * - ТОЛЬКО массовое перемещение задач в другую очередь
- * - Отправка POST запроса на /v2/bulkchange/_move
+ * - Отправка POST запроса на /v3/bulkchange/_move
  * - Возврат информации об операции (для мониторинга статуса)
  * - НЕТ ожидания завершения (асинхронная операция)
  * - НЕТ polling статуса (делается через GetBulkChangeStatusOperation)
  *
- * API: POST /v2/bulkchange/_move
+ * API: POST /v3/bulkchange/_move
+ *
+ * Существование этого маршрута под v3 подтверждено только по аналогии с v2 (пишущий
+ * эндпоинт, живым пробоем не проверить) — в отличие от `/v3/bulkchange/{id}`, который
+ * подтверждён read-only оракулом. См. `inventory/v2-paths-2026-08-24.md` (раздел bulkchange).
  */
 
 import { BaseOperation } from '../base-operation.js';
@@ -52,7 +56,7 @@ export class BulkMoveIssuesOperation extends BaseOperation {
       `Массовое перемещение ${params.issues.length} задач в очередь '${params.queue}'`
     );
 
-    const endpoint = '/v2/bulkchange/_move';
+    const endpoint = '/v3/bulkchange/_move';
 
     const requestBody: Record<string, unknown> = {
       issues: params.issues,

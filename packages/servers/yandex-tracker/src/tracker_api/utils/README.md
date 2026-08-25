@@ -85,8 +85,9 @@ guard отбрасывает пути не из `/v2/`|`/v3/` (возвраща�
   на первую страницу: при любой проблеме бросает `InvalidCursorError` — неизвестная версия
   (не `c1:`), битый base64/JSON/структура, mismatch тега (кросс-эндпоинт курсор), путь не
   из `/v[23]/` (guard через `stripTrackerHost`).
-- `CURSOR_TAGS` — теги семейств (changelog/comments/links/worklog/checklist/queues/projects/
-  findIssues). Непагинируемые components/attachments курсор не выдают и тега не имеют.
+- `CURSOR_TAGS` — теги семейств (changelog/comments/links/worklog/checklist/queues/
+  findIssues/findEntities/users/worklogSearch). Непагинируемые components/attachments
+  курсор не выдают и тега не имеют.
 - `CURSOR_VERSION_PREFIX = 'c1:'` — версия формата (forward-compat).
 
 ---

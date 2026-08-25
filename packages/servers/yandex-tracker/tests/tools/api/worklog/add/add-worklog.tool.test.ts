@@ -41,7 +41,7 @@ describe('AddWorklogTool', () => {
 
   describe('Batch operations', () => {
     it('должен привести worklogId к строке, когда API вернул id числом (регрессия -32602)', async () => {
-      // Реальный API v2 возвращает id записи времени числом, а не строкой —
+      // Реальный API возвращает id записи времени числом, а не строкой —
       // раньше это валило outputSchema с "worklogId must be string".
       const numericIdWorklog = {
         id: 12345,

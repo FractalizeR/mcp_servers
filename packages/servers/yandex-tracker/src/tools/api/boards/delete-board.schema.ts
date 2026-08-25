@@ -3,14 +3,14 @@
  */
 
 import { z } from 'zod';
-import { buildOutputSchema } from '#common/schemas/index.js';
+import { buildOutputSchema, buildEntityIdSchema } from '#common/schemas/index.js';
 
 /**
  * Схема параметров для удаления доски
  */
 export const DeleteBoardParamsSchema = z.object({
   /** Идентификатор доски для удаления (обязательно) */
-  boardId: z.string().min(1, 'Board ID не может быть пустым'),
+  boardId: buildEntityIdSchema('Board'),
 });
 
 /**

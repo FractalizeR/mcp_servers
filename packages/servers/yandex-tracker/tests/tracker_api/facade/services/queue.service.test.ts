@@ -147,7 +147,9 @@ describe('QueueService', () => {
         lead: 'lead-user',
         defaultType: 'task',
         defaultPriority: 'normal',
-        issueTypesConfig: [{ issueType: 'task' }],
+        issueTypesConfig: [
+          { issueType: 'task', workflow: 'quickStartV2PresetWorkflow', resolutions: ['fixed'] },
+        ],
       };
       const mockResult: QueueOutput = createQueueFixture({ key: 'NEW', name: 'New Queue' });
 

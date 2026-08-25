@@ -24,44 +24,44 @@
 | `fr_yandex_tracker_update_queue` | нет | нет | PATCH | `/v3/queues/probe_queueId` | name, lead, defaultType, defaultPriority, description, issueTypes |
 | `fr_yandex_tracker_get_queue_fields` | да | нет | GET | `/v3/queues/probe_queueId/fields` | — |
 | `fr_yandex_tracker_manage_queue_access` | нет | нет | PATCH | `/v3/queues/probe_queueId/permissions` | queue-lead |
-| `fr_yandex_tracker_get_components` | да | нет | GET | `/v2/queues/probe_queueId/components` | — |
-| `fr_yandex_tracker_create_component` | нет | нет | POST | `/v2/queues/probe_queueId/components` | name, description, lead, assignAuto |
-| `fr_yandex_tracker_update_component` | нет | нет | PATCH | `/v2/components/probe_componentId` | name, description, lead, assignAuto |
-| `fr_yandex_tracker_delete_component` | нет | да | GET | `/v2/components/probe_componentId` | — |
-| `fr_yandex_tracker_delete_component` | нет | да | DELETE | `/v2/components/probe_componentId` | — |
+| `fr_yandex_tracker_get_components` | да | нет | GET | `/v3/queues/probe_queueId/components` | — |
+| `fr_yandex_tracker_create_component` | нет | нет | POST | `/v3/queues/probe_queueId/components` | name, description, lead, assignAuto |
+| `fr_yandex_tracker_update_component` | нет | нет | PATCH | `/v3/components/probe_componentId` | name, description, lead, assignAuto |
+| `fr_yandex_tracker_delete_component` | нет | да | GET | `/v3/components/probe_componentId` | — |
+| `fr_yandex_tracker_delete_component` | нет | да | DELETE | `/v3/components/probe_componentId` | — |
 | `fr_yandex_tracker_create_link` | нет | нет | POST | `/v3/issues/TEST-1/links` | relationship, issue |
 | `fr_yandex_tracker_delete_link` | нет | да | DELETE | `/v3/issues/TEST-1/links/probe_links___linkId` | — |
 | `fr_yandex_tracker_add_comment` | нет | нет | POST | `/v3/issues/TEST-1/comments?isAddToFollowers=true` | text, attachmentIds, summonees, maillistSummonees, markupType |
 | `fr_yandex_tracker_edit_comment` | нет | нет | PATCH | `/v3/issues/TEST-1/comments/probe_comments___commentId` | text |
 | `fr_yandex_tracker_delete_comment` | нет | да | DELETE | `/v3/issues/TEST-1/comments/probe_comments___commentId` | — |
-| `fr_yandex_tracker_get_attachments` | да | нет | GET | `/v2/issues/TEST-1/attachments` | — |
-| `fr_yandex_tracker_upload_attachment` | нет | нет | POST | `/v2/issues/TEST-1/attachments` | — |
-| `fr_yandex_tracker_download_attachment` | нет | нет | GET | `/v2/issues/TEST-1/attachments` | — |
-| `fr_yandex_tracker_delete_attachment` | нет | да | DELETE | `/v2/issues/TEST-1/attachments/probe_attachmentId` | — |
-| `fr_yandex_tracker_get_thumbnail` | нет | нет | GET | `/v2/issues/TEST-1/attachments` | — |
-| `fr_yandex_tracker_add_checklist_item` | нет | нет | POST | `/v2/issues/TEST-1/checklistItems` | text, checked, assignee, deadline |
-| `fr_yandex_tracker_update_checklist_item` | нет | нет | PATCH | `/v2/issues/TEST-1/checklistItems/probe_items___checklistItemId` | text, checked, assignee, deadline |
-| `fr_yandex_tracker_delete_checklist_item` | нет | да | DELETE | `/v2/issues/TEST-1/checklistItems/probe_items___itemId` | — |
-| `fr_yandex_tracker_get_project` | да | нет | GET | `/v2/projects/probe_projectId?expand=probe_expand` | — |
-| `fr_yandex_tracker_create_project` | нет | нет | POST | `/v2/projects` | key, name, lead, status, description, startDate, endDate, queueIds, teamUserIds |
-| `fr_yandex_tracker_update_project` | нет | нет | PATCH | `/v2/projects/probe_projectId` | name, lead, status, description, startDate, endDate, queueIds, teamUserIds |
-| `fr_yandex_tracker_delete_project` | нет | да | DELETE | `/v2/projects/probe_projectId` | — |
-| `fr_yandex_tracker_add_worklog` | нет | нет | POST | `/v2/issues/TEST-1/worklog` | start, duration, comment |
-| `fr_yandex_tracker_update_worklog` | нет | нет | PATCH | `/v2/issues/TEST-1/worklog/probe_worklogId` | start, duration, comment |
-| `fr_yandex_tracker_delete_worklog` | нет | да | DELETE | `/v2/issues/TEST-1/worklog/probe_worklogId` | — |
-| `fr_yandex_tracker_bulk_update_issues` | нет | нет | POST | `/v2/bulkchange/_update` | issues, values |
-| `fr_yandex_tracker_bulk_transition_issues` | нет | нет | POST | `/v2/bulkchange/_transition` | issues, transition, values |
-| `fr_yandex_tracker_bulk_move_issues` | нет | нет | POST | `/v2/bulkchange/_move` | issues, queue, moveAllFields, initialStatus, values |
-| `fr_yandex_tracker_get_bulk_change_status` | да | нет | GET | `/v2/bulkchange/probe_operationId` | — |
-| `fr_yandex_tracker_get_boards` | да | нет | GET | `/v2/boards?localized=true` | — |
-| `fr_yandex_tracker_get_board` | да | нет | GET | `/v2/boards/probe_boardId?localized=true` | — |
-| `fr_yandex_tracker_create_board` | нет | нет | POST | `/v2/boards` | name, queue, columns, filter, orderBy, orderAsc, query, useRanking, country |
-| `fr_yandex_tracker_update_board` | нет | нет | PATCH | `/v2/boards/probe_boardId` | name, version, columns, filter, orderBy, orderAsc, query, useRanking, country |
-| `fr_yandex_tracker_delete_board` | нет | да | DELETE | `/v2/boards/probe_boardId` | — |
-| `fr_yandex_tracker_get_sprints` | да | нет | GET | `/v2/boards/probe_boardId/sprints` | — |
-| `fr_yandex_tracker_get_sprint` | да | нет | GET | `/v2/sprints/probe_sprintId` | — |
-| `fr_yandex_tracker_create_sprint` | нет | нет | POST | `/v2/sprints` | name, board, startDate, endDate, startDateTime, endDateTime, status |
-| `fr_yandex_tracker_update_sprint` | нет | нет | PATCH | `/v2/sprints/probe_sprintId` | name, version, startDate, endDate, startDateTime, endDateTime, status |
+| `fr_yandex_tracker_get_attachments` | да | нет | GET | `/v3/issues/TEST-1/attachments` | — |
+| `fr_yandex_tracker_upload_attachment` | нет | нет | POST | `/v3/issues/TEST-1/attachments` | — |
+| `fr_yandex_tracker_download_attachment` | нет | нет | GET | `/v3/issues/TEST-1/attachments` | — |
+| `fr_yandex_tracker_delete_attachment` | нет | да | DELETE | `/v3/issues/TEST-1/attachments/probe_attachmentId` | — |
+| `fr_yandex_tracker_get_thumbnail` | нет | нет | GET | `/v3/issues/TEST-1/attachments` | — |
+| `fr_yandex_tracker_add_checklist_item` | нет | нет | POST | `/v3/issues/TEST-1/checklistItems` | text, checked, assignee, deadline |
+| `fr_yandex_tracker_update_checklist_item` | нет | нет | PATCH | `/v3/issues/TEST-1/checklistItems/probe_items___checklistItemId` | text, checked, assignee, deadline |
+| `fr_yandex_tracker_delete_checklist_item` | нет | да | DELETE | `/v3/issues/TEST-1/checklistItems/probe_items___itemId` | — |
+| `fr_yandex_tracker_get_project` | да | нет | GET | `/v3/projects/probe_projectId?expand=probe_expand` | — |
+| `fr_yandex_tracker_create_project` | нет | нет | POST | `/v3/projects` | key, name, lead, status, description, startDate, endDate, queueIds, teamUserIds |
+| `fr_yandex_tracker_update_project` | нет | нет | PATCH | `/v3/projects/probe_projectId` | name, lead, status, description, startDate, endDate, queueIds, teamUserIds |
+| `fr_yandex_tracker_delete_project` | нет | да | DELETE | `/v3/projects/probe_projectId` | — |
+| `fr_yandex_tracker_add_worklog` | нет | нет | POST | `/v3/issues/TEST-1/worklog` | start, duration, comment |
+| `fr_yandex_tracker_update_worklog` | нет | нет | PATCH | `/v3/issues/TEST-1/worklog/probe_worklogId` | start, duration, comment |
+| `fr_yandex_tracker_delete_worklog` | нет | да | DELETE | `/v3/issues/TEST-1/worklog/probe_worklogId` | — |
+| `fr_yandex_tracker_bulk_update_issues` | нет | нет | POST | `/v3/bulkchange/_update` | issues, values |
+| `fr_yandex_tracker_bulk_transition_issues` | нет | нет | POST | `/v3/bulkchange/_transition` | issues, transition, values |
+| `fr_yandex_tracker_bulk_move_issues` | нет | нет | POST | `/v3/bulkchange/_move` | issues, queue, moveAllFields, initialStatus, values |
+| `fr_yandex_tracker_get_bulk_change_status` | да | нет | GET | `/v3/bulkchange/probe_operationId` | — |
+| `fr_yandex_tracker_get_boards` | да | нет | GET | `/v3/boards?localized=true` | — |
+| `fr_yandex_tracker_get_board` | да | нет | GET | `/v3/boards/probe_boardId?localized=true` | — |
+| `fr_yandex_tracker_create_board` | нет | нет | POST | `/v3/boards` | name, queue, columns, filter, orderBy, orderAsc, query, useRanking, country |
+| `fr_yandex_tracker_update_board` | нет | нет | PATCH | `/v3/boards/probe_boardId` | name, version, columns, filter, orderBy, orderAsc, query, useRanking, country |
+| `fr_yandex_tracker_delete_board` | нет | да | DELETE | `/v3/boards/probe_boardId` | — |
+| `fr_yandex_tracker_get_sprints` | да | нет | GET | `/v3/boards/probe_boardId/sprints` | — |
+| `fr_yandex_tracker_get_sprint` | да | нет | GET | `/v3/sprints/probe_sprintId` | — |
+| `fr_yandex_tracker_create_sprint` | нет | нет | POST | `/v3/sprints` | name, board, startDate, endDate, startDateTime, endDateTime, status |
+| `fr_yandex_tracker_update_sprint` | нет | нет | PATCH | `/v3/sprints/probe_sprintId` | name, version, startDate, endDate, startDateTime, endDateTime, status |
 | `fr_yandex_tracker_get_entity` | да | нет | GET | `/v3/entities/goal/probe_entityId` | — |
 | `fr_yandex_tracker_create_entity` | нет | нет | POST | `/v3/entities/goal` | fields |
 | `fr_yandex_tracker_update_entity` | нет | нет | PATCH | `/v3/entities/goal/probe_entityId?version=189201` | fields |
@@ -86,11 +86,11 @@
 | `fr_yandex_tracker_update_board_column` | нет | нет | PATCH | `/v3/boards/probe_boardId/columns/probe_columnId` | name, statuses, limit |
 | `fr_yandex_tracker_delete_board_column` | нет | да | DELETE | `/v3/boards/probe_boardId/columns/probe_columnId` | — |
 | `fr_yandex_tracker_manage_sprint_lifecycle` | нет | да | POST | `/v3/sprints/probe_sprintId/_start` | — |
-| `fr_yandex_tracker_get_global_fields` | да | нет | GET | `/v2/fields` | — |
-| `fr_yandex_tracker_get_global_field` | да | нет | GET | `/v2/fields/probe_fieldId` | — |
-| `fr_yandex_tracker_create_global_field` | нет | нет | POST | `/v2/fields` | name, description, schema, readonly, options, suggest, optionsProvider |
-| `fr_yandex_tracker_update_global_field` | нет | нет | PATCH | `/v2/fields/probe_fieldId` | name, description, readonly, options, suggest, optionsProvider |
-| `fr_yandex_tracker_delete_global_field` | нет | да | DELETE | `/v2/fields/probe_fieldId` | — |
+| `fr_yandex_tracker_get_global_fields` | да | нет | GET | `/v3/fields` | — |
+| `fr_yandex_tracker_get_global_field` | да | нет | GET | `/v3/fields/probe_fieldId` | — |
+| `fr_yandex_tracker_create_global_field` | нет | нет | POST | `/v3/fields` | name, description, schema, readonly, options, suggest, optionsProvider |
+| `fr_yandex_tracker_update_global_field` | нет | нет | PATCH | `/v3/fields/probe_fieldId` | name, description, readonly, options, suggest, optionsProvider |
+| `fr_yandex_tracker_delete_global_field` | нет | да | DELETE | `/v3/fields/probe_fieldId` | — |
 
 ## Инструменты без зафиксированного запроса (14)
 

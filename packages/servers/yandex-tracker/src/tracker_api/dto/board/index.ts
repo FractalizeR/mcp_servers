@@ -5,12 +5,8 @@
 // Input DTOs
 export type { GetBoardsDto } from './get-boards.dto.js';
 export type { GetBoardDto } from './get-board.dto.js';
-export type {
-  CreateBoardDto,
-  CreateBoardColumnDto,
-  CreateBoardFilterDto,
-} from './create-board.dto.js';
-export type { UpdateBoardDto } from './update-board.dto.js';
+export type { CreateBoardDto, CreateBoardColumnDto } from './create-board.dto.js';
+export type { UpdateBoardDto, UpdateBoardFilterDto } from './update-board.dto.js';
 export type { DeleteBoardDto } from './delete-board.dto.js';
 
 // Output DTOs

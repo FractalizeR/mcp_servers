@@ -5,7 +5,7 @@
  * - ТОЛЬКО получение списка спринтов конкретной доски
  * - НЕТ создания/обновления/удаления
  *
- * API: GET /v2/boards/{boardId}/sprints
+ * API: GET /v3/boards/{boardId}/sprints
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -32,7 +32,7 @@ export class GetSprintsOperation extends BaseOperation {
 
     this.logger.info(`Получение спринтов доски: ${boardId}`);
 
-    const endpoint = `/v2/boards/${boardId}/sprints`;
+    const endpoint = `/v3/boards/${boardId}/sprints`;
 
     const sprints = await this.httpClient.get<SprintsListOutput>(endpoint);
 

@@ -1,7 +1,7 @@
 /**
  * DTO для обновления компонента в Яндекс.Трекере
  *
- * API: PATCH /v2/components/{componentId}
+ * API: PATCH /v3/components/{componentId}
  *
  * ВАЖНО:
  * - Все поля опциональны (частичное обновление)

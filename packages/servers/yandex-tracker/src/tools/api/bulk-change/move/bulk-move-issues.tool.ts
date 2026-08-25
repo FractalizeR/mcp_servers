@@ -68,7 +68,7 @@ export class BulkMoveIssuesTool extends BaseTool<YandexTrackerFacade> {
         this.logger.info(`Дополнительные поля: ${Object.keys(values).join(', ')}`);
       }
 
-      // 3. API v2: массовое перемещение задач (асинхронная операция)
+      // 3. API v3: массовое перемещение задач (асинхронная операция)
       const operation = await this.facade.bulkMoveIssues({
         issues: issueIds,
         queue,

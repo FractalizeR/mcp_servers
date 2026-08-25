@@ -6,7 +6,7 @@
  * - Инвалидация кеша после обновления
  * - НЕТ создания/получения/удаления
  *
- * API: PATCH /v2/boards/{boardId}
+ * API: PATCH /v3/boards/{boardId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -30,12 +30,12 @@ export class UpdateBoardOperation extends BaseOperation {
 
     this.logger.info(`Обновление доски: ${boardId}`);
 
-    const endpoint = `/v2/boards/${boardId}`;
+    const endpoint = `/v3/boards/${boardId}`;
 
     const board = await this.httpClient.patch<BoardOutput>(endpoint, updateData);
 
     // Инвалидация кеша обновленной доски
-    const cacheKey = EntityCacheKey.createKey(EntityType.BOARD, board.id);
+    const cacheKey = EntityCacheKey.createKey(EntityType.BOARD, String(board.id));
     await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Доска обновлена: ${board.id}`);

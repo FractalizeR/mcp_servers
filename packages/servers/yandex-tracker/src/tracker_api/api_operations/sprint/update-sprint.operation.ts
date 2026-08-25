@@ -6,7 +6,7 @@
  * - Инвалидация кеша после обновления
  * - НЕТ создания/получения/удаления
  *
- * API: PATCH /v2/sprints/{sprintId}
+ * API: PATCH /v3/sprints/{sprintId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -30,12 +30,12 @@ export class UpdateSprintOperation extends BaseOperation {
 
     this.logger.info(`Обновление спринта: ${sprintId}`);
 
-    const endpoint = `/v2/sprints/${sprintId}`;
+    const endpoint = `/v3/sprints/${sprintId}`;
 
     const sprint = await this.httpClient.patch<SprintOutput>(endpoint, updateData);
 
     // Инвалидация кеша обновленного спринта
-    const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, sprint.id);
+    const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, String(sprint.id));
     await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Спринт обновлен: ${sprint.id}`);

@@ -6,7 +6,7 @@
  * - НЕТ создания/удаления/получения полей
  * - НЕТ валидации прав доступа (делается в API)
  *
- * API: PATCH /v2/fields/{fieldId}
+ * API: PATCH /v3/fields/{fieldId}
  *
  * ВАЖНО:
  * - Тип поля (schema.type) нельзя изменить после создания
@@ -45,7 +45,7 @@ export class UpdateFieldOperation extends BaseOperation {
     this.logger.info(`Обновление поля ${fieldId}`);
 
     // Обновляем поле через API
-    const field = await this.httpClient.patch<FieldOutput>(`/v2/fields/${fieldId}`, input);
+    const field = await this.httpClient.patch<FieldOutput>(`/v3/fields/${fieldId}`, input);
 
     // Инвалидируем кеш
     await this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, fieldId));

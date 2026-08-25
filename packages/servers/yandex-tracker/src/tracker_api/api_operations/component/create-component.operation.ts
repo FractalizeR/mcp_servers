@@ -1,18 +1,14 @@
 /**
- * Операция создания компонента в очереди
+ * Операция создания компонента
  *
  * Ответственность (SRP):
- * - ТОЛЬКО создание одного компонента в указанной очереди
+ * - ТОЛЬКО создание одного компонента
  * - Кеширование созданного компонента
  * - Инвалидация кеша списка компонентов очереди
  * - НЕТ обновления/удаления/получения компонентов
  *
- * API: POST /v2/queues/{queueId}/components
- *
- * ВАЖНО:
- * - Компонент создается в контексте конкретной очереди (queueId в URL)
- * - После создания нельзя изменить привязку к очереди
- * - Требуются права на управление очередью
+ * API: POST /v3/components (очередь — ключ `queue` в теле запроса, не в пути;
+ * `POST /v3/queues/{queueId}/components` в API не существует)
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -21,10 +17,9 @@ import type { CreateComponentDto, ComponentOutput } from '#tracker_api/dto/index
 
 export class CreateComponentOperation extends BaseOperation {
   /**
-   * Создаёт новый компонент в очереди
+   * Создаёт новый компонент
    *
-   * @param queueId - ключ или ID очереди (например, 'QUEUE' или '1')
-   * @param componentData - данные для создания компонента
+   * @param componentData - данные для создания компонента (включая ключ очереди `queue`)
    * @returns созданный компонент с полными данными
    * @throws {Error} если не указано название компонента или очередь не существует
    *
@@ -37,25 +32,28 @@ export class CreateComponentOperation extends BaseOperation {
    * @example
    * ```typescript
    * // Создать компонент в очереди QUEUE
-   * const component = await operation.execute('QUEUE', {
+   * const component = await operation.execute({
    *   name: 'Backend',
+   *   queue: 'QUEUE',
    *   description: 'Backend services',
    *   assignAuto: true,
    *   lead: 'user-login'
    * });
    * ```
    */
-  async execute(queueId: string, componentData: CreateComponentDto): Promise<ComponentOutput> {
+  async execute(componentData: CreateComponentDto): Promise<ComponentOutput> {
     // Валидация обязательного поля
     if (!componentData.name || componentData.name.trim() === '') {
       throw new Error('Название компонента обязательно');
     }
 
-    this.logger.info(`Создание компонента "${componentData.name}" в очереди ${queueId}`);
+    this.logger.info(
+      `Создание компонента "${componentData.name}" в очереди ${componentData.queue}`
+    );
 
     // Создаём компонент через API
     const createdComponent = await this.httpClient.post<ComponentOutput>(
-      `/v2/queues/${queueId}/components`,
+      '/v3/components',
       componentData
     );
 
@@ -67,7 +65,7 @@ export class CreateComponentOperation extends BaseOperation {
     await this.cacheManager.set(componentCacheKey, createdComponent);
 
     // Инвалидируем кеш списка компонентов очереди
-    await this.invalidateComponentsCache(queueId);
+    await this.invalidateComponentsCache(componentData.queue);
 
     this.logger.info(
       `Компонент успешно создан: ${createdComponent.name} (ID: ${createdComponent.id})`

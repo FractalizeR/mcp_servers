@@ -47,11 +47,11 @@ API Operations (конкретные HTTP запросы)
 - **Домен**: Управление очередями
 
 ### 6. ComponentService
-- **Методы**: `getComponents()`, `createComponent()`, `updateComponent()`, `deleteComponent()`
+- **Методы**: `getComponents()`, `createComponent()`, `updateComponent()`
 - **Домен**: Компоненты очередей
 
 ### 7. FieldService
-- **Методы**: `getFields()`, `getField()`, `createField()`, `updateField()`, `deleteField()`
+- **Методы**: `getFields()`, `getField()`, `createField()`, `updateField()`
 - **Домен**: Кастомные поля
 
 ### 8. CommentService
@@ -70,15 +70,11 @@ API Operations (конкретные HTTP запросы)
 - **Методы**: `bulkUpdateIssues()`, `bulkTransitionIssues()`, `bulkMoveIssues()`, `getBulkChangeStatus()`
 - **Домен**: Массовые операции над задачами
 
-### 12. ProjectService
-- **Методы**: `getProjects()`, `getProject()`, `createProject()`, `updateProject()`, `deleteProject()`
-- **Домен**: Управление проектами
-
-### 13. BoardService
+### 12. BoardService
 - **Методы**: `getBoards()`, `getBoard()`, `createBoard()`, `updateBoard()`, `deleteBoard()`
 - **Домен**: Доски (Scrum/Kanban)
 
-### 14. SprintService
+### 13. SprintService
 - **Методы**: `getSprints()`, `getSprint()`, `createSprint()`, `updateSprint()`
 - **Домен**: Спринты
 
@@ -124,7 +120,6 @@ const facade = new YandexTrackerFacade(
   mockChecklistService,
   mockWorklogService,
   mockBulkChangeService,
-  mockProjectService,
   mockBoardService,
   mockSprintService
 );

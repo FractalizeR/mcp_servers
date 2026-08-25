@@ -29,11 +29,28 @@ describe('UpdateSprintTool', () => {
   });
 
   it('обновит спринт', async () => {
-    const sprint = { id: '1', self: 'url', version: 2, name: 'Renamed' };
+    const sprint = { id: 1, self: 'url', version: 2, name: 'Renamed' };
     vi.mocked(mockTrackerFacade.updateSprint).mockResolvedValue(sprint);
 
     const result = await tool.execute({
       sprintId: '1',
+      name: 'Renamed',
+      fields: ['id', 'name'],
+    });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.updateSprint).toHaveBeenCalledWith(
+      '1',
+      expect.objectContaining({ name: 'Renamed' })
+    );
+  });
+
+  it('примет числовой sprintId (как отдаёт get_sprints) и дойдёт до того же запроса', async () => {
+    const sprint = { id: 1, self: 'url', version: 2, name: 'Renamed' };
+    vi.mocked(mockTrackerFacade.updateSprint).mockResolvedValue(sprint);
+
+    const result = await tool.execute({
+      sprintId: 1,
       name: 'Renamed',
       fields: ['id', 'name'],
     });

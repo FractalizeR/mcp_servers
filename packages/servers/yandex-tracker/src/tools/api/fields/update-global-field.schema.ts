@@ -1,7 +1,7 @@
 /**
  * Zod схема для валидации параметров UpdateGlobalFieldTool
  *
- * ВАЖНО: обновляет ГЛОБАЛЬНОЕ поле (`PATCH /v2/fields/{fieldId}`), адресуется
+ * ВАЖНО: обновляет ГЛОБАЛЬНОЕ поле (`PATCH /v3/fields/{fieldId}`), адресуется
  * полным `fieldId` (в т.ч. `id`/`self` из `get_global_field(s)`). Для
  * ЛОКАЛЬНОГО поля очереди используйте `update_queue_local_field` — там
  * адресация коротким `key`, а не `fieldId`. Тип поля (schema.type) после

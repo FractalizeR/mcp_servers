@@ -32,7 +32,6 @@ import {
   ChecklistService,
   WorklogService,
   SprintService,
-  ProjectService,
   BoardService,
   QueueService,
   IssueAttachmentService,
@@ -86,9 +85,6 @@ export function bindFacadeServices(container: Container): void {
 
   // Sprint Service
   container.bind(SprintService).toSelf();
-
-  // Project Service
-  container.bind(ProjectService).toSelf();
 
   // Board Service
   container.bind(BoardService).toSelf();

@@ -19,10 +19,3 @@ export {
   UpdateComponentParamsSchema,
   type UpdateComponentParams,
 } from './update-component.schema.js';
-
-// Delete Component
-export { DeleteComponentTool } from './delete-component.tool.js';
-export {
-  DeleteComponentParamsSchema,
-  type DeleteComponentParams,
-} from './delete-component.schema.js';

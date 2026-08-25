@@ -1,7 +1,7 @@
 /**
  * Экспорты для Global Fields API tools (пакет 7.2.E)
  *
- * ВАЖНО: это ГЛОБАЛЬНЫЕ поля Трекера (`/v2/fields`), видимые во всей
+ * ВАЖНО: это ГЛОБАЛЬНЫЕ поля Трекера (`/v3/fields`), видимые во всей
  * организации — НЕ путать с ЛОКАЛЬНЫМИ полями очереди
  * (`#tools/api/queue-local-fields`), у которых своя схема тела запроса и
  * своя адресация (короткий `key`, а не `fieldId`).
@@ -30,9 +30,3 @@ export {
   UpdateGlobalFieldParamsSchema,
   type UpdateGlobalFieldParams,
 } from './update-global-field.schema.js';
-
-export { DeleteGlobalFieldTool } from './delete-global-field.tool.js';
-export {
-  DeleteGlobalFieldParamsSchema,
-  type DeleteGlobalFieldParams,
-} from './delete-global-field.schema.js';

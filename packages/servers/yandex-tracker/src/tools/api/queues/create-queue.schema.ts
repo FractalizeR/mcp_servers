@@ -7,6 +7,10 @@ import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/s
 
 /**
  * Схема параметров для создания очереди
+ *
+ * Параметра `issueTypes` здесь нет намеренно: живая проба 2026-08-25 показала
+ * `400 issueTypes: Incorrect data format` — любой вызов с ним ронял создание, то есть
+ * необязательный параметр гарантировал отказ. Набор типов задаётся `issueTypesConfig`.
  */
 export const CreateQueueParamsSchema = z.object({
   /**
@@ -15,9 +19,12 @@ export const CreateQueueParamsSchema = z.object({
   key: z.string().regex(/^[A-Z]{2,10}$/, 'Ключ очереди должен быть A-Z, 2-10 символов'),
 
   /**
-   * Название очереди (обязательно)
+   * Название очереди (обязательно, лимит найден живым прогоном API)
    */
-  name: z.string().min(1, 'Name не может быть пустым'),
+  name: z
+    .string()
+    .min(1, 'Name не может быть пустым')
+    .max(40, 'Name не может быть длиннее 40 символов'),
 
   /**
    * ID или login руководителя (обязательно)
@@ -35,14 +42,33 @@ export const CreateQueueParamsSchema = z.object({
   defaultPriority: z.string().min(1, 'DefaultPriority не может быть пустым'),
 
   /**
+   * Конфигурация воркфлоу и резолюций по типам задач (обязательно для API)
+   */
+  issueTypesConfig: z
+    .array(
+      z.object({
+        issueType: z.string().min(1).describe('ID типа задачи — справочник get_issue_types'),
+        workflow: z
+          .string()
+          .min(1)
+          .describe(
+            'ID воркфлоу организации — справочник raw_api_request GET /v3/workflows (пресеты и собственные W1..WN)'
+          ),
+        resolutions: z
+          .array(z.string().min(1))
+          .min(1)
+          .describe('Ключи резолюций — справочник get_resolutions'),
+      })
+    )
+    .min(
+      1,
+      'issueTypesConfig обязателен: API отклоняет запрос без него. Возьми workflow из raw_api_request GET /v3/workflows, issueType из get_issue_types, resolutions из get_resolutions'
+    ),
+
+  /**
    * Описание очереди (опционально)
    */
   description: z.string().optional(),
-
-  /**
-   * Массив ID доступных типов задач (опционально)
-   */
-  issueTypes: z.array(z.string()).optional(),
 
   /**
    * Список полей для возврата (обязательно)

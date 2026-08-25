@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
- * ВАЖНО: эндпоинт `GET /v2/fields` не пагинируется — возвращает разом все
+ * ВАЖНО: эндпоинт `GET /v3/fields` не пагинируется — возвращает разом все
  * поля трекера (системные + кастомные), аналогично get_statuses/get_priorities.
  */
 export const GetGlobalFieldsParamsSchema = z.object({

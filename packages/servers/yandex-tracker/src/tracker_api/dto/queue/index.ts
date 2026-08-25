@@ -5,7 +5,7 @@
 // Input DTO
 export type { GetQueuesDto } from './get-queues.dto.js';
 export type { GetQueueDto } from './get-queue.dto.js';
-export type { CreateQueueDto } from './create-queue.dto.js';
+export type { CreateQueueDto, CreateQueueIssueTypeConfigDto } from './create-queue.dto.js';
 export type { UpdateQueueDto } from './update-queue.dto.js';
 export type { GetQueueFieldsDto } from './get-queue-fields.dto.js';
 export type { ManageQueueAccessDto, AccessAction } from './manage-queue-access.dto.js';

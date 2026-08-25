@@ -23,7 +23,7 @@
 - **Vitest** (тесты, покрытие ≥80%)
 - **dependency-cruiser** (валидация архитектурных правил)
 - **MCP SDK** (Model Context Protocol)
-- **API:** Яндекс.Трекер v2/v3 (используются обе официально поддерживаемые версии)
+- **API:** Яндекс.Трекер v3 (целевая версия всюду, кроме `raw_api_request` — см. §2)
 
 ---
 
@@ -53,14 +53,17 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 
 ### 2. Использование API v2 и v3
 
-**Яндекс.Трекер поддерживает два API:**
-- **API v3** — новая версия (issues, queues, comments, links, changelog, transitions)
-- **API v2** — старая версия (attachments, checklists, components, projects, worklogs)
+**Целевая версия — v3 всюду, где v3 существует.** Решено 2026-08-23; миграция —
+`.agentic-planning/plan_tracker_test_coverage/4.1_v3_migration_parallel.md`, завершена 2026-08-24.
+Артефакт A этапа (`inventory/v2-paths-2026-08-24.md` в той же папке) подтвердил: v3 существует у
+всех десяти затронутых семейств — исключений «v2 без v3-аналога» нет. Нормативный источник версии
+— **документация Трекера**, не эта таблица и не `yandex_tracker_client/`: у submodule версия —
+параметр соединения (`Connection.__init__(api_version=VERSION_V2)`), поэтому он подтверждает v2
+тавтологически и источником истины по версии не является — путь и метод подтверждать им можно.
+Новая операция пишется сразу на v3.
 
-**Правило:** Используй версию API согласно таблице ниже:
-
-| Категория | API версия | Endpoint пример |
-|-----------|------------|-----------------|
+| Категория | Версия | Endpoint пример |
+|-----------|--------|-----------------|
 | Issues Core | v3 | `/v3/issues/{key}` |
 | Queues | v3 | `/v3/queues/{id}` |
 | Comments | v3 | `/v3/issues/{id}/comments` |
@@ -68,21 +71,28 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 | Transitions | v3 | `/v3/issues/{id}/transitions` |
 | Changelog | v3 | `/v3/issues/{id}/changelog` |
 | User | v3 | `/v3/myself` |
-| Attachments | v2 | `/v2/issues/{id}/attachments` |
-| Checklists | v2 | `/v2/issues/{id}/checklistItems` |
-| Components | v2 | `/v2/queues/{id}/components` |
-| Projects | v2 | `/v2/projects` |
-| Worklogs | v2 | `/v2/issues/{id}/worklog` |
+| Attachments | v3 | `/v3/issues/{id}/attachments` |
+| Checklists | v3 | `/v3/issues/{id}/checklistItems` |
+| Components | v3 | `GET /v3/queues/{id}/components`, `POST /v3/components` |
+| Worklogs | v3 | `/v3/issues/{id}/worklog` |
+| Boards | v3 | `POST /v3/liveBoards/`, чтение/правка/удаление `/v3/boards/{id}` |
+| Board columns | v3 | `/v3/boards/{id}/columns/` |
+| Sprints | v3 | `/v3/sprints`, lifecycle `/v3/sprints/{id}/_start` |
+| Global fields | v3 | `/v3/fields` |
+| Entity API | v3 | `/v3/entities/{type}` |
+| Filters | v3 | `POST /v3/filters/`, путь чтения не документирован |
+
+**Единственное законное исключение — `raw_api_request`.** Его схема допускает и `/v2/`, и
+`/v3/`: версию выбирает вызывающий инструмент, а не наш код, поэтому миграции не подлежит по
+смыслу (см. `src/tools/api/raw/raw-api-request.schema.ts`).
 
 ✅ **Правильно:**
 ```typescript
-// v3 для issues
+// v3 везде
 this.httpClient.get('/v3/issues/PROJ-123');
 this.httpClient.get('/v3/myself');
-
-// v2 для attachments и worklogs
-this.httpClient.get('/v2/issues/PROJ-123/attachments');
-this.httpClient.post('/v2/issues/PROJ-123/worklog', {...});
+this.httpClient.get('/v3/issues/PROJ-123/attachments');
+this.httpClient.post('/v3/issues/PROJ-123/worklog', {...});
 ```
 
 ❌ **Неправильно:**
@@ -91,7 +101,20 @@ this.httpClient.get('/issues');    // Без версии
 this.httpClient.get('/v1/issues'); // Неверная версия
 ```
 
-**Примечание:** При появлении v3 версий для категорий на v2, приоритет отдаётся v3.
+⚠️ **Форма ответа v3 на мутациях организационных сущностей (проекты, доски, спринты, глобальные
+поля) вживую не наблюдалась** — уверенность держится на существовании маршрута (read-only
+оракул), идентичности формы на GET и моке. Проверка — предмет живой приёмки 3.1. Боевая проба
+2026-08-23 показала: v2 и v3 отдают одинаковое число элементов и одинаковый набор ключей у досок,
+проектов, глобальных полей и спринтов — то есть миграция этих четырёх семейств была сменой
+версии в пути, а не переписыванием парсинга. У очередей, worklog, чек-листов, вложений и
+компонентов проверено только существование маршрута v3 (оракул), не форма ответа и не число
+элементов. Отчёты:
+`.agentic-planning/plan_tracker_test_coverage/inventory/live-version-probe-2026-08-23.md`,
+`.agentic-planning/plan_tracker_test_coverage/inventory/v2-paths-2026-08-24.md`.
+
+⚠️ **Наши типы когда-то расходились с боевым ответом независимо от версии** (`options`
+глобального поля — `boolean`, а не массив опций; `id` досок, колонок досок и спринтов — число, а
+было объявлено `string`) — исправлено пакетом B этапа 4.1.
 
 **Дополнительно:**
 - ✅ Batch-операции: `getIssues([keys])`, НЕ `getIssue(key)`
@@ -235,7 +258,7 @@ return this.formatSuccess(
   кодирует путь+perPage; выводится из `Link rel="next"`).
 - `cursor` несовместим с `perPage`/`fetchAll`/`maxItems`/`maxTotalItems`; в batch валиден
   только при одном issueId.
-- `total`/`totalPages` отдаются **только** для seekable (queues/projects/find_issues,
+- `total`/`totalPages` отдаются **только** для seekable (queues/find_issues,
   `Link rel="seek"`); у cursor-эндпоинтов (changelog/comments/links/worklog/checklist) их нет.
 - `fetchAll=true` — полный обход по `Link rel="next"` с лимитами `maxItems` (500/цепочку)
   и `maxTotalItems` (1000/batch-ответ); обрезка → `pagination.truncated=true`.
@@ -324,6 +347,45 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
 - ⚠️ Устаревшие env-переменные прежнего режима discovery удалены целиком (не no-op): если клиент их
   всё ещё выставляет, сервер печатает предупреждение в stderr при старте и продолжает работу с
   полным набором инструментов
+
+### 5.0. Категория `projects` — это Entity API, а не легаси (с 2026-08-25)
+
+После удаления легаси-семейства `/v3/projects` значение `ToolCategory.PROJECTS` несут
+ровно девять инструментов Entity API: `create_entity`, `get_entity`, `find_entities`,
+`update_entity`, `delete_entity` и четвёрка ключевых результатов цели. То есть
+`projects` теперь означает «проекты, портфели и цели», а не старое семейство.
+
+Из-за этого группа `projects` **убрана** из значения `disabled_tool_groups` по
+умолчанию в `manifest.template.json`: пока она там стояла, профиль MCPB по умолчанию
+прятал единственный способ работать с проектами, портфелями и целями разом. Словесное
+описание параметра в манифесте эту группу отключённой и не называло — значение
+разошлось с текстом ещё когда категория значила легаси.
+
+**Правка дефолта не догоняет уже установленные сборки.** `default` в
+`manifest.template.json` применяется при первой настройке; у кого `disabled_tool_groups`
+уже сохранён с прежним значением, `projects` продолжит гасить Entity API до тех пор,
+пока пользователь не поправит настройку руками. Это форма входа, которую манифест не
+перекрывает, — при обновлении об этом надо сказать в release notes, а не рассчитывать
+на новый дефолт.
+
+### 5.1. Инструментов удаления не заводим (решено 2026-08-25)
+
+Сервер намеренно **не даёт** инструментов удаления очереди, сохранённого фильтра, локального поля
+очереди, задачи, компонента и глобального поля, хотя API Трекера часть из них поддерживает
+(`DELETE /v3/queues/{id}` задокументирован). Причина: цена ошибки агента несимметрична. Удаление
+очереди или задачи в общей организации необратимо и уносит чужую работу, а разница между «удали
+мою тестовую очередь» и «удали очередь» — одно слово в запросе пользователя.
+
+Инструменты `delete_component` и `delete_global_field` были удалены отдельно (2026-08-25):
+маршруты `DELETE /v3/components/{id}` и `DELETE /v3/fields/{id}`, на которых они основывались, не
+задокументированы ни справочником Трекера, ни `yandex_tracker_client/` — оба выведены из общей
+механики `Collection.delete()` базового класса submodule, а не из подтверждённого API.
+
+Следствие, которое надо принимать как есть: остаток живых прогонов по этим сущностям убирается
+руками в интерфейсе, и отчёт прогона обязан перечислять созданное поимённо
+(`.agentic-planning/plan_tracker_test_coverage/5.2_LIVE_RUN_REPORT_2026-08-25.md`). Асимметрия
+«создать можем, удалить нет» — осознанная, а не пробел покрытия API; заводить такой инструмент
+можно только по явному запросу пользователя, а не «для симметрии CRUD».
 
 ### 6. Логирование (Pino)
 
@@ -535,7 +597,7 @@ packages/servers/yandex-tracker/
 ### Команды
 
 ```bash
-# Список инструментов (92 штуки) с классификацией read/write/local-side-effect
+# Список инструментов (85 штук) с классификацией read/write/local-side-effect
 npm run tools:list
 
 # Вызвать один инструмент

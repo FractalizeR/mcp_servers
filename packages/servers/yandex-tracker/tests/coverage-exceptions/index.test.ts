@@ -40,14 +40,14 @@ describe('loadCoverageExceptions', () => {
   it('подхватывает новый файл категории автообходом, без правки index.ts', async () => {
     const dir = writeCategory(
       'export const EXCEPTIONS = [\n' +
-        "  { tool: 'get_projects', property: 'С-5', reason: 'тест оснастки', replacedBy: null },\n" +
+        "  { tool: 'get_queues', property: 'С-5', reason: 'тест оснастки', replacedBy: null },\n" +
         '];\n'
     );
 
     const exceptions = await loadCoverageExceptions(dir);
 
     expect(exceptions).toContainEqual({
-      tool: 'get_projects',
+      tool: 'get_queues',
       property: 'С-5',
       reason: 'тест оснастки',
       replacedBy: null,
@@ -61,14 +61,14 @@ describe('loadCoverageExceptions', () => {
   });
 
   it('EXCEPTIONS не массив роняет с понятной причиной', async () => {
-    const dir = writeCategory("export const EXCEPTIONS = { tool: 'get_projects' };\n");
+    const dir = writeCategory("export const EXCEPTIONS = { tool: 'get_queues' };\n");
 
     await expect(loadCoverageExceptions(dir)).rejects.toThrow(/не массив/);
   });
 
   it('пустой reason роняет загрузку', async () => {
     const dir = writeCategory(
-      "export const EXCEPTIONS = [{ tool: 'get_projects', property: 'С-5', reason: '   ', replacedBy: null }];\n"
+      "export const EXCEPTIONS = [{ tool: 'get_queues', property: 'С-5', reason: '   ', replacedBy: null }];\n"
     );
 
     await expect(loadCoverageExceptions(dir)).rejects.toThrow(/reason не может быть пустым/);
@@ -84,7 +84,7 @@ describe('loadCoverageExceptions', () => {
 
   it('свойство вне CoverageProperty роняет загрузку', async () => {
     const dir = writeCategory(
-      "export const EXCEPTIONS = [{ tool: 'get_projects', property: 'С-99', reason: 'x', replacedBy: null }];\n"
+      "export const EXCEPTIONS = [{ tool: 'get_queues', property: 'С-99', reason: 'x', replacedBy: null }];\n"
     );
 
     await expect(loadCoverageExceptions(dir)).rejects.toThrow(/неизвестное свойство/);

@@ -51,7 +51,7 @@ export class DeleteChecklistItemTool extends BaseTool<YandexTrackerFacade> {
       // 2. Логирование начала операции
       ResultLogger.logOperationStart(this.logger, 'Удаление элементов из чеклистов', items.length);
 
-      // 3. API v2: удаление элементов через batch-метод
+      // 3. API v3: удаление элементов через batch-метод
       const results = await this.facade.deleteChecklistItemMany(items);
 
       // 4. Ручная обработка результатов (для void результатов)

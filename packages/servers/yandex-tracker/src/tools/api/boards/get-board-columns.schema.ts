@@ -3,12 +3,17 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  FilteredEntitySchema,
+  buildOutputSchema,
+  buildEntityIdSchema,
+} from '#common/schemas/index.js';
 
 /** ВАЖНО: эндпоинт не пагинируется (небольшой набор колонок доски). */
 export const GetBoardColumnsParamsSchema = z.object({
   /** Идентификатор доски (обязательно) */
-  boardId: z.string().min(1, 'Board ID не может быть пустым'),
+  boardId: buildEntityIdSchema('Board'),
 
   /** Список полей для возврата (обязательно) */
   fields: FieldsSchema,

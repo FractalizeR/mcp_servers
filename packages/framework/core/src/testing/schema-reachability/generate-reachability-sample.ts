@@ -281,6 +281,16 @@ function generate(
     return generate(first, path, leaves, depth + 1, options);
   }
 
+  // `.transform()`/`.pipe()` компилируются в ZodPipe (zod 4) — генерируем образец
+  // по ВХОДНОЙ схеме (`.in`, публичное свойство): именно вход подаётся при
+  // валидации реальных параметров инструмента. Предполагается, что трансформ
+  // не меняет сериализованный вид сгенерированного образца (иначе записанный
+  // здесь маркер не переживёт трансформ и проверка достижимости ложно упадёт) —
+  // ответственность автора схемы держать трансформ идентичным на сэмпле.
+  if (unwrapped instanceof z.ZodPipe) {
+    return generate(unwrapped.in as z.ZodTypeAny, path, leaves, depth + 1, options);
+  }
+
   if (unwrapped instanceof z.ZodEnum) {
     const entries = unwrapped.enum as Record<string, string | number>;
     const firstKey = Object.keys(entries)[0];

@@ -66,7 +66,7 @@ export class BulkTransitionIssuesTool extends BaseTool<YandexTrackerFacade> {
         this.logger.info(`Дополнительные поля: ${Object.keys(values).join(', ')}`);
       }
 
-      // 3. API v2: массовый переход статусов (асинхронная операция)
+      // 3. API v3: массовый переход статусов (асинхронная операция)
       const operation = await this.facade.bulkTransitionIssues({
         issues: issueIds,
         transition: transitionId,

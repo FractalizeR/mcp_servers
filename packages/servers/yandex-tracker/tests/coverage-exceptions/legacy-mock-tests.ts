@@ -52,8 +52,6 @@ export const LEGACY_MOCK_TEST_PATHS: ReadonlySet<string> = new Set([
   'tests/integration/tools/api/comments/delete/delete-comment.tool.integration.test.ts',
   'tests/integration/tools/api/comments/edit/edit-comment.tool.integration.test.ts',
   'tests/integration/tools/api/comments/get/get-comments.tool.integration.test.ts',
-  'tests/integration/tools/api/components/create/create-component.tool.integration.test.ts',
-  'tests/integration/tools/api/components/delete/delete-component.tool.integration.test.ts',
   'tests/integration/tools/api/components/get/get-components.tool.integration.test.ts',
   'tests/integration/tools/api/components/update/update-component.tool.integration.test.ts',
   'tests/integration/tools/api/issues/attachments/delete/delete-attachment.tool.integration.test.ts',
@@ -72,7 +70,6 @@ export const LEGACY_MOCK_TEST_PATHS: ReadonlySet<string> = new Set([
   'tests/integration/tools/api/issues/transitions/get-issue-transitions.tool.integration.test.ts',
   'tests/integration/tools/api/issues/update/update-issue.tool.integration.test.ts',
   'tests/integration/tools/api/queues/access/manage-queue-access.tool.integration.test.ts',
-  'tests/integration/tools/api/queues/create/create-queue.tool.integration.test.ts',
   'tests/integration/tools/api/queues/fields/get-queue-fields.tool.integration.test.ts',
   'tests/integration/tools/api/queues/get-queue/get-queue.tool.integration.test.ts',
   'tests/integration/tools/api/queues/get/get-queues.tool.integration.test.ts',
@@ -84,7 +81,7 @@ export const LEGACY_MOCK_TEST_PATHS: ReadonlySet<string> = new Set([
  * `LEGACY_MOCK_TEST_PATHS.size` с этой константой роняет `coverage:check` — растущий
  * перечень без видимой правки этого числа невозможен.
  */
-export const LEGACY_MOCK_TEST_BASELINE_COUNT = 33;
+export const LEGACY_MOCK_TEST_BASELINE_COUNT = 30;
 
 const MIN_IT_CALLS = 1;
 const MIN_EXPECT_CALLS = 1;

@@ -1,6 +1,12 @@
 /**
- * `PromptProvider` для Трекера — агрегирует 4 промпта плана (5.1.C.tracker):
- * triage очереди, дейли-сводка, сводка по проекту, разбор связей эпика.
+ * `PromptProvider` для Трекера — агрегирует промпты плана (5.1.C.tracker):
+ * triage очереди, дейли-сводка, разбор связей эпика.
+ *
+ * Промпт «сводка по проекту» (`project-summary.prompt.ts`) удалён вместе с
+ * легаси-семейством проектов 2026-08-25: Entity API (`entityType: 'project'`)
+ * не гарантирует полей status/lead/queues/startDate/endDate легаси-Project —
+ * только generic `fields` с org-специфичными кастомными полями, поэтому
+ * честный перевод промпта без выдумывания названий полей невозможен.
  *
  * `listPrompts()`/`getPrompt()` — тонкая обёртка над массивом
  * `TrackerPromptDefinition` (см. tracker-prompt.types.ts): порядок массива —
@@ -13,13 +19,11 @@ import type { PromptProvider, McpPrompt, PromptGetResult } from '@fractalizer/mc
 import type { TrackerPromptDefinition } from './tracker-prompt.types.js';
 import { triageQueuePrompt } from './triage-queue.prompt.js';
 import { dailySummaryPrompt } from './daily-summary.prompt.js';
-import { projectSummaryPrompt } from './project-summary.prompt.js';
 import { epicLinksPrompt } from './epic-links.prompt.js';
 
 const TRACKER_PROMPTS: readonly TrackerPromptDefinition[] = [
   triageQueuePrompt,
   dailySummaryPrompt,
-  projectSummaryPrompt,
   epicLinksPrompt,
 ];
 

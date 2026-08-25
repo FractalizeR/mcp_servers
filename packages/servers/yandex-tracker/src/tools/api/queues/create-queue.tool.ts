@@ -30,7 +30,7 @@ export class CreateQueueTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { fields, key, name, lead, defaultType, defaultPriority, description, issueTypes } =
+    const { fields, key, name, lead, defaultType, defaultPriority, issueTypesConfig, description } =
       validation.data;
 
     try {
@@ -46,8 +46,8 @@ export class CreateQueueTool extends BaseTool<YandexTrackerFacade> {
         lead,
         defaultType,
         defaultPriority,
+        issueTypesConfig,
         ...(description && { description }),
-        ...(issueTypes && { issueTypes }),
       };
 
       const createdQueue = await this.facade.createQueue(queueData);

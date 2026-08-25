@@ -29,7 +29,7 @@ describe('UpdateBoardColumnTool', () => {
   });
 
   it('обновит WIP-лимит колонки', async () => {
-    const column = { id: 'c1', name: 'Doing', limit: 3 };
+    const column = { id: 1, name: 'Doing', limit: 3 };
     vi.mocked(mockTrackerFacade.updateBoardColumn).mockResolvedValue(column);
 
     const result = await tool.execute({
@@ -43,6 +43,25 @@ describe('UpdateBoardColumnTool', () => {
     expect(mockTrackerFacade.updateBoardColumn).toHaveBeenCalledWith({
       boardId: 'b1',
       columnId: 'c1',
+      limit: 3,
+    });
+  });
+
+  it('примет числовые boardId/columnId (как отдаёт get_boards/get_board_columns) и дойдёт до того же запроса', async () => {
+    const column = { id: 1, name: 'Doing', limit: 3 };
+    vi.mocked(mockTrackerFacade.updateBoardColumn).mockResolvedValue(column);
+
+    const result = await tool.execute({
+      boardId: 42,
+      columnId: 1,
+      limit: 3,
+      fields: ['id', 'limit'],
+    });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.updateBoardColumn).toHaveBeenCalledWith({
+      boardId: '42',
+      columnId: '1',
       limit: 3,
     });
   });

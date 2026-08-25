@@ -44,7 +44,7 @@ describe('DeleteWorklogOperation', () => {
 
       await operation.execute('TEST-1', '123');
 
-      expect(mockHttpClient.delete).toHaveBeenCalledWith('/v2/issues/TEST-1/worklog/123');
+      expect(mockHttpClient.delete).toHaveBeenCalledWith('/v3/issues/TEST-1/worklog/123');
     });
 
     it('should successfully delete worklog', async () => {

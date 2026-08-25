@@ -51,6 +51,35 @@ describe('UpdateComponentTool', () => {
 
   describe('execute', () => {
     describe('валидация параметров (Zod)', () => {
+      it('предупреждает, когда версия не передана: блокировка выродилась', async () => {
+        const component = createComponentFixture({ id: 1, version: 3 });
+        vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(component);
+
+        const result = await tool.execute({ componentId: '1', name: 'X', fields: ['id'] });
+        const structured = JSON.parse(getTextContent(result)) as {
+          warnings?: Array<{ code: string }>;
+        };
+
+        expect(structured.warnings).toEqual([
+          expect.objectContaining({ code: 'VERSION_NOT_PROVIDED' }),
+        ]);
+      });
+
+      it('с переданной версией предупреждения нет', async () => {
+        const component = createComponentFixture({ id: 1, version: 3 });
+        vi.mocked(mockTrackerFacade.updateComponent).mockResolvedValue(component);
+
+        const result = await tool.execute({
+          componentId: '1',
+          name: 'X',
+          version: 3,
+          fields: ['id'],
+        });
+        const structured = JSON.parse(getTextContent(result)) as { warnings?: unknown };
+
+        expect(structured.warnings).toBeUndefined();
+      });
+
       it('должен вернуть ошибку если componentId не указан', async () => {
         const result = await tool.execute({});
 

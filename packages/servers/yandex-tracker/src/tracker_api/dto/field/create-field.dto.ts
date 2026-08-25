@@ -1,26 +1,50 @@
 /**
- * DTO для создания кастомного поля в Яндекс.Трекере
+ * DTO для создания глобального кастомного поля в Яндекс.Трекере
  *
- * API: POST /v2/fields
+ * API: POST /v3/fields
  *
  * ВАЖНО:
  * - Создаются только кастомные поля (системные поля нельзя создавать)
- * - После создания нельзя изменить тип поля (schema.type)
+ * - После создания нельзя изменить тип поля (`type`)
  * - Поле доступно во всей организации
  */
 
-import type {
-  FieldSchema,
-  FieldOption,
-  FieldOptionsProvider,
-} from '#tracker_api/entities/index.js';
+import type { FieldOptionsProvider } from '#tracker_api/entities/index.js';
 
 export interface CreateFieldDto {
   /**
-   * Название поля
-   * @example "Customer Priority", "Sprint Name"
+   * Короткий идентификатор поля
+   * @example "customPriority"
    */
-  name: string;
+  id: string;
+
+  /**
+   * Локализованное название поля
+   * @example { en: "Customer Priority", ru: "Приоритет клиента" }
+   */
+  name: {
+    en: string;
+    ru: string;
+  };
+
+  /**
+   * Идентификатор категории поля (см. GET /v3/fields/categories)
+   */
+  category: string;
+
+  /**
+   * Тип поля
+   *
+   * ВАЖНО: После создания тип поля нельзя изменить!
+   *
+   * @example "ru.yandex.startrek.core.fields.StringFieldType"
+   */
+  type: string;
+
+  /**
+   * Порядок отображения поля
+   */
+  order?: number | undefined;
 
   /**
    * Описание поля
@@ -29,37 +53,25 @@ export interface CreateFieldDto {
   description?: string | undefined;
 
   /**
-   * Схема поля (тип данных)
-   *
-   * ВАЖНО: После создания тип поля нельзя изменить!
-   *
-   * Примеры типов:
-   * - { type: "string" } - текстовое поле
-   * - { type: "number" } - числовое поле
-   * - { type: "date" } - дата
-   * - { type: "array", items: "string" } - массив строк
-   * - { type: "user" } - пользователь
-   */
-  schema: FieldSchema;
-
-  /**
    * Является ли поле только для чтения
    * @default false
    */
   readonly?: boolean | undefined;
 
   /**
-   * Опции выбора для полей с фиксированным набором значений
-   *
-   * Используется для полей типа "select", "multiselect" и т.д.
+   * Видимость поля
    */
-  options?: readonly FieldOption[] | undefined;
+  visible?: boolean | undefined;
 
   /**
-   * Включить автоподстановку значений
-   * @default false
+   * Скрыто ли поле
    */
-  suggest?: boolean | undefined;
+  hidden?: boolean | undefined;
+
+  /**
+   * Является ли поле контейнером (массивом значений)
+   */
+  container?: boolean | undefined;
 
   /**
    * Провайдер опций для динамических полей

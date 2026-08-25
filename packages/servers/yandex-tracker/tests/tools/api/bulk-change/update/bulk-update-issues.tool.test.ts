@@ -16,7 +16,7 @@ describe('BulkUpdateIssuesTool', () => {
 
   const mockOperation: BulkChangeOperationWithUnknownFields = {
     id: 'op-1',
-    self: 'https://api.tracker.yandex.net/v2/bulkchange/op-1',
+    self: 'https://api.tracker.yandex.net/v3/bulkchange/op-1',
     status: 'CREATED',
     totalIssues: 2,
   };

@@ -17,11 +17,8 @@ import {
 } from '#common/schemas/index.js';
 
 /**
- * Тип записи Entity API — различает три коллекции с общей формой запроса.
- *
- * ВАЖНО: `entityType: 'project'` — Project ВНУТРИ Entity API
- * (`/v3/entities/project/...`), НЕ legacy `/v2/projects` (см. `get_projects`/
- * `create_project` и др. — отдельные инструменты, другая коллекция).
+ * Тип записи Entity API — различает три коллекции с общей формой запроса
+ * (`/v3/entities/{entityType}/...`).
  */
 const EntityApiTypeSchema = z.enum(['goal', 'project', 'portfolio']);
 

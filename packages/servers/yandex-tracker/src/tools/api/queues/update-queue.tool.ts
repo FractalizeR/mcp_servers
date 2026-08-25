@@ -28,7 +28,7 @@ export class UpdateQueueTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { fields, queueId, name, lead, defaultType, defaultPriority, description, issueTypes } =
+    const { fields, queueId, name, lead, defaultType, defaultPriority, description } =
       validation.data;
 
     try {
@@ -45,7 +45,6 @@ export class UpdateQueueTool extends BaseTool<YandexTrackerFacade> {
       if (defaultType !== undefined) updates.defaultType = defaultType;
       if (defaultPriority !== undefined) updates.defaultPriority = defaultPriority;
       if (description !== undefined) updates.description = description;
-      if (issueTypes !== undefined) updates.issueTypes = issueTypes;
 
       const updatedQueue = await this.facade.updateQueue({ queueId, updates });
 

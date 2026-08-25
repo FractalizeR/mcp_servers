@@ -2,10 +2,11 @@
  * Доменный тип: Компонент очереди в Яндекс.Трекере
  *
  * Соответствует API v3:
- * - GET /v2/queues/{queueId}/components - список компонентов очереди
- * - POST /v2/queues/{queueId}/components - создание компонента
- * - PATCH /v2/components/{componentId} - обновление компонента
- * - DELETE /v2/components/{componentId} - удаление компонента
+ * - GET /v3/queues/{queueId}/components - список компонентов очереди
+ * - POST /v3/components - создание компонента (очередь — ключ в теле, `queue`, не в пути;
+ *   D1, `0_CONTRACTS.md`: `POST /v3/queues/{queueId}/components` в API не существует)
+ * - PATCH /v3/components/{componentId} - обновление компонента
+ * - DELETE /v3/components/{componentId} - удаление компонента
  *
  * Компоненты - это механизм для группировки задач внутри очереди.
  * Каждый компонент привязан к определенной очереди и может иметь
@@ -34,9 +35,17 @@ export interface Component {
 
   /**
    * URL ссылка на компонент в API
-   * @example "https://api.tracker.yandex.net/v2/components/1"
+   * @example "https://api.tracker.yandex.net/v3/components/1"
    */
   readonly self: string;
+
+  /**
+   * Версия компонента (optimistic locking)
+   *
+   * PATCH без версии отвечает 428 — правка компонента без неё невозможна вовсе
+   * (живая проба 2026-08-25).
+   */
+  readonly version: number;
 
   /**
    * Название компонента

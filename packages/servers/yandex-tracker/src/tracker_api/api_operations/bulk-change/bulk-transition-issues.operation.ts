@@ -3,12 +3,16 @@
  *
  * Ответственность (SRP):
  * - ТОЛЬКО массовая смена статусов задач (transition)
- * - Отправка POST запроса на /v2/bulkchange/_transition
+ * - Отправка POST запроса на /v3/bulkchange/_transition
  * - Возврат информации об операции (для мониторинга статуса)
  * - НЕТ ожидания завершения (асинхронная операция)
  * - НЕТ polling статуса (делается через GetBulkChangeStatusOperation)
  *
- * API: POST /v2/bulkchange/_transition
+ * API: POST /v3/bulkchange/_transition
+ *
+ * Существование этого маршрута под v3 подтверждено только по аналогии с v2 (пишущий
+ * эндпоинт, живым пробоем не проверить) — в отличие от `/v3/bulkchange/{id}`, который
+ * подтверждён read-only оракулом. См. `inventory/v2-paths-2026-08-24.md` (раздел bulkchange).
  */
 
 import { BaseOperation } from '../base-operation.js';
@@ -52,7 +56,7 @@ export class BulkTransitionIssuesOperation extends BaseOperation {
       `Массовая смена статуса для ${params.issues.length} задач: переход '${params.transition}'`
     );
 
-    const endpoint = '/v2/bulkchange/_transition';
+    const endpoint = '/v3/bulkchange/_transition';
 
     const requestBody: Record<string, unknown> = {
       issues: params.issues,

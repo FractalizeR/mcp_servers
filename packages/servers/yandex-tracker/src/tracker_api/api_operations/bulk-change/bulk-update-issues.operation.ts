@@ -3,12 +3,16 @@
  *
  * Ответственность (SRP):
  * - ТОЛЬКО массовое обновление полей задач
- * - Отправка POST запроса на /v2/bulkchange/_update
+ * - Отправка POST запроса на /v3/bulkchange/_update
  * - Возврат информации об операции (для мониторинга статуса)
  * - НЕТ ожидания завершения (асинхронная операция)
  * - НЕТ polling статуса (делается через GetBulkChangeStatusOperation)
  *
- * API: POST /v2/bulkchange/_update
+ * API: POST /v3/bulkchange/_update
+ *
+ * Существование этого маршрута под v3 подтверждено только по аналогии с v2 (пишущий
+ * эндпоинт, живым пробоем не проверить) — в отличие от `/v3/bulkchange/{id}`, который
+ * подтверждён read-only оракулом. См. `inventory/v2-paths-2026-08-24.md` (раздел bulkchange).
  */
 
 import { BaseOperation } from '../base-operation.js';
@@ -47,7 +51,7 @@ export class BulkUpdateIssuesOperation extends BaseOperation {
       }`
     );
 
-    const endpoint = '/v2/bulkchange/_update';
+    const endpoint = '/v3/bulkchange/_update';
 
     const response = await this.httpClient.post<BulkChangeOperationWithUnknownFields>(endpoint, {
       issues: params.issues,

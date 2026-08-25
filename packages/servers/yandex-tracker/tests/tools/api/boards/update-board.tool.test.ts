@@ -29,7 +29,7 @@ describe('UpdateBoardTool', () => {
   });
 
   it('обновит доску', async () => {
-    const board = { id: '1', self: 'url', version: 2, name: 'Renamed' };
+    const board = { id: 1, self: 'url', version: 2, name: 'Renamed' };
     vi.mocked(mockTrackerFacade.updateBoard).mockResolvedValue(board);
 
     const result = await tool.execute({
@@ -43,6 +43,74 @@ describe('UpdateBoardTool', () => {
       '1',
       expect.objectContaining({ name: 'Renamed' })
     );
+  });
+
+  it('примет числовой boardId (как отдаёт get_boards) и дойдёт до того же запроса', async () => {
+    const board = { id: 1, self: 'url', version: 2, name: 'Renamed' };
+    vi.mocked(mockTrackerFacade.updateBoard).mockResolvedValue(board);
+
+    const result = await tool.execute({
+      boardId: 1,
+      name: 'Renamed',
+      fields: ['id', 'name'],
+    });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.updateBoard).toHaveBeenCalledWith(
+      '1',
+      expect.objectContaining({ name: 'Renamed' })
+    );
+  });
+
+  it('version не объявлен и до API не доезжает', async () => {
+    // `PATCH /v3/boards/{id}` отвечает `400 version: Incorrect data format` при любом
+    // значении, включая текущую версию доски (живая проба 2026-08-25). Параметра нет
+    // в схеме, поэтому клиент отклонит его по additionalProperties, а присланный в
+    // обход — не попадёт в тело запроса.
+    const definition = tool.getDefinition();
+    const properties = (definition.inputSchema as { properties?: Record<string, unknown> })
+      .properties;
+    expect(properties?.['version']).toBeUndefined();
+
+    vi.mocked(mockTrackerFacade.updateBoard).mockResolvedValue({
+      id: 5,
+      self: 'url',
+      version: 6,
+      name: 'X',
+    });
+    await tool.execute({ boardId: '5', name: 'X', version: 6, fields: ['id'] });
+
+    expect(mockTrackerFacade.updateBoard).toHaveBeenCalledWith(
+      '5',
+      expect.not.objectContaining({ version: expect.anything() })
+    );
+  });
+
+  it('orderBy вместе с filter принимается', async () => {
+    // Вторая половина ограничения: отказ обязан касаться только комбинации без filter.
+    vi.mocked(mockTrackerFacade.updateBoard).mockResolvedValue({
+      id: 5,
+      self: 'url',
+      version: 2,
+      name: 'X',
+    });
+
+    const result = await tool.execute({
+      boardId: '5',
+      filter: { queue: ['TEST'] },
+      orderBy: 'created',
+      orderAsc: false,
+      fields: ['id'],
+    });
+
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('не принимает orderBy без filter: API отвечает 422', async () => {
+    const result = await tool.execute({ boardId: '5', orderBy: 'created', fields: ['id'] });
+
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result)).toContain('filter');
   });
 
   it('обработает ошибку facade', async () => {

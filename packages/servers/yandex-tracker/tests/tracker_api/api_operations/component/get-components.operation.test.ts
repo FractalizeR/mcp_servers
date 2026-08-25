@@ -40,13 +40,13 @@ describe('GetComponentsOperation', () => {
         createComponentFixture({ id: 1, name: 'Backend' }),
         createComponentFixture({ id: 2, name: 'Frontend' }),
       ];
-      httpClient.setResponse('GET', '/v2/queues/QUEUE/components', components);
+      httpClient.setResponse('GET', '/v3/queues/QUEUE/components', components);
 
       const result = await operation.execute({ queueId: 'QUEUE' });
 
       const history = httpClient.getRequestHistory();
       expect(history).toHaveLength(1);
-      expect(history[0]).toMatchObject({ method: 'GET', path: '/v2/queues/QUEUE/components' });
+      expect(history[0]).toMatchObject({ method: 'GET', path: '/v3/queues/QUEUE/components' });
       // Один запрос без query-параметров пагинации.
       expect(history[0]?.params).toBeUndefined();
       expect(result.items).toHaveLength(2);
@@ -77,7 +77,7 @@ describe('GetComponentsOperation', () => {
     });
 
     it('кеширует запрос после загрузки из API', async () => {
-      httpClient.setResponse('GET', '/v2/queues/TEST/components', [
+      httpClient.setResponse('GET', '/v3/queues/TEST/components', [
         createComponentFixture({ id: 1 }),
       ]);
 
@@ -91,7 +91,7 @@ describe('GetComponentsOperation', () => {
     });
 
     it('обрабатывает пустой результат', async () => {
-      httpClient.setResponse('GET', '/v2/queues/EMPTY/components', []);
+      httpClient.setResponse('GET', '/v3/queues/EMPTY/components', []);
 
       const result = await operation.execute({ queueId: 'EMPTY' });
 

@@ -11,6 +11,10 @@ import { MCP_TOOL_PREFIX } from '#constants';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
 
+const ISSUE_TYPES_CONFIG = [
+  { issueType: '1', workflow: 'quickStartV2PresetWorkflow', resolutions: ['fixed', 'wontFix'] },
+];
+
 describe('CreateQueueTool', () => {
   let mockTrackerFacade: YandexTrackerFacade;
   let mockLogger: Logger;
@@ -43,10 +47,14 @@ describe('CreateQueueTool', () => {
       expect(definition.inputSchema.required).toContain('lead');
       expect(definition.inputSchema.required).toContain('defaultType');
       expect(definition.inputSchema.required).toContain('defaultPriority');
+      expect(definition.inputSchema.required).toContain('issueTypesConfig');
       expect(definition.inputSchema.properties?.['key']).toBeDefined();
       expect(definition.inputSchema.properties?.['name']).toBeDefined();
       expect(definition.inputSchema.properties?.['description']).toBeDefined();
-      expect(definition.inputSchema.properties?.['issueTypes']).toBeDefined();
+      // `issueTypes` в схеме нет намеренно: API отвечает на него
+      // `400 Incorrect data format` (живая проба 2026-08-25).
+      expect(definition.inputSchema.properties?.['issueTypes']).toBeUndefined();
+      expect(definition.inputSchema.properties?.['issueTypesConfig']).toBeDefined();
     });
 
     it('должен включать параметр fields в inputSchema', () => {
@@ -71,6 +79,56 @@ describe('CreateQueueTool', () => {
         expect(parsed.message).toContain('валидации');
       });
 
+      it('должен вернуть ошибку если issueTypesConfig не указан', async () => {
+        const result = await tool.execute({
+          key: 'TEST',
+          name: 'Test Queue',
+          lead: 'user1',
+          defaultType: '1',
+          defaultPriority: '2',
+          fields: ['id', 'key', 'name'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
+      it('должен вернуть ошибку если issueTypesConfig — пустой массив', async () => {
+        const result = await tool.execute({
+          key: 'TEST',
+          name: 'Test Queue',
+          lead: 'user1',
+          defaultType: '1',
+          defaultPriority: '2',
+          issueTypesConfig: [],
+          fields: ['id', 'key', 'name'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
+      it('описание параметра workflow должно называть способ его добыть (GET /v3/workflows)', () => {
+        const definition = tool.getDefinition();
+        const issueTypesConfigProp = definition.inputSchema.properties?.['issueTypesConfig'] as {
+          items?: { properties?: Record<string, { description?: string }> };
+        };
+        const workflowDescription =
+          issueTypesConfigProp.items?.properties?.['workflow']?.description ?? '';
+
+        expect(workflowDescription).toContain('GET /v3/workflows');
+      });
+
       it('должен вернуть ошибку для некорректного key (lowercase)', async () => {
         const result = await tool.execute({
           key: 'test',
@@ -78,6 +136,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -97,6 +156,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -116,6 +176,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -135,6 +196,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -147,6 +209,43 @@ describe('CreateQueueTool', () => {
         expect(parsed.message).toContain('валидации');
       });
 
+      it('должен вернуть ошибку если name длиннее 40 символов', async () => {
+        const result = await tool.execute({
+          key: 'TEST',
+          name: 'A'.repeat(41),
+          lead: 'user1',
+          defaultType: '1',
+          defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
+          fields: ['id', 'key', 'name'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
+      it('должен принимать name ровно из 40 символов', async () => {
+        const mockQueue = createQueueFixture({ key: 'MY' });
+        vi.mocked(mockTrackerFacade.createQueue).mockResolvedValue(mockQueue);
+
+        const result = await tool.execute({
+          key: 'MY',
+          name: 'A'.repeat(40),
+          lead: 'user1',
+          defaultType: '1',
+          defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
+          fields: ['id', 'key', 'name'],
+        });
+
+        expect(result.isError).toBeUndefined();
+      });
+
       it('должен принимать корректный key (2 символа)', async () => {
         const mockQueue = createQueueFixture({ key: 'MY' });
         vi.mocked(mockTrackerFacade.createQueue).mockResolvedValue(mockQueue);
@@ -157,6 +256,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -174,6 +274,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -188,6 +289,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -212,6 +314,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -222,6 +325,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
         });
         expect(mockLogger.info).toHaveBeenCalledWith('Создание новой очереди', {
           key: 'TEST',
@@ -263,6 +367,7 @@ describe('CreateQueueTool', () => {
           defaultType: '1',
           defaultPriority: '2',
           description: 'Project description',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -274,10 +379,11 @@ describe('CreateQueueTool', () => {
           defaultType: '1',
           defaultPriority: '2',
           description: 'Project description',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
         });
       });
 
-      it('должен создать очередь с типами задач', async () => {
+      it('должен создать очередь с настройкой типов задач', async () => {
         const mockQueue = createQueueFixture({ key: 'TASK' });
         vi.mocked(mockTrackerFacade.createQueue).mockResolvedValue(mockQueue);
 
@@ -287,7 +393,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
-          issueTypes: ['1', '2', '3'],
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -298,7 +404,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
-          issueTypes: ['1', '2', '3'],
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
         });
       });
 
@@ -313,7 +419,7 @@ describe('CreateQueueTool', () => {
           defaultType: '1',
           defaultPriority: '3',
           description: 'Full queue description',
-          issueTypes: ['1', '2', '3', '4'],
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -325,7 +431,7 @@ describe('CreateQueueTool', () => {
           defaultType: '1',
           defaultPriority: '3',
           description: 'Full queue description',
-          issueTypes: ['1', '2', '3', '4'],
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
         });
       });
     });
@@ -341,6 +447,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -365,6 +472,7 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 
@@ -387,6 +495,7 @@ describe('CreateQueueTool', () => {
           lead: 'invalid-user',
           defaultType: '1',
           defaultPriority: '2',
+          issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
 

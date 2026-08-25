@@ -4,10 +4,10 @@ import type { Sprint, SprintWithUnknownFields } from '#tracker_api/entities/spri
 export function createBoardFixture(
   overrides?: Partial<Board> & Record<string, unknown>
 ): BoardWithUnknownFields {
-  const id = overrides?.id ?? '1';
+  const id = overrides?.id ?? 1;
   return {
     id,
-    self: `https://api.tracker.yandex.net/v2/boards/${id}`,
+    self: `https://api.tracker.yandex.net/v3/boards/${id}`,
     version: 1,
     name: 'Test Board',
     ...overrides,
@@ -17,10 +17,10 @@ export function createBoardFixture(
 export function createSprintFixture(
   overrides?: Partial<Sprint> & Record<string, unknown>
 ): SprintWithUnknownFields {
-  const id = overrides?.id ?? '1';
+  const id = overrides?.id ?? 1;
   return {
     id,
-    self: `https://api.tracker.yandex.net/v2/sprints/${id}`,
+    self: `https://api.tracker.yandex.net/v3/sprints/${id}`,
     version: 1,
     name: 'Test Sprint',
     ...overrides,

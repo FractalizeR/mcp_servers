@@ -23,7 +23,7 @@ import { createUserRef } from './common-fixtures.js';
  *   name: 'screenshot.png',
  *   mimetype: 'image/png',
  *   size: 1024,
- *   thumbnail: 'https://api.tracker.yandex.net/v2/issues/TEST-1/thumbnails/12345'
+ *   thumbnail: 'https://api.tracker.yandex.net/v3/issues/TEST-1/thumbnails/12345'
  * });
  *
  * // Создать PDF документ
@@ -42,9 +42,9 @@ export function createAttachmentFixture(
 
   return {
     id,
-    self: `https://api.tracker.yandex.net/v2/issues/${issueKey}/attachments/${id}`,
+    self: `https://api.tracker.yandex.net/v3/issues/${issueKey}/attachments/${id}`,
     name: 'test-file.txt',
-    content: `https://api.tracker.yandex.net/v2/issues/${issueKey}/attachments/${id}/test-file.txt`,
+    content: `https://api.tracker.yandex.net/v3/issues/${issueKey}/attachments/${id}/test-file.txt`,
     createdBy: createUserRef(),
     createdAt: new Date('2024-01-15T10:00:00.000Z').toISOString(),
     mimetype: 'text/plain',
@@ -75,7 +75,7 @@ export function createImageAttachmentFixture(
     id,
     name,
     mimetype: 'image/png',
-    thumbnail: `https://api.tracker.yandex.net/v2/issues/${issueKey}/thumbnails/${id}`,
+    thumbnail: `https://api.tracker.yandex.net/v3/issues/${issueKey}/thumbnails/${id}`,
     size: 2048,
     ...overrides,
   });
@@ -115,9 +115,9 @@ export function createAttachmentListFixture(
 export function createMinimalAttachmentFixture(id = '67890', issueKey = 'TEST-123'): Attachment {
   return {
     id,
-    self: `https://api.tracker.yandex.net/v2/issues/${issueKey}/attachments/${id}`,
+    self: `https://api.tracker.yandex.net/v3/issues/${issueKey}/attachments/${id}`,
     name: 'minimal.txt',
-    content: `https://api.tracker.yandex.net/v2/issues/${issueKey}/attachments/${id}/minimal.txt`,
+    content: `https://api.tracker.yandex.net/v3/issues/${issueKey}/attachments/${id}/minimal.txt`,
     createdBy: createUserRef(),
     createdAt: new Date('2024-01-15T10:00:00.000Z').toISOString(),
     mimetype: 'text/plain',

@@ -5,7 +5,6 @@
  * - Получение списка компонентов очереди
  * - Создание компонента
  * - Обновление компонента
- * - Удаление компонента
  *
  * Архитектура:
  * - Прямая инъекция операций через декораторы (@injectable + @inject)
@@ -21,7 +20,6 @@ import { injectable, inject } from 'inversify';
 import { GetComponentsOperation } from '#tracker_api/api_operations/component/get-components.operation.js';
 import { CreateComponentOperation } from '#tracker_api/api_operations/component/create-component.operation.js';
 import { UpdateComponentOperation } from '#tracker_api/api_operations/component/update-component.operation.js';
-import { DeleteComponentOperation } from '#tracker_api/api_operations/component/delete-component.operation.js';
 import type { ComponentOutput } from '#tracker_api/dto/index.js';
 import type { GetComponentsInput } from '#tracker_api/dto/component/get-components.dto.js';
 import type { ComponentWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -32,8 +30,7 @@ export class ComponentService {
   constructor(
     @inject(GetComponentsOperation) private readonly getComponentsOp: GetComponentsOperation,
     @inject(CreateComponentOperation) private readonly createOp: CreateComponentOperation,
-    @inject(UpdateComponentOperation) private readonly updateOp: UpdateComponentOperation,
-    @inject(DeleteComponentOperation) private readonly deleteOp: DeleteComponentOperation
+    @inject(UpdateComponentOperation) private readonly updateOp: UpdateComponentOperation
   ) {}
 
   /**
@@ -61,7 +58,7 @@ export class ComponentService {
     assignAuto?: boolean | undefined;
   }): Promise<ComponentOutput> {
     const { queueId, ...componentData } = params;
-    return this.createOp.execute(queueId, componentData);
+    return this.createOp.execute({ ...componentData, queue: queueId });
   }
 
   /**
@@ -76,16 +73,9 @@ export class ComponentService {
     description?: string | undefined;
     lead?: string | undefined;
     assignAuto?: boolean | undefined;
+    version?: number | undefined;
   }): Promise<ComponentOutput> {
-    const { componentId, ...componentData } = params;
-    return this.updateOp.execute(componentId, componentData);
-  }
-
-  /**
-   * Удаляет компонент из очереди
-   * @param componentId - ID компонента
-   */
-  async deleteComponent(params: { componentId: string }): Promise<void> {
-    return this.deleteOp.execute(params.componentId);
+    const { componentId, version, ...componentData } = params;
+    return this.updateOp.execute(componentId, componentData, version);
   }
 }

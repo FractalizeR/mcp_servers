@@ -1,12 +1,12 @@
 /**
  * Доменный тип: Поле задачи в Яндекс.Трекере
  *
- * Соответствует API v2:
- * - GET /v2/fields - список всех полей трекера
- * - GET /v2/fields/{fieldId} - получение поля по ID
- * - POST /v2/fields - создание кастомного поля
- * - PATCH /v2/fields/{fieldId} - обновление поля
- * - DELETE /v2/fields/{fieldId} - удаление поля
+ * Соответствует API v3:
+ * - GET /v3/fields - список всех полей трекера
+ * - GET /v3/fields/{fieldId} - получение поля по ID
+ * - POST /v3/fields - создание кастомного поля
+ * - PATCH /v3/fields/{fieldId} - обновление поля
+ * - DELETE /v3/fields/{fieldId} - удаление поля
  *
  * Поля (Fields) - это атрибуты задач в Яндекс.Трекере.
  * Существуют системные поля (summary, description, assignee и т.д.)
@@ -100,7 +100,7 @@ export interface Field {
 
   /**
    * URL поля в API (всегда присутствует)
-   * @example "https://api.tracker.yandex.net/v2/fields/summary"
+   * @example "https://api.tracker.yandex.net/v3/fields/summary"
    */
   readonly self: string;
 
@@ -128,10 +128,16 @@ export interface Field {
   readonly readonly?: boolean;
 
   /**
-   * Опции выбора для полей с фиксированным набором значений
-   * Используется для полей типа "select", "multiselect" и т.д.
+   * Есть ли у поля список опций выбора (select/multiselect)
+   *
+   * Булев флаг, а не список опций: подтверждено боевым `GET` (§4.1 плана
+   * миграции v3, `inventory/live-version-probe-2026-08-23.md`). Не путать с
+   * входным `options` инструментов `create_global_field`/`update_global_field`
+   * (`FieldOptionValueSchema[]`, тело запроса) — там `options` задаёт сами
+   * значения выбора при создании/изменении поля; здесь — только факт их
+   * наличия в ответе на чтение.
    */
-  readonly options?: readonly FieldOption[];
+  readonly options?: boolean;
 
   /**
    * Настройки автоподстановки значений

@@ -62,7 +62,7 @@ export class BulkUpdateIssuesTool extends BaseTool<YandexTrackerFacade> {
       this.logger.info(`Обновляемые поля: ${Object.keys(values).join(', ')}`);
       this.logger.info(`Задачи: ${issueIds.join(', ')}`);
 
-      // 3. API v2: массовое обновление задач (асинхронная операция)
+      // 3. API v3: массовое обновление задач (асинхронная операция)
       const operation = await this.facade.bulkUpdateIssues({
         issues: issueIds,
         values: values as Record<string, unknown>,

@@ -39,7 +39,7 @@ describe('ManageSprintLifecycleOperation', () => {
   });
 
   it('start: POST /v3/sprints/{id}/_start, возвращает спринт', async () => {
-    const sprint = { id: '1', self: 'url', version: 2, name: 'Sprint 1', status: 'in_progress' };
+    const sprint = { id: 1, self: 'url', version: 2, name: 'Sprint 1', status: 'in_progress' };
     vi.mocked(mockHttpClient.post).mockResolvedValue(sprint);
 
     const result = await operation.execute({ sprintId: '1', action: 'start' });
@@ -49,7 +49,7 @@ describe('ManageSprintLifecycleOperation', () => {
   });
 
   it('archive: POST /v3/sprints/{id}/_archive, возвращает спринт', async () => {
-    const sprint = { id: '1', self: 'url', version: 3, name: 'Sprint 1', archived: true };
+    const sprint = { id: 1, self: 'url', version: 3, name: 'Sprint 1', archived: true };
     vi.mocked(mockHttpClient.post).mockResolvedValue(sprint);
 
     const result = await operation.execute({ sprintId: '1', action: 'archive' });
@@ -67,7 +67,7 @@ describe('ManageSprintLifecycleOperation', () => {
   });
 
   it('инвалидирует кеш спринта независимо от действия', async () => {
-    vi.mocked(mockHttpClient.post).mockResolvedValue({ id: '1' });
+    vi.mocked(mockHttpClient.post).mockResolvedValue({ id: 1 });
     await operation.execute({ sprintId: '1', action: 'start' });
 
     const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, '1');

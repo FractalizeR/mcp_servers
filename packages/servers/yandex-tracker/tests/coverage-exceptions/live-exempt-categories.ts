@@ -1,7 +1,7 @@
 /**
  * Категории (папки `src/tools/api/*`), которые «Реестр исключений: что живьём не
  * проверяется» (`tests/TESTING_STRATEGY.md` §1) выводит за пределы очереди `TEST`
- * целиком: доски и колонки, спринты, проекты, глобальные поля, цели и Entity API,
+ * целиком: доски и колонки, спринты, глобальные поля, цели и Entity API,
  * сохранённые фильтры, очереди. Для них С-4 на моке — гипотеза, а не наблюдение
  * (канон §2), С-5 не наблюдается никогда.
  *
@@ -13,10 +13,11 @@
  */
 
 export const LIVE_EXEMPT_CATEGORY_FOLDERS: ReadonlySet<string> = new Set([
+  // Колонки досок лежат в `api/boards` (`create-board-column.tool.ts` и соседние),
+  // отдельной папки `api/board-columns` не существует — запись на неё была мёртвой
+  // и читалась как работающая (ревью волны 2.1.2, claude-12).
   'api/boards',
-  'api/board-columns',
   'api/sprints',
-  'api/projects',
   'api/fields',
   'api/entities',
   'api/filters',

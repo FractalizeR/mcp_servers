@@ -83,7 +83,7 @@ describe('GetThumbnailOperation', () => {
 
       // Assert
       expect(downloadFileSpy).toHaveBeenCalledWith(
-        `/v2/issues/${issueId}/thumbnails/${attachmentId}`
+        `/v3/issues/${issueId}/thumbnails/${attachmentId}`
       );
     });
 
@@ -139,7 +139,7 @@ describe('GetThumbnailOperation', () => {
     it('должна вернуть true для файла с полем thumbnail', async () => {
       // Arrange
       const attachment = createImageAttachmentFixture({
-        thumbnail: 'https://api.tracker.yandex.net/v2/issues/TEST-123/thumbnails/67890',
+        thumbnail: 'https://api.tracker.yandex.net/v3/issues/TEST-123/thumbnails/67890',
       });
 
       // Act

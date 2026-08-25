@@ -5,7 +5,7 @@
  * - ТОЛЬКО получение всех элементов чеклиста задачи
  * - НЕТ добавления/редактирования/удаления элементов
  *
- * API: GET /v2/issues/{issueId}/checklistItems
+ * API: GET /v3/issues/{issueId}/checklistItems
  *
  * Кеширование: операция кеш НЕ использует (по-прежнему) — кеш-аудит расхождений
  * не выявил.
@@ -88,7 +88,7 @@ export class GetChecklistOperation extends BaseOperation {
     // был известен buildMeta (F3-sanity-check).
     const effectivePerPage = input.perPage ?? (fetchAll ? DEFAULT_MAX_PER_PAGE : DEFAULT_PER_PAGE);
 
-    const path = `/v2/issues/${issueId}/checklistItems`;
+    const path = `/v3/issues/${issueId}/checklistItems`;
     const params = this.buildParams(effectivePerPage);
 
     const first = await this.httpClient.getWithResponse<ChecklistItemWithUnknownFields[]>(

@@ -1,12 +1,13 @@
 /**
  * Схемы URI ресурсов Трекера (пакет 5.1.C.tracker плана модернизации MCP
- * 2026-07-28) — три схемы, спроектированные планом:
+ * 2026-07-28):
  *
  * - `tracker://issue/{key}`   — задача, ключ (например, `PROJ-123`)
  * - `tracker://queue/{key}`   — очередь, ключ (например, `PROJ`)
- * - `tracker://project/{id}`  — проект, ID (НЕ ключ — так задано планом;
- *   `GetProjectParams.projectId` принимает и ID, и ключ, но URI фиксирует
- *   именно ID, чтобы у одного проекта был один канонический адрес)
+ *
+ * Схема `tracker://project/{id}` существовала для легаси-семейства проектов
+ * (`/v3/projects`) и убрана вместе с ним 2026-08-25 — данные проектов теперь
+ * только через Entity API (`entityType: 'project'`), без отдельной схемы URI.
  *
  * Файл — единственное место, которое знает формат этих URI: провайдеры
  * (`issue-resource-provider.ts` и др.) и инструменты, строящие `resource_link`
@@ -20,7 +21,6 @@
 
 const ISSUE_URI_PREFIX = 'tracker://issue/';
 const QUEUE_URI_PREFIX = 'tracker://queue/';
-const PROJECT_URI_PREFIX = 'tracker://project/';
 
 function buildUri(prefix: string, segment: string): string {
   return `${prefix}${encodeURIComponent(segment)}`;
@@ -65,15 +65,6 @@ export function parseQueueResourceUri(uri: string): string | undefined {
   return parseUri(QUEUE_URI_PREFIX, uri);
 }
 
-export function buildProjectResourceUri(projectId: string): string {
-  return buildUri(PROJECT_URI_PREFIX, projectId);
-}
-
-export function parseProjectResourceUri(uri: string): string | undefined {
-  return parseUri(PROJECT_URI_PREFIX, uri);
-}
-
 /** uriTemplate (RFC 6570) для `resources/templates/list` — держим рядом с парсерами. */
 export const ISSUE_URI_TEMPLATE = 'tracker://issue/{key}';
 export const QUEUE_URI_TEMPLATE = 'tracker://queue/{key}';
-export const PROJECT_URI_TEMPLATE = 'tracker://project/{id}';

@@ -18,7 +18,7 @@ import {
  * - Массив issueIds для получения файлов нескольких задач
  * - Общие параметры (fields) применяются ко всем результатам
  *
- * ВАЖНО: эндпоинт `/v2/issues/{id}/attachments` НЕ пагинируется (API отдаёт
+ * ВАЖНО: эндпоинт `/v3/issues/{id}/attachments` НЕ пагинируется (API отдаёт
  * все вложения за один ответ, без `Link rel="next"`). Поэтому параметры
  * пагинации (page/perPage/fetchAll/maxItems/maxTotalItems) и cursor отсутствуют.
  */

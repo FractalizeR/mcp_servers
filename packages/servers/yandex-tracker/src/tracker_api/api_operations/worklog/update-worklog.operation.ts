@@ -6,7 +6,7 @@
  * - Конвертация human-readable duration в ISO 8601
  * - НЕТ добавления/получения/удаления записей
  *
- * API: PATCH /v2/issues/{issueId}/worklog/{worklogId}
+ * API: PATCH /v3/issues/{issueId}/worklog/{worklogId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -28,7 +28,7 @@ export class UpdateWorklogOperation extends BaseOperation {
    * - Retry делается автоматически в HttpClient.patch
    * - API возвращает полный объект обновлённой записи времени
    * - duration автоматически конвертируется в ISO 8601, если передан в human-readable формате
-   * - Эндпоинт из API v2 (не v3!)
+   * - Эндпоинт из API v3
    */
   async execute(
     issueId: string,
@@ -56,7 +56,7 @@ export class UpdateWorklogOperation extends BaseOperation {
     });
 
     const worklog = await this.httpClient.patch<WorklogWithUnknownFields>(
-      `/v2/issues/${issueId}/worklog/${worklogId}`,
+      `/v3/issues/${issueId}/worklog/${worklogId}`,
       payload
     );
 

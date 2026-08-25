@@ -40,6 +40,18 @@ describe('DeleteBoardColumnTool', () => {
     });
   });
 
+  it('примет числовые boardId/columnId (как отдаёт get_boards/get_board_columns) и дойдёт до того же запроса', async () => {
+    vi.mocked(mockTrackerFacade.deleteBoardColumn).mockResolvedValue(undefined);
+
+    const result = await tool.execute({ boardId: 42, columnId: 1 });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.deleteBoardColumn).toHaveBeenCalledWith({
+      boardId: '42',
+      columnId: '1',
+    });
+  });
+
   it('обработает ошибку facade', async () => {
     vi.mocked(mockTrackerFacade.deleteBoardColumn).mockRejectedValue(new Error('Not found'));
     const result = await tool.execute({ boardId: 'b1', columnId: 'c1' });

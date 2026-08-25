@@ -174,7 +174,12 @@ rate limits), частичная обработка ошибок, единооб
 
 Этот MCP сервер поддерживает **9 из 17 категорий** официального API Яндекс.Трекера (покрытие ~53%).
 
-### Поддерживаемые API (42 инструмента)
+### Поддерживаемые API
+
+Инструментов в сервере — **85**; точный перечень отдаёт `npm run tools:list`.
+Таблица и детальный список ниже покрывают восемь самых ходовых семейств (36
+инструментов) и не претендуют на полноту: сводные числа тут расходились с фактом
+и раньше, поэтому единственный источник истины по составу — сам сервер.
 
 | API Категория | Инструментов | Описание |
 |---------------|-------------|----------|
@@ -185,8 +190,7 @@ rate limits), частичная обработка ошибок, единооб
 | **Checklists** | 4 | Управление чек-листами в задачах |
 | **Worklog** | 4 | Учет затраченного времени |
 | **Queues** | 6 | Управление очередями задач |
-| **Components** | 4 | Управление компонентами проекта |
-| **Projects** | 5 | Управление проектами |
+| **Components** | 3 | Управление компонентами проекта |
 
 ### Детальный список инструментов
 
@@ -266,23 +270,11 @@ rate limits), частичная обработка ошибок, единооб
 </details>
 
 <details>
-<summary><strong>Components (4 инструмента)</strong></summary>
+<summary><strong>Components (3 инструмента)</strong></summary>
 
 - `fr_yandex_tracker_create_component` — Создать компонент
 - `fr_yandex_tracker_get_components` — Получить компоненты очереди
 - `fr_yandex_tracker_update_component` — Обновить компонент
-- `fr_yandex_tracker_delete_component` — Удалить компонент
-
-</details>
-
-<details>
-<summary><strong>Projects (5 инструментов)</strong></summary>
-
-- `fr_yandex_tracker_create_project` — Создать проект
-- `fr_yandex_tracker_get_projects` — Получить список проектов
-- `fr_yandex_tracker_update_project` — Обновить проект
-- `fr_yandex_tracker_delete_project` — Удалить проект
-- `fr_yandex_tracker_get_project_queues` — Получить очереди проекта
 
 </details>
 

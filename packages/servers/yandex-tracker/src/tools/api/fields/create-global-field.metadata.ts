@@ -16,9 +16,20 @@ export const CREATE_GLOBAL_FIELD_TOOL_METADATA: StaticToolMetadata = {
   tags: ['administration', 'fields', 'global-fields', 'create', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  // Только структурные/идентификаторные поля — 'name'/'description'/'options.display'
-  // могут содержать произвольный бизнес-текст, поэтому НЕ в allowlist.
-  redactionAllowlist: ['schema', 'readonly', 'suggest', 'optionsProvider', 'fields'],
+  // Только структурные/идентификаторные поля — 'name'/'description' могут
+  // содержать произвольный бизнес-текст, поэтому НЕ в allowlist.
+  redactionAllowlist: [
+    'id',
+    'category',
+    'type',
+    'order',
+    'readonly',
+    'visible',
+    'hidden',
+    'container',
+    'optionsProvider',
+    'fields',
+  ],
   title: 'Создать глобальное поле',
   outputSchema: CreateGlobalFieldOutputSchema,
   annotations: {

@@ -8,11 +8,15 @@
  */
 
 import { z } from 'zod';
-import { FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
+import {
+  FilteredEntitySchema,
+  buildOutputSchema,
+  buildEntityIdSchema,
+} from '#common/schemas/index.js';
 
 export const ManageSprintLifecycleParamsSchema = z.object({
   /** Идентификатор спринта (обязательно) */
-  sprintId: z.string().min(1, 'Sprint ID не может быть пустым'),
+  sprintId: buildEntityIdSchema('Sprint'),
 
   /** Действие: запустить / архивировать / удалить спринт (обязательно) */
   action: z.enum(['start', 'archive', 'delete']),

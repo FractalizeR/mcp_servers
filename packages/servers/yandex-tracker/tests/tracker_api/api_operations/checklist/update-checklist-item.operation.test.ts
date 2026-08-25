@@ -79,7 +79,7 @@ describe('UpdateChecklistItemOperation', () => {
 
       const result = await operation.execute('TEST-1', '123', input);
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems/123', {
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/issues/TEST-1/checklistItems/123', {
         text: 'Updated item text',
       });
       expect(result).toEqual(mockItem);
@@ -117,7 +117,7 @@ describe('UpdateChecklistItemOperation', () => {
         text: 'New text',
         checked: true,
         assignee: {
-          self: 'https://api.tracker.yandex.net/v2/users/user456',
+          self: 'https://api.tracker.yandex.net/v3/users/user456',
           id: 'user456',
           display: 'Jane Smith',
         },
@@ -300,7 +300,7 @@ describe('UpdateChecklistItemOperation', () => {
         },
       ]);
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems/item-1', {
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/issues/TEST-1/checklistItems/item-1', {
         text: 'Item 1',
         checked: true,
         assignee: 'user1',

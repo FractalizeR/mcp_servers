@@ -52,7 +52,7 @@ export class DeleteWorklogTool extends BaseTool<YandexTrackerFacade> {
         worklogId,
       });
 
-      // 3. API v2: удаление записи времени
+      // 3. API v3: удаление записи времени
       await this.facade.deleteWorklog(issueId, worklogId);
 
       // 4. Логирование результата

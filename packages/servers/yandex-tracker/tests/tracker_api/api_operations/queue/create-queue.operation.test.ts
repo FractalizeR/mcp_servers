@@ -57,6 +57,35 @@ describe('CreateQueueOperation', () => {
       expect(result).toEqual(mockQueue);
     });
 
+    it('should send the full request body verbatim, including issueTypesConfig', async () => {
+      const dto = {
+        key: 'FULLBODY',
+        name: 'Full Body Queue',
+        lead: 'testuser',
+        defaultType: '1',
+        defaultPriority: '2',
+        issueTypesConfig: [
+          { issueType: '1', workflow: 'quickStartV2PresetWorkflow', resolutions: ['fixed'] },
+          { issueType: '2', workflow: 'W7', resolutions: ['wontFix', 'duplicate'] },
+        ],
+      };
+      const mockQueue: QueueWithUnknownFields = createQueueFixture({ key: 'FULLBODY' });
+      vi.mocked(mockHttpClient.post).mockResolvedValue(mockQueue);
+
+      await operation.execute(dto);
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/queues/', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v3/queues/',
+        expect.objectContaining({
+          issueTypesConfig: [
+            { issueType: '1', workflow: 'quickStartV2PresetWorkflow', resolutions: ['fixed'] },
+            { issueType: '2', workflow: 'W7', resolutions: ['wontFix', 'duplicate'] },
+          ],
+        })
+      );
+    });
+
     it('should validate queue key format (must be A-Z, 2-10 characters)', async () => {
       const invalidDto = createInvalidCreateQueueDto({ key: 'test' }); // lowercase
 

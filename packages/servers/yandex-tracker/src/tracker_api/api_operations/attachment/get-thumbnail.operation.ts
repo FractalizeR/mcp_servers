@@ -6,7 +6,7 @@
  * - Валидация, что файл является изображением
  * - НЕТ загрузки/удаления/скачивания полного файла
  *
- * API: GET /v2/issues/{issueId}/thumbnails/{attachmentId}
+ * API: GET /v3/issues/{issueId}/thumbnails/{attachmentId}
  *
  * ВАЖНО: Миниатюры доступны ТОЛЬКО для изображений.
  * Для других типов файлов API вернет ошибку.
@@ -43,7 +43,7 @@ export class GetThumbnailOperation extends BaseOperation {
     );
 
     // Используем метод downloadFile из BaseOperation
-    const buffer = await this.downloadFile(`/v2/issues/${issueId}/thumbnails/${attachmentId}`);
+    const buffer = await this.downloadFile(`/v3/issues/${issueId}/thumbnails/${attachmentId}`);
 
     this.logger.info(
       `GetThumbnailOperation: миниатюра получена для attachmentId=${attachmentId}, ` +
@@ -76,7 +76,7 @@ export class GetThumbnailOperation extends BaseOperation {
 
     // Получаем список всех файлов и находим нужный
     const attachments = await this.httpClient.get<AttachmentWithUnknownFields[]>(
-      `/v2/issues/${issueId}/attachments`
+      `/v3/issues/${issueId}/attachments`
     );
 
     const attachment = attachments.find((a) => a.id === attachmentId);

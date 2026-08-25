@@ -6,7 +6,7 @@
  * - Инвалидация кеша после создания
  * - НЕТ получения/обновления/удаления
  *
- * API: POST /v2/sprints
+ * API: POST /v3/sprints
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -27,12 +27,12 @@ export class CreateSprintOperation extends BaseOperation {
   async execute(dto: CreateSprintDto): Promise<SprintOutput> {
     this.logger.info(`Создание спринта: ${dto.name}`);
 
-    const endpoint = '/v2/sprints';
+    const endpoint = '/v3/sprints';
 
     const sprint = await this.httpClient.post<SprintOutput>(endpoint, dto);
 
     // Инвалидация кеша для нового спринта
-    const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, sprint.id);
+    const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, String(sprint.id));
     await this.cacheManager.delete(cacheKey);
 
     this.logger.info(`Спринт создан: ${sprint.id}`);

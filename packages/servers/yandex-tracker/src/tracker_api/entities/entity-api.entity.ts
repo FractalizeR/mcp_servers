@@ -3,16 +3,17 @@
  *
  * Соответствует API v3: /v3/entities/{entityType}/{id}
  *
- * ВАЖНО — не путать с двумя другими "проектами" в этом сервере:
- * - `Project` (`project.entity.ts`) — LEGACY-коллекция `/v2/projects`, уже
- *   покрытая `get_project(s)`/`create_project`/... Отдельная сущность со
- *   своими числовыми ID.
- * - `EntityApiRecord` здесь (`entityType: 'project'`) — Project ВНУТРИ Entity
- *   API (`/v3/entities/project/{id}`), появившийся в Трекере отдельно и
- *   имеющий другое пространство идентификаторов (`shortId`/`id`).
+ * История: до 2026-08-25 в сервере существовала параллельная LEGACY-коллекция
+ * `/v3/projects` (`get_project(s)`/`create_project`/`update_project`/
+ * `delete_project`, своя сущность `Project` со своими числовыми ID). Живой
+ * пробой было доказано, что легаси и Entity API отдают ОДИН И ТОТ ЖЕ набор
+ * проектов организации под разными идентификаторами — легаси-семейство было
+ * удалено как избыточное (`.agentic-planning/plan_tracker_route_sweep_fixes/
+ * inventory/legacy-vs-entity-projects-LIVE.md`). Доступ к данным проектов не
+ * потерян: `EntityApiRecord` (`entityType: 'project'`) — единственный
+ * оставшийся путь, свой namespace идентификаторов (`shortId`/`id`).
  * Инструменты Entity API называются `*_entity` (не `*_project`) и в
- * description явно помечены как "Entity API", чтобы не смешивать эти две
- * сущности при выборе инструмента.
+ * description явно помечены как "Entity API".
  *
  * ВАЖНО про происхождение типизации: официальная документация Трекера НЕ
  * описывает тело create/update Entity API (страниц `api-ref/entities/*` не

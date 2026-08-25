@@ -65,7 +65,6 @@ describe('YandexTrackerFacade', () => {
         getField: vi.fn(),
         createField: vi.fn(),
         updateField: vi.fn(),
-        deleteField: vi.fn(),
       },
     } as unknown as CoreServicesContainer;
 
@@ -127,18 +126,11 @@ describe('YandexTrackerFacade', () => {
         getComponents: vi.fn(),
         createComponent: vi.fn(),
         updateComponent: vi.fn(),
-        deleteComponent: vi.fn(),
       },
     } as unknown as QueueServicesContainer;
 
     mockProjectAgileContainer = {
-      project: {
-        getProjects: vi.fn(),
-        getProject: vi.fn(),
-        createProject: vi.fn(),
-        updateProject: vi.fn(),
-        deleteProject: vi.fn(),
-      },
+      project: {},
       board: {
         getBoards: vi.fn(),
         getBoard: vi.fn(),
@@ -730,7 +722,13 @@ describe('YandexTrackerFacade', () => {
 
     describe('createField', () => {
       it('должна делегировать вызов FieldService.createField', async () => {
-        const input: CreateFieldDto = { name: 'Custom Field', schema: { type: 'string' } };
+        // Форма D10 (0_CONTRACTS.md): id/name{en,ru}/category/type обязательны, schema — только в ответе.
+        const input: CreateFieldDto = {
+          id: 'customField',
+          name: { en: 'Custom Field', ru: 'Пользовательское поле' },
+          category: 'category1',
+          type: 'ru.yandex.startrek.core.fields.StringFieldType',
+        };
         const mockResult: FieldOutput = {
           id: 'newField',
           self: 'https://api.tracker.yandex.net/v3/fields/newField',
@@ -766,18 +764,6 @@ describe('YandexTrackerFacade', () => {
         expect(result).toEqual(mockResult);
       });
     });
-
-    describe('deleteField', () => {
-      it('должна делегировать вызов FieldService.deleteField', async () => {
-        const fieldId = 'customField123';
-
-        vi.mocked(mockCoreContainer.field.deleteField).mockResolvedValue(undefined);
-
-        await facade.deleteField(fieldId);
-
-        expect(mockCoreContainer.field.deleteField).toHaveBeenCalledWith(fieldId);
-      });
-    });
   });
 
   describe('Board methods', () => {
@@ -785,7 +771,7 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.getBoards без параметров', async () => {
         const mockResult: BoardsListOutput = [
           createBoardFixture({
-            id: '1',
+            id: 1,
             self: 'https://api.tracker.yandex.net/v3/boards/1',
             name: 'Board 1',
           }),
@@ -803,7 +789,7 @@ describe('YandexTrackerFacade', () => {
         const params: GetBoardsDto = { filter: 'active' };
         const mockResult: BoardsListOutput = [
           createBoardFixture({
-            id: '1',
+            id: 1,
             self: 'https://api.tracker.yandex.net/v3/boards/1',
             name: 'Active Board',
           }),
@@ -822,7 +808,7 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.getBoard', async () => {
         const boardId = '1';
         const mockResult: BoardOutput = createBoardFixture({
-          id: '1',
+          id: 1,
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
         });
@@ -839,7 +825,7 @@ describe('YandexTrackerFacade', () => {
         const boardId = '1';
         const params = { localized: true };
         const mockResult: BoardOutput = createBoardFixture({
-          id: '1',
+          id: 1,
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
         });
@@ -855,9 +841,16 @@ describe('YandexTrackerFacade', () => {
 
     describe('createBoard', () => {
       it('должна делегировать вызов BoardService.createBoard', async () => {
-        const input: CreateBoardDto = { name: 'Sprint Board', filter: { query: 'status: open' } };
+        // Форма D9 (0_CONTRACTS.md): POST /v3/liveBoards/ — очередь задаётся
+        // через autoFilters, а не через filter.query верхнего уровня.
+        const input: CreateBoardDto = {
+          name: 'Sprint Board',
+          autoFilters: {
+            addFilter: { liveFilter: { fieldValues: { queue: [{ fixed: 'TEST' }] } } },
+          },
+        };
         const mockResult: BoardOutput = createBoardFixture({
-          id: '1',
+          id: 1,
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
         });
@@ -876,7 +869,7 @@ describe('YandexTrackerFacade', () => {
         const boardId = '1';
         const input = { name: 'Updated Board' };
         const mockResult: BoardOutput = createBoardFixture({
-          id: '1',
+          id: 1,
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Updated Board',
         });
@@ -909,7 +902,7 @@ describe('YandexTrackerFacade', () => {
         const boardId = '1';
         const mockResult: SprintsListOutput = [
           createSprintFixture({
-            id: '10',
+            id: 10,
             self: 'https://api.tracker.yandex.net/v3/sprints/10',
             name: 'Sprint 1',
           }),
@@ -928,7 +921,7 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов SprintService.getSprint', async () => {
         const sprintId = '10';
         const mockResult: SprintOutput = createSprintFixture({
-          id: '10',
+          id: 10,
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1',
         });
@@ -951,7 +944,7 @@ describe('YandexTrackerFacade', () => {
           endDate: '2024-01-14',
         };
         const mockResult: SprintOutput = createSprintFixture({
-          id: '10',
+          id: 10,
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1',
         });
@@ -970,7 +963,7 @@ describe('YandexTrackerFacade', () => {
         const sprintId = '10';
         const input = { name: 'Sprint 1 Updated' };
         const mockResult: SprintOutput = createSprintFixture({
-          id: '10',
+          id: 10,
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1 Updated',
         });

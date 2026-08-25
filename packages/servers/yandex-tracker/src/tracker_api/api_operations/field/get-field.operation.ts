@@ -6,7 +6,7 @@
  * - НЕТ получения списка полей
  * - НЕТ создания/обновления/удаления полей
  *
- * API: GET /v2/fields/{fieldId}
+ * API: GET /v3/fields/{fieldId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -43,7 +43,7 @@ export class GetFieldOperation extends BaseOperation {
     }
 
     // Получаем поле через API
-    const field = await this.httpClient.get<FieldOutput>(`/v2/fields/${fieldId}`);
+    const field = await this.httpClient.get<FieldOutput>(`/v3/fields/${fieldId}`);
 
     // Кешируем результат
     await this.cacheManager.set(cacheKey, field);

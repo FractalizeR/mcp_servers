@@ -17,7 +17,6 @@ import type { Issue } from './issue.entity.js';
 import type { Transition } from './transition.entity.js';
 import type { ChangelogEntry, ChangelogField } from './changelog.entity.js';
 import type { Attachment } from './attachment.entity.js';
-import type { Project, ProjectStatus } from './project.entity.js';
 import type { QueueRef } from './common/queue-ref.entity.js';
 
 /**
@@ -328,9 +327,9 @@ export function createFullChangelogEntry(overrides?: Partial<ChangelogEntry>): C
 export function createAttachment(overrides?: Partial<Attachment>): Attachment {
   return {
     id: '1',
-    self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/attachments/1',
+    self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/attachments/1',
     name: 'test-file.pdf',
-    content: 'https://api.tracker.yandex.net/v2/issues/TEST-1/attachments/1/test-file.pdf',
+    content: 'https://api.tracker.yandex.net/v3/issues/TEST-1/attachments/1/test-file.pdf',
     createdBy: createUserRef(),
     createdAt: '2024-01-01T00:00:00.000Z',
     mimetype: 'application/pdf',
@@ -345,10 +344,10 @@ export function createAttachment(overrides?: Partial<Attachment>): Attachment {
 export function createAttachmentWithThumbnail(overrides?: Partial<Attachment>): Attachment {
   return {
     id: '1',
-    self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/attachments/1',
+    self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/attachments/1',
     name: 'screenshot.png',
-    content: 'https://api.tracker.yandex.net/v2/issues/TEST-1/attachments/1/screenshot.png',
-    thumbnail: 'https://api.tracker.yandex.net/v2/issues/TEST-1/thumbnails/1',
+    content: 'https://api.tracker.yandex.net/v3/issues/TEST-1/attachments/1/screenshot.png',
+    thumbnail: 'https://api.tracker.yandex.net/v3/issues/TEST-1/thumbnails/1',
     createdBy: createUserRef(),
     createdAt: '2024-01-01T00:00:00.000Z',
     mimetype: 'image/png',
@@ -366,42 +365,6 @@ export function createQueueRef(overrides?: Partial<QueueRef>): QueueRef {
     id: '1',
     key: 'TEST',
     display: 'Test Queue',
-    ...overrides,
-  };
-}
-
-/**
- * Создает минимальный Project entity (только обязательные поля)
- */
-export function createMinimalProject(overrides?: Partial<Project>): Project {
-  return {
-    id: '1',
-    self: 'https://api.tracker.yandex.net/v2/projects/1',
-    key: 'PROJECT',
-    name: 'Test Project',
-    lead: createUserRef(),
-    status: 'in_progress' as ProjectStatus,
-    ...overrides,
-  };
-}
-
-/**
- * Создает полный Project entity (со всеми опциональными полями)
- */
-export function createFullProject(overrides?: Partial<Project>): Project {
-  return {
-    id: '1',
-    self: 'https://api.tracker.yandex.net/v2/projects/1',
-    key: 'PROJECT',
-    name: 'Test Project',
-    lead: createUserRef(),
-    status: 'in_progress' as ProjectStatus,
-    description: 'Test project description',
-    teamUsers: [createUserRef()],
-    teamGroups: [{ id: '1', display: 'Test Group' }],
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
-    queues: [createQueueRef()],
     ...overrides,
   };
 }

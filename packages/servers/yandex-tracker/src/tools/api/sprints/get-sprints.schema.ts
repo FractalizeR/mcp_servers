@@ -3,7 +3,12 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  FilteredEntitySchema,
+  buildOutputSchema,
+  buildEntityIdSchema,
+} from '#common/schemas/index.js';
 
 /**
  * Схема параметров для получения списка спринтов доски.
@@ -13,7 +18,7 @@ import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/s
  */
 export const GetSprintsParamsSchema = z.object({
   /** Идентификатор доски (обязательно) */
-  boardId: z.string().min(1, 'Board ID не может быть пустым'),
+  boardId: buildEntityIdSchema('Board'),
 
   /** Список полей для возврата (обязательный) */
   fields: FieldsSchema,

@@ -33,6 +33,13 @@ export function createGetQueueDto(overrides?: Partial<GetQueueDto>): GetQueueDto
 }
 
 /**
+ * Дефолтная конфигурация issueTypesConfig для фабрик CreateQueueDto в тестах
+ */
+const DEFAULT_ISSUE_TYPES_CONFIG: CreateQueueDto['issueTypesConfig'] = [
+  { issueType: '1', workflow: 'quickStartV2PresetWorkflow', resolutions: ['fixed', 'wontFix'] },
+];
+
+/**
  * Создает минимальный валидный CreateQueueDto
  */
 export function createMinimalCreateQueueDto(overrides?: Partial<CreateQueueDto>): CreateQueueDto {
@@ -42,6 +49,7 @@ export function createMinimalCreateQueueDto(overrides?: Partial<CreateQueueDto>)
     lead: 'testuser',
     defaultType: '1',
     defaultPriority: '2',
+    issueTypesConfig: DEFAULT_ISSUE_TYPES_CONFIG,
     ...overrides,
   };
 }
@@ -58,6 +66,7 @@ export function createFullCreateQueueDto(overrides?: Partial<CreateQueueDto>): C
     defaultType: '1',
     defaultPriority: '2',
     issueTypes: ['1', '2', '3'],
+    issueTypesConfig: DEFAULT_ISSUE_TYPES_CONFIG,
     ...overrides,
   };
 }
@@ -74,14 +83,12 @@ export function createUpdateQueueDto(overrides?: Partial<UpdateQueueDto>): Updat
 
 /**
  * Создает валидный GetQueueFieldsDto
- * Note: Похож на createGetQueueDto, но создает разные типы
+ *
+ * GetQueueFieldsDto структурно — подмножество GetQueueDto (без expand),
+ * поэтому значение GetQueueDto ему удовлетворяет без отдельной реализации.
  */
-
 export function createGetQueueFieldsDto(overrides?: Partial<GetQueueFieldsDto>): GetQueueFieldsDto {
-  return {
-    queueId: 'TEST',
-    ...overrides,
-  };
+  return createGetQueueDto(overrides);
 }
 
 /**
