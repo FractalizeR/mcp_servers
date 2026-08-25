@@ -6,7 +6,6 @@
  * - Получение конкретного поля
  * - Создание кастомного поля
  * - Обновление поля
- * - Удаление поля
  *
  * Архитектура:
  * - Прямая инъекция операций через декораторы (@injectable + @inject)
@@ -23,7 +22,6 @@ import { GetFieldsOperation } from '#tracker_api/api_operations/field/get-fields
 import { GetFieldOperation } from '#tracker_api/api_operations/field/get-field.operation.js';
 import { CreateFieldOperation } from '#tracker_api/api_operations/field/create-field.operation.js';
 import { UpdateFieldOperation } from '#tracker_api/api_operations/field/update-field.operation.js';
-import { DeleteFieldOperation } from '#tracker_api/api_operations/field/delete-field.operation.js';
 import type {
   FieldsListOutput,
   FieldOutput,
@@ -37,8 +35,7 @@ export class FieldService {
     @inject(GetFieldsOperation) private readonly getFieldsOp: GetFieldsOperation,
     @inject(GetFieldOperation) private readonly getFieldOp: GetFieldOperation,
     @inject(CreateFieldOperation) private readonly createOp: CreateFieldOperation,
-    @inject(UpdateFieldOperation) private readonly updateOp: UpdateFieldOperation,
-    @inject(DeleteFieldOperation) private readonly deleteOp: DeleteFieldOperation
+    @inject(UpdateFieldOperation) private readonly updateOp: UpdateFieldOperation
   ) {}
 
   /**
@@ -75,13 +72,5 @@ export class FieldService {
    */
   async updateField(fieldId: string, input: UpdateFieldDto): Promise<FieldOutput> {
     return this.updateOp.execute(fieldId, input);
-  }
-
-  /**
-   * Удаляет поле
-   * @param fieldId - идентификатор поля
-   */
-  async deleteField(fieldId: string): Promise<void> {
-    return this.deleteOp.execute(fieldId);
   }
 }

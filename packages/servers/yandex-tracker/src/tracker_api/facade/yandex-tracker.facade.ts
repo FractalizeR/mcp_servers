@@ -417,14 +417,6 @@ export class YandexTrackerFacade implements RawApiCapable {
     return this.queues.component.updateComponent(params);
   }
 
-  /**
-   * Удаляет компонент из очереди
-   * @param componentId - ID компонента
-   */
-  async deleteComponent(params: { componentId: string }): Promise<void> {
-    return this.queues.component.deleteComponent(params);
-  }
-
   // === Issue Methods - Links ===
 
   /**
@@ -1004,14 +996,6 @@ export class YandexTrackerFacade implements RawApiCapable {
    */
   async updateField(fieldId: string, input: UpdateFieldDto): Promise<FieldOutput> {
     return this.core.field.updateField(fieldId, input);
-  }
-
-  /**
-   * Удаляет поле
-   * @param fieldId - идентификатор поля
-   */
-  async deleteField(fieldId: string): Promise<void> {
-    return this.core.field.deleteField(fieldId);
   }
 
   // === Board Methods ===

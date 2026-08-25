@@ -266,12 +266,11 @@ rate limits), частичная обработка ошибок, единооб
 </details>
 
 <details>
-<summary><strong>Components (4 инструмента)</strong></summary>
+<summary><strong>Components (3 инструмента)</strong></summary>
 
 - `fr_yandex_tracker_create_component` — Создать компонент
 - `fr_yandex_tracker_get_components` — Получить компоненты очереди
 - `fr_yandex_tracker_update_component` — Обновить компонент
-- `fr_yandex_tracker_delete_component` — Удалить компонент
 
 </details>
 

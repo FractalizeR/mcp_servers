@@ -468,7 +468,7 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 
 ## 📦 Component Operations (Complete API)
 
-**4 операции для работы с компонентами очередей:**
+**3 операции для работы с компонентами очередей:**
 
 ### 1. GetComponentsOperation
 `GET /v3/queues/{queueId}/components` — список компонентов очереди, кеш ✅
@@ -481,16 +481,12 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 ### 3. UpdateComponentOperation
 `PATCH /v3/components/{componentId}` — обновление параметров, инвалидация кеша
 
-### 4. DeleteComponentOperation
-`DELETE /v3/components/{componentId}` — удаление, сначала GET для queueId
-
 **Ключевые аспекты:**
 - **API версия:** v3 (миграция 4.1, 2026-08-24)
 - **Scope:** Компоненты привязаны к конкретной очереди
 - **Auto-assign:** `assignAuto` — автоназначение исполнителя при добавлении компонента к задаче
 - **Lead:** Опциональный ответственный за компонент
 - **Кеш:** Списки компонентов кешируются по очереди, инвалидируются при изменениях
-- **Delete:** При удалении сначала делает GET для получения queueId (для инвалидации кеша)
 
 ---
 

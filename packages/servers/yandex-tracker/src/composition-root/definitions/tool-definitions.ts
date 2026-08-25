@@ -28,7 +28,6 @@ import {
   GetComponentsTool,
   CreateComponentTool,
   UpdateComponentTool,
-  DeleteComponentTool,
 } from '#tools/api/components/index.js';
 import { GetIssueLinksTool } from '#tools/api/issues/links/get/index.js';
 import { CreateLinkTool } from '#tools/api/issues/links/create/index.js';
@@ -118,7 +117,6 @@ import {
   GetGlobalFieldTool,
   CreateGlobalFieldTool,
   UpdateGlobalFieldTool,
-  DeleteGlobalFieldTool,
 } from '#tools/api/fields/index.js';
 
 /**
@@ -153,7 +151,6 @@ export const TOOL_CLASSES = [
   GetComponentsTool,
   CreateComponentTool,
   UpdateComponentTool,
-  DeleteComponentTool,
   GetIssueLinksTool,
   CreateLinkTool,
   DeleteLinkTool,
@@ -234,7 +231,6 @@ export const TOOL_CLASSES = [
   GetGlobalFieldTool,
   CreateGlobalFieldTool,
   UpdateGlobalFieldTool,
-  DeleteGlobalFieldTool,
 ] as const;
 
 /**

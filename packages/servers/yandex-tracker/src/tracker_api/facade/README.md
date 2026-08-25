@@ -47,11 +47,11 @@ API Operations (конкретные HTTP запросы)
 - **Домен**: Управление очередями
 
 ### 6. ComponentService
-- **Методы**: `getComponents()`, `createComponent()`, `updateComponent()`, `deleteComponent()`
+- **Методы**: `getComponents()`, `createComponent()`, `updateComponent()`
 - **Домен**: Компоненты очередей
 
 ### 7. FieldService
-- **Методы**: `getFields()`, `getField()`, `createField()`, `updateField()`, `deleteField()`
+- **Методы**: `getFields()`, `getField()`, `createField()`, `updateField()`
 - **Домен**: Кастомные поля
 
 ### 8. CommentService

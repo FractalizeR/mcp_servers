@@ -241,7 +241,7 @@ afterEach(() => mockServer.cleanup());
 
 ### Особенные кейсы рядом с фабрикой
 
-Многоступенчатые потоки (`delete_component` — GET→DELETE, `download_attachment` и
+Многоступенчатые потоки (`download_attachment` и
 `get_thumbnail` — вторая ступень по значениям первого ответа, `transition_issue` — `_execute`→GET)
 в шаблон не укладываются и не должны. Пишутся обычными `it()`, но **не с нуля**:
 

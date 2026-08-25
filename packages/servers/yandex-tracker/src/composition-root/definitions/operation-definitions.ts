@@ -29,7 +29,6 @@ import {
   GetComponentsOperation,
   CreateComponentOperation,
   UpdateComponentOperation,
-  DeleteComponentOperation,
 } from '#tracker_api/api_operations/component/index.js';
 import {
   GetIssueLinksOperation,
@@ -79,7 +78,6 @@ import {
   GetFieldOperation,
   CreateFieldOperation,
   UpdateFieldOperation,
-  DeleteFieldOperation,
 } from '#tracker_api/api_operations/field/index.js';
 import {
   GetBoardsOperation,
@@ -158,7 +156,6 @@ export const OPERATION_CLASSES = [
   GetComponentsOperation,
   CreateComponentOperation,
   UpdateComponentOperation,
-  DeleteComponentOperation,
   GetIssueLinksOperation,
   CreateLinkOperation,
   DeleteLinkOperation,
@@ -192,7 +189,6 @@ export const OPERATION_CLASSES = [
   GetFieldOperation,
   CreateFieldOperation,
   UpdateFieldOperation,
-  DeleteFieldOperation,
   GetBoardsOperation,
   GetBoardOperation,
   CreateBoardOperation,

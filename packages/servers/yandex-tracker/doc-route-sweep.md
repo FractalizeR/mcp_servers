@@ -1,8 +1,8 @@
 # Сверка маршрутов сервера со справочником API Трекера
 
-Снято: 2026-08-25. Страниц справочника: 152. Маршрутов в документации: 240. Наших вызовов: 94.
+Снято: 2026-08-25. Страниц справочника: 152. Маршрутов в документации: 240. Наших вызовов: 91.
 
-## Маршруты, которых нет в документации (7)
+## Маршруты, которых нет в документации (4)
 
 Отсутствие страницы само по себе не дефект: часть живых маршрутов не описана.
 Каждый пункт требует живой пробы — читающий маршрут проверяется `raw_api_request`,
@@ -12,11 +12,8 @@
 |---|---|---|
 | PATCH | `/v3/queues/probe_queueId` | `fr_yandex_tracker_update_queue` |
 | GET | `/v3/queues/probe_queueId/components` | `fr_yandex_tracker_get_components` |
-| GET | `/v3/components/probe_componentId` | `fr_yandex_tracker_delete_component` |
-| DELETE | `/v3/components/probe_componentId` | `fr_yandex_tracker_delete_component` |
 | PATCH | `/v3/projects/probe_projectId?version=189201` | `fr_yandex_tracker_update_project` |
 | GET | `/v3/myself/favorites/filters` | `fr_yandex_tracker_get_filters` |
-| DELETE | `/v3/fields/probe_fieldId` | `fr_yandex_tracker_delete_global_field` |
 
 ## Ключи тела, не упомянутые на странице своего маршрута (0)
 

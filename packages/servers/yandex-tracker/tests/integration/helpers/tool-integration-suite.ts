@@ -25,7 +25,7 @@
  *   `tests/TESTING_STRATEGY.md` §3).
  *
  * Особенное (многоступенчатые потоки: `download_attachment`, `get_thumbnail`,
- * `delete_component`, `transition_issue`) в эту фабрику не укладывается и не должно —
+ * `transition_issue`) в эту фабрику не укладывается и не должно —
  * пишется обычными `it()` рядом, напрямую на `ApiExpectationSet` (план §A).
  */
 
@@ -76,7 +76,7 @@ function getTextContent(result: ToolExecutionResult): string {
 
 /**
  * Готовый контекст (`client`+`api`) для многоступенчатых кейсов
- * (`delete_component`: GET→DELETE, `download_attachment`/`get_thumbnail`: вторая
+ * (`download_attachment`/`get_thumbnail`: вторая
  * ступень по значениям первого ответа, `transition_issue`: `_execute`→GET), которые
  * не укладываются в `describeToolIntegration` и пишутся обычными `it()` рядом
  * (план §A). Возвращаемые поля — геттеры, а не снимок: значение актуально только

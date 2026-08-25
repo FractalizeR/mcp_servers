@@ -187,7 +187,7 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
     expectation: 'allowed-in-sandbox',
   },
 
-  // Класс A' — сущности, локализованные в самой песочной очереди (6 запросов).
+  // Класс A' — сущности, локализованные в самой песочной очереди (5 запросов).
   {
     tool: 'create_component',
     method: 'post',
@@ -198,12 +198,6 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
   {
     tool: 'update_component',
     method: 'patch',
-    path: `/v3/components/${SANDBOX_COMPONENT}`,
-    expectation: 'allowed-in-sandbox',
-  },
-  {
-    tool: 'delete_component',
-    method: 'delete',
     path: `/v3/components/${SANDBOX_COMPONENT}`,
     expectation: 'allowed-in-sandbox',
   },
@@ -306,12 +300,6 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
     method: 'patch',
     path: `/v3/fields/${SANDBOX_GLOBAL_FIELD}`,
     body: { name: `${RUN_PREFIX}-field-updated` },
-    expectation: 'allowed-in-sandbox',
-  },
-  {
-    tool: 'delete_global_field',
-    method: 'delete',
-    path: `/v3/fields/${SANDBOX_GLOBAL_FIELD}`,
     expectation: 'allowed-in-sandbox',
   },
   {

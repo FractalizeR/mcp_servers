@@ -1398,69 +1398,6 @@ export class MockServer {
     return this;
   }
 
-  /**
-   * Mock успешного удаления компонента
-   */
-  mockDeleteComponentSuccess(componentId: string, queueId = 'TEST'): this {
-    // DELETE operation сначала GET компонент для получения queue.id
-    const component = generateComponent({
-      overrides: {
-        id: componentId,
-        queue: { id: queueId, key: queueId, display: queueId },
-      },
-    });
-    const getMockKey = `GET /v3/components/${componentId}`;
-    this.mockAdapter.onGet(`/v3/components/${componentId}`).reply(() => {
-      const index = this.pendingMocks.indexOf(getMockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [200, component];
-    });
-    this.pendingMocks.push(getMockKey);
-
-    // Затем DELETE
-    const deleteMockKey = `DELETE /v3/components/${componentId}`;
-    this.mockAdapter.onDelete(`/v3/components/${componentId}`).reply(() => {
-      const index = this.pendingMocks.indexOf(deleteMockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [204, ''];
-    });
-    this.pendingMocks.push(deleteMockKey);
-    return this;
-  }
-
-  /**
-   * Mock ошибки 404 при удалении компонента
-   */
-  mockDeleteComponent404(componentId: string): this {
-    // Компонент не найден уже на GET
-    const response = generateError404();
-    const mockKey = `GET /v3/components/${componentId}`;
-    this.mockAdapter.onGet(`/v3/components/${componentId}`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [404, response];
-    });
-    this.pendingMocks.push(mockKey);
-
-    // DELETE тоже вернет 404
-    const deleteMockKey = `DELETE /v3/components/${componentId}`;
-    this.mockAdapter.onDelete(`/v3/components/${componentId}`).reply(() => {
-      const index = this.pendingMocks.indexOf(deleteMockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [404, response];
-    });
-    this.pendingMocks.push(deleteMockKey);
-    return this;
-  }
-
   // ============================================================
   // CHECKLISTS API МЕТОДЫ
   // ============================================================

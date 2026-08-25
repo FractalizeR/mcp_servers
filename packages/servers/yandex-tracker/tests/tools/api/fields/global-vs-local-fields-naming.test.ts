@@ -13,7 +13,6 @@ import {
   GetGlobalFieldTool,
   CreateGlobalFieldTool,
   UpdateGlobalFieldTool,
-  DeleteGlobalFieldTool,
 } from '#tools/api/fields/index.js';
 import {
   GetQueueLocalFieldsTool,
@@ -26,7 +25,6 @@ const globalFieldTools = [
   GetGlobalFieldTool,
   CreateGlobalFieldTool,
   UpdateGlobalFieldTool,
-  DeleteGlobalFieldTool,
 ];
 
 const queueLocalFieldTools = [

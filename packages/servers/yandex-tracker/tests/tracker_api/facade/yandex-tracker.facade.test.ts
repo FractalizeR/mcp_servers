@@ -65,7 +65,6 @@ describe('YandexTrackerFacade', () => {
         getField: vi.fn(),
         createField: vi.fn(),
         updateField: vi.fn(),
-        deleteField: vi.fn(),
       },
     } as unknown as CoreServicesContainer;
 
@@ -127,7 +126,6 @@ describe('YandexTrackerFacade', () => {
         getComponents: vi.fn(),
         createComponent: vi.fn(),
         updateComponent: vi.fn(),
-        deleteComponent: vi.fn(),
       },
     } as unknown as QueueServicesContainer;
 
@@ -770,18 +768,6 @@ describe('YandexTrackerFacade', () => {
 
         expect(mockCoreContainer.field.updateField).toHaveBeenCalledWith(fieldId, input);
         expect(result).toEqual(mockResult);
-      });
-    });
-
-    describe('deleteField', () => {
-      it('должна делегировать вызов FieldService.deleteField', async () => {
-        const fieldId = 'customField123';
-
-        vi.mocked(mockCoreContainer.field.deleteField).mockResolvedValue(undefined);
-
-        await facade.deleteField(fieldId);
-
-        expect(mockCoreContainer.field.deleteField).toHaveBeenCalledWith(fieldId);
       });
     });
   });

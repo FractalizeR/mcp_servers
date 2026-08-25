@@ -32,8 +32,6 @@
 | `fr_yandex_tracker_get_components` | да | нет | GET | `/v3/queues/probe_queueId/components` | — |
 | `fr_yandex_tracker_create_component` | нет | нет | POST | `/v3/components` | name, description, lead, assignAuto, queue |
 | `fr_yandex_tracker_update_component` | нет | нет | PATCH | `/v3/components/probe_componentId?version=189201` | name, description, lead, assignAuto |
-| `fr_yandex_tracker_delete_component` | нет | да | GET | `/v3/components/probe_componentId` | — |
-| `fr_yandex_tracker_delete_component` | нет | да | DELETE | `/v3/components/probe_componentId` | — |
 | `fr_yandex_tracker_create_link` | нет | нет | POST | `/v3/issues/TEST-1/links` | relationship, issue |
 | `fr_yandex_tracker_delete_link` | нет | да | DELETE | `/v3/issues/TEST-1/links/probe_links___linkId` | — |
 | `fr_yandex_tracker_add_comment` | нет | нет | POST | `/v3/issues/TEST-1/comments?isAddToFollowers=true` | text, attachmentIds, summonees, maillistSummonees, markupType |
@@ -61,7 +59,7 @@
 | `fr_yandex_tracker_get_boards` | да | нет | GET | `/v3/boards?localized=true` | — |
 | `fr_yandex_tracker_get_board` | да | нет | GET | `/v3/boards/probe_boardId?localized=true` | — |
 | `fr_yandex_tracker_create_board` | нет | нет | POST | `/v3/liveBoards/` | name, owner, boardPermissionsTemplate, backlogAvailable, sprintsAvailable, columns, backlogColumns, nonParametrizedColumns, autoFilters |
-| `fr_yandex_tracker_update_board` | нет | нет | PATCH | `/v3/boards/probe_boardId` | name, version, columns, filter, orderBy, orderAsc, query, useRanking, country |
+| `fr_yandex_tracker_update_board` | нет | нет | PATCH | `/v3/boards/probe_boardId` | name, columns, filter, orderBy, orderAsc, query, useRanking, country |
 | `fr_yandex_tracker_delete_board` | нет | да | DELETE | `/v3/boards/probe_boardId` | — |
 | `fr_yandex_tracker_get_sprints` | да | нет | GET | `/v3/boards/probe_boardId/sprints` | — |
 | `fr_yandex_tracker_get_sprint` | да | нет | GET | `/v3/sprints/probe_sprintId` | — |
@@ -98,7 +96,6 @@
 | `fr_yandex_tracker_get_global_field` | да | нет | GET | `/v3/fields/probe_fieldId` | — |
 | `fr_yandex_tracker_create_global_field` | нет | нет | POST | `/v3/fields` | id, name, category, type, order, description, readonly, visible, hidden, container, optionsProvider |
 | `fr_yandex_tracker_update_global_field` | нет | нет | PATCH | `/v3/fields/probe_fieldId` | name, description, readonly, options, suggest, optionsProvider |
-| `fr_yandex_tracker_delete_global_field` | нет | да | DELETE | `/v3/fields/probe_fieldId` | — |
 
 ## Инструменты без зафиксированного запроса (14)
 

@@ -30,9 +30,3 @@ export {
   UpdateGlobalFieldParamsSchema,
   type UpdateGlobalFieldParams,
 } from './update-global-field.schema.js';
-
-export { DeleteGlobalFieldTool } from './delete-global-field.tool.js';
-export {
-  DeleteGlobalFieldParamsSchema,
-  type DeleteGlobalFieldParams,
-} from './delete-global-field.schema.js';
