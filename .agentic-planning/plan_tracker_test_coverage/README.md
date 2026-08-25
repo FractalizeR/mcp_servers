@@ -112,6 +112,8 @@ read-only оракул маршрутов (отсутствующий путь �
 | [2.1.3_c6_split_sequential.md](2.1.3_c6_split_sequential.md) | расщепление С-6 на шесть подсвойств — **до волны 2** | 2.1.2 волна 1 |
 | [4.1_v3_migration_parallel.md](4.1_v3_migration_parallel.md) | **миграция на v3 — закрыт 2026-08-24** ([артефакт A](inventory/v2-paths-2026-08-24.md)) | 2.1.2 волна 1 |
 | [3.1_live_acceptance_sequential.md](3.1_live_acceptance_sequential.md) | живая приёмка мутирующих и деструктивных | 1.1, 2.1.2, 4.1 |
+| [5.1_org_scope_guard_sequential.md](5.1_org_scope_guard_sequential.md) | допуск по владению прогоном для сущностей уровня организации | 1.1, 4.1 |
+| [5.2_org_live_acceptance_sequential.md](5.2_org_live_acceptance_sequential.md) | живая приёмка мутирующих инструментов на v3, включая организацию | 5.1 |
 
 ## DoD
 
