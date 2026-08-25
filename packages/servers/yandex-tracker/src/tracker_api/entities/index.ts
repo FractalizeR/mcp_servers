@@ -111,6 +111,7 @@ export type {
   BoardFilter,
   CountryRef,
 } from './board.entity.js';
+export { findColumnsSharingId } from './board.entity.js';
 
 // Sprint
 export type { Sprint, SprintWithUnknownFields, SprintStatus, BoardRef } from './sprint.entity.js';

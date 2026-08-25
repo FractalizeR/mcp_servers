@@ -8,6 +8,11 @@
  * и не подтверждён внешним источником — референсный клиент шлёт `create()` на
  * `self.path` без слэша в конце для `id`-параметризованных путей; трактуется как
  * гипотеза этапа 3.1, наблюдаемое поведение фиксируется как есть.
+ *
+ * D11 (`0_CONTRACTS.md`): `id` колонки не уникален внутри доски. После POST
+ * инструмент читает `GET /v3/boards/{id}/columns` (без слэша — тот же путь, что
+ * у `get-board-columns.operation.ts`) и предупреждает, если созданная колонка
+ * делит `id` с другой — отсюда GET после POST в каждом сценарии ниже.
  */
 
 import {
@@ -17,13 +22,20 @@ import {
 import { createBoardColumnFixture } from '#helpers/board-columns.fixture.js';
 import { CREATE_BOARD_COLUMN_TOOL_METADATA } from '#tools/api/boards/create-board-column.metadata.js';
 import { CreateBoardColumnOutputDataSchema } from '#tools/api/boards/create-board-column.schema.js';
-import { describeToolIntegration } from '#integration/helpers/tool-integration-suite.js';
-import { expect } from 'vitest';
+import {
+  describeToolIntegration,
+  useToolIntegrationContext,
+  assertMatchesOutputSchema,
+} from '#integration/helpers/tool-integration-suite.js';
+import { describe, it, expect } from 'vitest';
 
 describeToolIntegration({
   tool: CREATE_BOARD_COLUMN_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'post', path: '/v3/boards/42/columns/', apiVersion: 'v3' }],
+  expectedRequests: [
+    { method: 'post', path: '/v3/boards/42/columns/', apiVersion: 'v3' },
+    { method: 'get', path: '/v3/boards/42/columns', apiVersion: 'v3' },
+  ],
 
   happyPath: {
     input: { boardId: '42', name: 'In Progress', statuses: ['inProgress'], fields: ['id', 'name'] },
@@ -36,6 +48,9 @@ describeToolIntegration({
           body: { name: 'In Progress', statuses: ['inProgress'] },
         })
         .reply(200, createBoardColumnFixture({ id: 7, name: 'In Progress' }));
+      api
+        .expectRequest({ method: 'get', path: '/v3/boards/42/columns', apiVersion: 'v3' })
+        .reply(200, [createBoardColumnFixture({ id: 7, name: 'In Progress' })]);
     },
     outputDataSchema: CreateBoardColumnOutputDataSchema,
     assertData: (data) => {
@@ -61,7 +76,8 @@ describeToolIntegration({
     notFound: {
       // Тот же boardId, что и в happyPath/forbidden — expectedRequests декларирует
       // конкретный путь один раз (H-1); 404 здесь — та же операция, отвечающая
-      // «доска не найдена» на тот же адрес.
+      // «доска не найдена» на тот же адрес. POST 404 обрывает выполнение до
+      // проверки дубликата id — GET-предупреждения после него не будет.
       arrange: (api) => {
         api
           .expectRequest({ method: 'post', path: '/v3/boards/42/columns/', apiVersion: 'v3' })
@@ -82,8 +98,45 @@ describeToolIntegration({
       api
         .expectRequest({ method: 'post', path: '/v3/boards/42/columns/', apiVersion: 'v3' })
         .reply(200, createBoardColumnFixture({ id: 8, name: 'With Gaps' }));
+      api
+        .expectRequest({ method: 'get', path: '/v3/boards/42/columns', apiVersion: 'v3' })
+        .reply(200, [createBoardColumnFixture({ id: 8, name: 'With Gaps' })]);
     },
     input: { boardId: '42', name: 'With Gaps', statuses: ['open'], fields: ['id', 'missingField'] },
     codes: ['FIELDS_WITHOUT_VALUE'],
   },
+});
+
+describe(`${CREATE_BOARD_COLUMN_TOOL_METADATA.name} — предупреждение о дубликате id (D11)`, () => {
+  const ctx = useToolIntegrationContext();
+
+  it('предупреждает AMBIGUOUS_ENTITY_ID, если после создания на доске оказалось несколько колонок с этим id', async () => {
+    ctx.api
+      .expectRequest({ method: 'post', path: '/v3/boards/42/columns/', apiVersion: 'v3' })
+      .reply(200, createBoardColumnFixture({ id: 1, name: 'Новая колонка' }));
+    ctx.api
+      .expectRequest({ method: 'get', path: '/v3/boards/42/columns', apiVersion: 'v3' })
+      .reply(200, [
+        createBoardColumnFixture({ id: 1, name: 'Открыт' }),
+        createBoardColumnFixture({ id: 1, name: 'Новая колонка' }),
+      ]);
+
+    const result = await ctx.client.callTool(CREATE_BOARD_COLUMN_TOOL_METADATA.name, {
+      boardId: '42',
+      name: 'Новая колонка',
+      statuses: ['open'],
+      fields: ['id', 'name'],
+    });
+
+    expect(result.isError).toBeUndefined();
+    const data = assertMatchesOutputSchema(result, CreateBoardColumnOutputDataSchema);
+    expect(data.column).toMatchObject({ id: 1, name: 'Новая колонка' });
+
+    const structured = result['structuredContent'] as {
+      warnings?: Array<{ code: string; message: string }>;
+    };
+    expect(structured.warnings).toEqual([expect.objectContaining({ code: 'AMBIGUOUS_ENTITY_ID' })]);
+    expect(structured.warnings?.[0]?.message).toContain('Открыт');
+    ctx.api.assertAllExpectationsMet();
+  });
 });
