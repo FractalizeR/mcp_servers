@@ -1,162 +1,104 @@
 /**
- * Интеграционные тесты для create-component tool
+ * Интеграционный тест `create_component` на фабрике `describeToolIntegration`.
+ *
+ * Категория `api/components` НЕ входит в реестр исключений живых прогонов
+ * (`tests/coverage-exceptions/live-exempt-categories.ts`) — маршрут подтверждён живьём
+ * (D1, `.agentic-planning/plan_tracker_test_coverage/5.2_LIVE_RUN_REPORT_2026-08-25.md`).
+ *
+ * Путь и форма тела — `POST /v3/components` (D1, `0_CONTRACTS.md`): маршрута
+ * `POST /v3/queues/{q}/components` в API нет, очередь передаётся ключом в теле (`queue`).
+ *
+ * Раньше тело запроса не сверялось вовсе (`mockCreateComponentSuccess` отвечал успехом
+ * независимо от тела, `tests/integration/helpers/mock-server.ts`) — ровно так маршрут,
+ * которого нет в API, годами казался рабочим. `ApiExpectationSet.expectRequest` сверяет
+ * тело строго — тот же вес, что у соседних семейств (`create_board`/`create_project`/
+ * `create_global_field`).
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createTestClient } from '#integration/helpers/mcp-client.js';
-import { createMockServer } from '#integration/helpers/mock-server.js';
-import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
-import type { MockServer } from '#integration/helpers/mock-server.js';
+import {
+  generateError403,
+  generateError404,
+} from '#integration/helpers/template-based-generator.js';
+import { createComponentFixture } from '#helpers/component.fixture.js';
+import { CREATE_COMPONENT_TOOL_METADATA } from '#tools/api/components/create-component.metadata.js';
+import { CreateComponentOutputDataSchema } from '#tools/api/components/create-component.schema.js';
 import { STANDARD_COMPONENT_FIELDS } from '#helpers/test-fields.js';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import { describeToolIntegration } from '#integration/helpers/tool-integration-suite.js';
+import { expect } from 'vitest';
 
-describe('create-component integration tests', () => {
-  let client: TestMCPClient;
-  let mockServer: MockServer;
+describeToolIntegration({
+  tool: CREATE_COMPONENT_TOOL_METADATA.name,
 
-  beforeEach(async () => {
-    client = await createTestClient({ logLevel: 'silent' });
-    mockServer = createMockServer(client.getAxiosInstance());
-  });
+  expectedRequests: [{ method: 'post', path: '/v3/components', apiVersion: 'v3' }],
 
-  afterEach(() => {
-    mockServer.cleanup();
-  });
+  happyPath: {
+    input: { queueId: 'TEST', name: 'Backend', fields: ['id', 'name'] },
+    arrange: (api) => {
+      api
+        .expectRequest({
+          method: 'post',
+          path: '/v3/components',
+          apiVersion: 'v3',
+          body: { queue: 'TEST', name: 'Backend' },
+        })
+        .reply(201, createComponentFixture({ id: 42, name: 'Backend' }));
+    },
+    outputDataSchema: CreateComponentOutputDataSchema,
+    assertData: (data) => {
+      expect(data.component).toMatchObject({ id: 42, name: 'Backend' });
+      expect(data.message).toContain('Backend');
+    },
+  },
 
-  describe('Happy Path', () => {
-    it('должен создать компонент с минимальными параметрами', async () => {
-      // Arrange
-      const queueId = 'TEST';
-      mockServer.mockCreateComponentSuccess(queueId, {
-        name: 'New Component',
-      });
+  invalidInput: {
+    // `fields` обязателен (не optional) — CreateComponentParamsSchema, FieldsSchema.
+    input: { queueId: 'TEST', name: 'Component without fields' },
+  },
 
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_component', {
-        queueId,
-        name: 'New Component',
-        fields: STANDARD_COMPONENT_FIELDS,
-      });
+  errors: {
+    forbidden: {
+      arrange: (api) => {
+        api
+          .expectRequest({ method: 'post', path: '/v3/components', apiVersion: 'v3' })
+          .reply(403, generateError403());
+      },
+      input: { queueId: 'RESTRICTED', name: 'Restricted', fields: [...STANDARD_COMPONENT_FIELDS] },
+    },
+    notFound: {
+      // Единственный HTTP-вызов create_component — POST /v3/components; 404 здесь —
+      // та же операция, отвечающая «очередь не найдена».
+      arrange: (api) => {
+        api
+          .expectRequest({ method: 'post', path: '/v3/components', apiVersion: 'v3' })
+          .reply(404, generateError404());
+      },
+      input: {
+        queueId: 'MISSING',
+        name: 'For missing queue',
+        fields: [...STANDARD_COMPONENT_FIELDS],
+      },
+    },
+  },
 
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      expect(response.data.component).toBeDefined();
-      expect(response.data.component.name).toBe('New Component');
-      mockServer.assertAllRequestsDone();
-    });
+  // create_component — единичная операция без batch-режима.
+  batch: 'not-applicable',
 
-    it('должен создать компонент с полными параметрами', async () => {
-      // Arrange
-      const queueId = 'PROJ';
-      mockServer.mockCreateComponentSuccess(queueId, {
-        name: 'Backend',
-        description: 'Backend services',
-        assignAuto: true,
-      });
+  // Создание компонента не list-эндпоинт — пагинация неприменима.
+  pagination: 'none',
 
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_component', {
-        queueId,
-        name: 'Backend',
-        description: 'Backend services',
-        lead: 'testuser',
-        assignAuto: true,
-        fields: STANDARD_COMPONENT_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      expect(response.data.component).toBeDefined();
-      expect(response.data.component.name).toBe('Backend');
-      mockServer.assertAllRequestsDone();
-    });
-
-    it('должен создать компонент с автоназначением', async () => {
-      // Arrange
-      const queueId = 'TEST';
-      mockServer.mockCreateComponentSuccess(queueId, {
-        name: 'Frontend',
-        assignAuto: true,
-      });
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_component', {
-        queueId,
-        name: 'Frontend',
-        assignAuto: true,
-        lead: 'frontend-lead',
-        fields: STANDARD_COMPONENT_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      expect(response.data.component).toBeDefined();
-      mockServer.assertAllRequestsDone();
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('должен обработать ошибку 403 (нет прав)', async () => {
-      // Arrange
-      const queueId = 'RESTRICTED';
-      mockServer.mockCreateComponent403(queueId);
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_component', {
-        queueId,
-        name: 'New Component',
-        fields: STANDARD_COMPONENT_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBe(true);
-      mockServer.assertAllRequestsDone();
-    });
-
-    it('должен обработать ошибку 404 (очередь не найдена)', async () => {
-      // Arrange
-      const queueId = 'NONEXISTENT';
-      mockServer.mockCreateComponent404(queueId);
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_component', {
-        queueId,
-        name: 'New Component',
-        fields: STANDARD_COMPONENT_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBe(true);
-      mockServer.assertAllRequestsDone();
-    });
-  });
-
-  describe('Response Structure', () => {
-    it('должен вернуть полную структуру созданного компонента', async () => {
-      // Arrange
-      const queueId = 'TEST';
-      mockServer.mockCreateComponentSuccess(queueId, { name: 'Test Component' });
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_component', {
-        queueId,
-        name: 'Test Component',
-        fields: STANDARD_COMPONENT_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      const component = response.data.component;
-
-      expect(component).toHaveProperty('id');
-      expect(component).toHaveProperty('name');
-      expect(component).toHaveProperty('queue');
-      expect(component).toHaveProperty('assignAuto');
-      mockServer.assertAllRequestsDone();
-    });
-  });
+  warnings: {
+    // Ответ не содержит запрошенное поле "missingField" —
+    // ResponseFieldFilter отдаёт FIELDS_WITHOUT_VALUE (CLAUDE.md §2.1).
+    arrange: (api) => {
+      api
+        .expectRequest({ method: 'post', path: '/v3/components', apiVersion: 'v3' })
+        .reply(201, createComponentFixture({ id: 43, name: 'Component With Gaps' }));
+    },
+    input: {
+      queueId: 'TEST',
+      name: 'Component With Gaps',
+      fields: [...STANDARD_COMPONENT_FIELDS, 'missingField'],
+    },
+    codes: ['FIELDS_WITHOUT_VALUE'],
+  },
 });

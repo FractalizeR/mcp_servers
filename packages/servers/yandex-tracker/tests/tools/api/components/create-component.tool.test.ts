@@ -48,6 +48,15 @@ describe('CreateComponentTool', () => {
       expect(definition.inputSchema.properties?.['assignAuto']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
+
+    it('описание queueId должно называть ключ очереди, а не ID', () => {
+      const definition = tool.getDefinition();
+      const queueIdProp = definition.inputSchema.properties?.['queueId'] as {
+        description?: string;
+      };
+
+      expect(queueIdProp.description ?? '').toMatch(/ключ/i);
+    });
   });
 
   describe('execute', () => {

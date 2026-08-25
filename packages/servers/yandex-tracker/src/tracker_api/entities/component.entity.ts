@@ -3,7 +3,8 @@
  *
  * Соответствует API v3:
  * - GET /v3/queues/{queueId}/components - список компонентов очереди
- * - POST /v3/queues/{queueId}/components - создание компонента
+ * - POST /v3/components - создание компонента (очередь — ключ в теле, `queue`, не в пути;
+ *   D1, `0_CONTRACTS.md`: `POST /v3/queues/{queueId}/components` в API не существует)
  * - PATCH /v3/components/{componentId} - обновление компонента
  * - DELETE /v3/components/{componentId} - удаление компонента
  *

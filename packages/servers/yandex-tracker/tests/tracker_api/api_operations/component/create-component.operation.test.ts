@@ -48,37 +48,42 @@ describe('CreateComponentOperation', () => {
   });
 
   describe('execute', () => {
-    it('should call httpClient.post with correct endpoint and data', async () => {
-      const dto = createCreateComponentDto({ name: 'Backend' });
+    it('should call httpClient.post with /v3/components and body containing queue', async () => {
+      const dto = createCreateComponentDto({ name: 'Backend', queue: 'QUEUE' });
       const mockComponent: ComponentOutput = createComponentFixture({
         id: 1,
         name: 'Backend',
       });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
-      const result = await operation.execute('QUEUE', dto);
+      const result = await operation.execute(dto);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/queues/QUEUE/components', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/components', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v3/components',
+        expect.objectContaining({ queue: 'QUEUE' })
+      );
       expect(result).toEqual(mockComponent);
     });
 
     it('should create component with minimal fields', async () => {
-      const dto = createMinimalCreateComponentDto({ name: 'Minimal Component' });
+      const dto = createMinimalCreateComponentDto({ name: 'Minimal Component', queue: 'QUEUE' });
       const mockComponent: ComponentOutput = createComponentFixture({
         id: 1,
         name: 'Minimal Component',
       });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
-      const result = await operation.execute('QUEUE', dto);
+      const result = await operation.execute(dto);
 
       expect(result.name).toBe('Minimal Component');
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/queues/QUEUE/components', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/components', dto);
     });
 
     it('should create component with all fields', async () => {
       const dto = createFullCreateComponentDto({
         name: 'Full Component',
+        queue: 'QUEUE',
         description: 'Full description',
         lead: 'user-login',
         assignAuto: true,
@@ -90,16 +95,16 @@ describe('CreateComponentOperation', () => {
       });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
-      const result = await operation.execute('QUEUE', dto);
+      const result = await operation.execute(dto);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/queues/QUEUE/components', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/components', dto);
       expect(result).toEqual(mockComponent);
     });
 
     it('should validate component name (cannot be empty)', async () => {
-      const invalidDto = createInvalidCreateComponentDto({ name: '' });
+      const invalidDto = createInvalidCreateComponentDto({ name: '', queue: 'QUEUE' });
 
-      await expect(operation.execute('QUEUE', invalidDto)).rejects.toThrow(
+      await expect(operation.execute(invalidDto)).rejects.toThrow(
         'Название компонента обязательно'
       );
 
@@ -107,65 +112,63 @@ describe('CreateComponentOperation', () => {
     });
 
     it('should validate component name (cannot be whitespace only)', async () => {
-      const dto = createCreateComponentDto({ name: '   ' });
+      const dto = createCreateComponentDto({ name: '   ', queue: 'QUEUE' });
 
-      await expect(operation.execute('QUEUE', dto)).rejects.toThrow(
-        'Название компонента обязательно'
-      );
+      await expect(operation.execute(dto)).rejects.toThrow('Название компонента обязательно');
 
       expect(mockHttpClient.post).not.toHaveBeenCalled();
     });
 
     it('should cache created component by its ID', async () => {
-      const dto = createCreateComponentDto({ name: 'Backend' });
+      const dto = createCreateComponentDto({ name: 'Backend', queue: 'QUEUE' });
       const mockComponent: ComponentOutput = createComponentFixture({ id: 123 });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
-      await operation.execute('QUEUE', dto);
+      await operation.execute(dto);
 
       const componentCacheKey = EntityCacheKey.createKey(EntityType.COMPONENT, '123');
       expect(mockCacheManager.set).toHaveBeenCalledWith(componentCacheKey, mockComponent);
     });
 
     it('should invalidate components list cache after creation', async () => {
-      const dto = createCreateComponentDto({ name: 'Backend' });
+      const dto = createCreateComponentDto({ name: 'Backend', queue: 'QUEUE' });
       const mockComponent: ComponentOutput = createComponentFixture({ id: 1 });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
-      await operation.execute('QUEUE', dto);
+      await operation.execute(dto);
 
       const listCacheKey = EntityCacheKey.createKey(EntityType.QUEUE, 'QUEUE/components');
       expect(mockCacheManager.delete).toHaveBeenCalledWith(listCacheKey);
     });
 
     it('should handle API errors', async () => {
-      const dto = createCreateComponentDto({ name: 'Test' });
+      const dto = createCreateComponentDto({ name: 'Test', queue: 'QUEUE' });
       const error = new Error('Component already exists');
       vi.mocked(mockHttpClient.post).mockRejectedValue(error);
 
-      await expect(operation.execute('QUEUE', dto)).rejects.toThrow('Component already exists');
+      await expect(operation.execute(dto)).rejects.toThrow('Component already exists');
     });
 
     it('should log info messages', async () => {
-      const dto = createCreateComponentDto({ name: 'Backend' });
+      const dto = createCreateComponentDto({ name: 'Backend', queue: 'QUEUE' });
       const mockComponent: ComponentOutput = createComponentFixture({
         id: 1,
         name: 'Backend',
       });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
-      await operation.execute('QUEUE', dto);
+      await operation.execute(dto);
 
       expect(mockLogger.info).toHaveBeenCalledWith('Создание компонента "Backend" в очереди QUEUE');
       expect(mockLogger.info).toHaveBeenCalledWith('Компонент успешно создан: Backend (ID: 1)');
     });
 
     it('should log debug message about cache invalidation', async () => {
-      const dto = createCreateComponentDto({ name: 'Test' });
+      const dto = createCreateComponentDto({ name: 'Test', queue: 'QUEUE' });
       const mockComponent: ComponentOutput = createComponentFixture({ id: 1 });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
-      await operation.execute('QUEUE', dto);
+      await operation.execute(dto);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Инвалидирован кеш компонентов для очереди: QUEUE'
@@ -173,18 +176,19 @@ describe('CreateComponentOperation', () => {
     });
 
     it('should work with queue ID instead of key', async () => {
-      const dto = createCreateComponentDto({ name: 'Component' });
+      const dto = createCreateComponentDto({ name: 'Component', queue: 'queue-123' });
       const mockComponent: ComponentOutput = createComponentFixture({ id: 1 });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
-      await operation.execute('queue-123', dto);
+      await operation.execute(dto);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/queues/queue-123/components', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/components', dto);
     });
 
     it('should create component with assignAuto enabled', async () => {
       const dto = createCreateComponentDto({
         name: 'Auto-assign Component',
+        queue: 'QUEUE',
         assignAuto: true,
         lead: 'user-login',
       });
@@ -195,7 +199,7 @@ describe('CreateComponentOperation', () => {
       });
       vi.mocked(mockHttpClient.post).mockResolvedValue(mockComponent);
 
-      const result = await operation.execute('QUEUE', dto);
+      const result = await operation.execute(dto);
 
       expect(result.assignAuto).toBe(true);
     });

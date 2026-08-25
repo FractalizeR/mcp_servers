@@ -61,7 +61,7 @@ export class ComponentService {
     assignAuto?: boolean | undefined;
   }): Promise<ComponentOutput> {
     const { queueId, ...componentData } = params;
-    return this.createOp.execute(queueId, componentData);
+    return this.createOp.execute({ ...componentData, queue: queueId });
   }
 
   /**

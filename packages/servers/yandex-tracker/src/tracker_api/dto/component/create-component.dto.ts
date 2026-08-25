@@ -1,10 +1,10 @@
 /**
- * DTO для создания компонента в очереди Яндекс.Трекера
+ * DTO для создания компонента в Яндекс.Трекере
  *
- * API: POST /v3/queues/{queueId}/components
+ * API: POST /v3/components
  *
  * ВАЖНО:
- * - Компонент создается в контексте конкретной очереди (queueId в URL)
+ * - Очередь передаётся ключом в теле запроса (`queue`), а не в пути
  * - После создания нельзя изменить привязку компонента к очереди
  */
 export interface CreateComponentDto {
@@ -13,6 +13,12 @@ export interface CreateComponentDto {
    * @example "Backend"
    */
   name: string;
+
+  /**
+   * Ключ очереди (не ID), которой принадлежит компонент
+   * @example "QUEUE"
+   */
+  queue: string;
 
   /**
    * Описание компонента
