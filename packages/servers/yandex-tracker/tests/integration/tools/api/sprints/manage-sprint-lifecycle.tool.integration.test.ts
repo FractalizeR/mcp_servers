@@ -33,13 +33,13 @@ describeToolIntegration({
     arrange: (api) => {
       api
         .expectRequest({ method: 'post', path: '/v3/sprints/100/_start', apiVersion: 'v3' })
-        .reply(200, createSprintFixture({ id: '100', name: 'Sprint 1', status: 'in_progress' }));
+        .reply(200, createSprintFixture({ id: 100, name: 'Sprint 1', status: 'in_progress' }));
     },
     outputDataSchema: ManageSprintLifecycleOutputDataSchema,
     assertData: (data) => {
       expect(data.sprintId).toBe('100');
       expect(data.action).toBe('start');
-      expect(data.sprint).toMatchObject({ id: '100', status: 'in_progress' });
+      expect(data.sprint).toMatchObject({ id: 100, status: 'in_progress' });
       expect(data.message).toContain('100');
     },
   },
@@ -87,7 +87,7 @@ describe('manage_sprint_lifecycle — режимы archive/delete (path/верс
   it('archive: POST /v3/sprints/{id}/_archive возвращает архивированный спринт', async () => {
     ctx.api
       .expectRequest({ method: 'post', path: '/v3/sprints/200/_archive', apiVersion: 'v3' })
-      .reply(200, createSprintFixture({ id: '200', name: 'Sprint 2', archived: true }));
+      .reply(200, createSprintFixture({ id: 200, name: 'Sprint 2', archived: true }));
 
     const result = await ctx.client.callTool(MANAGE_SPRINT_LIFECYCLE_TOOL_METADATA.name, {
       sprintId: '200',
@@ -98,7 +98,7 @@ describe('manage_sprint_lifecycle — режимы archive/delete (path/верс
     const data = assertMatchesOutputSchema(result, ManageSprintLifecycleOutputDataSchema);
     expect(data.sprintId).toBe('200');
     expect(data.action).toBe('archive');
-    expect(data.sprint).toMatchObject({ id: '200', archived: true });
+    expect(data.sprint).toMatchObject({ id: 200, archived: true });
     ctx.api.assertAllExpectationsMet();
   });
 

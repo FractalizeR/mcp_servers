@@ -1,8 +1,8 @@
 /**
  * Доменный тип: Спринт в Яндекс.Трекере
  *
- * Соответствует API v2: /v2/sprints/{sprintId}
- * Также: /v2/boards/{boardId}/sprints/
+ * Соответствует API v3: /v3/sprints/{sprintId}
+ * Также: /v3/boards/{boardId}/sprints/
  */
 
 import type { WithUnknownFields } from './types.js';
@@ -21,8 +21,12 @@ export type SprintStatus = 'draft' | 'in_progress' | 'released';
  * Референс на доску (упрощенная версия Board)
  */
 export interface BoardRef {
-  /** Идентификатор доски */
-  readonly id: string;
+  /**
+   * Идентификатор доски
+   *
+   * Число, не строка — тот же id, что у `Board.id` (§4.1 плана миграции v3).
+   */
+  readonly id: number;
 
   /** URL ссылка на доску в API */
   readonly self: string;
@@ -34,13 +38,19 @@ export interface BoardRef {
 /**
  * Спринт в Яндекс.Трекере
  *
- * ВАЖНО: Типизация основана на официальном Python SDK и реальных ответах API v2.
- * Обязательные поля (без ?) всегда присутствуют в ответе GET /v2/sprints/{sprintId}.
+ * ВАЖНО: Типизация основана на официальном Python SDK и реальных ответах API v2/v3
+ * (форма ответа идентична, §4.1 плана миграции v3).
+ * Обязательные поля (без ?) всегда присутствуют в ответе GET /v3/sprints/{sprintId}.
  * Опциональные поля могут отсутствовать в зависимости от настроек спринта.
  */
 export interface Sprint {
-  /** Идентификатор спринта (всегда присутствует) */
-  readonly id: string;
+  /**
+   * Идентификатор спринта (всегда присутствует)
+   *
+   * Число, не строка: подтверждено боевым `GET` (§4.1 плана миграции v3,
+   * `inventory/live-version-probe-2026-08-23.md`).
+   */
+  readonly id: number;
 
   /** URL ссылка на спринт в API (всегда присутствует) */
   readonly self: string;

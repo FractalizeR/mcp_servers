@@ -9,7 +9,8 @@ import { GetEntityOutputSchema } from './get-entity.schema.js';
 
 export const GET_ENTITY_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('get_entity', MCP_TOOL_PREFIX),
-  description: '[Entities/Read] Goal/Project/Portfolio по ID (Entity API ≠ /v2/projects)',
+  description:
+    '[Entities/Read] Goal/Project/Portfolio по ID (коллекция /v3/entities/, не /v3/projects — см. get_projects)',
   category: ToolCategory.PROJECTS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

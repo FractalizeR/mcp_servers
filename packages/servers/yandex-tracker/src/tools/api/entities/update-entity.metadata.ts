@@ -9,7 +9,9 @@ import { UpdateEntityOutputSchema } from './update-entity.schema.js';
 
 export const UPDATE_ENTITY_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('update_entity', MCP_TOOL_PREFIX),
-  description: '[Entities/Write] Обновить Goal/Project/Portfolio (Entity API ≠ /v2/projects)',
+  description:
+    '[Entities/Write] Обновить Goal/Project/Portfolio ' +
+    '(коллекция /v3/entities/, не /v3/projects — см. get_projects)',
   category: ToolCategory.PROJECTS,
   subcategory: 'write',
   priority: ToolPriority.HIGH,

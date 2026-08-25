@@ -29,13 +29,23 @@ describe('GetSprintsTool', () => {
   });
 
   it('вернёт список спринтов доски', async () => {
-    const sprints = [{ id: '1', self: 'url', version: 1, name: 'Sprint 1' }];
+    const sprints = [{ id: 1, self: 'url', version: 1, name: 'Sprint 1' }];
     vi.mocked(mockTrackerFacade.getSprints).mockResolvedValue(sprints);
 
     const result = await tool.execute({ boardId: 'b1', fields: ['id', 'name'] });
 
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.getSprints).toHaveBeenCalledWith('b1');
+  });
+
+  it('примет числовой boardId (как отдаёт get_boards) и дойдёт до того же запроса', async () => {
+    const sprints = [{ id: 1, self: 'url', version: 1, name: 'Sprint 1' }];
+    vi.mocked(mockTrackerFacade.getSprints).mockResolvedValue(sprints);
+
+    const result = await tool.execute({ boardId: 42, fields: ['id', 'name'] });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.getSprints).toHaveBeenCalledWith('42');
   });
 
   it('обработает ошибку facade', async () => {

@@ -40,6 +40,14 @@ describe('LiveScopeGuard', () => {
     ).toThrow(/проекты принадлежат организации целиком/);
   });
 
+  it('отклоняет тот же запрос вне области действия и на пути v3 (этап 4.1)', () => {
+    const guard = createGuard();
+
+    expect(() =>
+      guard.inspectRequest({ method: 'delete', url: '/v3/projects/11', data: undefined })
+    ).toThrow(/проекты принадлежат организации целиком/);
+  });
+
   it('созданная задача попадает в журнал и становится доступной для правки', () => {
     const guard = createGuard();
     const create = { method: 'post', url: '/v3/issues', data: { queue: 'TEST' } };
@@ -65,6 +73,20 @@ describe('LiveScopeGuard', () => {
 
     expect(() =>
       guard.inspectRequest({ method: 'delete', url: '/v2/components/555', data: undefined })
+    ).not.toThrow();
+  });
+
+  it('созданный компонент опознаётся и когда операция уже переехала на v3 (этап 4.1)', () => {
+    // Попытка, не декларация: createdEntityOf должен узнавать создание компонента
+    // независимо от версии пути, иначе после миграции create_component на v3
+    // журнал не заполнится и легальная правка своего компонента отклонится.
+    const guard = createGuard();
+    const create = { method: 'post', url: '/v3/queues/TEST/components', data: { name: 'c' } };
+
+    guard.observeResponse({ request: create, status: 201, data: { id: 556, name: 'c' } });
+
+    expect(() =>
+      guard.inspectRequest({ method: 'delete', url: '/v3/components/556', data: undefined })
     ).not.toThrow();
   });
 

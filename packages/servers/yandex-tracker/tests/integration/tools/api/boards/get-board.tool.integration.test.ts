@@ -5,7 +5,8 @@
  * `мок (гипотеза)`: путь и метод сверены с внешним источником — референсным
  * клиентом `yandex_tracker_client/` (`Boards.path = '/{api_version}/boards/{id}'`,
  * `Collection.get_all()` → `GET`) с дефолтной версией соединения `VERSION_V2` —
- * совпадает с `/v2/boards/{boardId}`.
+ * путь и метод подтверждены, версия — нет (submodule её не различает); сервер
+ * реально ходит в `/v3/boards/{boardId}`.
  */
 
 import {
@@ -25,18 +26,18 @@ import { describe, it, expect } from 'vitest';
 describeToolIntegration({
   tool: GET_BOARD_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'get', path: '/v2/boards/42', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'get', path: '/v3/boards/42', apiVersion: 'v3' }],
 
   happyPath: {
     input: { boardId: '42', fields: ['id', 'name'] },
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/boards/42', apiVersion: 'v2' })
-        .reply(200, createBoardFixture({ id: '42', name: 'Test Board' }));
+        .expectRequest({ method: 'get', path: '/v3/boards/42', apiVersion: 'v3' })
+        .reply(200, createBoardFixture({ id: 42, name: 'Test Board' }));
     },
     outputDataSchema: GetBoardOutputDataSchema,
     assertData: (data) => {
-      expect(data.board).toMatchObject({ id: '42', name: 'Test Board' });
+      expect(data.board).toMatchObject({ id: 42, name: 'Test Board' });
     },
   },
 
@@ -49,17 +50,17 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/boards/42', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/boards/42', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { boardId: '42', fields: ['id'] },
     },
     notFound: {
       // Тот же boardId, что и в happyPath/forbidden — expectedRequests декларирует
-      // конкретный путь `/v2/boards/42` один раз (H-1).
+      // конкретный путь `/v3/boards/42` один раз (H-1).
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/boards/42', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/boards/42', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { boardId: '42', fields: ['id'] },
@@ -75,8 +76,8 @@ describeToolIntegration({
   warnings: {
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/boards/42', apiVersion: 'v2' })
-        .reply(200, createBoardFixture({ id: '42', name: 'Test Board' }));
+        .expectRequest({ method: 'get', path: '/v3/boards/42', apiVersion: 'v3' })
+        .reply(200, createBoardFixture({ id: 42, name: 'Test Board' }));
     },
     input: { boardId: '42', fields: ['id', 'name', 'missingField'] },
     codes: ['FIELDS_WITHOUT_VALUE'],
@@ -93,11 +94,11 @@ describe('get_board — кейсы вне обязательного соста�
     ctx.api
       .expectRequest({
         method: 'get',
-        path: '/v2/boards/42',
-        apiVersion: 'v2',
+        path: '/v3/boards/42',
+        apiVersion: 'v3',
         query: { localized: false },
       })
-      .reply(200, createBoardFixture({ id: '42', name: 'Test Board' }));
+      .reply(200, createBoardFixture({ id: 42, name: 'Test Board' }));
 
     const result = await ctx.client.callTool(GET_BOARD_TOOL_METADATA.name, {
       boardId: '42',
@@ -107,7 +108,7 @@ describe('get_board — кейсы вне обязательного соста�
 
     expect(result.isError).toBeUndefined();
     const data = assertMatchesOutputSchema(result, GetBoardOutputDataSchema);
-    expect(data.board).toMatchObject({ id: '42', name: 'Test Board' });
+    expect(data.board).toMatchObject({ id: 42, name: 'Test Board' });
     ctx.api.assertAllExpectationsMet();
   });
 });

@@ -86,7 +86,7 @@ describe('DeleteChecklistItemOperation', () => {
     it('should call deleteRequest with correct endpoint', async () => {
       await operation.execute('TEST-1', '123');
 
-      expect(deleteRequestSpy).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems/123');
+      expect(deleteRequestSpy).toHaveBeenCalledWith('/v3/issues/TEST-1/checklistItems/123');
     });
 
     it('should not return any value', async () => {
@@ -187,8 +187,8 @@ describe('DeleteChecklistItemOperation', () => {
       ]);
 
       expect(deleteRequestSpy).toHaveBeenCalledTimes(2);
-      expect(deleteRequestSpy).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems/item-1');
-      expect(deleteRequestSpy).toHaveBeenCalledWith('/v2/issues/TEST-2/checklistItems/item-2');
+      expect(deleteRequestSpy).toHaveBeenCalledWith('/v3/issues/TEST-1/checklistItems/item-1');
+      expect(deleteRequestSpy).toHaveBeenCalledWith('/v3/issues/TEST-2/checklistItems/item-2');
     });
   });
 });

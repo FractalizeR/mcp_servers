@@ -35,11 +35,11 @@ describeToolIntegration({
           apiVersion: 'v3',
           body: { name: 'In Progress', statuses: ['inProgress'] },
         })
-        .reply(200, createBoardColumnFixture({ id: '7', name: 'In Progress' }));
+        .reply(200, createBoardColumnFixture({ id: 7, name: 'In Progress' }));
     },
     outputDataSchema: CreateBoardColumnOutputDataSchema,
     assertData: (data) => {
-      expect(data.column).toMatchObject({ id: '7', name: 'In Progress' });
+      expect(data.column).toMatchObject({ id: 7, name: 'In Progress' });
       expect(data.message).toContain('In Progress');
     },
   },
@@ -81,7 +81,7 @@ describeToolIntegration({
     arrange: (api) => {
       api
         .expectRequest({ method: 'post', path: '/v3/boards/42/columns/', apiVersion: 'v3' })
-        .reply(200, createBoardColumnFixture({ id: '8', name: 'With Gaps' }));
+        .reply(200, createBoardColumnFixture({ id: 8, name: 'With Gaps' }));
     },
     input: { boardId: '42', name: 'With Gaps', statuses: ['open'], fields: ['id', 'missingField'] },
     codes: ['FIELDS_WITHOUT_VALUE'],

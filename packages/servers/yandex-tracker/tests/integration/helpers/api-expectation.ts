@@ -66,7 +66,7 @@ export interface ExpectedRequestSpec {
   /** HTTP-метод запроса. */
   readonly method: HttpMethodLower;
   /**
-   * Относительный путь запроса, ВКЛЮЧАЯ версию (например, `/v2/boards`,
+   * Относительный путь запроса, ВКЛЮЧАЯ версию (например, `/v3/boards`,
    * `/v3/filters/`). Завершающий слэш значим — часть операций Трекера
    * (`create_filter`, `create_queue`) шлёт его осознанно (см.
    * `tests/TESTING_STRATEGY.md` §2).

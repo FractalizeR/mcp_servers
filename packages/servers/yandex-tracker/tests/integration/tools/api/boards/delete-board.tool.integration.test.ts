@@ -5,7 +5,8 @@
  * `мок (гипотеза)`: путь и метод сверены с внешним источником — референсным
  * клиентом `yandex_tracker_client/` (`Boards.path = '/{api_version}/boards/{id}'`,
  * `Collection.delete()` → `DELETE`, дефолтная версия соединения `VERSION_V2`) —
- * см. отчёт пакета P1.
+ * путь и метод подтверждены, версия — нет (submodule её не различает); сервер
+ * реально ходит в `/v3/boards/{id}`, см. отчёт пакета P1.
  */
 
 import {
@@ -20,12 +21,12 @@ import { expect } from 'vitest';
 describeToolIntegration({
   tool: DELETE_BOARD_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'delete', path: '/v2/boards/42', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'delete', path: '/v3/boards/42', apiVersion: 'v3' }],
 
   happyPath: {
     input: { boardId: '42' },
     arrange: (api) => {
-      api.expectRequest({ method: 'delete', path: '/v2/boards/42', apiVersion: 'v2' }).reply(200);
+      api.expectRequest({ method: 'delete', path: '/v3/boards/42', apiVersion: 'v3' }).reply(200);
     },
     outputDataSchema: DeleteBoardOutputDataSchema,
     assertData: (data) => {
@@ -43,18 +44,18 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'delete', path: '/v2/boards/42', apiVersion: 'v2' })
+          .expectRequest({ method: 'delete', path: '/v3/boards/42', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { boardId: '42' },
     },
     notFound: {
       // Тот же boardId, что и в happyPath/forbidden — expectedRequests декларирует
-      // конкретный путь `/v2/boards/42` один раз (H-1); 404 здесь — та же операция,
+      // конкретный путь `/v3/boards/42` один раз (H-1); 404 здесь — та же операция,
       // отвечающая «доска уже удалена/не существует» на тот же адрес.
       arrange: (api) => {
         api
-          .expectRequest({ method: 'delete', path: '/v2/boards/42', apiVersion: 'v2' })
+          .expectRequest({ method: 'delete', path: '/v3/boards/42', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { boardId: '42' },

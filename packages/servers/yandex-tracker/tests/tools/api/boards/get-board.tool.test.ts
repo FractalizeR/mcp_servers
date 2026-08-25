@@ -30,7 +30,7 @@ describe('GetBoardTool', () => {
   });
 
   it('вернёт доску при успешном запросе', async () => {
-    const board = { id: '1', self: 'url', version: 1, name: 'Board 1' };
+    const board = { id: 1, self: 'url', version: 1, name: 'Board 1' };
     vi.mocked(mockTrackerFacade.getBoard).mockResolvedValue(board);
 
     const result = await tool.execute({ boardId: '1', fields: ['id', 'name'] });
@@ -39,9 +39,19 @@ describe('GetBoardTool', () => {
     expect(mockTrackerFacade.getBoard).toHaveBeenCalledWith('1', { localized: undefined });
 
     const parsed = JSON.parse(getTextContent(result)) as {
-      data: { board: { id: string; name: string } };
+      data: { board: { id: number; name: string } };
     };
-    expect(parsed.data.board.id).toBe('1');
+    expect(parsed.data.board.id).toBe(1);
+  });
+
+  it('примет числовой boardId (как отдаёт get_boards) и дойдёт до того же запроса', async () => {
+    const board = { id: 1, self: 'url', version: 1, name: 'Board 1' };
+    vi.mocked(mockTrackerFacade.getBoard).mockResolvedValue(board);
+
+    const result = await tool.execute({ boardId: 1, fields: ['id', 'name'] });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.getBoard).toHaveBeenCalledWith('1', { localized: undefined });
   });
 
   it('обработает ошибку facade', async () => {
@@ -52,7 +62,7 @@ describe('GetBoardTool', () => {
 
   describe('Предупреждения о полях без значения (FIELDS_WITHOUT_VALUE)', () => {
     it('добавляет warning при запросе несуществующего поля', async () => {
-      const board = { id: '1', self: 'url', version: 1, name: 'Board 1' };
+      const board = { id: 1, self: 'url', version: 1, name: 'Board 1' };
       vi.mocked(mockTrackerFacade.getBoard).mockResolvedValue(board);
 
       const result = await tool.execute({ boardId: '1', fields: ['id', 'bogusField'] });
@@ -68,7 +78,7 @@ describe('GetBoardTool', () => {
     });
 
     it('ответ без предупреждений не содержит ключа warnings ни в одной из проекций', async () => {
-      const board = { id: '1', self: 'url', version: 1, name: 'Board 1' };
+      const board = { id: 1, self: 'url', version: 1, name: 'Board 1' };
       vi.mocked(mockTrackerFacade.getBoard).mockResolvedValue(board);
 
       const result = await tool.execute({ boardId: '1', fields: ['id', 'name'] });

@@ -785,7 +785,7 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.getBoards без параметров', async () => {
         const mockResult: BoardsListOutput = [
           createBoardFixture({
-            id: '1',
+            id: 1,
             self: 'https://api.tracker.yandex.net/v3/boards/1',
             name: 'Board 1',
           }),
@@ -803,7 +803,7 @@ describe('YandexTrackerFacade', () => {
         const params: GetBoardsDto = { filter: 'active' };
         const mockResult: BoardsListOutput = [
           createBoardFixture({
-            id: '1',
+            id: 1,
             self: 'https://api.tracker.yandex.net/v3/boards/1',
             name: 'Active Board',
           }),
@@ -822,7 +822,7 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.getBoard', async () => {
         const boardId = '1';
         const mockResult: BoardOutput = createBoardFixture({
-          id: '1',
+          id: 1,
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
         });
@@ -839,7 +839,7 @@ describe('YandexTrackerFacade', () => {
         const boardId = '1';
         const params = { localized: true };
         const mockResult: BoardOutput = createBoardFixture({
-          id: '1',
+          id: 1,
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
         });
@@ -857,7 +857,7 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов BoardService.createBoard', async () => {
         const input: CreateBoardDto = { name: 'Sprint Board', filter: { query: 'status: open' } };
         const mockResult: BoardOutput = createBoardFixture({
-          id: '1',
+          id: 1,
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Sprint Board',
         });
@@ -876,7 +876,7 @@ describe('YandexTrackerFacade', () => {
         const boardId = '1';
         const input = { name: 'Updated Board' };
         const mockResult: BoardOutput = createBoardFixture({
-          id: '1',
+          id: 1,
           self: 'https://api.tracker.yandex.net/v3/boards/1',
           name: 'Updated Board',
         });
@@ -909,7 +909,7 @@ describe('YandexTrackerFacade', () => {
         const boardId = '1';
         const mockResult: SprintsListOutput = [
           createSprintFixture({
-            id: '10',
+            id: 10,
             self: 'https://api.tracker.yandex.net/v3/sprints/10',
             name: 'Sprint 1',
           }),
@@ -928,7 +928,7 @@ describe('YandexTrackerFacade', () => {
       it('должна делегировать вызов SprintService.getSprint', async () => {
         const sprintId = '10';
         const mockResult: SprintOutput = createSprintFixture({
-          id: '10',
+          id: 10,
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1',
         });
@@ -951,7 +951,7 @@ describe('YandexTrackerFacade', () => {
           endDate: '2024-01-14',
         };
         const mockResult: SprintOutput = createSprintFixture({
-          id: '10',
+          id: 10,
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1',
         });
@@ -970,7 +970,7 @@ describe('YandexTrackerFacade', () => {
         const sprintId = '10';
         const input = { name: 'Sprint 1 Updated' };
         const mockResult: SprintOutput = createSprintFixture({
-          id: '10',
+          id: 10,
           self: 'https://api.tracker.yandex.net/v3/sprints/10',
           name: 'Sprint 1 Updated',
         });

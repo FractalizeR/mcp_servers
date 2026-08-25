@@ -23,7 +23,7 @@
 - **Vitest** (тесты, покрытие ≥80%)
 - **dependency-cruiser** (валидация архитектурных правил)
 - **MCP SDK** (Model Context Protocol)
-- **API:** Яндекс.Трекер v2/v3 (используются обе официально поддерживаемые версии)
+- **API:** Яндекс.Трекер v3 (целевая версия всюду, кроме `raw_api_request` — см. §2)
 
 ---
 
@@ -53,45 +53,47 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 
 ### 2. Использование API v2 и v3
 
-**Яндекс.Трекер поддерживает два API:**
-- **API v3** — новая версия (issues, queues, comments, links, changelog, transitions)
-- **API v2** — старая версия (attachments, checklists, components, projects, worklogs)
+**Целевая версия — v3 всюду, где v3 существует.** Решено 2026-08-23; миграция —
+`.agentic-planning/plan_tracker_test_coverage/4.1_v3_migration_parallel.md`, завершена 2026-08-24.
+Артефакт A этапа (`inventory/v2-paths-2026-08-24.md` в той же папке) подтвердил: v3 существует у
+всех десяти затронутых семейств — исключений «v2 без v3-аналога» нет. Нормативный источник версии
+— **документация Трекера**, не эта таблица и не `yandex_tracker_client/`: у submodule версия —
+параметр соединения (`Connection.__init__(api_version=VERSION_V2)`), поэтому он подтверждает v2
+тавтологически и источником истины по версии не является — путь и метод подтверждать им можно.
+Новая операция пишется сразу на v3.
 
-**Правило: целевая версия — v3 всюду, где v3 существует.** Решено 2026-08-23; план миграции —
-`.agentic-planning/plan_tracker_test_coverage/4.1_v3_migration_parallel.md`. Нормативный источник
-версии — **документация Трекера**, а таблица ниже **описывает текущее состояние кода**: колонка
-«цель» говорит, куда операция должна переехать. Новая операция пишется сразу на v3.
+| Категория | Версия | Endpoint пример |
+|-----------|--------|-----------------|
+| Issues Core | v3 | `/v3/issues/{key}` |
+| Queues | v3 | `/v3/queues/{id}` |
+| Comments | v3 | `/v3/issues/{id}/comments` |
+| Links | v3 | `/v3/issues/{id}/links` |
+| Transitions | v3 | `/v3/issues/{id}/transitions` |
+| Changelog | v3 | `/v3/issues/{id}/changelog` |
+| User | v3 | `/v3/myself` |
+| Attachments | v3 | `/v3/issues/{id}/attachments` |
+| Checklists | v3 | `/v3/issues/{id}/checklistItems` |
+| Components | v3 | `/v3/queues/{id}/components` |
+| Projects | v3 | `/v3/projects` |
+| Worklogs | v3 | `/v3/issues/{id}/worklog` |
+| Boards | v3 | `/v3/boards` |
+| Board columns | v3 | `/v3/boards/{id}/columns/` |
+| Sprints | v3 | `/v3/sprints`, lifecycle `/v3/sprints/{id}/_start` |
+| Global fields | v3 | `/v3/fields` |
+| Entity API | v3 | `/v3/entities/{type}` |
+| Filters | v3 | `POST /v3/filters/`, путь чтения не документирован |
 
-| Категория | Сейчас | Endpoint пример | Цель |
-|-----------|--------|-----------------|------|
-| Issues Core | v3 | `/v3/issues/{key}` | v3 — уже целевая |
-| Queues | v3 | `/v3/queues/{id}` | v3 — уже целевая |
-| Comments | v3 | `/v3/issues/{id}/comments` | v3 — уже целевая |
-| Links | v3 | `/v3/issues/{id}/links` | v3 — уже целевая |
-| Transitions | v3 | `/v3/issues/{id}/transitions` | v3 — уже целевая |
-| Changelog | v3 | `/v3/issues/{id}/changelog` | v3 — уже целевая |
-| User | v3 | `/v3/myself` | v3 — уже целевая |
-| Attachments | v2 | `/v2/issues/{id}/attachments` | **v3, миграция 4.1** |
-| Checklists | v2 | `/v2/issues/{id}/checklistItems` | **v3, миграция 4.1** |
-| Components | v2 | `/v2/queues/{id}/components` | **v3, миграция 4.1** |
-| Projects | v2 | `/v2/projects` | **v3, миграция 4.1** |
-| Worklogs | v2 | `/v2/issues/{id}/worklog` | **v3, миграция 4.1** |
-| Boards | v2 | `/v2/boards` | **v3, миграция 4.1** |
-| Board columns | v3 | `/v3/boards/{id}/columns/` | **v3, миграция 4.1** |
-| Sprints | v2 | `/v2/sprints`, lifecycle `/v3/sprints/{id}/_start` | **v3, миграция 4.1** |
-| Global fields | v2 | `/v2/fields` | **v3, миграция 4.1** |
-| Entity API | v3 | `/v3/entities/{type}` | v3 — уже целевая |
-| Filters | v3 | `POST /v3/filters/` | v3 — уже целевая, путь чтения не документирован |
+**Единственное законное исключение — `raw_api_request`.** Его схема допускает и `/v2/`, и
+`/v3/`: версию выбирает вызывающий инструмент, а не наш код, поэтому миграции не подлежит по
+смыслу (см. `src/tools/api/raw/raw-api-request.schema.ts`).
 
 ✅ **Правильно:**
 ```typescript
-// v3 для issues
+// v3 везде
 this.httpClient.get('/v3/issues/PROJ-123');
 this.httpClient.get('/v3/myself');
-
-// v2 для attachments и worklogs
-this.httpClient.get('/v2/issues/PROJ-123/attachments');
-this.httpClient.post('/v2/issues/PROJ-123/worklog', {...});
+this.httpClient.get('/v3/issues/PROJ-123/attachments');
+this.httpClient.post('/v3/issues/PROJ-123/worklog', {...});
 ```
 
 ❌ **Неправильно:**
@@ -100,22 +102,20 @@ this.httpClient.get('/issues');    // Без версии
 this.httpClient.get('/v1/issues'); // Неверная версия
 ```
 
-**Примечание:** При появлении v3 версий для категорий на v2, приоритет отдаётся v3.
+⚠️ **Форма ответа v3 на мутациях организационных сущностей (проекты, доски, спринты, глобальные
+поля) вживую не наблюдалась** — уверенность держится на существовании маршрута (read-only
+оракул), идентичности формы на GET и моке. Проверка — предмет живой приёмки 3.1. Боевая проба
+2026-08-23 показала: v2 и v3 отдают одинаковое число элементов и одинаковый набор ключей у досок,
+проектов, глобальных полей и спринтов — то есть миграция этих четырёх семейств была сменой
+версии в пути, а не переписыванием парсинга. У очередей, worklog, чек-листов, вложений и
+компонентов проверено только существование маршрута v3 (оракул), не форма ответа и не число
+элементов. Отчёты:
+`.agentic-planning/plan_tracker_test_coverage/inventory/live-version-probe-2026-08-23.md`,
+`.agentic-planning/plan_tracker_test_coverage/inventory/v2-paths-2026-08-24.md`.
 
-⚠️ **v2 работает, но это совместимость, а не поддержка.** Боевая проба 2026-08-23 показала:
-v2 и v3 отдают одинаковое число элементов и одинаковый набор ключей у досок, проектов,
-глобальных полей, спринтов, очередей, worklog, чек-листов, вложений и компонентов — то есть
-миграция этих семейств есть смена версии в пути, а не переписывание парсинга. Отчёт:
-`.agentic-planning/plan_tracker_test_coverage/inventory/live-version-probe-2026-08-23.md`.
-
-⚠️ **Отдельно от версий: наши типы расходятся с боевым ответом.** `options` глобального поля —
-`boolean`, а не массив опций; `id` досок, колонок досок и спринтов — число, а объявлено `string`.
-Мок этого не поймает по построению — он отдаёт предписанное. Чинится пакетом B этапа 4.1.
-
-Новую операцию сверяй с документацией, **не** с этой таблицей и **не** с `yandex_tracker_client/`:
-у submodule версия — параметр соединения (`Connection.__init__(api_version=VERSION_V2)`), поэтому
-он подтверждает нашу v2 тавтологически и источником истины по версии не является. Путь и метод
-подтверждать им можно.
+⚠️ **Наши типы когда-то расходились с боевым ответом независимо от версии** (`options`
+глобального поля — `boolean`, а не массив опций; `id` досок, колонок досок и спринтов — число, а
+было объявлено `string`) — исправлено пакетом B этапа 4.1.
 
 **Дополнительно:**
 - ✅ Batch-операции: `getIssues([keys])`, НЕ `getIssue(key)`

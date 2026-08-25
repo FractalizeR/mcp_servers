@@ -3,7 +3,12 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  FilteredEntitySchema,
+  buildOutputSchema,
+  buildEntityIdSchema,
+} from '#common/schemas/index.js';
 
 const UpdateBoardColumnSchema = z.object({
   name: z.string().min(1, 'Название колонки обязательно'),
@@ -19,7 +24,7 @@ const UpdateBoardFilterSchema = z.object({
  */
 export const UpdateBoardParamsSchema = z.object({
   /** Идентификатор доски (обязательно) */
-  boardId: z.string().min(1, 'Board ID не может быть пустым'),
+  boardId: buildEntityIdSchema('Board'),
 
   /** Новое название доски (опционально) */
   name: z.string().min(1).optional(),

@@ -58,7 +58,7 @@ describe('CreateComponentOperation', () => {
 
       const result = await operation.execute('QUEUE', dto);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/queues/QUEUE/components', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/queues/QUEUE/components', dto);
       expect(result).toEqual(mockComponent);
     });
 
@@ -73,7 +73,7 @@ describe('CreateComponentOperation', () => {
       const result = await operation.execute('QUEUE', dto);
 
       expect(result.name).toBe('Minimal Component');
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/queues/QUEUE/components', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/queues/QUEUE/components', dto);
     });
 
     it('should create component with all fields', async () => {
@@ -92,7 +92,7 @@ describe('CreateComponentOperation', () => {
 
       const result = await operation.execute('QUEUE', dto);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/queues/QUEUE/components', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/queues/QUEUE/components', dto);
       expect(result).toEqual(mockComponent);
     });
 
@@ -179,7 +179,7 @@ describe('CreateComponentOperation', () => {
 
       await operation.execute('queue-123', dto);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/queues/queue-123/components', dto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/queues/queue-123/components', dto);
     });
 
     it('should create component with assignAuto enabled', async () => {

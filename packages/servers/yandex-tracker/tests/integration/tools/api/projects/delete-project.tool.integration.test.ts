@@ -8,12 +8,13 @@
  *
  * Сверка с внешним источником истины (план `2.1.2` §«Пакеты, где мок — единственная
  * проверка»): официальная документация Трекера (`en/api-ref/projects/delete-project`,
- * снято `curl` 2026-08-23) описывает `DELETE /v3/projects/<project_ID>` — версия v3,
- * не v2. Референсный `yandex_tracker_client/` (`Projects.path = '/{api_version}/projects/{id}'`,
- * без переопределения `api_version`, дефолт соединения `VERSION_V2`) — v2, как и код
- * этого пакета (`DeleteProjectOperation`: `DELETE /v2/projects/{projectId}`). Тест
- * фиксирует НАБЛЮДАЕМОЕ поведение кода (v2) — расхождение с документацией не чинится
- * здесь (канон §5), строка передана оркестратору для `TESTING_STRATEGY.md` §2.
+ * снято `curl` 2026-08-23) описывает `DELETE /v3/projects/<project_ID>` — версия v3.
+ * Референсный `yandex_tracker_client/` (`Projects.path = '/{api_version}/projects/{id}'`,
+ * без переопределения `api_version`, дефолт соединения `VERSION_V2`) остаётся на v2 и
+ * не мигрирует; код этого пакета после миграции 4.1 — v3 (`DeleteProjectOperation`:
+ * `DELETE /v3/projects/{projectId}`). Тест фиксирует НАБЛЮДАЕМОЕ поведение кода (v3) —
+ * после миграции 4.1 версия и метод совпадают с документацией; расхождение
+ * референсного клиента с обоими не чинится здесь (канон §5).
  */
 
 import {
@@ -28,13 +29,13 @@ import { expect } from 'vitest';
 describeToolIntegration({
   tool: DELETE_PROJECT_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'delete', path: '/v2/projects/project123', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'delete', path: '/v3/projects/project123', apiVersion: 'v3' }],
 
   happyPath: {
     input: { projectId: 'project123' },
     arrange: (api) => {
       api
-        .expectRequest({ method: 'delete', path: '/v2/projects/project123', apiVersion: 'v2' })
+        .expectRequest({ method: 'delete', path: '/v3/projects/project123', apiVersion: 'v3' })
         .reply(200, {});
     },
     outputDataSchema: DeleteProjectOutputDataSchema,
@@ -53,7 +54,7 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'delete', path: '/v2/projects/project123', apiVersion: 'v2' })
+          .expectRequest({ method: 'delete', path: '/v3/projects/project123', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { projectId: 'project123' },
@@ -61,7 +62,7 @@ describeToolIntegration({
     notFound: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'delete', path: '/v2/projects/project123', apiVersion: 'v2' })
+          .expectRequest({ method: 'delete', path: '/v3/projects/project123', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { projectId: 'project123' },

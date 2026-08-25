@@ -1,13 +1,18 @@
 /**
  * Доменный тип: Запись времени в Яндекс.Трекере
  *
- * Соответствует API v2: /v2/issues/{issueId}/worklog
+ * Соответствует API v3: /v3/issues/{issueId}/worklog
  *
- * ВАЖНО: API возвращает записи времени в формате:
+ * ВАЖНО: пример ниже — из документации API, живым GET по worklog не
+ * переснимался (в отличие от досок, проектов, глобальных полей и спринтов —
+ * см. `.agentic-planning/plan_tracker_test_coverage/inventory/live-version-probe-2026-08-23.md`).
+ * В частности, `version` документацией заявлен, но не подтверждён боевым
+ * ответом. API возвращает записи времени в формате:
  * ```json
  * {
  *   "id": "123",
- *   "self": "https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/123",
+ *   "version": 1,
+ *   "self": "https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/123",
  *   "issue": {
  *     "id": "abc123",
  *     "key": "TEST-1",
@@ -47,9 +52,22 @@ export interface Worklog {
 
   /**
    * URL записи времени в API (всегда присутствует)
-   * @example "https://api.tracker.yandex.net/v2/issues/TEST-1/worklog/123"
+   * @example "https://api.tracker.yandex.net/v3/issues/TEST-1/worklog/123"
    */
   readonly self: string;
+
+  /**
+   * Версия записи (токен оптимистичной блокировки; по документации
+   * увеличивается при каждом изменении записи).
+   *
+   * Источник: документация API v3 (не подтверждено боевым GET — live-probe
+   * `inventory/live-version-probe-2026-08-23.md` worklog не покрывал, отсюда
+   * `?`, а не безусловное поле как у Board/Project/Sprint). Мутации
+   * `version` не отправляют — см. решение №2 плана
+   * (`4.1_v3_migration_parallel.md`): оптимистичная блокировка в этапе 4.1
+   * не вводится.
+   */
+  readonly version?: number;
 
   /**
    * Задача, к которой привязана запись времени (всегда присутствует)

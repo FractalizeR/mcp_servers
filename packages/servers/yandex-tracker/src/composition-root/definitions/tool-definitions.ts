@@ -227,7 +227,7 @@ export const TOOL_CLASSES = [
   DeleteBoardColumnTool,
   ManageSprintLifecycleTool,
   SearchWorklogTool,
-  // Пакет 7.2.E: глобальные поля Трекера (`/v2/fields`) — Operation/Service/Facade уже
+  // Пакет 7.2.E: глобальные поля Трекера (`/v3/fields`) — Operation/Service/Facade уже
   // существовали, но не были обёрнуты ни одним Tool. НЕ путать с локальными полями
   // очереди выше (GetQueueLocalFieldsTool и др.) — разные сущности, разная адресация.
   GetGlobalFieldsTool,

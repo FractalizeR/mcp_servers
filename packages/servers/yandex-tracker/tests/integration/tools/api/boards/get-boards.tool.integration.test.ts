@@ -5,7 +5,8 @@
  * `мок (гипотеза)`: путь и метод сверены с внешним источником — референсным
  * клиентом `yandex_tracker_client/` (`Boards.path = '/{api_version}/boards/{id}'`,
  * `Collection.get_all()` → `GET`, `id` пуст для листинга) с дефолтной версией
- * соединения `VERSION_V2` — совпадает с `/v2/boards`.
+ * соединения `VERSION_V2` — путь и метод подтверждены, версия — нет (submodule
+ * её не различает); сервер реально ходит в `/v3/boards`.
  */
 
 import { createBoardFixture } from '#helpers/agile.fixture.js';
@@ -26,24 +27,24 @@ import { describe, it, expect } from 'vitest';
 describeToolIntegration({
   tool: GET_BOARDS_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'get', path: '/v2/boards', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'get', path: '/v3/boards', apiVersion: 'v3' }],
 
   happyPath: {
     input: { fields: ['id', 'name'] },
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' })
+        .expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' })
         .reply(200, [
-          createBoardFixture({ id: '1', name: 'Board One' }),
-          createBoardFixture({ id: '2', name: 'Board Two' }),
+          createBoardFixture({ id: 1, name: 'Board One' }),
+          createBoardFixture({ id: 2, name: 'Board Two' }),
         ]);
     },
     outputDataSchema: GetBoardsOutputDataSchema,
     assertData: (data) => {
       expect(data.count).toBe(2);
       expect(data.boards).toEqual([
-        { id: '1', name: 'Board One' },
-        { id: '2', name: 'Board Two' },
+        { id: 1, name: 'Board One' },
+        { id: 2, name: 'Board Two' },
       ]);
     },
   },
@@ -57,19 +58,19 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { fields: ['id'] },
     },
     notFound: {
-      // Единственный HTTP-вызов get_boards — GET /v2/boards; 404 — гипотетическая
+      // Единственный HTTP-вызов get_boards — GET /v3/boards; 404 — гипотетическая
       // реакция API на несуществующий ресурс организации (список досок сам по
       // себе не адресует конкретную сущность, но контрактная ошибка проверяется
       // как маппинг любого статуса ответа операции).
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { fields: ['id'] },
@@ -86,8 +87,8 @@ describeToolIntegration({
   warnings: {
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' })
-        .reply(200, [createBoardFixture({ id: '1', name: 'Board One' })]);
+        .expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' })
+        .reply(200, [createBoardFixture({ id: 1, name: 'Board One' })]);
     },
     input: { fields: ['id', 'name', 'missingField'] },
     codes: ['FIELDS_WITHOUT_VALUE'],
@@ -98,7 +99,7 @@ describe('get_boards — кейсы вне обязательного соста
   const ctx = useToolIntegrationContext();
 
   it('организация без досок: пустой массив, count=0, warnings отсутствует', async () => {
-    ctx.api.expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' }).reply(200, []);
+    ctx.api.expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' }).reply(200, []);
 
     const result = await ctx.client.callTool(GET_BOARDS_TOOL_METADATA.name, {
       fields: ['id', 'name'],
@@ -119,11 +120,11 @@ describe('get_boards — кейсы вне обязательного соста
     ctx.api
       .expectRequest({
         method: 'get',
-        path: '/v2/boards',
-        apiVersion: 'v2',
+        path: '/v3/boards',
+        apiVersion: 'v3',
         query: { localized: false },
       })
-      .reply(200, [createBoardFixture({ id: '1', name: 'Board One' })]);
+      .reply(200, [createBoardFixture({ id: 1, name: 'Board One' })]);
 
     const result = await ctx.client.callTool(GET_BOARDS_TOOL_METADATA.name, {
       fields: ['id', 'name'],

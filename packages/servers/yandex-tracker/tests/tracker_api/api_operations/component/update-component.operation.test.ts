@@ -54,7 +54,7 @@ describe('UpdateComponentOperation', () => {
 
       const result = await operation.execute('1', updates);
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/components/1', updates);
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/components/1', updates);
       expect(result).toEqual(mockComponent);
     });
 
@@ -96,7 +96,7 @@ describe('UpdateComponentOperation', () => {
 
       await operation.execute('1', updates);
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/components/1', updates);
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/components/1', updates);
     });
 
     it('should update assignAuto flag', async () => {
@@ -214,7 +214,7 @@ describe('UpdateComponentOperation', () => {
 
       const result = await operation.execute('1', updates);
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/components/1', {});
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/components/1', {});
       expect(result).toEqual(mockComponent);
     });
   });

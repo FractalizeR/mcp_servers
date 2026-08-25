@@ -4,13 +4,12 @@
  * Категория `api/fields` целиком в реестре исключений живых прогонов
  * (`tests/coverage-exceptions/live-exempt-categories.ts`) — С-4 здесь `мок (гипотеза)`.
  *
- * Сверка с внешним источником истины: референсный клиент (`Fields.path`, `update()`
- * → `PATCH` на `obj._path`, `api_version` по умолчанию `v2`) подтверждает
- * `PATCH /v2/fields/{fieldId}`. Официальная документация описывает переименование
- * поля как `PATCH /v3/fields/{id}?version=...` (`api-ref/issues/patch-issue-field-name.md`)
- * — другая версия API и обязательный query-параметр `version` (optimistic locking),
- * которого в нашей операции нет вовсе — расхождение с обоими источниками записано в
- * отчёт пакета, здесь фиксируется фактическое поведение кода.
+ * Путь — `PATCH /v3/fields/{fieldId}` (миграция 4.1, маршрут ресурса — `inventory/
+ * v2-paths-2026-08-24.md`). Референсный клиент подтверждает метод `PATCH`
+ * (`collections.py:188`); документация (`api-ref/issues/patch-issue-field-name.md`)
+ * описывает переименование как `PATCH /v3/fields/{id}?version=...`, но
+ * оптимистичную блокировку этап 4.1 сознательно не вводит (план, «Решения»,
+ * п.2) — `version` в query здесь нет, и это не расхождение, а принятое решение.
  */
 
 import {
@@ -26,7 +25,7 @@ import { expect } from 'vitest';
 describeToolIntegration({
   tool: UPDATE_GLOBAL_FIELD_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'patch', path: '/v2/fields/customField123', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'patch', path: '/v3/fields/customField123', apiVersion: 'v3' }],
 
   happyPath: {
     input: { fieldId: 'customField123', name: 'Renamed Priority', fields: ['id', 'name'] },
@@ -34,8 +33,8 @@ describeToolIntegration({
       api
         .expectRequest({
           method: 'patch',
-          path: '/v2/fields/customField123',
-          apiVersion: 'v2',
+          path: '/v3/fields/customField123',
+          apiVersion: 'v3',
           body: { name: 'Renamed Priority' },
         })
         .reply(200, createGlobalFieldFixture({ id: 'customField123', name: 'Renamed Priority' }));
@@ -55,17 +54,17 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'patch', path: '/v2/fields/customField123', apiVersion: 'v2' })
+          .expectRequest({ method: 'patch', path: '/v3/fields/customField123', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { fieldId: 'customField123', name: 'Restricted Rename', fields: ['id'] },
     },
     notFound: {
-      // Единственный HTTP-вызов update_global_field — PATCH /v2/fields/{fieldId};
+      // Единственный HTTP-вызов update_global_field — PATCH /v3/fields/{fieldId};
       // 404 здесь — та же операция, отвечающая «поле не найдено».
       arrange: (api) => {
         api
-          .expectRequest({ method: 'patch', path: '/v2/fields/customField123', apiVersion: 'v2' })
+          .expectRequest({ method: 'patch', path: '/v3/fields/customField123', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { fieldId: 'customField123', name: 'Rename Missing', fields: ['id'] },
@@ -81,7 +80,7 @@ describeToolIntegration({
   warnings: {
     arrange: (api) => {
       api
-        .expectRequest({ method: 'patch', path: '/v2/fields/customField123', apiVersion: 'v2' })
+        .expectRequest({ method: 'patch', path: '/v3/fields/customField123', apiVersion: 'v3' })
         .reply(200, createGlobalFieldFixture({ id: 'customField123', name: 'Field With Gaps' }));
     },
     input: {

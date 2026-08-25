@@ -53,7 +53,7 @@ export class DeleteAttachmentTool extends BaseTool<YandexTrackerFacade> {
       // 2. Логирование начала операции
       this.logger.info(`Удаление файла attachmentId=${attachmentId} из задачи ${issueId}`);
 
-      // 3. API v2: удаление файла
+      // 3. API v3: удаление файла
       await this.facade.deleteAttachment(issueId, attachmentId);
 
       // 4. Логирование результатов

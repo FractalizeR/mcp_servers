@@ -6,7 +6,7 @@
  * - НЕТ обновления/удаления/получения полей
  * - НЕТ валидации прав доступа (делается в API)
  *
- * API: POST /v2/fields
+ * API: POST /v3/fields
  *
  * ВАЖНО:
  * - Создаются только кастомные поля (системные поля нельзя создавать)
@@ -44,7 +44,7 @@ export class CreateFieldOperation extends BaseOperation {
     this.logger.info(`Создание кастомного поля: ${input.name}`);
 
     // Создаем поле через API
-    const field = await this.httpClient.post<FieldOutput>('/v2/fields', input);
+    const field = await this.httpClient.post<FieldOutput>('/v3/fields', input);
 
     // Инвалидируем кеш списка полей
     await this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, 'all'));

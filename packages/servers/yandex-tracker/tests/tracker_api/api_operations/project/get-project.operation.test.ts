@@ -48,7 +48,7 @@ describe('GetProjectOperation', () => {
 
       const result = await operation.execute({ projectId: 'TESTPROJ' });
 
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/projects/TESTPROJ');
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/projects/TESTPROJ');
       expect(result).toEqual(mockProject);
     });
 
@@ -58,7 +58,7 @@ describe('GetProjectOperation', () => {
 
       await operation.execute({ projectId: 'PROJ', expand: 'queues' });
 
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/projects/PROJ?expand=queues');
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/projects/PROJ?expand=queues');
     });
 
     it('should cache project by its ID', async () => {

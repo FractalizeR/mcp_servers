@@ -6,7 +6,7 @@
  * - Инвалидация кеша после удаления
  * - НЕТ создания/получения/обновления
  *
- * API: DELETE /v2/boards/{boardId}
+ * API: DELETE /v3/boards/{boardId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -32,7 +32,7 @@ export class DeleteBoardOperation extends BaseOperation {
 
     this.logger.info(`Удаление доски: ${boardId}`);
 
-    const endpoint = `/v2/boards/${boardId}`;
+    const endpoint = `/v3/boards/${boardId}`;
 
     await this.httpClient.delete(endpoint);
 

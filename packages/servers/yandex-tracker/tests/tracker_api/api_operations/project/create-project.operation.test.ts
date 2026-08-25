@@ -53,7 +53,7 @@ describe('CreateProjectOperation', () => {
 
       const result = await operation.execute(inputDto);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/projects', inputDto);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/projects', inputDto);
       expect(result).toEqual(mockProject);
     });
 

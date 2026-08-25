@@ -35,7 +35,7 @@ describe('CreateBoardColumnTool', () => {
 
   it('создаст колонку', async () => {
     const column = {
-      id: 'c1',
+      id: 1,
       name: 'Done',
       statuses: [{ id: '1', key: 'closed', display: 'Closed' }],
     };
@@ -51,6 +51,29 @@ describe('CreateBoardColumnTool', () => {
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.createBoardColumn).toHaveBeenCalledWith({
       boardId: 'b1',
+      name: 'Done',
+      statuses: ['closed'],
+    });
+  });
+
+  it('примет числовой boardId (как отдаёт get_boards) и дойдёт до того же запроса', async () => {
+    const column = {
+      id: 1,
+      name: 'Done',
+      statuses: [{ id: '1', key: 'closed', display: 'Closed' }],
+    };
+    vi.mocked(mockTrackerFacade.createBoardColumn).mockResolvedValue(column);
+
+    const result = await tool.execute({
+      boardId: 42,
+      name: 'Done',
+      statuses: ['closed'],
+      fields: ['id', 'name'],
+    });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.createBoardColumn).toHaveBeenCalledWith({
+      boardId: '42',
       name: 'Done',
       statuses: ['closed'],
     });

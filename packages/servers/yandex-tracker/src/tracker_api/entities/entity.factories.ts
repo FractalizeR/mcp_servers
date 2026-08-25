@@ -328,9 +328,9 @@ export function createFullChangelogEntry(overrides?: Partial<ChangelogEntry>): C
 export function createAttachment(overrides?: Partial<Attachment>): Attachment {
   return {
     id: '1',
-    self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/attachments/1',
+    self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/attachments/1',
     name: 'test-file.pdf',
-    content: 'https://api.tracker.yandex.net/v2/issues/TEST-1/attachments/1/test-file.pdf',
+    content: 'https://api.tracker.yandex.net/v3/issues/TEST-1/attachments/1/test-file.pdf',
     createdBy: createUserRef(),
     createdAt: '2024-01-01T00:00:00.000Z',
     mimetype: 'application/pdf',
@@ -345,10 +345,10 @@ export function createAttachment(overrides?: Partial<Attachment>): Attachment {
 export function createAttachmentWithThumbnail(overrides?: Partial<Attachment>): Attachment {
   return {
     id: '1',
-    self: 'https://api.tracker.yandex.net/v2/issues/TEST-1/attachments/1',
+    self: 'https://api.tracker.yandex.net/v3/issues/TEST-1/attachments/1',
     name: 'screenshot.png',
-    content: 'https://api.tracker.yandex.net/v2/issues/TEST-1/attachments/1/screenshot.png',
-    thumbnail: 'https://api.tracker.yandex.net/v2/issues/TEST-1/thumbnails/1',
+    content: 'https://api.tracker.yandex.net/v3/issues/TEST-1/attachments/1/screenshot.png',
+    thumbnail: 'https://api.tracker.yandex.net/v3/issues/TEST-1/thumbnails/1',
     createdBy: createUserRef(),
     createdAt: '2024-01-01T00:00:00.000Z',
     mimetype: 'image/png',
@@ -376,11 +376,12 @@ export function createQueueRef(overrides?: Partial<QueueRef>): QueueRef {
 export function createMinimalProject(overrides?: Partial<Project>): Project {
   return {
     id: '1',
-    self: 'https://api.tracker.yandex.net/v2/projects/1',
+    self: 'https://api.tracker.yandex.net/v3/projects/1',
     key: 'PROJECT',
     name: 'Test Project',
     lead: createUserRef(),
     status: 'in_progress' as ProjectStatus,
+    version: 1,
     ...overrides,
   };
 }
@@ -391,11 +392,12 @@ export function createMinimalProject(overrides?: Partial<Project>): Project {
 export function createFullProject(overrides?: Partial<Project>): Project {
   return {
     id: '1',
-    self: 'https://api.tracker.yandex.net/v2/projects/1',
+    self: 'https://api.tracker.yandex.net/v3/projects/1',
     key: 'PROJECT',
     name: 'Test Project',
     lead: createUserRef(),
     status: 'in_progress' as ProjectStatus,
+    version: 1,
     description: 'Test project description',
     teamUsers: [createUserRef()],
     teamGroups: [{ id: '1', display: 'Test Group' }],

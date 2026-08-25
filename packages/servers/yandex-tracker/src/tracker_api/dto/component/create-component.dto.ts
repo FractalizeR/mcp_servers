@@ -1,7 +1,7 @@
 /**
  * DTO для создания компонента в очереди Яндекс.Трекера
  *
- * API: POST /v2/queues/{queueId}/components
+ * API: POST /v3/queues/{queueId}/components
  *
  * ВАЖНО:
  * - Компонент создается в контексте конкретной очереди (queueId в URL)

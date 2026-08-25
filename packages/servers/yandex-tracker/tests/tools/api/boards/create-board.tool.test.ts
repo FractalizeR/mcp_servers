@@ -29,7 +29,7 @@ describe('CreateBoardTool', () => {
   });
 
   it('создаст доску с минимальными полями', async () => {
-    const board = { id: '1', self: 'url', version: 1, name: 'New Board' };
+    const board = { id: 1, self: 'url', version: 1, name: 'New Board' };
     vi.mocked(mockTrackerFacade.createBoard).mockResolvedValue(board);
 
     const result = await tool.execute({ name: 'New Board', fields: ['id', 'name'] });

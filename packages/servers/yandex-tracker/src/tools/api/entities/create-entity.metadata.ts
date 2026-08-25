@@ -9,7 +9,8 @@ import { CreateEntityOutputSchema } from './create-entity.schema.js';
 
 export const CREATE_ENTITY_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_entity', MCP_TOOL_PREFIX),
-  description: '[Entities/Write] Создать Goal/Project/Portfolio (Entity API ≠ /v2/projects)',
+  description:
+    '[Entities/Write] Создать Goal/Project/Portfolio (коллекция /v3/entities/, не /v3/projects — см. get_projects)',
   category: ToolCategory.PROJECTS,
   subcategory: 'write',
   priority: ToolPriority.HIGH,

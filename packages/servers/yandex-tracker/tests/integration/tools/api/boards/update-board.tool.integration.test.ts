@@ -5,7 +5,8 @@
  * `мок (гипотеза)`: путь и метод сверены с внешним источником — референсным
  * клиентом `yandex_tracker_client/` (`Boards.path = '/{api_version}/boards/{id}'`,
  * `Collection.update()` → `PATCH` при непустом `kwargs`) с дефолтной версией
- * соединения `VERSION_V2` — совпадает с `/v2/boards/{boardId}`.
+ * соединения `VERSION_V2` — путь и метод подтверждены, версия — нет (submodule
+ * её не различает); сервер реально ходит в `/v3/boards/{boardId}`.
  */
 
 import {
@@ -21,7 +22,7 @@ import { expect } from 'vitest';
 describeToolIntegration({
   tool: UPDATE_BOARD_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'patch', path: '/v2/boards/42', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'patch', path: '/v3/boards/42', apiVersion: 'v3' }],
 
   happyPath: {
     input: { boardId: '42', name: 'Renamed Board', fields: ['id', 'name'] },
@@ -29,15 +30,15 @@ describeToolIntegration({
       api
         .expectRequest({
           method: 'patch',
-          path: '/v2/boards/42',
-          apiVersion: 'v2',
+          path: '/v3/boards/42',
+          apiVersion: 'v3',
           body: { name: 'Renamed Board' },
         })
-        .reply(200, createBoardFixture({ id: '42', name: 'Renamed Board' }));
+        .reply(200, createBoardFixture({ id: 42, name: 'Renamed Board' }));
     },
     outputDataSchema: UpdateBoardOutputDataSchema,
     assertData: (data) => {
-      expect(data.board).toMatchObject({ id: '42', name: 'Renamed Board' });
+      expect(data.board).toMatchObject({ id: 42, name: 'Renamed Board' });
     },
   },
 
@@ -50,17 +51,17 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'patch', path: '/v2/boards/42', apiVersion: 'v2' })
+          .expectRequest({ method: 'patch', path: '/v3/boards/42', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { boardId: '42', name: 'Restricted rename', fields: ['id'] },
     },
     notFound: {
       // Тот же boardId, что и в happyPath/forbidden — expectedRequests декларирует
-      // конкретный путь `/v2/boards/42` один раз (H-1).
+      // конкретный путь `/v3/boards/42` один раз (H-1).
       arrange: (api) => {
         api
-          .expectRequest({ method: 'patch', path: '/v2/boards/42', apiVersion: 'v2' })
+          .expectRequest({ method: 'patch', path: '/v3/boards/42', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { boardId: '42', name: 'Missing board', fields: ['id'] },
@@ -76,8 +77,8 @@ describeToolIntegration({
   warnings: {
     arrange: (api) => {
       api
-        .expectRequest({ method: 'patch', path: '/v2/boards/42', apiVersion: 'v2' })
-        .reply(200, createBoardFixture({ id: '42', name: 'Board With Gaps' }));
+        .expectRequest({ method: 'patch', path: '/v3/boards/42', apiVersion: 'v3' })
+        .reply(200, createBoardFixture({ id: 42, name: 'Board With Gaps' }));
     },
     input: { boardId: '42', name: 'Board With Gaps', fields: ['id', 'name', 'missingField'] },
     codes: ['FIELDS_WITHOUT_VALUE'],

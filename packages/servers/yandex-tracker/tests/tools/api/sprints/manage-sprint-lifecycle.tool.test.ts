@@ -32,7 +32,7 @@ describe('ManageSprintLifecycleTool', () => {
 
   it('запустит спринт (start)', async () => {
     const sprint = createSprintFixture({
-      id: '1',
+      id: 1,
       version: 2,
       name: 'Sprint 1',
       status: 'in_progress',
@@ -51,6 +51,24 @@ describe('ManageSprintLifecycleTool', () => {
     };
     expect(parsed.data.sprint).toEqual(sprint);
     expect(parsed.data.message).toContain('запущен');
+  });
+
+  it('примет числовой sprintId (как отдаёт get_sprints) и дойдёт до того же запроса', async () => {
+    const sprint = createSprintFixture({
+      id: 1,
+      version: 2,
+      name: 'Sprint 1',
+      status: 'in_progress',
+    });
+    vi.mocked(mockTrackerFacade.manageSprintLifecycle).mockResolvedValue(sprint);
+
+    const result = await tool.execute({ sprintId: 1, action: 'start' });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.manageSprintLifecycle).toHaveBeenCalledWith({
+      sprintId: '1',
+      action: 'start',
+    });
   });
 
   it('удалит спринт (delete) — sprint в ответе null', async () => {

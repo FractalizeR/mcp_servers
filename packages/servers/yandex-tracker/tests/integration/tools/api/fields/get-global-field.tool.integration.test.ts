@@ -4,14 +4,9 @@
  * Категория `api/fields` целиком в реестре исключений живых прогонов
  * (`tests/coverage-exceptions/live-exempt-categories.ts`) — С-4 здесь `мок (гипотеза)`.
  *
- * Сверка с внешним источником истины: референсный клиент (`Fields.path =
- * '/{api_version}/fields/{id}'`, `get()` → `get_all()` → `GET`, `api_version` по
- * умолчанию `v2`) подтверждает `GET /v2/fields/{fieldId}`. Официальная документация
- * не описывает получение ОДНОГО поля по ID отдельным методом — только список
- * (`GET /v3/fields`, см. `create-global-field`/`get-global-fields` тесты) — путь
- * этого конкретного инструмента подтверждён только референсным клиентом, версия
- * (`v2` кода против `v3` списка в документации) — та же гипотеза, что и у соседних
- * инструментов пакета; расхождение записано в отчёт.
+ * Путь — `GET /v3/fields/{fieldId}` (миграция 4.1). Документация не описывает получение
+ * ОДНОГО поля отдельным разделом; v3 подтверждён read-only оракулом маршрутов
+ * (`GET /v3/fields/queue` → 200, `inventory/v2-paths-2026-08-24.md`).
  */
 
 import {
@@ -27,13 +22,13 @@ import { expect } from 'vitest';
 describeToolIntegration({
   tool: GET_GLOBAL_FIELD_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'get', path: '/v2/fields/customField123', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'get', path: '/v3/fields/customField123', apiVersion: 'v3' }],
 
   happyPath: {
     input: { fieldId: 'customField123', fields: ['id', 'name'] },
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/fields/customField123', apiVersion: 'v2' })
+        .expectRequest({ method: 'get', path: '/v3/fields/customField123', apiVersion: 'v3' })
         .reply(200, createGlobalFieldFixture({ id: 'customField123', name: 'Custom Priority' }));
     },
     outputDataSchema: GetGlobalFieldOutputDataSchema,
@@ -51,17 +46,17 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/fields/customField123', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/fields/customField123', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { fieldId: 'customField123', fields: ['id'] },
     },
     notFound: {
-      // Единственный HTTP-вызов get_global_field — GET /v2/fields/{fieldId}; 404
+      // Единственный HTTP-вызов get_global_field — GET /v3/fields/{fieldId}; 404
       // здесь — та же операция, отвечающая «поле не найдено».
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/fields/customField123', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/fields/customField123', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { fieldId: 'customField123', fields: ['id'] },
@@ -77,7 +72,7 @@ describeToolIntegration({
   warnings: {
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/fields/customField123', apiVersion: 'v2' })
+        .expectRequest({ method: 'get', path: '/v3/fields/customField123', apiVersion: 'v3' })
         .reply(200, createGlobalFieldFixture({ id: 'customField123', name: 'Custom Priority' }));
     },
     input: { fieldId: 'customField123', fields: ['id', 'name', 'missingField'] },

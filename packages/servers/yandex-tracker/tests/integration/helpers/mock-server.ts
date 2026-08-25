@@ -638,8 +638,8 @@ export class MockServer {
    * Mock успешного получения списка файлов задачи
    */
   mockGetAttachmentsSuccess(issueKey: string, attachments: unknown[]): this {
-    const mockKey = `GET /v2/issues/${issueKey}/attachments`;
-    this.mockAdapter.onGet(`/v2/issues/${issueKey}/attachments`).reply(() => {
+    const mockKey = `GET /v3/issues/${issueKey}/attachments`;
+    this.mockAdapter.onGet(`/v3/issues/${issueKey}/attachments`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -655,8 +655,8 @@ export class MockServer {
    */
   mockGetAttachments404(issueKey: string): this {
     const response = generateError404();
-    const mockKey = `GET /v2/issues/${issueKey}/attachments`;
-    this.mockAdapter.onGet(`/v2/issues/${issueKey}/attachments`).reply(() => {
+    const mockKey = `GET /v3/issues/${issueKey}/attachments`;
+    this.mockAdapter.onGet(`/v3/issues/${issueKey}/attachments`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -671,8 +671,8 @@ export class MockServer {
    * Mock успешной загрузки файла
    */
   mockUploadAttachmentSuccess(issueKey: string, attachment: unknown): this {
-    const mockKey = `POST /v2/issues/${issueKey}/attachments`;
-    this.mockAdapter.onPost(`/v2/issues/${issueKey}/attachments`).reply(() => {
+    const mockKey = `POST /v3/issues/${issueKey}/attachments`;
+    this.mockAdapter.onPost(`/v3/issues/${issueKey}/attachments`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -688,8 +688,8 @@ export class MockServer {
    */
   mockUploadAttachment403(issueKey: string): this {
     const response = generateError403();
-    const mockKey = `POST /v2/issues/${issueKey}/attachments`;
-    this.mockAdapter.onPost(`/v2/issues/${issueKey}/attachments`).reply(() => {
+    const mockKey = `POST /v3/issues/${issueKey}/attachments`;
+    this.mockAdapter.onPost(`/v3/issues/${issueKey}/attachments`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -704,10 +704,10 @@ export class MockServer {
    * Mock успешного скачивания файла
    */
   mockDownloadAttachmentSuccess(issueKey: string, attachmentId: string, filename: string): this {
-    const mockKey = `GET /v2/issues/${issueKey}/attachments/${attachmentId}/${filename}`;
+    const mockKey = `GET /v3/issues/${issueKey}/attachments/${attachmentId}/${filename}`;
     const fileContent = Buffer.from('test file content');
     this.mockAdapter
-      .onGet(`/v2/issues/${issueKey}/attachments/${attachmentId}/${filename}`)
+      .onGet(`/v3/issues/${issueKey}/attachments/${attachmentId}/${filename}`)
       .reply(() => {
         const index = this.pendingMocks.indexOf(mockKey);
         if (index !== -1) {
@@ -731,9 +731,9 @@ export class MockServer {
    */
   mockDownloadAttachment404(issueKey: string, attachmentId: string, filename: string): this {
     const response = generateError404();
-    const mockKey = `GET /v2/issues/${issueKey}/attachments/${attachmentId}/${filename}`;
+    const mockKey = `GET /v3/issues/${issueKey}/attachments/${attachmentId}/${filename}`;
     this.mockAdapter
-      .onGet(`/v2/issues/${issueKey}/attachments/${attachmentId}/${filename}`)
+      .onGet(`/v3/issues/${issueKey}/attachments/${attachmentId}/${filename}`)
       .reply(() => {
         const index = this.pendingMocks.indexOf(mockKey);
         if (index !== -1) {
@@ -749,8 +749,8 @@ export class MockServer {
    * Mock успешного удаления файла
    */
   mockDeleteAttachmentSuccess(issueKey: string, attachmentId: string): this {
-    const mockKey = `DELETE /v2/issues/${issueKey}/attachments/${attachmentId}`;
-    this.mockAdapter.onDelete(`/v2/issues/${issueKey}/attachments/${attachmentId}`).reply(() => {
+    const mockKey = `DELETE /v3/issues/${issueKey}/attachments/${attachmentId}`;
+    this.mockAdapter.onDelete(`/v3/issues/${issueKey}/attachments/${attachmentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -766,8 +766,8 @@ export class MockServer {
    */
   mockDeleteAttachment404(issueKey: string, attachmentId: string): this {
     const response = generateError404();
-    const mockKey = `DELETE /v2/issues/${issueKey}/attachments/${attachmentId}`;
-    this.mockAdapter.onDelete(`/v2/issues/${issueKey}/attachments/${attachmentId}`).reply(() => {
+    const mockKey = `DELETE /v3/issues/${issueKey}/attachments/${attachmentId}`;
+    this.mockAdapter.onDelete(`/v3/issues/${issueKey}/attachments/${attachmentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -782,9 +782,9 @@ export class MockServer {
    * Mock успешного получения миниатюры
    */
   mockGetThumbnailSuccess(issueKey: string, attachmentId: string): this {
-    const mockKey = `GET /v2/issues/${issueKey}/thumbnails/${attachmentId}`;
+    const mockKey = `GET /v3/issues/${issueKey}/thumbnails/${attachmentId}`;
     const thumbnailContent = Buffer.from('thumbnail image content');
-    this.mockAdapter.onGet(`/v2/issues/${issueKey}/thumbnails/${attachmentId}`).reply(() => {
+    this.mockAdapter.onGet(`/v3/issues/${issueKey}/thumbnails/${attachmentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -806,8 +806,8 @@ export class MockServer {
    */
   mockGetThumbnail404(issueKey: string, attachmentId: string): this {
     const response = generateError404();
-    const mockKey = `GET /v2/issues/${issueKey}/thumbnails/${attachmentId}`;
-    this.mockAdapter.onGet(`/v2/issues/${issueKey}/thumbnails/${attachmentId}`).reply(() => {
+    const mockKey = `GET /v3/issues/${issueKey}/thumbnails/${attachmentId}`;
+    this.mockAdapter.onGet(`/v3/issues/${issueKey}/thumbnails/${attachmentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1343,8 +1343,8 @@ export class MockServer {
         },
       }),
     ];
-    const mockKey = `GET /v2/queues/${queueId}/components`;
-    const urlPattern = new RegExp(`^/v2/queues/${queueId}/components(\\?.*)?$`);
+    const mockKey = `GET /v3/queues/${queueId}/components`;
+    const urlPattern = new RegExp(`^/v3/queues/${queueId}/components(\\?.*)?$`);
     this.mockAdapter.onGet(urlPattern).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
@@ -1360,8 +1360,8 @@ export class MockServer {
    * Mock пустого списка компонентов
    */
   mockGetComponentsEmpty(queueId: string): this {
-    const mockKey = `GET /v2/queues/${queueId}/components`;
-    const urlPattern = new RegExp(`^/v2/queues/${queueId}/components(\\?.*)?$`);
+    const mockKey = `GET /v3/queues/${queueId}/components`;
+    const urlPattern = new RegExp(`^/v3/queues/${queueId}/components(\\?.*)?$`);
     this.mockAdapter.onGet(urlPattern).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
@@ -1378,8 +1378,8 @@ export class MockServer {
    */
   mockGetComponents404(queueId: string): this {
     const response = generateError404();
-    const mockKey = `GET /v2/queues/${queueId}/components`;
-    this.mockAdapter.onGet(`/v2/queues/${queueId}/components`).reply(() => {
+    const mockKey = `GET /v3/queues/${queueId}/components`;
+    this.mockAdapter.onGet(`/v3/queues/${queueId}/components`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1400,8 +1400,8 @@ export class MockServer {
         ...componentData,
       },
     });
-    const mockKey = `POST /v2/queues/${queueId}/components`;
-    this.mockAdapter.onPost(`/v2/queues/${queueId}/components`).reply(() => {
+    const mockKey = `POST /v3/queues/${queueId}/components`;
+    this.mockAdapter.onPost(`/v3/queues/${queueId}/components`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1417,8 +1417,8 @@ export class MockServer {
    */
   mockCreateComponent403(queueId: string): this {
     const response = generateError403();
-    const mockKey = `POST /v2/queues/${queueId}/components`;
-    this.mockAdapter.onPost(`/v2/queues/${queueId}/components`).reply(() => {
+    const mockKey = `POST /v3/queues/${queueId}/components`;
+    this.mockAdapter.onPost(`/v3/queues/${queueId}/components`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1434,8 +1434,8 @@ export class MockServer {
    */
   mockCreateComponent404(queueId: string): this {
     const response = generateError404();
-    const mockKey = `POST /v2/queues/${queueId}/components`;
-    this.mockAdapter.onPost(`/v2/queues/${queueId}/components`).reply(() => {
+    const mockKey = `POST /v3/queues/${queueId}/components`;
+    this.mockAdapter.onPost(`/v3/queues/${queueId}/components`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1453,8 +1453,8 @@ export class MockServer {
     const component = generateComponent({
       overrides: { id: componentId, ...updates },
     });
-    const mockKey = `PATCH /v2/components/${componentId}`;
-    this.mockAdapter.onPatch(`/v2/components/${componentId}`).reply(() => {
+    const mockKey = `PATCH /v3/components/${componentId}`;
+    this.mockAdapter.onPatch(`/v3/components/${componentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1470,8 +1470,8 @@ export class MockServer {
    */
   mockUpdateComponent404(componentId: string): this {
     const response = generateError404();
-    const mockKey = `PATCH /v2/components/${componentId}`;
-    this.mockAdapter.onPatch(`/v2/components/${componentId}`).reply(() => {
+    const mockKey = `PATCH /v3/components/${componentId}`;
+    this.mockAdapter.onPatch(`/v3/components/${componentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1493,8 +1493,8 @@ export class MockServer {
         queue: { id: queueId, key: queueId, display: queueId },
       },
     });
-    const getMockKey = `GET /v2/components/${componentId}`;
-    this.mockAdapter.onGet(`/v2/components/${componentId}`).reply(() => {
+    const getMockKey = `GET /v3/components/${componentId}`;
+    this.mockAdapter.onGet(`/v3/components/${componentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(getMockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1504,8 +1504,8 @@ export class MockServer {
     this.pendingMocks.push(getMockKey);
 
     // Затем DELETE
-    const deleteMockKey = `DELETE /v2/components/${componentId}`;
-    this.mockAdapter.onDelete(`/v2/components/${componentId}`).reply(() => {
+    const deleteMockKey = `DELETE /v3/components/${componentId}`;
+    this.mockAdapter.onDelete(`/v3/components/${componentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(deleteMockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1522,8 +1522,8 @@ export class MockServer {
   mockDeleteComponent404(componentId: string): this {
     // Компонент не найден уже на GET
     const response = generateError404();
-    const mockKey = `GET /v2/components/${componentId}`;
-    this.mockAdapter.onGet(`/v2/components/${componentId}`).reply(() => {
+    const mockKey = `GET /v3/components/${componentId}`;
+    this.mockAdapter.onGet(`/v3/components/${componentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1533,8 +1533,8 @@ export class MockServer {
     this.pendingMocks.push(mockKey);
 
     // DELETE тоже вернет 404
-    const deleteMockKey = `DELETE /v2/components/${componentId}`;
-    this.mockAdapter.onDelete(`/v2/components/${componentId}`).reply(() => {
+    const deleteMockKey = `DELETE /v3/components/${componentId}`;
+    this.mockAdapter.onDelete(`/v3/components/${componentId}`).reply(() => {
       const index = this.pendingMocks.indexOf(deleteMockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1553,8 +1553,8 @@ export class MockServer {
    * Mock успешного получения чеклиста задачи
    */
   mockGetChecklistSuccess(issueKey: string, checklist?: unknown[]): this {
-    const mockKey = `GET /v2/issues/${issueKey}/checklistItems`;
-    this.mockAdapter.onGet(`/v2/issues/${issueKey}/checklistItems`).reply(() => {
+    const mockKey = `GET /v3/issues/${issueKey}/checklistItems`;
+    this.mockAdapter.onGet(`/v3/issues/${issueKey}/checklistItems`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1570,8 +1570,8 @@ export class MockServer {
    */
   mockGetChecklist404(issueKey: string): this {
     const response = generateError404();
-    const mockKey = `GET /v2/issues/${issueKey}/checklistItems`;
-    this.mockAdapter.onGet(`/v2/issues/${issueKey}/checklistItems`).reply(() => {
+    const mockKey = `GET /v3/issues/${issueKey}/checklistItems`;
+    this.mockAdapter.onGet(`/v3/issues/${issueKey}/checklistItems`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1586,8 +1586,8 @@ export class MockServer {
    * Mock успешного добавления элемента в чеклист
    */
   mockAddChecklistItemSuccess(issueKey: string, item: unknown): this {
-    const mockKey = `POST /v2/issues/${issueKey}/checklistItems`;
-    this.mockAdapter.onPost(`/v2/issues/${issueKey}/checklistItems`).reply(() => {
+    const mockKey = `POST /v3/issues/${issueKey}/checklistItems`;
+    this.mockAdapter.onPost(`/v3/issues/${issueKey}/checklistItems`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1605,8 +1605,8 @@ export class MockServer {
    */
   mockAddChecklistItem404(issueKey: string): this {
     const response = generateError404();
-    const mockKey = `POST /v2/issues/${issueKey}/checklistItems`;
-    this.mockAdapter.onPost(`/v2/issues/${issueKey}/checklistItems`).reply(() => {
+    const mockKey = `POST /v3/issues/${issueKey}/checklistItems`;
+    this.mockAdapter.onPost(`/v3/issues/${issueKey}/checklistItems`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1621,9 +1621,9 @@ export class MockServer {
    * Mock успешного обновления элемента чеклиста
    */
   mockUpdateChecklistItemSuccess(issueKey: string, checklistItemId: string, item: unknown): this {
-    const mockKey = `PATCH /v2/issues/${issueKey}/checklistItems/${checklistItemId}`;
+    const mockKey = `PATCH /v3/issues/${issueKey}/checklistItems/${checklistItemId}`;
     this.mockAdapter
-      .onPatch(`/v2/issues/${issueKey}/checklistItems/${checklistItemId}`)
+      .onPatch(`/v3/issues/${issueKey}/checklistItems/${checklistItemId}`)
       .reply(() => {
         const index = this.pendingMocks.indexOf(mockKey);
         if (index !== -1) {
@@ -1646,9 +1646,9 @@ export class MockServer {
    */
   mockUpdateChecklistItem404(issueKey: string, checklistItemId: string): this {
     const response = generateError404();
-    const mockKey = `PATCH /v2/issues/${issueKey}/checklistItems/${checklistItemId}`;
+    const mockKey = `PATCH /v3/issues/${issueKey}/checklistItems/${checklistItemId}`;
     this.mockAdapter
-      .onPatch(`/v2/issues/${issueKey}/checklistItems/${checklistItemId}`)
+      .onPatch(`/v3/issues/${issueKey}/checklistItems/${checklistItemId}`)
       .reply(() => {
         const index = this.pendingMocks.indexOf(mockKey);
         if (index !== -1) {
@@ -1664,9 +1664,9 @@ export class MockServer {
    * Mock успешного удаления элемента из чеклиста
    */
   mockDeleteChecklistItemSuccess(issueKey: string, checklistItemId: string): this {
-    const mockKey = `DELETE /v2/issues/${issueKey}/checklistItems/${checklistItemId}`;
+    const mockKey = `DELETE /v3/issues/${issueKey}/checklistItems/${checklistItemId}`;
     this.mockAdapter
-      .onDelete(`/v2/issues/${issueKey}/checklistItems/${checklistItemId}`)
+      .onDelete(`/v3/issues/${issueKey}/checklistItems/${checklistItemId}`)
       .reply(() => {
         const index = this.pendingMocks.indexOf(mockKey);
         if (index !== -1) {
@@ -1683,9 +1683,9 @@ export class MockServer {
    */
   mockDeleteChecklistItem404(issueKey: string, checklistItemId: string): this {
     const response = generateError404();
-    const mockKey = `DELETE /v2/issues/${issueKey}/checklistItems/${checklistItemId}`;
+    const mockKey = `DELETE /v3/issues/${issueKey}/checklistItems/${checklistItemId}`;
     this.mockAdapter
-      .onDelete(`/v2/issues/${issueKey}/checklistItems/${checklistItemId}`)
+      .onDelete(`/v3/issues/${issueKey}/checklistItems/${checklistItemId}`)
       .reply(() => {
         const index = this.pendingMocks.indexOf(mockKey);
         if (index !== -1) {

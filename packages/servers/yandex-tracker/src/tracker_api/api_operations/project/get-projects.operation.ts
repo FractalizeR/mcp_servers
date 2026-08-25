@@ -7,9 +7,9 @@
  * - Поддержка expand параметров
  * - НЕТ создания/обновления/удаления
  *
- * API: GET /v2/projects (seekable v2: Link rel="seek" → total из X-Total-Count)
+ * API: GET /v3/projects (seekable: Link rel="seek" → total из X-Total-Count)
  *
- * ВНИМАНИЕ: `Link` в ответах этой ручки указывает на `/v2/queues` — см.
+ * ВНИМАНИЕ: `Link` в ответах этой ручки указывает на чужую коллекцию — см.
  * `pin-projects-link.util.ts`; каждый конверт прогоняется через починку
  * ДО пагинатора, иначе листание уводит на чужую коллекцию.
  */
@@ -61,8 +61,10 @@ export class GetProjectsOperation extends BaseOperation {
       const { path } = CursorCodec.decode(cursor, CURSOR_TAGS.projects);
       if (!isProjectsPath(path)) {
         throw new InvalidCursorError(
-          'Курсор адресует не коллекцию проектов. Такой курсор мог быть выдан версией сервера, ' +
-            'доверявшей чужому заголовку Link, — запросите первую страницу заново.'
+          'Курсор адресует не коллекцию проектов на текущей версии API. Наиболее вероятная ' +
+            'причина — курсор выдан до миграции на /v3/projects (ещё адресует /v2/projects); ' +
+            'также курсор мог быть выдан версией сервера, доверявшей чужому заголовку Link. ' +
+            'Запросите первую страницу заново.'
         );
       }
       this.logger.info('Получение списка проектов (cursor)');
@@ -119,6 +121,6 @@ export class GetProjectsOperation extends BaseOperation {
     if (opts.queueId) queryParams.append('queueId', opts.queueId);
 
     const queryString = queryParams.toString();
-    return `/v2/projects${queryString ? `?${queryString}` : ''}`;
+    return `/v3/projects${queryString ? `?${queryString}` : ''}`;
   }
 }

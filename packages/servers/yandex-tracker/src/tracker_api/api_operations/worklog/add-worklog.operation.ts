@@ -7,7 +7,7 @@
  * - Параллельное выполнение через ParallelExecutor (batch режим)
  * - НЕТ получения/редактирования/удаления записей
  *
- * API: POST /v2/issues/{issueId}/worklog
+ * API: POST /v3/issues/{issueId}/worklog
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -46,7 +46,7 @@ export class AddWorklogOperation extends BaseOperation {
    * - Retry делается автоматически в HttpClient.post
    * - API возвращает полный объект записи времени
    * - duration автоматически конвертируется в ISO 8601, если передан в human-readable формате
-   * - Эндпоинт из API v2 (не v3!)
+   * - Эндпоинт из API v3
    */
   async execute(issueId: string, input: AddWorklogInput): Promise<WorklogWithUnknownFields> {
     this.logger.info(`Добавление записи времени к задаче ${issueId}`);
@@ -68,7 +68,7 @@ export class AddWorklogOperation extends BaseOperation {
     });
 
     const worklog = await this.httpClient.post<WorklogWithUnknownFields>(
-      `/v2/issues/${issueId}/worklog`,
+      `/v3/issues/${issueId}/worklog`,
       payload
     );
 

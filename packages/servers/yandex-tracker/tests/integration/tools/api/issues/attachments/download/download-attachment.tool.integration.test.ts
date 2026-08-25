@@ -68,8 +68,8 @@ describe('download-attachment integration tests', () => {
           size: 100,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/${filename}`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/${filename}`,
         },
       ]);
       mockServer.mockDownloadAttachmentSuccess(issueId, attachmentId, filename);
@@ -121,8 +121,8 @@ describe('download-attachment integration tests', () => {
           size: 2048,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/${filename}`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/${filename}`,
         },
       ]);
       mockServer.mockDownloadAttachmentSuccess(issueId, attachmentId, filename);
@@ -239,8 +239,8 @@ describe('download-attachment integration tests', () => {
           size: 100,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/${filename}`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/${filename}`,
         },
       ]);
       mockServer.mockDownloadAttachmentSuccess(issueId, attachmentId, filename);
@@ -283,8 +283,8 @@ describe('download-attachment integration tests', () => {
           size: 2048,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/${filename}`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/${filename}`,
         },
       ]);
       mockServer.mockDownloadAttachmentSuccess(issueId, attachmentId, filename);
@@ -327,8 +327,8 @@ describe('download-attachment integration tests', () => {
           size: 150,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/${filename}`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/${filename}`,
         },
       ]);
       mockServer.mockDownloadAttachmentSuccess(issueId, attachmentId, filename);

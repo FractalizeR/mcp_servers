@@ -6,7 +6,7 @@
  * - Инвалидация кеша после обновления
  * - НЕТ создания/удаления
  *
- * API: PATCH /v2/projects/{projectId}
+ * API: PATCH /v3/projects/{projectId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -37,7 +37,7 @@ export class UpdateProjectOperation extends BaseOperation {
 
     this.logger.info(`Обновление проекта: ${projectId}`);
 
-    const endpoint = `/v2/projects/${projectId}`;
+    const endpoint = `/v3/projects/${projectId}`;
 
     const project = await this.httpClient.patch<ProjectOutput>(endpoint, data);
 

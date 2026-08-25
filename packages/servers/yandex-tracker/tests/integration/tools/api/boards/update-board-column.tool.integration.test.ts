@@ -32,11 +32,11 @@ describeToolIntegration({
           apiVersion: 'v3',
           body: { name: 'Renamed Column' },
         })
-        .reply(200, createBoardColumnFixture({ id: '7', name: 'Renamed Column' }));
+        .reply(200, createBoardColumnFixture({ id: 7, name: 'Renamed Column' }));
     },
     outputDataSchema: UpdateBoardColumnOutputDataSchema,
     assertData: (data) => {
-      expect(data.column).toMatchObject({ id: '7', name: 'Renamed Column' });
+      expect(data.column).toMatchObject({ id: 7, name: 'Renamed Column' });
     },
   },
 
@@ -76,7 +76,7 @@ describeToolIntegration({
     arrange: (api) => {
       api
         .expectRequest({ method: 'patch', path: '/v3/boards/42/columns/7', apiVersion: 'v3' })
-        .reply(200, createBoardColumnFixture({ id: '7', name: 'Column With Gaps' }));
+        .reply(200, createBoardColumnFixture({ id: 7, name: 'Column With Gaps' }));
     },
     input: {
       boardId: '42',

@@ -66,7 +66,7 @@ export class GetAttachmentsTool extends BaseTool<YandexTrackerFacade> {
         fields
       );
 
-      // 3. API v2: получение списка файлов для нескольких задач через batch-метод.
+      // 3. API v3: получение списка файлов для нескольких задач через batch-метод.
       // Эндпоинт НЕ пагинируется — возвращает все вложения за один ответ.
       const results = await this.facade.getAttachmentsMany(issueIds);
 

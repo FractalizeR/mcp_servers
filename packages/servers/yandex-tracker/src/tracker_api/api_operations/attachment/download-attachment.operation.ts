@@ -7,7 +7,7 @@
  * - НЕТ загрузки/удаления файлов
  * - НЕТ сохранения в файловую систему (это делает FileDownloadUtil)
  *
- * API: GET /v2/issues/{issueId}/attachments/{attachmentId}/{filename}
+ * API: GET /v3/issues/{issueId}/attachments/{attachmentId}/{filename}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -46,7 +46,7 @@ export class DownloadAttachmentOperation extends BaseOperation {
 
     // Используем метод downloadFile из BaseOperation
     const buffer = await this.downloadFile(
-      `/v2/issues/${issueId}/attachments/${attachmentId}/${encodeURIComponent(filename)}`
+      `/v3/issues/${issueId}/attachments/${attachmentId}/${encodeURIComponent(filename)}`
     );
 
     this.logger.info(
@@ -80,7 +80,7 @@ export class DownloadAttachmentOperation extends BaseOperation {
 
     // Получаем список всех файлов и находим нужный
     const attachments = await this.httpClient.get<AttachmentWithUnknownFields[]>(
-      `/v2/issues/${issueId}/attachments`
+      `/v3/issues/${issueId}/attachments`
     );
 
     const attachment = attachments.find((a) => a.id === attachmentId);

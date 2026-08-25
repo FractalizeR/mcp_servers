@@ -61,7 +61,11 @@ function createdEntityOf(request: OutgoingRequest): EntityKind | undefined {
   const path = canonicalRequestPath(request.url).path;
   if (path === undefined) return undefined;
   if (/^\/v3\/issues\/?$/.test(path)) return 'issue';
-  if (/^\/v2\/queues\/[^/]+\/components\/?$/.test(path)) return 'component';
+  // v2 или v3 — этап 4.1 переносит create_component на v3, а этот детектор
+  // должен узнавать созданный компонент независимо от версии, иначе после
+  // миграции журнал не заполнится и легальная правка своего компонента
+  // отклонится как «не создан этим прогоном».
+  if (/^\/v[23]\/queues\/[^/]+\/components\/?$/.test(path)) return 'component';
   if (/^\/v3\/queues\/[^/]+\/localFields\/?$/.test(path)) return 'queueLocalField';
   return undefined;
 }

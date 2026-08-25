@@ -6,7 +6,7 @@
  * - Инвалидация кеша после создания
  * - НЕТ обновления/удаления
  *
- * API: POST /v2/projects
+ * API: POST /v3/projects
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -27,7 +27,7 @@ export class CreateProjectOperation extends BaseOperation {
   async execute(data: CreateProjectDto): Promise<ProjectOutput> {
     this.logger.info(`Создание проекта: ${data.key}`);
 
-    const endpoint = '/v2/projects';
+    const endpoint = '/v3/projects';
 
     const project = await this.httpClient.post<ProjectOutput>(endpoint, data);
 

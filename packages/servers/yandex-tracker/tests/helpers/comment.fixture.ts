@@ -59,7 +59,7 @@ export function createCommentFixture(overrides?: Partial<Comment>): CommentWithU
 
   return {
     id,
-    self: `https://api.tracker.yandex.net/v2/issues/${issueKey}/comments/${id}`,
+    self: `https://api.tracker.yandex.net/v3/issues/${issueKey}/comments/${id}`,
     text: 'Test comment text',
     createdBy: createUserRef(),
     createdAt: new Date('2025-01-18T10:00:00.000Z').toISOString(),
@@ -144,7 +144,7 @@ export function createCommentListFixture(
 export function createMinimalCommentFixture(id = '12345', issueKey = 'TEST-123'): Comment {
   return {
     id,
-    self: `https://api.tracker.yandex.net/v2/issues/${issueKey}/comments/${id}`,
+    self: `https://api.tracker.yandex.net/v3/issues/${issueKey}/comments/${id}`,
     text: 'Minimal comment',
     createdBy: createUserRef(),
     createdAt: new Date('2025-01-18T10:00:00.000Z').toISOString(),

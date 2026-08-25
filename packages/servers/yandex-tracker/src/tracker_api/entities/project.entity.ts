@@ -1,7 +1,7 @@
 /**
  * Доменный тип: Проект в Яндекс.Трекере
  *
- * Соответствует API v2: /v2/projects/{projectId}
+ * Соответствует API v3: /v3/projects/{projectId}
  */
 
 import type { WithUnknownFields } from './types.js';
@@ -22,8 +22,9 @@ export type ProjectStatus = 'draft' | 'in_progress' | 'launched' | 'postponed' |
 /**
  * Проект в Яндекс.Трекере
  *
- * ВАЖНО: Типизация основана на реальных ответах API v2.
- * Обязательные поля (без ?) всегда присутствуют в ответе GET /v2/projects/{projectId}.
+ * ВАЖНО: Типизация основана на реальных ответах API v2 (форма ответа v2/v3
+ * идентична, см. `inventory/live-version-probe-2026-08-23.md`).
+ * Обязательные поля (без ?) всегда присутствуют в ответе GET /v3/projects/{projectId}.
  * Опциональные поля могут отсутствовать в зависимости от настроек проекта.
  */
 export interface Project {
@@ -38,6 +39,16 @@ export interface Project {
 
   /** Название проекта (всегда присутствует) */
   readonly name: string;
+
+  /**
+   * Версия проекта (токен оптимистичной блокировки, всегда присутствует)
+   *
+   * Подтверждено боевым `GET` (§4.1 плана миграции v3,
+   * `inventory/live-version-probe-2026-08-23.md`). Только форма ответа —
+   * отправка `version` в мутациях (`PUT`/`?version=`) не реализована, это
+   * открытый вопрос плана (см. `4.1_v3_migration_parallel.md`, п. 2).
+   */
+  readonly version: number;
 
   /** Руководитель проекта (всегда присутствует) */
   readonly lead: UserRef;

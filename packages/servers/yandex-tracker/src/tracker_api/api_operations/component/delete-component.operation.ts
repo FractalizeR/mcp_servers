@@ -6,7 +6,7 @@
  * - Инвалидация кеша компонента и списка компонентов очереди
  * - НЕТ создания/обновления/получения компонентов
  *
- * API: DELETE /v2/components/{componentId}
+ * API: DELETE /v3/components/{componentId}
  *
  * ВАЖНО:
  * - API возвращает 204 No Content при успешном удалении
@@ -44,7 +44,7 @@ export class DeleteComponentOperation extends BaseOperation {
     // Получаем компонент перед удалением для инвалидации кеша очереди
     let queueId: string | undefined;
     try {
-      const component = await this.httpClient.get<ComponentOutput>(`/v2/components/${componentId}`);
+      const component = await this.httpClient.get<ComponentOutput>(`/v3/components/${componentId}`);
       queueId = component.queue.id;
     } catch {
       // Если компонент не найден, логируем но продолжаем удаление
@@ -53,7 +53,7 @@ export class DeleteComponentOperation extends BaseOperation {
 
     // Выполняем DELETE запрос к API
     // API возвращает 204 No Content при успешном удалении
-    await this.deleteRequest<void>(`/v2/components/${componentId}`);
+    await this.deleteRequest<void>(`/v3/components/${componentId}`);
 
     // Инвалидируем кеш компонента
     await this.invalidateComponentCache(componentId);

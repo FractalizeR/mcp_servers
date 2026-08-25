@@ -6,7 +6,7 @@
  * - Параллельное выполнение через ParallelExecutor (batch режим)
  * - НЕТ получения/редактирования/удаления элементов
  *
- * API: POST /v2/issues/{issueId}/checklistItems
+ * API: POST /v3/issues/{issueId}/checklistItems
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -18,9 +18,10 @@ import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 
 /**
- * Ответ API v2 на POST /v2/issues/{id}/checklistItems: возвращается ОБНОВЛЁННАЯ
- * задача (issue), а не созданный элемент — новый элемент лежит последним в
- * массиве `checklistItems` этой задачи.
+ * Ответ на POST /issues/{id}/checklistItems: возвращается ОБНОВЛЁННАЯ задача
+ * (issue), а не созданный элемент — новый элемент лежит последним в массиве
+ * `checklistItems` этой задачи. Наблюдение снято на v2; после миграции 4.1
+ * путь ходит на v3, на v3 не переснималось.
  */
 interface AddChecklistItemResponse {
   readonly checklistItems?: ChecklistItemWithUnknownFields[];
@@ -61,11 +62,11 @@ export class AddChecklistItemOperation extends BaseOperation {
   ): Promise<ChecklistItemWithUnknownFields> {
     this.logger.info(`Добавление элемента в чеклист задачи ${issueId}`);
 
-    // API v2 возвращает ОБНОВЛЁННУЮ задачу с полным массивом `checklistItems`,
+    // API v3 возвращает ОБНОВЛЁННУЮ задачу с полным массивом `checklistItems`,
     // а не созданный элемент: id из корня ответа — это id задачи (поймано как
     // баг «itemId ≠ id элемента чеклиста»). Новый элемент — последний в массиве.
     const response = await this.httpClient.post<AddChecklistItemResponse>(
-      `/v2/issues/${issueId}/checklistItems`,
+      `/v3/issues/${issueId}/checklistItems`,
       buildChecklistItemBody(input)
     );
 

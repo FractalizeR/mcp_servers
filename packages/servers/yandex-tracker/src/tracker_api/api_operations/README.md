@@ -256,11 +256,14 @@ async execute(key: string, input: GetCommentsInput): Promise<PaginatedResult<Com
 
 ### 1. Использование API v2 и v3
 
-**Яндекс.Трекер поддерживает два API:**
-- **API v3** — новая версия (issues, queues, comments, links, changelog, transitions)
-- **API v2** — старая версия (attachments, checklists, components, projects, worklogs)
+**Целевая версия — v3 всюду, где v3 существует** (решено 2026-08-23, миграция — этап 4.1 плана
+`plan_tracker_test_coverage`, завершена 2026-08-24). Артефакт A этапа
+(`.agentic-planning/plan_tracker_test_coverage/inventory/v2-paths-2026-08-24.md`) подтвердил: v3
+существует у всех десяти затронутых семейств — исключений «v2 без v3-аналога» нет. Единственное
+законное упоминание v2 в коде — схема `raw_api_request`: там версию задаёт вызывающий, инструмент
+её не выбирает.
 
-**Правило:** Используй версию API согласно таблице ниже:
+**Правило:** используй версию API согласно таблице ниже:
 
 | Категория | API версия | Endpoint пример |
 |-----------|------------|-----------------|
@@ -271,27 +274,28 @@ async execute(key: string, input: GetCommentsInput): Promise<PaginatedResult<Com
 | Transitions | v3 | `/v3/issues/{id}/transitions` |
 | Changelog | v3 | `/v3/issues/{id}/changelog` |
 | User | v3 | `/v3/myself` |
-| Attachments | v2 → **v3** | `/v2/issues/{id}/attachments` |
-| Checklists | v2 → **v3** | `/v2/issues/{id}/checklistItems` |
-| Components | v2 → **v3** | `/v2/queues/{id}/components` |
-| Projects | v2 → **v3** | `/v2/projects` |
-| Worklogs | v2 → **v3** | `/v2/issues/{id}/worklog` |
-| Boards, колонки, спринты, глобальные поля, bulkchange | v2 → **v3** | в таблице ранее отсутствовали |
+| Attachments | v3 | `/v3/issues/{id}/attachments` |
+| Checklists | v3 | `/v3/issues/{id}/checklistItems` |
+| Components | v3 | `/v3/queues/{id}/components` |
+| Projects | v3 | `/v3/projects` |
+| Worklogs | v3 | `/v3/issues/{id}/worklog` |
+| Boards, колонки, спринты, глобальные поля, bulkchange | v3 | все пути семейства на v3 |
 
-**`v2 → v3` означает: ходим в v2 сейчас, целевая версия v3.** v2 работает на совместимости,
-документация описывает только v3; для проверенных семейств формы ответа совпадают (боевая проба
-2026-08-23). Миграция — этап 4.1 плана `plan_tracker_test_coverage`. Новая операция пишется
-сразу на v3.
+v3 у мигрированных семейств подтверждён read-only оракулом (доменная ошибка вместо «маршрут не
+найден») и, где применимо, боевой пробой числа элементов (2026-08-23) — форма ответа v2 и v3
+совпадает у проверенных семейств, миграция была сменой версии в пути, а не переписыванием
+парсинга. Форма ответа v3 **на мутациях** организационных сущностей (проекты, доски, спринты,
+глобальные поля) вживую не наблюдалась — уверенность держится на существовании маршрута,
+идентичности формы на GET и моке; проверка — предмет живой приёмки 3.1. Новая операция пишется
+сразу на v3, сверяясь с документацией Трекера, а не с этой таблицей.
 
 ✅ **Правильно:**
 ```typescript
-// v3 для issues
+// v3 везде
 this.httpClient.get('/v3/issues/PROJ-123');
 this.httpClient.get('/v3/myself');
-
-// v2 для attachments и worklogs
-this.httpClient.get('/v2/issues/PROJ-123/attachments');
-this.httpClient.post('/v2/issues/PROJ-123/worklog', {...});
+this.httpClient.get('/v3/issues/PROJ-123/attachments');
+this.httpClient.post('/v3/issues/PROJ-123/worklog', {...});
 ```
 
 ❌ **Неправильно:**
@@ -299,8 +303,6 @@ this.httpClient.post('/v2/issues/PROJ-123/worklog', {...});
 this.httpClient.get('/issues');    // Без версии
 this.httpClient.get('/v1/issues'); // Неверная версия
 ```
-
-**Примечание:** При появлении v3 версий для категорий на v2, приоритет отдаётся v3.
 
 ---
 
@@ -363,22 +365,22 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 **5 операций для работы с вложениями:**
 
 ### 1. GetAttachmentsOperation
-`GET /v2/issues/{issueId}/attachments` — получение списка файлов, кеш ✅
+`GET /v3/issues/{issueId}/attachments` — получение списка файлов, кеш ✅
 
 ### 2. UploadAttachmentOperation
-`POST /v2/issues/{issueId}/attachments` — загрузка файла (multipart/form-data), валидация размера (10MB)
+`POST /v3/issues/{issueId}/attachments` — загрузка файла (multipart/form-data), валидация размера (10MB)
 
 ### 3. DownloadAttachmentOperation
-`GET /v2/issues/{issueId}/attachments/{attachmentId}/{filename}` — скачивание как Buffer
+`GET /v3/issues/{issueId}/attachments/{attachmentId}/{filename}` — скачивание как Buffer
 
 ### 4. DeleteAttachmentOperation
-`DELETE /v2/issues/{issueId}/attachments/{attachmentId}` — удаление файла, инвалидация кеша
+`DELETE /v3/issues/{issueId}/attachments/{attachmentId}` — удаление файла, инвалидация кеша
 
 ### 5. GetThumbnailOperation
-`GET /v2/issues/{issueId}/attachments/{attachmentId}/thumbnail/{filename}` — миниатюра изображения, кеш ✅
+`GET /v3/issues/{issueId}/thumbnails/{attachmentId}` — миниатюра изображения, кеш ✅
 
 **Ключевые аспекты:**
-- **API версия:** v2 (официально поддерживается Яндекс.Трекер)
+- **API версия:** v3 (миграция 4.1, 2026-08-24)
 - **Размер файла:** Default 10MB, настраивается через конфигурацию
 - **Валидация:** `FileUploadUtil.validateFilename()`, `validateFileSize()`
 - **Кодирование:** `encodeURIComponent()` для filename в URL
@@ -469,19 +471,19 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 **4 операции для работы с компонентами очередей:**
 
 ### 1. GetComponentsOperation
-`GET /v2/queues/{queueId}/components` — список компонентов очереди, кеш ✅
+`GET /v3/queues/{queueId}/components` — список компонентов очереди, кеш ✅
 
 ### 2. CreateComponentOperation
-`POST /v2/queues/{queueId}/components` — создание (name, description?, lead?, assignAuto?), инвалидация кеша
+`POST /v3/queues/{queueId}/components` — создание (name, description?, lead?, assignAuto?), инвалидация кеша
 
 ### 3. UpdateComponentOperation
-`PATCH /v2/components/{componentId}` — обновление параметров, инвалидация кеша
+`PATCH /v3/components/{componentId}` — обновление параметров, инвалидация кеша
 
 ### 4. DeleteComponentOperation
-`DELETE /v2/components/{componentId}` — удаление, сначала GET для queueId
+`DELETE /v3/components/{componentId}` — удаление, сначала GET для queueId
 
 **Ключевые аспекты:**
-- **API версия:** Компоненты используют API v2 (не v3)
+- **API версия:** v3 (миграция 4.1, 2026-08-24)
 - **Scope:** Компоненты привязаны к конкретной очереди
 - **Auto-assign:** `assignAuto` — автоназначение исполнителя при добавлении компонента к задаче
 - **Lead:** Опциональный ответственный за компонент
@@ -495,7 +497,7 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 **4 операции для работы с чеклистами задач:**
 
 ### 1. GetChecklistOperation
-`GET /v2/issues/{issueId}/checklistItems` — получение всех элементов чеклиста задачи
+`GET /v3/issues/{issueId}/checklistItems` — получение всех элементов чеклиста задачи
 
 **Пример использования:**
 ```typescript
@@ -504,7 +506,7 @@ const checklist = await getChecklistOperation.execute('QUEUE-123');
 ```
 
 ### 2. AddChecklistItemOperation
-`POST /v2/issues/{issueId}/checklistItems` — добавление нового элемента в чеклист
+`POST /v3/issues/{issueId}/checklistItems` — добавление нового элемента в чеклист
 
 **Пример использования:**
 ```typescript
@@ -518,7 +520,7 @@ const newItem = await addChecklistItemOperation.execute('QUEUE-123', {
 ```
 
 ### 3. UpdateChecklistItemOperation
-`PATCH /v2/issues/{issueId}/checklistItems/{checklistItemId}` — обновление существующего элемента
+`PATCH /v3/issues/{issueId}/checklistItems/{checklistItemId}` — обновление существующего элемента
 
 **Пример использования:**
 ```typescript
@@ -534,7 +536,7 @@ const updated = await updateChecklistItemOperation.execute(
 ```
 
 ### 4. DeleteChecklistItemOperation
-`DELETE /v2/issues/{issueId}/checklistItems/{checklistItemId}` — удаление элемента чеклиста
+`DELETE /v3/issues/{issueId}/checklistItems/{checklistItemId}` — удаление элемента чеклиста
 
 **Пример использования:**
 ```typescript
@@ -543,7 +545,7 @@ await deleteChecklistItemOperation.execute('QUEUE-123', 'checklist-item-id');
 ```
 
 **Ключевые аспекты:**
-- **API версия:** Чеклисты используют API v2 (не v3)
+- **API версия:** v3 (миграция 4.1, 2026-08-24)
 - **Scope:** Чеклисты привязаны к конкретной задаче
 - **Assignee:** Опциональное назначение ответственного за элемент (UserRef)
 - **Deadline:** Опциональный дедлайн в формате ISO 8601

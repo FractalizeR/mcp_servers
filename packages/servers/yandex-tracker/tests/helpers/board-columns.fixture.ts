@@ -1,44 +1,29 @@
 /**
  * Фикстура колонки доски (`GET/POST/PATCH /v3/boards/{boardId}/columns`).
  *
- * Форма — документированная wire-форма API, а не наша entity `BoardColumn`
- * (`src/tracker_api/entities/board.entity.ts`). Официальная документация Трекера
- * (Yandex Cloud Docs, страницы `get-board` и `post-column`, снято 2026-08-23)
- * показывает `id` колонки ЧИСЛОМ (`"id": 5`) и присутствующий `self`
- * (`"self": "https://api.tracker.yandex.net/v3/boards/73/columns/5"`), тогда как
- * локальная entity типизирует `id: string` и вовсе не знает про `self` у колонки.
- * Это РАСХОЖДЕНИЕ, найденное ревью волны 2.1.2 (гипотеза этапа 3.1, `src/` этим
- * пакетом не правится). Фикстура намеренно НЕ подгоняется под неверный тип entity
- * (`id: string`) — иначе расхождение осталось бы невидимым в тестах; тип фикстуры
- * — отдельный `DocumentedBoardColumn`, а не импорт `BoardColumn`.
+ * До 4.1/пакета B `id` колонки в entity `BoardColumn` был типизирован как
+ * `string`, тогда как боевой `GET` отдавал число (`"id": 5`) — это расхождение
+ * исправлено там же (`src/tracker_api/entities/board.entity.ts`), эта
+ * фикстура больше не нуждается в отдельном "документированном" типе и
+ * использует `BoardColumn` напрямую.
  *
- * `id` в overrides принимает и `number` (документированная форма, дефолт), и
- * `string` — вызовы `create-board-column`/`update-board-column.tool.integration.test.ts`
- * передают `id` как эхо переданного `columnId` (строка), эти файлы вне набора
- * данного пакета правок.
+ * Второе расхождение НЕ закрыто: боевой `GET` отдаёт у колонки `self`
+ * (`"self": "https://api.tracker.yandex.net/v3/boards/73/columns/5"`), а
+ * `BoardColumn` это поле не объявляет — гипотеза этапа 3.1. Данные не
+ * теряются в рантайме (`WithUnknownFields` пропускает `self` как unknown), но
+ * оно остаётся неучтённым в типе. Фикстура ниже задаёт `self`, чтобы
+ * расхождение оставалось видимым в тестах.
  *
- * НЕ путать с `agile.fixture.ts` — там фикстуры Board и Sprint целиком (`/v2/boards`,
- * `/v2/sprints`), здесь — только вложенная колонка доски (`/v3/boards/{id}/columns`).
+ * НЕ путать с `agile.fixture.ts` — там фикстуры Board и Sprint целиком (`/v3/boards`,
+ * `/v3/sprints`), здесь — только вложенная колонка доски (`/v3/boards/{id}/columns`).
  */
 
+import type { BoardColumn } from '#tracker_api/entities/board.entity.js';
 import type { WithUnknownFields } from '#tracker_api/entities/types.js';
 
-interface DocumentedBoardColumnStatus {
-  readonly id: string;
-  readonly key: string;
-  readonly display: string;
-}
-
-interface DocumentedBoardColumn {
-  readonly self: string;
-  readonly id: number | string;
-  readonly name: string;
-  readonly statuses?: ReadonlyArray<DocumentedBoardColumnStatus>;
-}
-
 export function createBoardColumnFixture(
-  overrides?: Partial<DocumentedBoardColumn> & Record<string, unknown>
-): WithUnknownFields<DocumentedBoardColumn> {
+  overrides?: Partial<BoardColumn> & Record<string, unknown>
+): WithUnknownFields<BoardColumn> {
   const id = overrides?.id ?? 1;
   return {
     self: `https://api.tracker.yandex.net/v3/boards/1/columns/${String(id)}`,

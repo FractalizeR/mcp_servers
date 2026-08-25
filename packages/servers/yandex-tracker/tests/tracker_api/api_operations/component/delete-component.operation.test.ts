@@ -54,8 +54,8 @@ describe('DeleteComponentOperation', () => {
 
       await operation.execute('1');
 
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/components/1');
-      expect(deleteSpy).toHaveBeenCalledWith('/v2/components/1');
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/components/1');
+      expect(deleteSpy).toHaveBeenCalledWith('/v3/components/1');
     });
 
     it('should invalidate component cache after deletion', async () => {
@@ -92,7 +92,7 @@ describe('DeleteComponentOperation', () => {
 
       await operation.execute('1');
 
-      expect(deleteSpy).toHaveBeenCalledWith('/v2/components/1');
+      expect(deleteSpy).toHaveBeenCalledWith('/v3/components/1');
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Не удалось получить компонент 1 перед удалением'
       );
@@ -172,8 +172,8 @@ describe('DeleteComponentOperation', () => {
 
       await operation.execute('123');
 
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v2/components/123');
-      expect(deleteSpy).toHaveBeenCalledWith('/v2/components/123');
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/components/123');
+      expect(deleteSpy).toHaveBeenCalledWith('/v3/components/123');
     });
   });
 });

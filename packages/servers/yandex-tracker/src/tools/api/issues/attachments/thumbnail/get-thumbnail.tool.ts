@@ -57,7 +57,7 @@ export class GetThumbnailTool extends BaseTool<YandexTrackerFacade> {
       // 2. Логирование начала операции
       this.logger.info(`Получение миниатюры для attachmentId=${attachmentId} из задачи ${issueId}`);
 
-      // 3. API v2: получение миниатюры
+      // 3. API v3: получение миниатюры
       const result = await this.facade.getThumbnail(issueId, attachmentId, {
         returnBase64: !saveToPath,
       });

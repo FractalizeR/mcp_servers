@@ -1,7 +1,7 @@
 /**
  * Output DTO для списка компонентов очереди
  *
- * API: GET /v2/queues/{queueId}/components
+ * API: GET /v3/queues/{queueId}/components
  */
 
 import type { ComponentWithUnknownFields } from '../../entities/component.entity.js';

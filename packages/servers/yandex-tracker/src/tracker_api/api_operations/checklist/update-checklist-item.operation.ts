@@ -6,7 +6,7 @@
  * - Параллельное выполнение через ParallelExecutor (batch режим)
  * - НЕТ добавления/получения/удаления элементов
  *
- * API: PATCH /v2/issues/{issueId}/checklistItems/{checklistItemId}
+ * API: PATCH /v3/issues/{issueId}/checklistItems/{checklistItemId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -18,10 +18,11 @@ import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 import type { ServerConfig } from '#config';
 
 /**
- * Ответ API v2 на PATCH /v2/issues/{id}/checklistItems/{itemId}: возвращается
- * ОБНОВЛЁННАЯ задача (issue), а не обновлённый элемент — тот лежит в массиве
+ * Ответ на PATCH /issues/{id}/checklistItems/{itemId}: возвращается ОБНОВЛЁННАЯ
+ * задача (issue), а не обновлённый элемент — тот лежит в массиве
  * `checklistItems` этой задачи. Тот же капкан, что и у POST (см.
- * `add-checklist-item.operation.ts`).
+ * `add-checklist-item.operation.ts`), включая источник наблюдения — v2,
+ * на v3 не переснималось.
  */
 interface UpdateChecklistItemResponse {
   readonly checklistItems?: ChecklistItemWithUnknownFields[];
@@ -67,7 +68,7 @@ export class UpdateChecklistItemOperation extends BaseOperation {
     this.logger.info(`Обновление элемента ${checklistItemId} чеклиста задачи ${issueId}`);
 
     const response = await this.httpClient.patch<UpdateChecklistItemResponse>(
-      `/v2/issues/${issueId}/checklistItems/${checklistItemId}`,
+      `/v3/issues/${issueId}/checklistItems/${checklistItemId}`,
       buildChecklistItemBody(input)
     );
 

@@ -19,7 +19,7 @@ import { expect } from 'vitest';
 describeToolIntegration({
   tool: CREATE_BOARD_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'post', path: '/v2/boards', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'post', path: '/v3/boards', apiVersion: 'v3' }],
 
   happyPath: {
     input: { name: 'New Board', queue: 'TEST', fields: ['id', 'name'] },
@@ -27,15 +27,15 @@ describeToolIntegration({
       api
         .expectRequest({
           method: 'post',
-          path: '/v2/boards',
-          apiVersion: 'v2',
+          path: '/v3/boards',
+          apiVersion: 'v3',
           body: { name: 'New Board', queue: 'TEST' },
         })
-        .reply(200, createBoardFixture({ id: '42', name: 'New Board' }));
+        .reply(200, createBoardFixture({ id: 42, name: 'New Board' }));
     },
     outputDataSchema: CreateBoardOutputDataSchema,
     assertData: (data) => {
-      expect(data.board).toMatchObject({ id: '42', name: 'New Board' });
+      expect(data.board).toMatchObject({ id: 42, name: 'New Board' });
       expect(data.message).toContain('New Board');
     },
   },
@@ -49,17 +49,17 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'post', path: '/v2/boards', apiVersion: 'v2' })
+          .expectRequest({ method: 'post', path: '/v3/boards', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { name: 'Restricted Board', fields: ['id'] },
     },
     notFound: {
-      // Единственный HTTP-вызов create_board — POST /v2/boards; 404 здесь — та же
+      // Единственный HTTP-вызов create_board — POST /v3/boards; 404 здесь — та же
       // операция, отвечающая «очередь не найдена» (queue из параметров не существует).
       arrange: (api) => {
         api
-          .expectRequest({ method: 'post', path: '/v2/boards', apiVersion: 'v2' })
+          .expectRequest({ method: 'post', path: '/v3/boards', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { name: 'Board for missing queue', queue: 'MISSING', fields: ['id'] },
@@ -77,8 +77,8 @@ describeToolIntegration({
     // ResponseFieldFilter отдаёт FIELDS_WITHOUT_VALUE (CLAUDE.md §2.1).
     arrange: (api) => {
       api
-        .expectRequest({ method: 'post', path: '/v2/boards', apiVersion: 'v2' })
-        .reply(200, createBoardFixture({ id: '43', name: 'Board With Gaps' }));
+        .expectRequest({ method: 'post', path: '/v3/boards', apiVersion: 'v3' })
+        .reply(200, createBoardFixture({ id: 43, name: 'Board With Gaps' }));
     },
     input: { name: 'Board With Gaps', queue: 'TEST', fields: ['id', 'name', 'missingField'] },
     codes: ['FIELDS_WITHOUT_VALUE'],

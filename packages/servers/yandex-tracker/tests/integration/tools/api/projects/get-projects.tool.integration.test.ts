@@ -8,14 +8,15 @@
  *
  * Сверка с внешним источником истины: официальная документация Трекера
  * (`en/api-ref/projects/get-project-list`, снято `curl` 2026-08-23) описывает
- * `GET /v3/projects` — версия v3, не v2. Референсный `yandex_tracker_client/`
- * (`Projects`, без переопределения `api_version`, дефолт соединения `VERSION_V2`) —
- * v2, как и код этого пакета (`GetProjectsOperation`: `GET /v2/projects`). Тест
- * фиксирует НАБЛЮДАЕМОЕ поведение кода (v2) — расхождение с документацией не
- * чинится здесь (канон §5), строка передана оркестратору для `TESTING_STRATEGY.md` §2.
+ * `GET /v3/projects` — версия v3. Референсный `yandex_tracker_client/`
+ * (`Projects`, без переопределения `api_version`, дефолт соединения `VERSION_V2`)
+ * остаётся на v2 и не мигрирует; код этого пакета после миграции 4.1 — v3
+ * (`GetProjectsOperation`: `GET /v3/projects`). Тест фиксирует НАБЛЮДАЕМОЕ
+ * поведение кода (v3) — версия теперь совпадает с документацией; расхождение
+ * референсного клиента с обоими не чинится здесь (канон §5).
  *
  * Тип постранички — `link` (seekable, `tests/TESTING_STRATEGY.md` §4): `GET
- * /v2/projects` пагинируется через заголовок `Link` (`rel="next"`/`rel="seek"`),
+ * /v3/projects` пагинируется через заголовок `Link` (`rel="next"`/`rel="seek"`),
  * `total`/`totalPages` заполняются из `X-Total-Count`/`X-Total-Pages` только когда
  * есть `rel="seek"` (seek-gating, `TrackerPaginator.buildMeta`). `nextCursor` в
  * ответе — производная от `Link`, кодирующая путь следующей страницы
@@ -38,19 +39,19 @@ import {
 import { describe, it, expect } from 'vitest';
 
 /**
- * `rel="next"` + `rel="seek"` — семантика `/v2/projects` реальной API (см.
+ * `rel="next"` + `rel="seek"` — семантика `/v3/projects` реальной API (см.
  * `pin-projects-link.util.ts`): семейство эндпоинта seekable, поэтому
  * `hasNextPage` не подвержен sanity-поправке F3 (та применяется только к
  * НЕ-seek курсорным ручкам).
  */
 const NEXT_AND_SEEK_LINK =
-  '<https://api.tracker.yandex.net/v2/projects?perPage=2&page=2>; rel="next", ' +
-  '<https://api.tracker.yandex.net/v2/projects?perPage=2{&page}>; rel="seek"';
+  '<https://api.tracker.yandex.net/v3/projects?perPage=2&page=2>; rel="next", ' +
+  '<https://api.tracker.yandex.net/v3/projects?perPage=2{&page}>; rel="seek"';
 
 describeToolIntegration({
   tool: GET_PROJECTS_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'get', path: '/v2/projects', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'get', path: '/v3/projects', apiVersion: 'v3' }],
 
   happyPath: {
     input: { fields: ['id', 'key'], perPage: 2 },
@@ -58,8 +59,8 @@ describeToolIntegration({
       api
         .expectRequest({
           method: 'get',
-          path: '/v2/projects',
-          apiVersion: 'v2',
+          path: '/v3/projects',
+          apiVersion: 'v3',
           query: { perPage: 2 },
         })
         .reply(200, createProjectListFixture(2));
@@ -83,20 +84,20 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/projects', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/projects', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { fields: ['id'] },
     },
     notFound: {
-      // Единственный HTTP-вызов get_projects — GET /v2/projects; 404 здесь — та же
+      // Единственный HTTP-вызов get_projects — GET /v3/projects; 404 здесь — та же
       // операция, отвечающая «очередь-фильтр не найдена» (queueId не существует).
       arrange: (api) => {
         api
           .expectRequest({
             method: 'get',
-            path: '/v2/projects',
-            apiVersion: 'v2',
+            path: '/v3/projects',
+            apiVersion: 'v3',
             query: { queueId: 'MISSING' },
           })
           .reply(404, generateError404());
@@ -116,8 +117,8 @@ describeToolIntegration({
         api
           .expectRequest({
             method: 'get',
-            path: '/v2/projects',
-            apiVersion: 'v2',
+            path: '/v3/projects',
+            apiVersion: 'v3',
             query: { perPage: 2 },
           })
           .reply(200, createProjectListFixture(2), {
@@ -132,8 +133,8 @@ describeToolIntegration({
         api
           .expectRequest({
             method: 'get',
-            path: '/v2/projects',
-            apiVersion: 'v2',
+            path: '/v3/projects',
+            apiVersion: 'v3',
             query: { perPage: 2 },
           })
           .reply(200, createProjectListFixture(1));
@@ -146,7 +147,7 @@ describeToolIntegration({
     // отдаёт FIELDS_WITHOUT_VALUE (CLAUDE.md §2.1).
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/projects', apiVersion: 'v2' })
+        .expectRequest({ method: 'get', path: '/v3/projects', apiVersion: 'v3' })
         .reply(200, createProjectListFixture(1));
     },
     input: { fields: ['id', 'key', 'missingField'] },
@@ -158,7 +159,7 @@ describe('get_projects — организация без проектов (пу�
   const ctx = useToolIntegrationContext();
 
   it('API возвращает [] ⇒ count:0, пустая проекция, без warnings', async () => {
-    ctx.api.expectRequest({ method: 'get', path: '/v2/projects', apiVersion: 'v2' }).reply(200, []);
+    ctx.api.expectRequest({ method: 'get', path: '/v3/projects', apiVersion: 'v3' }).reply(200, []);
 
     const result = await ctx.client.callTool(GET_PROJECTS_TOOL_METADATA.name, {
       fields: ['id', 'key'],

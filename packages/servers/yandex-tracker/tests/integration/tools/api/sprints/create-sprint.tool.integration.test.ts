@@ -1,9 +1,9 @@
 /**
  * Категория `sprints` целиком в реестре исключений живых прогонов (спринты
  * принадлежат доске — `tests/TESTING_STRATEGY.md` §1): С-4 здесь `мок (гипотеза)`,
- * а не `мок`. Путь и версия сверены с официальной документацией Яндекс.Трекера —
- * см. отчёт пакета P5 (расхождение: актуальная документация 2026 отдаёт
- * `POST /v3/sprints`, код сервера — `POST /v2/sprints`).
+ * а не `мок`. Путь и версия сверены с официальной документацией Яндекс.Трекера.
+ * Пакет `sprints` этапа 4.1 перевёл операцию на `POST /v3/sprints` — расхождение
+ * с документацией, отмеченное отчётом пакета P5, устранено.
  */
 
 import {
@@ -19,7 +19,7 @@ import { expect } from 'vitest';
 describeToolIntegration({
   tool: CREATE_SPRINT_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'post', path: '/v2/sprints', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'post', path: '/v3/sprints', apiVersion: 'v3' }],
 
   happyPath: {
     input: { name: 'New Sprint', board: '10', fields: ['id', 'name'] },
@@ -27,15 +27,15 @@ describeToolIntegration({
       api
         .expectRequest({
           method: 'post',
-          path: '/v2/sprints',
-          apiVersion: 'v2',
+          path: '/v3/sprints',
+          apiVersion: 'v3',
           body: { name: 'New Sprint', board: '10' },
         })
-        .reply(200, createSprintFixture({ id: '55', name: 'New Sprint' }));
+        .reply(200, createSprintFixture({ id: 55, name: 'New Sprint' }));
     },
     outputDataSchema: CreateSprintOutputDataSchema,
     assertData: (data) => {
-      expect(data.sprint).toMatchObject({ id: '55', name: 'New Sprint' });
+      expect(data.sprint).toMatchObject({ id: 55, name: 'New Sprint' });
       expect(data.message).toContain('New Sprint');
     },
   },
@@ -49,17 +49,17 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'post', path: '/v2/sprints', apiVersion: 'v2' })
+          .expectRequest({ method: 'post', path: '/v3/sprints', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { name: 'Restricted Sprint', board: '10', fields: ['id'] },
     },
     notFound: {
-      // Единственный HTTP-вызов create_sprint — POST /v2/sprints; 404 здесь —
+      // Единственный HTTP-вызов create_sprint — POST /v3/sprints; 404 здесь —
       // та же операция, отвечающая «доска не найдена» (board из параметров не существует).
       arrange: (api) => {
         api
-          .expectRequest({ method: 'post', path: '/v2/sprints', apiVersion: 'v2' })
+          .expectRequest({ method: 'post', path: '/v3/sprints', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { name: 'Sprint for missing board', board: 'MISSING', fields: ['id'] },
@@ -77,8 +77,8 @@ describeToolIntegration({
     // ResponseFieldFilter отдаёт FIELDS_WITHOUT_VALUE (CLAUDE.md §2.1).
     arrange: (api) => {
       api
-        .expectRequest({ method: 'post', path: '/v2/sprints', apiVersion: 'v2' })
-        .reply(200, createSprintFixture({ id: '56', name: 'Sprint With Gaps' }));
+        .expectRequest({ method: 'post', path: '/v3/sprints', apiVersion: 'v3' })
+        .reply(200, createSprintFixture({ id: 56, name: 'Sprint With Gaps' }));
     },
     input: { name: 'Sprint With Gaps', board: '10', fields: ['id', 'name', 'missingField'] },
     codes: ['FIELDS_WITHOUT_VALUE'],

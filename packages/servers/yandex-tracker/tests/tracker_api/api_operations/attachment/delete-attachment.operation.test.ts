@@ -58,7 +58,7 @@ describe('DeleteAttachmentOperation', () => {
 
       // Assert
       expect(deleteRequestSpy).toHaveBeenCalledWith(
-        `/v2/issues/${issueId}/attachments/${attachmentId}`
+        `/v3/issues/${issueId}/attachments/${attachmentId}`
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining(`файл attachmentId=${attachmentId} удален из ${issueId}`)

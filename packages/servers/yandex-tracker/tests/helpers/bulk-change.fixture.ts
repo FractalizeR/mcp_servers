@@ -9,7 +9,7 @@ export function createBulkChangeOperationFixture(
   const id = overrides?.id ?? 'bulk-1';
   return {
     id,
-    self: `https://api.tracker.yandex.net/v2/bulkchange/${id}`,
+    self: `https://api.tracker.yandex.net/v3/bulkchange/${id}`,
     status: 'COMPLETE',
     ...overrides,
   };

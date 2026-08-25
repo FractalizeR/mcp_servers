@@ -3,14 +3,14 @@
  */
 
 import { z } from 'zod';
-import { buildOutputSchema } from '#common/schemas/index.js';
+import { buildOutputSchema, buildEntityIdSchema } from '#common/schemas/index.js';
 
 export const DeleteBoardColumnParamsSchema = z.object({
   /** Идентификатор доски (обязательно) */
-  boardId: z.string().min(1, 'Board ID не может быть пустым'),
+  boardId: buildEntityIdSchema('Board'),
 
   /** Идентификатор колонки для удаления (обязательно) */
-  columnId: z.string().min(1, 'Column ID не может быть пустым'),
+  columnId: buildEntityIdSchema('Column'),
 });
 
 export type DeleteBoardColumnParams = z.infer<typeof DeleteBoardColumnParamsSchema>;

@@ -196,7 +196,7 @@ describe('DownloadAttachmentOperation', () => {
 
       // Assert
       expect(result.id).toBe(attachmentId);
-      expect(mockHttpClient.get).toHaveBeenCalledWith(`/v2/issues/${issueId}/attachments`);
+      expect(mockHttpClient.get).toHaveBeenCalledWith(`/v3/issues/${issueId}/attachments`);
     });
 
     it('должна выбросить ошибку если файл не найден', async () => {

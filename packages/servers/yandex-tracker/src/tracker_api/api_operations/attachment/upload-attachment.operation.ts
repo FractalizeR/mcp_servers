@@ -8,7 +8,7 @@
  * - Инвалидация кеша списка файлов после загрузки
  * - НЕТ скачивания/удаления файлов
  *
- * API: POST /v2/issues/{issueId}/attachments
+ * API: POST /v3/issues/{issueId}/attachments
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -97,7 +97,7 @@ export class UploadAttachmentOperation extends BaseOperation {
 
     // Загрузка файла
     const attachment = await this.uploadFile<AttachmentWithUnknownFields>(
-      `/v2/issues/${issueId}/attachments`,
+      `/v3/issues/${issueId}/attachments`,
       formData
     );
 

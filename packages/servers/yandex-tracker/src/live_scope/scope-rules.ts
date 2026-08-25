@@ -11,6 +11,13 @@
  * Порядок важен: правила проверяются сверху вниз, первое совпавшее решает.
  * Не совпало ни одно — отказ (см. `decideRequest`): умолчание «пропустить, раз
  * не поняли» превратило бы рубеж в декорацию.
+ *
+ * Версия в пути (`/v2/` или `/v3/`) правилами не различается: миграция 4.1
+ * (`.agentic-planning/plan_tracker_test_coverage/4.1_v3_migration_parallel.md`)
+ * меняет пути в `api_operations/**`, но ни одна ветка `decide()` не читает сам
+ * сегмент версии — только то, что после него (имя очереди, id, тело запроса).
+ * Поэтому матчеры принимают `/v[23]/` там, где семейство ещё может прислать
+ * обе версии в переходный период.
  */
 
 import type { OutgoingRequest } from '@fractalizer/mcp-infrastructure';
@@ -185,8 +192,12 @@ export const SCOPE_RULES: readonly ScopeRule[] = [
   },
 
   // C: массовые операции — только по явному списку ключей этого прогона.
+  // Версия принимается любая (v2 или v3, этап 4.1): решение зависит только от
+  // тела запроса (список задач, целевая очередь) — сегмент версии в пути ни
+  // одна ветка decide() не читает, поэтому расширение матчера не расширяет
+  // допуск ни на один нелегальный запрос.
   {
-    pattern: /^\/v2\/bulkchange\/_(?<kind>update|transition|move)$/,
+    pattern: /^\/v[23]\/bulkchange\/_(?<kind>update|transition|move)$/,
     methods: ['post'],
     decide: (match, request, context): ScopeDecision => {
       const body = asRecord(request.data);
@@ -216,8 +227,10 @@ export const SCOPE_RULES: readonly ScopeRule[] = [
   },
 
   // A': компоненты очереди — сущность самой очереди, за её пределами не видна.
+  // Версия в пути не влияет на decide() (сверяется только имя очереди/журнал) —
+  // тот же довод, что у bulkchange выше.
   {
-    pattern: /^\/v2\/queues\/([^/?]+)\/components\/?$/,
+    pattern: /^\/v[23]\/queues\/([^/?]+)\/components\/?$/,
     methods: ['post'],
     decide: (match, _request, context) =>
       match[1] === context.sandboxQueue
@@ -225,7 +238,7 @@ export const SCOPE_RULES: readonly ScopeRule[] = [
         : deny(`компонент в очереди ${match[1] ?? '?'} вне песочницы`),
   },
   {
-    pattern: /^\/v2\/components\/([^/?]+)/,
+    pattern: /^\/v[23]\/components\/([^/?]+)/,
     methods: 'any',
     decide: (match, _request, context) =>
       context.journal.has('component', match[1] ?? '')
@@ -275,12 +288,12 @@ export const SCOPE_RULES: readonly ScopeRule[] = [
     decide: () => deny('доступы очереди определяют, кто её видит, — эффект вне песочницы'),
   },
   {
-    pattern: /^\/v2\/projects/,
+    pattern: /^\/v[23]\/projects/,
     methods: 'any',
     decide: () => deny('проекты принадлежат организации целиком'),
   },
   {
-    pattern: /^\/v2\/fields/,
+    pattern: /^\/v[23]\/fields/,
     methods: 'any',
     decide: () => deny('глобальные поля действуют во всех очередях организации'),
   },

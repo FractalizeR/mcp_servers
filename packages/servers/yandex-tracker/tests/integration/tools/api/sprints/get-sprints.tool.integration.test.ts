@@ -1,9 +1,9 @@
 /**
  * Категория `sprints` целиком в реестре исключений живых прогонов (спринты
  * принадлежат доске — `tests/TESTING_STRATEGY.md` §1): С-4 здесь `мок (гипотеза)`,
- * а не `мок`. Путь и версия сверены с официальной документацией Яндекс.Трекера —
- * см. отчёт пакета P5 (расхождение: актуальная документация 2026 отдаёт
- * `GET /v3/boards/{id}/sprints`, код сервера — `GET /v2/boards/{id}/sprints`).
+ * а не `мок`. Путь и версия сверены с официальной документацией Яндекс.Трекера.
+ * Пакет `sprints` этапа 4.1 перевёл операцию на `GET /v3/boards/{id}/sprints` —
+ * расхождение с документацией, отмеченное отчётом пакета P5, устранено.
  */
 
 import {
@@ -24,16 +24,16 @@ import { describe, it, expect } from 'vitest';
 describeToolIntegration({
   tool: GET_SPRINTS_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'get', path: '/v2/boards/5/sprints', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'get', path: '/v3/boards/5/sprints', apiVersion: 'v3' }],
 
   happyPath: {
     input: { boardId: '5', fields: ['id', 'name'] },
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/boards/5/sprints', apiVersion: 'v2' })
+        .expectRequest({ method: 'get', path: '/v3/boards/5/sprints', apiVersion: 'v3' })
         .reply(200, [
-          createSprintFixture({ id: '1', name: 'Sprint 1' }),
-          createSprintFixture({ id: '2', name: 'Sprint 2' }),
+          createSprintFixture({ id: 1, name: 'Sprint 1' }),
+          createSprintFixture({ id: 2, name: 'Sprint 2' }),
         ]);
     },
     outputDataSchema: GetSprintsOutputDataSchema,
@@ -45,8 +45,8 @@ describeToolIntegration({
       expect(data.count).toBe(2);
       expect(data.boardId).toBe('5');
       expect(data.sprints).toEqual([
-        { id: '1', name: 'Sprint 1' },
-        { id: '2', name: 'Sprint 2' },
+        { id: 1, name: 'Sprint 1' },
+        { id: 2, name: 'Sprint 2' },
       ]);
     },
   },
@@ -60,17 +60,17 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/boards/5/sprints', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/boards/5/sprints', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { boardId: '5', fields: ['id'] },
     },
     notFound: {
-      // Единственный HTTP-вызов get_sprints — GET /v2/boards/{id}/sprints; 404
+      // Единственный HTTP-вызов get_sprints — GET /v3/boards/{id}/sprints; 404
       // здесь — доска с таким boardId не найдена.
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/boards/5/sprints', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/boards/5/sprints', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { boardId: '5', fields: ['id'] },
@@ -88,8 +88,8 @@ describeToolIntegration({
   warnings: {
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/boards/5/sprints', apiVersion: 'v2' })
-        .reply(200, [createSprintFixture({ id: '1', name: 'Sprint With Gaps' })]);
+        .expectRequest({ method: 'get', path: '/v3/boards/5/sprints', apiVersion: 'v3' })
+        .reply(200, [createSprintFixture({ id: 1, name: 'Sprint With Gaps' })]);
     },
     input: { boardId: '5', fields: ['id', 'name', 'missingField'] },
     codes: ['FIELDS_WITHOUT_VALUE'],
@@ -101,7 +101,7 @@ describe('get_sprints — доска без единого спринта (до�
 
   it('пустой список: sprints=[], count=0, без warnings', async () => {
     ctx.api
-      .expectRequest({ method: 'get', path: '/v2/boards/5/sprints', apiVersion: 'v2' })
+      .expectRequest({ method: 'get', path: '/v3/boards/5/sprints', apiVersion: 'v3' })
       .reply(200, []);
 
     const result = await ctx.client.callTool(GET_SPRINTS_TOOL_METADATA.name, {

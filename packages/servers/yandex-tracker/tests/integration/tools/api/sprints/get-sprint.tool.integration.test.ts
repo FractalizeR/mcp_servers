@@ -1,9 +1,9 @@
 /**
  * Категория `sprints` целиком в реестре исключений живых прогонов (спринты
  * принадлежат доске — `tests/TESTING_STRATEGY.md` §1): С-4 здесь `мок (гипотеза)`,
- * а не `мок`. Путь и версия сверены с официальной документацией Яндекс.Трекера —
- * см. отчёт пакета P5 (расхождение: актуальная документация 2026 отдаёт
- * `GET /v3/sprints/{id}`, код сервера — `GET /v2/sprints/{id}`).
+ * а не `мок`. Путь и версия сверены с официальной документацией Яндекс.Трекера.
+ * Пакет `sprints` этапа 4.1 перевёл операцию на `GET /v3/sprints/{id}` —
+ * расхождение с документацией, отмеченное отчётом пакета P5, устранено.
  */
 
 import {
@@ -19,18 +19,18 @@ import { expect } from 'vitest';
 describeToolIntegration({
   tool: GET_SPRINT_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'get', path: '/v2/sprints/88', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'get', path: '/v3/sprints/88', apiVersion: 'v3' }],
 
   happyPath: {
     input: { sprintId: '88', fields: ['id', 'name'] },
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/sprints/88', apiVersion: 'v2' })
-        .reply(200, createSprintFixture({ id: '88', name: 'Sprint 88' }));
+        .expectRequest({ method: 'get', path: '/v3/sprints/88', apiVersion: 'v3' })
+        .reply(200, createSprintFixture({ id: 88, name: 'Sprint 88' }));
     },
     outputDataSchema: GetSprintOutputDataSchema,
     assertData: (data) => {
-      expect(data.sprint).toMatchObject({ id: '88', name: 'Sprint 88' });
+      expect(data.sprint).toMatchObject({ id: 88, name: 'Sprint 88' });
     },
   },
 
@@ -43,7 +43,7 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/sprints/88', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/sprints/88', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { sprintId: '88', fields: ['id'] },
@@ -51,7 +51,7 @@ describeToolIntegration({
     notFound: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/sprints/88', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/sprints/88', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { sprintId: '88', fields: ['id'] },
@@ -67,8 +67,8 @@ describeToolIntegration({
   warnings: {
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/sprints/88', apiVersion: 'v2' })
-        .reply(200, createSprintFixture({ id: '88', name: 'Sprint With Gaps' }));
+        .expectRequest({ method: 'get', path: '/v3/sprints/88', apiVersion: 'v3' })
+        .reply(200, createSprintFixture({ id: 88, name: 'Sprint With Gaps' }));
     },
     input: { sprintId: '88', fields: ['id', 'name', 'missingField'] },
     codes: ['FIELDS_WITHOUT_VALUE'],

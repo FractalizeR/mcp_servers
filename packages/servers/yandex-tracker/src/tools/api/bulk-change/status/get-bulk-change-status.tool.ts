@@ -54,7 +54,7 @@ export class GetBulkChangeStatusTool extends BaseTool<YandexTrackerFacade> {
       // 2. Логирование начала операции
       this.logger.info(`Получение статуса bulk операции: ${operationId}`);
 
-      // 3. API v2: получение статуса bulk операции
+      // 3. API v3: получение статуса bulk операции
       const operation = await this.facade.getBulkChangeStatus(operationId);
 
       // 4. Логирование результата

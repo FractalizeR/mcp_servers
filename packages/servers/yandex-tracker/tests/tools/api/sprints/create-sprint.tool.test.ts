@@ -29,7 +29,7 @@ describe('CreateSprintTool', () => {
   });
 
   it('создаст спринт', async () => {
-    const sprint = { id: '1', self: 'url', version: 1, name: 'Sprint 1' };
+    const sprint = { id: 1, self: 'url', version: 1, name: 'Sprint 1' };
     vi.mocked(mockTrackerFacade.createSprint).mockResolvedValue(sprint);
 
     const result = await tool.execute({
@@ -41,6 +41,22 @@ describe('CreateSprintTool', () => {
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.createSprint).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'Sprint 1', board: 'b1' })
+    );
+  });
+
+  it('примет числовой board (как отдаёт get_boards) и дойдёт до того же запроса', async () => {
+    const sprint = { id: 1, self: 'url', version: 1, name: 'Sprint 1' };
+    vi.mocked(mockTrackerFacade.createSprint).mockResolvedValue(sprint);
+
+    const result = await tool.execute({
+      name: 'Sprint 1',
+      board: 42,
+      fields: ['id', 'name'],
+    });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.createSprint).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Sprint 1', board: '42' })
     );
   });
 

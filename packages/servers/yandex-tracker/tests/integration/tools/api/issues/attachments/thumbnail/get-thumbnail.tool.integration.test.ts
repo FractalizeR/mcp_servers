@@ -67,9 +67,9 @@ describe('get-thumbnail integration tests', () => {
           size: 1024,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/screenshot.png`,
-          thumbnail: `https://api.tracker.yandex.net/v2/issues/${issueId}/thumbnails/${attachmentId}`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/screenshot.png`,
+          thumbnail: `https://api.tracker.yandex.net/v3/issues/${issueId}/thumbnails/${attachmentId}`,
         },
       ]);
       mockServer.mockGetThumbnailSuccess(issueId, attachmentId);
@@ -115,9 +115,9 @@ describe('get-thumbnail integration tests', () => {
           size: 2048,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/photo.jpg`,
-          thumbnail: `https://api.tracker.yandex.net/v2/issues/${issueId}/thumbnails/${attachmentId}`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/photo.jpg`,
+          thumbnail: `https://api.tracker.yandex.net/v3/issues/${issueId}/thumbnails/${attachmentId}`,
         },
       ]);
       mockServer.mockGetThumbnailSuccess(issueId, attachmentId);
@@ -178,8 +178,8 @@ describe('get-thumbnail integration tests', () => {
           size: 2048,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/document.pdf`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/document.pdf`,
           // Нет thumbnail для не-изображений
         },
       ]);
@@ -250,9 +250,9 @@ describe('get-thumbnail integration tests', () => {
           size: 1024,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/screenshot.png`,
-          thumbnail: `https://api.tracker.yandex.net/v2/issues/${issueId}/thumbnails/${attachmentId}`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/screenshot.png`,
+          thumbnail: `https://api.tracker.yandex.net/v3/issues/${issueId}/thumbnails/${attachmentId}`,
         },
       ]);
       mockServer.mockGetThumbnailSuccess(issueId, attachmentId);
@@ -293,9 +293,9 @@ describe('get-thumbnail integration tests', () => {
           size: 2048,
           createdBy: { id: '1', display: 'Test User' },
           createdAt: '2024-01-01T00:00:00.000Z',
-          self: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}`,
-          content: `https://api.tracker.yandex.net/v2/issues/${issueId}/attachments/${attachmentId}/photo.jpg`,
-          thumbnail: `https://api.tracker.yandex.net/v2/issues/${issueId}/thumbnails/${attachmentId}`,
+          self: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}`,
+          content: `https://api.tracker.yandex.net/v3/issues/${issueId}/attachments/${attachmentId}/photo.jpg`,
+          thumbnail: `https://api.tracker.yandex.net/v3/issues/${issueId}/thumbnails/${attachmentId}`,
         },
       ]);
       mockServer.mockGetThumbnailSuccess(issueId, attachmentId);

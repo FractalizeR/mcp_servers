@@ -4,15 +4,13 @@
  * Категория `api/fields` целиком в реестре исключений живых прогонов
  * (`tests/coverage-exceptions/live-exempt-categories.ts`) — С-4 здесь `мок (гипотеза)`.
  *
- * Сверка с внешним источником истины: референсный клиент (`Fields.path =
- * '/{api_version}/fields/{id}'`, `get_all()` без `id` → `GET`, `api_version` по
- * умолчанию `v2`) подтверждает `GET /v2/fields`. Официальная документация
- * (`https://yandex.ru/support/tracker/ru/api-ref/issues/get-global-fields.md`,
- * дословно `GET /v3/fields`) называет ту же операцию версией `v3`, а не `v2` —
- * прямое расхождение с приоритетным источником (документация первична по правилу
- * `tests/TESTING_STRATEGY.md` §2), записано в отчёт пакета как гипотеза этапа 3.1.
+ * Путь — `GET /v3/fields` (миграция 4.1, `.agentic-planning/plan_tracker_test_coverage/
+ * 4.1_v3_migration_parallel.md`): документация (`https://yandex.ru/support/tracker/ru/
+ * api-ref/issues/get-global-fields.md`) описывает только v3, боевая проба 2026-08-23
+ * подтвердила идентичную форму ответа (72 = 72 элемента, тот же набор ключей) —
+ * `inventory/v2-paths-2026-08-24.md`.
  *
- * `GET /v2/fields` не пагинируется (комментарий `get-global-fields.schema.ts`,
+ * `GET /v3/fields` не пагинируется (комментарий `get-global-fields.schema.ts`,
  * `get-fields.operation.ts`) — отдаёт все поля разом, аналогично
  * `get_statuses`/`get_priorities`.
  */
@@ -35,13 +33,13 @@ import { describe, it, expect } from 'vitest';
 describeToolIntegration({
   tool: GET_GLOBAL_FIELDS_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'get', path: '/v2/fields', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'get', path: '/v3/fields', apiVersion: 'v3' }],
 
   happyPath: {
     input: { fields: ['id', 'name'] },
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/fields', apiVersion: 'v2' })
+        .expectRequest({ method: 'get', path: '/v3/fields', apiVersion: 'v3' })
         .reply(200, [
           createGlobalFieldFixture({ id: 'summary', name: 'Summary' }),
           createGlobalFieldFixture({ id: 'customField123', name: 'Custom Priority' }),
@@ -68,17 +66,17 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/fields', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/fields', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { fields: ['id'] },
     },
     notFound: {
-      // Единственный HTTP-вызов get_global_fields — GET /v2/fields; тот же
+      // Единственный HTTP-вызов get_global_fields — GET /v3/fields; тот же
       // эндпоинт, отвечающий 404 (например, при недоступности организации).
       arrange: (api) => {
         api
-          .expectRequest({ method: 'get', path: '/v2/fields', apiVersion: 'v2' })
+          .expectRequest({ method: 'get', path: '/v3/fields', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { fields: ['id'] },
@@ -88,13 +86,13 @@ describeToolIntegration({
   // Список без батч-режима — на вход один набор параметров, не массив запросов.
   batch: 'not-applicable',
 
-  // GET /v2/fields не пагинируется — отдаёт все поля разом (см. схему инструмента).
+  // GET /v3/fields не пагинируется — отдаёт все поля разом (см. схему инструмента).
   pagination: 'none',
 
   warnings: {
     arrange: (api) => {
       api
-        .expectRequest({ method: 'get', path: '/v2/fields', apiVersion: 'v2' })
+        .expectRequest({ method: 'get', path: '/v3/fields', apiVersion: 'v3' })
         .reply(200, [createGlobalFieldFixture({ id: 'customField123', name: 'Custom Priority' })]);
     },
     input: { fields: ['id', 'name', 'missingField'] },
@@ -106,7 +104,7 @@ describe('get_global_fields — организация без глобальны
   const ctx = useToolIntegrationContext();
 
   it('API возвращает [] ⇒ count:0, пустая проекция, без warnings', async () => {
-    ctx.api.expectRequest({ method: 'get', path: '/v2/fields', apiVersion: 'v2' }).reply(200, []);
+    ctx.api.expectRequest({ method: 'get', path: '/v3/fields', apiVersion: 'v3' }).reply(200, []);
 
     const result = await ctx.client.callTool(GET_GLOBAL_FIELDS_TOOL_METADATA.name, {
       fields: ['id', 'name'],

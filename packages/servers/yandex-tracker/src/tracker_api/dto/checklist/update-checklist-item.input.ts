@@ -3,7 +3,7 @@
  *
  * Используется в UpdateChecklistItemOperation и yandex_tracker_update_checklist_item tool.
  *
- * API: PATCH /v2/issues/{issueId}/checklistItems/{checklistId}
+ * API: PATCH /v3/issues/{issueId}/checklistItems/{checklistId}
  *
  * Все поля опциональны (partial update)
  */

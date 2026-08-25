@@ -42,11 +42,12 @@ export function createProjectFixture(overrides?: Partial<Project>): ProjectWithU
 
   return {
     id,
-    self: `https://api.tracker.yandex.net/v2/projects/${id}`,
+    self: `https://api.tracker.yandex.net/v3/projects/${id}`,
     key,
     name: 'Test Project',
     lead: createUserRef(),
     status: 'in_progress' as ProjectStatus,
+    version: 1,
     ...overrides,
   };
 }
@@ -63,11 +64,12 @@ export function createProjectFixture(overrides?: Partial<Project>): ProjectWithU
 export function createMinimalProjectFixture(key = 'TESTPROJ'): Project {
   return {
     id: `project-${key.toLowerCase()}`,
-    self: `https://api.tracker.yandex.net/v2/projects/project-${key.toLowerCase()}`,
+    self: `https://api.tracker.yandex.net/v3/projects/project-${key.toLowerCase()}`,
     key,
     name: `${key} Project`,
     lead: createUserRef(),
     status: 'draft' as ProjectStatus,
+    version: 1,
   };
 }
 

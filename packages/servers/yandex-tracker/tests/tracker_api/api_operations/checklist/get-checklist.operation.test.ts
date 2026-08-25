@@ -9,7 +9,7 @@ import { InvalidCursorError } from '#tracker_api/utils/cursor-codec.util.js';
 import { itemAt } from '#helpers/tool-result.helper.js';
 
 const NEXT_LINK =
-  '<https://api.tracker.yandex.net/v2/issues/TEST-1/checklistItems?id=ID2>; rel="next"';
+  '<https://api.tracker.yandex.net/v3/issues/TEST-1/checklistItems?id=ID2>; rel="next"';
 
 const item = (id: string): ChecklistItemWithUnknownFields => ({
   id,
@@ -50,19 +50,19 @@ describe('GetChecklistOperation', () => {
 
   describe('execute (single page)', () => {
     it('запрашивает корректный endpoint и возвращает PaginatedResult без next', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1'), item('2')]);
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', [item('1'), item('2')]);
 
       const result = await operation.execute({ issueId: 'TEST-1' });
 
       const history = httpClient.getRequestHistory();
-      expect(history[0]).toMatchObject({ method: 'GET', path: '/v2/issues/TEST-1/checklistItems' });
+      expect(history[0]).toMatchObject({ method: 'GET', path: '/v3/issues/TEST-1/checklistItems' });
       expect(result.items).toHaveLength(2);
       expect(result.pagination.hasNextPage).toBe(false);
       expect(result.pagination.fetchedAll).toBe(true);
     });
 
     it('РЕГРЕССИЯ (план 3.3/3.4): без явного perPage, один элемент, Link rel="next" всё равно есть → hasNextPage=false', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', [item('1')], {
         link: NEXT_LINK,
       });
 
@@ -74,7 +74,7 @@ describe('GetChecklistOperation', () => {
 
     it('при заполненной ровно до perPage странице + Link rel="next" → hasNextPage=true', async () => {
       const fullPage = Array.from({ length: 50 }, (_, i) => item(String(i + 1)));
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', fullPage, {
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', fullPage, {
         link: NEXT_LINK,
       });
 
@@ -84,7 +84,7 @@ describe('GetChecklistOperation', () => {
     });
 
     it('пробрасывает perPage в query (без page)', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', []);
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', []);
 
       await operation.execute({ issueId: 'TEST-1', perPage: 20 });
 
@@ -94,7 +94,7 @@ describe('GetChecklistOperation', () => {
     it('выдаёт nextCursor при наличии Link rel="next"', async () => {
       // perPage=1 явно передан и совпадает с числом элементов — sanity-check
       // (F3) не гасит hasNextPage/nextCursor.
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', [item('1')], {
         link: NEXT_LINK,
       });
 
@@ -111,11 +111,11 @@ describe('GetChecklistOperation', () => {
 
   describe('execute (fetchAll)', () => {
     it('обходит несколько страниц через Link rel="next"', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', [item('1')], {
         link: NEXT_LINK,
       });
       // Вторая страница — под путём с query (как его вернёт stripHost)
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems?id=ID2', [item('2')]);
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems?id=ID2', [item('2')]);
 
       const result = await operation.execute({ issueId: 'TEST-1', fetchAll: true });
 
@@ -125,7 +125,7 @@ describe('GetChecklistOperation', () => {
     });
 
     it('обрезает выдачу по maxItems и выставляет truncated', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1'), item('2')], {
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', [item('1'), item('2')], {
         link: NEXT_LINK,
       });
 
@@ -141,11 +141,11 @@ describe('GetChecklistOperation', () => {
       // Первая страница отдаёт Link rel="next" с ?id=ID2 → nextCursor.
       // perPage=1 явно передан и совпадает с числом элементов — sanity-check
       // (F3) не гасит hasNextPage/nextCursor.
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')], {
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', [item('1')], {
         link: NEXT_LINK,
       });
       // Декодированный путь курсора (stripHost от next) отдаёт следующую запись
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems?id=ID2', [item('2')]);
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems?id=ID2', [item('2')]);
 
       const firstPage = await operation.execute({ issueId: 'TEST-1', perPage: 1 });
       const cursor = firstPage.pagination.nextCursor;
@@ -155,7 +155,7 @@ describe('GetChecklistOperation', () => {
 
       // Повторный запрос ушёл по декодированному из курсора пути
       const lastReq = httpClient.getRequestHistory().at(-1);
-      expect(lastReq?.path).toBe('/v2/issues/TEST-1/checklistItems?id=ID2');
+      expect(lastReq?.path).toBe('/v3/issues/TEST-1/checklistItems?id=ID2');
       expect(secondPage.items).toHaveLength(1);
       expect(secondPage.items[0]?.id).toBe('2');
     });
@@ -169,8 +169,8 @@ describe('GetChecklistOperation', () => {
 
   describe('executeMany', () => {
     it('возвращает PaginatedResult для каждой задачи', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')]);
-      httpClient.setResponse('GET', '/v2/issues/TEST-2/checklistItems', [item('2'), item('3')]);
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', [item('1')]);
+      httpClient.setResponse('GET', '/v3/issues/TEST-2/checklistItems', [item('2'), item('3')]);
 
       const result = await operation.executeMany(['TEST-1', 'TEST-2']);
 
@@ -184,7 +184,7 @@ describe('GetChecklistOperation', () => {
     });
 
     it('обрабатывает частичные ошибки', async () => {
-      httpClient.setResponse('GET', '/v2/issues/TEST-1/checklistItems', [item('1')]);
+      httpClient.setResponse('GET', '/v3/issues/TEST-1/checklistItems', [item('1')]);
       // для TEST-2 ответ не настроен → reject
 
       const result = await operation.executeMany(['TEST-1', 'TEST-2']);

@@ -43,7 +43,7 @@ describe('GetBoardColumnsTool', () => {
   });
 
   it('вернёт список колонок', async () => {
-    const columns = [{ id: 'c1', name: 'To Do' }];
+    const columns = [{ id: 1, name: 'To Do' }];
     vi.mocked(mockTrackerFacade.getBoardColumns).mockResolvedValue(paginated(columns));
 
     const result = await tool.execute({ boardId: 'b1', fields: ['id', 'name'] });
@@ -52,6 +52,16 @@ describe('GetBoardColumnsTool', () => {
     expect(mockTrackerFacade.getBoardColumns).toHaveBeenCalledWith({ boardId: 'b1' });
     const parsed = JSON.parse(getTextContent(result)) as { data: { count: number } };
     expect(parsed.data.count).toBe(1);
+  });
+
+  it('примет числовой boardId (как отдаёт get_boards) и дойдёт до того же запроса', async () => {
+    const columns = [{ id: 1, name: 'To Do' }];
+    vi.mocked(mockTrackerFacade.getBoardColumns).mockResolvedValue(paginated(columns));
+
+    const result = await tool.execute({ boardId: 42, fields: ['id', 'name'] });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.getBoardColumns).toHaveBeenCalledWith({ boardId: '42' });
   });
 
   it('обработает ошибку facade', async () => {

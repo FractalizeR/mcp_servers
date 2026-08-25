@@ -1,7 +1,7 @@
 /**
  * Доменный тип: Доска (Board) в Яндекс.Трекере
  *
- * Соответствует API v2: /v2/boards/{boardId}
+ * Соответствует API v3: /v3/boards/{boardId}
  */
 
 import type { WithUnknownFields } from './types.js';
@@ -10,8 +10,13 @@ import type { WithUnknownFields } from './types.js';
  * Колонка доски (упрощенная версия для вложенного объекта)
  */
 export interface BoardColumn {
-  /** Идентификатор колонки */
-  readonly id: string;
+  /**
+   * Идентификатор колонки
+   *
+   * Число, не строка: подтверждено боевым `GET` (§4.1 плана миграции v3,
+   * `inventory/live-version-probe-2026-08-23.md`).
+   */
+  readonly id: number;
 
   /** Название колонки */
   readonly name: string;
@@ -55,13 +60,18 @@ export interface CountryRef {
 /**
  * Доска в Яндекс.Трекере
  *
- * ВАЖНО: Типизация основана на официальном Python SDK и реальных ответах API v2.
- * Обязательные поля (без ?) всегда присутствуют в ответе GET /v2/boards/{boardId}.
+ * ВАЖНО: Типизация основана на официальном Python SDK и реальных ответах API v3.
+ * Обязательные поля (без ?) всегда присутствуют в ответе GET /v3/boards/{boardId}.
  * Опциональные поля могут отсутствовать в зависимости от настроек доски.
  */
 export interface Board {
-  /** Идентификатор доски (всегда присутствует) */
-  readonly id: string;
+  /**
+   * Идентификатор доски (всегда присутствует)
+   *
+   * Число, не строка: подтверждено боевым `GET` (§4.1 плана миграции v3,
+   * `inventory/live-version-probe-2026-08-23.md`).
+   */
+  readonly id: number;
 
   /** URL ссылка на доску в API (всегда присутствует) */
   readonly self: string;

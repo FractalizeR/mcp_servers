@@ -7,14 +7,15 @@
  * - НЕТ загрузки/удаления/скачивания файлов
  *
  * ВАЖНО: эндпоинт НЕ пагинируется — API отдаёт все вложения за один ответ
- * (подтверждено сырыми заголовками: нет `Link rel="next"`). Поэтому запрос
- * выполняется ровно один раз, без пагинационных query-параметров.
+ * (подтверждено сырыми заголовками на v2: нет `Link rel="next"`; после
+ * миграции 4.1 путь ходит на v3, на v3 заголовки не переснимались). Поэтому
+ * запрос выполняется ровно один раз, без пагинационных query-параметров.
  *
  * Возвращаемый тип сохранён как `PaginatedResult<...>` ради совместимости
  * сигнатур facade/service: `singlePage(response)` (легаси-режим, без tag)
  * всегда даёт `hasNextPage=false`, т.к. Link-заголовка нет.
  *
- * API: GET /v2/issues/{issueId}/attachments
+ * API: GET /v3/issues/{issueId}/attachments
  */
 
 import { ParallelExecutor } from '@fractalizer/mcp-infrastructure';
@@ -68,7 +69,7 @@ export class GetAttachmentsOperation extends BaseOperation {
   private async fetch(issueId: string): Promise<PaginatedResult<AttachmentWithUnknownFields>> {
     this.logger.debug(`GetAttachmentsOperation: получение списка файлов для ${issueId}`);
 
-    const path = `/v2/issues/${issueId}/attachments`;
+    const path = `/v3/issues/${issueId}/attachments`;
     const response = await this.httpClient.getWithResponse<AttachmentWithUnknownFields[]>(path);
 
     // Без tag → легаси-режим singlePage: hasNextPage=false (Link-заголовка нет).

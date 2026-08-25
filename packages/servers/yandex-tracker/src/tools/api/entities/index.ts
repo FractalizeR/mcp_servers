@@ -2,7 +2,7 @@
  * Экспорты для Entity API tools (Goal/Project/Portfolio + Key Results)
  *
  * ВАЖНО: Entity API (`entityType: 'goal'|'project'|'portfolio'`), НЕ legacy
- * `/v2/projects` (см. `#tools/api/projects/index.js`) — разные коллекции,
+ * `/v3/projects` (см. `#tools/api/projects/index.js`) — разные коллекции,
  * разные идентификаторы. См. `entities/entity-api.entity.ts`.
  */
 

@@ -6,7 +6,7 @@
  * - Инвалидация кеша после удаления
  * - НЕТ создания/обновления
  *
- * API: DELETE /v2/projects/{projectId}
+ * API: DELETE /v3/projects/{projectId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -33,7 +33,7 @@ export class DeleteProjectOperation extends BaseOperation {
 
     this.logger.info(`Удаление проекта: ${projectId}`);
 
-    const endpoint = `/v2/projects/${projectId}`;
+    const endpoint = `/v3/projects/${projectId}`;
 
     await this.httpClient.delete(endpoint);
 

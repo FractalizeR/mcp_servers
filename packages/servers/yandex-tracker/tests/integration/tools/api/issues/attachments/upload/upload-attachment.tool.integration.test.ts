@@ -115,7 +115,7 @@ describe('upload-attachment integration tests', () => {
       const uploadedAttachment = createAttachmentFixture({
         name: filename,
         mimetype: 'image/png',
-        thumbnail: `https://api.tracker.yandex.net/v2/issues/${issueId}/thumbnails/12345`,
+        thumbnail: `https://api.tracker.yandex.net/v3/issues/${issueId}/thumbnails/12345`,
       });
 
       mockServer.mockUploadAttachmentSuccess(issueId, uploadedAttachment);

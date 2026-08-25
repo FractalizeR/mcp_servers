@@ -1,8 +1,16 @@
 /**
- * Контрактный тест: Entity API (Goal/Project/Portfolio, `/v3/entities/...`) не
- * смешивается с legacy `/v2/projects` — ни по именам инструментов, ни по
+ * Контрактный тест: Entity API (Goal/Project/Portfolio, `/v3/entities/{type}`)
+ * не смешивается с коллекцией проектов (`/v3/projects`, инструменты
+ * `get_projects`/`create_project`/...) — ни по именам инструментов, ни по
  * описаниям (DoD пакета 7.2.A/7.2.B, п. 2:
  * .agentic-planning/plan_mcp_2026_modernization/7.2_api_coverage_parallel.md).
+ *
+ * ВАЖНО: после миграции на API v3 обе коллекции лежат на `/v3/...` — версия
+ * пути больше не различает их. Различение проверяется по фактическому пути
+ * коллекции (`/v3/entities/` у Entity API, `/v3/projects` у legacy-проектов),
+ * а не по слову "legacy" или версии в тексте описания (находка код-ревью
+ * этапа 4.1: регулярка `/v2\/projects|legacy/i` проходила только за счёт
+ * слова "legacy" и не проверяла реальное отличие путей).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -20,7 +28,7 @@ const ENTITY_API_TOOL_NAMES = [
   'clear_goal_key_results',
 ];
 
-const LEGACY_PROJECT_TOOL_NAMES = [
+const PROJECTS_COLLECTION_TOOL_NAMES = [
   'get_projects',
   'get_project',
   'create_project',
@@ -36,13 +44,13 @@ function findByShortName(shortName: string) {
   return ToolClass;
 }
 
-describe('Entity API vs legacy /v2/projects — контракт разделения', () => {
-  it('ни один инструмент Entity API не называется так же, как legacy-инструмент проектов', () => {
-    const overlap = ENTITY_API_TOOL_NAMES.filter((n) => LEGACY_PROJECT_TOOL_NAMES.includes(n));
+describe('Entity API vs коллекция /v3/projects — контракт разделения', () => {
+  it('ни один инструмент Entity API не называется так же, как инструмент коллекции /v3/projects', () => {
+    const overlap = ENTITY_API_TOOL_NAMES.filter((n) => PROJECTS_COLLECTION_TOOL_NAMES.includes(n));
     expect(overlap).toEqual([]);
   });
 
-  it('все инструменты Entity API существуют в реестре и READ/WRITE-инструменты для CRUD явно упоминают отличие от /v2/projects', () => {
+  it('READ/WRITE-инструменты Entity API для CRUD явно называют путь /v3/entities/', () => {
     const crudNeedingDisambiguation = [
       'find_entities',
       'get_entity',
@@ -57,15 +65,16 @@ describe('Entity API vs legacy /v2/projects — контракт разделе�
 
       expect(
         description,
-        `Описание ${ToolClass.METADATA.name} должно явно отличать Entity API от legacy /v2/projects`
-      ).toMatch(/v2\/projects|legacy/i);
+        `Описание ${ToolClass.METADATA.name} должно называть путь /v3/entities/, ` +
+          'отличающий Entity API от коллекции /v3/projects'
+      ).toMatch(/\/v3\/entities\//i);
     }
   });
 
-  it('legacy-инструменты проектов существуют и не претендуют быть Entity API', () => {
-    for (const shortName of LEGACY_PROJECT_TOOL_NAMES) {
+  it('инструменты коллекции /v3/projects существуют и не претендуют быть Entity API', () => {
+    for (const shortName of PROJECTS_COLLECTION_TOOL_NAMES) {
       const ToolClass = findByShortName(shortName);
-      expect(ToolClass.METADATA.description).not.toMatch(/entity api/i);
+      expect(ToolClass.METADATA.description).not.toMatch(/\/v3\/entities\//i);
     }
   });
 

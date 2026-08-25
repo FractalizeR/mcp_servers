@@ -38,13 +38,13 @@ describe('ApiExpectationSet — оснастка ожиданий HTTP-запр�
   });
 
   it('незаявленный запрос роняет с внятной причиной', async () => {
-    await expect(client.getAxiosInstance().get('/v2/boards')).rejects.toThrow(
+    await expect(client.getAxiosInstance().get('/v3/boards')).rejects.toThrow(
       /Незаявленный запрос/
     );
   });
 
   it('заявленный, но не случившийся запрос роняет assertAllExpectationsMet()', () => {
-    api.expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' }).reply(200, []);
+    api.expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' }).reply(200, []);
 
     expect(() => api.assertAllExpectationsMet()).toThrow(/Не все заявленные запросы/);
   });
@@ -56,32 +56,32 @@ describe('ApiExpectationSet — оснастка ожиданий HTTP-запр�
   });
 
   it('нарушенный порядок роняет: второй заявленный запрос пришёл раньше первого', async () => {
-    api.expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' }).reply(200, []);
-    api.expectRequest({ method: 'get', path: '/v2/boards/1', apiVersion: 'v2' }).reply(200, {});
+    api.expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' }).reply(200, []);
+    api.expectRequest({ method: 'get', path: '/v3/boards/1', apiVersion: 'v3' }).reply(200, {});
 
-    await expect(client.getAxiosInstance().get('/v2/boards/1')).rejects.toThrow(
+    await expect(client.getAxiosInstance().get('/v3/boards/1')).rejects.toThrow(
       /не совпал с ожиданием/
     );
   });
 
   it('ожидание без .reply() до прихода запроса роняет с понятной причиной', async () => {
-    api.expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' });
+    api.expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' });
 
-    await expect(client.getAxiosInstance().get('/v2/boards')).rejects.toThrow(
+    await expect(client.getAxiosInstance().get('/v3/boards')).rejects.toThrow(
       /не получило \.reply/
     );
   });
 
   it('несколько ответов на один и тот же путь отдаются по порядку (страница 1, затем 2)', async () => {
     api
-      .expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' })
+      .expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' })
       .reply(200, [{ id: '1' }]);
     api
-      .expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' })
+      .expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' })
       .reply(200, [{ id: '2' }]);
 
-    const first = await client.getAxiosInstance().get('/v2/boards');
-    const second = await client.getAxiosInstance().get('/v2/boards');
+    const first = await client.getAxiosInstance().get('/v3/boards');
+    const second = await client.getAxiosInstance().get('/v3/boards');
 
     expect(first.data).toEqual([{ id: '1' }]);
     expect(second.data).toEqual([{ id: '2' }]);
@@ -90,10 +90,10 @@ describe('ApiExpectationSet — оснастка ожиданий HTTP-запр�
 
   it('заголовки ответа доступны вызывающему (нужны для Link rel="next"/rel="seek")', async () => {
     api
-      .expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' })
-      .reply(200, [], { Link: '<https://api.tracker.yandex.net/v2/boards?page=2>; rel="next"' });
+      .expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' })
+      .reply(200, [], { Link: '<https://api.tracker.yandex.net/v3/boards?page=2>; rel="next"' });
 
-    const response = await client.getAxiosInstance().get('/v2/boards');
+    const response = await client.getAxiosInstance().get('/v3/boards');
 
     // Bracket-доступ регистрозависим на "сыром" AxiosHeaders (нормализует только
     // через .get(), а не bracket-доступ) — подтверждено экспериментом при написании
@@ -103,10 +103,10 @@ describe('ApiExpectationSet — оснастка ожиданий HTTP-запр�
   });
 
   it('незаявленный query роняет: параметр, попавший в запрос молча, не свидетельство', async () => {
-    api.expectRequest({ method: 'get', path: '/v2/boards', apiVersion: 'v2' }).reply(200, []);
+    api.expectRequest({ method: 'get', path: '/v3/boards', apiVersion: 'v3' }).reply(200, []);
 
     await expect(
-      client.getAxiosInstance().get('/v2/boards', { params: { localized: false } })
+      client.getAxiosInstance().get('/v3/boards', { params: { localized: false } })
     ).rejects.toThrow(/незаявленный query/);
   });
 
@@ -124,13 +124,13 @@ describe('ApiExpectationSet — оснастка ожиданий HTTP-запр�
     api
       .expectRequest({
         method: 'get',
-        path: '/v2/projects',
-        apiVersion: 'v2',
+        path: '/v3/projects',
+        apiVersion: 'v3',
         query: { perPage: 10 },
       })
       .reply(200, []);
 
-    const response = await client.getAxiosInstance().get('/v2/projects?perPage=10');
+    const response = await client.getAxiosInstance().get('/v3/projects?perPage=10');
 
     expect(response.status).toBe(200);
   });
@@ -139,13 +139,13 @@ describe('ApiExpectationSet — оснастка ожиданий HTTP-запр�
     api
       .expectRequest({
         method: 'post',
-        path: '/v2/boards',
-        apiVersion: 'v2',
+        path: '/v3/boards',
+        apiVersion: 'v3',
         body: { name: 'Expected' },
       })
       .reply(200, {});
 
-    await expect(client.getAxiosInstance().post('/v2/boards', { name: 'Actual' })).rejects.toThrow(
+    await expect(client.getAxiosInstance().post('/v3/boards', { name: 'Actual' })).rejects.toThrow(
       /тело запроса не совпало/
     );
   });
@@ -155,7 +155,7 @@ describe('ApiExpectationSet — оснастка ожиданий HTTP-запр�
 
     await client
       .getAxiosInstance()
-      .get('/v2/unmatched')
+      .get('/v3/unmatched')
       .catch(() => undefined);
 
     expect(api.attemptedCount).toBe(1);

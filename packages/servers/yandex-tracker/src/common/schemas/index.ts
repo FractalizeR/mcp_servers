@@ -7,3 +7,4 @@ export * from './expand.schema.js';
 export * from './fields.schema.js';
 export * from './pagination.schema.js';
 export * from './output.schema.js';
+export * from './entity-id.schema.js';

@@ -69,7 +69,7 @@ describe('AddChecklistItemOperation', () => {
 
       const result = await operation.execute('TEST-1', input);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/TEST-1/checklistItems', {
         text: 'New checklist item',
       });
       expect(result).toEqual(mockItem);
@@ -88,7 +88,7 @@ describe('AddChecklistItemOperation', () => {
         text: 'Complete task',
         checked: true,
         assignee: {
-          self: 'https://api.tracker.yandex.net/v2/users/user123',
+          self: 'https://api.tracker.yandex.net/v3/users/user123',
           id: 'user123',
           display: 'John Doe',
         },
@@ -248,7 +248,7 @@ describe('AddChecklistItemOperation', () => {
         },
       ]);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/issues/TEST-1/checklistItems', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/issues/TEST-1/checklistItems', {
         text: 'Item 1',
         checked: true,
         assignee: 'user1',

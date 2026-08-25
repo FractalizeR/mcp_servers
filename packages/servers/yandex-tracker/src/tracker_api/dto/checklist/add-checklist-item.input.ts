@@ -3,7 +3,7 @@
  *
  * Используется в AddChecklistItemOperation и yandex_tracker_add_checklist_item tool.
  *
- * API: POST /v2/issues/{issueId}/checklistItems
+ * API: POST /v3/issues/{issueId}/checklistItems
  */
 export interface AddChecklistItemInput {
   /** Текст элемента чеклиста (обязательно) */

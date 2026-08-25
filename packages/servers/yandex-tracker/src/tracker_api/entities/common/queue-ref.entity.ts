@@ -6,10 +6,13 @@
  * - Component.queue
  * - Project.queues
  *
- * Форма подтверждена живым GET к боевому API 2026-08-19: `/v3/issues/{key}` для
- * `Issue.queue` и `/v2/queues/{id}/components` для `Component.queue` — то есть
- * ровно тот путь, которым ходит `GetComponentsOperation`. Обе версии API отдают
- * здесь одни и те же четыре поля.
+ * Форма подтверждена живым GET к боевому API 2026-08-19 на ДВУХ РАЗНЫХ
+ * эндпоинтах: `/v3/issues/{key}` для `Issue.queue` и `/v2/queues/{id}/components`
+ * (на тот момент — путь `GetComponentsOperation`, с миграции 4.1 операция ходит
+ * на `/v3/queues/{id}/components`, в этом виде не наблюдался) для
+ * `Component.queue`. Оба эндпоинта отдают одни и те же четыре поля — это
+ * совпадение формы двух разных ресурсов, а не проверка одного ресурса на
+ * обеих версиях API.
  */
 
 import type { WithUnknownFields } from '../types.js';

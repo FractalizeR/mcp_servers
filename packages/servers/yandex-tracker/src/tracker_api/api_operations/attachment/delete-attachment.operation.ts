@@ -6,7 +6,7 @@
  * - Инвалидация кеша списка файлов после удаления
  * - НЕТ загрузки/скачивания файлов
  *
- * API: DELETE /v2/issues/{issueId}/attachments/{attachmentId}
+ * API: DELETE /v3/issues/{issueId}/attachments/{attachmentId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -37,7 +37,7 @@ export class DeleteAttachmentOperation extends BaseOperation {
     );
 
     // Удаляем файл
-    await this.deleteRequest<void>(`/v2/issues/${issueId}/attachments/${attachmentId}`);
+    await this.deleteRequest<void>(`/v3/issues/${issueId}/attachments/${attachmentId}`);
 
     // Инвалидация кеша списка файлов
     const listCacheKey = EntityCacheKey.createKey(EntityType.ATTACHMENT, `list:${issueId}`);

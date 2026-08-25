@@ -1,7 +1,7 @@
 /**
  * Input DTO для получения чеклиста задачи
  *
- * API: GET /v2/issues/{issueId}/checklistItems
+ * API: GET /v3/issues/{issueId}/checklistItems
  *
  * Параметры пагинации опциональны:
  * - по умолчанию (`fetchAll` не задан/false) — одна страница + метаданные

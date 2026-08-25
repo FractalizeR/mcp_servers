@@ -4,9 +4,10 @@
  * Соответствует API v3: /v3/entities/{entityType}/{id}
  *
  * ВАЖНО — не путать с двумя другими "проектами" в этом сервере:
- * - `Project` (`project.entity.ts`) — LEGACY-коллекция `/v2/projects`, уже
+ * - `Project` (`project.entity.ts`) — LEGACY-коллекция `/v3/projects`, уже
  *   покрытая `get_project(s)`/`create_project`/... Отдельная сущность со
- *   своими числовыми ID.
+ *   своими числовыми ID. «LEGACY» здесь про более старый REST-ресурс, а не
+ *   про версию пути в URL — обе коллекции лежат на v3.
  * - `EntityApiRecord` здесь (`entityType: 'project'`) — Project ВНУТРИ Entity
  *   API (`/v3/entities/project/{id}`), появившийся в Трекере отдельно и
  *   имеющий другое пространство идентификаторов (`shortId`/`id`).

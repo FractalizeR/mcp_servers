@@ -30,10 +30,20 @@ describe('GetSprintTool', () => {
   });
 
   it('вернёт спринт', async () => {
-    const sprint = { id: '1', self: 'url', version: 1, name: 'Sprint 1' };
+    const sprint = { id: 1, self: 'url', version: 1, name: 'Sprint 1' };
     vi.mocked(mockTrackerFacade.getSprint).mockResolvedValue(sprint);
 
     const result = await tool.execute({ sprintId: '1', fields: ['id', 'name'] });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.getSprint).toHaveBeenCalledWith('1');
+  });
+
+  it('примет числовой sprintId (как отдаёт get_sprints) и дойдёт до того же запроса', async () => {
+    const sprint = { id: 1, self: 'url', version: 1, name: 'Sprint 1' };
+    vi.mocked(mockTrackerFacade.getSprint).mockResolvedValue(sprint);
+
+    const result = await tool.execute({ sprintId: 1, fields: ['id', 'name'] });
 
     expect(result.isError).toBeUndefined();
     expect(mockTrackerFacade.getSprint).toHaveBeenCalledWith('1');
@@ -47,7 +57,7 @@ describe('GetSprintTool', () => {
 
   describe('Предупреждения о полях без значения (FIELDS_WITHOUT_VALUE)', () => {
     it('добавляет warning при запросе несуществующего поля', async () => {
-      const sprint = { id: '1', self: 'url', version: 1, name: 'Sprint 1' };
+      const sprint = { id: 1, self: 'url', version: 1, name: 'Sprint 1' };
       vi.mocked(mockTrackerFacade.getSprint).mockResolvedValue(sprint);
 
       const result = await tool.execute({ sprintId: '1', fields: ['id', 'bogusField'] });
@@ -63,7 +73,7 @@ describe('GetSprintTool', () => {
     });
 
     it('ответ без предупреждений не содержит ключа warnings ни в одной из проекций', async () => {
-      const sprint = { id: '1', self: 'url', version: 1, name: 'Sprint 1' };
+      const sprint = { id: 1, self: 'url', version: 1, name: 'Sprint 1' };
       vi.mocked(mockTrackerFacade.getSprint).mockResolvedValue(sprint);
 
       const result = await tool.execute({ sprintId: '1', fields: ['id', 'name'] });

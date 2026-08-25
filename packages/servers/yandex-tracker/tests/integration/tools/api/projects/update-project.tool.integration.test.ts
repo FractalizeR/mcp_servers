@@ -9,14 +9,14 @@
  * Сверка с внешним источником истины: официальная документация Трекера
  * (`en/api-ref/projects/update-project`, снято `curl` 2026-08-23) описывает
  * `PUT /v3/projects/<project_ID>?version=<version>` — другой HTTP-метод (PUT, не
- * PATCH), другая версия (v3, не v2) и обязательный query-параметр `version`
- * (оптимистичная блокировка), которого в схеме этого инструмента нет вовсе.
- * Референсный `yandex_tracker_client/` (`Projects`, без переопределения
- * `api_version`, дефолт соединения `VERSION_V2`) — v2, как и код этого пакета
- * (`UpdateProjectOperation`: `PATCH /v2/projects/{projectId}`, без `version`). Тест
- * фиксирует НАБЛЮДАЕМОЕ поведение кода (PATCH v2, без `version`) — расхождение с
- * документацией не чинится здесь (канон §5), строка передана оркестратору для
- * `TESTING_STRATEGY.md` §2.
+ * PATCH) и обязательный query-параметр `version` (оптимистичная блокировка),
+ * которого в схеме этого инструмента нет вовсе. Референсный `yandex_tracker_client/`
+ * (`Projects`, без переопределения `api_version`, дефолт соединения `VERSION_V2`)
+ * остаётся на v2 и не мигрирует; код этого пакета после миграции 4.1 — v3
+ * (`UpdateProjectOperation`: `PATCH /v3/projects/{projectId}`, без `version`). Тест
+ * фиксирует НАБЛЮДАЕМОЕ поведение кода (PATCH v3, без `version`) — версия теперь
+ * совпадает с документацией, расхождение по методу и `version` не чинится здесь
+ * (канон §5).
  */
 
 import {
@@ -32,7 +32,7 @@ import { expect } from 'vitest';
 describeToolIntegration({
   tool: UPDATE_PROJECT_TOOL_METADATA.name,
 
-  expectedRequests: [{ method: 'patch', path: '/v2/projects/project123', apiVersion: 'v2' }],
+  expectedRequests: [{ method: 'patch', path: '/v3/projects/project123', apiVersion: 'v3' }],
 
   happyPath: {
     input: { projectId: 'project123', name: 'Updated Name', fields: ['id', 'name'] },
@@ -40,8 +40,8 @@ describeToolIntegration({
       api
         .expectRequest({
           method: 'patch',
-          path: '/v2/projects/project123',
-          apiVersion: 'v2',
+          path: '/v3/projects/project123',
+          apiVersion: 'v3',
           body: { name: 'Updated Name' },
         })
         .reply(200, createProjectFixture({ id: 'project123', name: 'Updated Name' }));
@@ -61,7 +61,7 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'patch', path: '/v2/projects/project123', apiVersion: 'v2' })
+          .expectRequest({ method: 'patch', path: '/v3/projects/project123', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
       input: { projectId: 'project123', name: 'Restricted Update', fields: ['id'] },
@@ -69,7 +69,7 @@ describeToolIntegration({
     notFound: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'patch', path: '/v2/projects/project123', apiVersion: 'v2' })
+          .expectRequest({ method: 'patch', path: '/v3/projects/project123', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
       input: { projectId: 'project123', name: 'Missing Project', fields: ['id'] },
@@ -87,7 +87,7 @@ describeToolIntegration({
     // отдаёт FIELDS_WITHOUT_VALUE (CLAUDE.md §2.1).
     arrange: (api) => {
       api
-        .expectRequest({ method: 'patch', path: '/v2/projects/project123', apiVersion: 'v2' })
+        .expectRequest({ method: 'patch', path: '/v3/projects/project123', apiVersion: 'v3' })
         .reply(200, createProjectFixture({ id: 'project123', name: 'Updated With Gaps' }));
     },
     input: {

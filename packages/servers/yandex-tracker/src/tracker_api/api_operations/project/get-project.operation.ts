@@ -7,7 +7,7 @@
  * - Поддержка expand параметров
  * - НЕТ создания/обновления/удаления
  *
- * API: GET /v2/projects/{projectId}
+ * API: GET /v3/projects/{projectId}
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -51,7 +51,7 @@ export class GetProjectOperation extends BaseOperation {
       const queryParams = new URLSearchParams();
       if (expand) queryParams.append('expand', expand);
 
-      const endpoint = `/v2/projects/${projectId}${
+      const endpoint = `/v3/projects/${projectId}${
         queryParams.toString() ? `?${queryParams.toString()}` : ''
       }`;
 

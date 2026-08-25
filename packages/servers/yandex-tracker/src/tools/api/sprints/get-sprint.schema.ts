@@ -3,11 +3,16 @@
  */
 
 import { z } from 'zod';
-import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
+import {
+  FieldsSchema,
+  FilteredEntitySchema,
+  buildOutputSchema,
+  buildEntityIdSchema,
+} from '#common/schemas/index.js';
 
 export const GetSprintParamsSchema = z.object({
   /** Идентификатор спринта (обязательно) */
-  sprintId: z.string().min(1, 'Sprint ID не может быть пустым'),
+  sprintId: buildEntityIdSchema('Sprint'),
 
   /** Список полей для возврата (обязательный) */
   fields: FieldsSchema,

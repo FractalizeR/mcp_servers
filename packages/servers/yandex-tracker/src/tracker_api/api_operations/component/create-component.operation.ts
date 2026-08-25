@@ -7,7 +7,7 @@
  * - Инвалидация кеша списка компонентов очереди
  * - НЕТ обновления/удаления/получения компонентов
  *
- * API: POST /v2/queues/{queueId}/components
+ * API: POST /v3/queues/{queueId}/components
  *
  * ВАЖНО:
  * - Компонент создается в контексте конкретной очереди (queueId в URL)
@@ -55,7 +55,7 @@ export class CreateComponentOperation extends BaseOperation {
 
     // Создаём компонент через API
     const createdComponent = await this.httpClient.post<ComponentOutput>(
-      `/v2/queues/${queueId}/components`,
+      `/v3/queues/${queueId}/components`,
       componentData
     );
 

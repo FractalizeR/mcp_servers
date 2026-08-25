@@ -67,7 +67,7 @@ export class AddWorklogTool extends BaseTool<YandexTrackerFacade> {
         fields
       );
 
-      // 3. API v2: добавление записей времени через batch-метод
+      // 3. API v3: добавление записей времени через batch-метод
       const results = await this.facade.addWorklogsMany(worklogs);
 
       // 4. Обработка результатов через BatchResultProcessor (без фильтрации —

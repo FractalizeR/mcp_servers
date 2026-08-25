@@ -58,7 +58,7 @@ export class DownloadAttachmentTool extends BaseTool<YandexTrackerFacade> {
         `Скачивание файла ${filename} (attachmentId=${attachmentId}) из задачи ${issueId}`
       );
 
-      // 3. API v2: скачивание файла
+      // 3. API v3: скачивание файла
       const result = await this.facade.downloadAttachment(issueId, attachmentId, filename, {
         returnBase64: !saveToPath,
       });

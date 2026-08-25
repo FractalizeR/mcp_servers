@@ -1,7 +1,7 @@
 /**
  * Input DTO для получения списка компонентов очереди
  *
- * API: GET /v2/queues/{queueId}/components
+ * API: GET /v3/queues/{queueId}/components
  *
  * ВАЖНО: API компонентов НЕ пагинирует (Link rel="next" отсутствует) —
  * возвращает все компоненты очереди одним ответом. Пагинационных параметров

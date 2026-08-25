@@ -29,11 +29,28 @@ describe('UpdateBoardTool', () => {
   });
 
   it('обновит доску', async () => {
-    const board = { id: '1', self: 'url', version: 2, name: 'Renamed' };
+    const board = { id: 1, self: 'url', version: 2, name: 'Renamed' };
     vi.mocked(mockTrackerFacade.updateBoard).mockResolvedValue(board);
 
     const result = await tool.execute({
       boardId: '1',
+      name: 'Renamed',
+      fields: ['id', 'name'],
+    });
+
+    expect(result.isError).toBeUndefined();
+    expect(mockTrackerFacade.updateBoard).toHaveBeenCalledWith(
+      '1',
+      expect.objectContaining({ name: 'Renamed' })
+    );
+  });
+
+  it('примет числовой boardId (как отдаёт get_boards) и дойдёт до того же запроса', async () => {
+    const board = { id: 1, self: 'url', version: 2, name: 'Renamed' };
+    vi.mocked(mockTrackerFacade.updateBoard).mockResolvedValue(board);
+
+    const result = await tool.execute({
+      boardId: 1,
       name: 'Renamed',
       fields: ['id', 'name'],
     });

@@ -124,6 +124,35 @@ describe('Область действия живого прогона', () => {
       expect(decision.allowed).toBe(false);
     });
 
+    // Этап 4.1: bulkchange, components и queues/{q}/components переезжают на v3
+    // (`.agentic-planning/plan_tracker_test_coverage/inventory/v2-paths-2026-08-24.md`).
+    // Проверка тем же набором кейсов на новых путях — попытка, а не декларация:
+    // тест, отклоняющий только v2-путь, после переезда операций перестал бы
+    // доказывать хоть что-то про реальный трафик.
+    it('массовая операция вне журнала отклоняется и на пути v3', () => {
+      const decision = decide('post', '/v3/bulkchange/_update', {
+        issues: [SANDBOX_ISSUE, `${SANDBOX_QUEUE}-999`],
+        values: {},
+      });
+      expect(decision.allowed).toBe(false);
+    });
+
+    it('правка компонента чужого прогона отклоняется и на пути v3', () => {
+      const decision = decide('delete', '/v3/components/foreign-component');
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('не создан этим прогоном');
+    });
+
+    it('компонент в чужой очереди отклоняется и на пути v3', () => {
+      const decision = decide('post', '/v3/queues/PROD/components');
+      expect(decision.allowed).toBe(false);
+    });
+
+    it('проекты и глобальные поля остаются вне области действия и на пути v3', () => {
+      expect(decide('patch', '/v3/projects/11').allowed).toBe(false);
+      expect(decide('patch', '/v3/fields/f1').allowed).toBe(false);
+    });
+
     it('правка локального поля, созданного не этим прогоном', () => {
       // Очередь TEST общая: её поля мог завести кто-то другой.
       const decision = decide('patch', `/v3/queues/${SANDBOX_QUEUE}/localFields/foreignField`);
@@ -169,6 +198,27 @@ describe('Область действия живого прогона', () => {
     it('чтение не ограничивается областью действия', () => {
       expect(decide('get', '/v3/issues/PROD-1').allowed).toBe(true);
       expect(decide('get', '/v2/projects/11').allowed).toBe(true);
+      expect(decide('get', '/v3/projects/11').allowed).toBe(true);
+    });
+  });
+
+  describe('этап 4.1: v3 допускается там же, где допускался v2', () => {
+    it('массовая операция по задачам этого прогона проходит на v3', () => {
+      const decision = decide('post', '/v3/bulkchange/_update', {
+        issues: [SANDBOX_ISSUE],
+        values: {},
+      });
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+
+    it('создание компонента в песочной очереди проходит на v3', () => {
+      const decision = decide('post', `/v3/queues/${SANDBOX_QUEUE}/components`);
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+
+    it('правка компонента, созданного этим прогоном, проходит на v3', () => {
+      const decision = decide('patch', `/v3/components/${SANDBOX_COMPONENT}`);
+      expect(decision.allowed, decision.reason).toBe(true);
     });
   });
 });

@@ -3,11 +3,11 @@
  *
  * Используется в GetAttachmentsOperation / IssueAttachmentService.getAttachments[Many].
  *
- * ВАЖНО: эндпоинт `/v2/issues/{issueId}/attachments` НЕ пагинируется — API
+ * ВАЖНО: эндпоинт `/v3/issues/{issueId}/attachments` НЕ пагинируется — API
  * отдаёт все вложения за один ответ (подтверждено сырыми заголовками: нет
  * `Link rel="next"`). Поэтому параметров пагинации/курсора у DTO нет.
  *
- * API: GET /v2/issues/{issueId}/attachments
+ * API: GET /v3/issues/{issueId}/attachments
  */
 export interface GetAttachmentsInput {
   /**

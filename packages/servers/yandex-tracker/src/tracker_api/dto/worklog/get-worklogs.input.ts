@@ -8,7 +8,7 @@
  *   листать через `cursor` (значение `pagination.nextCursor` предыдущего ответа);
  * - `fetchAll=true` — полный обход по `Link rel="next"` с защитным `maxItems`.
  *
- * API: GET /v2/issues/{issueId}/worklog
+ * API: GET /v3/issues/{issueId}/worklog
  */
 export interface GetWorklogsInput {
   /**

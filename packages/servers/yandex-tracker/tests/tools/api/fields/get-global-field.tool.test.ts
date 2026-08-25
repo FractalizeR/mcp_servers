@@ -38,6 +38,20 @@ describe('GetGlobalFieldTool', () => {
     expect(mockTrackerFacade.getField).toHaveBeenCalledWith('customField123');
   });
 
+  it('вернёт поле с булевым options (форма боевого ответа, не массив опций)', async () => {
+    const field = { id: 'customField123', self: 'url', name: 'Custom', options: true };
+    vi.mocked(mockTrackerFacade.getField).mockResolvedValue(field);
+
+    const result = await tool.execute({ fieldId: 'customField123', fields: ['id', 'options'] });
+
+    const parsed = result['structuredContent'] as {
+      success: boolean;
+      data: { globalField: { options: boolean } };
+    };
+    expect(parsed.success).toBe(true);
+    expect(parsed.data.globalField.options).toBe(true);
+  });
+
   it('обработает ошибку facade', async () => {
     vi.mocked(mockTrackerFacade.getField).mockRejectedValue(new Error('Not found'));
     const result = await tool.execute({ fieldId: 'customField123', fields: ['id'] });

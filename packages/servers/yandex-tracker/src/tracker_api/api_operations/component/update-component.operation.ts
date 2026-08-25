@@ -6,7 +6,7 @@
  * - Инвалидация кеша компонента и списка компонентов очереди
  * - НЕТ создания/удаления/получения компонентов
  *
- * API: PATCH /v2/components/{componentId}
+ * API: PATCH /v3/components/{componentId}
  *
  * ВАЖНО:
  * - Все поля опциональны (частичное обновление)
@@ -47,7 +47,7 @@ export class UpdateComponentOperation extends BaseOperation {
 
     // Обновляем компонент через API
     const updatedComponent = await this.httpClient.patch<ComponentOutput>(
-      `/v2/components/${componentId}`,
+      `/v3/components/${componentId}`,
       componentData
     );
 

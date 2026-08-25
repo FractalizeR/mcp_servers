@@ -58,7 +58,7 @@ describe('GetAttachmentsOperation', () => {
     it('делает один запрос и возвращает все вложения (hasNextPage=false)', async () => {
       httpClient.setResponse(
         'GET',
-        '/v2/issues/TEST-1/attachments',
+        '/v3/issues/TEST-1/attachments',
         createAttachmentListFixture(3)
       );
 
@@ -66,7 +66,7 @@ describe('GetAttachmentsOperation', () => {
 
       const history = httpClient.getRequestHistory();
       expect(history).toHaveLength(1);
-      expect(history[0]).toMatchObject({ method: 'GET', path: '/v2/issues/TEST-1/attachments' });
+      expect(history[0]).toMatchObject({ method: 'GET', path: '/v3/issues/TEST-1/attachments' });
       expect(result.items).toHaveLength(3);
       expect(result.pagination.hasNextPage).toBe(false);
       expect(result.pagination.fetchedAll).toBe(true);
@@ -75,14 +75,14 @@ describe('GetAttachmentsOperation', () => {
     it('не отправляет пагинационные query-параметры', async () => {
       httpClient.setResponse(
         'GET',
-        '/v2/issues/TEST-1/attachments',
+        '/v3/issues/TEST-1/attachments',
         createAttachmentListFixture(1)
       );
 
       await operation.execute('TEST-1');
 
       const req = httpClient.getRequestHistory()[0];
-      expect(req?.path).toBe('/v2/issues/TEST-1/attachments');
+      expect(req?.path).toBe('/v3/issues/TEST-1/attachments');
       expect(req?.params).toBeUndefined();
     });
 
@@ -93,7 +93,7 @@ describe('GetAttachmentsOperation', () => {
     it('кеширует запрос под каноническим ключом list:{issueId}', async () => {
       httpClient.setResponse(
         'GET',
-        '/v2/issues/TEST-1/attachments',
+        '/v3/issues/TEST-1/attachments',
         createAttachmentListFixture(1)
       );
 
@@ -110,12 +110,12 @@ describe('GetAttachmentsOperation', () => {
     it('возвращает BatchResult с PaginatedResult в value', async () => {
       httpClient.setResponse(
         'GET',
-        '/v2/issues/TEST-1/attachments',
+        '/v3/issues/TEST-1/attachments',
         createAttachmentListFixture(2)
       );
       httpClient.setResponse(
         'GET',
-        '/v2/issues/TEST-2/attachments',
+        '/v3/issues/TEST-2/attachments',
         createAttachmentListFixture(1)
       );
 
@@ -133,7 +133,7 @@ describe('GetAttachmentsOperation', () => {
     it('обрабатывает частичные ошибки', async () => {
       httpClient.setResponse(
         'GET',
-        '/v2/issues/TEST-1/attachments',
+        '/v3/issues/TEST-1/attachments',
         createAttachmentListFixture(1)
       );
 

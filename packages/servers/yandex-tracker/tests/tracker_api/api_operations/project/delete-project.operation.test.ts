@@ -45,7 +45,7 @@ describe('DeleteProjectOperation', () => {
 
       await operation.execute({ projectId: 'project123' });
 
-      expect(mockHttpClient.delete).toHaveBeenCalledWith('/v2/projects/project123');
+      expect(mockHttpClient.delete).toHaveBeenCalledWith('/v3/projects/project123');
     });
 
     it('should invalidate project cache after deletion', async () => {

@@ -50,7 +50,7 @@ describe('UpdateProjectOperation', () => {
 
       const result = await operation.execute({ projectId: 'project123', data: updateDto });
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v2/projects/project123', updateDto);
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/projects/project123', updateDto);
       expect(result).toEqual(mockProject);
     });
 

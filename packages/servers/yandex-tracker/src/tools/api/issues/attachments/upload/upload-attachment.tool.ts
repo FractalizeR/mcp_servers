@@ -79,7 +79,7 @@ export class UploadAttachmentTool extends BaseTool<YandexTrackerFacade> {
         `Загрузка файла ${filename} (${fileBuffer.length} байт) в задачу ${issueId}`
       );
 
-      // 4. API v2: загрузка файла
+      // 4. API v3: загрузка файла
       const attachment = await this.facade.uploadAttachment(issueId, {
         filename,
         file: fileBuffer,

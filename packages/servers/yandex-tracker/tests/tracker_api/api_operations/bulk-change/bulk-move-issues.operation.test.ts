@@ -14,7 +14,7 @@ describe('BulkMoveIssuesOperation', () => {
 
   const mockBulkChangeResult: BulkChangeOperationWithUnknownFields = {
     id: 'op-1',
-    self: 'https://api.tracker.yandex.net/v2/bulkchange/op-1',
+    self: 'https://api.tracker.yandex.net/v3/bulkchange/op-1',
     status: 'CREATED',
   };
 
@@ -56,7 +56,7 @@ describe('BulkMoveIssuesOperation', () => {
 
       const result = await operation.execute(params);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/bulkchange/_move', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/bulkchange/_move', {
         issues: ['QUEUE1-1', 'QUEUE1-2'],
         queue: 'QUEUE2',
       });
@@ -72,7 +72,7 @@ describe('BulkMoveIssuesOperation', () => {
         moveAllFields: true,
       });
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/bulkchange/_move', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/bulkchange/_move', {
         issues: ['QUEUE1-1'],
         queue: 'QUEUE2',
         moveAllFields: true,
@@ -90,7 +90,7 @@ describe('BulkMoveIssuesOperation', () => {
         initialStatus: true,
       });
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/bulkchange/_move', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/bulkchange/_move', {
         issues: ['QUEUE1-1'],
         queue: 'QUEUE2',
         initialStatus: true,
@@ -106,7 +106,7 @@ describe('BulkMoveIssuesOperation', () => {
         initialStatus: false,
       });
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/bulkchange/_move', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/bulkchange/_move', {
         issues: ['QUEUE1-1'],
         queue: 'QUEUE2',
         initialStatus: false,
@@ -137,7 +137,7 @@ describe('BulkMoveIssuesOperation', () => {
         values: { priority: 'critical' },
       });
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v2/bulkchange/_move', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/bulkchange/_move', {
         issues: ['QUEUE1-1'],
         queue: 'QUEUE2',
         values: { priority: 'critical' },

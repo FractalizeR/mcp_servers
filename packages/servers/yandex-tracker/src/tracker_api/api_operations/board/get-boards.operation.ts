@@ -6,7 +6,7 @@
  * - НЕТ фильтрации по конкретным параметрам (это делается на стороне клиента)
  * - НЕТ создания/обновления/удаления
  *
- * API: GET /v2/boards
+ * API: GET /v3/boards
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -36,7 +36,7 @@ export class GetBoardsOperation extends BaseOperation {
       queryParams.append('localized', params.localized.toString());
     }
 
-    const endpoint = `/v2/boards${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/v3/boards${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
     const boards = await this.httpClient.get<BoardsListOutput>(endpoint);
 

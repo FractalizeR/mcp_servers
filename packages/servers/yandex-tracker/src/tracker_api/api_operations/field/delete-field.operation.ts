@@ -6,7 +6,7 @@
  * - НЕТ создания/обновления/получения полей
  * - НЕТ валидации прав доступа (делается в API)
  *
- * API: DELETE /v2/fields/{fieldId}
+ * API: DELETE /v3/fields/{fieldId}
  *
  * ВАЖНО:
  * - Удаляются только кастомные поля (системные защищены)
@@ -39,7 +39,7 @@ export class DeleteFieldOperation extends BaseOperation {
     this.logger.info(`Удаление поля ${fieldId}`);
 
     // Удаляем поле через API
-    await this.httpClient.delete(`/v2/fields/${fieldId}`);
+    await this.httpClient.delete(`/v3/fields/${fieldId}`);
 
     // Инвалидируем кеш
     await this.cacheManager.delete(EntityCacheKey.createKey(EntityType.FIELD, fieldId));
