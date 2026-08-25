@@ -26,7 +26,7 @@ export class CreateGlobalFieldTool extends BaseTool<YandexTrackerFacade> {
     const { fields, ...input } = validation.data;
 
     try {
-      this.logger.info('Создание глобального поля трекера', { name: input.name });
+      this.logger.info('Создание глобального поля трекера', { id: input.id });
 
       const created = await this.facade.createField(input);
 

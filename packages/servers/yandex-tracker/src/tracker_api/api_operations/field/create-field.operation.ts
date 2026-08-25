@@ -10,7 +10,7 @@
  *
  * ВАЖНО:
  * - Создаются только кастомные поля (системные поля нельзя создавать)
- * - После создания тип поля (schema.type) нельзя изменить
+ * - После создания тип поля (type) нельзя изменить
  * - Требуются права администратора
  */
 
@@ -34,14 +34,15 @@ export class CreateFieldOperation extends BaseOperation {
    * ```typescript
    * // Создать текстовое поле
    * const field = await operation.execute({
-   *   name: 'Custom Priority',
-   *   description: 'Priority set by customer',
-   *   schema: { type: 'string' }
+   *   id: 'customPriority',
+   *   name: { en: 'Custom Priority', ru: 'Пользовательский приоритет' },
+   *   category: 'category1',
+   *   type: 'ru.yandex.startrek.core.fields.StringFieldType',
    * });
    * ```
    */
   async execute(input: CreateFieldDto): Promise<FieldOutput> {
-    this.logger.info(`Создание кастомного поля: ${input.name}`);
+    this.logger.info(`Создание кастомного поля: ${input.id}`);
 
     // Создаем поле через API
     const field = await this.httpClient.post<FieldOutput>('/v3/fields', input);

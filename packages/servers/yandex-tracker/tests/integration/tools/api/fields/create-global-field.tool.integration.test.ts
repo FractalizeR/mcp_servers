@@ -4,13 +4,10 @@
  * Категория `api/fields` целиком в реестре исключений живых прогонов
  * (`tests/coverage-exceptions/live-exempt-categories.ts`) — С-4 здесь `мок (гипотеза)`.
  *
- * Путь — `POST /v3/fields` (миграция 4.1, маршрут коллекции — `inventory/
- * v2-paths-2026-08-24.md`). Официальная документация (`api-ref/issues/create-field.md`)
- * называет тот же метод и при этом описывает другую форму тела (`name` —
- * локализуемый объект `{en, ru}`, обязательный `category`, `type` вместо
- * `schema.type`) — расхождение зафиксировано, здесь проверяется фактическое
- * поведение кода; мутации вне очереди `TEST` этапом 4.1 не делаются, форма тела
- * на записи не наблюдалась живьём.
+ * Путь и форма тела — `POST /v3/fields` (D10, `.agentic-planning/
+ * plan_tracker_fix_create_tools/0_CONTRACTS.md`): `id`/`name{en,ru}`/`category`/`type`
+ * обязательны, ключа `schema` в запросе нет (приходит только в ответе). Мутации вне
+ * очереди `TEST` этапом 4.1 не делаются, форма тела на записи вживую не наблюдалась.
  */
 
 import {
@@ -27,24 +24,27 @@ import {
 } from '#integration/helpers/tool-integration-suite.js';
 import { describe, it, expect } from 'vitest';
 
+const BASE_INPUT = {
+  id: 'customPriority',
+  name: { en: 'Custom Priority', ru: 'Пользовательский приоритет' },
+  category: 'category1',
+  type: 'ru.yandex.startrek.core.fields.StringFieldType',
+};
+
 describeToolIntegration({
   tool: CREATE_GLOBAL_FIELD_TOOL_METADATA.name,
 
   expectedRequests: [{ method: 'post', path: '/v3/fields', apiVersion: 'v3' }],
 
   happyPath: {
-    input: {
-      name: 'Custom Priority',
-      schema: { type: 'string' },
-      fields: ['id', 'name'],
-    },
+    input: { ...BASE_INPUT, fields: ['id', 'name'] },
     arrange: (api) => {
       api
         .expectRequest({
           method: 'post',
           path: '/v3/fields',
           apiVersion: 'v3',
-          body: { name: 'Custom Priority', schema: { type: 'string' } },
+          body: BASE_INPUT,
         })
         .reply(200, createGlobalFieldFixture({ id: 'customPriority', name: 'Custom Priority' }));
     },
@@ -56,8 +56,8 @@ describeToolIntegration({
   },
 
   invalidInput: {
-    // `schema` обязательна (не optional) — CreateGlobalFieldParamsSchema.
-    input: { name: 'Field without schema', fields: ['id'] },
+    // `category` обязательна (не optional) — CreateGlobalFieldParamsSchema.
+    input: { id: 'customPriority', name: BASE_INPUT.name, type: BASE_INPUT.type, fields: ['id'] },
   },
 
   errors: {
@@ -67,7 +67,7 @@ describeToolIntegration({
           .expectRequest({ method: 'post', path: '/v3/fields', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
-      input: { name: 'Restricted Field', schema: { type: 'string' }, fields: ['id'] },
+      input: { ...BASE_INPUT, fields: ['id'] },
     },
     notFound: {
       // Единственный HTTP-вызов create_global_field — POST /v3/fields; 404 здесь
@@ -79,7 +79,7 @@ describeToolIntegration({
           .expectRequest({ method: 'post', path: '/v3/fields', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
-      input: { name: 'Field with bad provider', schema: { type: 'string' }, fields: ['id'] },
+      input: { ...BASE_INPUT, fields: ['id'] },
     },
   },
 
@@ -98,18 +98,17 @@ describeToolIntegration({
         .reply(200, createGlobalFieldFixture({ id: 'customGap', name: 'Field With Gaps' }));
     },
     input: {
-      name: 'Field With Gaps',
-      schema: { type: 'string' },
+      ...BASE_INPUT,
       fields: ['id', 'name', 'missingField'],
     },
     codes: ['FIELDS_WITHOUT_VALUE'],
   },
 });
 
-describe('create_global_field — явный false у optional-boolean (readonly/suggest)', () => {
+describe('create_global_field — явный false у optional-boolean (readonly/visible/hidden/container)', () => {
   const ctx = useToolIntegrationContext();
 
-  it('readonly:false и suggest:false доходят до тела запроса, а не теряются как undefined', async () => {
+  it('readonly:false и container:false доходят до тела запроса, а не теряются как undefined', async () => {
     ctx.api
       .expectRequest({
         method: 'post',
@@ -119,19 +118,17 @@ describe('create_global_field — явный false у optional-boolean (readonly
         // CreateGlobalFieldTool отбрасывал falsy-boolean вместо undefined, тело
         // запроса не содержало бы эти ключи и сравнение ниже провалилось бы.
         body: {
-          name: 'Explicit False Flags',
-          schema: { type: 'string' },
+          ...BASE_INPUT,
           readonly: false,
-          suggest: false,
+          container: false,
         },
       })
       .reply(200, createGlobalFieldFixture({ id: 'explicitFalse', name: 'Explicit False Flags' }));
 
     const result = await ctx.client.callTool(CREATE_GLOBAL_FIELD_TOOL_METADATA.name, {
-      name: 'Explicit False Flags',
-      schema: { type: 'string' },
+      ...BASE_INPUT,
       readonly: false,
-      suggest: false,
+      container: false,
       fields: ['id', 'name'],
     });
 

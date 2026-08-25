@@ -730,7 +730,13 @@ describe('YandexTrackerFacade', () => {
 
     describe('createField', () => {
       it('должна делегировать вызов FieldService.createField', async () => {
-        const input: CreateFieldDto = { name: 'Custom Field', schema: { type: 'string' } };
+        // Форма D10 (0_CONTRACTS.md): id/name{en,ru}/category/type обязательны, schema — только в ответе.
+        const input: CreateFieldDto = {
+          id: 'customField',
+          name: { en: 'Custom Field', ru: 'Пользовательское поле' },
+          category: 'category1',
+          type: 'ru.yandex.startrek.core.fields.StringFieldType',
+        };
         const mockResult: FieldOutput = {
           id: 'newField',
           self: 'https://api.tracker.yandex.net/v3/fields/newField',
@@ -855,7 +861,14 @@ describe('YandexTrackerFacade', () => {
 
     describe('createBoard', () => {
       it('должна делегировать вызов BoardService.createBoard', async () => {
-        const input: CreateBoardDto = { name: 'Sprint Board', filter: { query: 'status: open' } };
+        // Форма D9 (0_CONTRACTS.md): POST /v3/liveBoards/ — очередь задаётся
+        // через autoFilters, а не через filter.query верхнего уровня.
+        const input: CreateBoardDto = {
+          name: 'Sprint Board',
+          autoFilters: {
+            addFilter: { liveFilter: { fieldValues: { queue: [{ fixed: 'TEST' }] } } },
+          },
+        };
         const mockResult: BoardOutput = createBoardFixture({
           id: 1,
           self: 'https://api.tracker.yandex.net/v3/boards/1',
