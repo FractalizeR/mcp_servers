@@ -73,10 +73,10 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 | User | v3 | `/v3/myself` |
 | Attachments | v3 | `/v3/issues/{id}/attachments` |
 | Checklists | v3 | `/v3/issues/{id}/checklistItems` |
-| Components | v3 | `/v3/queues/{id}/components` |
+| Components | v3 | `GET /v3/queues/{id}/components`, `POST /v3/components` |
 | Projects | v3 | `/v3/projects` |
 | Worklogs | v3 | `/v3/issues/{id}/worklog` |
-| Boards | v3 | `/v3/boards` |
+| Boards | v3 | `POST /v3/liveBoards/`, чтение/правка/удаление `/v3/boards/{id}` |
 | Board columns | v3 | `/v3/boards/{id}/columns/` |
 | Sprints | v3 | `/v3/sprints`, lifecycle `/v3/sprints/{id}/_start` |
 | Global fields | v3 | `/v3/fields` |

@@ -276,7 +276,7 @@ async execute(key: string, input: GetCommentsInput): Promise<PaginatedResult<Com
 | User | v3 | `/v3/myself` |
 | Attachments | v3 | `/v3/issues/{id}/attachments` |
 | Checklists | v3 | `/v3/issues/{id}/checklistItems` |
-| Components | v3 | `/v3/queues/{id}/components` |
+| Components | v3 | `GET /v3/queues/{id}/components`, `POST /v3/components` (D1) |
 | Projects | v3 | `/v3/projects` |
 | Worklogs | v3 | `/v3/issues/{id}/worklog` |
 | Boards, колонки, спринты, глобальные поля, bulkchange | v3 | все пути семейства на v3 |
@@ -474,7 +474,9 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 `GET /v3/queues/{queueId}/components` — список компонентов очереди, кеш ✅
 
 ### 2. CreateComponentOperation
-`POST /v3/queues/{queueId}/components` — создание (name, description?, lead?, assignAuto?), инвалидация кеша
+`POST /v3/components` — создание (name, queue, description?, lead?, assignAuto?), очередь — ключ
+в теле (`queue`), не в пути (D1: `POST /v3/queues/{queueId}/components` в API не существует),
+инвалидация кеша
 
 ### 3. UpdateComponentOperation
 `PATCH /v3/components/{componentId}` — обновление параметров, инвалидация кеша
