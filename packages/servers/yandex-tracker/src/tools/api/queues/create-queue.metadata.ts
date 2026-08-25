@@ -31,7 +31,6 @@ export const CREATE_QUEUE_TOOL_METADATA: StaticToolMetadata = {
     'lead',
     'defaultType',
     'defaultPriority',
-    'issueTypes',
     'issueTypesConfig',
     'fields',
   ],

@@ -29,7 +29,7 @@ export interface UpdateProjectDto {
    * Массив ключей очередей, связанных с проектом
    * @example ['QUEUE1', 'QUEUE2']
    */
-  queueIds?: string[] | undefined;
+  queues?: string | undefined;
 
   /**
    * Массив ID или login участников проекта

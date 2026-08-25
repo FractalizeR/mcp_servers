@@ -6,12 +6,13 @@
  * - Инвалидация кеша компонента и списка компонентов очереди
  * - НЕТ создания/удаления/получения компонентов
  *
- * API: PATCH /v3/components/{componentId}
+ * API: PATCH /v3/components/{componentId}?version={version}
  *
  * ВАЖНО:
  * - Все поля опциональны (частичное обновление)
  * - Нельзя изменить привязку к очереди (она задается при создании)
  * - Требуются права на управление очередью
+ * - Версия обязательна: без неё API отвечает 428 и правка не проходит вовсе
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -42,12 +43,17 @@ export class UpdateComponentOperation extends BaseOperation {
    * });
    * ```
    */
-  async execute(componentId: string, componentData: UpdateComponentDto): Promise<ComponentOutput> {
+  async execute(
+    componentId: string,
+    componentData: UpdateComponentDto,
+    version?: number
+  ): Promise<ComponentOutput> {
     this.logger.info(`Обновление компонента ${componentId}`);
 
-    // Обновляем компонент через API
+    const effectiveVersion = version ?? (await this.readCurrentVersion(componentId));
+
     const updatedComponent = await this.httpClient.patch<ComponentOutput>(
-      `/v3/components/${componentId}`,
+      `/v3/components/${componentId}?version=${effectiveVersion}`,
       componentData
     );
 
@@ -60,6 +66,18 @@ export class UpdateComponentOperation extends BaseOperation {
     this.logger.info(`Компонент ${componentId} успешно обновлён`);
 
     return updatedComponent;
+  }
+
+  /**
+   * Читает текущую версию компонента.
+   *
+   * Лишний GET осознан: без версии API отвечает 428, а вызывающий её обычно не
+   * держит. Передавшему версию явно этот запрос не делается — там работает
+   * настоящая оптимистичная блокировка.
+   */
+  private async readCurrentVersion(componentId: string): Promise<number> {
+    const component = await this.httpClient.get<ComponentOutput>(`/v3/components/${componentId}`);
+    return component.version;
   }
 
   /**

@@ -35,13 +35,14 @@ describeToolIntegration({
   expectedRequests: [{ method: 'patch', path: '/v3/projects/project123', apiVersion: 'v3' }],
 
   happyPath: {
-    input: { projectId: 'project123', name: 'Updated Name', fields: ['id', 'name'] },
+    input: { projectId: 'project123', name: 'Updated Name', version: 5, fields: ['id', 'name'] },
     arrange: (api) => {
       api
         .expectRequest({
           method: 'patch',
           path: '/v3/projects/project123',
           apiVersion: 'v3',
+          query: { version: 5 },
           body: { name: 'Updated Name' },
         })
         .reply(200, createProjectFixture({ id: 'project123', name: 'Updated Name' }));
@@ -61,18 +62,28 @@ describeToolIntegration({
     forbidden: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'patch', path: '/v3/projects/project123', apiVersion: 'v3' })
+          .expectRequest({
+            method: 'patch',
+            path: '/v3/projects/project123',
+            apiVersion: 'v3',
+            query: { version: 5 },
+          })
           .reply(403, generateError403());
       },
-      input: { projectId: 'project123', name: 'Restricted Update', fields: ['id'] },
+      input: { projectId: 'project123', name: 'Restricted Update', version: 5, fields: ['id'] },
     },
     notFound: {
       arrange: (api) => {
         api
-          .expectRequest({ method: 'patch', path: '/v3/projects/project123', apiVersion: 'v3' })
+          .expectRequest({
+            method: 'patch',
+            path: '/v3/projects/project123',
+            apiVersion: 'v3',
+            query: { version: 5 },
+          })
           .reply(404, generateError404());
       },
-      input: { projectId: 'project123', name: 'Missing Project', fields: ['id'] },
+      input: { projectId: 'project123', name: 'Missing Project', version: 5, fields: ['id'] },
     },
   },
 
@@ -87,12 +98,18 @@ describeToolIntegration({
     // отдаёт FIELDS_WITHOUT_VALUE (CLAUDE.md §2.1).
     arrange: (api) => {
       api
-        .expectRequest({ method: 'patch', path: '/v3/projects/project123', apiVersion: 'v3' })
+        .expectRequest({
+          method: 'patch',
+          path: '/v3/projects/project123',
+          apiVersion: 'v3',
+          query: { version: 5 },
+        })
         .reply(200, createProjectFixture({ id: 'project123', name: 'Updated With Gaps' }));
     },
     input: {
       projectId: 'project123',
       name: 'Updated With Gaps',
+      version: 5,
       fields: ['id', 'name', 'missingField'],
     },
     codes: ['FIELDS_WITHOUT_VALUE'],

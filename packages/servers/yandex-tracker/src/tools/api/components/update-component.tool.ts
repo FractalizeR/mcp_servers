@@ -30,7 +30,7 @@ export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { componentId, name, description, lead, assignAuto, fields } = validation.data;
+    const { componentId, name, description, lead, assignAuto, version, fields } = validation.data;
 
     try {
       this.logger.info('Обновление компонента', {
@@ -47,6 +47,7 @@ export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
         description,
         lead,
         assignAuto,
+        version,
       });
 
       // Фильтрация полей ответа

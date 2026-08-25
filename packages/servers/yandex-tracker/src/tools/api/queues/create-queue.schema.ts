@@ -7,6 +7,10 @@ import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/s
 
 /**
  * Схема параметров для создания очереди
+ *
+ * Параметра `issueTypes` здесь нет намеренно: живая проба 2026-08-25 показала
+ * `400 issueTypes: Incorrect data format` — любой вызов с ним ронял создание, то есть
+ * необязательный параметр гарантировал отказ. Набор типов задаётся `issueTypesConfig`.
  */
 export const CreateQueueParamsSchema = z.object({
   /**
@@ -65,11 +69,6 @@ export const CreateQueueParamsSchema = z.object({
    * Описание очереди (опционально)
    */
   description: z.string().optional(),
-
-  /**
-   * Массив ID доступных типов задач (опционально)
-   */
-  issueTypes: z.array(z.string()).optional(),
 
   /**
    * Список полей для возврата (обязательно)

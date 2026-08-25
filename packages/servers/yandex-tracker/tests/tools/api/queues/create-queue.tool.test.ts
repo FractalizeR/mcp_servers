@@ -51,7 +51,9 @@ describe('CreateQueueTool', () => {
       expect(definition.inputSchema.properties?.['key']).toBeDefined();
       expect(definition.inputSchema.properties?.['name']).toBeDefined();
       expect(definition.inputSchema.properties?.['description']).toBeDefined();
-      expect(definition.inputSchema.properties?.['issueTypes']).toBeDefined();
+      // `issueTypes` в схеме нет намеренно: API отвечает на него
+      // `400 Incorrect data format` (живая проба 2026-08-25).
+      expect(definition.inputSchema.properties?.['issueTypes']).toBeUndefined();
       expect(definition.inputSchema.properties?.['issueTypesConfig']).toBeDefined();
     });
 
@@ -381,7 +383,7 @@ describe('CreateQueueTool', () => {
         });
       });
 
-      it('должен создать очередь с типами задач', async () => {
+      it('должен создать очередь с настройкой типов задач', async () => {
         const mockQueue = createQueueFixture({ key: 'TASK' });
         vi.mocked(mockTrackerFacade.createQueue).mockResolvedValue(mockQueue);
 
@@ -391,7 +393,6 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
-          issueTypes: ['1', '2', '3'],
           issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
@@ -403,7 +404,6 @@ describe('CreateQueueTool', () => {
           lead: 'user1',
           defaultType: '1',
           defaultPriority: '2',
-          issueTypes: ['1', '2', '3'],
           issueTypesConfig: ISSUE_TYPES_CONFIG,
         });
       });
@@ -419,7 +419,6 @@ describe('CreateQueueTool', () => {
           defaultType: '1',
           defaultPriority: '3',
           description: 'Full queue description',
-          issueTypes: ['1', '2', '3', '4'],
           issueTypesConfig: ISSUE_TYPES_CONFIG,
           fields: ['id', 'key', 'name'],
         });
@@ -432,7 +431,6 @@ describe('CreateQueueTool', () => {
           defaultType: '1',
           defaultPriority: '3',
           description: 'Full queue description',
-          issueTypes: ['1', '2', '3', '4'],
           issueTypesConfig: ISSUE_TYPES_CONFIG,
         });
       });

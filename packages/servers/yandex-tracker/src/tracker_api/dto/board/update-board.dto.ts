@@ -4,10 +4,13 @@
 
 import type { CreateBoardColumnDto } from './create-board.dto.js';
 
-/** Фильтр доски в форме, которую принимает `PATCH /v3/boards/{id}`. */
-export interface UpdateBoardFilterDto {
-  query?: string | undefined;
-}
+/**
+ * Фильтр доски — карта «поле задачи → значение или список значений».
+ *
+ * Форма снята чтением боевых досок 2026-08-25 (`{"queue": ["DVIZHDEV"]}`); прежняя
+ * `{query}` отвергалась API с 422.
+ */
+export type UpdateBoardFilterDto = Record<string, string | number | Array<string | number>>;
 
 export interface UpdateBoardDto {
   /** ID доски для обновления */

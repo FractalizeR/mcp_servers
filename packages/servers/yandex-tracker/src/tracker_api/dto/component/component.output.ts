@@ -2,7 +2,7 @@
  * Output DTO для одного компонента
  *
  * Используется в responses:
- * - POST /v3/queues/{queueId}/components (создание)
+ * - POST /v3/components (создание)
  * - PATCH /v3/components/{componentId} (обновление)
  *
  * DELETE не возвращает тело ответа (только 204 No Content)

@@ -39,8 +39,9 @@ export class UpdateProjectTool extends BaseTool<YandexTrackerFacade> {
       description,
       startDate,
       endDate,
-      queueIds,
+      queues,
       teamUserIds,
+      version,
     } = validation.data;
 
     try {
@@ -55,13 +56,14 @@ export class UpdateProjectTool extends BaseTool<YandexTrackerFacade> {
         ...(description !== undefined && { description }),
         ...(startDate && { startDate }),
         ...(endDate && { endDate }),
-        ...(queueIds && { queueIds }),
+        ...(queues && { queues }),
         ...(teamUserIds && { teamUserIds }),
       };
 
       const updatedProject = await this.facade.updateProject({
         projectId,
         data: updateData,
+        version,
       });
 
       this.logger.info('Проект успешно обновлен', {

@@ -280,7 +280,7 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
     tool: 'update_project',
     method: 'patch',
     path: `/v3/projects/${SANDBOX_PROJECT_ID}`,
-    body: { name: `${RUN_PREFIX}-project-updated`, queueIds: [SANDBOX_QUEUE], teamUserIds: [] },
+    body: { name: `${RUN_PREFIX}-project-updated`, queues: SANDBOX_QUEUE, teamUserIds: [] },
     expectation: 'allowed-in-sandbox',
   },
   {

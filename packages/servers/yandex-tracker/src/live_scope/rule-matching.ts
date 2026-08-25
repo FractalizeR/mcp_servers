@@ -140,12 +140,6 @@ export const queueWithinScope = (key: string | undefined, context: ScopeContext)
   if (key === context.sandboxQueue) return true;
   return key === context.disposableQueue && context.journal.has('queue', key);
 };
-/** Ссылки на очереди не должны выводить сущность за пределы прогона; `undefined` — поле не задано. */
-export function queueRefsWithinScope(value: unknown, context: ScopeContext): boolean {
-  if (value === undefined) return true;
-  if (!Array.isArray(value)) return false;
-  return value.every((entry) => queueWithinScope(queueKeyOf(entry), context));
-}
 export const queueRefWithinScope = (value: unknown, context: ScopeContext): boolean =>
   queueWithinScope(queueKeyOf(value), context);
 

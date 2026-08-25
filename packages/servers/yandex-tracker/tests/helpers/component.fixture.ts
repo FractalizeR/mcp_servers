@@ -40,6 +40,7 @@ export function createComponentFixture(overrides?: Partial<Component>): Componen
   return {
     id,
     self: `https://api.tracker.yandex.net/v3/components/${id}`,
+    version: overrides?.version ?? 1,
     name,
     queue: overrides?.queue || createQueueRef(),
     assignAuto: overrides?.assignAuto !== undefined ? overrides.assignAuto : false,

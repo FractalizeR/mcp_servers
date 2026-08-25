@@ -40,6 +40,14 @@ export interface Component {
   readonly self: string;
 
   /**
+   * Версия компонента (optimistic locking)
+   *
+   * PATCH без версии отвечает 428 — правка компонента без неё невозможна вовсе
+   * (живая проба 2026-08-25).
+   */
+  readonly version: number;
+
+  /**
    * Название компонента
    * @example "Backend"
    */

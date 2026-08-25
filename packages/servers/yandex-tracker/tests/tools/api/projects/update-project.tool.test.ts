@@ -46,7 +46,10 @@ describe('UpdateProjectTool', () => {
       expect(definition.inputSchema.properties?.['description']).toBeDefined();
       expect(definition.inputSchema.properties?.['startDate']).toBeDefined();
       expect(definition.inputSchema.properties?.['endDate']).toBeDefined();
-      expect(definition.inputSchema.properties?.['queueIds']).toBeDefined();
+      // Очередь правки зовётся `queues` (ключ строкой): `queueIds` API отвергает
+      // с `400 Incorrect data format` (живая проба 2026-08-25).
+      expect(definition.inputSchema.properties?.['queues']).toBeDefined();
+      expect(definition.inputSchema.properties?.['queueIds']).toBeUndefined();
       expect(definition.inputSchema.properties?.['teamUserIds']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
     });
@@ -213,13 +216,13 @@ describe('UpdateProjectTool', () => {
         });
       });
 
-      it('должен обновить очереди проекта', async () => {
+      it('должен обновить очередь проекта', async () => {
         const mockProject = createProjectFixture({ key: 'PROJ' });
         vi.mocked(mockTrackerFacade.updateProject).mockResolvedValue(mockProject);
 
         const result = await tool.execute({
           projectId: 'PROJ',
-          queueIds: ['QUEUE1', 'QUEUE2'],
+          queues: 'QUEUE1',
           fields: ['key', 'name'],
         });
 
@@ -227,7 +230,7 @@ describe('UpdateProjectTool', () => {
         expect(mockTrackerFacade.updateProject).toHaveBeenCalledWith({
           projectId: 'PROJ',
           data: {
-            queueIds: ['QUEUE1', 'QUEUE2'],
+            queues: 'QUEUE1',
           },
         });
       });
@@ -266,7 +269,7 @@ describe('UpdateProjectTool', () => {
           description: 'Full description',
           startDate: '2024-01-01',
           endDate: '2024-12-31',
-          queueIds: ['QUEUE1'],
+          queues: 'QUEUE1',
           teamUserIds: ['user1'],
           fields: ['key', 'name', 'lead', 'status'],
         });
@@ -281,7 +284,7 @@ describe('UpdateProjectTool', () => {
             description: 'Full description',
             startDate: '2024-01-01',
             endDate: '2024-12-31',
-            queueIds: ['QUEUE1'],
+            queues: 'QUEUE1',
             teamUserIds: ['user1'],
           },
         });

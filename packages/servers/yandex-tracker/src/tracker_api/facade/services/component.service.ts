@@ -76,9 +76,10 @@ export class ComponentService {
     description?: string | undefined;
     lead?: string | undefined;
     assignAuto?: boolean | undefined;
+    version?: number | undefined;
   }): Promise<ComponentOutput> {
-    const { componentId, ...componentData } = params;
-    return this.updateOp.execute(componentId, componentData);
+    const { componentId, version, ...componentData } = params;
+    return this.updateOp.execute(componentId, componentData, version);
   }
 
   /**

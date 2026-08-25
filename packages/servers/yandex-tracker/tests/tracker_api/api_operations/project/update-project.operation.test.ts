@@ -16,7 +16,8 @@ describe('UpdateProjectOperation', () => {
 
   beforeEach(() => {
     mockHttpClient = {
-      get: vi.fn().mockResolvedValue(null),
+      // Операция читает текущую версию перед PATCH: без версии API отвечает 428.
+      get: vi.fn().mockResolvedValue(createProjectFixture({ version: 7 })),
       post: vi.fn(),
       patch: vi.fn(),
       put: vi.fn(),
@@ -43,6 +44,31 @@ describe('UpdateProjectOperation', () => {
   });
 
   describe('execute', () => {
+    it('без версии от вызывающего читает текущую и шлёт её в query', async () => {
+      // Без ?version= API отвечает 428 — правка не проходит вовсе (живая проба 2026-08-25).
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(createProjectFixture({}));
+
+      await operation.execute({ projectId: 'p1', data: createUpdateProjectDto() });
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/projects/p1');
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v3/projects/p1?version=7',
+        expect.anything()
+      );
+    });
+
+    it('переданную версию берёт как есть и лишнего чтения не делает', async () => {
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(createProjectFixture({}));
+
+      await operation.execute({ projectId: 'p1', data: createUpdateProjectDto(), version: 3 });
+
+      expect(mockHttpClient.get).not.toHaveBeenCalled();
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v3/projects/p1?version=3',
+        expect.anything()
+      );
+    });
+
     it('should call httpClient.patch with correct endpoint and data', async () => {
       const updateDto = createUpdateProjectDto({ name: 'Updated Name' });
       const mockProject: ProjectWithUnknownFields = createProjectFixture({ name: 'Updated Name' });
@@ -50,7 +76,10 @@ describe('UpdateProjectOperation', () => {
 
       const result = await operation.execute({ projectId: 'project123', data: updateDto });
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/projects/project123', updateDto);
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v3/projects/project123?version=7',
+        updateDto
+      );
       expect(result).toEqual(mockProject);
     });
 

@@ -1363,8 +1363,11 @@ export class MockServer {
     const component = generateComponent({
       overrides: { id: componentId, ...updates },
     });
+    // Правка компонента обязана нести `?version=`: без неё API отвечает 428. Версию
+    // операция читает сама, если её не передал вызывающий, — отсюда GET рядом с PATCH.
+    this.mockAdapter.onGet(`/v3/components/${componentId}`).reply(200, component);
     const mockKey = `PATCH /v3/components/${componentId}`;
-    this.mockAdapter.onPatch(`/v3/components/${componentId}`).reply(() => {
+    this.mockAdapter.onPatch(new RegExp(`^/v3/components/${componentId}(\\?|$)`)).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);
@@ -1380,8 +1383,11 @@ export class MockServer {
    */
   mockUpdateComponent404(componentId: string): this {
     const response = generateError404();
+    this.mockAdapter
+      .onGet(`/v3/components/${componentId}`)
+      .reply(200, generateComponent({ overrides: { id: componentId } }));
     const mockKey = `PATCH /v3/components/${componentId}`;
-    this.mockAdapter.onPatch(`/v3/components/${componentId}`).reply(() => {
+    this.mockAdapter.onPatch(new RegExp(`^/v3/components/${componentId}(\\?|$)`)).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);

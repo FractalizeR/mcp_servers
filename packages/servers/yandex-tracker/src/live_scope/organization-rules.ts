@@ -22,7 +22,6 @@ import {
   ownershipRule,
   orgFamilyRules,
   queueRefWithinScope,
-  queueRefsWithinScope,
   queueWithinScope,
   refOf,
   requireRunPrefix,
@@ -40,14 +39,13 @@ import { personViolation } from './people-in-body.js';
  * ссылок на людей.
  */
 const PROJECT_KEYS = [
-  'key',
   'name',
   'lead',
   'status',
   'description',
   'startDate',
   'endDate',
-  'queueIds',
+  'queues',
   'teamUserIds',
 ] as const;
 /** `POST /v3/projects` не знает ни `key`, ни `queueIds`, ни `teamUserIds` (0_CONTRACTS.md, D8). */
@@ -67,7 +65,6 @@ const QUEUE_KEYS = [
   'defaultType',
   'defaultPriority',
   'description',
-  'issueTypes',
   'issueTypesConfig',
 ] as const;
 const BOARD_KEYS = [
@@ -170,10 +167,16 @@ const projectCreateViolation: BodyViolation = (body, context) =>
     ? undefined
     : 'проект создаётся в очереди за пределами прогона либо без неё (queues)';
 
-/** `queueIds` — только очереди прогона, `teamUserIds` — пусто. */
+/**
+ * `queues` — только очередь прогона, `teamUserIds` — пусто.
+ *
+ * Правка знает очередь как `queues` (ключ строкой), а не `queueIds`: живая проба
+ * 2026-08-25 показала `400 queueIds: Incorrect data format`.
+ */
 const projectEditViolation: BodyViolation = (body, context) => {
-  if (!queueRefsWithinScope(body?.['queueIds'], context)) {
-    return 'проект ссылается на очередь за пределами прогона (queueIds)';
+  const queues = body?.['queues'];
+  if (queues !== undefined && !queueRefWithinScope(queues, context)) {
+    return 'проект ссылается на очередь за пределами прогона (queues)';
   }
   const team = body?.['teamUserIds'];
   return team !== undefined && (!Array.isArray(team) || team.length > 0)

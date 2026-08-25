@@ -355,9 +355,19 @@ describe('этап 5.1: ссылки в теле, тело без имени, п
       expect(decision.reason).toContain('queues');
     });
 
-    it('queueIds содержит постороннюю очередь при правке', () => {
+    it('queues содержит постороннюю очередь при правке', () => {
       const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
-        queueIds: ['PROD'],
+        queues: 'PROD',
+      });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('queues');
+    });
+
+    it('queueIds при правке отклоняется как неизвестный ключ', () => {
+      // API отвечает на него `400 queueIds: Incorrect data format` (живая проба 2026-08-25);
+      // рубеж обязан отклонить его раньше, чем запрос уйдёт.
+      const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
+        queueIds: [SANDBOX_QUEUE],
       });
       expect(decision.allowed).toBe(false);
       expect(decision.reason).toContain('queueIds');
@@ -479,8 +489,9 @@ describe('этап 5.1: ссылки в теле, тело без имени, п
 });
 
 // Создание и правка разъехались по маршрутам и перечням ключей (`0_CONTRACTS.md`):
-// у доски создание идёт на `liveBoards`, у проекта очередь на создании зовётся
-// `queues`, а на правке — `queueIds`. Один общий перечень снял бы проверку молча.
+// у доски создание идёт на `liveBoards`. У проекта очередь и там и там — `queues`
+// (живая проба 2026-08-25 опровергла `queueIds` на правке), но правка знает ещё
+// `teamUserIds`. Один общий перечень снял бы проверку молча.
 describe('этап 1.1: раздельные маршруты и перечни ключей создания и правки', () => {
   describe('доска', () => {
     it('создание на liveBoards с очередью в autoFilters допускается', () => {
@@ -560,7 +571,7 @@ describe('этап 1.1: раздельные маршруты и перечни 
       expect(decision.reason).toContain('queues');
     });
 
-    it('ключи правки key, queueIds и teamUserIds при создании неизвестны', () => {
+    it('ключи key, queueIds и teamUserIds при создании неизвестны', () => {
       ['key', 'queueIds', 'teamUserIds'].forEach((key) => {
         const decision = decide('post', '/v3/projects', {
           name: `${RUN_PREFIX}-project`,
@@ -572,9 +583,9 @@ describe('этап 1.1: раздельные маршруты и перечни 
       });
     });
 
-    it('правка своего проекта с queueIds остаётся разрешённой', () => {
+    it('правка своего проекта с queues разрешена', () => {
       const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
-        queueIds: [SANDBOX_QUEUE],
+        queues: SANDBOX_QUEUE,
         teamUserIds: [],
       });
       expect(decision.allowed, decision.reason).toBe(true);

@@ -412,6 +412,7 @@ export class YandexTrackerFacade implements RawApiCapable {
     description?: string | undefined;
     lead?: string | undefined;
     assignAuto?: boolean | undefined;
+    version?: number | undefined;
   }): Promise<ComponentOutput> {
     return this.queues.component.updateComponent(params);
   }

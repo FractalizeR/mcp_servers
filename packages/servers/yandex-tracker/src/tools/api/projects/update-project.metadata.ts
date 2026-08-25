@@ -31,7 +31,7 @@ export const UPDATE_PROJECT_TOOL_METADATA: StaticToolMetadata = {
     'status',
     'startDate',
     'endDate',
-    'queueIds',
+    'queues',
     'teamUserIds',
     'fields',
   ],
