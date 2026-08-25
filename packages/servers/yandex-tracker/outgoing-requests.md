@@ -26,7 +26,7 @@
 | `fr_yandex_tracker_transition_issue` | нет | нет | GET | `/v3/issues/TEST-1` | — |
 | `fr_yandex_tracker_get_queue` | да | нет | GET | `/v3/queues/probe_queueId?expand=probe_expand` | — |
 | `fr_yandex_tracker_create_queue` | нет | нет | POST | `/v3/queues/` | key, name, lead, defaultType, defaultPriority, issueTypesConfig, description |
-| `fr_yandex_tracker_update_queue` | нет | нет | PATCH | `/v3/queues/probe_queueId` | name, lead, defaultType, defaultPriority, description, issueTypes |
+| `fr_yandex_tracker_update_queue` | нет | нет | PATCH | `/v3/queues/probe_queueId` | name, lead, defaultType, defaultPriority, description |
 | `fr_yandex_tracker_get_queue_fields` | да | нет | GET | `/v3/queues/probe_queueId/fields` | — |
 | `fr_yandex_tracker_manage_queue_access` | нет | нет | PATCH | `/v3/queues/probe_queueId/permissions` | queue-lead |
 | `fr_yandex_tracker_get_components` | да | нет | GET | `/v3/queues/probe_queueId/components` | — |

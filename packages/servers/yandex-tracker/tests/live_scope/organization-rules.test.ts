@@ -93,9 +93,21 @@ describe('ссылки в теле проверяются и на правке, 
     expect(decision.reason).toContain('queue');
   });
 
-  it('доска прогона правится, пока очередь остаётся песочной', () => {
-    const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, { queue: SANDBOX_QUEUE });
+  it('доска прогона правится, пока очередь фильтра остаётся песочной', () => {
+    // Очередь доски задаётся внутри filter картой «поле → значения»; ключа queue
+    // верхнего уровня `PATCH /v3/boards/{id}` не принимает вовсе.
+    const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, {
+      filter: { queue: [SANDBOX_QUEUE] },
+    });
     expect(decision.allowed, decision.reason).toBe(true);
+  });
+
+  it('доска прогона не уезжает на чужую очередь через filter', () => {
+    const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, {
+      filter: { queue: ['PROD'] },
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason).toContain('filter.queue');
   });
 
   it('создание спринта без ссылки на доску отклоняется: родитель не распознан', () => {

@@ -53,9 +53,13 @@ const QUEUE_KEYS = [
   'description',
   'issueTypesConfig',
 ] as const;
+/**
+ * `queue` и `version` из перечня убраны: `PATCH /v3/boards/{id}` их не принимает
+ * (живая проба 2026-08-25 — `400 version: Incorrect data format`), а очередь доски
+ * задаётся внутри `filter` картой «поле → значения».
+ */
 const BOARD_KEYS = [
   'name',
-  'queue',
   'columns',
   'filter',
   'orderBy',
@@ -63,7 +67,6 @@ const BOARD_KEYS = [
   'query',
   'useRanking',
   'country',
-  'version',
 ] as const;
 /** `POST /v3/liveBoards` (0_CONTRACTS.md, D9): очередь — внутри `autoFilters`. */
 const BOARD_CREATE_KEYS = [
@@ -167,11 +170,21 @@ const boardCreateViolation: BodyViolation = (body, context) => {
     : 'доска привязана к очереди за пределами прогона (autoFilters)';
 };
 
+/**
+ * Очередь правки доски лежит внутри `filter` — карты «поле задачи → значения»
+ * (`{"queue": ["TEST"]}`), а не полем верхнего уровня. Проверка по `body.queue`
+ * пропускала бы перевод доски на чужую очередь молча: ключа `queue` у правки нет
+ * вовсе, а `filter.queue` до этой проверки не смотрел никто.
+ */
 const boardEditViolation: BodyViolation = (body, context) => {
-  const queue = body?.['queue'];
-  return queue !== undefined && !queueRefWithinScope(queue, context)
-    ? 'доска привязана к очереди за пределами прогона (queue)'
-    : undefined;
+  const filter = body?.['filter'];
+  if (!isRecord(filter)) return undefined;
+  const queue = filter['queue'];
+  if (queue === undefined) return undefined;
+  const refs = Array.isArray(queue) ? queue : [queue];
+  return refs.every((ref) => queueRefWithinScope(ref, context))
+    ? undefined
+    : 'доска привязана к очереди за пределами прогона (filter.queue)';
 };
 
 /** Спринт живёт на доске: перевешенный на чужую, он меняет состав ЧУЖОЙ доски. */

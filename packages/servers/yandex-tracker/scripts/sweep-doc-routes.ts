@@ -99,7 +99,10 @@ const SAMPLE_ARTEFACT_KEYS = new Set(['markerKey']);
  */
 const LIVE_VERIFIED_KEYS = new Map<string, Set<string>>([
   ['fr_yandex_tracker_create_queue', new Set(['description'])],
-  ['fr_yandex_tracker_update_board', new Set(['filter', 'orderBy', 'orderAsc', 'query'])],
+  // `orderBy`/`orderAsc` сюда НЕ входят: успешного вызова с ними не было — живая проба
+  // дала только отказ 422 при отсутствии `filter`. Пометить их проверенными значило бы
+  // соврать инструменту, который для того и заведён, чтобы ловить такое враньё.
+  ['fr_yandex_tracker_update_board', new Set(['filter', 'query'])],
   ['fr_yandex_tracker_update_board_column', new Set(['limit'])],
 ]);
 
@@ -251,6 +254,20 @@ function readOurCalls(file: string): OurCall[] {
   return [...calls, ...MANUAL_ROUTES];
 }
 
+/**
+ * Часть статьи до раздела «Формат ответа».
+ *
+ * Искать ключ тела по всей странице нельзя: имя, встречающееся только в описании
+ * ОТВЕТА, засчитывалось бы как документированный параметр запроса. Именно так `version`
+ * у правки доски выглядел документированным, хотя API отвечает на него 400.
+ */
+function requestSection(text: string): string {
+  // Заголовки повторяются в оглавлении статьи в самом её начале, поэтому берётся
+  // ПОСЛЕДНЕЕ вхождение: первое обрезало бы страницу до нескольких строк.
+  const responseHeading = text.lastIndexOf('Формат ответа');
+  return responseHeading > 0 ? text.slice(0, responseHeading) : text;
+}
+
 /** Сегмент-переменная: плейсхолдер документации либо подставное значение образца. */
 const VARIABLE_SEGMENT = /^(\{.*\}|<.*>|probe_.*|[A-Z]+-\d+|\d+|__.*|.*\*\*\*.*)$/;
 
@@ -288,7 +305,7 @@ function judge(calls: OurCall[], pages: DocPage[]): Verdict[] {
     const hitPages = [...new Set(hits.map((hit) => hit.page))].sort();
     const blob = pages
       .filter((page) => hitPages.includes(page.page))
-      .map((page) => page.text)
+      .map((page) => requestSection(page.text))
       .join(' ');
     const verified = LIVE_VERIFIED_KEYS.get(call.tool);
     const absent = call.bodyKeys.filter(
@@ -310,6 +327,11 @@ function report(verdicts: Verdict[], pages: DocPage[]): string {
   const missing = verdicts.filter((verdict) => verdict.pages.length === 0);
   const bodyDrift = verdicts.filter((verdict) => verdict.unknownBodyKeys.length > 0);
   const settled = verdicts.filter((verdict) => verdict.settledBodyKeys.length > 0);
+  // Маршрут без страницы: ключи тела не с чем сверять. Молчание отчёта об этом
+  // читалось бы как «расхождений нет» — ровно та подмена, ради которой сверка заведена.
+  const unchecked = verdicts.filter(
+    (verdict) => verdict.pages.length === 0 && verdict.call.bodyKeys.length > 0
+  );
   const legacySections = [...new Set(pages.map((page) => page.section))].filter((section) =>
     /стар|устар|deprecat|legacy/i.test(section)
   );
@@ -336,7 +358,11 @@ function report(verdicts: Verdict[], pages: DocPage[]): string {
     '',
     `## Ключи тела, не упомянутые на странице своего маршрута (${bodyDrift.length})`,
     '',
-    'Класс дефекта D9: API принимает запрос, ключ игнорирует, инструмент отчитывается об успехе.',
+    'Кандидаты класса D9 (API принимает запрос, ключ игнорирует, инструмент рапортует',
+    'об успехе) — но НЕ доказанные дефекты. Ищется вхождение имени в раздел ЗАПРОСА',
+    'страницы; справочник Трекера неполон, поэтому отсутствие имени означает «проверь',
+    'живьём», а не «параметр не работает». Проверенное живой пробой переносится в',
+    '`LIVE_VERIFIED_KEYS`, чтобы не всплывать в каждой следующей сверке.',
     '',
     '| Инструмент | Метод и путь | Ключи | Страницы |',
     '|---|---|---|---|',
@@ -345,6 +371,19 @@ function report(verdicts: Verdict[], pages: DocPage[]): string {
         `| \`${verdict.call.tool}\` | ${verdict.call.method} \`${verdict.call.path.split('?')[0] ?? ''}\` ` +
         `| ${verdict.unknownBodyKeys.join(', ')} | ${verdict.pages.join(', ')} |`
     ),
+    '',
+    `## Ключи тела, не проверенные ни с чем (${unchecked.length})`,
+    '',
+    'У маршрута нет страницы справочника — сверять ключи тела не с чем. Это НЕ',
+    '«расхождений нет»: для этих инструментов проверка класса D9 не выполнялась вовсе.',
+    '',
+    ...(unchecked.length === 0
+      ? ['Нет.']
+      : unchecked.map(
+          (verdict) =>
+            `- \`${verdict.call.tool}\` — ${verdict.call.method} ` +
+            `\`${verdict.call.path.split('?')[0] ?? ''}\`: ${verdict.call.bodyKeys.join(', ')}`
+        )),
     '',
     `## Расхождения, закрытые живой пробой (${settled.length})`,
     '',
@@ -411,9 +450,13 @@ async function main(): Promise<void> {
 
   const missing = verdicts.filter((verdict) => verdict.pages.length === 0).length;
   const drift = verdicts.filter((verdict) => verdict.unknownBodyKeys.length > 0).length;
+  const unchecked = verdicts.filter(
+    (verdict) => verdict.pages.length === 0 && verdict.call.bodyKeys.length > 0
+  ).length;
   process.stdout.write(
     `Разобрано страниц: ${pages.length}\n` +
-      `Наших вызовов: ${verdicts.length}; без страницы: ${missing}; с чужими ключами тела: ${drift}\n` +
+      `Наших вызовов: ${verdicts.length}; без страницы: ${missing}; ` +
+      `с чужими ключами тела: ${drift}; ключи тела не проверены: ${unchecked}\n` +
       `Отчёт: ${outPath}\n`
   );
 }

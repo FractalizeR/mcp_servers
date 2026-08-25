@@ -19,9 +19,6 @@ export interface UpdateQueueDto {
   /** Описание очереди */
   description?: string | undefined;
 
-  /** Массив ID доступных типов задач */
-  issueTypes?: string[] | undefined;
-
   /** Дополнительные поля */
   [key: string]: unknown;
 }

@@ -8,6 +8,11 @@ import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/s
 /**
  * Схема параметров для обновления очереди
  */
+/**
+ * Параметра `issueTypes` здесь нет намеренно: `PATCH /v3/queues/{id}` отвечает на него
+ * `400 issueTypes: Incorrect data format` — проверено живьём 2026-08-25 на одноразовой
+ * очереди прогона. Тот же ответ даёт создание очереди, откуда параметр убран тем же днём.
+ */
 export const UpdateQueueParamsSchema = z.object({
   /**
    * Идентификатор или ключ очереди (обязательно)
@@ -39,11 +44,6 @@ export const UpdateQueueParamsSchema = z.object({
    * Описание очереди (опционально)
    */
   description: z.string().optional(),
-
-  /**
-   * Массив ID доступных типов задач (опционально)
-   */
-  issueTypes: z.array(z.string()).optional(),
 
   /**
    * Список полей для возврата (обязательно)

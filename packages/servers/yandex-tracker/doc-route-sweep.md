@@ -14,12 +14,30 @@
 | GET | `/v3/queues/probe_queueId/components` | `fr_yandex_tracker_get_components` |
 | GET | `/v3/myself/favorites/filters` | `fr_yandex_tracker_get_filters` |
 
-## Ключи тела, не упомянутые на странице своего маршрута (0)
+## Ключи тела, не упомянутые на странице своего маршрута (7)
 
-Класс дефекта D9: API принимает запрос, ключ игнорирует, инструмент отчитывается об успехе.
+Кандидаты класса D9 (API принимает запрос, ключ игнорирует, инструмент рапортует
+об успехе) — но НЕ доказанные дефекты. Ищется вхождение имени в раздел ЗАПРОСА
+страницы; справочник Трекера неполон, поэтому отсутствие имени означает «проверь
+живьём», а не «параметр не работает». Проверенное живой пробой переносится в
+`LIVE_VERIFIED_KEYS`, чтобы не всплывать в каждой следующей сверке.
 
 | Инструмент | Метод и путь | Ключи | Страницы |
 |---|---|---|---|
+| `fr_yandex_tracker_update_issue` | PATCH `/v3/issues/TEST-1` | assignee | api-ref/issues/patch-issue |
+| `fr_yandex_tracker_manage_queue_access` | PATCH `/v3/queues/probe_queueId/permissions` | queue-lead | api-ref/queues/manage-access |
+| `fr_yandex_tracker_update_worklog` | PATCH `/v3/issues/TEST-1/worklog/probe_worklogId` | start | api-ref/issues/patch-worklog |
+| `fr_yandex_tracker_update_board` | PATCH `/v3/boards/probe_boardId` | orderBy, orderAsc, useRanking, country | api-ref/boards/patch-board |
+| `fr_yandex_tracker_create_sprint` | POST `/v3/sprints` | startDateTime, endDateTime, status | api-ref/boards/post-sprint |
+| `fr_yandex_tracker_update_sprint` | PATCH `/v3/sprints/probe_sprintId` | startDateTime, endDateTime | api-ref/boards/patch-sprint |
+| `fr_yandex_tracker_update_global_field` | PATCH `/v3/fields/probe_fieldId` | options, suggest | api-ref/issues/patch-issue-field-name, api-ref/issues/patch-issue-field-value |
+
+## Ключи тела, не проверенные ни с чем (1)
+
+У маршрута нет страницы справочника — сверять ключи тела не с чем. Это НЕ
+«расхождений нет»: для этих инструментов проверка класса D9 не выполнялась вовсе.
+
+- `fr_yandex_tracker_update_queue` — PATCH `/v3/queues/probe_queueId`: name, lead, defaultType, defaultPriority, description
 
 ## Расхождения, закрытые живой пробой (3)
 
@@ -27,7 +45,7 @@
 документации. Перепроверять не нужно; список ведётся в `LIVE_VERIFIED_KEYS`.
 
 - `fr_yandex_tracker_create_queue` — description
-- `fr_yandex_tracker_update_board` — filter, orderBy, orderAsc, query
+- `fr_yandex_tracker_update_board` — filter, query
 - `fr_yandex_tracker_update_board_column` — limit
 
 ## Разделы справочника с пометкой устаревания (1)

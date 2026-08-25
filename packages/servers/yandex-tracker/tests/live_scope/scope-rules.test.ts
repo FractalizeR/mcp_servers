@@ -509,9 +509,28 @@ describe('этап 1.1: раздельные маршруты и перечни 
       expect(decision.reason).toContain('не описан ни одним правилом');
     });
 
-    it('правка своей доски с queue остаётся разрешённой', () => {
-      const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, { queue: SANDBOX_QUEUE });
+    it('правка своей доски фильтром по своей очереди разрешена', () => {
+      const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, {
+        filter: { queue: [SANDBOX_QUEUE] },
+      });
       expect(decision.allowed, decision.reason).toBe(true);
+    });
+
+    it('правка своей доски фильтром по ЧУЖОЙ очереди отклоняется', () => {
+      // Очередь доски живёт внутри filter, а не полем верхнего уровня: проверка по
+      // body.queue пропускала бы перевод доски на чужую очередь молча.
+      const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, {
+        filter: { queue: ['PROD'] },
+      });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('filter.queue');
+    });
+
+    it('ключ queue у правки доски рубежу неизвестен', () => {
+      // API его не принимает — рубеж обязан отклонить раньше, чем запрос уйдёт.
+      const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, { queue: SANDBOX_QUEUE });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('queue');
     });
   });
 
