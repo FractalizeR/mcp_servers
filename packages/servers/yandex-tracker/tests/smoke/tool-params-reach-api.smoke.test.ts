@@ -31,6 +31,21 @@
  *   axios). Реальная отправка attachmentId на сервер физически не проходит через
  *   инструментированные методы, поэтому инструмент исключён целиком, а не помечен
  *   точечным исключением параметра.
+ * - update_board_column / delete_board_column НЕ в общем цикле ниже (не в
+ *   `EXCLUDED_TOOLS` — общего исключения целиком больше нет): перед мутирующим
+ *   запросом обе операции читают `GET /v3/boards/{id}/columns` и ищут единственную
+ *   колонку с запрошенным `columnId` (`ensureColumnAddressable`, D11 —
+ *   `0_CONTRACTS.md`) — при неоднозначной или отсутствующей адресации отказывают ДО
+ *   PATCH/DELETE. Под общим спаем-заглушкой (`createHttpClientCallRecorder`) GET
+ *   отдаёт глубокий stub, а не массив: попытка `columns.filter(...)` бросает
+ *   `TypeError` раньше, чем инструмент успевает сделать целевой мутирующий вызов —
+ *   тот же класс проблемы, что у download_attachment/get_thumbnail выше (клиентская
+ *   обработка ответа GET перед целевым запросом не переживает синтетическую
+ *   заглушку), только на массиве, а не на одиночном объекте. В реальном API ответ
+ *   всегда массив (документированный контракт эндпоинта) — это не дефект операции.
+ *   Гарантия для этих двух инструментов не потеряна: ниже, отдельным блоком, та же
+ *   проверка достижимости запускается для них с ТОЧЕЧНОЙ подменой `GET` на
+ *   правдоподобный массив колонок (см. `describe('update_board_column / ...')`).
  * - raw_api_request: generic escape-hatch фабрики @fractalizer/mcp-core
  *   (createRawApiRequestSchema) — путь запроса ЯВЛЯЕТСЯ HTTP-запросом как есть,
  *   а не доменной DTO-моделью, у которой поле может "потеряться" между операцией
@@ -99,8 +114,17 @@ const EXCLUDED_TOOLS = new Set<string>([
   'raw_api_request',
 ]);
 
+/**
+ * `update_board_column` / `delete_board_column` — не в `EXCLUDED_TOOLS` (см. шапку
+ * файла): проверены отдельным блоком ниже, с точечной подменой диагностического
+ * `GET /v3/boards/{id}/columns` вместо общего `createHttpClientCallRecorder`.
+ */
+const BOARD_COLUMN_ADDRESSING_TOOLS = ['update_board_column', 'delete_board_column'];
+
 function isExcludedTool(metadataName: string): boolean {
-  return Array.from(EXCLUDED_TOOLS).some((short) => metadataName.endsWith(`_${short}`));
+  return [...EXCLUDED_TOOLS, ...BOARD_COLUMN_ADDRESSING_TOOLS].some((short) =>
+    metadataName.endsWith(`_${short}`)
+  );
 }
 
 /**
@@ -131,6 +155,7 @@ const KNOWN_REGEX_SAMPLES = new Map<string, string>([
   [/^[A-Z][A-Z0-9]+-\d+$/.source, 'TEST-1'], // IssueKeySchema и локальные копии
   [/^[A-Z][A-Z0-9]+$/.source, 'TESTQ'], // ключ очереди (bulk-move/bulk-update)
   [/^[A-Z]{2,10}$/.source, 'TESTQ'], // ключ очереди (create-queue)
+  [/^\d{4}-\d{2}-\d{2}$/.source, '2026-01-01'], // startDate/endDate проекта (base-project.schema.ts)
 ]);
 
 describe('Tool Params Reach API (Smoke) — обход реестра инструментов', () => {
@@ -200,6 +225,95 @@ describe('Tool Params Reach API (Smoke) — обход реестра инстр
       } catch {
         // Инструмент мог упасть при обработке фиктивного ответа мока — не важно,
         // нас интересует только факт исходящего HTTP-вызова (записан ДО throw).
+      }
+
+      const unreachable = findUnreachableLeaves(recorder.calls(), leaves, GLOBAL_EXCEPTIONS);
+
+      expect(
+        unreachable,
+        unreachable.map((u) => describeUnreachableLeaf(toolName, u)).join('\n')
+      ).toHaveLength(0);
+    });
+  });
+});
+
+/**
+ * `update_board_column` / `delete_board_column` — та же проверка достижимости, но
+ * с диагностический `GET /v3/boards/{id}/columns` (`ensureColumnAddressable`, D11)
+ * подменённым на правдоподобный массив (одна колонка с `id`, совпадающим с
+ * сгенерированным `columnId`), а не общий глубокий stub `createHttpClientCallRecorder`
+ * (падает на `columns.filter(...)` — см. шапку файла). Без этого блока достижимость
+ * `statuses`/`limit`/`name` у правки колонки не была бы закрыта НИЧЕМ end-to-end.
+ */
+describe('Tool Params Reach API (Smoke) — update_board_column / delete_board_column с адресующим GET', () => {
+  const fakeConfig: ServerConfig = {
+    token: 'fake-token-for-testing',
+    orgId: 'fake-org-id',
+    apiBase: 'https://api.tracker.yandex.net',
+    requestTimeout: 30000,
+    maxBatchSize: 50,
+    maxConcurrentRequests: 10,
+    logLevel: 'error',
+    prettyLogs: false,
+    logsDir: '/tmp/logs',
+    logMaxSize: 10485760,
+    logMaxFiles: 10,
+  };
+
+  let toolRegistry: ToolRegistry;
+  let httpClient: IHttpClient;
+  let recorder: HttpClientCallRecorder;
+
+  beforeAll(async () => {
+    const container = await createContainer(fakeConfig);
+    toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+    httpClient = container.get<IHttpClient>(TYPES.HttpClient);
+    recorder = createHttpClientCallRecorder(httpClient);
+  });
+
+  afterEach(() => {
+    recorder.clear();
+  });
+
+  const addressingToolClasses = TOOL_CLASSES.filter((ToolClass) =>
+    BOARD_COLUMN_ADDRESSING_TOOLS.some((short) => ToolClass.METADATA.name.endsWith(`_${short}`))
+  );
+
+  it('находит оба адресующих инструмента (иначе список выше рассинхронизировался с составом)', () => {
+    expect(addressingToolClasses).toHaveLength(BOARD_COLUMN_ADDRESSING_TOOLS.length);
+  });
+
+  addressingToolClasses.forEach((ToolClass) => {
+    const toolName = ToolClass.METADATA.name;
+
+    it(`${ToolClass.name} (${toolName}): каждое поле схемы доезжает до целевого запроса за диагностическим GET`, async () => {
+      const tool = toolRegistry.getTool(toolName);
+      expect(tool, `Инструмент "${toolName}" не найден в ToolRegistry`).toBeDefined();
+
+      const schema = (
+        tool as unknown as {
+          getParamsSchema: () => Parameters<typeof generateReachabilitySample>[0];
+        }
+      ).getParamsSchema();
+
+      const { value, leaves } = generateReachabilitySample(schema, {
+        knownFieldSamples: KNOWN_FIELD_SAMPLES,
+        knownRegexSamples: KNOWN_REGEX_SAMPLES,
+      });
+      const sampleColumnId = (value as { columnId: string }).columnId;
+
+      recorder.clear();
+      const originalGet = httpClient.get.bind(httpClient);
+      (httpClient as unknown as { get: IHttpClient['get'] }).get = (async () => [
+        { id: sampleColumnId, name: 'probe-column', statuses: ['probe-status'] },
+      ]) as IHttpClient['get'];
+
+      try {
+        await (tool as BaseTool).execute(value as Record<string, unknown>);
+      } catch {
+        // см. общий цикл выше — интересует только факт исходящего вызова.
+      } finally {
+        (httpClient as unknown as { get: IHttpClient['get'] }).get = originalGet;
       }
 
       const unreachable = findUnreachableLeaves(recorder.calls(), leaves, GLOBAL_EXCEPTIONS);

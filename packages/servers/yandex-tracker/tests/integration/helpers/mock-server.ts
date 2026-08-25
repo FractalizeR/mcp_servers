@@ -1181,40 +1181,6 @@ export class MockServer {
   }
 
   /**
-   * Mock успешного создания очереди
-   */
-  mockCreateQueueSuccess(queueData?: Record<string, unknown>): this {
-    const queue = generateQueue(queueData ? { overrides: queueData } : {});
-    const mockKey = `POST ${TRACKER_API_V3}/queues/`;
-    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [201, queue];
-    });
-    this.pendingMocks.push(mockKey);
-    return this;
-  }
-
-  /**
-   * Mock ошибки 403 при создании очереди (нет прав)
-   */
-  mockCreateQueue403(): this {
-    const response = generateError403();
-    const mockKey = `POST ${TRACKER_API_V3}/queues/`;
-    this.mockAdapter.onPost(`${TRACKER_API_V3}/queues/`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [403, response];
-    });
-    this.pendingMocks.push(mockKey);
-    return this;
-  }
-
-  /**
    * Mock успешного обновления очереди
    */
   mockUpdateQueueSuccess(queueKey: string, updates?: Record<string, unknown>): this {
@@ -1380,62 +1346,6 @@ export class MockServer {
     const response = generateError404();
     const mockKey = `GET /v3/queues/${queueId}/components`;
     this.mockAdapter.onGet(`/v3/queues/${queueId}/components`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [404, response];
-    });
-    this.pendingMocks.push(mockKey);
-    return this;
-  }
-
-  /**
-   * Mock успешного создания компонента
-   */
-  mockCreateComponentSuccess(queueId: string, componentData?: Record<string, unknown>): this {
-    const component = generateComponent({
-      overrides: {
-        queue: { id: queueId, key: 'TEST', display: 'Test Queue' },
-        ...componentData,
-      },
-    });
-    const mockKey = `POST /v3/queues/${queueId}/components`;
-    this.mockAdapter.onPost(`/v3/queues/${queueId}/components`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [201, component];
-    });
-    this.pendingMocks.push(mockKey);
-    return this;
-  }
-
-  /**
-   * Mock ошибки 403 при создании компонента (нет прав)
-   */
-  mockCreateComponent403(queueId: string): this {
-    const response = generateError403();
-    const mockKey = `POST /v3/queues/${queueId}/components`;
-    this.mockAdapter.onPost(`/v3/queues/${queueId}/components`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [403, response];
-    });
-    this.pendingMocks.push(mockKey);
-    return this;
-  }
-
-  /**
-   * Mock ошибки 404 при создании компонента (очередь не найдена)
-   */
-  mockCreateComponent404(queueId: string): this {
-    const response = generateError404();
-    const mockKey = `POST /v3/queues/${queueId}/components`;
-    this.mockAdapter.onPost(`/v3/queues/${queueId}/components`).reply(() => {
       const index = this.pendingMocks.indexOf(mockKey);
       if (index !== -1) {
         this.pendingMocks.splice(index, 1);

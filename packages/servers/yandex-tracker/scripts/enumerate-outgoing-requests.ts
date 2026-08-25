@@ -9,6 +9,7 @@
  */
 import { writeFileSync } from 'node:fs';
 import { TOOL_CLASSES } from '#composition-root/definitions/tool-definitions.js';
+import type { ToolClass } from '#composition-root/definitions/tool-definitions.js';
 import { createContainer } from '#composition-root/container.js';
 import { TYPES } from '#composition-root/types.js';
 import type { ToolRegistry, BaseTool } from '@fractalizer/mcp-core';
@@ -21,6 +22,7 @@ const KNOWN_REGEX_SAMPLES = new Map<string, string>([
   [/^[A-Z][A-Z0-9]+-\d+$/.source, 'TEST-1'],
   [/^[A-Z][A-Z0-9]+$/.source, 'TESTQ'],
   [/^[A-Z]{2,10}$/.source, 'TESTQ'],
+  [/^\d{4}-\d{2}-\d{2}$/.source, '2026-01-01'], // startDate/endDate проекта (base-project.schema.ts)
 ]);
 
 const fakeConfig: ServerConfig = {
@@ -47,6 +49,111 @@ interface Captured {
   bodyPreview: string;
 }
 
+/** Изменяемое между итерациями `TOOL_CLASSES` состояние, которое видит adapter-замыкание. */
+interface RunState {
+  current: { tool: string; readOnly: boolean; destructive: boolean };
+  /**
+   * `columnId` образца текущего инструмента — заполняется в `probeTool()` перед
+   * `tool.execute()`, читает `buildResponseData()` (см. её докстринг за причиной).
+   */
+  currentColumnId: string | undefined;
+}
+
+/**
+ * `update_board_column`/`delete_board_column` читают `GET /v3/boards/{id}/columns`
+ * (`ensureColumnAddressable`, D11) и отказывают ДО целевого PATCH/DELETE, если
+ * `columnId` не адресует ровно одну колонку. Заглушка-адаптер по умолчанию отдаёт
+ * `{}` на любой запрос — `findColumnsSharingId` падает на `columns.filter is not
+ * a function` раньше целевого запроса, и он не попадает в перечень (тот же класс
+ * дефекта, закрытый в смоке — `tests/smoke/tool-params-reach-api.smoke.test.ts`,
+ * блок «с адресующим GET»). Здесь тот же приём: вызывающий запоминает `columnId`
+ * сгенерированного образца и передаёт его сюда, а эта функция отдаёт на такой GET
+ * массив с одной колонкой этого id — адресация проходит, и целевой запрос успевает
+ * попасть в `captured`.
+ */
+const BOARD_COLUMNS_GET_PATH = /\/v3\/boards\/[^/]+\/columns$/;
+
+function buildResponseData(
+  method: string,
+  url: string,
+  currentColumnId: string | undefined
+): unknown {
+  const isAddressingGet =
+    method === 'GET' && currentColumnId !== undefined && BOARD_COLUMNS_GET_PATH.test(url);
+  return isAddressingGet
+    ? [{ id: currentColumnId, name: 'probe-column', statuses: ['probe-status'] }]
+    : {};
+}
+
+/** Разбор тела запроса для колонок отчёта `bodyKeys`/`bodyPreview` — вынесено из адаптера ради когнитивной сложности. */
+function describeRequestBody(body: unknown): { bodyKeys: string[]; bodyPreview: string } {
+  try {
+    const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+    const bodyKeys =
+      parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? Object.keys(parsed as Record<string, unknown>)
+        : [];
+    const bodyPreview =
+      typeof body === 'string' ? body.slice(0, 200) : String(body ?? '').slice(0, 200);
+    return { bodyKeys, bodyPreview };
+  } catch {
+    return { bodyKeys: [], bodyPreview: '<non-json>' };
+  }
+}
+
+/**
+ * Прогоняет один инструмент: генерирует образец параметров из его Zod-схемы,
+ * выполняет его (запросы оседают в `captured` через adapter в `main()`) и
+ * фиксирует причину отсутствия запроса в `noRequest`, если инструмент его не сделал.
+ * Вынесено из `main()` ради когнитивной сложности (весь цикл обхода `TOOL_CLASSES`
+ * был одной функцией с adapter-замыканием).
+ */
+async function probeTool(
+  toolClass: ToolClass,
+  registry: ToolRegistry,
+  state: RunState,
+  captured: Captured[],
+  noRequest: string[]
+): Promise<void> {
+  const metadata = toolClass.METADATA;
+  state.current = {
+    tool: metadata.name,
+    readOnly: metadata.annotations?.readOnlyHint === true,
+    destructive: metadata.annotations?.destructiveHint === true,
+  };
+  const before = captured.length;
+  const tool = registry.getTool(metadata.name);
+  if (!tool) {
+    noRequest.push(`${metadata.name} — НЕТ В РЕЕСТРЕ`);
+    return;
+  }
+  const schema = (
+    tool as unknown as { getParamsSchema: () => Parameters<typeof generateReachabilitySample>[0] }
+  ).getParamsSchema();
+  let sample: unknown = {};
+  try {
+    sample = generateReachabilitySample(schema, {
+      knownFieldSamples: KNOWN_FIELD_SAMPLES,
+      knownRegexSamples: KNOWN_REGEX_SAMPLES,
+    }).value;
+  } catch (e) {
+    noRequest.push(`${metadata.name} — генератор образца упал: ${(e as Error).message}`);
+    return;
+  }
+  const sampleColumnId = (sample as { columnId?: unknown }).columnId;
+  state.currentColumnId = typeof sampleColumnId === 'string' ? sampleColumnId : undefined;
+  try {
+    await (tool as BaseTool).execute(sample as Record<string, unknown>);
+  } catch (e) {
+    if (captured.length === before) {
+      noRequest.push(`${metadata.name} — запросов нет: ${(e as Error).message.slice(0, 160)}`);
+    }
+  }
+  if (captured.length === before && !noRequest.some((n) => n.startsWith(metadata.name))) {
+    noRequest.push(`${metadata.name} — запросов нет (выполнился без HTTP)`);
+  }
+}
+
 async function main(): Promise<void> {
   const container = await createContainer(fakeConfig);
   const registry = container.get<ToolRegistry>(TYPES.ToolRegistry);
@@ -56,10 +163,9 @@ async function main(): Promise<void> {
   };
 
   const captured: Captured[] = [];
-  let current: { tool: string; readOnly: boolean; destructive: boolean } = {
-    tool: '?',
-    readOnly: false,
-    destructive: false,
+  const state: RunState = {
+    current: { tool: '?', readOnly: false, destructive: false },
+    currentColumnId: undefined,
   };
 
   axiosInstance.defaults.adapter = async (config: {
@@ -67,67 +173,25 @@ async function main(): Promise<void> {
     method?: string;
     url?: string;
   }) => {
-    const body = config.data;
-    let bodyKeys: string[] = [];
-    let bodyPreview = '';
-    try {
-      const parsed = typeof body === 'string' ? JSON.parse(body) : body;
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        bodyKeys = Object.keys(parsed as Record<string, unknown>);
-      }
-      bodyPreview =
-        typeof body === 'string' ? body.slice(0, 200) : String(body ?? '').slice(0, 200);
-    } catch {
-      bodyPreview = '<non-json>';
-    }
+    const method = String(config.method ?? '?').toUpperCase();
+    const url = String(config.url ?? '?');
+    const responseData = buildResponseData(method, url, state.currentColumnId);
+    const { bodyKeys, bodyPreview } = describeRequestBody(config.data);
+
     captured.push({
-      ...current,
-      method: String(config.method ?? '?').toUpperCase(),
-      path: String(config.url ?? '?'),
+      ...state.current,
+      method,
+      path: url,
       bodyKeys,
       bodyPreview,
     });
-    return { data: {}, status: 200, statusText: 'OK', headers: {}, config };
+    return { data: responseData, status: 200, statusText: 'OK', headers: {}, config };
   };
 
   const noRequest: string[] = [];
 
-  for (const ToolClass of TOOL_CLASSES) {
-    const metadata = ToolClass.METADATA;
-    current = {
-      tool: metadata.name,
-      readOnly: metadata.annotations?.readOnlyHint === true,
-      destructive: metadata.annotations?.destructiveHint === true,
-    };
-    const before = captured.length;
-    const tool = registry.getTool(metadata.name);
-    if (!tool) {
-      noRequest.push(`${metadata.name} — НЕТ В РЕЕСТРЕ`);
-      continue;
-    }
-    const schema = (
-      tool as unknown as { getParamsSchema: () => Parameters<typeof generateReachabilitySample>[0] }
-    ).getParamsSchema();
-    let sample: unknown = {};
-    try {
-      sample = generateReachabilitySample(schema, {
-        knownFieldSamples: KNOWN_FIELD_SAMPLES,
-        knownRegexSamples: KNOWN_REGEX_SAMPLES,
-      }).value;
-    } catch (e) {
-      noRequest.push(`${metadata.name} — генератор образца упал: ${(e as Error).message}`);
-      continue;
-    }
-    try {
-      await (tool as BaseTool).execute(sample as Record<string, unknown>);
-    } catch (e) {
-      if (captured.length === before) {
-        noRequest.push(`${metadata.name} — запросов нет: ${(e as Error).message.slice(0, 160)}`);
-      }
-    }
-    if (captured.length === before && !noRequest.some((n) => n.startsWith(metadata.name))) {
-      noRequest.push(`${metadata.name} — запросов нет (выполнился без HTTP)`);
-    }
+  for (const toolClass of TOOL_CLASSES) {
+    await probeTool(toolClass, registry, state, captured, noRequest);
   }
 
   const lines: string[] = [];
