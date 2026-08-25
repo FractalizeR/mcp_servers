@@ -3,7 +3,7 @@
  * пакет 1.1.E проверяет, что регрессия не вернулась при добивании retry-
  * поверхности для читающих POST).
  *
- * `CreateBoardOperation` создаёт ресурс (POST /v3/boards) без ключа
+ * `CreateBoardOperation` создаёт ресурс (POST /v3/liveBoards/) без ключа
  * идемпотентности — прямой аналог классов дефектов из 1.1.C (create_issue до
  * фикса, create_component, create_field, ...). Используется реальный
  * `AxiosHttpClient` + реальная `ExponentialBackoffStrategy` поверх

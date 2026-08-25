@@ -2,7 +2,12 @@
  * DTO для обновления доски в Яндекс.Трекере
  */
 
-import type { CreateBoardColumnDto, CreateBoardFilterDto } from './create-board.dto.js';
+import type { CreateBoardColumnDto } from './create-board.dto.js';
+
+/** Фильтр доски в форме, которую принимает `PATCH /v3/boards/{id}`. */
+export interface UpdateBoardFilterDto {
+  query?: string | undefined;
+}
 
 export interface UpdateBoardDto {
   /** ID доски для обновления */
@@ -18,7 +23,7 @@ export interface UpdateBoardDto {
   columns?: CreateBoardColumnDto[] | undefined;
 
   /** Обновленный фильтр доски */
-  filter?: CreateBoardFilterDto | undefined;
+  filter?: UpdateBoardFilterDto | undefined;
 
   /** Поле для сортировки задач */
   orderBy?: string | undefined;

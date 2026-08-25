@@ -23,12 +23,25 @@ export class CreateBoardTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { fields, ...boardData } = validation.data;
+    const { fields, queue, ...boardData } = validation.data;
+
+    const autoFilters =
+      queue === undefined
+        ? undefined
+        : {
+            addFilter: {
+              liveFilter: { fieldValues: { queue: [{ fixed: queue }] } },
+              enabled: true,
+            },
+          };
 
     try {
-      this.logger.info('Создание доски', { name: boardData.name, queue: boardData.queue });
+      this.logger.info('Создание доски', { name: boardData.name, queue });
 
-      const board = await this.facade.createBoard(boardData);
+      const board = await this.facade.createBoard({
+        ...boardData,
+        ...(autoFilters === undefined ? {} : { autoFilters }),
+      });
 
       this.logger.info('Доска создана', { boardId: board.id, name: board.name });
 
