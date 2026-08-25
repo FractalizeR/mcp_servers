@@ -86,6 +86,26 @@ describe('UpdateBoardTool', () => {
     );
   });
 
+  it('orderBy вместе с filter принимается', async () => {
+    // Вторая половина ограничения: отказ обязан касаться только комбинации без filter.
+    vi.mocked(mockTrackerFacade.updateBoard).mockResolvedValue({
+      id: 5,
+      self: 'url',
+      version: 2,
+      name: 'X',
+    });
+
+    const result = await tool.execute({
+      boardId: '5',
+      filter: { queue: ['TEST'] },
+      orderBy: 'created',
+      orderAsc: false,
+      fields: ['id'],
+    });
+
+    expect(result.isError).toBeUndefined();
+  });
+
   it('не принимает orderBy без filter: API отвечает 422', async () => {
     const result = await tool.execute({ boardId: '5', orderBy: 'created', fields: ['id'] });
 

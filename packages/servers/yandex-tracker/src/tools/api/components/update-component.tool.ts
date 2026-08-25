@@ -2,7 +2,7 @@
  * MCP Tool для обновления компонента в Яндекс.Трекере
  */
 
-import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+import { BaseTool, ResponseFieldFilter, ToolWarningCode } from '@fractalizer/mcp-core';
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import type { ComponentWithUnknownFields } from '#tracker_api/entities/index.js';
@@ -59,12 +59,28 @@ export class UpdateComponentTool extends BaseTool<YandexTrackerFacade> {
         name: component.name,
       });
 
+      // Версию не передали — операция прочитала текущую, и правка прошла как
+      // «последний выигрывает». Молчать об этом нельзя: вызывающий думает, что у него
+      // оптимистичная блокировка, а конфликт с чужой правкой разошёлся бы незаметно.
+      const lockWarnings =
+        version === undefined
+          ? [
+              {
+                code: ToolWarningCode.VERSION_NOT_PROVIDED,
+                message:
+                  'Версия не передана: операция прочитала текущую сама, поэтому чужая ' +
+                  'параллельная правка перезаписана без конфликта. Передавай version ' +
+                  'из поля version компонента, чтобы получить отказ вместо перезаписи.',
+              },
+            ]
+          : [];
+
       return this.formatSuccess(
         {
           component: filtered,
           message: `Компонент ${componentId} успешно обновлен`,
         },
-        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
+        [...ResponseFieldFilter.toWarnings(fieldsWithoutValue), ...lockWarnings]
       );
     } catch (error: unknown) {
       return this.formatError('Ошибка при обновлении компонента', error);

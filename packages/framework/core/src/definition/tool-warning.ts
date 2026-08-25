@@ -26,6 +26,8 @@ export const ToolWarningCode = {
   FIELDS_WITHOUT_VALUE: 'FIELDS_WITHOUT_VALUE',
   UNKNOWN_PARAMETER: 'UNKNOWN_PARAMETER',
   AMBIGUOUS_ENTITY_ID: 'AMBIGUOUS_ENTITY_ID',
+  /** Правка прошла без токена версии: конфликт с чужой правкой не будет замечен. */
+  VERSION_NOT_PROVIDED: 'VERSION_NOT_PROVIDED',
 } as const;
 
 export type ToolWarningCode = (typeof ToolWarningCode)[keyof typeof ToolWarningCode];
@@ -48,6 +50,7 @@ export const ToolWarningSchema = z.object({
     ToolWarningCode.FIELDS_WITHOUT_VALUE,
     ToolWarningCode.UNKNOWN_PARAMETER,
     ToolWarningCode.AMBIGUOUS_ENTITY_ID,
+    ToolWarningCode.VERSION_NOT_PROVIDED,
   ]),
   message: z.string(),
   details: z.record(z.string(), z.unknown()).optional(),
