@@ -21,7 +21,6 @@ import {
   ChecklistService,
   WorklogService,
   SprintService,
-  ProjectService,
   BoardService,
   QueueService,
   IssueAttachmentService,
@@ -223,13 +222,6 @@ describe('Container', () => {
       expect(service).toHaveProperty('createSprint');
     });
 
-    it('должен resolve ProjectService', () => {
-      const service = container.get(ProjectService);
-      expect(service).toBeDefined();
-      expect(service).toHaveProperty('getProjects');
-      expect(service).toHaveProperty('getProject');
-    });
-
     it('должен resolve BoardService', () => {
       const service = container.get(BoardService);
       expect(service).toBeDefined();
@@ -409,7 +401,6 @@ describe('Container', () => {
         container.get(ChecklistService);
         container.get(WorklogService);
         container.get(SprintService);
-        container.get(ProjectService);
         container.get(BoardService);
         container.get(QueueService);
         container.get(IssueAttachmentService);

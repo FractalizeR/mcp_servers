@@ -74,7 +74,6 @@ import { BaseTool } from '../../../core/src/tools/base/base-tool.js'; // WRONG!
 | Attachments | v3 | `/v3/issues/{id}/attachments` |
 | Checklists | v3 | `/v3/issues/{id}/checklistItems` |
 | Components | v3 | `GET /v3/queues/{id}/components`, `POST /v3/components` |
-| Projects | v3 | `/v3/projects` |
 | Worklogs | v3 | `/v3/issues/{id}/worklog` |
 | Boards | v3 | `POST /v3/liveBoards/`, чтение/правка/удаление `/v3/boards/{id}` |
 | Board columns | v3 | `/v3/boards/{id}/columns/` |
@@ -259,7 +258,7 @@ return this.formatSuccess(
   кодирует путь+perPage; выводится из `Link rel="next"`).
 - `cursor` несовместим с `perPage`/`fetchAll`/`maxItems`/`maxTotalItems`; в batch валиден
   только при одном issueId.
-- `total`/`totalPages` отдаются **только** для seekable (queues/projects/find_issues,
+- `total`/`totalPages` отдаются **только** для seekable (queues/find_issues,
   `Link rel="seek"`); у cursor-эндпоинтов (changelog/comments/links/worklog/checklist) их нет.
 - `fetchAll=true` — полный обход по `Link rel="next"` с лимитами `maxItems` (500/цепочку)
   и `maxTotalItems` (1000/batch-ответ); обрезка → `pagination.truncated=true`.
@@ -348,6 +347,19 @@ export class GetIssuesTool extends BaseTool<typeof GetIssuesSchema> {
 - ⚠️ Устаревшие env-переменные прежнего режима discovery удалены целиком (не no-op): если клиент их
   всё ещё выставляет, сервер печатает предупреждение в stderr при старте и продолжает работу с
   полным набором инструментов
+
+### 5.0. Категория `projects` — это Entity API, а не легаси (с 2026-08-25)
+
+После удаления легаси-семейства `/v3/projects` значение `ToolCategory.PROJECTS` несут
+ровно девять инструментов Entity API: `create_entity`, `get_entity`, `find_entities`,
+`update_entity`, `delete_entity` и четвёрка ключевых результатов цели. То есть
+`projects` теперь означает «проекты, портфели и цели», а не старое семейство.
+
+Из-за этого группа `projects` **убрана** из значения `disabled_tool_groups` по
+умолчанию в `manifest.template.json`: пока она там стояла, профиль MCPB по умолчанию
+прятал единственный способ работать с проектами, портфелями и целями разом. Словесное
+описание параметра в манифесте эту группу отключённой и не называло — значение
+разошлось с текстом ещё когда категория значила легаси.
 
 ### 5.1. Инструментов удаления не заводим (решено 2026-08-25)
 
@@ -578,7 +590,7 @@ packages/servers/yandex-tracker/
 ### Команды
 
 ```bash
-# Список инструментов (90 штук) с классификацией read/write/local-side-effect
+# Список инструментов (85 штук) с классификацией read/write/local-side-effect
 npm run tools:list
 
 # Вызвать один инструмент

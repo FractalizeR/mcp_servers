@@ -57,16 +57,18 @@ download_attachment`) на момент верификации уже устра
 проверки: не пишут ни в удалённое окружение (нет вызовов `httpClient.post/postWithResponse/patch/
 put/delete`), ни на локальную ФС (нет `writeFile`/`createWriteStream`/`writeFileSync`).
 
-- **yandex-tracker** (40 инструментов): `analyze_issue_description`, `demo`, `find_entities`,
-  `find_issues`, `find_users`, `get_attachments`, `get_board`, `get_board_columns`, `get_boards`,
-  `get_bulk_change_status`, `get_checklist`, `get_comments`, `get_components`, `get_entity`,
-  `get_filters`, `get_global_field`, `get_global_fields`, `get_goal_key_results`,
-  `get_issue_changelog`, `get_issue_links`, `get_issue_transitions`, `get_issue_types`,
-  `get_issue_urls`, `get_issues`, `get_priorities`, `get_project`, `get_projects`, `get_queue`,
+- **yandex-tracker** (38 инструментов; было 40 до удаления легаси-семейства проектов
+  `get_project`/`get_projects` 2026-08-25 — данные проектов теперь только через
+  `get_entity`/`find_entities`, уже в списке): `analyze_issue_description`, `demo`,
+  `find_entities`, `find_issues`, `find_users`, `get_attachments`, `get_board`,
+  `get_board_columns`, `get_boards`, `get_bulk_change_status`, `get_checklist`, `get_comments`,
+  `get_components`, `get_entity`, `get_filters`, `get_global_field`, `get_global_fields`,
+  `get_goal_key_results`, `get_issue_changelog`, `get_issue_links`, `get_issue_transitions`,
+  `get_issue_types`, `get_issue_urls`, `get_issues`, `get_priorities`, `get_queue`,
   `get_queue_fields`, `get_queue_local_fields`, `get_queues`, `get_resolutions`, `get_sprint`,
   `get_sprints`, `get_statuses`, `get_users`, `get_worklogs`, `ping`, `raw_api_request`,
   `search_worklog` — все делегируют через `facade.*` → `*.service.ts` к операциям на
-  `httpClient.get`/`getWithResponse`; ни один сервис-класс на пути этих 40 инструментов не
+  `httpClient.get`/`getWithResponse`; ни один сервис-класс на пути этих 38 инструментов не
   содержит `httpClient.post/patch/put/delete`; ни один файл в `tools/` не содержит `writeFile`.
   `raw_api_request` дополнительно заперт на уровне схемы (`method: z.literal('GET')`) и в
   операции (`switch(method) { case 'GET': ...; default: throw }`) — расширение на другие методы
@@ -171,11 +173,6 @@ wiki как минимум `local-side-effect` по
 | yandex-tracker | transition_issue | false | false | false | true | transition-issue.metadata.ts |
 | yandex-tracker | get_issue_transitions | true | false | true | true | get-issue-transitions.metadata.ts |
 | yandex-tracker | update_issue | false | false | true | true | update-issue.metadata.ts |
-| yandex-tracker | create_project | false | false | false | true | create-project.metadata.ts |
-| yandex-tracker | delete_project | false | true | true | true | delete-project.metadata.ts |
-| yandex-tracker | get_project | true | false | true | true | get-project.metadata.ts |
-| yandex-tracker | get_projects | true | false | true | true | get-projects.metadata.ts |
-| yandex-tracker | update_project | false | false | true | true | update-project.metadata.ts |
 | yandex-tracker | create_queue_local_field | false | false | false | true | create-queue-local-field.metadata.ts |
 | yandex-tracker | get_queue_local_fields | true | false | true | true | get-queue-local-fields.metadata.ts |
 | yandex-tracker | update_queue_local_field | false | false | true | true | update-queue-local-field.metadata.ts |

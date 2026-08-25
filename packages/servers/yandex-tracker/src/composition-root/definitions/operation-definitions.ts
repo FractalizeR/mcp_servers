@@ -61,13 +61,6 @@ import {
   DeleteWorklogOperation,
 } from '#tracker_api/api_operations/worklog/index.js';
 import {
-  GetProjectsOperation,
-  GetProjectOperation,
-  CreateProjectOperation,
-  UpdateProjectOperation,
-  DeleteProjectOperation,
-} from '#tracker_api/api_operations/project/index.js';
-import {
   BulkUpdateIssuesOperation,
   BulkTransitionIssuesOperation,
   BulkMoveIssuesOperation,
@@ -176,11 +169,6 @@ export const OPERATION_CLASSES = [
   AddWorklogOperation,
   UpdateWorklogOperation,
   DeleteWorklogOperation,
-  GetProjectsOperation,
-  GetProjectOperation,
-  CreateProjectOperation,
-  UpdateProjectOperation,
-  DeleteProjectOperation,
   BulkUpdateIssuesOperation,
   BulkTransitionIssuesOperation,
   BulkMoveIssuesOperation,

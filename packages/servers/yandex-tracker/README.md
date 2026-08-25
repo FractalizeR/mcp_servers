@@ -186,7 +186,6 @@ rate limits), частичная обработка ошибок, единооб
 | **Worklog** | 4 | Учет затраченного времени |
 | **Queues** | 6 | Управление очередями задач |
 | **Components** | 4 | Управление компонентами проекта |
-| **Projects** | 5 | Управление проектами |
 
 ### Детальный список инструментов
 
@@ -271,17 +270,6 @@ rate limits), частичная обработка ошибок, единооб
 - `fr_yandex_tracker_create_component` — Создать компонент
 - `fr_yandex_tracker_get_components` — Получить компоненты очереди
 - `fr_yandex_tracker_update_component` — Обновить компонент
-
-</details>
-
-<details>
-<summary><strong>Projects (5 инструментов)</strong></summary>
-
-- `fr_yandex_tracker_create_project` — Создать проект
-- `fr_yandex_tracker_get_projects` — Получить список проектов
-- `fr_yandex_tracker_update_project` — Обновить проект
-- `fr_yandex_tracker_delete_project` — Удалить проект
-- `fr_yandex_tracker_get_project_queues` — Получить очереди проекта
 
 </details>
 

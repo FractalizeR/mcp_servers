@@ -17,7 +17,6 @@ import type { Issue } from './issue.entity.js';
 import type { Transition } from './transition.entity.js';
 import type { ChangelogEntry, ChangelogField } from './changelog.entity.js';
 import type { Attachment } from './attachment.entity.js';
-import type { Project, ProjectStatus } from './project.entity.js';
 import type { QueueRef } from './common/queue-ref.entity.js';
 
 /**
@@ -366,44 +365,6 @@ export function createQueueRef(overrides?: Partial<QueueRef>): QueueRef {
     id: '1',
     key: 'TEST',
     display: 'Test Queue',
-    ...overrides,
-  };
-}
-
-/**
- * Создает минимальный Project entity (только обязательные поля)
- */
-export function createMinimalProject(overrides?: Partial<Project>): Project {
-  return {
-    id: '1',
-    self: 'https://api.tracker.yandex.net/v3/projects/1',
-    key: 'PROJECT',
-    name: 'Test Project',
-    lead: createUserRef(),
-    status: 'in_progress' as ProjectStatus,
-    version: 1,
-    ...overrides,
-  };
-}
-
-/**
- * Создает полный Project entity (со всеми опциональными полями)
- */
-export function createFullProject(overrides?: Partial<Project>): Project {
-  return {
-    id: '1',
-    self: 'https://api.tracker.yandex.net/v3/projects/1',
-    key: 'PROJECT',
-    name: 'Test Project',
-    lead: createUserRef(),
-    status: 'in_progress' as ProjectStatus,
-    version: 1,
-    description: 'Test project description',
-    teamUsers: [createUserRef()],
-    teamGroups: [{ id: '1', display: 'Test Group' }],
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
-    queues: [createQueueRef()],
     ...overrides,
   };
 }

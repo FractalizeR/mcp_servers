@@ -163,9 +163,9 @@ HTTP-заголовки даёт `getWithResponse`/`postWithResponse` (`@fractal
 
 **Два механизма Трекера (определяет сервер, не клиент):**
 - **Link `rel="next"`** (cursor) — GET-коллекции (changelog, comments, worklog, links,
-  checklist, queues, projects). Идём по next-URL до исчерпания. `total`/`totalPages` НЕ
+  checklist, queues). Идём по next-URL до исчерпания. `total`/`totalPages` НЕ
   заполняются (нет seek).
-- **Seekable** — POST `_search` (find_issues), а также queues/projects: `Link rel="seek"`
+- **Seekable** — POST `_search` (find_issues), а также queues: `Link rel="seek"`
   даёт `X-Total-Count`/`X-Total-Pages`. find_issues: следуем `Link rel="next"`, если он
   есть; иначе перебираем `page=1..X-Total-Pages` (внутренний fallback, наружу page не виден).
 - **Непагинируемые** — components/attachments: возвращают все элементы за один ответ,
@@ -277,7 +277,6 @@ async execute(key: string, input: GetCommentsInput): Promise<PaginatedResult<Com
 | Attachments | v3 | `/v3/issues/{id}/attachments` |
 | Checklists | v3 | `/v3/issues/{id}/checklistItems` |
 | Components | v3 | `GET /v3/queues/{id}/components`, `POST /v3/components` (D1) |
-| Projects | v3 | `/v3/projects` |
 | Worklogs | v3 | `/v3/issues/{id}/worklog` |
 | Boards, колонки, спринты, глобальные поля, bulkchange | v3 | все пути семейства на v3 |
 

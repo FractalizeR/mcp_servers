@@ -6,7 +6,7 @@
  * `serveStdio`, а не голый `server.connect()`).
  *
  * Проверяет DoD задания целиком на уровне протокола:
- * 1. prompts/list отдаёт все 4 промпта с описаниями и аргументами.
+ * 1. prompts/list отдаёт все 3 промпта с описаниями и аргументами.
  * 2. prompts/get каждого подставляет аргументы; обязательный аргумент без
  *    значения даёт внятную ошибку.
  * 3. Несуществующее имя промпта → -32602.
@@ -137,7 +137,7 @@ describe('Трекер: prompts/* через реальный Server (wire-ур�
     return harness;
   }
 
-  it('DoD 1: prompts/list отдаёт все 4 промпта с описаниями и аргументами', async () => {
+  it('DoD 1: prompts/list отдаёт все 3 промпта с описаниями и аргументами', async () => {
     const h = await withConnectedHarness();
 
     const list = await h.request(2, 'prompts/list', { _meta: modernMeta() });
@@ -148,12 +148,7 @@ describe('Трекер: prompts/* через реальный Server (wire-ур�
       description?: string;
       arguments?: unknown[];
     }>;
-    expect(prompts.map((p) => p.name)).toEqual([
-      'triage_queue',
-      'daily_summary',
-      'project_summary',
-      'epic_links',
-    ]);
+    expect(prompts.map((p) => p.name)).toEqual(['triage_queue', 'daily_summary', 'epic_links']);
     for (const p of prompts) {
       expect(p.description, `${p.name} обязан иметь description`).toBeTruthy();
     }
@@ -203,20 +198,6 @@ describe('Трекер: prompts/* через реальный Server (wire-ур�
     // requireArgs() бросает ProtocolError сам, но только wire-уровень
     // (реальная сериализация через Server SDK) подтверждает, что код
     // действительно доходит до клиента таким, а не заворачивается по дороге.
-    expect(get.error?.code).toBe(-32602);
-  });
-
-  it('DoD 2/3: prompts/get без обязательного аргумента → JSON-RPC -32602 на WIRE (project_summary без project), не internal error', async () => {
-    const h = await withConnectedHarness();
-
-    const get = await h.request(2, 'prompts/get', {
-      name: 'project_summary',
-      _meta: modernMeta(),
-    });
-
-    expect(get.result).toBeUndefined();
-    expect(get.error).toBeDefined();
-    expect(get.error?.message).toMatch(/project/i);
     expect(get.error?.code).toBe(-32602);
   });
 

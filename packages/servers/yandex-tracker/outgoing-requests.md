@@ -45,10 +45,6 @@
 | `fr_yandex_tracker_add_checklist_item` | нет | нет | POST | `/v3/issues/TEST-1/checklistItems` | text, checked, assignee, deadline |
 | `fr_yandex_tracker_update_checklist_item` | нет | нет | PATCH | `/v3/issues/TEST-1/checklistItems/probe_items___checklistItemId` | text, checked, assignee, deadline |
 | `fr_yandex_tracker_delete_checklist_item` | нет | да | DELETE | `/v3/issues/TEST-1/checklistItems/probe_items___itemId` | — |
-| `fr_yandex_tracker_get_project` | да | нет | GET | `/v3/projects/probe_projectId?expand=probe_expand` | — |
-| `fr_yandex_tracker_create_project` | нет | нет | POST | `/v3/projects` | name, queues, lead, status, description, startDate, endDate |
-| `fr_yandex_tracker_update_project` | нет | нет | PATCH | `/v3/projects/probe_projectId?version=189201` | name, lead, status, description, startDate, endDate, queues, teamUserIds |
-| `fr_yandex_tracker_delete_project` | нет | да | DELETE | `/v3/projects/probe_projectId` | — |
 | `fr_yandex_tracker_add_worklog` | нет | нет | POST | `/v3/issues/TEST-1/worklog` | start, duration, comment |
 | `fr_yandex_tracker_update_worklog` | нет | нет | PATCH | `/v3/issues/TEST-1/worklog/probe_worklogId` | start, duration, comment |
 | `fr_yandex_tracker_delete_worklog` | нет | да | DELETE | `/v3/issues/TEST-1/worklog/probe_worklogId` | — |
@@ -97,7 +93,7 @@
 | `fr_yandex_tracker_create_global_field` | нет | нет | POST | `/v3/fields` | id, name, category, type, order, description, readonly, visible, hidden, container, optionsProvider |
 | `fr_yandex_tracker_update_global_field` | нет | нет | PATCH | `/v3/fields/probe_fieldId` | name, description, readonly, options, suggest, optionsProvider |
 
-## Инструменты без зафиксированного запроса (14)
+## Инструменты без зафиксированного запроса (13)
 
 - fr_yandex_tracker_find_issues — запросов нет (выполнился без HTTP)
 - fr_yandex_tracker_get_issue_changelog — запросов нет (выполнился без HTTP)
@@ -105,7 +101,6 @@
 - fr_yandex_tracker_get_issue_links — запросов нет (выполнился без HTTP)
 - fr_yandex_tracker_get_comments — запросов нет (выполнился без HTTP)
 - fr_yandex_tracker_get_checklist — запросов нет (выполнился без HTTP)
-- fr_yandex_tracker_get_projects — запросов нет (выполнился без HTTP)
 - fr_yandex_tracker_get_worklogs — запросов нет (выполнился без HTTP)
 - fr_yandex_tracker_get_issue_urls — запросов нет (выполнился без HTTP)
 - fr_yandex_tracker_demo — запросов нет (выполнился без HTTP)

@@ -10,7 +10,7 @@ import { DeleteEntityOutputSchema } from './delete-entity.schema.js';
 export const DELETE_ENTITY_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('delete_entity', MCP_TOOL_PREFIX),
   description:
-    '[Entities/Write] Удалить Goal/Project/Portfolio (коллекция /v3/entities/, не /v3/projects — см. get_projects)',
+    '[Entities/Write] Удалить Goal/Project/Portfolio (Entity API, коллекция /v3/entities/)',
   category: ToolCategory.PROJECTS,
   subcategory: 'delete',
   priority: ToolPriority.NORMAL,

@@ -78,8 +78,8 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
 }
 
 describe('Рубеж в собранном контейнере', () => {
-  it('удаление проекта не доходит до сети', async () => {
-    const message = await callTool('delete_project', { projectId: '11' });
+  it('правка глобального поля вне журнала не доходит до сети', async () => {
+    const message = await callTool('update_global_field', { fieldId: '11', fields: ['id'] });
 
     expect(requestsSent).toBe(0);
     expect(message).toContain('не принадлежит этому прогону');

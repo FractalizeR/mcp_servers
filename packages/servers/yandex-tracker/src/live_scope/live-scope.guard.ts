@@ -77,7 +77,6 @@ function createdEntityOf(request: OutgoingRequest): CreatedEntity | undefined {
   if (/^\/v3\/issues\/?$/.test(path)) return { kind: 'issue' };
   if (/^\/v3\/components\/?$/.test(path)) return { kind: 'component' };
   if (/^\/v3\/queues\/[^/]+\/localFields\/?$/.test(path)) return { kind: 'queueLocalField' };
-  if (/^\/v3\/projects\/?$/.test(path)) return { kind: 'project' };
   // Доска создаётся на `liveBoards`, а адресуется потом по `/v3/boards/{id}`:
   // детектор стоит на маршруте создания, иначе своя доска не попадёт в журнал.
   if (/^\/v3\/liveBoards\/?$/.test(path)) return { kind: 'board' };
@@ -99,8 +98,8 @@ function asIdentifier(raw: unknown): string | undefined {
 
 /**
  * Поля ответа, из которых для каждого рода собираются идентификаторы, какими
- * сущность потом адресуют. Составлено по таблице плана этапа 5.1: `project` и
- * `queue` допускают адресацию и по `id`, и по `key`; у остальных родов (кроме
+ * сущность потом адресуют. Составлено по таблице плана этапа 5.1: `queue`
+ * допускает адресацию и по `id`, и по `key`; у остальных родов (кроме
  * `entity`, см. `identifiersOf`) второй формы адресации нет.
  *
  * Поля обоих родов адресуются двояко и по третьему адресу: `PATCH` локального
@@ -113,7 +112,6 @@ const IDENTIFIER_FIELDS: Readonly<Record<Exclude<EntityKind, 'entity'>, readonly
   issue: ['key', 'id'],
   component: ['id'],
   queueLocalField: ['id', 'key'],
-  project: ['id', 'key'],
   queue: ['id', 'key'],
   board: ['id'],
   sprint: ['id'],

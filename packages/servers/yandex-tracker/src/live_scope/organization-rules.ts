@@ -1,6 +1,12 @@
 /**
- * Правила сущностей уровня организации: проекты, очереди и их доступы, доски и
+ * Правила сущностей уровня организации: очереди и их доступы, доски и
  * колонки, спринты, глобальные поля, записи Entity API, фильтры.
+ *
+ * Легаси-семейство проектов (`/v3/projects`) убрано отсюда 2026-08-25 вместе с его
+ * инструментами: `raw_api_request` — GET-only, поэтому мутирующий запрос к этому
+ * пути больше не может исходить ни от одного инструмента сервера, и правило было
+ * бы недостижимым мёртвым кодом. Данные проектов — через Entity API
+ * (`entityType: 'project'`, правило «запись Entity API» ниже).
  *
  * Такая сущность видна всей организации, поэтому принадлежности очереди для неё не
  * существует вовсе: создание допускается по префиксу прогона в имени (журнал гибнет
@@ -38,26 +44,6 @@ import { personViolation } from './people-in-body.js';
  * задачи Трекера произвольные пользовательские поля, там работает только проверка
  * ссылок на людей.
  */
-const PROJECT_KEYS = [
-  'name',
-  'lead',
-  'status',
-  'description',
-  'startDate',
-  'endDate',
-  'queues',
-  'teamUserIds',
-] as const;
-/** `POST /v3/projects` не знает ни `key`, ни `queueIds`, ни `teamUserIds` (0_CONTRACTS.md, D8). */
-const PROJECT_CREATE_KEYS = [
-  'name',
-  'queues',
-  'description',
-  'lead',
-  'status',
-  'startDate',
-  'endDate',
-] as const;
 const QUEUE_KEYS = [
   'key',
   'name',
@@ -157,32 +143,9 @@ const QUEUE_ACCESS_ROLES: ReadonlySet<string> = new Set([
 ]);
 const QUEUE_ACCESS_ACTIONS: ReadonlySet<string> = new Set(['add', 'remove']);
 
-/** `lead` — обязательное поле схем создания проекта и очереди: живой руководитель. */
+/** `lead` — обязательное поле схемы создания очереди: живой руководитель. */
 const leadViolation: BodyViolation = (body, context) =>
   personViolation('lead', body?.['lead'], context);
-
-/** Создание знает очередь как `queues` — одной ссылкой строкой, а не массивом. */
-const projectCreateViolation: BodyViolation = (body, context) =>
-  queueRefWithinScope(body?.['queues'], context)
-    ? undefined
-    : 'проект создаётся в очереди за пределами прогона либо без неё (queues)';
-
-/**
- * `queues` — только очередь прогона, `teamUserIds` — пусто.
- *
- * Правка знает очередь как `queues` (ключ строкой), а не `queueIds`: живая проба
- * 2026-08-25 показала `400 queueIds: Incorrect data format`.
- */
-const projectEditViolation: BodyViolation = (body, context) => {
-  const queues = body?.['queues'];
-  if (queues !== undefined && !queueRefWithinScope(queues, context)) {
-    return 'проект ссылается на очередь за пределами прогона (queues)';
-  }
-  const team = body?.['teamUserIds'];
-  return team !== undefined && (!Array.isArray(team) || team.length > 0)
-    ? 'проект назначает участников команды — это меняет живых людей организации (teamUserIds)'
-    : undefined;
-};
 
 const BOARD_QUEUE_PATH = ['addFilter', 'liveFilter', 'fieldValues', 'queue'] as const;
 
@@ -316,17 +279,6 @@ export const ORGANIZATION_RULES: readonly ScopeRule[] = [
       bothViolations(allowedKeysViolation('очередь', QUEUE_KEYS), leadViolation),
       nameKeepsPrefix('очередь', (body) => body?.['name'], 'имя')
     ),
-  }),
-  ...orgFamilyRules({
-    label: 'проект',
-    kind: 'project',
-    createPattern: /^\/v3\/projects\/?$/,
-    editPattern: /^\/v3\/projects\/([^/?]+)\/?$/,
-    bodyViolation: leadViolation,
-    createViolation: projectCreateViolation,
-    editViolation: projectEditViolation,
-    allowedKeys: PROJECT_KEYS,
-    createAllowedKeys: PROJECT_CREATE_KEYS,
   }),
   ...orgFamilyRules({
     label: 'глобальное поле',

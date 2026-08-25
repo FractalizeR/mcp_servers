@@ -13,7 +13,7 @@
  *   - IssueServicesContainer: IssueService, IssueLinkService, IssueAttachmentService,
  *                             CommentService, ChecklistService, WorklogService
  *   - QueueServicesContainer: QueueService, ComponentService
- *   - ProjectAgileServicesContainer: ProjectService, BoardService, SprintService, BulkChangeService
+ *   - ProjectAgileServicesContainer: BoardService, SprintService, BulkChangeService, BoardColumnService
  * - Нет зависимости от Container (прямая инъекция)
  *
  * Паттерн: Facade Pattern + Parameter Object + Dependency Injection
@@ -65,9 +65,6 @@ import type {
   DownloadAttachmentOutput,
   AddChecklistItemInput,
   UpdateChecklistItemInput,
-  GetProjectsDto,
-  CreateProjectDto,
-  ProjectOutput,
   BulkUpdateIssuesInputDto,
   BulkTransitionIssuesInputDto,
   BulkMoveIssuesInputDto,
@@ -121,7 +118,6 @@ import type {
   AttachmentWithUnknownFields,
   ChecklistItemWithUnknownFields,
   ComponentWithUnknownFields,
-  ProjectWithUnknownFields,
   QueueWithUnknownFields,
   PaginatedResult,
   BulkChangeOperationWithUnknownFields,
@@ -139,9 +135,6 @@ import type { WithUnknownFields } from '#tracker_api/entities/types.js';
 import type {
   UpdateQueueParams,
   ManageQueueAccessParams,
-  GetProjectParams,
-  UpdateProjectParams,
-  DeleteProjectParams,
 } from '#tracker_api/api_operations/index.js';
 import type { BatchResult } from '@fractalizer/mcp-infrastructure';
 
@@ -322,53 +315,6 @@ export class YandexTrackerFacade implements RawApiCapable {
    */
   async manageQueueAccess(params: ManageQueueAccessParams): Promise<QueuePermissionsOutput> {
     return this.queues.queue.manageQueueAccess(params);
-  }
-
-  // === Project Methods ===
-
-  /**
-   * Получает список проектов
-   * @param params - параметры запроса (опционально)
-   * @returns список проектов
-   */
-  async getProjects(params?: GetProjectsDto): Promise<PaginatedResult<ProjectWithUnknownFields>> {
-    return this.projectAgile.project.getProjects(params);
-  }
-
-  /**
-   * Получает один проект по ID
-   * @param params - параметры запроса (projectId, expand)
-   * @returns проект
-   */
-  async getProject(params: GetProjectParams): Promise<ProjectOutput> {
-    return this.projectAgile.project.getProject(params);
-  }
-
-  /**
-   * Создаёт новый проект
-   * @param data - данные проекта
-   * @returns созданный проект
-   */
-  async createProject(data: CreateProjectDto): Promise<ProjectOutput> {
-    return this.projectAgile.project.createProject(data);
-  }
-
-  /**
-   * Обновляет проект
-   * @param params - параметры обновления (projectId, data)
-   * @returns обновлённый проект
-   */
-  async updateProject(params: UpdateProjectParams): Promise<ProjectOutput> {
-    return this.projectAgile.project.updateProject(params);
-  }
-
-  /**
-   * Удаляет проект
-   * @param params - параметры удаления (projectId)
-   * @returns void
-   */
-  async deleteProject(params: DeleteProjectParams): Promise<void> {
-    return this.projectAgile.project.deleteProject(params);
   }
 
   // === Component Methods ===
@@ -1139,9 +1085,7 @@ export class YandexTrackerFacade implements RawApiCapable {
 
   // === Entity API Methods (Goal/Project/Portfolio, пакет 7.2.A) ===
   //
-  // ВАЖНО: НЕ путать с legacy `getProject(s)`/`createProject`/... выше —
-  // это ДРУГАЯ коллекция (`/v3/entities/{entityType}/...`), см.
-  // `entities/entity-api.entity.ts`.
+  // Коллекция `/v3/entities/{entityType}/...`, см. `entities/entity-api.entity.ts`.
 
   async findEntities(dto: FindEntitiesDto): Promise<FindEntitiesResult> {
     return this.entityAdmin.entityApi.findEntities(dto);

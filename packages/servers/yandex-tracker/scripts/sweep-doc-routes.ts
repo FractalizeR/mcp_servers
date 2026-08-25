@@ -62,7 +62,6 @@ const MANUAL_ROUTES: OurCall[] = [
     path: '/v3/issues/TEST-1/checklistItems',
     bodyKeys: [],
   },
-  { tool: 'fr_yandex_tracker_get_projects', method: 'GET', path: '/v3/projects', bodyKeys: [] },
   {
     tool: 'fr_yandex_tracker_get_worklogs',
     method: 'GET',

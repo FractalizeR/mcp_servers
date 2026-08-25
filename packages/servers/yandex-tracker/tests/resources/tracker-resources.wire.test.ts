@@ -33,7 +33,6 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import { createTrackerResourceRegistry } from '#resources/index.js';
 import { buildIssueResourceUri, buildQueueResourceUri } from '#resources/tracker-resource-uri.js';
 import { createQueueListFixture } from '#helpers/queue.fixture.js';
-import { createProjectListFixture } from '#helpers/project.fixture.js';
 import type { IssueWithUnknownFields, PaginatedResult } from '#tracker_api/entities/index.js';
 import { createIssueFixture } from '#helpers/issue.fixture.js';
 
@@ -60,20 +59,11 @@ const mockIssue: IssueWithUnknownFields = createIssueFixture({
 
 function makeMockFacade(): YandexTrackerFacade {
   const queues = createQueueListFixture(1);
-  const projects = createProjectListFixture(1);
 
   return {
     getQueues: vi.fn().mockResolvedValue(page(queues)),
     getQueue: vi.fn().mockImplementation(({ queueId }: { queueId: string }) => {
       const found = queues.find((q) => q.key === queueId || String(q.id) === queueId);
-      if (found === undefined) {
-        return Promise.reject(new ApiErrorClass(404, 'Not found'));
-      }
-      return Promise.resolve(found);
-    }),
-    getProjects: vi.fn().mockResolvedValue(page(projects)),
-    getProject: vi.fn().mockImplementation(({ projectId }: { projectId: string }) => {
-      const found = projects.find((p) => p.id === projectId || p.key === projectId);
       if (found === undefined) {
         return Promise.reject(new ApiErrorClass(404, 'Not found'));
       }
@@ -234,17 +224,16 @@ describe('Трекер: resources/* через реальный Server (wire-у�
     return all;
   }
 
-  it('DoD 1: resources/list (по всем страницам) агрегирует очереди, проекты и виджет MCP Apps (задачи не перечисляются)', async () => {
+  it('DoD 1: resources/list (по всем страницам) агрегирует очереди и виджет MCP Apps (задачи не перечисляются)', async () => {
     const h = await withConnectedHarness();
 
     const resources = await collectAllResources(h);
 
-    // 3: queue + project + ui://tracker/issue-description-editor (пилот MCP
+    // 2: queue + ui://tracker/issue-description-editor (пилот MCP
     // Apps №1, пакет 6.1) — статический виджет, тоже единственный в своём
     // роде, поэтому тоже перечислим (в отличие от issues, см. ниже).
-    expect(resources).toHaveLength(3);
+    expect(resources).toHaveLength(2);
     expect(resources.some((r) => r.uri.startsWith('tracker://queue/'))).toBe(true);
-    expect(resources.some((r) => r.uri.startsWith('tracker://project/'))).toBe(true);
     expect(resources.some((r) => r.uri.startsWith('tracker://issue/'))).toBe(false);
     expect(resources.some((r) => r.uri === 'ui://tracker/issue-description-editor')).toBe(true);
   });
@@ -259,7 +248,7 @@ describe('Трекер: resources/* через реальный Server (wire-у�
     expect(list.result?.['cacheScope']).toBeDefined();
   });
 
-  it('DoD 1: resources/templates/list отдаёт шаблоны всех трёх схем', async () => {
+  it('DoD 1: resources/templates/list отдаёт шаблоны обеих схем', async () => {
     const h = await withConnectedHarness();
 
     const templates = await h.request(2, 'resources/templates/list', { _meta: modernMeta() });
@@ -267,9 +256,7 @@ describe('Трекер: resources/* через реальный Server (wire-у�
     expect(templates.error).toBeUndefined();
     const list = templates.result?.['resourceTemplates'] as Array<{ uriTemplate: string }>;
     const uriTemplates = list.map((t) => t.uriTemplate).sort();
-    expect(uriTemplates).toEqual(
-      ['tracker://issue/{key}', 'tracker://project/{id}', 'tracker://queue/{key}'].sort()
-    );
+    expect(uriTemplates).toEqual(['tracker://issue/{key}', 'tracker://queue/{key}'].sort());
   });
 
   it('DoD 2: resources/read по URI задачи, ОТСУТСТВУЮЩЕЙ в resources/list, тем не менее работает', async () => {

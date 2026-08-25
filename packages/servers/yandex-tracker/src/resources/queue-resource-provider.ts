@@ -9,8 +9,7 @@
  * `pagination.nextCursor`, ре-экспортируется как `nextCursor` страницы
  * `ResourceProvider` буквально как есть: `ResourceRegistry` трактует его как
  * непрозрачную строку конкретного провайдера, поэтому заворачивать его в
- * ещё один слой кодирования незачем — тот же приём справедлив для
- * `project-resource-provider.ts`.
+ * ещё один слой кодирования незачем.
  */
 
 import { ApiErrorClass } from '@fractalizer/mcp-infrastructure';

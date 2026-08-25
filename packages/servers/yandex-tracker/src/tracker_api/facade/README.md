@@ -70,15 +70,11 @@ API Operations (конкретные HTTP запросы)
 - **Методы**: `bulkUpdateIssues()`, `bulkTransitionIssues()`, `bulkMoveIssues()`, `getBulkChangeStatus()`
 - **Домен**: Массовые операции над задачами
 
-### 12. ProjectService
-- **Методы**: `getProjects()`, `getProject()`, `createProject()`, `updateProject()`, `deleteProject()`
-- **Домен**: Управление проектами
-
-### 13. BoardService
+### 12. BoardService
 - **Методы**: `getBoards()`, `getBoard()`, `createBoard()`, `updateBoard()`, `deleteBoard()`
 - **Домен**: Доски (Scrum/Kanban)
 
-### 14. SprintService
+### 13. SprintService
 - **Методы**: `getSprints()`, `getSprint()`, `createSprint()`, `updateSprint()`
 - **Домен**: Спринты
 
@@ -124,7 +120,6 @@ const facade = new YandexTrackerFacade(
   mockChecklistService,
   mockWorklogService,
   mockBulkChangeService,
-  mockProjectService,
   mockBoardService,
   mockSprintService
 );

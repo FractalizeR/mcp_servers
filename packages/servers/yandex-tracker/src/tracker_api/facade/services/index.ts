@@ -22,7 +22,6 @@ export { CommentService } from './comment.service.js';
 export { ChecklistService } from './checklist.service.js';
 export { WorklogService } from './worklog.service.js';
 export { SprintService } from './sprint.service.js';
-export { ProjectService } from './project.service.js';
 export { BoardService } from './board.service.js';
 export { QueueService } from './queue.service.js';
 export { IssueAttachmentService } from './issue-attachment.service.js';

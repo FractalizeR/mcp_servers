@@ -16,8 +16,6 @@ import {
   RUN_PREFIX,
   RUN_OWNER,
   DISPOSABLE_QUEUE,
-  SANDBOX_PROJECT_ID,
-  SANDBOX_PROJECT_KEY,
   SANDBOX_BOARD,
   SANDBOX_SPRINT,
   SANDBOX_GLOBAL_FIELD,
@@ -35,8 +33,6 @@ export function createRunContext(journalPath: string): ScopeContext {
   journal.register('queueLocalField', SANDBOX_LOCAL_FIELD);
   // Сущности организации этого прогона — обе формы адресации там, где API их даёт:
   // боевой ответ несёт и id, и key одновременно.
-  journal.register('project', SANDBOX_PROJECT_ID);
-  journal.register('project', SANDBOX_PROJECT_KEY);
   journal.register('board', SANDBOX_BOARD);
   journal.register('sprint', SANDBOX_SPRINT);
   journal.register('globalField', SANDBOX_GLOBAL_FIELD);

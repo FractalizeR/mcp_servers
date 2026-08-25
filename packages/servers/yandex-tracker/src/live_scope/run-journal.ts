@@ -31,7 +31,6 @@ export type EntityKind =
   | 'issue'
   | 'component'
   | 'queueLocalField'
-  | 'project'
   | 'board'
   | 'sprint'
   | 'globalField'

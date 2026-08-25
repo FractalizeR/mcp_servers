@@ -23,7 +23,6 @@ import {
   RUN_PREFIX,
   RUN_OWNER,
   DISPOSABLE_QUEUE,
-  SANDBOX_PROJECT_ID,
   SANDBOX_BOARD,
   SANDBOX_SPRINT,
   SANDBOX_ENTITY_TYPE,
@@ -62,7 +61,6 @@ function decideIn(
 function withUncreatedDisposableQueue(): ScopeContext {
   const journal = new RunJournal(join(workDir, 'journal-uncreated.jsonl'), RUN_ID);
   journal.register('issue', SANDBOX_ISSUE);
-  journal.register('project', SANDBOX_PROJECT_ID);
   journal.register('board', SANDBOX_BOARD);
   return {
     sandboxQueue: SANDBOX_QUEUE,
@@ -105,44 +103,9 @@ describe('ссылки в теле проверяются и на правке, 
     expect(decision.allowed).toBe(false);
     expect(decision.reason).toContain('board');
   });
-
-  it('нераспознанная форма teamUserIds отклоняется так же, как непустая', () => {
-    const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
-      teamUserIds: 'user-1',
-    });
-    expect(decision.allowed).toBe(false);
-    expect(decision.reason).toContain('teamUserIds');
-  });
 });
 
 describe('ссылка на живого человека — только владелец прогона', () => {
-  it('lead проекта на чужом человеке отклоняется при создании', () => {
-    const decision = decide('post', '/v3/projects', {
-      name: `${RUN_PREFIX}-project`,
-      lead: FOREIGN_PERSON,
-      queues: SANDBOX_QUEUE,
-    });
-    expect(decision.allowed).toBe(false);
-    expect(decision.reason).toContain(FOREIGN_PERSON);
-  });
-
-  it('lead проекта на владельце прогона допускается', () => {
-    const decision = decide('post', '/v3/projects', {
-      name: `${RUN_PREFIX}-project`,
-      lead: RUN_OWNER,
-      queues: SANDBOX_QUEUE,
-    });
-    expect(decision.allowed, decision.reason).toBe(true);
-  });
-
-  it('lead проекта на чужом человеке отклоняется и при правке', () => {
-    const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
-      lead: { id: FOREIGN_PERSON },
-    });
-    expect(decision.allowed).toBe(false);
-    expect(decision.reason).toContain(FOREIGN_PERSON);
-  });
-
   it('lead создаваемой очереди на чужом человеке отклоняется', () => {
     const decision = decide('post', '/v3/queues', {
       key: DISPOSABLE_QUEUE,
@@ -198,10 +161,10 @@ describe('ссылка на живого человека — только вл�
 
   it('необъявленный владелец прогона отклоняет любое тело со ссылкой на человека', () => {
     const noOwner: ScopeContext = { ...context, runOwner: undefined };
-    const decision = decideIn(noOwner, 'post', '/v3/projects', {
-      name: `${RUN_PREFIX}-project`,
+    const decision = decideIn(noOwner, 'post', '/v3/queues', {
+      key: DISPOSABLE_QUEUE,
+      name: `${RUN_PREFIX}-queue`,
       lead: RUN_OWNER,
-      queues: SANDBOX_QUEUE,
     });
     expect(decision.allowed).toBe(false);
     expect(decision.reason).toContain('YANDEX_TRACKER_LIVE_SCOPE_RUN_OWNER');
@@ -217,16 +180,6 @@ describe('ссылка на живого человека — только вл�
 });
 
 describe('владение одноразовой очередью доказывает журнал, а не переменная окружения', () => {
-  it('проект не ссылается на объявленную, но не созданную одноразовую очередь', () => {
-    const decision = decideIn(withUncreatedDisposableQueue(), 'post', '/v3/projects', {
-      name: `${RUN_PREFIX}-project`,
-      lead: RUN_OWNER,
-      queues: DISPOSABLE_QUEUE,
-    });
-    expect(decision.allowed).toBe(false);
-    expect(decision.reason).toContain('queues');
-  });
-
   it('доска не привязывается к объявленной, но не созданной одноразовой очереди', () => {
     const decision = decideIn(withUncreatedDisposableQueue(), 'post', '/v3/liveBoards', {
       name: `${RUN_PREFIX}-board`,
@@ -246,16 +199,15 @@ describe('владение одноразовой очередью доказы�
   });
 
   it('созданная одноразовая очередь становится законной целью ссылок', () => {
-    const project = decide('post', '/v3/projects', {
-      name: `${RUN_PREFIX}-project`,
-      lead: RUN_OWNER,
-      queues: DISPOSABLE_QUEUE,
+    const board = decide('post', '/v3/liveBoards', {
+      name: `${RUN_PREFIX}-board`,
+      autoFilters: BOARD_QUEUE_FILTER(DISPOSABLE_QUEUE),
     });
     const move = decide('post', '/v3/bulkchange/_move', {
       issues: [SANDBOX_ISSUE],
       queue: DISPOSABLE_QUEUE,
     });
-    expect(project.allowed, project.reason).toBe(true);
+    expect(board.allowed, board.reason).toBe(true);
     expect(move.allowed, move.reason).toBe(true);
   });
 });

@@ -10,7 +10,7 @@
  * Раньше тело запроса не сверялось вовсе (`mockCreateQueueSuccess` отвечал успехом
  * независимо от тела, `tests/integration/helpers/mock-server.ts`). `ApiExpectationSet.
  * expectRequest` сверяет тело строго — тот же вес, что у соседних семейств
- * (`create_board`/`create_project`/`create_global_field`).
+ * (`create_board`/`create_global_field`).
  */
 
 import {

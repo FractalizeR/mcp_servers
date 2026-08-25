@@ -20,8 +20,6 @@ import {
   SANDBOX_COMPONENT,
   RUN_PREFIX,
   DISPOSABLE_QUEUE,
-  SANDBOX_PROJECT_ID,
-  SANDBOX_PROJECT_KEY,
   SANDBOX_BOARD,
   SANDBOX_SPRINT,
   SANDBOX_GLOBAL_FIELD,
@@ -160,8 +158,7 @@ describe('Область действия живого прогона', () => {
       expect(decision.reason).toContain('не создан этим прогоном');
     });
 
-    it('проекты и глобальные поля остаются вне области действия и на пути v3', () => {
-      expect(decide('patch', '/v3/projects/11').allowed).toBe(false);
+    it('глобальные поля вне журнала остаются вне области действия и на пути v3', () => {
       expect(decide('patch', '/v3/fields/f1').allowed).toBe(false);
     });
 
@@ -266,15 +263,6 @@ describe('Область действия живого прогона', () => {
 // иначе один общий callback описания вырос бы за max-lines-per-function.
 describe('этап 5.1: создание org-сущностей и правка по журналу (условия 1-6)', () => {
   describe('условие 1 — создание без префикса в имени отклоняется', () => {
-    it('проект', () => {
-      const decision = decide('post', '/v3/projects', {
-        name: 'no-prefix-project',
-        queues: SANDBOX_QUEUE,
-      });
-      expect(decision.allowed).toBe(false);
-      expect(decision.reason).toContain('префикс');
-    });
-
     it('доска', () => {
       const decision = decide('post', '/v3/liveBoards', { name: 'no-prefix-board' });
       expect(decision.allowed).toBe(false);
@@ -295,8 +283,8 @@ describe('этап 5.1: создание org-сущностей и правка 
   });
 
   it('условие 2 — правка сущности вне журнала отклоняется, даже если имя несёт префикс', () => {
-    const decision = decide('patch', '/v3/projects/unknown-project', {
-      name: `${RUN_PREFIX}-project`,
+    const decision = decide('patch', '/v3/fields/unknown-field', {
+      name: `${RUN_PREFIX}-field`,
     });
     expect(decision.allowed).toBe(false);
     expect(decision.reason).toContain('не принадлежит этому прогону');
@@ -360,42 +348,10 @@ describe('этап 5.1: создание org-сущностей и правка 
 });
 
 describe('этап 5.1: ссылки в теле, тело без имени, префикс/якорение (условия 7-13)', () => {
-  describe('условие 7 — проект со ссылкой за пределами прогона в теле отклоняется', () => {
-    it('queues указывает на постороннюю очередь при создании', () => {
-      const decision = decide('post', '/v3/projects', {
-        name: `${RUN_PREFIX}-project`,
-        queues: 'PROD',
-      });
-      expect(decision.allowed).toBe(false);
-      expect(decision.reason).toContain('queues');
-    });
-
-    it('queues содержит постороннюю очередь при правке', () => {
-      const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
-        queues: 'PROD',
-      });
-      expect(decision.allowed).toBe(false);
-      expect(decision.reason).toContain('queues');
-    });
-
-    it('queueIds при правке отклоняется как неизвестный ключ', () => {
-      // API отвечает на него `400 queueIds: Incorrect data format` (живая проба 2026-08-25);
-      // рубеж обязан отклонить его раньше, чем запрос уйдёт.
-      const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
-        queueIds: [SANDBOX_QUEUE],
-      });
-      expect(decision.allowed).toBe(false);
-      expect(decision.reason).toContain('queueIds');
-    });
-
-    it('непустой teamUserIds при правке', () => {
-      const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
-        teamUserIds: ['user-1'],
-      });
-      expect(decision.allowed).toBe(false);
-      expect(decision.reason).toContain('teamUserIds');
-    });
-  });
+  // Условие 7 (проверка ссылки на очередь за пределами прогона в теле легаси-проекта)
+  // удалено вместе с легаси-семейством проектов (2026-08-25): `queueRefWithinScope`/
+  // `queues`/`teamUserIds` были специфичны для `/v3/projects`, аналога у оставшихся
+  // семейств нет. Такая же проверка для доски (autoFilters) — условие 8 ниже.
 
   it('условие 8 — доска с очередью вне песочницы отклоняется', () => {
     const decision = decide('post', '/v3/liveBoards', {
@@ -429,24 +385,24 @@ describe('этап 5.1: ссылки в теле, тело без имени, п
 
   describe('условие 10 — тело без распознанного имени отклоняется', () => {
     it('пустое тело', () => {
-      expect(decide('post', '/v3/projects').allowed).toBe(false);
+      expect(decide('post', '/v3/filters').allowed).toBe(false);
     });
 
     it('тело строкой', () => {
-      expect(decide('post', '/v3/projects', 'not-json-and-not-object').allowed).toBe(false);
+      expect(decide('post', '/v3/filters', 'not-json-and-not-object').allowed).toBe(false);
     });
 
     it('тело FormData (multipart, как у upload_attachment)', () => {
       const form = new FormData();
-      form.append('name', `${RUN_PREFIX}-project`);
-      expect(decide('post', '/v3/projects', form).allowed).toBe(false);
+      form.append('name', `${RUN_PREFIX}-filter`);
+      expect(decide('post', '/v3/filters', form).allowed).toBe(false);
     });
   });
 
   it('условие 11 — незаданный runPrefix отклоняет создание named-причиной, а не fail-closed', () => {
     const noPrefix: ScopeContext = { ...context, runPrefix: undefined };
     const decision = decideRequest(
-      { method: 'post', url: '/v3/projects', data: { name: 'anything' } },
+      { method: 'post', url: '/v3/filters', data: { name: 'anything' } },
       noPrefix
     );
     expect(decision.allowed).toBe(false);
@@ -454,10 +410,9 @@ describe('этап 5.1: ссылки в теле, тело без имени, п
     expect(decision.reason).not.toContain('не описан ни одним правилом');
   });
 
-  it('условие 12 — своя сущность адресуется и по id, и по key', () => {
-    expect(decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`).allowed).toBe(true);
-    expect(decide('patch', `/v3/projects/${SANDBOX_PROJECT_KEY}`).allowed).toBe(true);
-  });
+  // Условие 12 (легаси-проект адресуется и по id, и по key) удалено вместе с
+  // легаси-семейством проектов: дуальная адресация уже покрыта для globalField и
+  // queue в `live-scope.guard.test.ts` («… регистрируется и по id, и по key»).
 
   describe('условие 13 — bulk _move в одноразовую очередь', () => {
     it('в disposableQueue — допуск', () => {
@@ -504,9 +459,7 @@ describe('этап 5.1: ссылки в теле, тело без имени, п
 });
 
 // Создание и правка разъехались по маршрутам и перечням ключей (`0_CONTRACTS.md`):
-// у доски создание идёт на `liveBoards`. У проекта очередь и там и там — `queues`
-// (живая проба 2026-08-25 опровергла `queueIds` на правке), но правка знает ещё
-// `teamUserIds`. Один общий перечень снял бы проверку молча.
+// у доски создание идёт на `liveBoards`, правка — на `/v3/boards/{id}`.
 describe('этап 1.1: раздельные маршруты и перечни ключей создания и правки', () => {
   describe('доска', () => {
     it('создание на liveBoards с очередью в autoFilters допускается', () => {
@@ -558,51 +511,6 @@ describe('этап 1.1: раздельные маршруты и перечни 
 
     it('правка своей доски с queue остаётся разрешённой', () => {
       const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, { queue: SANDBOX_QUEUE });
-      expect(decision.allowed, decision.reason).toBe(true);
-    });
-  });
-
-  describe('проект', () => {
-    it('создание с queues в песочной очереди допускается', () => {
-      const decision = decide('post', '/v3/projects', {
-        name: `${RUN_PREFIX}-project`,
-        queues: SANDBOX_QUEUE,
-      });
-      expect(decision.allowed, decision.reason).toBe(true);
-    });
-
-    it('создание без queues отклоняется: родитель не распознан', () => {
-      const decision = decide('post', '/v3/projects', { name: `${RUN_PREFIX}-project` });
-      expect(decision.allowed).toBe(false);
-      expect(decision.reason).toContain('queues');
-    });
-
-    it('создание с queues вне прогона отклоняется', () => {
-      const decision = decide('post', '/v3/projects', {
-        name: `${RUN_PREFIX}-project`,
-        queues: 'PROD',
-      });
-      expect(decision.allowed).toBe(false);
-      expect(decision.reason).toContain('queues');
-    });
-
-    it('ключи key, queueIds и teamUserIds при создании неизвестны', () => {
-      ['key', 'queueIds', 'teamUserIds'].forEach((key) => {
-        const decision = decide('post', '/v3/projects', {
-          name: `${RUN_PREFIX}-project`,
-          queues: SANDBOX_QUEUE,
-          [key]: key === 'key' ? 'PRJ' : [],
-        });
-        expect(decision.allowed).toBe(false);
-        expect(decision.reason).toContain(key);
-      });
-    });
-
-    it('правка своего проекта с queues разрешена', () => {
-      const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
-        queues: SANDBOX_QUEUE,
-        teamUserIds: [],
-      });
       expect(decision.allowed, decision.reason).toBe(true);
     });
   });

@@ -24,7 +24,6 @@ import {
   RUN_PREFIX,
   RUN_OWNER,
   DISPOSABLE_QUEUE,
-  SANDBOX_PROJECT_ID,
   SANDBOX_BOARD,
   SANDBOX_SPRINT,
   SANDBOX_GLOBAL_FIELD,
@@ -151,7 +150,6 @@ describe('пункт 1: ссылка на человека ищется по в�
 
 describe('пункт 2: тело сущности организации разрешается по белому списку ключей', () => {
   const knownKey: readonly (readonly [string, string, string, unknown])[] = [
-    ['проект', 'patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, { description: 'd' }],
     ['доска', 'patch', `/v3/boards/${SANDBOX_BOARD}`, { orderBy: 'rank' }],
     ['колонка доски', 'patch', `/v3/boards/${SANDBOX_BOARD}/columns/c1`, { limit: 5 }],
     ['спринт', 'patch', `/v3/sprints/${SANDBOX_SPRINT}`, { startDate: '2026-01-01' }],
@@ -169,13 +167,6 @@ describe('пункт 2: тело сущности организации раз�
   });
 
   const unknownKey: readonly (readonly [string, string, string, unknown, string])[] = [
-    [
-      'проект',
-      'patch',
-      `/v3/projects/${SANDBOX_PROJECT_ID}`,
-      { parentEntity: 999 },
-      'parentEntity',
-    ],
     ['доска', 'patch', `/v3/boards/${SANDBOX_BOARD}`, { sprints: [1] }, 'sprints'],
     ['колонка доски', 'patch', `/v3/boards/${SANDBOX_BOARD}/columns/c1`, { board: 'x' }, 'board'],
     ['спринт', 'patch', `/v3/sprints/${SANDBOX_SPRINT}`, { entityStatus: 'x' }, 'entityStatus'],
@@ -342,7 +333,6 @@ describe('пункт 2а: пользовательское поле — толь
 
 describe('пункт 3: правка не снимает префикс с имени своей сущности', () => {
   const renames: readonly (readonly [string, string, unknown])[] = [
-    ['проект', `/v3/projects/${SANDBOX_PROJECT_ID}`, { name: 'renamed' }],
     ['доска', `/v3/boards/${SANDBOX_BOARD}`, { name: 'renamed' }],
     ['спринт', `/v3/sprints/${SANDBOX_SPRINT}`, { name: 'renamed' }],
     ['глобальное поле', `/v3/fields/${SANDBOX_GLOBAL_FIELD}`, { name: 'renamed' }],
@@ -360,14 +350,14 @@ describe('пункт 3: правка не снимает префикс с им�
   });
 
   it('имя с префиксом на правке проходит', () => {
-    const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
-      name: `${RUN_PREFIX}-project-renamed`,
+    const decision = decide('patch', `/v3/fields/${SANDBOX_GLOBAL_FIELD}`, {
+      name: `${RUN_PREFIX}-field-renamed`,
     });
     expect(decision.allowed, decision.reason).toBe(true);
   });
 
   it('тело без имени правку имени не затрагивает', () => {
-    const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, { description: 'd' });
+    const decision = decide('patch', `/v3/fields/${SANDBOX_GLOBAL_FIELD}`, { suggest: true });
     expect(decision.allowed, decision.reason).toBe(true);
   });
 

@@ -45,9 +45,9 @@ describe('Пакет 3.1.C.tracker — annotations/outputSchema/tools-list contr
     });
   });
 
-  it('реестр содержит ровно 90 инструментов (перечисление зафиксировано планом этапа)', () => {
-    expect(TOOL_CLASSES.length).toBe(90);
-    expect(definitions.length).toBe(90);
+  it('реестр содержит ровно 85 инструментов (перечисление зафиксировано планом этапа)', () => {
+    expect(TOOL_CLASSES.length).toBe(85);
+    expect(definitions.length).toBe(85);
   });
 
   describe('DoD 1: каждый инструмент реестра имеет annotations и outputSchema', () => {
@@ -84,7 +84,7 @@ describe('Пакет 3.1.C.tracker — annotations/outputSchema/tools-list contr
     it('projectToolDefinitionsForList прокидывает все три поля для каждого инструмента', () => {
       const listEntries = projectToolDefinitionsForList(definitions);
 
-      expect(listEntries.length).toBe(90);
+      expect(listEntries.length).toBe(85);
 
       const missingTitle = listEntries.filter((e) => !e.title).map((e) => e.name);
       const missingOutputSchema = listEntries.filter((e) => !e.outputSchema).map((e) => e.name);

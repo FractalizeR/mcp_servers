@@ -39,11 +39,11 @@ describe('LiveScopeGuard', () => {
     const guard = createGuard();
 
     expect(() =>
-      guard.inspectRequest({ method: 'delete', url: '/v3/projects/11', data: undefined })
+      guard.inspectRequest({ method: 'delete', url: '/v3/fields/11', data: undefined })
     ).toThrow(ScopeViolationError);
     expect(() =>
-      guard.inspectRequest({ method: 'delete', url: '/v3/projects/11', data: undefined })
-    ).toThrow(/проект 11 не принадлежит этому прогону/);
+      guard.inspectRequest({ method: 'delete', url: '/v3/fields/11', data: undefined })
+    ).toThrow(/глобальное поле 11 не принадлежит этому прогону/);
   });
 
   it('путь версии v2, снятой миграцией 4.1, отклоняется как неизвестный', () => {
@@ -52,7 +52,7 @@ describe('LiveScopeGuard', () => {
     const guard = createGuard();
 
     expect(() =>
-      guard.inspectRequest({ method: 'delete', url: '/v2/projects/11', data: undefined })
+      guard.inspectRequest({ method: 'delete', url: '/v2/fields/11', data: undefined })
     ).toThrow(/не описан ни одним правилом/);
   });
 
@@ -191,19 +191,6 @@ describe('Регистрация созданного уровня органи�
   // Один тест на род — этап 5.1 п.А: по каждому роду в журнал кладутся поля из
   // таблицы плана, иначе рубеж отклонит собственный законный запрос прогона,
   // стоит инструменту адресовать сущность формой, которая не была записана.
-
-  it('проект регистрируется и по id, и по key', () => {
-    const { guard, journal } = createGuardWithJournal();
-
-    guard.observeResponse({
-      request: { method: 'post', url: '/v3/projects', data: { name: 'run-1-project' } },
-      status: 201,
-      data: { id: 10, key: 'PRJ' },
-    });
-
-    expect(journal.has('project', '10')).toBe(true);
-    expect(journal.has('project', 'PRJ')).toBe(true);
-  });
 
   it('доска регистрируется по id с маршрута создания liveBoards', () => {
     const { guard, journal } = createGuardWithJournal();
@@ -449,11 +436,11 @@ describe('Включение рубежа', () => {
       ).toThrow(new RegExp(DISPOSABLE_QUEUE_VAR));
     });
 
-    it('не заданы — создание проекта отклоняется отсутствием префикса', () => {
+    it('не заданы — создание фильтра отклоняется отсутствием префикса', () => {
       const guard = createLiveScopeGuardFromEnv(baseEnv());
 
       expect(() =>
-        guard?.inspectRequest({ method: 'post', url: '/v3/projects', data: { name: 'x' } })
+        guard?.inspectRequest({ method: 'post', url: '/v3/filters', data: { name: 'x' } })
       ).toThrow(new RegExp(RUN_PREFIX_VAR));
     });
 
@@ -481,7 +468,7 @@ describe('Включение рубежа', () => {
       });
 
       expect(() =>
-        guard?.inspectRequest({ method: 'post', url: '/v3/projects', data: { name: 'x' } })
+        guard?.inspectRequest({ method: 'post', url: '/v3/filters', data: { name: 'x' } })
       ).toThrow(new RegExp(RUN_PREFIX_VAR));
     });
 
@@ -493,7 +480,7 @@ describe('Включение рубежа', () => {
       });
 
       expect(() =>
-        guard?.inspectRequest({ method: 'post', url: '/v3/projects', data: { name: 'x' } })
+        guard?.inspectRequest({ method: 'post', url: '/v3/filters', data: { name: 'x' } })
       ).toThrow(new RegExp(RUN_PREFIX_VAR));
     });
 

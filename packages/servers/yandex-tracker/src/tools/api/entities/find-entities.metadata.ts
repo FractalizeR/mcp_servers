@@ -10,14 +10,11 @@ import { FindEntitiesOutputSchema } from './find-entities.schema.js';
 /**
  * Статические метаданные для FindEntitiesTool
  *
- * ВАЖНО: Entity API — коллекция `/v3/entities/{type}` (Goal/Project/Portfolio),
- * НЕ коллекция `/v3/projects` (см. `get_projects`) — обе лежат на v3, поэтому
- * различение по версии не работает; description и имя различают их по пути.
+ * Entity API — коллекция `/v3/entities/{type}` (Goal/Project/Portfolio).
  */
 export const FIND_ENTITIES_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('find_entities', MCP_TOOL_PREFIX),
-  description:
-    '[Entities/Read] Найти Goal/Project/Portfolio (коллекция /v3/entities/, не /v3/projects — см. get_projects)',
+  description: '[Entities/Read] Найти Goal/Project/Portfolio (Entity API, коллекция /v3/entities/)',
   category: ToolCategory.PROJECTS,
   subcategory: 'read',
   priority: ToolPriority.HIGH,

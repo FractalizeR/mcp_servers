@@ -11,7 +11,7 @@
  * рубеж отклонит как неописанный — политика fail-closed, — но отдельной строки
  * здесь у него не будет: таблицу обновляют повторным прогоном скрипта.
  *
- * **Строки компонента, доски, проекта, очереди и глобального поля правлены руками**
+ * **Строки компонента, доски, очереди и глобального поля правлены руками**
  * под `0_CONTRACTS.md`: этап 1.1 переводит рубеж на целевые маршруты раньше, чем
  * пакеты 2.x переписывают схемы инструментов, поэтому скрипт сейчас снял бы форму
  * старого тела. Полная перегенерация — шаг этапа 3.1, после волны 2.x.
@@ -47,8 +47,6 @@ export const RUN_PREFIX = 'run-under-test';
 /** Владелец прогона: единственный человек, на которого тело запроса вправе ссылаться. */
 export const RUN_OWNER = 'run-owner-login';
 export const DISPOSABLE_QUEUE = 'DISP';
-export const SANDBOX_PROJECT_ID = '5';
-export const SANDBOX_PROJECT_KEY = 'PRJ';
 export const SANDBOX_BOARD = '20';
 export const SANDBOX_SPRINT = '30';
 export const SANDBOX_GLOBAL_FIELD = 'globalField-of-this-run';
@@ -254,34 +252,6 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
     path: `/v3/queues/${SANDBOX_QUEUE}/permissions`,
     body: { access: { add: [RUN_OWNER] } },
     expectation: 'denied',
-  },
-  {
-    tool: 'create_project',
-    method: 'post',
-    path: '/v3/projects',
-    body: {
-      name: `${RUN_PREFIX}-project`,
-      lead: RUN_OWNER,
-      status: 'draft',
-      description: '',
-      startDate: '2026-01-01',
-      endDate: '2026-01-02',
-      queues: SANDBOX_QUEUE,
-    },
-    expectation: 'allowed-in-sandbox',
-  },
-  {
-    tool: 'update_project',
-    method: 'patch',
-    path: `/v3/projects/${SANDBOX_PROJECT_ID}`,
-    body: { name: `${RUN_PREFIX}-project-updated`, queues: SANDBOX_QUEUE, teamUserIds: [] },
-    expectation: 'allowed-in-sandbox',
-  },
-  {
-    tool: 'delete_project',
-    method: 'delete',
-    path: `/v3/projects/${SANDBOX_PROJECT_ID}`,
-    expectation: 'allowed-in-sandbox',
   },
   {
     tool: 'create_global_field',

@@ -11,7 +11,7 @@
  * Раньше тело запроса не сверялось вовсе (`mockCreateComponentSuccess` отвечал успехом
  * независимо от тела, `tests/integration/helpers/mock-server.ts`) — ровно так маршрут,
  * которого нет в API, годами казался рабочим. `ApiExpectationSet.expectRequest` сверяет
- * тело строго — тот же вес, что у соседних семейств (`create_board`/`create_project`/
+ * тело строго — тот же вес, что у соседних семейств (`create_board`/
  * `create_global_field`).
  */
 

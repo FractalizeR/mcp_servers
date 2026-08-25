@@ -92,9 +92,6 @@ export type { Comment, CommentWithUnknownFields, CommentAttachment } from './com
 // Worklog
 export type { Worklog, WorklogWithUnknownFields } from './worklog.entity.js';
 
-// Project
-export type { Project, ProjectWithUnknownFields, ProjectStatus } from './project.entity.js';
-
 // Bulk Change
 export type {
   BulkChangeOperation,
@@ -167,6 +164,4 @@ export {
   createAttachment,
   createAttachmentWithThumbnail,
   createQueueRef,
-  createMinimalProject,
-  createFullProject,
 } from './entity.factories.js';
