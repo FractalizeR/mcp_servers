@@ -1,129 +1,122 @@
 /**
- * Интеграционные тесты для create-queue tool
+ * Интеграционный тест `create_queue` на фабрике `describeToolIntegration`.
+ *
+ * Категория `api/queues` целиком в реестре исключений живых прогонов
+ * (`tests/coverage-exceptions/live-exempt-categories.ts`) — живой прогон 2026-08-25
+ * дошёл до `POST /v3/queues/` и упал на отсутствовавшем тогда `issueTypesConfig` (D7,
+ * `.agentic-planning/plan_tracker_test_coverage/5.2_LIVE_RUN_REPORT_2026-08-25.md`),
+ * успешного создания очереди не наблюдалось. С-4 здесь честно `мок (гипотеза)`.
+ *
+ * Раньше тело запроса не сверялось вовсе (`mockCreateQueueSuccess` отвечал успехом
+ * независимо от тела, `tests/integration/helpers/mock-server.ts`). `ApiExpectationSet.
+ * expectRequest` сверяет тело строго — тот же вес, что у соседних семейств
+ * (`create_board`/`create_project`/`create_global_field`).
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createTestClient } from '#integration/helpers/mcp-client.js';
-import { createMockServer } from '#integration/helpers/mock-server.js';
-import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
-import type { MockServer } from '#integration/helpers/mock-server.js';
+import {
+  generateError403,
+  generateError404,
+} from '#integration/helpers/template-based-generator.js';
+import { createQueueFixture } from '#helpers/queue.fixture.js';
+import { CREATE_QUEUE_TOOL_METADATA } from '#tools/api/queues/create-queue.metadata.js';
+import { CreateQueueOutputDataSchema } from '#tools/api/queues/create-queue.schema.js';
 import { STANDARD_QUEUE_FIELDS } from '#helpers/test-fields.js';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import { describeToolIntegration } from '#integration/helpers/tool-integration-suite.js';
+import { expect } from 'vitest';
 
-describe('create-queue integration tests', () => {
-  let client: TestMCPClient;
-  let mockServer: MockServer;
+const ISSUE_TYPES_CONFIG = [
+  { issueType: '1', workflow: 'quickStartV2PresetWorkflow', resolutions: ['fixed', 'wontFix'] },
+];
 
-  beforeEach(async () => {
-    client = await createTestClient({ logLevel: 'silent' });
-    mockServer = createMockServer(client.getAxiosInstance());
-  });
+const BASE_INPUT = {
+  key: 'NEWQ',
+  name: 'New Queue',
+  lead: 'testuser',
+  defaultType: 'task',
+  defaultPriority: 'normal',
+  issueTypesConfig: ISSUE_TYPES_CONFIG,
+};
 
-  afterEach(() => {
-    mockServer.cleanup();
-  });
+describeToolIntegration({
+  tool: CREATE_QUEUE_TOOL_METADATA.name,
 
-  describe('Happy Path', () => {
-    it('должен создать очередь с минимальными параметрами', async () => {
-      // Arrange
-      mockServer.mockCreateQueueSuccess({
-        key: 'NEWQ',
-        name: 'New Queue',
-      });
+  expectedRequests: [{ method: 'post', path: '/v3/queues/', apiVersion: 'v3' }],
 
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_queue', {
-        key: 'NEWQ',
-        name: 'New Queue',
-        lead: 'testuser',
-        defaultType: 'task',
-        defaultPriority: 'normal',
-        fields: STANDARD_QUEUE_FIELDS,
-      });
+  happyPath: {
+    input: { ...BASE_INPUT, fields: ['id', 'key', 'name'] },
+    arrange: (api) => {
+      api
+        .expectRequest({
+          method: 'post',
+          path: '/v3/queues/',
+          apiVersion: 'v3',
+          body: BASE_INPUT,
+        })
+        .reply(201, createQueueFixture({ id: 42, key: 'NEWQ', name: 'New Queue' }));
+    },
+    outputDataSchema: CreateQueueOutputDataSchema,
+    assertData: (data) => {
+      expect(data.queueKey).toBe('NEWQ');
+      expect(data.queue).toMatchObject({ id: 42, key: 'NEWQ' });
+    },
+  },
 
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      expect(response.data.queue).toBeDefined();
-      expect(response.data.queue.key).toBe('NEWQ');
-      expect(response.data.queue.name).toBe('New Queue');
-      mockServer.assertAllRequestsDone();
-    });
+  invalidInput: {
+    // `issueTypesConfig` обязателен (не optional) — CreateQueueParamsSchema.
+    input: {
+      key: 'NEWQ',
+      name: 'New Queue',
+      lead: 'testuser',
+      defaultType: 'task',
+      defaultPriority: 'normal',
+    },
+  },
 
-    it('должен создать очередь с полными параметрами', async () => {
-      // Arrange
-      mockServer.mockCreateQueueSuccess({
-        key: 'PROJ',
-        name: 'Project Queue',
-        description: 'Project queue description',
-      });
+  errors: {
+    forbidden: {
+      arrange: (api) => {
+        api
+          .expectRequest({ method: 'post', path: '/v3/queues/', apiVersion: 'v3' })
+          .reply(403, generateError403());
+      },
+      input: { ...BASE_INPUT, key: 'RESTRQ', fields: [...STANDARD_QUEUE_FIELDS] },
+    },
+    notFound: {
+      // Единственный HTTP-вызов create_queue — POST /v3/queues/; 404 здесь —
+      // та же операция, отвечающая «руководитель очереди не найден».
+      arrange: (api) => {
+        api
+          .expectRequest({ method: 'post', path: '/v3/queues/', apiVersion: 'v3' })
+          .reply(404, generateError404());
+      },
+      input: {
+        ...BASE_INPUT,
+        key: 'NOLEADQ',
+        lead: 'missing-user',
+        fields: [...STANDARD_QUEUE_FIELDS],
+      },
+    },
+  },
 
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_queue', {
-        key: 'PROJ',
-        name: 'Project Queue',
-        lead: 'manager',
-        defaultType: 'task',
-        defaultPriority: 'normal',
-        description: 'Project queue description',
-        fields: STANDARD_QUEUE_FIELDS,
-      });
+  // create_queue — единичная операция без batch-режима.
+  batch: 'not-applicable',
 
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      expect(response.data.queue).toBeDefined();
-      expect(response.data.queue.key).toBe('PROJ');
-      mockServer.assertAllRequestsDone();
-    });
-  });
+  // Создание очереди не list-эндпоинт — пагинация неприменима.
+  pagination: 'none',
 
-  describe('Error Handling', () => {
-    it('должен обработать ошибку 403 (нет прав)', async () => {
-      // Arrange
-      mockServer.mockCreateQueue403();
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_queue', {
-        key: 'NEWQ',
-        name: 'New Queue',
-        lead: 'testuser',
-        defaultType: 'task',
-        defaultPriority: 'normal',
-        fields: STANDARD_QUEUE_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBe(true);
-      mockServer.assertAllRequestsDone();
-    });
-  });
-
-  describe('Response Structure', () => {
-    it('должен вернуть полную структуру созданной очереди', async () => {
-      // Arrange
-      mockServer.mockCreateQueueSuccess({ key: 'TEST', name: 'Test' });
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_create_queue', {
-        key: 'TEST',
-        name: 'Test',
-        lead: 'admin',
-        defaultType: 'task',
-        defaultPriority: 'normal',
-        fields: STANDARD_QUEUE_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      const queue = response.data.queue;
-
-      expect(queue).toHaveProperty('id');
-      expect(queue).toHaveProperty('key');
-      expect(queue).toHaveProperty('name');
-      expect(queue).toHaveProperty('lead');
-      mockServer.assertAllRequestsDone();
-    });
-  });
+  warnings: {
+    // Ответ не содержит запрошенное поле "missingField" —
+    // ResponseFieldFilter отдаёт FIELDS_WITHOUT_VALUE (CLAUDE.md §2.1).
+    arrange: (api) => {
+      api
+        .expectRequest({ method: 'post', path: '/v3/queues/', apiVersion: 'v3' })
+        .reply(201, createQueueFixture({ id: 43, key: 'GAPQ' }));
+    },
+    input: {
+      ...BASE_INPUT,
+      key: 'GAPQ',
+      fields: [...STANDARD_QUEUE_FIELDS, 'missingField'],
+    },
+    codes: ['FIELDS_WITHOUT_VALUE'],
+  },
 });

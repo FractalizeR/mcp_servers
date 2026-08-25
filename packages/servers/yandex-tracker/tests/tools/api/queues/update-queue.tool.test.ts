@@ -82,6 +82,22 @@ describe('UpdateQueueTool', () => {
         expect(parsed.message).toContain('валидации');
       });
 
+      it('должен отклонить name длиннее 40 символов', async () => {
+        const result = await tool.execute({
+          queueId: 'TEST',
+          name: 'A'.repeat(41),
+          fields: ['id', 'key', 'name'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
       it('должен принимать только queueId без обновлений', async () => {
         const mockQueue = createQueueFixture({ key: 'TEST' });
         vi.mocked(mockTrackerFacade.updateQueue).mockResolvedValue(mockQueue);

@@ -19,14 +19,22 @@ import { CreateQueueOutputSchema } from './create-queue.schema.js';
 export const CREATE_QUEUE_TOOL_METADATA: StaticToolMetadata = {
   name: buildToolName('create_queue', MCP_TOOL_PREFIX),
   description:
-    '[Queues/Write] Создать очередь (queue, create) — пространство для задач с типами и полями',
+    '[Queues/Write] Создать очередь (queue, create); workflow для issueTypesConfig — GET /v3/workflows',
   category: ToolCategory.QUEUES,
   subcategory: 'write',
   priority: ToolPriority.CRITICAL,
   tags: ['queue', 'create', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['key', 'lead', 'defaultType', 'defaultPriority', 'issueTypes', 'fields'],
+  redactionAllowlist: [
+    'key',
+    'lead',
+    'defaultType',
+    'defaultPriority',
+    'issueTypes',
+    'issueTypesConfig',
+    'fields',
+  ],
   title: 'Создать очередь',
   outputSchema: CreateQueueOutputSchema,
   annotations: {

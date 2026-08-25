@@ -15,9 +15,10 @@ export const UpdateQueueParamsSchema = z.object({
   queueId: z.string().min(1, 'Queue ID не может быть пустым'),
 
   /**
-   * Название очереди (опционально)
+   * Название очереди (опционально, лимит найден живым прогоном API — тот же,
+   * что у создания)
    */
-  name: z.string().optional(),
+  name: z.string().max(40, 'Name не может быть длиннее 40 символов').optional(),
 
   /**
    * ID или login руководителя (опционально)

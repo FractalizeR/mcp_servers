@@ -30,8 +30,17 @@ export class CreateQueueTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { fields, key, name, lead, defaultType, defaultPriority, description, issueTypes } =
-      validation.data;
+    const {
+      fields,
+      key,
+      name,
+      lead,
+      defaultType,
+      defaultPriority,
+      issueTypesConfig,
+      description,
+      issueTypes,
+    } = validation.data;
 
     try {
       this.logger.info('Создание новой очереди', {
@@ -46,6 +55,7 @@ export class CreateQueueTool extends BaseTool<YandexTrackerFacade> {
         lead,
         defaultType,
         defaultPriority,
+        issueTypesConfig,
         ...(description && { description }),
         ...(issueTypes && { issueTypes }),
       };

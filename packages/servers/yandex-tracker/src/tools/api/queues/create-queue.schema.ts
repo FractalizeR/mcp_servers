@@ -15,9 +15,12 @@ export const CreateQueueParamsSchema = z.object({
   key: z.string().regex(/^[A-Z]{2,10}$/, 'Ключ очереди должен быть A-Z, 2-10 символов'),
 
   /**
-   * Название очереди (обязательно)
+   * Название очереди (обязательно, лимит найден живым прогоном API)
    */
-  name: z.string().min(1, 'Name не может быть пустым'),
+  name: z
+    .string()
+    .min(1, 'Name не может быть пустым')
+    .max(40, 'Name не может быть длиннее 40 символов'),
 
   /**
    * ID или login руководителя (обязательно)
@@ -33,6 +36,30 @@ export const CreateQueueParamsSchema = z.object({
    * ID приоритета по умолчанию (обязательно)
    */
   defaultPriority: z.string().min(1, 'DefaultPriority не может быть пустым'),
+
+  /**
+   * Конфигурация воркфлоу и резолюций по типам задач (обязательно для API)
+   */
+  issueTypesConfig: z
+    .array(
+      z.object({
+        issueType: z.string().min(1).describe('ID типа задачи — справочник get_issue_types'),
+        workflow: z
+          .string()
+          .min(1)
+          .describe(
+            'ID воркфлоу организации — справочник raw_api_request GET /v3/workflows (пресеты и собственные W1..WN)'
+          ),
+        resolutions: z
+          .array(z.string().min(1))
+          .min(1)
+          .describe('Ключи резолюций — справочник get_resolutions'),
+      })
+    )
+    .min(
+      1,
+      'issueTypesConfig обязателен: API отклоняет запрос без него. Возьми workflow из raw_api_request GET /v3/workflows, issueType из get_issue_types, resolutions из get_resolutions'
+    ),
 
   /**
    * Описание очереди (опционально)
