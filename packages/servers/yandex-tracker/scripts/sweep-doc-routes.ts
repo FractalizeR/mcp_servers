@@ -254,6 +254,11 @@ function readOurCalls(file: string): OurCall[] {
   return [...calls, ...MANUAL_ROUTES];
 }
 
+/** Ключ тела может содержать `-` и `.`; без экранирования он стал бы шаблоном. */
+function escapeForRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * Часть статьи до раздела «Формат ответа».
  *
@@ -310,7 +315,8 @@ function judge(calls: OurCall[], pages: DocPage[]): Verdict[] {
     const verified = LIVE_VERIFIED_KEYS.get(call.tool);
     const absent = call.bodyKeys.filter(
       (key) =>
-        !SAMPLE_ARTEFACT_KEYS.has(key) && !new RegExp(`(?<![\\w-])${key}(?![\\w-])`).test(blob)
+        !SAMPLE_ARTEFACT_KEYS.has(key) &&
+        !new RegExp(`(?<![\\w-])${escapeForRegExp(key)}(?![\\w-])`).test(blob)
     );
     const empty: string[] = [];
     return {
@@ -453,8 +459,13 @@ async function main(): Promise<void> {
   const unchecked = verdicts.filter(
     (verdict) => verdict.pages.length === 0 && verdict.call.bodyKeys.length > 0
   ).length;
+  // Ненулевой код: артефакт устаревает молча, если сверка всегда «успешна». В
+  // `validate` шаг не входит намеренно — он ходит в сеть за 156 страницами.
+  const rotten = missing + drift + unchecked + (toc.length - pages.length);
+  process.exitCode = rotten > 0 ? 1 : 0;
+
   process.stdout.write(
-    `Разобрано страниц: ${pages.length}\n` +
+    `Разобрано страниц: ${pages.length} из ${toc.length}\n` +
       `Наших вызовов: ${verdicts.length}; без страницы: ${missing}; ` +
       `с чужими ключами тела: ${drift}; ключи тела не проверены: ${unchecked}\n` +
       `Отчёт: ${outPath}\n`

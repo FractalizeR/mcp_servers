@@ -58,6 +58,15 @@ describe('UpdateComponentOperation', () => {
       );
     });
 
+    it('ответ без версии даёт понятный отказ, а не ?version=undefined', async () => {
+      vi.mocked(mockHttpClient.get).mockResolvedValue({ id: 1, name: 'X' });
+
+      await expect(operation.execute('1', createUpdateComponentDto({ name: 'X' }))).rejects.toThrow(
+        /версию компонента/
+      );
+      expect(mockHttpClient.patch).not.toHaveBeenCalled();
+    });
+
     it('переданную версию берёт как есть и лишнего чтения не делает', async () => {
       const mockComponent = createComponentFixture({ id: 1, version: 3 });
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockComponent);

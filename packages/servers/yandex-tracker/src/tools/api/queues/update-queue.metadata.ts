@@ -25,7 +25,7 @@ export const UPDATE_QUEUE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['queue', 'update', 'write'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['queueId', 'lead', 'defaultType', 'defaultPriority', 'issueTypes', 'fields'],
+  redactionAllowlist: ['queueId', 'lead', 'defaultType', 'defaultPriority', 'fields'],
   title: 'Обновить очередь',
   outputSchema: UpdateQueueOutputSchema,
   annotations: {

@@ -77,7 +77,16 @@ export class UpdateComponentOperation extends BaseOperation {
    */
   private async readCurrentVersion(componentId: string): Promise<number> {
     const component = await this.httpClient.get<ComponentOutput>(`/v3/components/${componentId}`);
-    return component.version;
+    const version = component.version;
+    // Без этой проверки в URL уехало бы `?version=undefined`, и API отверг бы запрос
+    // сообщением про формат, а не про причину — читать его пришлось бы наугад.
+    if (typeof version !== 'number') {
+      throw new Error(
+        `Не удалось прочитать версию компонента ${componentId}: ответ API её не содержит. ` +
+          'Передай version параметром инструмента.'
+      );
+    }
+    return version;
   }
 
   /**

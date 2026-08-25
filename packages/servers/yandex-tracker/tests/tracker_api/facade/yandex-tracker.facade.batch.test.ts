@@ -131,13 +131,7 @@ describe('YandexTrackerFacade - Batch Methods', () => {
     } as unknown as QueueServicesContainer;
 
     mockProjectAgileContainer = {
-      project: {
-        getProjects: vi.fn(),
-        getProject: vi.fn(),
-        createProject: vi.fn(),
-        updateProject: vi.fn(),
-        deleteProject: vi.fn(),
-      },
+      project: {},
       board: {
         getBoards: vi.fn(),
         getBoard: vi.fn(),

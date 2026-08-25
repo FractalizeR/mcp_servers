@@ -137,7 +137,6 @@ wiki как минимум `local-side-effect` по
 | yandex-tracker | edit_comment | false | false | true | true | edit-comment.metadata.ts |
 | yandex-tracker | get_comments | true | false | true | true | get-comments.metadata.ts |
 | yandex-tracker | create_component | false | false | false | true | create-component.metadata.ts |
-| yandex-tracker | delete_component | false | true | true | true | delete-component.metadata.ts |
 | yandex-tracker | get_components | true | false | true | true | get-components.metadata.ts |
 | yandex-tracker | update_component | false | false | true | true | update-component.metadata.ts |
 | yandex-tracker | add_goal_key_result | false | false | false | true | add-goal-key-result.metadata.ts |
@@ -150,7 +149,6 @@ wiki как минимум `local-side-effect` по
 | yandex-tracker | set_goal_key_results | false | true | true | true | set-goal-key-results.metadata.ts |
 | yandex-tracker | update_entity | false | false | true | true | update-entity.metadata.ts |
 | yandex-tracker | create_global_field | false | false | false | true | create-global-field.metadata.ts |
-| yandex-tracker | delete_global_field | false | true | true | true | delete-global-field.metadata.ts |
 | yandex-tracker | get_global_field | true | false | true | true | get-global-field.metadata.ts |
 | yandex-tracker | get_global_fields | true | false | true | true | get-global-fields.metadata.ts |
 | yandex-tracker | update_global_field | false | false | true | true | update-global-field.metadata.ts |
