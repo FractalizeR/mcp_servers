@@ -1,20 +1,22 @@
 /**
  * DTO для создания проекта в Яндекс.Трекере
  *
- * ВАЖНО: Ключ проекта должен быть уникальным в рамках организации.
+ * `POST /v3/projects` не принимает `key` (назначается сервером) и `teamUserIds`;
+ * вместо массива `queueIds` — ключ одной очереди строкой, `queues` (D8,
+ * `0_CONTRACTS.md`).
  */
 
 import type { ProjectStatus } from '#tracker_api/entities/index.js';
 
 export interface CreateProjectDto {
-  /** Уникальный ключ проекта */
-  key: string;
-
   /** Название проекта */
   name: string;
 
+  /** Ключ очереди, в портфель которой добавляется проект */
+  queues: string;
+
   /** ID или login руководителя проекта */
-  lead: string;
+  lead?: string | undefined;
 
   /** Статус проекта */
   status?: ProjectStatus | undefined;
@@ -27,18 +29,6 @@ export interface CreateProjectDto {
 
   /** Дата окончания проекта (формат: YYYY-MM-DD) */
   endDate?: string | undefined;
-
-  /**
-   * Массив ключей очередей, связанных с проектом
-   * @example ['QUEUE1', 'QUEUE2']
-   */
-  queueIds?: string[] | undefined;
-
-  /**
-   * Массив ID или login участников проекта
-   * @example ['user1', 'user2']
-   */
-  teamUserIds?: string[] | undefined;
 
   /** Дополнительные поля */
   [key: string]: unknown;

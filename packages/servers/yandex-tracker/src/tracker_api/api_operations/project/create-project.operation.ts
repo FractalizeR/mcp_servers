@@ -25,7 +25,7 @@ export class CreateProjectOperation extends BaseOperation {
    * - Retry делается ТОЛЬКО в HttpClient.post (нет двойного retry)
    */
   async execute(data: CreateProjectDto): Promise<ProjectOutput> {
-    this.logger.info(`Создание проекта: ${data.key}`);
+    this.logger.info(`Создание проекта: ${data.name}`);
 
     const endpoint = '/v3/projects';
 

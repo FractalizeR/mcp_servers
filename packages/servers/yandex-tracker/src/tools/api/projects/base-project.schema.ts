@@ -6,6 +6,17 @@ import { z } from 'zod';
 
 /**
  * Возможные статусы проекта
+ *
+ * `draft`/`in_progress`/`launched`/`postponed` — из документации запроса создания
+ * (D8, `0_CONTRACTS.md`), там же они названы в верхнем регистре; строчный регистр
+ * оставлен по типизации, снятой с боевых ответов GET — расхождение регистра решает
+ * живой прогон (см. BRIEF, известные допущения), здесь не меняем.
+ *
+ * `at_risk` в документации создания не значится, но наблюдался в боевых ответах GET
+ * (`project.entity.ts`) — читаемый существующий проект может быть в этом статусе.
+ * Оставлен в перечне: убрать его значило бы отказывать в чтении/правке проекта,
+ * у которого он уже стоит. Годится ли `at_risk` для создания/правки — не проверено;
+ * решает живой прогон наравне с регистром остальных статусов.
  */
 export const ProjectStatusSchema = z.enum([
   'draft',
@@ -15,47 +26,55 @@ export const ProjectStatusSchema = z.enum([
   'at_risk',
 ]);
 
+/** `YYYY-MM-DD` — единственная форма даты, которую принимает API (D8, `0_CONTRACTS.md`). */
+const DATE_YYYY_MM_DD = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
- * Базовые поля проекта (без ключа/ID)
+ * Базовые поля проекта, общие для создания и правки (без ключа/ID/очередей/участников)
+ *
+ * `queueIds`/`teamUserIds` из базы исключены: у создания и правки проекта разный
+ * состав тела запроса (D8, `0_CONTRACTS.md`) — создание шлёт `queues: string`
+ * (ключ одной очереди) и не знает `teamUserIds`, правка продолжает слать оба массива.
  */
 export const BaseProjectFieldsSchema = z.object({
   /**
    * Название проекта
    */
-  name: z.string().min(1, 'Название проекта не может быть пустым'),
+  name: z.string().min(1, 'Название проекта не может быть пустым').describe('Название проекта'),
 
   /**
    * ID или login руководителя проекта
    */
-  lead: z.string().min(1, 'Руководитель проекта не может быть пустым'),
+  lead: z
+    .string()
+    .min(1, 'Руководитель проекта не может быть пустым')
+    .describe('ID или login руководителя проекта — справочник find_users/get_users'),
 
   /**
    * Статус проекта
    */
-  status: ProjectStatusSchema,
+  status: ProjectStatusSchema.describe(
+    'Статус проекта: draft | in_progress | launched | postponed | at_risk'
+  ),
 
   /**
    * Описание проекта
    */
-  description: z.string(),
+  description: z.string().describe('Описание проекта'),
 
   /**
    * Дата начала проекта в формате YYYY-MM-DD
    */
-  startDate: z.string(),
+  startDate: z
+    .string()
+    .regex(DATE_YYYY_MM_DD, 'Дата начала должна быть в формате YYYY-MM-DD')
+    .describe('Дата начала проекта в формате YYYY-MM-DD'),
 
   /**
    * Дата окончания проекта в формате YYYY-MM-DD
    */
-  endDate: z.string(),
-
-  /**
-   * Массив ключей очередей, связанных с проектом
-   */
-  queueIds: z.array(z.string()),
-
-  /**
-   * Массив ID или login участников проекта
-   */
-  teamUserIds: z.array(z.string()),
+  endDate: z
+    .string()
+    .regex(DATE_YYYY_MM_DD, 'Дата окончания должна быть в формате YYYY-MM-DD')
+    .describe('Дата окончания проекта в формате YYYY-MM-DD'),
 });

@@ -44,7 +44,7 @@ describe('CreateProjectOperation', () => {
 
   describe('execute', () => {
     it('should call httpClient.post with correct endpoint and data', async () => {
-      const inputDto = createCreateProjectDto({ key: 'NEWPROJ', name: 'New Project' });
+      const inputDto = createCreateProjectDto({ queues: 'NEWQUEUE', name: 'New Project' });
       const mockProject: ProjectWithUnknownFields = createProjectFixture({
         key: 'NEWPROJ',
         name: 'New Project',
@@ -80,7 +80,7 @@ describe('CreateProjectOperation', () => {
     });
 
     it('should log correct messages', async () => {
-      const inputDto = createCreateProjectDto({ key: 'TEST' });
+      const inputDto = createCreateProjectDto({ name: 'TEST' });
       const mockProject: ProjectWithUnknownFields = createProjectFixture({
         key: 'TEST',
         id: 'project123',

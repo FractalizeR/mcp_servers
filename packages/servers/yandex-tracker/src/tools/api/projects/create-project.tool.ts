@@ -30,36 +30,23 @@ export class CreateProjectTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const {
-      fields,
-      key,
-      name,
-      lead,
-      status,
-      description,
-      startDate,
-      endDate,
-      queueIds,
-      teamUserIds,
-    } = validation.data;
+    const { fields, name, queues, lead, status, description, startDate, endDate } = validation.data;
 
     try {
       this.logger.info('Создание нового проекта', {
-        key,
         name,
+        queues,
         lead,
       });
 
       const projectData: CreateProjectDto = {
-        key,
         name,
-        lead,
+        queues,
+        ...(lead && { lead }),
         ...(status && { status }),
         ...(description && { description }),
         ...(startDate && { startDate }),
         ...(endDate && { endDate }),
-        ...(queueIds && { queueIds }),
-        ...(teamUserIds && { teamUserIds }),
       };
 
       const createdProject = await this.facade.createProject(projectData);
@@ -81,7 +68,7 @@ export class CreateProjectTool extends BaseTool<YandexTrackerFacade> {
         ResponseFieldFilter.toWarnings(fieldsWithoutValue)
       );
     } catch (error: unknown) {
-      return this.formatError(`Ошибка при создании проекта ${key}`, error);
+      return this.formatError(`Ошибка при создании проекта ${name}`, error);
     }
   }
 }

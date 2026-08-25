@@ -9,6 +9,10 @@ import { BaseProjectFieldsSchema } from './base-project.schema.js';
 /**
  * Схема параметров для обновления проекта
  *
+ * В отличие от создания, правка проекта (`PATCH /v3/projects/{id}`) продолжает
+ * принимать `queueIds`/`teamUserIds` (этап 1.1, раздельные перечни ключей —
+ * см. `0_CONTRACTS.md`, D8) — это осталось вне базовой схемы, общей с созданием.
+ *
  * Использует базовую схему проекта с:
  * - projectId: обязательно (вместо key)
  * - все остальные поля: опционально (через .partial())
@@ -25,7 +29,22 @@ export const UpdateProjectParamsSchema = z
      */
     fields: FieldsSchema,
   })
-  .merge(BaseProjectFieldsSchema.partial());
+  .merge(BaseProjectFieldsSchema.partial())
+  .merge(
+    z
+      .object({
+        /**
+         * Массив ключей очередей, связанных с проектом
+         */
+        queueIds: z.array(z.string()),
+
+        /**
+         * Массив ID или login участников проекта
+         */
+        teamUserIds: z.array(z.string()),
+      })
+      .partial()
+  );
 
 /**
  * Вывод типа из схемы

@@ -38,24 +38,34 @@ describe('CreateProjectTool', () => {
       expect(definition.name).toBe(buildToolName('create_project', MCP_TOOL_PREFIX));
       expect(definition.description).toContain('[Projects/Write] Создать новый проект');
       expect(definition.inputSchema.type).toBe('object');
-      expect(definition.inputSchema.required).toEqual(['key', 'name', 'lead', 'fields']);
-      expect(definition.inputSchema.properties?.['key']).toBeDefined();
+      expect(definition.inputSchema.required).toEqual(['queues', 'name', 'fields']);
+      expect(definition.inputSchema.properties?.['queues']).toBeDefined();
       expect(definition.inputSchema.properties?.['name']).toBeDefined();
       expect(definition.inputSchema.properties?.['lead']).toBeDefined();
       expect(definition.inputSchema.properties?.['status']).toBeDefined();
       expect(definition.inputSchema.properties?.['description']).toBeDefined();
       expect(definition.inputSchema.properties?.['startDate']).toBeDefined();
       expect(definition.inputSchema.properties?.['endDate']).toBeDefined();
-      expect(definition.inputSchema.properties?.['queueIds']).toBeDefined();
-      expect(definition.inputSchema.properties?.['teamUserIds']).toBeDefined();
       expect(definition.inputSchema.properties?.['fields']).toBeDefined();
+      expect(definition.inputSchema.properties?.['key']).toBeUndefined();
+      expect(definition.inputSchema.properties?.['queueIds']).toBeUndefined();
+      expect(definition.inputSchema.properties?.['teamUserIds']).toBeUndefined();
+    });
+
+    it('описание queues должно называть ключ очереди, а не ID', () => {
+      const definition = tool.getDefinition();
+      const queuesProp = definition.inputSchema.properties?.['queues'] as {
+        description?: string;
+      };
+
+      expect(queuesProp.description ?? '').toMatch(/ключ/i);
     });
   });
 
   describe('execute', () => {
     describe('валидация параметров (Zod)', () => {
-      it('должен требовать параметр key', async () => {
-        const result = await tool.execute({ name: 'Test', lead: 'user1', fields: ['id', 'key'] });
+      it('должен требовать параметр queues', async () => {
+        const result = await tool.execute({ name: 'Test', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -67,19 +77,7 @@ describe('CreateProjectTool', () => {
       });
 
       it('должен требовать параметр name', async () => {
-        const result = await tool.execute({ key: 'PROJ', lead: 'user1', fields: ['id', 'key'] });
-
-        expect(result.isError).toBe(true);
-        const parsed = JSON.parse(getTextContent(result)) as {
-          success: boolean;
-          message: string;
-        };
-        expect(parsed.success).toBe(false);
-        expect(parsed.message).toContain('валидации');
-      });
-
-      it('должен требовать параметр lead', async () => {
-        const result = await tool.execute({ key: 'PROJ', name: 'Test', fields: ['id', 'key'] });
+        const result = await tool.execute({ queues: 'PROJQ', fields: ['id', 'key'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -92,7 +90,59 @@ describe('CreateProjectTool', () => {
 
       it('должен отклонить пустые строки', async () => {
         const result = await tool.execute({
-          key: '',
+          queues: '',
+          name: 'Test',
+          fields: ['id', 'key'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
+      it('должен отклонить startDate не в формате YYYY-MM-DD', async () => {
+        const result = await tool.execute({
+          queues: 'PROJQ',
+          name: 'Test',
+          startDate: '01/01/2024',
+          fields: ['id', 'key'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
+      it('должен отклонить endDate не в формате YYYY-MM-DD', async () => {
+        const result = await tool.execute({
+          queues: 'PROJQ',
+          name: 'Test',
+          endDate: '2024/12/31',
+          fields: ['id', 'key'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
+      it('должен отклонить вызов старого контракта (key вместо queues)', async () => {
+        // `key` в схеме больше не объявлен — старый вызов без обязательного
+        // `queues` отвергается как вызов без `queues`, а не из-за наличия `key`.
+        const result = await tool.execute({
+          key: 'PROJ',
           name: 'Test',
           lead: 'user1',
           fields: ['id', 'key'],
@@ -107,14 +157,13 @@ describe('CreateProjectTool', () => {
         expect(parsed.message).toContain('валидации');
       });
 
-      it('должен принимать корректные параметры', async () => {
+      it('должен принимать корректные параметры без lead', async () => {
         const mockProject = createProjectFixture({ key: 'NEWPROJ' });
         vi.mocked(mockTrackerFacade.createProject).mockResolvedValue(mockProject);
 
         const result = await tool.execute({
-          key: 'NEWPROJ',
+          queues: 'NEWQUEUE',
           name: 'New Project',
-          lead: 'user1',
           fields: ['id', 'key', 'name'],
         });
 
@@ -132,22 +181,20 @@ describe('CreateProjectTool', () => {
         vi.mocked(mockTrackerFacade.createProject).mockResolvedValue(mockProject);
 
         const result = await tool.execute({
-          key: 'MINIMAL',
+          queues: 'MINQUEUE',
           name: 'Minimal Project',
-          lead: 'user1',
           fields: ['key', 'name'],
         });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.createProject).toHaveBeenCalledWith({
-          key: 'MINIMAL',
+          queues: 'MINQUEUE',
           name: 'Minimal Project',
-          lead: 'user1',
         });
         expect(mockLogger.info).toHaveBeenCalledWith('Создание нового проекта', {
-          key: 'MINIMAL',
           name: 'Minimal Project',
-          lead: 'user1',
+          queues: 'MINQUEUE',
+          lead: undefined,
         });
 
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -172,29 +219,25 @@ describe('CreateProjectTool', () => {
         vi.mocked(mockTrackerFacade.createProject).mockResolvedValue(mockProject);
 
         const result = await tool.execute({
-          key: 'FULL',
+          queues: 'FULLQUEUE',
           name: 'Full Project',
           lead: 'user1',
           status: 'in_progress',
           description: 'Full description',
           startDate: '2024-01-01',
           endDate: '2024-12-31',
-          queueIds: ['QUEUE1', 'QUEUE2'],
-          teamUserIds: ['user1', 'user2'],
           fields: ['key', 'name', 'status'],
         });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.createProject).toHaveBeenCalledWith({
-          key: 'FULL',
+          queues: 'FULLQUEUE',
           name: 'Full Project',
           lead: 'user1',
           status: 'in_progress',
           description: 'Full description',
           startDate: '2024-01-01',
           endDate: '2024-12-31',
-          queueIds: ['QUEUE1', 'QUEUE2'],
-          teamUserIds: ['user1', 'user2'],
         });
 
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -215,7 +258,7 @@ describe('CreateProjectTool', () => {
         vi.mocked(mockTrackerFacade.createProject).mockResolvedValue(mockProject);
 
         const result = await tool.execute({
-          key: 'PROJ',
+          queues: 'PROJQUEUE',
           name: 'Project',
           lead: 'user1',
           description: 'Project description',
@@ -224,52 +267,10 @@ describe('CreateProjectTool', () => {
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.createProject).toHaveBeenCalledWith({
-          key: 'PROJ',
+          queues: 'PROJQUEUE',
           name: 'Project',
           lead: 'user1',
           description: 'Project description',
-        });
-      });
-
-      it('должен создать проект с очередями', async () => {
-        const mockProject = createProjectFixture({ key: 'PROJ' });
-        vi.mocked(mockTrackerFacade.createProject).mockResolvedValue(mockProject);
-
-        const result = await tool.execute({
-          key: 'PROJ',
-          name: 'Project',
-          lead: 'user1',
-          queueIds: ['QUEUE1', 'QUEUE2'],
-          fields: ['key', 'name'],
-        });
-
-        expect(result.isError).toBeUndefined();
-        expect(mockTrackerFacade.createProject).toHaveBeenCalledWith({
-          key: 'PROJ',
-          name: 'Project',
-          lead: 'user1',
-          queueIds: ['QUEUE1', 'QUEUE2'],
-        });
-      });
-
-      it('должен создать проект с участниками', async () => {
-        const mockProject = createProjectFixture({ key: 'PROJ' });
-        vi.mocked(mockTrackerFacade.createProject).mockResolvedValue(mockProject);
-
-        const result = await tool.execute({
-          key: 'PROJ',
-          name: 'Project',
-          lead: 'user1',
-          teamUserIds: ['user1', 'user2', 'user3'],
-          fields: ['key', 'name'],
-        });
-
-        expect(result.isError).toBeUndefined();
-        expect(mockTrackerFacade.createProject).toHaveBeenCalledWith({
-          key: 'PROJ',
-          name: 'Project',
-          lead: 'user1',
-          teamUserIds: ['user1', 'user2', 'user3'],
         });
       });
     });
@@ -280,7 +281,7 @@ describe('CreateProjectTool', () => {
         vi.mocked(mockTrackerFacade.createProject).mockRejectedValue(error);
 
         const result = await tool.execute({
-          key: 'EXISTS',
+          queues: 'EXISTSQ',
           name: 'Exists',
           lead: 'user1',
           fields: ['id', 'key'],
@@ -302,7 +303,7 @@ describe('CreateProjectTool', () => {
         vi.mocked(mockTrackerFacade.createProject).mockRejectedValue(error);
 
         const result = await tool.execute({
-          key: 'PROJ',
+          queues: 'PROJQUEUE',
           name: 'Project',
           lead: 'user1',
           fields: ['id', 'key'],
@@ -322,7 +323,7 @@ describe('CreateProjectTool', () => {
         vi.mocked(mockTrackerFacade.createProject).mockRejectedValue(error);
 
         const result = await tool.execute({
-          key: 'PROJ',
+          queues: 'PROJQUEUE',
           name: 'Project',
           lead: 'user1',
           fields: ['id', 'key'],
@@ -342,7 +343,7 @@ describe('CreateProjectTool', () => {
         vi.mocked(mockTrackerFacade.createProject).mockRejectedValue(error);
 
         const result = await tool.execute({
-          key: 'PROJ',
+          queues: 'PROJQUEUE',
           name: 'Project',
           lead: 'user1',
           fields: ['id', 'key'],

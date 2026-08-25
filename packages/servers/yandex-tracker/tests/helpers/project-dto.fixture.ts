@@ -31,13 +31,13 @@ export function createGetProjectsDto(overrides?: Partial<GetProjectsDto>): GetPr
  *
  * @example
  * ```typescript
- * const dto = createCreateProjectDto({ key: 'MYPROJ', name: 'My Project' });
+ * const dto = createCreateProjectDto({ queues: 'MYQUEUE', name: 'My Project' });
  * ```
  */
 export function createCreateProjectDto(overrides?: Partial<CreateProjectDto>): CreateProjectDto {
   return {
-    key: 'TESTPROJ',
     name: 'Test Project',
+    queues: 'TESTQUEUE',
     lead: 'testuser',
     ...overrides,
   };
@@ -55,15 +55,13 @@ export function createFullCreateProjectDto(
   overrides?: Partial<CreateProjectDto>
 ): CreateProjectDto {
   return {
-    key: 'TESTPROJ',
     name: 'Test Project',
+    queues: 'TESTQUEUE',
     lead: 'testuser',
     status: 'in_progress' as ProjectStatus,
     description: 'Test project description',
     startDate: '2024-01-01',
     endDate: '2024-12-31',
-    queueIds: ['QUEUE1', 'QUEUE2'],
-    teamUserIds: ['user1', 'user2'],
     ...overrides,
   };
 }

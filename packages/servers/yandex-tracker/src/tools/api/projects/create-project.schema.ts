@@ -9,20 +9,28 @@ import { BaseProjectFieldsSchema } from './base-project.schema.js';
 /**
  * Схема параметров для создания проекта
  *
+ * `POST /v3/projects` не знает параметра `key` (назначается сервером, `400 key:
+ * Incorrect data format` на любую присланную форму) и требует вместо `queueIds`
+ * ключ одной очереди строкой — `queues` (D8, `0_CONTRACTS.md`). `lead` в API
+ * опционален.
+ *
  * Использует базовую схему проекта с:
- * - key: обязательно
- * - name, lead: обязательно (из базовой схемы)
- * - остальные поля: опционально (через .partial())
+ * - name: обязательно (из базовой схемы)
+ * - queues: обязательно
+ * - lead и остальные базовые поля: опционально (через .partial())
  */
 export const CreateProjectParamsSchema = z
   .object({
     /**
-     * Уникальный ключ проекта (обязательно)
+     * Ключ очереди, в портфель которой добавляется проект (обязательно)
      */
-    key: z.string().min(1, 'Ключ проекта не может быть пустым'),
+    queues: z
+      .string()
+      .min(1, 'Ключ очереди не может быть пустым')
+      .describe('Ключ очереди (не ID) — справочник get_queues, поле key'),
   })
-  .merge(BaseProjectFieldsSchema.pick({ name: true, lead: true }))
-  .merge(BaseProjectFieldsSchema.omit({ name: true, lead: true }).partial())
+  .merge(BaseProjectFieldsSchema.pick({ name: true }))
+  .merge(BaseProjectFieldsSchema.omit({ name: true }).partial())
   .merge(
     z.object({
       /**

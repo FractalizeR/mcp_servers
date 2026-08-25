@@ -33,14 +33,14 @@ describeToolIntegration({
   expectedRequests: [{ method: 'post', path: '/v3/projects', apiVersion: 'v3' }],
 
   happyPath: {
-    input: { key: 'NEWPROJ', name: 'New Project', lead: 'lead-user', fields: ['id', 'key'] },
+    input: { queues: 'NEWQUEUE', name: 'New Project', lead: 'lead-user', fields: ['id', 'key'] },
     arrange: (api) => {
       api
         .expectRequest({
           method: 'post',
           path: '/v3/projects',
           apiVersion: 'v3',
-          body: { key: 'NEWPROJ', name: 'New Project', lead: 'lead-user' },
+          body: { queues: 'NEWQUEUE', name: 'New Project', lead: 'lead-user' },
         })
         .reply(200, createProjectFixture({ id: 'project42', key: 'NEWPROJ', name: 'New Project' }));
     },
@@ -53,7 +53,7 @@ describeToolIntegration({
 
   invalidInput: {
     // `fields` обязателен (не optional) — FieldsSchema в CreateProjectParamsSchema.
-    input: { key: 'NEWPROJ', name: 'New Project', lead: 'lead-user' },
+    input: { queues: 'NEWQUEUE', name: 'New Project', lead: 'lead-user' },
   },
 
   errors: {
@@ -63,7 +63,7 @@ describeToolIntegration({
           .expectRequest({ method: 'post', path: '/v3/projects', apiVersion: 'v3' })
           .reply(403, generateError403());
       },
-      input: { key: 'RESTRICTED', name: 'Restricted', lead: 'lead-user', fields: ['id'] },
+      input: { queues: 'RESTRICTEDQ', name: 'Restricted', lead: 'lead-user', fields: ['id'] },
     },
     notFound: {
       // Единственный HTTP-вызов create_project — POST /v3/projects; 404 здесь —
@@ -73,7 +73,7 @@ describeToolIntegration({
           .expectRequest({ method: 'post', path: '/v3/projects', apiVersion: 'v3' })
           .reply(404, generateError404());
       },
-      input: { key: 'NOLEAD', name: 'No Lead', lead: 'missing-user', fields: ['id'] },
+      input: { queues: 'NOLEADQ', name: 'No Lead', lead: 'missing-user', fields: ['id'] },
     },
   },
 
@@ -92,7 +92,7 @@ describeToolIntegration({
         .reply(200, createProjectFixture({ id: 'project43', key: 'GAPPROJ' }));
     },
     input: {
-      key: 'GAPPROJ',
+      queues: 'GAPQUEUE',
       name: 'Project With Gaps',
       lead: 'lead-user',
       fields: ['id', 'key', 'missingField'],

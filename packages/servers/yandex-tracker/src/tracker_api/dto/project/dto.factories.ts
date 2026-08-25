@@ -36,9 +36,8 @@ export function createMinimalCreateProjectDto(
   overrides?: Partial<CreateProjectDto>
 ): CreateProjectDto {
   return {
-    key: 'TESTPROJ',
     name: 'Test Project',
-    lead: 'testuser',
+    queues: 'TESTQUEUE',
     ...overrides,
   };
 }
@@ -50,15 +49,13 @@ export function createFullCreateProjectDto(
   overrides?: Partial<CreateProjectDto>
 ): CreateProjectDto {
   return {
-    key: 'TESTPROJ',
     name: 'Test Project',
+    queues: 'TESTQUEUE',
     lead: 'testuser',
     status: 'in_progress',
     description: 'Test Project Description',
     startDate: '2024-01-01',
     endDate: '2024-12-31',
-    queueIds: ['QUEUE1', 'QUEUE2'],
-    teamUserIds: ['user1', 'user2'],
     ...overrides,
   };
 }
