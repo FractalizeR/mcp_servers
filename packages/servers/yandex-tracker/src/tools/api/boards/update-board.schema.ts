@@ -31,6 +31,11 @@ const UpdateBoardFilterSchema = z.record(
 
 /**
  * Схема параметров для обновления доски
+ *
+ * Параметра `version` здесь нет намеренно: `PATCH /v3/boards/{id}` отвергает его
+ * ключом тела — `400 version: Incorrect data format` при любом значении, включая
+ * текущую версию доски (живая проба 2026-08-25). Оптимистичной блокировки у правки
+ * доски нет ни в теле, ни заголовком `If-Match` — в документации она не описана.
  */
 export const UpdateBoardParamsSchema = z
   .object({
@@ -39,9 +44,6 @@ export const UpdateBoardParamsSchema = z
 
     /** Новое название доски (опционально) */
     name: z.string().min(1).optional(),
-
-    /** Версия доски для оптимистичной блокировки (опционально) */
-    version: z.number().int().positive().optional(),
 
     /** Обновлённые колонки доски (опционально) */
     columns: z.array(UpdateBoardColumnSchema).optional(),

@@ -19,9 +19,6 @@ export interface UpdateBoardDto {
   /** Новое название доски */
   name?: string | undefined;
 
-  /** Версия доски (для оптимистичной блокировки) */
-  version?: number | undefined;
-
   /** Обновленные колонки доски */
   columns?: CreateBoardColumnDto[] | undefined;
 
