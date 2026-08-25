@@ -208,6 +208,11 @@ async function main(): Promise<void> {
   );
   lines.push('отдельным списком ниже и требуют ручного разбора.');
   lines.push('');
+  lines.push('**Ключи тела — из образца, а не из API.** `markerKey` в колонке ключей — имя,');
+  lines.push('которым генератор образцов заполняет `z.record()` (свободная карта кастомных');
+  lines.push('полей). Поля API с таким именем нет; сверка с документацией должна его');
+  lines.push('пропускать — см. `SAMPLE_ARTEFACT_KEYS` в `scripts/sweep-doc-routes.ts`.');
+  lines.push('');
   lines.push('| Инструмент | readOnly | destructive | Метод | Путь | Ключи тела |');
   lines.push('|---|:--:|:--:|---|---|---|');
   for (const c of captured) {

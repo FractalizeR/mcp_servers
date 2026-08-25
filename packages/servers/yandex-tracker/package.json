@@ -81,6 +81,7 @@
     "mcp:list": "npm run build && node dist/cli/bin/mcp-connect.js list",
     "mcp:status": "npm run build && node dist/cli/bin/mcp-connect.js status",
     "migrate:subpath-imports": "tsx scripts/migrate-to-subpath-imports.ts",
+    "sweep:doc-routes": "tsx scripts/sweep-doc-routes.ts",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:perf": "tsx scripts/analyze-test-performance.ts",
