@@ -16,15 +16,26 @@ export interface PathVerdict {
   readonly rejection?: string;
 }
 
-/** Кодированные разделители: после декодирования сервером они меняют адресата. */
-const ENCODED_SEPARATOR = /%2f|%5c/i;
+/**
+ * Процентное кодирование в пути отвергается целиком, а не перечнем опасных
+ * последовательностей: `%2F` меняет адресата после декодирования сервером, и ровно
+ * тот же довод верен для `%2e` (точка), `%252e` (двойное кодирование) и любой
+ * следующей формы, которую перечислять пришлось бы бесконечно. Мутирующих путей с
+ * законным `%` у нас нет: имя файла вложения едет в query, а не в сегменте, и
+ * запрос строки запроса эта проверка не касается.
+ */
+const PERCENT_ENCODED = /%/;
 
 export function canonicalRequestPath(url: string): PathVerdict {
   const queryStart = url.indexOf('?');
   const raw = queryStart === -1 ? url : url.slice(0, queryStart);
 
-  if (ENCODED_SEPARATOR.test(raw)) {
-    return { rejection: 'путь содержит кодированный разделитель (%2F/%5C)' };
+  if (PERCENT_ENCODED.test(raw)) {
+    return {
+      rejection:
+        'путь содержит процентное кодирование: после декодирования сервером он адресует ' +
+        'не то, что показывает правилам',
+    };
   }
   if (raw.includes('\\')) {
     return { rejection: 'путь содержит обратный слэш' };

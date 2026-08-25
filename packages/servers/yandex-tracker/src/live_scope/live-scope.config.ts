@@ -38,6 +38,32 @@ const UNGUARDED_OPT_OUT_VALUE = 'i-am-writing-to-production';
 const JOURNAL_VAR = 'YANDEX_TRACKER_LIVE_SCOPE_JOURNAL';
 
 /**
+ * Префикс, обязательный в имени создаваемой сущности уровня организации (проект,
+ * доска, спринт, глобальное поле, фильтр, задача Entity API). Не задана — мутации
+ * этих сущностей отклоняются в правиле допуска, а не здесь: прогон уровня песочной
+ * очереди организации может вовсе не касаться, и требовать от него префикс значило
+ * бы ломать работающий сценарий.
+ */
+const RUN_PREFIX_VAR = 'YANDEX_TRACKER_LIVE_SCOPE_RUN_PREFIX';
+
+/**
+ * Ключ одноразовой очереди, которую прогону разрешено создать и удалить (`POST
+ * /v3/queues`). Не задана — создание любой очереди отклоняется в правиле допуска:
+ * значение нельзя получить машинально, только явным заданием переменной.
+ */
+const DISPOSABLE_QUEUE_VAR = 'YANDEX_TRACKER_LIVE_SCOPE_DISPOSABLE_QUEUE';
+
+/**
+ * Владелец прогона — единственный человек, на которого телу запроса разрешено
+ * ссылаться (`lead` проекта и очереди, субъекты доступов очереди). Значение
+ * сравнивается со ссылкой буквально: рубеж не разрешает логины в идентификаторы и
+ * наоборот, поэтому задавать надо ровно ту форму, которую шлют инструменты. Не
+ * задана — тело со ссылкой на человека отклоняется в правиле допуска, а не здесь:
+ * прогон уровня песочной очереди людей организации не касается вовсе.
+ */
+const RUN_OWNER_VAR = 'YANDEX_TRACKER_LIVE_SCOPE_RUN_OWNER';
+
+/**
  * Метка прогона. Ею подписан журнал, и файл с чужой меткой не принимается:
  * забытый журнал прошлого запуска иначе выдавал бы права на его сущности.
  */
@@ -98,5 +124,17 @@ export function createLiveScopeGuardFromEnv(
     );
   }
 
-  return new LiveScopeGuard({ sandboxQueue, journal: new RunJournal(journalPath, runId) });
+  return new LiveScopeGuard({
+    sandboxQueue,
+    journal: new RunJournal(journalPath, runId),
+    runPrefix: nonEmpty(env[RUN_PREFIX_VAR]),
+    disposableQueue: nonEmpty(env[DISPOSABLE_QUEUE_VAR]),
+    runOwner: nonEmpty(env[RUN_OWNER_VAR]),
+  });
+}
+
+/** Пустая и незаданная переменная равнозначны — обе кладутся в `undefined`. */
+function nonEmpty(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === '' ? undefined : trimmed;
 }

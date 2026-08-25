@@ -32,6 +32,25 @@ export const SANDBOX_COMPONENT = 'component-of-this-run';
 /** Локальное поле очереди, созданное этим прогоном. */
 export const SANDBOX_LOCAL_FIELD = 'field-of-this-run';
 
+/**
+ * Сущности организации, допуск к которым (этап 5.1) зависит от журнала и от
+ * префикса прогона в имени создаваемой сущности. Значения ниже фигурируют и в
+ * теле запроса (для create — с префиксом в имени), и как записи в журнале
+ * (`scope-rules.test.ts` регистрирует их в `beforeEach`).
+ */
+export const RUN_PREFIX = 'run-under-test';
+/** Владелец прогона: единственный человек, на которого тело запроса вправе ссылаться. */
+export const RUN_OWNER = 'run-owner-login';
+export const DISPOSABLE_QUEUE = 'DISP';
+export const SANDBOX_PROJECT_ID = '5';
+export const SANDBOX_PROJECT_KEY = 'PRJ';
+export const SANDBOX_BOARD = '20';
+export const SANDBOX_SPRINT = '30';
+export const SANDBOX_GLOBAL_FIELD = 'globalField-of-this-run';
+export const SANDBOX_FILTER = '40';
+export const SANDBOX_ENTITY_TYPE = 'goal';
+export const SANDBOX_ENTITY_ID = 'g1';
+
 export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
   // Класс A — ключ задачи в пути (15 запросов).
   {
@@ -193,80 +212,220 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
     tool: 'update_queue',
     method: 'patch',
     path: `/v3/queues/${SANDBOX_QUEUE}`,
+    // TEST — песочница, а не очередь, созданная этим прогоном (журнал рода
+    // `queue` — только для одноразовой очереди из POST /v3/queues); остаётся отказом.
     expectation: 'denied',
   },
 
-  // Классы D и E — видно за пределами очереди (25 запросов).
-  { tool: 'create_queue', method: 'post', path: '/v3/queues/', expectation: 'denied' },
+  // Классы D и E — сущности уровня организации, допуск по владению прогоном
+  // (этап 5.1, план 5.1_org_scope_guard_sequential.md).
   {
+    tool: 'create_queue',
+    method: 'post',
+    path: '/v3/queues/',
+    body: {
+      key: DISPOSABLE_QUEUE,
+      name: `${RUN_PREFIX}-queue`,
+      lead: RUN_OWNER,
+      defaultType: 'task',
+      defaultPriority: 'normal',
+    },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    // Форма тела — та, что строит операция: `{ [роль]: { [действие]: [субъекты] } }`.
     tool: 'manage_queue_access',
     method: 'patch',
+    path: `/v3/queues/${DISPOSABLE_QUEUE}/permissions`,
+    body: { access: { add: [RUN_OWNER] } },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    // Доступы боевой очереди — самая разрушительная мутация Трекера: песочная
+    // очередь этим прогоном не создавалась, права на её доступы у него нет.
+    tool: 'manage_queue_access (чужая очередь)',
+    method: 'patch',
     path: `/v3/queues/${SANDBOX_QUEUE}/permissions`,
+    body: { access: { add: [RUN_OWNER] } },
     expectation: 'denied',
   },
-  { tool: 'create_project', method: 'post', path: '/v3/projects', expectation: 'denied' },
-  { tool: 'update_project', method: 'patch', path: '/v3/projects/11', expectation: 'denied' },
-  { tool: 'delete_project', method: 'delete', path: '/v3/projects/11', expectation: 'denied' },
-  { tool: 'create_global_field', method: 'post', path: '/v3/fields', expectation: 'denied' },
-  { tool: 'update_global_field', method: 'patch', path: '/v3/fields/f1', expectation: 'denied' },
-  { tool: 'delete_global_field', method: 'delete', path: '/v3/fields/f1', expectation: 'denied' },
-  { tool: 'create_entity', method: 'post', path: '/v3/entities/goal', expectation: 'denied' },
+  {
+    tool: 'create_project',
+    method: 'post',
+    path: '/v3/projects',
+    body: {
+      name: `${RUN_PREFIX}-project`,
+      lead: RUN_OWNER,
+      status: 'draft',
+      description: '',
+      startDate: '2026-01-01',
+      endDate: '2026-01-02',
+      queueIds: [SANDBOX_QUEUE],
+      teamUserIds: [],
+    },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'update_project',
+    method: 'patch',
+    path: `/v3/projects/${SANDBOX_PROJECT_ID}`,
+    body: { name: `${RUN_PREFIX}-project-updated`, queueIds: [SANDBOX_QUEUE], teamUserIds: [] },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'delete_project',
+    method: 'delete',
+    path: `/v3/projects/${SANDBOX_PROJECT_ID}`,
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'create_global_field',
+    method: 'post',
+    path: '/v3/fields',
+    body: { name: `${RUN_PREFIX}-field`, schema: { type: 'string' } },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'update_global_field',
+    method: 'patch',
+    path: `/v3/fields/${SANDBOX_GLOBAL_FIELD}`,
+    body: { name: `${RUN_PREFIX}-field-updated` },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'delete_global_field',
+    method: 'delete',
+    path: `/v3/fields/${SANDBOX_GLOBAL_FIELD}`,
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'create_entity',
+    method: 'post',
+    path: `/v3/entities/${SANDBOX_ENTITY_TYPE}`,
+    body: { fields: { summary: `${RUN_PREFIX}-goal` } },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    // Без префикса запись Entity API неотличима от чужой и не находится поиском.
+    tool: 'create_entity (без префикса)',
+    method: 'post',
+    path: `/v3/entities/${SANDBOX_ENTITY_TYPE}`,
+    body: { fields: { summary: 'no-prefix-goal' } },
+    expectation: 'denied',
+  },
   {
     tool: 'update_entity',
     method: 'patch',
-    path: '/v3/entities/goal/g1?version=1',
-    expectation: 'denied',
+    path: `/v3/entities/${SANDBOX_ENTITY_TYPE}/${SANDBOX_ENTITY_ID}?version=1`,
+    // Префикс обязан пережить правку: остаток ищут поиском по имени.
+    body: { fields: { summary: `${RUN_PREFIX}-goal-updated` } },
+    expectation: 'allowed-in-sandbox',
   },
-  { tool: 'delete_entity', method: 'delete', path: '/v3/entities/goal/g1', expectation: 'denied' },
+  {
+    tool: 'delete_entity',
+    method: 'delete',
+    path: `/v3/entities/${SANDBOX_ENTITY_TYPE}/${SANDBOX_ENTITY_ID}`,
+    expectation: 'allowed-in-sandbox',
+  },
   {
     tool: 'add_goal_key_result',
     method: 'patch',
-    path: '/v3/entities/goal/g1?fields=keyResultItems',
-    expectation: 'denied',
+    path: `/v3/entities/${SANDBOX_ENTITY_TYPE}/${SANDBOX_ENTITY_ID}?fields=keyResultItems`,
+    // Форма элемента — та, что строит `buildKeyResultItemBody`; `assignee` —
+    // ссылка на живого человека, поэтому в теле прогона стоит владелец прогона.
+    body: {
+      fields: { keyResultItems: [{ type: 'binary', text: 'kr', assignee: RUN_OWNER }] },
+    },
+    expectation: 'allowed-in-sandbox',
   },
   {
     tool: 'set_goal_key_results',
     method: 'patch',
-    path: '/v3/entities/goal/g1?fields=keyResultItems',
-    expectation: 'denied',
+    path: `/v3/entities/${SANDBOX_ENTITY_TYPE}/${SANDBOX_ENTITY_ID}?fields=keyResultItems`,
+    body: { fields: { keyResultItems: [] } },
+    expectation: 'allowed-in-sandbox',
   },
   {
     tool: 'clear_goal_key_results',
     method: 'patch',
-    path: '/v3/entities/goal/g1?fields=keyResultItems',
-    expectation: 'denied',
+    path: `/v3/entities/${SANDBOX_ENTITY_TYPE}/${SANDBOX_ENTITY_ID}?fields=keyResultItems`,
+    body: { fields: { keyResultItems: [] } },
+    expectation: 'allowed-in-sandbox',
   },
-  { tool: 'create_board', method: 'post', path: '/v3/boards', expectation: 'denied' },
-  { tool: 'update_board', method: 'patch', path: '/v3/boards/b1', expectation: 'denied' },
-  { tool: 'delete_board', method: 'delete', path: '/v3/boards/b1', expectation: 'denied' },
+  {
+    tool: 'create_board',
+    method: 'post',
+    path: '/v3/boards',
+    body: { name: `${RUN_PREFIX}-board`, queue: SANDBOX_QUEUE },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'update_board',
+    method: 'patch',
+    path: `/v3/boards/${SANDBOX_BOARD}`,
+    body: { name: `${RUN_PREFIX}-board-updated` },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'delete_board',
+    method: 'delete',
+    path: `/v3/boards/${SANDBOX_BOARD}`,
+    expectation: 'allowed-in-sandbox',
+  },
   {
     tool: 'create_board_column',
     method: 'post',
-    path: '/v3/boards/b1/columns/',
-    expectation: 'denied',
+    path: `/v3/boards/${SANDBOX_BOARD}/columns/`,
+    body: { name: 'col', statuses: ['open'] },
+    expectation: 'allowed-in-sandbox',
   },
   {
     tool: 'update_board_column',
     method: 'patch',
-    path: '/v3/boards/b1/columns/c1',
-    expectation: 'denied',
+    path: `/v3/boards/${SANDBOX_BOARD}/columns/c1`,
+    body: { name: 'col-updated' },
+    expectation: 'allowed-in-sandbox',
   },
   {
     tool: 'delete_board_column',
     method: 'delete',
-    path: '/v3/boards/b1/columns/c1',
-    expectation: 'denied',
+    path: `/v3/boards/${SANDBOX_BOARD}/columns/c1`,
+    expectation: 'allowed-in-sandbox',
   },
-  { tool: 'create_sprint', method: 'post', path: '/v3/sprints', expectation: 'denied' },
-  { tool: 'update_sprint', method: 'patch', path: '/v3/sprints/s1', expectation: 'denied' },
+  {
+    tool: 'create_sprint',
+    method: 'post',
+    path: '/v3/sprints',
+    body: { name: `${RUN_PREFIX}-sprint`, board: SANDBOX_BOARD },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'update_sprint',
+    method: 'patch',
+    path: `/v3/sprints/${SANDBOX_SPRINT}`,
+    body: { name: `${RUN_PREFIX}-sprint-updated` },
+    expectation: 'allowed-in-sandbox',
+  },
   {
     tool: 'manage_sprint_lifecycle',
     method: 'post',
-    path: '/v3/sprints/s1/_start',
-    expectation: 'denied',
+    path: `/v3/sprints/${SANDBOX_SPRINT}/_start`,
+    expectation: 'allowed-in-sandbox',
   },
-  { tool: 'create_filter', method: 'post', path: '/v3/filters/', expectation: 'denied' },
-  { tool: 'update_filter', method: 'patch', path: '/v3/filters/f1', expectation: 'denied' },
+  {
+    tool: 'create_filter',
+    method: 'post',
+    path: '/v3/filters/',
+    body: { name: `${RUN_PREFIX}-filter` },
+    expectation: 'allowed-in-sandbox',
+  },
+  {
+    tool: 'update_filter',
+    method: 'patch',
+    path: `/v3/filters/${SANDBOX_FILTER}`,
+    body: { name: `${RUN_PREFIX}-filter-updated` },
+    expectation: 'allowed-in-sandbox',
+  },
 ];
 
 /**

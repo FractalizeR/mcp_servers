@@ -82,7 +82,7 @@ describe('Рубеж в собранном контейнере', () => {
     const message = await callTool('delete_project', { projectId: '11' });
 
     expect(requestsSent).toBe(0);
-    expect(message).toContain('организации целиком');
+    expect(message).toContain('не принадлежит этому прогону');
   });
 
   it('правка задачи чужой очереди не доходит до сети', async () => {

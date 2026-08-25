@@ -17,8 +17,27 @@
 
 import { appendFileSync, readFileSync, existsSync } from 'node:fs';
 
-/** Род сущности; идентификаторы разных родов не взаимозаменяемы. */
-export type EntityKind = 'issue' | 'component' | 'queueLocalField';
+/**
+ * Род сущности; идентификаторы разных родов не взаимозаменяемы.
+ *
+ * `entity` (Entity API — Goal/Project/Portfolio) хранит составной идентификатор
+ * `{entityType}/{entityId}`: один и тот же id у другого типа — чужая сущность.
+ *
+ * Рода `boardColumn` нет осознанно: колонка не адресуется вне своей доски, а доска
+ * целиком принадлежит прогону и убирается одним удалением — право на колонку даёт
+ * запись о доске. Полная картина — `README.md`.
+ */
+export type EntityKind =
+  | 'issue'
+  | 'component'
+  | 'queueLocalField'
+  | 'project'
+  | 'board'
+  | 'sprint'
+  | 'globalField'
+  | 'entity'
+  | 'filter'
+  | 'queue';
 
 interface JournalEntry {
   kind: EntityKind;
