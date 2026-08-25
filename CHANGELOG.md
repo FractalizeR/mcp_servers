@@ -1,3 +1,107 @@
+## [4.0.0](https://github.com/FractalizeR/mcp_servers/compare/v3.2.0...v4.0.0) (2026-08-25)
+
+### ⚠ BREAKING CHANGES
+
+* **tracker:** удалены инструменты create_project, get_project,
+get_projects, update_project, delete_project, delete_component,
+delete_global_field. Параметры issueTypes (create_queue, update_queue),
+queueIds (update_project), version (update_board) больше не принимаются.
+Форма filter у update_board изменена с {query} на карту «поле — значения».
+Ресурс tracker://project/{id} и промпт project-summary сняты. Работа с
+проектами, портфелями и целями — через Entity API (entityType: 'project').
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** update_queue больше не принимает issueTypes.
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** инструменты create_project, get_project, get_projects,
+update_project, delete_project удалены — используй Entity API
+(create_entity/get_entity/find_entities/update_entity/delete_entity с
+entityType: 'project'). Ресурс tracker://project/{id} и промпт
+project-summary сняты.
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** инструменты fr_yandex_tracker_delete_component и
+fr_yandex_tracker_delete_global_field удалены.
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** update_board больше не принимает version.
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** update_project больше не принимает queueIds (используй
+queues — ключ очереди строкой); create_queue не принимает issueTypes
+(набор типов задаёт issueTypesConfig); форма filter у update_board
+изменена с {query} на карту «поле → значения».
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** update_board_column и delete_board_column отказывают при
+неоднозначном columnId вместо изменения произвольной колонки.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** create_board не принимает filter, orderBy, orderAsc,
+query, useRanking, country — этих полей нет у POST /v3/liveBoards.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** create_global_field требует id, category, type; name стал
+объектом {en, ru}; ключи schema, options, suggest из тела убраны.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** create_project не принимает key, queueIds, teamUserIds;
+параметр queues обязателен.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** create_queue требует параметр issueTypesConfig.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** CreateComponentDto требует поле queue; сигнатура
+CreateComponentOperation.execute принимает один аргумент.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **live-scope:** правила рубежа переписаны под новые маршруты API.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **live-scope:** живой прогон требует YANDEX_TRACKER_LIVE_SCOPE_RUN_OWNER для тел со ссылкой
+на человека и YANDEX_TRACKER_LIVE_SCOPE_RUN_PREFIX для сущностей организации.
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+* **tracker:** инструменты Трекера ходят в API v3; id досок, колонок досок и
+спринтов возвращаются числами, а не строками, options глобального поля — булево.
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+
+### Features
+
+* **core:** предупреждение VERSION_NOT_PROVIDED и вторая половина ограничения доски ([ce9d041](https://github.com/FractalizeR/mcp_servers/commit/ce9d041f57e87d89f4249fd8c624e52d5ba1debc))
+* **live-scope:** допуск сущностей организации по владению прогоном ([0597658](https://github.com/FractalizeR/mcp_servers/commit/0597658acbeb43f4cf4247df38acc28772effb0b))
+* **live-scope:** раздельные правила создания и правки под новые маршруты ([6aa8ef5](https://github.com/FractalizeR/mcp_servers/commit/6aa8ef5f37f7d2fa02ea988278517b6e80a532c6))
+* **tracker:** контракты правки, разошедшиеся с API, найденные сверкой ([bb4ad7b](https://github.com/FractalizeR/mcp_servers/commit/bb4ad7b85a6ee84f310c89d123f264fad4b22e28))
+* **tracker:** обязательный issueTypesConfig при создании очереди (D7) ([4ba5f0e](https://github.com/FractalizeR/mcp_servers/commit/4ba5f0e9fcd4e7b619af9f010a0373ba060504c4))
+* **tracker:** отказ при неоднозначной адресации колонки доски (D11) ([0ff5a64](https://github.com/FractalizeR/mcp_servers/commit/0ff5a64c74e18573e293258a7c04d90270ea8cf0))
+* **tracker:** перевод всех запросов к API Трекера с v2 на v3 ([4f49aa0](https://github.com/FractalizeR/mcp_servers/commit/4f49aa0ff59da18849e7df2b2940d2c2e12843b7))
+* **tracker:** сверка маршрутов с документацией и починка контрактов v3 ([fae01d9](https://github.com/FractalizeR/mcp_servers/commit/fae01d91da249abb53a5d9aaba4044cf3ca757e7))
+* **tracker:** создание доски через POST /v3/liveBoards (D9) ([6ee7dff](https://github.com/FractalizeR/mcp_servers/commit/6ee7dffca384397489e4b0b493510ff58ed22559))
+* **tracker:** создание компонента через POST /v3/components (D1) ([88d089a](https://github.com/FractalizeR/mcp_servers/commit/88d089ab82c6d79391ff15c1d20bd1de3caf6be0))
+* **tracker:** создание проекта без key, очередь параметром queues (D8) ([d897eb7](https://github.com/FractalizeR/mcp_servers/commit/d897eb741b6e65d004035e4e0255cbf7a5c600f2))
+* **tracker:** сплошная сверка маршрутов с документацией API ([d5ebf54](https://github.com/FractalizeR/mcp_servers/commit/d5ebf54bcf3dd641c0c48deb539e5ef3c5e493e7))
+* **tracker:** тело создания глобального поля без schema (D10) ([f395bec](https://github.com/FractalizeR/mcp_servers/commit/f395bec74856b8dea6a952cc543603d1e9c99562))
+* **tracker:** убрать delete_component и delete_global_field ([2160732](https://github.com/FractalizeR/mcp_servers/commit/2160732a71ff6348a6c6ea896ea7472858cba4cc))
+* **tracker:** убрать легаси-семейство проектов /v3/projects ([e9cfe93](https://github.com/FractalizeR/mcp_servers/commit/e9cfe93c88bbdb136028c7803a95667586551872))
+
+### Bug Fixes
+
+* **tests:** vite-tsconfig-paths ломал subpath imports после сборки ([34c48e2](https://github.com/FractalizeR/mcp_servers/commit/34c48e2b4e848e7e940e9ad808489162e43bc8fa))
+* **tracker:** находки ревью — дыра в рубеже, issueTypes у правки очереди ([b119819](https://github.com/FractalizeR/mcp_servers/commit/b1198193f08c5acc8dd8d81cd62b8978aaf9896d))
+* **tracker:** остаток находок ревью — версия, счётчики, хвосты ([e4e2ff0](https://github.com/FractalizeR/mcp_servers/commit/e4e2ff0912b3d7555a8bee98f3fa8ea05517ef09))
+* **tracker:** убрать version из правки доски — API его отвергает ([cb16bab](https://github.com/FractalizeR/mcp_servers/commit/cb16bab92fff16425b663227277741d31704d04e))
+
 ## [3.2.0](https://github.com/FractalizeR/mcp_servers/compare/v3.1.0...v3.2.0) (2026-08-20)
 
 ### Features
