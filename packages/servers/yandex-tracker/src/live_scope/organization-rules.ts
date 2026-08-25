@@ -18,10 +18,12 @@ import {
   hasRunPrefix,
   isRecord,
   nameKeepsPrefix,
+  nestedValue,
   ownershipRule,
   orgFamilyRules,
   queueRefWithinScope,
   queueRefsWithinScope,
+  queueWithinScope,
   refOf,
   requireRunPrefix,
 } from './rule-matching.js';
@@ -48,6 +50,16 @@ const PROJECT_KEYS = [
   'queueIds',
   'teamUserIds',
 ] as const;
+/** `POST /v3/projects` не знает ни `key`, ни `queueIds`, ни `teamUserIds` (0_CONTRACTS.md, D8). */
+const PROJECT_CREATE_KEYS = [
+  'name',
+  'queues',
+  'description',
+  'lead',
+  'status',
+  'startDate',
+  'endDate',
+] as const;
 const QUEUE_KEYS = [
   'key',
   'name',
@@ -56,6 +68,7 @@ const QUEUE_KEYS = [
   'defaultPriority',
   'description',
   'issueTypes',
+  'issueTypesConfig',
 ] as const;
 const BOARD_KEYS = [
   'name',
@@ -68,6 +81,18 @@ const BOARD_KEYS = [
   'useRanking',
   'country',
   'version',
+] as const;
+/** `POST /v3/liveBoards` (0_CONTRACTS.md, D9): очередь — внутри `autoFilters`. */
+const BOARD_CREATE_KEYS = [
+  'name',
+  'owner',
+  'boardPermissionsTemplate',
+  'backlogAvailable',
+  'sprintsAvailable',
+  'columns',
+  'backlogColumns',
+  'nonParametrizedColumns',
+  'autoFilters',
 ] as const;
 const BOARD_COLUMN_KEYS = ['name', 'statuses', 'limit'] as const;
 const SPRINT_KEYS = [
@@ -88,6 +113,24 @@ const GLOBAL_FIELD_KEYS = [
   'readonly',
   'options',
   'suggest',
+  'optionsProvider',
+] as const;
+/**
+ * `POST /v3/fields` (0_CONTRACTS.md, D10). `schema` в запросе не существует — оно
+ * приходит только в ответе; набор значений задаётся `optionsProvider`, а не
+ * `options`/`suggest`.
+ */
+const GLOBAL_FIELD_CREATE_KEYS = [
+  'id',
+  'name',
+  'description',
+  'category',
+  'type',
+  'order',
+  'readonly',
+  'visible',
+  'hidden',
+  'container',
   'optionsProvider',
 ] as const;
 const FILTER_KEYS = ['name', 'filter', 'query', 'sorts', 'fields', 'groupBy'] as const;
@@ -121,19 +164,44 @@ const QUEUE_ACCESS_ACTIONS: ReadonlySet<string> = new Set(['add', 'remove']);
 const leadViolation: BodyViolation = (body, context) =>
   personViolation('lead', body?.['lead'], context);
 
-/** `queueIds` — только очереди прогона, `teamUserIds` — пусто, `lead` — владелец прогона. */
-const projectBodyViolation: BodyViolation = (body, context) => {
+/** Создание знает очередь как `queues` — одной ссылкой строкой, а не массивом. */
+const projectCreateViolation: BodyViolation = (body, context) =>
+  queueRefWithinScope(body?.['queues'], context)
+    ? undefined
+    : 'проект создаётся в очереди за пределами прогона либо без неё (queues)';
+
+/** `queueIds` — только очереди прогона, `teamUserIds` — пусто. */
+const projectEditViolation: BodyViolation = (body, context) => {
   if (!queueRefsWithinScope(body?.['queueIds'], context)) {
     return 'проект ссылается на очередь за пределами прогона (queueIds)';
   }
   const team = body?.['teamUserIds'];
-  if (team !== undefined && (!Array.isArray(team) || team.length > 0)) {
-    return 'проект назначает участников команды — это меняет живых людей организации (teamUserIds)';
-  }
-  return leadViolation(body, context);
+  return team !== undefined && (!Array.isArray(team) || team.length > 0)
+    ? 'проект назначает участников команды — это меняет живых людей организации (teamUserIds)'
+    : undefined;
 };
 
-const boardBodyViolation: BodyViolation = (body, context) => {
+const BOARD_QUEUE_PATH = ['addFilter', 'liveFilter', 'fieldValues', 'queue'] as const;
+
+/**
+ * Очередь создаваемой доски лежит внутри `autoFilters` элементами `{ fixed: 'TEST' }`.
+ * `autoFilters` нет вовсе — доска заводится без привязки к очереди, это законно;
+ * `autoFilters` есть, а очередь из него не читается — отказ: форма разошлась с той,
+ * под которую написана проверка, и доска могла бы уехать в чужую очередь молча.
+ */
+const boardCreateViolation: BodyViolation = (body, context) => {
+  const autoFilters = body?.['autoFilters'];
+  if (autoFilters === undefined) return undefined;
+  const refs = nestedValue(autoFilters, BOARD_QUEUE_PATH);
+  if (!Array.isArray(refs) || refs.length === 0) {
+    return `доска: очередь не распознана в autoFilters.${BOARD_QUEUE_PATH.join('.')}`;
+  }
+  return refs.every((entry) => queueWithinScope(refOf(entry, 'fixed'), context))
+    ? undefined
+    : 'доска привязана к очереди за пределами прогона (autoFilters)';
+};
+
+const boardEditViolation: BodyViolation = (body, context) => {
   const queue = body?.['queue'];
   return queue !== undefined && !queueRefWithinScope(queue, context)
     ? 'доска привязана к очереди за пределами прогона (queue)'
@@ -251,8 +319,11 @@ export const ORGANIZATION_RULES: readonly ScopeRule[] = [
     kind: 'project',
     createPattern: /^\/v3\/projects\/?$/,
     editPattern: /^\/v3\/projects\/([^/?]+)\/?$/,
-    bodyViolation: projectBodyViolation,
+    bodyViolation: leadViolation,
+    createViolation: projectCreateViolation,
+    editViolation: projectEditViolation,
     allowedKeys: PROJECT_KEYS,
+    createAllowedKeys: PROJECT_CREATE_KEYS,
   }),
   ...orgFamilyRules({
     label: 'глобальное поле',
@@ -260,6 +331,7 @@ export const ORGANIZATION_RULES: readonly ScopeRule[] = [
     createPattern: /^\/v3\/fields\/?$/,
     editPattern: /^\/v3\/fields\/([^/?]+)\/?$/,
     allowedKeys: GLOBAL_FIELD_KEYS,
+    createAllowedKeys: GLOBAL_FIELD_CREATE_KEYS,
   }),
   // name/description в Entity API не существуют — только fields.summary (create-entity.schema.ts).
   // Тип записи перечислен в самом правиле: полагаться на то, что Zod-схема
@@ -290,13 +362,18 @@ export const ORGANIZATION_RULES: readonly ScopeRule[] = [
       violation: allowedKeysViolation('колонка доски', BOARD_COLUMN_KEYS),
     }
   ),
+  // Создание и правка доски разъехались по маршрутам: `POST /v3/boards` объявлен
+  // устаревшим и молча игнорирует тело, поэтому правилом не покрыт и уходит в
+  // fail-closed — отказ честнее беззвучно созданной доски с параметрами по умолчанию.
   ...orgFamilyRules({
     label: 'доска',
     kind: 'board',
-    createPattern: /^\/v3\/boards\/?$/,
+    createPattern: /^\/v3\/liveBoards\/?$/,
     editPattern: /^\/v3\/boards\/([^/?]+)\/?$/,
-    bodyViolation: boardBodyViolation,
+    createViolation: boardCreateViolation,
+    editViolation: boardEditViolation,
     allowedKeys: BOARD_KEYS,
+    createAllowedKeys: BOARD_CREATE_KEYS,
   }),
   ...orgFamilyRules({
     label: 'спринт',

@@ -72,8 +72,8 @@ describe('пункт 1: ссылка на человека ищется по в�
     [
       'lead компонента',
       'post',
-      `/v3/queues/${SANDBOX_QUEUE}/components`,
-      { name: 'c', lead: FOREIGN_PERSON },
+      '/v3/components',
+      { name: 'c', queue: SANDBOX_QUEUE, lead: FOREIGN_PERSON },
     ],
     [
       'lead компонента на правке',
@@ -382,7 +382,7 @@ describe('пункт 3: правка не снимает префикс с им�
 
 describe('пункт 4: дети одноразовой очереди принадлежат области прогона', () => {
   it('компонент в одноразовой очереди прогона создаётся', () => {
-    const decision = decide('post', `/v3/queues/${DISPOSABLE_QUEUE}/components`, { name: 'c' });
+    const decision = decide('post', '/v3/components', { name: 'c', queue: DISPOSABLE_QUEUE });
     expect(decision.allowed, decision.reason).toBe(true);
   });
 
@@ -401,7 +401,7 @@ describe('пункт 4: дети одноразовой очереди прин�
   });
 
   it('очередь вне области прогона детей не получает', () => {
-    const component = decide('post', '/v3/queues/PROD/components', { name: 'c' });
+    const component = decide('post', '/v3/components', { name: 'c', queue: 'PROD' });
     const localField = decide('post', '/v3/queues/PROD/localFields', { id: 'f' });
     expect(component.allowed).toBe(false);
     expect(component.reason).toContain('вне области прогона');

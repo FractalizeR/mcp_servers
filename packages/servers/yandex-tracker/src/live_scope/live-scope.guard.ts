@@ -75,19 +75,17 @@ function createdEntityOf(request: OutgoingRequest): CreatedEntity | undefined {
   const path = canonicalRequestPath(request.url).path;
   if (path === undefined) return undefined;
   if (/^\/v3\/issues\/?$/.test(path)) return { kind: 'issue' };
-  // v2 или v3 — этап 4.1 переносит create_component на v3, а этот детектор
-  // должен узнавать созданный компонент независимо от версии, иначе после
-  // миграции журнал не заполнится и легальная правка своего компонента
-  // отклонится как «не создан этим прогоном».
-  if (/^\/v[23]\/queues\/[^/]+\/components\/?$/.test(path)) return { kind: 'component' };
+  if (/^\/v3\/components\/?$/.test(path)) return { kind: 'component' };
   if (/^\/v3\/queues\/[^/]+\/localFields\/?$/.test(path)) return { kind: 'queueLocalField' };
   if (/^\/v3\/projects\/?$/.test(path)) return { kind: 'project' };
-  if (/^\/v3\/boards\/?$/.test(path)) return { kind: 'board' };
+  // Доска создаётся на `liveBoards`, а адресуется потом по `/v3/boards/{id}`:
+  // детектор стоит на маршруте создания, иначе своя доска не попадёт в журнал.
+  if (/^\/v3\/liveBoards\/?$/.test(path)) return { kind: 'board' };
   if (/^\/v3\/sprints\/?$/.test(path)) return { kind: 'sprint' };
   if (/^\/v3\/fields\/?$/.test(path)) return { kind: 'globalField' };
   if (/^\/v3\/filters\/?$/.test(path)) return { kind: 'filter' };
-  // Якорено `$`: `/v3/queues/{q}/components` и `/v3/queues/{q}/localFields`
-  // проверены выше и сюда не долетают, но без якоря совпали бы тоже.
+  // Якорено `$`: `/v3/queues/{q}/localFields` проверен выше и сюда не долетает,
+  // но без якоря совпал бы тоже.
   if (/^\/v3\/queues\/?$/.test(path)) return { kind: 'queue' };
   const entityMatch = /^\/v3\/entities\/([^/?]+)\/?$/.exec(path);
   if (entityMatch !== null) return { kind: 'entity', idPrefix: entityMatch[1] ?? '' };

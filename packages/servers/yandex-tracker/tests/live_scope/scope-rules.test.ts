@@ -12,6 +12,7 @@ import { join } from 'node:path';
 import { decideRequest } from '#live_scope';
 import type { ScopeContext } from '#live_scope';
 import {
+  BOARD_QUEUE_FILTER,
   KNOWN_MUTATING_REQUESTS,
   SEARCH_REQUESTS,
   SANDBOX_ISSUE,
@@ -23,6 +24,7 @@ import {
   SANDBOX_PROJECT_KEY,
   SANDBOX_BOARD,
   SANDBOX_SPRINT,
+  SANDBOX_GLOBAL_FIELD,
   SANDBOX_ENTITY_ID,
 } from './known-mutating-requests.js';
 import { createRunContext } from './run-fixture.js';
@@ -120,11 +122,27 @@ describe('Область действия живого прогона', () => {
     });
 
     it('компонент в чужой очереди', () => {
-      const decision = decide('post', '/v2/queues/PROD/components');
+      const decision = decide('post', '/v3/components', { name: 'c', queue: 'PROD' });
       expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('вне области прогона');
     });
 
-    // Этап 4.1 перевёл bulkchange, components и queues/{q}/components на v3.
+    it('компонент без очереди в теле: родитель не распознан', () => {
+      // Очередь больше не стоит в пути — тело без неё адресует неизвестно что.
+      const decision = decide('post', '/v3/components', { name: 'c' });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('не распознана очередь');
+    });
+
+    it('снятый маршрут создания компонента падает в fail-closed', () => {
+      // `POST /v3/queues/{q}/components` в API нет: живое правило на несуществующий
+      // путь маскировало бы регресс, поэтому оно удалено, а не оставлено «на всякий».
+      const decision = decide('post', `/v3/queues/${SANDBOX_QUEUE}/components`, { name: 'c' });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('не описан ни одним правилом');
+    });
+
+    // Этап 4.1 перевёл bulkchange и components на v3.
     // Проверка тем же набором кейсов на новых путях — попытка, а не декларация:
     // тест, отклоняющий только v2-путь, после переезда операций перестал бы
     // доказывать хоть что-то про реальный трафик.
@@ -140,11 +158,6 @@ describe('Область действия живого прогона', () => {
       const decision = decide('delete', '/v3/components/foreign-component');
       expect(decision.allowed).toBe(false);
       expect(decision.reason).toContain('не создан этим прогоном');
-    });
-
-    it('компонент в чужой очереди отклоняется и на пути v3', () => {
-      const decision = decide('post', '/v3/queues/PROD/components');
-      expect(decision.allowed).toBe(false);
     });
 
     it('проекты и глобальные поля остаются вне области действия и на пути v3', () => {
@@ -211,8 +224,18 @@ describe('Область действия живого прогона', () => {
     });
 
     it('создание компонента в песочной очереди проходит на v3', () => {
-      const decision = decide('post', `/v3/queues/${SANDBOX_QUEUE}/components`);
+      const decision = decide('post', '/v3/components', { name: 'c', queue: SANDBOX_QUEUE });
       expect(decision.allowed, decision.reason).toBe(true);
+    });
+
+    it('неизвестный ключ тела компонента отклоняется с его именем', () => {
+      const decision = decide('post', '/v3/components', {
+        name: 'c',
+        queue: SANDBOX_QUEUE,
+        permissions: {},
+      });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('permissions');
     });
 
     it('правка компонента, созданного этим прогоном, проходит на v3', () => {
@@ -231,15 +254,14 @@ describe('этап 5.1: создание org-сущностей и правка 
     it('проект', () => {
       const decision = decide('post', '/v3/projects', {
         name: 'no-prefix-project',
-        queueIds: [],
-        teamUserIds: [],
+        queues: SANDBOX_QUEUE,
       });
       expect(decision.allowed).toBe(false);
       expect(decision.reason).toContain('префикс');
     });
 
     it('доска', () => {
-      const decision = decide('post', '/v3/boards', { name: 'no-prefix-board' });
+      const decision = decide('post', '/v3/liveBoards', { name: 'no-prefix-board' });
       expect(decision.allowed).toBe(false);
       expect(decision.reason).toContain('префикс');
     });
@@ -324,24 +346,13 @@ describe('этап 5.1: создание org-сущностей и правка 
 
 describe('этап 5.1: ссылки в теле, тело без имени, префикс/якорение (условия 7-13)', () => {
   describe('условие 7 — проект со ссылкой за пределами прогона в теле отклоняется', () => {
-    it('queueIds содержит постороннюю очередь при создании', () => {
+    it('queues указывает на постороннюю очередь при создании', () => {
       const decision = decide('post', '/v3/projects', {
         name: `${RUN_PREFIX}-project`,
-        queueIds: ['PROD'],
-        teamUserIds: [],
+        queues: 'PROD',
       });
       expect(decision.allowed).toBe(false);
-      expect(decision.reason).toContain('queueIds');
-    });
-
-    it('непустой teamUserIds при создании', () => {
-      const decision = decide('post', '/v3/projects', {
-        name: `${RUN_PREFIX}-project`,
-        queueIds: [],
-        teamUserIds: ['user-1'],
-      });
-      expect(decision.allowed).toBe(false);
-      expect(decision.reason).toContain('teamUserIds');
+      expect(decision.reason).toContain('queues');
     });
 
     it('queueIds содержит постороннюю очередь при правке', () => {
@@ -361,13 +372,13 @@ describe('этап 5.1: ссылки в теле, тело без имени, п
     });
   });
 
-  it('условие 8 — доска с queue вне песочницы отклоняется', () => {
-    const decision = decide('post', '/v3/boards', {
+  it('условие 8 — доска с очередью вне песочницы отклоняется', () => {
+    const decision = decide('post', '/v3/liveBoards', {
       name: `${RUN_PREFIX}-board`,
-      queue: 'PROD',
+      autoFilters: BOARD_QUEUE_FILTER('PROD'),
     });
     expect(decision.allowed).toBe(false);
-    expect(decision.reason).toContain('queue');
+    expect(decision.reason).toContain('autoFilters');
   });
 
   describe('условие 9 — создание очереди по ключу и переменной окружения', () => {
@@ -462,6 +473,158 @@ describe('этап 5.1: ссылки в теле, тело без имени, п
       const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, {
         name: `${RUN_PREFIX}-board-renamed`,
       });
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+  });
+});
+
+// Создание и правка разъехались по маршрутам и перечням ключей (`0_CONTRACTS.md`):
+// у доски создание идёт на `liveBoards`, у проекта очередь на создании зовётся
+// `queues`, а на правке — `queueIds`. Один общий перечень снял бы проверку молча.
+describe('этап 1.1: раздельные маршруты и перечни ключей создания и правки', () => {
+  describe('доска', () => {
+    it('создание на liveBoards с очередью в autoFilters допускается', () => {
+      const decision = decide('post', '/v3/liveBoards/', {
+        name: `${RUN_PREFIX}-board`,
+        autoFilters: BOARD_QUEUE_FILTER(SANDBOX_QUEUE),
+      });
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+
+    it('создание без autoFilters допускается: доска без привязки к очереди законна', () => {
+      const decision = decide('post', '/v3/liveBoards/', { name: `${RUN_PREFIX}-board` });
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+
+    it('autoFilters, из которых очередь не читается, отклоняются', () => {
+      const decision = decide('post', '/v3/liveBoards/', {
+        name: `${RUN_PREFIX}-board`,
+        autoFilters: { addFilter: { liveFilter: { fieldValues: { status: ['open'] } } } },
+      });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('autoFilters');
+    });
+
+    it('чужой человек владельцем создаваемой доски отклоняется', () => {
+      const decision = decide('post', '/v3/liveBoards/', {
+        name: `${RUN_PREFIX}-board`,
+        owner: 'someone-else',
+      });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('someone-else');
+    });
+
+    it('ключ правки queue при создании неизвестен', () => {
+      const decision = decide('post', '/v3/liveBoards/', {
+        name: `${RUN_PREFIX}-board`,
+        queue: SANDBOX_QUEUE,
+      });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('queue');
+    });
+
+    it('устаревший POST /v3/boards падает в fail-closed', () => {
+      // Маршрут молча игнорирует тело и создаёт доску по умолчанию: отказ честнее.
+      const decision = decide('post', '/v3/boards', { name: `${RUN_PREFIX}-board` });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('не описан ни одним правилом');
+    });
+
+    it('правка своей доски с queue остаётся разрешённой', () => {
+      const decision = decide('patch', `/v3/boards/${SANDBOX_BOARD}`, { queue: SANDBOX_QUEUE });
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+  });
+
+  describe('проект', () => {
+    it('создание с queues в песочной очереди допускается', () => {
+      const decision = decide('post', '/v3/projects', {
+        name: `${RUN_PREFIX}-project`,
+        queues: SANDBOX_QUEUE,
+      });
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+
+    it('создание без queues отклоняется: родитель не распознан', () => {
+      const decision = decide('post', '/v3/projects', { name: `${RUN_PREFIX}-project` });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('queues');
+    });
+
+    it('создание с queues вне прогона отклоняется', () => {
+      const decision = decide('post', '/v3/projects', {
+        name: `${RUN_PREFIX}-project`,
+        queues: 'PROD',
+      });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('queues');
+    });
+
+    it('ключи правки key, queueIds и teamUserIds при создании неизвестны', () => {
+      ['key', 'queueIds', 'teamUserIds'].forEach((key) => {
+        const decision = decide('post', '/v3/projects', {
+          name: `${RUN_PREFIX}-project`,
+          queues: SANDBOX_QUEUE,
+          [key]: key === 'key' ? 'PRJ' : [],
+        });
+        expect(decision.allowed).toBe(false);
+        expect(decision.reason).toContain(key);
+      });
+    });
+
+    it('правка своего проекта с queueIds остаётся разрешённой', () => {
+      const decision = decide('patch', `/v3/projects/${SANDBOX_PROJECT_ID}`, {
+        queueIds: [SANDBOX_QUEUE],
+        teamUserIds: [],
+      });
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+  });
+
+  describe('очередь и глобальное поле', () => {
+    it('issueTypesConfig в теле создания очереди допускается', () => {
+      const decision = decide('post', '/v3/queues', {
+        key: DISPOSABLE_QUEUE,
+        name: `${RUN_PREFIX}-queue`,
+        issueTypesConfig: [{ issueType: 'task', workflow: 'W1', resolutions: ['fixed'] }],
+      });
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+
+    it('неизвестный ключ тела очереди отклоняется с его именем', () => {
+      const decision = decide('post', '/v3/queues', {
+        key: DISPOSABLE_QUEUE,
+        name: `${RUN_PREFIX}-queue`,
+        workflows: {},
+      });
+      expect(decision.allowed).toBe(false);
+      expect(decision.reason).toContain('workflows');
+    });
+
+    it('создание глобального поля по контракту допускается', () => {
+      const decision = decide('post', '/v3/fields', {
+        id: 'runField',
+        name: { ru: `${RUN_PREFIX}-поле`, en: `${RUN_PREFIX}-field` },
+        category: '000000000000000000000001',
+        type: 'ru.yandex.startrek.core.fields.StringFieldType',
+      });
+      expect(decision.allowed, decision.reason).toBe(true);
+    });
+
+    it('ключей schema, options и suggest в теле создания поля нет', () => {
+      ['schema', 'options', 'suggest'].forEach((key) => {
+        const decision = decide('post', '/v3/fields', {
+          id: 'runField',
+          name: `${RUN_PREFIX}-field`,
+          [key]: {},
+        });
+        expect(decision.allowed).toBe(false);
+        expect(decision.reason).toContain(key);
+      });
+    });
+
+    it('правка глобального поля прежним перечнем ключей остаётся разрешённой', () => {
+      const decision = decide('patch', `/v3/fields/${SANDBOX_GLOBAL_FIELD}`, { suggest: true });
       expect(decision.allowed, decision.reason).toBe(true);
     });
   });

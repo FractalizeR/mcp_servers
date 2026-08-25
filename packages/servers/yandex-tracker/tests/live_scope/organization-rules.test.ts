@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { decideRequest, RunJournal } from '#live_scope';
 import type { ScopeContext } from '#live_scope';
 import {
+  BOARD_QUEUE_FILTER,
   SANDBOX_ISSUE,
   SANDBOX_QUEUE,
   SANDBOX_COMPONENT,
@@ -119,8 +120,7 @@ describe('ссылка на живого человека — только вл�
     const decision = decide('post', '/v3/projects', {
       name: `${RUN_PREFIX}-project`,
       lead: FOREIGN_PERSON,
-      queueIds: [SANDBOX_QUEUE],
-      teamUserIds: [],
+      queues: SANDBOX_QUEUE,
     });
     expect(decision.allowed).toBe(false);
     expect(decision.reason).toContain(FOREIGN_PERSON);
@@ -130,8 +130,7 @@ describe('ссылка на живого человека — только вл�
     const decision = decide('post', '/v3/projects', {
       name: `${RUN_PREFIX}-project`,
       lead: RUN_OWNER,
-      queueIds: [SANDBOX_QUEUE],
-      teamUserIds: [],
+      queues: SANDBOX_QUEUE,
     });
     expect(decision.allowed, decision.reason).toBe(true);
   });
@@ -202,8 +201,7 @@ describe('ссылка на живого человека — только вл�
     const decision = decideIn(noOwner, 'post', '/v3/projects', {
       name: `${RUN_PREFIX}-project`,
       lead: RUN_OWNER,
-      queueIds: [],
-      teamUserIds: [],
+      queues: SANDBOX_QUEUE,
     });
     expect(decision.allowed).toBe(false);
     expect(decision.reason).toContain('YANDEX_TRACKER_LIVE_SCOPE_RUN_OWNER');
@@ -223,20 +221,19 @@ describe('владение одноразовой очередью доказы�
     const decision = decideIn(withUncreatedDisposableQueue(), 'post', '/v3/projects', {
       name: `${RUN_PREFIX}-project`,
       lead: RUN_OWNER,
-      queueIds: [DISPOSABLE_QUEUE],
-      teamUserIds: [],
+      queues: DISPOSABLE_QUEUE,
     });
     expect(decision.allowed).toBe(false);
-    expect(decision.reason).toContain('queueIds');
+    expect(decision.reason).toContain('queues');
   });
 
   it('доска не привязывается к объявленной, но не созданной одноразовой очереди', () => {
-    const decision = decideIn(withUncreatedDisposableQueue(), 'post', '/v3/boards', {
+    const decision = decideIn(withUncreatedDisposableQueue(), 'post', '/v3/liveBoards', {
       name: `${RUN_PREFIX}-board`,
-      queue: DISPOSABLE_QUEUE,
+      autoFilters: BOARD_QUEUE_FILTER(DISPOSABLE_QUEUE),
     });
     expect(decision.allowed).toBe(false);
-    expect(decision.reason).toContain('queue');
+    expect(decision.reason).toContain('autoFilters');
   });
 
   it('массовый перенос в объявленную, но не созданную одноразовую очередь отклоняется', () => {
@@ -252,8 +249,7 @@ describe('владение одноразовой очередью доказы�
     const project = decide('post', '/v3/projects', {
       name: `${RUN_PREFIX}-project`,
       lead: RUN_OWNER,
-      queueIds: [DISPOSABLE_QUEUE],
-      teamUserIds: [],
+      queues: DISPOSABLE_QUEUE,
     });
     const move = decide('post', '/v3/bulkchange/_move', {
       issues: [SANDBOX_ISSUE],

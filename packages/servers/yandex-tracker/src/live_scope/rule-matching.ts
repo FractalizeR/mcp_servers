@@ -67,8 +67,11 @@ export function asRecord(data: unknown): Body {
   }
 }
 
-/** Ссылка на сущность: строкой/числом либо объектом (`{ key: 'TEST' }`, `{ id: 42 }`). */
-export function refOf(value: unknown, field: 'id' | 'key'): string | undefined {
+/**
+ * Ссылка на сущность: строкой/числом либо объектом (`{ key: 'TEST' }`, `{ id: 42 }`).
+ * `fixed` — форма элемента фильтра доски (`{ fixed: 'TEST' }`).
+ */
+export function refOf(value: unknown, field: 'id' | 'key' | 'fixed'): string | undefined {
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
   if (typeof value === 'object' && value !== null) {
@@ -80,6 +83,16 @@ export function refOf(value: unknown, field: 'id' | 'key'): string | undefined {
 }
 export const queueKeyOf = (value: unknown): string | undefined => refOf(value, 'key');
 export const issueKeyOf = (value: unknown): string | undefined => refOf(value, 'key');
+
+/** Значение по цепочке вложенных объектов; любое звено не объект — `undefined`. */
+export function nestedValue(root: unknown, path: readonly string[]): unknown {
+  let node: unknown = root;
+  for (const segment of path) {
+    if (!isRecord(node)) return undefined;
+    node = node[segment];
+  }
+  return node;
+}
 
 /** Имя сущности организации: строка либо объект локализации (`{ ru, en }`). */
 function nameCandidates(value: unknown): readonly string[] {
@@ -262,6 +275,11 @@ export function nameKeepsPrefix(
  * даёт права перевесить её на чужого родителя или чужого человека, поэтому ссылки
  * в теле проверяются и на создании, и на правке. Рубеж не полагается на то, что
  * схема инструмента не пропустит такую ссылку: набор схем меняется, рубеж — нет.
+ *
+ * Перечни ключей и проверки ссылок парные: у доски и проекта создание и правка идут
+ * разными маршрутами с разной формой тела (очередь доски при создании лежит в
+ * `autoFilters`, при правке — в `queue`). Один общий перечень, переписанный под
+ * создание, снял бы проверку очереди с правки молча.
  */
 export interface OrgFamily {
   readonly label: string;
@@ -275,27 +293,36 @@ export interface OrgFamily {
   readonly bodyViolation?: BodyViolation | undefined;
   /** Сверх общей и только на создании: ссылка, обязательная в теле создания. */
   readonly createViolation?: BodyViolation | undefined;
-  /** Ключи верхнего уровня, допустимые в теле; прочие — отказ с именем ключа. */
+  /** Сверх общей и только на правке. */
+  readonly editViolation?: BodyViolation | undefined;
+  /** Ключи верхнего уровня, допустимые в теле правки; прочие — отказ с именем ключа. */
   readonly allowedKeys?: readonly string[] | undefined;
+  /** Ключи тела создания; не задан — тем же перечнем, что и правка. */
+  readonly createAllowedKeys?: readonly string[] | undefined;
 }
 
 export function orgFamilyRules(family: OrgFamily): readonly ScopeRule[] {
   const nameOf = family.nameOf ?? ((body: Body): unknown => body?.['name']);
   const fieldLabel = family.fieldLabel ?? 'имя';
-  const keys =
-    family.allowedKeys === undefined
-      ? undefined
-      : allowedKeysViolation(family.label, family.allowedKeys);
-  const common = bothViolations(keys, family.bodyViolation);
+  const keysViolation = (keys: readonly string[] | undefined): BodyViolation | undefined =>
+    keys === undefined ? undefined : allowedKeysViolation(family.label, keys);
+  const createCommon = bothViolations(
+    keysViolation(family.createAllowedKeys ?? family.allowedKeys),
+    family.bodyViolation
+  );
+  const editCommon = bothViolations(keysViolation(family.allowedKeys), family.bodyViolation);
   return [
     createRule(family.createPattern, family.label, {
       nameOf: family.nameOf,
       fieldLabel: family.fieldLabel,
-      violation: bothViolations(common, family.createViolation),
+      violation: bothViolations(createCommon, family.createViolation),
     }),
     ownershipRule(family.editPattern, family.editMethods ?? 'any', family.kind, family.label, {
       idOf: family.idOf,
-      violation: bothViolations(common, nameKeepsPrefix(family.label, nameOf, fieldLabel)),
+      violation: bothViolations(
+        bothViolations(editCommon, family.editViolation),
+        nameKeepsPrefix(family.label, nameOf, fieldLabel)
+      ),
     }),
   ];
 }

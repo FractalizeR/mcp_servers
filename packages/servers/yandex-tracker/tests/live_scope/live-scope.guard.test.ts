@@ -75,12 +75,16 @@ describe('LiveScopeGuard', () => {
 
   it('созданный компонент опознаётся по идентификатору из ответа', () => {
     const guard = createGuard();
-    const create = { method: 'post', url: '/v2/queues/TEST/components', data: { name: 'c' } };
+    const create = {
+      method: 'post',
+      url: '/v3/components',
+      data: { name: 'c', queue: 'TEST' },
+    };
 
     guard.observeResponse({ request: create, status: 201, data: { id: 555, name: 'c' } });
 
     expect(() =>
-      guard.inspectRequest({ method: 'delete', url: '/v2/components/555', data: undefined })
+      guard.inspectRequest({ method: 'delete', url: '/v3/components/555', data: undefined })
     ).not.toThrow();
   });
 
@@ -88,7 +92,11 @@ describe('LiveScopeGuard', () => {
     // Инвариант «рубеж не зависит от аккуратности вызывающего» держится в обеих
     // точках входа: «POST» мимо детектора оставил бы созданное без учёта.
     const guard = createGuard();
-    const create = { method: 'POST', url: '/v3/queues/TEST/components', data: { name: 'c' } };
+    const create = {
+      method: 'POST',
+      url: '/v3/components',
+      data: { name: 'c', queue: 'TEST' },
+    };
 
     guard.observeResponse({ request: create, status: 201, data: { id: 557, name: 'c' } });
 
@@ -97,18 +105,18 @@ describe('LiveScopeGuard', () => {
     ).not.toThrow();
   });
 
-  it('созданный компонент опознаётся и когда операция уже переехала на v3 (этап 4.1)', () => {
-    // Попытка, не декларация: createdEntityOf должен узнавать создание компонента
-    // независимо от версии пути, иначе после миграции create_component на v3
-    // журнал не заполнится и легальная правка своего компонента отклонится.
-    const guard = createGuard();
-    const create = { method: 'post', url: '/v3/queues/TEST/components', data: { name: 'c' } };
+  it('снятый маршрут создания компонента журнал не пополняет', () => {
+    // `POST /v3/queues/{q}/components` в API нет: детектор на несуществующем пути
+    // маскировал бы регресс — правка «своего» компонента прошла бы по чужому id.
+    const { guard, journal } = createGuardWithJournal();
 
-    guard.observeResponse({ request: create, status: 201, data: { id: 556, name: 'c' } });
+    guard.observeResponse({
+      request: { method: 'post', url: '/v3/queues/TEST/components', data: { name: 'c' } },
+      status: 201,
+      data: { id: 556 },
+    });
 
-    expect(() =>
-      guard.inspectRequest({ method: 'delete', url: '/v3/components/556', data: undefined })
-    ).not.toThrow();
+    expect(journal.list()).toHaveLength(0);
   });
 
   it('журнал переживает перезапуск процесса', () => {
@@ -197,16 +205,29 @@ describe('Регистрация созданного уровня органи�
     expect(journal.has('project', 'PRJ')).toBe(true);
   });
 
-  it('доска регистрируется по id', () => {
+  it('доска регистрируется по id с маршрута создания liveBoards', () => {
     const { guard, journal } = createGuardWithJournal();
 
     guard.observeResponse({
-      request: { method: 'post', url: '/v3/boards', data: { name: 'run-1-board' } },
+      request: { method: 'post', url: '/v3/liveBoards/', data: { name: 'run-1-board' } },
       status: 201,
       data: { id: 20 },
     });
 
     expect(journal.has('board', '20')).toBe(true);
+  });
+
+  it('устаревший POST /v3/boards журнал не пополняет', () => {
+    // Маршрут молча игнорирует тело: доска, заведённая им, прогону не принадлежит.
+    const { guard, journal } = createGuardWithJournal();
+
+    guard.observeResponse({
+      request: { method: 'post', url: '/v3/boards', data: { name: 'run-1-board' } },
+      status: 201,
+      data: { id: 21 },
+    });
+
+    expect(journal.list()).toHaveLength(0);
   });
 
   it('колонка доски (подпуть /v3/boards/{b}/columns) родом board не регистрируется', () => {

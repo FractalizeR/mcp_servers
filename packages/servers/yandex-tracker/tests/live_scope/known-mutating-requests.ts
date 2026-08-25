@@ -10,6 +10,11 @@
  * упавшие на валидации синтетического образца. Появившийся мимо этой таблицы путь
  * рубеж отклонит как неописанный — политика fail-closed, — но отдельной строки
  * здесь у него не будет: таблицу обновляют повторным прогоном скрипта.
+ *
+ * **Строки компонента, доски, проекта, очереди и глобального поля правлены руками**
+ * под `0_CONTRACTS.md`: этап 1.1 переводит рубеж на целевые маршруты раньше, чем
+ * пакеты 2.x переписывают схемы инструментов, поэтому скрипт сейчас снял бы форму
+ * старого тела. Полная перегенерация — шаг этапа 3.1, после волны 2.x.
  */
 
 /** Ожидаемое решение: разрешено внутри песочницы или отклонено с названной причиной. */
@@ -50,6 +55,11 @@ export const SANDBOX_GLOBAL_FIELD = 'globalField-of-this-run';
 export const SANDBOX_FILTER = '40';
 export const SANDBOX_ENTITY_TYPE = 'goal';
 export const SANDBOX_ENTITY_ID = 'g1';
+
+/** Очередь создаваемой доски (`0_CONTRACTS.md`, D9): не поле верхнего уровня, а фильтр. */
+export const BOARD_QUEUE_FILTER = (queue: string): Record<string, unknown> => ({
+  addFilter: { liveFilter: { fieldValues: { queue: [{ fixed: queue }] } } },
+});
 
 export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
   // Класс A — ключ задачи в пути (15 запросов).
@@ -181,7 +191,8 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
   {
     tool: 'create_component',
     method: 'post',
-    path: `/v3/queues/${SANDBOX_QUEUE}/components`,
+    path: '/v3/components',
+    body: { name: 'component', queue: SANDBOX_QUEUE },
     expectation: 'allowed-in-sandbox',
   },
   {
@@ -229,6 +240,7 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
       lead: RUN_OWNER,
       defaultType: 'task',
       defaultPriority: 'normal',
+      issueTypesConfig: [{ issueType: 'task', workflow: 'W1', resolutions: ['fixed'] }],
     },
     expectation: 'allowed-in-sandbox',
   },
@@ -260,8 +272,7 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
       description: '',
       startDate: '2026-01-01',
       endDate: '2026-01-02',
-      queueIds: [SANDBOX_QUEUE],
-      teamUserIds: [],
+      queues: SANDBOX_QUEUE,
     },
     expectation: 'allowed-in-sandbox',
   },
@@ -282,7 +293,12 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
     tool: 'create_global_field',
     method: 'post',
     path: '/v3/fields',
-    body: { name: `${RUN_PREFIX}-field`, schema: { type: 'string' } },
+    body: {
+      id: 'runField',
+      name: { ru: `${RUN_PREFIX}-поле`, en: `${RUN_PREFIX}-field` },
+      category: '000000000000000000000001',
+      type: 'ru.yandex.startrek.core.fields.StringFieldType',
+    },
     expectation: 'allowed-in-sandbox',
   },
   {
@@ -355,8 +371,11 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
   {
     tool: 'create_board',
     method: 'post',
-    path: '/v3/boards',
-    body: { name: `${RUN_PREFIX}-board`, queue: SANDBOX_QUEUE },
+    path: '/v3/liveBoards/',
+    body: {
+      name: `${RUN_PREFIX}-board`,
+      autoFilters: BOARD_QUEUE_FILTER(SANDBOX_QUEUE),
+    },
     expectation: 'allowed-in-sandbox',
   },
   {

@@ -16,6 +16,7 @@ import type { OutgoingRequest } from '@fractalizer/mcp-infrastructure';
 import type { Body, ScopeContext, ScopeDecision, ScopeRule } from './rule-matching.js';
 import {
   allow,
+  allowedKeysViolation,
   asRecord,
   deny,
   isRecord,
@@ -35,6 +36,9 @@ import {
 
 /** 24-hex идентификатор задачи — по нему принадлежность решает только журнал. */
 const OPAQUE_ISSUE_ID = /^[0-9a-f]{24}$/;
+
+/** Тело `POST /v3/components` (0_CONTRACTS.md, D1). */
+const COMPONENT_CREATE_KEYS = ['name', 'queue', 'description', 'lead', 'assignAuto'] as const;
 
 /** Задача принадлежит песочнице И создана этим прогоном: `TEST` общая. */
 function decideIssueScope(reference: string, context: ScopeContext): ScopeDecision {
@@ -210,13 +214,22 @@ export const SANDBOX_QUEUE_RULES: readonly ScopeRule[] = [
   // Очередь области прогона — песочная ИЛИ одноразовая, созданная прогоном:
   // сравнение с одной константой отказывало заводить компонент в очереди, которую
   // прогон сам же и создал (ревью 2026-08-25).
+  //
+  // Маршрута `POST /v3/queues/{q}/components` в API нет (0_CONTRACTS.md, D1):
+  // очередь называет тело, и нераспознанная очередь — отказ, как у создания задачи.
   {
-    pattern: /^\/v[23]\/queues\/([^/?]+)\/components\/?$/,
+    pattern: /^\/v3\/components\/?$/,
     methods: ['post'],
-    decide: (match, _request, context) =>
-      queueWithinScope(match[1], context)
-        ? allow(`компонент внутри очереди области прогона ${match[1] ?? '?'}`)
-        : deny(`компонент в очереди ${match[1] ?? '?'} вне области прогона`),
+    decide: (_match, request, context): ScopeDecision => {
+      const body = asRecord(request.data);
+      const problem = allowedKeysViolation('компонент', COMPONENT_CREATE_KEYS)(body);
+      if (problem !== undefined) return deny(problem);
+      const queue = queueKeyOf(body?.['queue']);
+      if (queue === undefined) return deny('в теле создания компонента не распознана очередь');
+      return queueWithinScope(queue, context)
+        ? allow(`компонент внутри очереди области прогона ${queue}`)
+        : deny(`компонент в очереди ${queue} вне области прогона`);
+    },
   },
   {
     pattern: /^\/v[23]\/components\/([^/?]+)\/?$/,
