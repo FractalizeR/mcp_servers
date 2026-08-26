@@ -1,7 +1,6 @@
 /**
  * Барьер соответствия `METADATA.redactionAllowlist` схеме параметров
- * инструмента (`.agentic-planning/plan_coverage_and_redaction_barriers`,
- * этап 1, пакет A).
+ * инструмента.
  *
  * Каждый ключ allow-list обязан называть параметр, реально существующий в
  * `getDefinition().inputSchema` инструмента, на любой глубине вложенности —

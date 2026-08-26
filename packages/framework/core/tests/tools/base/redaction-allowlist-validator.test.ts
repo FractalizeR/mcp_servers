@@ -1,6 +1,5 @@
 /**
- * `validateRedactionAllowlist` (`.agentic-planning/plan_coverage_and_redaction_barriers`,
- * этап 1, пакет A): каждый ключ `METADATA.redactionAllowlist` обязан называть
+ * `validateRedactionAllowlist`: каждый ключ `METADATA.redactionAllowlist` обязан называть
  * параметр, реально существующий в схеме параметров инструмента, на любой
  * глубине. Обратное направление не проверяется — тесты этого файла не
  * заводят кейс «параметр схемы не в allowlist», он не является ошибкой.
