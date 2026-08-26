@@ -28,7 +28,7 @@
 | `fr_yandex_tracker_create_queue` | нет | нет | POST | `/v3/queues/` | key, name, lead, defaultType, defaultPriority, issueTypesConfig, description |
 | `fr_yandex_tracker_update_queue` | нет | нет | PATCH | `/v3/queues/probe_queueId` | name, lead, defaultType, defaultPriority, description |
 | `fr_yandex_tracker_get_queue_fields` | да | нет | GET | `/v3/queues/probe_queueId/fields` | — |
-| `fr_yandex_tracker_manage_queue_access` | нет | нет | PATCH | `/v3/queues/probe_queueId/permissions` | queue-lead |
+| `fr_yandex_tracker_manage_queue_access` | нет | нет | PATCH | `/v3/queues/probe_queueId/permissions` | create |
 | `fr_yandex_tracker_get_components` | да | нет | GET | `/v3/queues/probe_queueId/components` | — |
 | `fr_yandex_tracker_create_component` | нет | нет | POST | `/v3/components` | name, description, lead, assignAuto, queue |
 | `fr_yandex_tracker_update_component` | нет | нет | PATCH | `/v3/components/probe_componentId?version=189201` | name, description, lead, assignAuto |
@@ -55,12 +55,12 @@
 | `fr_yandex_tracker_get_boards` | да | нет | GET | `/v3/boards?localized=true` | — |
 | `fr_yandex_tracker_get_board` | да | нет | GET | `/v3/boards/probe_boardId?localized=true` | — |
 | `fr_yandex_tracker_create_board` | нет | нет | POST | `/v3/liveBoards/` | name, owner, boardPermissionsTemplate, backlogAvailable, sprintsAvailable, columns, backlogColumns, nonParametrizedColumns, autoFilters |
-| `fr_yandex_tracker_update_board` | нет | нет | PATCH | `/v3/boards/probe_boardId` | name, columns, filter, orderBy, orderAsc, query, useRanking, country |
+| `fr_yandex_tracker_update_board` | нет | нет | PATCH | `/v3/boards/probe_boardId` | name, columns, filter, orderBy, orderAsc, query, useRanking |
 | `fr_yandex_tracker_delete_board` | нет | да | DELETE | `/v3/boards/probe_boardId` | — |
 | `fr_yandex_tracker_get_sprints` | да | нет | GET | `/v3/boards/probe_boardId/sprints` | — |
 | `fr_yandex_tracker_get_sprint` | да | нет | GET | `/v3/sprints/probe_sprintId` | — |
-| `fr_yandex_tracker_create_sprint` | нет | нет | POST | `/v3/sprints` | name, board, startDate, endDate, startDateTime, endDateTime, status |
-| `fr_yandex_tracker_update_sprint` | нет | нет | PATCH | `/v3/sprints/probe_sprintId` | name, version, startDate, endDate, startDateTime, endDateTime, status |
+| `fr_yandex_tracker_create_sprint` | нет | нет | POST | `/v3/sprints` | name, board, startDate, endDate, status |
+| `fr_yandex_tracker_update_sprint` | нет | нет | PATCH | `/v3/sprints/probe_sprintId?version=189201` | name, startDate, endDate, status |
 | `fr_yandex_tracker_get_entity` | да | нет | GET | `/v3/entities/goal/probe_entityId` | — |
 | `fr_yandex_tracker_create_entity` | нет | нет | POST | `/v3/entities/goal` | fields |
 | `fr_yandex_tracker_update_entity` | нет | нет | PATCH | `/v3/entities/goal/probe_entityId?version=189201` | fields |
@@ -87,7 +87,7 @@
 | `fr_yandex_tracker_update_board_column` | нет | нет | PATCH | `/v3/boards/probe_boardId/columns/probe_columnId` | name, statuses, limit |
 | `fr_yandex_tracker_delete_board_column` | нет | да | GET | `/v3/boards/probe_boardId/columns` | — |
 | `fr_yandex_tracker_delete_board_column` | нет | да | DELETE | `/v3/boards/probe_boardId/columns/probe_columnId` | — |
-| `fr_yandex_tracker_manage_sprint_lifecycle` | нет | да | POST | `/v3/sprints/probe_sprintId/_start` | — |
+| `fr_yandex_tracker_manage_sprint_lifecycle` | нет | да | POST | `/v3/sprints/probe_sprintId/_start?version=189201` | — |
 | `fr_yandex_tracker_get_global_fields` | да | нет | GET | `/v3/fields` | — |
 | `fr_yandex_tracker_get_global_field` | да | нет | GET | `/v3/fields/probe_fieldId` | — |
 | `fr_yandex_tracker_create_global_field` | нет | нет | POST | `/v3/fields` | id, name, category, type, order, description, readonly, visible, hidden, container, optionsProvider |

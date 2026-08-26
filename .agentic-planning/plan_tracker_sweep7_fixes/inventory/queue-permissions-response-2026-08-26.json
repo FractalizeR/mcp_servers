@@ -1,0 +1,107 @@
+{
+  "self": "https://api.tracker.yandex.net/v3/queues/TESTSWEEPB/permissions",
+  "version": 2,
+  "create": {
+    "self": "https://api.tracker.yandex.net/v3/queues/TESTSWEEPB/permissions/create",
+    "users": [
+      {
+        "self": "https://api.tracker.yandex.net/v3/users/780889736",
+        "id": "780889736",
+        "display": "Робот сервиса Tracker Робот",
+        "cloudUid": "ajemm8a2d8lr8n3no467",
+        "passportUid": 780889736
+      }
+    ],
+    "groups": [
+      {
+        "self": "https://api.tracker.yandex.net/v3/groups/1",
+        "id": "1",
+        "display": "Все сотрудники"
+      }
+    ],
+    "roles": [
+      {
+        "self": "https://api.tracker.yandex.net/v3/roles/queue-lead",
+        "id": "queue-lead",
+        "display": "Владелец очереди"
+      }
+    ]
+  },
+  "write": {
+    "self": "https://api.tracker.yandex.net/v3/queues/TESTSWEEPB/permissions/write",
+    "users": [
+      {
+        "self": "https://api.tracker.yandex.net/v3/users/780889736",
+        "id": "780889736",
+        "display": "Робот сервиса Tracker Робот",
+        "cloudUid": "ajemm8a2d8lr8n3no467",
+        "passportUid": 780889736
+      },
+      {
+        "self": "https://api.tracker.yandex.net/v3/users/1130000048722754",
+        "id": "1130000048722754",
+        "display": "Владислав Раструсный",
+        "cloudUid": "ajevubf24pen24t8pn5l",
+        "passportUid": 1130000048722754
+      }
+    ],
+    "groups": [
+      {
+        "self": "https://api.tracker.yandex.net/v3/groups/1",
+        "id": "1",
+        "display": "Все сотрудники"
+      }
+    ],
+    "roles": [
+      {
+        "self": "https://api.tracker.yandex.net/v3/roles/follower",
+        "id": "follower",
+        "display": "Наблюдатель"
+      },
+      {
+        "self": "https://api.tracker.yandex.net/v3/roles/queue-lead",
+        "id": "queue-lead",
+        "display": "Владелец очереди"
+      },
+      {
+        "self": "https://api.tracker.yandex.net/v3/roles/author",
+        "id": "author",
+        "display": "Автор"
+      },
+      {
+        "self": "https://api.tracker.yandex.net/v3/roles/assignee",
+        "id": "assignee",
+        "display": "Исполнитель"
+      }
+    ]
+  },
+  "read": {
+    "self": "https://api.tracker.yandex.net/v3/queues/TESTSWEEPB/permissions/read",
+    "roles": [
+      {
+        "self": "https://api.tracker.yandex.net/v3/roles/access",
+        "id": "access",
+        "display": "Доступ"
+      }
+    ]
+  },
+  "grant": {
+    "self": "https://api.tracker.yandex.net/v3/queues/TESTSWEEPB/permissions/grant",
+    "users": [
+      {
+        "self": "https://api.tracker.yandex.net/v3/users/780889736",
+        "id": "780889736",
+        "display": "Робот сервиса Tracker Робот",
+        "cloudUid": "ajemm8a2d8lr8n3no467",
+        "passportUid": 780889736
+      }
+    ],
+    "roles": [
+      {
+        "self": "https://api.tracker.yandex.net/v3/roles/queue-lead",
+        "id": "queue-lead",
+        "display": "Владелец очереди"
+      }
+    ]
+  }
+}

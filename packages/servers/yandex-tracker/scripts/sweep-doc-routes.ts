@@ -99,11 +99,17 @@ const SAMPLE_ARTEFACT_KEYS = new Set(['markerKey']);
  */
 const LIVE_VERIFIED_KEYS = new Map<string, Set<string>>([
   ['fr_yandex_tracker_create_queue', new Set(['description'])],
-  // `orderBy`/`orderAsc` сюда НЕ входят: успешного вызова с ними не было — живая проба
-  // дала только отказ 422 при отсутствии `filter`. Пометить их проверенными значило бы
-  // соврать инструменту, который для того и заведён, чтобы ловить такое враньё.
-  ['fr_yandex_tracker_update_board', new Set(['filter', 'query'])],
+  // `orderBy`/`orderAsc` доезжают вместе с `filter` — проверено 2026-08-26 на доске 108
+  // (чтение отдало `priority`/`true`, версия 1→2). `useRanking` доезжает отдельно
+  // (`false` → `true`, версия 2→3).
+  [
+    'fr_yandex_tracker_update_board',
+    new Set(['filter', 'query', 'orderBy', 'orderAsc', 'useRanking']),
+  ],
   ['fr_yandex_tracker_update_board_column', new Set(['limit'])],
+  ['fr_yandex_tracker_update_issue', new Set(['assignee'])],
+  ['fr_yandex_tracker_update_worklog', new Set(['start'])],
+  ['fr_yandex_tracker_create_sprint', new Set(['status'])],
 ]);
 
 interface OurCall {

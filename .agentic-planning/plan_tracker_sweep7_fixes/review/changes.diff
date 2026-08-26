@@ -1,0 +1,4206 @@
+diff --git a/.agentic-planning/plan_tracker_route_sweep_fixes/3_OPEN_ITEMS.md b/.agentic-planning/plan_tracker_route_sweep_fixes/3_OPEN_ITEMS.md
+index 63b67fce..c7666631 100644
+--- a/.agentic-planning/plan_tracker_route_sweep_fixes/3_OPEN_ITEMS.md
++++ b/.agentic-planning/plan_tracker_route_sweep_fixes/3_OPEN_ITEMS.md
+@@ -23,6 +23,10 @@ D10 (`500` на любую категорию). Менять контракт п
+ **Что закроет:** живая проба после закрытия D10 либо ответ поддержки Трекера.
+ Заодно проверить форму `name` при правке: документация ждёт `{en, ru}`, схема шлёт строку.
+ 
++**Заодно (перенесено из §7, 2026-08-26):** `options`/`suggest` у `update_global_field` —
++кандидаты сверки маршрутов, тоже не проверить, пока жив D10 (`create_global_field`
++отвечает `500` на категориях `…0001` и `…0003`, поле не создаётся — `GET` даёт 404).
++
+ ## 2. ЗАКРЫТО: правило задачи в рубеже заякорено (claude-r2-05)
+ 
+ Находка предыдущего ревью проверена по коду и не подтвердилась: правило A уже несёт
+@@ -101,7 +105,7 @@ D10 (`500` на любую категорию). Менять контракт п
+   `blocked`, `cancelled`) — соответствие нигде не описано;
+ - формат дат сменился с `YYYY-MM-DD` на полный ISO с офсетом.
+ 
+-## 7. Семь кандидатов, вскрытых после заточки сверки (2026-08-25, вечер)
++## 7. ЗАКРЫТО: семь кандидатов, вскрытых после заточки сверки (живой прогон 2026-08-26)
+ 
+ Ревью показало, что поиск ключа тела шёл по ВСЕЙ странице, включая раздел ответа:
+ имя, встречающееся только в примере ответа, засчитывалось как документированный
+@@ -109,28 +113,24 @@ D10 (`500` на любую категорию). Менять контракт п
+ хотя API отвечает на него `400`.
+ 
+ Поиск сужен до раздела запроса — и всплыли семь строк, которых прежняя проверка не
+-видела. Это **кандидаты**, а не дефекты: справочник Трекера неполон, отсутствие имени
+-означает «проверь живьём».
++видела. Прогон под меткой `sweep7-2026-08-26` проверил каждую живьём с чтением
++результата обратно; полный разбор —
++`.agentic-planning/plan_tracker_sweep7_fixes/0_LIVE_RUN_REPORT_2026-08-26.md`.
+ 
+-| Инструмент | Ключи | Страница |
++| Инструмент | Ключи | Исход |
+ |---|---|---|
+-| `update_issue` | `assignee` | `api-ref/issues/patch-issue` |
+-| `manage_queue_access` | `queue-lead` | `api-ref/queues/manage-access` |
+-| `update_worklog` | `start` | `api-ref/issues/patch-worklog` |
+-| `update_board` | `orderBy`, `orderAsc`, `useRanking`, `country` | `api-ref/boards/patch-board` |
+-| `create_sprint` | `startDateTime`, `endDateTime`, `status` | `api-ref/boards/post-sprint` |
+-| `update_sprint` | `startDateTime`, `endDateTime` | `api-ref/boards/patch-sprint` |
+-| `update_global_field` | `options`, `suggest` | `api-ref/issues/patch-issue-field-*` |
+-
+-Проверено выборочно: `assignee` на странице правки задачи встречается только в примере
+-ответа — то есть сужение поиска верное, а не ложное срабатывание. Работает ли `assignee`
+-на самом деле, известно из практики, но живой пробой в этом заходе не подтверждено.
+-
+-**Что закроет:** живой прогон по каждому кандидату с чтением результата обратно.
+-Подтверждённое доезжание переносится в `LIVE_VERIFIED_KEYS`, неподтверждённое —
+-чинится как D9. Отдельно отмечу `update_board.orderBy`/`orderAsc`: живая проба дала
+-только отказ `422` при отсутствии `filter`; успешного вызова с ними не было, поэтому
+-из белого списка проверенного они сняты.
++| `update_issue` | `assignee` | **доезжает** — перенесено в `LIVE_VERIFIED_KEYS` |
++| `update_worklog` | `start` | **доезжает** — перенесено в `LIVE_VERIFIED_KEYS` |
++| `update_board` | `orderBy`, `orderAsc` | **доезжают** (только вместе с `filter`) — перенесено в `LIVE_VERIFIED_KEYS` |
++| `update_board` | `useRanking` | **доезжает** — перенесено в `LIVE_VERIFIED_KEYS` |
++| `create_sprint` | `status` | **доезжает** — перенесено в `LIVE_VERIFIED_KEYS` |
++| `update_board` | `country` | **не доезжает** (D9, пакетом A снят из схемы) — `400 country: Incorrect data format` |
++| `create_sprint`, `update_sprint` | `startDateTime`, `endDateTime` | **не доезжают** (D9, пакетом A сняты из схемы) — `400 …: Incorrect data format` на четырёх формах ISO, включая ту, которую отдаёт сам API |
++| `manage_queue_access` | `queue-lead` | **не доезжает как задумано** — это не D9 отдельного ключа, а неверный контракт целиком (роль/действие вместо permission/subjectKind/action), почин пакетом C1/C2 |
++| `update_global_field` | `options`, `suggest` | **не проверено** — перенесено в §1 к D10, см. ниже |
++
++**Отдельно про `assignee`:** на странице правки задачи он встречается только в
++примере ответа — то есть сужение поиска верное, а не ложное срабатывание.
+ 
+ ## 8. Отклонённые находки ревью, с обоснованием
+ 
+@@ -154,3 +154,46 @@ release notes мажорной версии.
+ 
+ **codex-05 (MEDIUM) — удаление промпта и ресурса вместо переноса на Entity API.**
+ Подтверждено как решение, а не дефект; записано открытым пунктом 5 выше.
++
++## 9. Открытые пункты живой проверки после починки (2026-08-26)
++
++**(а) `permission: 'read'` у `manage_queue_access` принимается, но не даёт эффекта.**
++На очереди `TESTSWEEPB` `read`+`users`+`add ['vr']` и `read`+`roles`+`add ['author']`
++оба ушли `200`, но `read.users`/`read.roles` и версия очереди не изменились — при этом
++соседние `write`/`grant` на той же очереди в том же прогоне сработали. Гипотеза:
++очередь открыта на чтение всем сотрудникам, и индивидуальные права чтения на ней
++бессмысленны; это наблюдение об API, не дефект инструмента.
++**Что закроет:** та же проба на очереди с ограниченным доступом на чтение.
++
++**(б) `deny` в ответе `manage_queue_access` живьём не наблюдался.**
++Полная форма ответа (`{ self, version, create, write, read, grant }`) снята чтением
++`GET .../permissions` 2026-08-26, но ключ `deny` ни разу не встретился ни в одном
++прогоне; в типе он помечен опциональным и непроверенным.
++**Что закроет:** живая проба на очереди, где `deny` заведомо назначен субъекту.
++
++**(в) Матрица покрытия: исключение «живьём не наблюдается никогда» задано категориями
++целиком, посылка устарела.** `tests/coverage-exceptions/live-exempt-categories.ts`
++исключает категории `api/boards`, `api/sprints`, `api/fields`, `api/entities`,
++`api/filters`, `api/queues` разом — механизма «снять исключение у двух инструментов»
++нет. Допуск по владению прогоном (этап 5.1) сделал доски, спринты, фильтры и очереди
++наблюдаемыми живьём 25 и 26 августа; не наблюдаются по-прежнему только глобальные поля
++(упирается в D10) и записи Entity API. `npm run coverage:check` не входит в `validate`,
++поэтому расхождение матрицы с кодом сейчас молчит — это и есть причина, по которой
++посылка устарела незамеченной. Отложенный пакет E того же плана (см.
++`.agentic-planning/plan_tracker_sweep7_fixes/1_PLAN.md`, «Пакет E»): нужен потульный
++механизм исключения, список нужно перевести на него и перегенерировать матрицу.
++
++**(г) Zod-схемы инструментов без `.strict()` молча отбрасывают незнакомые параметры —
++находка ревью `codex-01`, отклонённая по объёму (§8), реализовалась дефектом.**
++У `manage_sprint_lifecycle` параметра `fields` не было в схеме вовсе: вызов с ним
++проходил валидацию, а фильтрация ответа не происходила — до починки пакетом C1 ответ
++`start`/`archive` нёс все 13 полей вместо запрошенных. Аргумент за включение строгости
++в `BaseTool` фреймворка усилился: смягчающее обстоятельство «клиент отклонит сам через
++`additionalProperties: false`» не спасает, когда параметр не лишний, а забытый в схеме.
++
++**(д) `redactionAllowlist` инструментов не имеет машинного барьера на соответствие
++схеме.** `tests/smoke/tool-redaction-allowlist.smoke.test.ts` покрывает 2 инструмента
++из 85 — из-за этого у `update_board` полтора месяца висел уже снятый параметр
++`version` в списке допустимых к редактированию, и ничто в `validate` этого не ловило.
++**Что закроет:** генератор или тест, сверяющий `redactionAllowlist` каждого инструмента
++с его актуальной Zod-схемой.
+diff --git a/packages/servers/yandex-tracker/README.md b/packages/servers/yandex-tracker/README.md
+index 6b2cd9ad..1f63436f 100644
+--- a/packages/servers/yandex-tracker/README.md
++++ b/packages/servers/yandex-tracker/README.md
+@@ -265,7 +265,7 @@ rate limits), частичная обработка ошибок, единооб
+ - `fr_yandex_tracker_get_queue` — Получить информацию об очереди
+ - `fr_yandex_tracker_update_queue` — Обновить очередь
+ - `fr_yandex_tracker_get_queue_fields` — Получить поля очереди
+-- `fr_yandex_tracker_manage_queue_access` — Управление доступом к очереди
++- `fr_yandex_tracker_manage_queue_access` — Управление доступом к очереди (`permission` × `subjectKind` × `action`, один субъект-вид за вызов)
+ 
+ </details>
+ 
+diff --git a/packages/servers/yandex-tracker/doc-route-sweep.md b/packages/servers/yandex-tracker/doc-route-sweep.md
+index bd736f51..f5838f6b 100644
+--- a/packages/servers/yandex-tracker/doc-route-sweep.md
++++ b/packages/servers/yandex-tracker/doc-route-sweep.md
+@@ -1,6 +1,6 @@
+ # Сверка маршрутов сервера со справочником API Трекера
+ 
+-Снято: 2026-08-25. Страниц справочника: 152. Маршрутов в документации: 240. Наших вызовов: 86.
++Снято: 2026-08-26. Страниц справочника: 152. Маршрутов в документации: 240. Наших вызовов: 86.
+ 
+ ## Маршруты, которых нет в документации (3)
+ 
+@@ -14,7 +14,7 @@
+ | GET | `/v3/queues/probe_queueId/components` | `fr_yandex_tracker_get_components` |
+ | GET | `/v3/myself/favorites/filters` | `fr_yandex_tracker_get_filters` |
+ 
+-## Ключи тела, не упомянутые на странице своего маршрута (7)
++## Ключи тела, не упомянутые на странице своего маршрута (1)
+ 
+ Кандидаты класса D9 (API принимает запрос, ключ игнорирует, инструмент рапортует
+ об успехе) — но НЕ доказанные дефекты. Ищется вхождение имени в раздел ЗАПРОСА
+@@ -24,12 +24,6 @@
+ 
+ | Инструмент | Метод и путь | Ключи | Страницы |
+ |---|---|---|---|
+-| `fr_yandex_tracker_update_issue` | PATCH `/v3/issues/TEST-1` | assignee | api-ref/issues/patch-issue |
+-| `fr_yandex_tracker_manage_queue_access` | PATCH `/v3/queues/probe_queueId/permissions` | queue-lead | api-ref/queues/manage-access |
+-| `fr_yandex_tracker_update_worklog` | PATCH `/v3/issues/TEST-1/worklog/probe_worklogId` | start | api-ref/issues/patch-worklog |
+-| `fr_yandex_tracker_update_board` | PATCH `/v3/boards/probe_boardId` | orderBy, orderAsc, useRanking, country | api-ref/boards/patch-board |
+-| `fr_yandex_tracker_create_sprint` | POST `/v3/sprints` | startDateTime, endDateTime, status | api-ref/boards/post-sprint |
+-| `fr_yandex_tracker_update_sprint` | PATCH `/v3/sprints/probe_sprintId` | startDateTime, endDateTime | api-ref/boards/patch-sprint |
+ | `fr_yandex_tracker_update_global_field` | PATCH `/v3/fields/probe_fieldId` | options, suggest | api-ref/issues/patch-issue-field-name, api-ref/issues/patch-issue-field-value |
+ 
+ ## Ключи тела, не проверенные ни с чем (1)
+@@ -39,13 +33,16 @@
+ 
+ - `fr_yandex_tracker_update_queue` — PATCH `/v3/queues/probe_queueId`: name, lead, defaultType, defaultPriority, description
+ 
+-## Расхождения, закрытые живой пробой (3)
++## Расхождения, закрытые живой пробой (6)
+ 
+ Ключа нет на странице маршрута, но API его принимает и сохраняет — неполнота
+ документации. Перепроверять не нужно; список ведётся в `LIVE_VERIFIED_KEYS`.
+ 
++- `fr_yandex_tracker_update_issue` — assignee
+ - `fr_yandex_tracker_create_queue` — description
+-- `fr_yandex_tracker_update_board` — filter, query
++- `fr_yandex_tracker_update_worklog` — start
++- `fr_yandex_tracker_update_board` — filter, orderBy, orderAsc, query, useRanking
++- `fr_yandex_tracker_create_sprint` — status
+ - `fr_yandex_tracker_update_board_column` — limit
+ 
+ ## Разделы справочника с пометкой устаревания (1)
+diff --git a/packages/servers/yandex-tracker/outgoing-requests.md b/packages/servers/yandex-tracker/outgoing-requests.md
+index 291464a3..efcb0f69 100644
+--- a/packages/servers/yandex-tracker/outgoing-requests.md
++++ b/packages/servers/yandex-tracker/outgoing-requests.md
+@@ -28,7 +28,7 @@
+ | `fr_yandex_tracker_create_queue` | нет | нет | POST | `/v3/queues/` | key, name, lead, defaultType, defaultPriority, issueTypesConfig, description |
+ | `fr_yandex_tracker_update_queue` | нет | нет | PATCH | `/v3/queues/probe_queueId` | name, lead, defaultType, defaultPriority, description |
+ | `fr_yandex_tracker_get_queue_fields` | да | нет | GET | `/v3/queues/probe_queueId/fields` | — |
+-| `fr_yandex_tracker_manage_queue_access` | нет | нет | PATCH | `/v3/queues/probe_queueId/permissions` | queue-lead |
++| `fr_yandex_tracker_manage_queue_access` | нет | нет | PATCH | `/v3/queues/probe_queueId/permissions` | create |
+ | `fr_yandex_tracker_get_components` | да | нет | GET | `/v3/queues/probe_queueId/components` | — |
+ | `fr_yandex_tracker_create_component` | нет | нет | POST | `/v3/components` | name, description, lead, assignAuto, queue |
+ | `fr_yandex_tracker_update_component` | нет | нет | PATCH | `/v3/components/probe_componentId?version=189201` | name, description, lead, assignAuto |
+@@ -55,12 +55,12 @@
+ | `fr_yandex_tracker_get_boards` | да | нет | GET | `/v3/boards?localized=true` | — |
+ | `fr_yandex_tracker_get_board` | да | нет | GET | `/v3/boards/probe_boardId?localized=true` | — |
+ | `fr_yandex_tracker_create_board` | нет | нет | POST | `/v3/liveBoards/` | name, owner, boardPermissionsTemplate, backlogAvailable, sprintsAvailable, columns, backlogColumns, nonParametrizedColumns, autoFilters |
+-| `fr_yandex_tracker_update_board` | нет | нет | PATCH | `/v3/boards/probe_boardId` | name, columns, filter, orderBy, orderAsc, query, useRanking, country |
++| `fr_yandex_tracker_update_board` | нет | нет | PATCH | `/v3/boards/probe_boardId` | name, columns, filter, orderBy, orderAsc, query, useRanking |
+ | `fr_yandex_tracker_delete_board` | нет | да | DELETE | `/v3/boards/probe_boardId` | — |
+ | `fr_yandex_tracker_get_sprints` | да | нет | GET | `/v3/boards/probe_boardId/sprints` | — |
+ | `fr_yandex_tracker_get_sprint` | да | нет | GET | `/v3/sprints/probe_sprintId` | — |
+-| `fr_yandex_tracker_create_sprint` | нет | нет | POST | `/v3/sprints` | name, board, startDate, endDate, startDateTime, endDateTime, status |
+-| `fr_yandex_tracker_update_sprint` | нет | нет | PATCH | `/v3/sprints/probe_sprintId` | name, version, startDate, endDate, startDateTime, endDateTime, status |
++| `fr_yandex_tracker_create_sprint` | нет | нет | POST | `/v3/sprints` | name, board, startDate, endDate, status |
++| `fr_yandex_tracker_update_sprint` | нет | нет | PATCH | `/v3/sprints/probe_sprintId?version=189201` | name, startDate, endDate, status |
+ | `fr_yandex_tracker_get_entity` | да | нет | GET | `/v3/entities/goal/probe_entityId` | — |
+ | `fr_yandex_tracker_create_entity` | нет | нет | POST | `/v3/entities/goal` | fields |
+ | `fr_yandex_tracker_update_entity` | нет | нет | PATCH | `/v3/entities/goal/probe_entityId?version=189201` | fields |
+@@ -87,7 +87,7 @@
+ | `fr_yandex_tracker_update_board_column` | нет | нет | PATCH | `/v3/boards/probe_boardId/columns/probe_columnId` | name, statuses, limit |
+ | `fr_yandex_tracker_delete_board_column` | нет | да | GET | `/v3/boards/probe_boardId/columns` | — |
+ | `fr_yandex_tracker_delete_board_column` | нет | да | DELETE | `/v3/boards/probe_boardId/columns/probe_columnId` | — |
+-| `fr_yandex_tracker_manage_sprint_lifecycle` | нет | да | POST | `/v3/sprints/probe_sprintId/_start` | — |
++| `fr_yandex_tracker_manage_sprint_lifecycle` | нет | да | POST | `/v3/sprints/probe_sprintId/_start?version=189201` | — |
+ | `fr_yandex_tracker_get_global_fields` | да | нет | GET | `/v3/fields` | — |
+ | `fr_yandex_tracker_get_global_field` | да | нет | GET | `/v3/fields/probe_fieldId` | — |
+ | `fr_yandex_tracker_create_global_field` | нет | нет | POST | `/v3/fields` | id, name, category, type, order, description, readonly, visible, hidden, container, optionsProvider |
+diff --git a/packages/servers/yandex-tracker/scripts/sweep-doc-routes.ts b/packages/servers/yandex-tracker/scripts/sweep-doc-routes.ts
+index 13dc8195..554b15b0 100644
+--- a/packages/servers/yandex-tracker/scripts/sweep-doc-routes.ts
++++ b/packages/servers/yandex-tracker/scripts/sweep-doc-routes.ts
+@@ -99,11 +99,17 @@ const SAMPLE_ARTEFACT_KEYS = new Set(['markerKey']);
+  */
+ const LIVE_VERIFIED_KEYS = new Map<string, Set<string>>([
+   ['fr_yandex_tracker_create_queue', new Set(['description'])],
+-  // `orderBy`/`orderAsc` сюда НЕ входят: успешного вызова с ними не было — живая проба
+-  // дала только отказ 422 при отсутствии `filter`. Пометить их проверенными значило бы
+-  // соврать инструменту, который для того и заведён, чтобы ловить такое враньё.
+-  ['fr_yandex_tracker_update_board', new Set(['filter', 'query'])],
++  // `orderBy`/`orderAsc` доезжают вместе с `filter` — проверено 2026-08-26 на доске 108
++  // (чтение отдало `priority`/`true`, версия 1→2). `useRanking` доезжает отдельно
++  // (`false` → `true`, версия 2→3).
++  [
++    'fr_yandex_tracker_update_board',
++    new Set(['filter', 'query', 'orderBy', 'orderAsc', 'useRanking']),
++  ],
+   ['fr_yandex_tracker_update_board_column', new Set(['limit'])],
++  ['fr_yandex_tracker_update_issue', new Set(['assignee'])],
++  ['fr_yandex_tracker_update_worklog', new Set(['start'])],
++  ['fr_yandex_tracker_create_sprint', new Set(['status'])],
+ ]);
+ 
+ interface OurCall {
+diff --git a/packages/servers/yandex-tracker/src/live_scope/organization-rules.ts b/packages/servers/yandex-tracker/src/live_scope/organization-rules.ts
+index fd718cc9..2aaa5f48 100644
+--- a/packages/servers/yandex-tracker/src/live_scope/organization-rules.ts
++++ b/packages/servers/yandex-tracker/src/live_scope/organization-rules.ts
+@@ -54,9 +54,12 @@ const QUEUE_KEYS = [
+   'issueTypesConfig',
+ ] as const;
+ /**
+- * `queue` и `version` из перечня убраны: `PATCH /v3/boards/{id}` их не принимает
+- * (живая проба 2026-08-25 — `400 version: Incorrect data format`), а очередь доски
+- * задаётся внутри `filter` картой «поле → значения».
++ * `queue`, `version` и `country` из перечня убраны: `PATCH /v3/boards/{id}` их не
++ * принимает при любом значении, включая текущее значение доски —
++ * `400 version: Incorrect data format` (живая проба 2026-08-25) и
++ * `400 country: Incorrect data format` (живая проба 2026-08-26). Очередь доски задаётся внутри `filter` картой «поле →
++ * значения»; `country` документация объявляет объектом и устаревшим параметром,
++ * не влияющим на работу доски.
+  */
+ const BOARD_KEYS = [
+   'name',
+@@ -66,7 +69,6 @@ const BOARD_KEYS = [
+   'orderAsc',
+   'query',
+   'useRanking',
+-  'country',
+ ] as const;
+ /** `POST /v3/liveBoards` (0_CONTRACTS.md, D9): очередь — внутри `autoFilters`. */
+ const BOARD_CREATE_KEYS = [
+@@ -81,17 +83,20 @@ const BOARD_CREATE_KEYS = [
+   'autoFilters',
+ ] as const;
+ const BOARD_COLUMN_KEYS = ['name', 'statuses', 'limit'] as const;
+-const SPRINT_KEYS = [
+-  'name',
+-  'board',
+-  'startDate',
+-  'endDate',
+-  'startDateTime',
+-  'endDateTime',
+-  'status',
+-  'version',
+-  'archived',
+-] as const;
++/**
++ * `startDateTime`/`endDateTime` из перечня убраны: `POST /v3/sprints` и `PATCH
++ * /v3/sprints/{id}` отвергают их ключом тела — `400 …: Incorrect data format` на
++ * всех проверенных формах ISO 8601, включая ту, что сам API отдаёт в ответе
++ * (живая проба 2026-08-26). В разделе запроса документации post-sprint и
++ * patch-sprint этих имён нет вовсе — они встречаются только в примере ответа.
++ *
++ * `version` из перечня тоже убран: `UpdateSprintTool`/`ManageSprintLifecycleTool`
++ * шлют её query-параметром (`?version=`), а не телом — `PATCH /v3/sprints/{id}` с
++ * версией в теле отвечает `400 version: Incorrect data format`, без версии
++ * (телом или query) — `428` (живая проба 2026-08-26). Белый список ключей тела,
++ * разрешающий ключ, которого в теле больше нет, — дрейф, ради которого он заведён.
++ */
++const SPRINT_KEYS = ['name', 'board', 'startDate', 'endDate', 'status', 'archived'] as const;
+ const GLOBAL_FIELD_KEYS = [
+   'name',
+   'description',
+@@ -137,13 +142,21 @@ const ENTITY_FIELD_KEYS = [
+   'weight',
+ ] as const;
+ 
+-/** Роли и действия правки доступов очереди — из схемы `manage_queue_access`. */
+-const QUEUE_ACCESS_ROLES: ReadonlySet<string> = new Set([
+-  'queue-lead',
+-  'team-member',
+-  'follower',
+-  'access',
++/**
++ * Разрешения, виды субъектов и действия правки доступов очереди — из схемы
++ * `manage_queue_access` (`manage-queue-access.schema.ts`). Тело —
++ * `{ <разрешение>: { <вид субъекта>: { <действие>: [субъекты] } } }`; прежняя форма
++ * `{ <роль>: { <действие>: [...] } }` рубежом больше не распознаётся — роли
++ * `queue-lead`/`team-member`/`follower`/`access` разрешениями не являются.
++ */
++const QUEUE_ACCESS_PERMISSIONS: ReadonlySet<string> = new Set([
++  'create',
++  'write',
++  'read',
++  'grant',
++  'deny',
+ ]);
++const QUEUE_ACCESS_SUBJECT_KINDS: ReadonlySet<string> = new Set(['users', 'groups', 'roles']);
+ const QUEUE_ACCESS_ACTIONS: ReadonlySet<string> = new Set(['add', 'remove']);
+ 
+ /** `lead` — обязательное поле схемы создания очереди: живой руководитель. */
+@@ -203,27 +216,45 @@ const sprintCreateViolation: BodyViolation = (body) =>
+     : undefined;
+ 
+ /**
+- * Тело правки доступов: `{ [роль]: { [действие]: [люди] } }`
+- * (`manage-queue-access.operation.ts`). Каждый субъект — реальный логин, поэтому
+- * список проверяется поимённо; нераспознанная форма — отказ.
++ * Тело правки доступов: `{ [разрешение]: { [вид субъекта]: { [действие]: [субъекты] } } }`
++ * (`manage-queue-access.operation.ts`). Ссылки на людей проверяются только у
++ * `subjectKind: 'users'` — числовые id групп и идентификаторы ролей (`author`,
++ * `assignee`, ...) людьми не являются и владельца прогона не касаются.
++ *
++ * Прежняя форма `{ [роль]: { [действие]: [...] } }` (роли `queue-lead`,
++ * `team-member`, `follower`, `access` верхним ключом) рубежом больше не
++ * распознаётся — верхний уровень тела теперь перечень разрешений, а не ролей.
+  */
+ const queueAccessViolation: BodyViolation = (body, context) => {
+   if (body === undefined || Object.keys(body).length === 0) {
+     return 'тело правки доступов очереди не распознано';
+   }
+-  for (const [role, roleValue] of Object.entries(body)) {
+-    if (!QUEUE_ACCESS_ROLES.has(role)) {
+-      return `доступы очереди: роль ${role} рубежу неизвестна`;
++  for (const [permission, permissionValue] of Object.entries(body)) {
++    if (!QUEUE_ACCESS_PERMISSIONS.has(permission)) {
++      return `доступы очереди: разрешение ${permission} рубежу неизвестно`;
+     }
+-    if (!isRecord(roleValue) || Object.keys(roleValue).length === 0) {
+-      return `доступы очереди: форма роли ${role} не распознана`;
++    if (!isRecord(permissionValue) || Object.keys(permissionValue).length === 0) {
++      return `доступы очереди: форма разрешения ${permission} не распознана`;
+     }
+-    for (const [action, subjects] of Object.entries(roleValue)) {
+-      if (!QUEUE_ACCESS_ACTIONS.has(action)) {
+-        return `доступы очереди: действие ${action} рубежу неизвестно`;
++    for (const [subjectKind, subjectKindValue] of Object.entries(permissionValue)) {
++      if (!QUEUE_ACCESS_SUBJECT_KINDS.has(subjectKind)) {
++        return `доступы очереди: вид субъекта ${subjectKind} рубежу неизвестен`;
++      }
++      if (!isRecord(subjectKindValue) || Object.keys(subjectKindValue).length === 0) {
++        return `доступы очереди: форма вида субъекта ${subjectKind} не распознана`;
++      }
++      for (const [action, subjects] of Object.entries(subjectKindValue)) {
++        if (!QUEUE_ACCESS_ACTIONS.has(action)) {
++          return `доступы очереди: действие ${action} рубежу неизвестно`;
++        }
++        if (subjectKind !== 'users') continue;
++        const problem = personViolation(
++          `доступы очереди (${permission}/${subjectKind}/${action})`,
++          subjects,
++          context
++        );
++        if (problem !== undefined) return problem;
+       }
+-      const problem = personViolation(`доступы очереди (${role}/${action})`, subjects, context);
+-      if (problem !== undefined) return problem;
+     }
+   }
+   return undefined;
+diff --git a/packages/servers/yandex-tracker/src/live_scope/people-in-body.ts b/packages/servers/yandex-tracker/src/live_scope/people-in-body.ts
+index 6812abdc..9c692183 100644
+--- a/packages/servers/yandex-tracker/src/live_scope/people-in-body.ts
++++ b/packages/servers/yandex-tracker/src/live_scope/people-in-body.ts
+@@ -55,7 +55,11 @@ const PERSON_FIELDS: ReadonlySet<string> = new Set(
+ 
+ export const isPersonField = (key: string): boolean => PERSON_FIELDS.has(key.toLowerCase());
+ 
+-/** Ссылки на людей: строка/число, объект `{id}`/`{login}` либо список того же. */
++/**
++ * Ссылки на людей: строка/число, объект `{id}`/`{login}`, список того же либо
++ * обёртка `{ add: [...] }` / `{ remove: [...] }` (`manage_queue_access`,
++ * `api-ref/queues/manage-access`) — рекурсия распаковывает её так же, как массив.
++ */
+ function personRefs(value: unknown): readonly string[] | undefined {
+   // `null` — не ссылка, а снятие ссылки: `assignee: null` освобождает исполнителя.
+   if (value === null) return [];
+@@ -68,6 +72,16 @@ function personRefs(value: unknown): readonly string[] | undefined {
+     }
+     return collected;
+   }
++  if (isRecord(value) && ('add' in value || 'remove' in value)) {
++    const collected: string[] = [];
++    for (const key of ['add', 'remove'] as const) {
++      if (!(key in value)) continue;
++      const nested = personRefs(value[key]);
++      if (nested === undefined) return undefined;
++      collected.push(...nested);
++    }
++    return collected;
++  }
+   const reference =
+     refOf(value, 'id') ?? (isRecord(value) ? refOf(value['login'], 'id') : undefined);
+   return reference === undefined ? undefined : [reference];
+diff --git a/packages/servers/yandex-tracker/src/tools/api/boards/update-board.metadata.ts b/packages/servers/yandex-tracker/src/tools/api/boards/update-board.metadata.ts
+index ae6c9fa3..358ff947 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/boards/update-board.metadata.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/boards/update-board.metadata.ts
+@@ -19,7 +19,7 @@ export const UPDATE_BOARD_TOOL_METADATA: StaticToolMetadata = {
+   tags: ['board', 'update', 'write', 'agile'],
+   isHelper: false,
+   requiresExplicitUserConsent: false,
+-  redactionAllowlist: ['boardId', 'version', 'orderAsc', 'useRanking', 'country', 'fields'],
++  redactionAllowlist: ['boardId', 'orderAsc', 'useRanking', 'fields'],
+   title: 'Обновить доску',
+   outputSchema: UpdateBoardOutputSchema,
+   annotations: {
+diff --git a/packages/servers/yandex-tracker/src/tools/api/boards/update-board.schema.ts b/packages/servers/yandex-tracker/src/tools/api/boards/update-board.schema.ts
+index 1cd4f5a9..39bf5ecb 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/boards/update-board.schema.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/boards/update-board.schema.ts
+@@ -36,6 +36,11 @@ const UpdateBoardFilterSchema = z.record(
+  * ключом тела — `400 version: Incorrect data format` при любом значении, включая
+  * текущую версию доски (живая проба 2026-08-25). Оптимистичной блокировки у правки
+  * доски нет ни в теле, ни заголовком `If-Match` — в документации она не описана.
++ *
++ * Параметра `country` здесь тоже нет: `PATCH /v3/boards/{id}` отвергает его ключом
++ * тела — `400 country: Incorrect data format` и на "2", и на текущем значении доски
++ * "1" (живая проба 2026-08-26). Документация patch-board объявляет `country`
++ * объектом и помечает параметр как устаревший, не влияющий на работу доски.
+  */
+ export const UpdateBoardParamsSchema = z
+   .object({
+@@ -63,9 +68,6 @@ export const UpdateBoardParamsSchema = z
+     /** Использовать ранжирование задач (опционально) */
+     useRanking: z.boolean().optional(),
+ 
+-    /** ID страны для региональных настроек (опционально) */
+-    country: z.string().optional(),
+-
+     /** Список полей для возврата (обязательный) */
+     fields: FieldsSchema,
+   })
+diff --git a/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.metadata.ts b/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.metadata.ts
+index 3506197b..e690eab8 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.metadata.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.metadata.ts
+@@ -25,7 +25,7 @@ export const MANAGE_QUEUE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
+   tags: ['queue', 'access', 'permissions', 'write'],
+   isHelper: false,
+   requiresExplicitUserConsent: false,
+-  redactionAllowlist: ['queueId', 'role', 'subjects', 'action', 'fields'],
++  redactionAllowlist: ['queueId', 'permission', 'subjectKind', 'action', 'subjects', 'fields'],
+   title: 'Управление доступом к очереди',
+   outputSchema: ManageQueueAccessOutputSchema,
+   annotations: {
+diff --git a/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.schema.ts b/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.schema.ts
+index cf6df93f..e6bf8395 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.schema.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.schema.ts
+@@ -1,39 +1,97 @@
+ /**
+  * Zod схема для валидации параметров ManageQueueAccessTool
++ *
++ * Документированная форма тела (api-ref/queues/manage-access, раздел «Параметры
++ * тела запроса»): `{ <разрешение>: { users|groups|roles: [...] | { add|remove: [...] } } }`.
++ * Прежняя схема шла ролями `queue-lead`/`team-member`/`follower`/`access` верхним
++ * ключом тела — ни одна роль разрешением не является, живая проба 2026-08-26 дала
++ * `400 <роль>: Incorrect data format` на каждой из четырёх.
+  */
+ 
+ import { z } from 'zod';
+ import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
+ 
++/** Разрешение — единственный ключ верхнего уровня тела запроса. */
++const QUEUE_ACCESS_PERMISSIONS = ['create', 'write', 'read', 'grant', 'deny'] as const;
++
++/** Вид субъекта: пользователь, группа (числовой id) или встроенная роль задачи. */
++const QUEUE_ACCESS_SUBJECT_KINDS = ['users', 'groups', 'roles'] as const;
++
+ /**
+- * Схема параметров для управления доступом к очереди
++ * Встроенные роли задачи, доступные как субъект (`subjectKind: 'roles'`).
++ * `queue-lead` сюда не входит: документация «Допустимые идентификаторы» не
++ * объявляет его назначаемой ролью — он встречается только в примерах ответов.
+  */
+-export const ManageQueueAccessParamsSchema = z.object({
+-  /**
+-   * Идентификатор или ключ очереди (обязательно)
+-   */
+-  queueId: z.string().min(1, 'Queue ID не может быть пустым'),
+-
+-  /**
+-   * Роль в очереди (обязательно)
+-   */
+-  role: z.enum(['queue-lead', 'team-member', 'follower', 'access']),
+-
+-  /**
+-   * Массив ID пользователей или групп (обязательно)
+-   */
+-  subjects: z.array(z.string().min(1)).min(1, 'Subjects не может быть пустым'),
+-
+-  /**
+-   * Действие (обязательно)
+-   */
+-  action: z.enum(['add', 'remove']),
++const QUEUE_ACCESS_ROLE_SUBJECTS = ['author', 'assignee', 'follower', 'access'] as const;
+ 
+-  /**
+-   * Список полей для возврата (обязательно)
+-   */
+-  fields: FieldsSchema,
+-});
++/**
++ * Схема параметров для управления доступом к очереди.
++ *
++ * Форма «одно разрешение × один вид субъекта × одно действие за запрос» — осознанное
++ * сужение документированной мультиформы (несколько разрешений в одном теле, а также
++ * форма-замена `users: [...]` без `add`/`remove`). Причина сужения — предсказуемость
++ * инструмента для агента: один вызов производит один понятный эффект, а не набор
++ * параллельных изменений, которые придётся распутывать по ответу.
++ */
++export const ManageQueueAccessParamsSchema = z
++  .object({
++    /**
++     * Идентификатор или ключ очереди (обязательно)
++     */
++    queueId: z.string().min(1, 'Queue ID не может быть пустым'),
++
++    /**
++     * Разрешение, которым управляем (обязательно)
++     */
++    permission: z.enum(QUEUE_ACCESS_PERMISSIONS),
++
++    /**
++     * Вид субъекта: пользователи, группы (числовой id) или роли задачи (обязательно)
++     */
++    subjectKind: z.enum(QUEUE_ACCESS_SUBJECT_KINDS),
++
++    /**
++     * Действие (обязательно)
++     */
++    action: z.enum(['add', 'remove']),
++
++    /**
++     * Субъекты: логины/uid пользователей, ЧИСЛОВЫЕ id групп либо идентификаторы ролей
++     * (обязательно)
++     */
++    subjects: z
++      .array(z.union([z.string().min(1), z.number()]))
++      .min(1, 'Subjects не может быть пустым'),
++
++    /**
++     * Список полей для возврата (обязательно)
++     */
++    fields: FieldsSchema,
++  })
++  .refine((data) => !(data.permission === 'deny' && data.subjectKind === 'roles'), {
++    message:
++      'Для разрешения deny доступны только subjectKind users и groups — роли запретить нельзя',
++    path: ['subjectKind'],
++  })
++  .refine(
++    (data) => data.subjectKind !== 'groups' || data.subjects.every((s) => typeof s === 'number'),
++    {
++      message: 'При subjectKind groups каждый субъект обязан быть числовым id группы',
++      path: ['subjects'],
++    }
++  )
++  .refine(
++    (data) =>
++      data.subjectKind !== 'roles' ||
++      data.subjects.every(
++        (s) =>
++          typeof s === 'string' && (QUEUE_ACCESS_ROLE_SUBJECTS as readonly string[]).includes(s)
++      ),
++    {
++      message: `При subjectKind roles каждый субъект обязан быть одной из ролей: ${QUEUE_ACCESS_ROLE_SUBJECTS.join(', ')}`,
++      path: ['subjects'],
++    }
++  );
+ 
+ /**
+  * Вывод типа из схемы
+@@ -42,13 +100,24 @@ export type ManageQueueAccessParams = z.infer<typeof ManageQueueAccessParamsSche
+ 
+ /**
+  * Схема данных успешного результата (поле `data` envelope `formatSuccess()`)
++ *
++ * `permissions` — форма ответа `GET/PATCH /v3/queues/{queueId}/permissions`, снятая
++ * живой пробой 2026-08-26: объект, ключёванный разрешением (`{self, version, create?,
++ * write?, read?, grant?, deny?}`), а НЕ массив — прежняя типизация
++ * (`z.array(FilteredEntitySchema)`) отвергалась MCP-клиентом на границе схемы
++ * (`data/data/permissions must be array`). `permissions` проходит через тот же
++ * `ResponseFieldFilter`, что и остальные отфильтрованные сущности, поэтому её
++ * конкретный набор ключей после фильтрации по-прежнему зависит от параметра
++ * `fields` — отсюда тот же `FilteredEntitySchema` (запись `string → unknown`), а не
++ * жёстко описанная вложенная форма.
+  */
+ export const ManageQueueAccessOutputDataSchema = z.object({
+   queueId: z.string(),
+-  role: z.enum(['queue-lead', 'team-member', 'follower', 'access']),
++  permission: z.enum(QUEUE_ACCESS_PERMISSIONS),
++  subjectKind: z.enum(QUEUE_ACCESS_SUBJECT_KINDS),
+   action: z.enum(['add', 'remove']),
+   subjectsProcessed: z.number(),
+-  permissions: z.array(FilteredEntitySchema),
++  permissions: FilteredEntitySchema,
+ });
+ 
+ /**
+diff --git a/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.tool.ts b/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.tool.ts
+index 168d748e..8340545e 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.tool.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/queues/manage-queue-access.tool.ts
+@@ -7,7 +7,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
+ import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
+ import { ManageQueueAccessParamsSchema } from './manage-queue-access.schema.js';
+ 
+-import type { QueuePermissionWithUnknownFields } from '#tracker_api/entities/index.js';
++import type { QueuePermissionsWithUnknownFields } from '#tracker_api/entities/index.js';
+ import { MANAGE_QUEUE_ACCESS_TOOL_METADATA } from './manage-queue-access.metadata.js';
+ 
+ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
+@@ -22,19 +22,20 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
+       return validation.error;
+     }
+ 
+-    const { fields, queueId, role, subjects, action } = validation.data;
++    const { fields, queueId, permission, subjectKind, subjects, action } = validation.data;
+ 
+     try {
+       this.logger.info('Управление доступом к очереди', {
+         queueId,
+-        role,
++        permission,
++        subjectKind,
+         subjectsCount: subjects.length,
+         action,
+       });
+ 
+       const permissions = await this.facade.manageQueueAccess({
+         queueId,
+-        accessData: { role, subjects, action },
++        accessData: { permission, subjectKind, subjects, action },
+       });
+ 
+       this.logger.info('Права доступа успешно обновлены', {
+@@ -44,7 +45,7 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
+       });
+ 
+       const { result: filteredPermissions, fieldsWithoutValue } =
+-        ResponseFieldFilter.filterWithReport<readonly QueuePermissionWithUnknownFields[]>(
++        ResponseFieldFilter.filterWithReport<QueuePermissionsWithUnknownFields>(
+           permissions,
+           fields
+         );
+@@ -52,7 +53,8 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
+       return this.formatSuccess(
+         {
+           queueId,
+-          role,
++          permission,
++          subjectKind,
+           action,
+           subjectsProcessed: subjects.length,
+           permissions: filteredPermissions,
+diff --git a/packages/servers/yandex-tracker/src/tools/api/sprints/create-sprint.metadata.ts b/packages/servers/yandex-tracker/src/tools/api/sprints/create-sprint.metadata.ts
+index 600b004d..78814018 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/sprints/create-sprint.metadata.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/sprints/create-sprint.metadata.ts
+@@ -16,15 +16,7 @@ export const CREATE_SPRINT_TOOL_METADATA: StaticToolMetadata = {
+   tags: ['sprint', 'create', 'write', 'agile'],
+   isHelper: false,
+   requiresExplicitUserConsent: false,
+-  redactionAllowlist: [
+-    'board',
+-    'startDate',
+-    'endDate',
+-    'startDateTime',
+-    'endDateTime',
+-    'status',
+-    'fields',
+-  ],
++  redactionAllowlist: ['board', 'startDate', 'endDate', 'status', 'fields'],
+   title: 'Создать спринт',
+   outputSchema: CreateSprintOutputSchema,
+   annotations: {
+diff --git a/packages/servers/yandex-tracker/src/tools/api/sprints/create-sprint.schema.ts b/packages/servers/yandex-tracker/src/tools/api/sprints/create-sprint.schema.ts
+index 07f71e00..11425776 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/sprints/create-sprint.schema.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/sprints/create-sprint.schema.ts
+@@ -14,6 +14,13 @@ const SprintStatusSchema = z.enum(['draft', 'in_progress', 'released']);
+ 
+ /**
+  * Схема параметров для создания спринта
++ *
++ * Параметров `startDateTime`/`endDateTime` здесь нет намеренно: `POST /v3/sprints`
++ * отвергает их ключом тела — `400 …: Incorrect data format` на всех проверенных
++ * формах ISO 8601, включая ту, что сам API отдаёт в ответе
++ * (`2026-09-01T00:00:00.000+0000`) (живая проба 2026-08-26). В разделе запроса
++ * документации post-sprint этих имён нет вовсе — они встречаются только в примере
++ * ответа. Даты задаются только `startDate`/`endDate` (YYYY-MM-DD).
+  */
+ export const CreateSprintParamsSchema = z.object({
+   /** Название спринта (обязательно) */
+@@ -28,12 +35,6 @@ export const CreateSprintParamsSchema = z.object({
+   /** Дата окончания спринта YYYY-MM-DD (опционально) */
+   endDate: z.string().optional(),
+ 
+-  /** Дата и время начала спринта ISO 8601 (опционально) */
+-  startDateTime: z.string().optional(),
+-
+-  /** Дата и время окончания спринта ISO 8601 (опционально) */
+-  endDateTime: z.string().optional(),
+-
+   /** Статус спринта (опционально) */
+   status: SprintStatusSchema.optional(),
+ 
+diff --git a/packages/servers/yandex-tracker/src/tools/api/sprints/manage-sprint-lifecycle.schema.ts b/packages/servers/yandex-tracker/src/tools/api/sprints/manage-sprint-lifecycle.schema.ts
+index d63380b1..5928b7cc 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/sprints/manage-sprint-lifecycle.schema.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/sprints/manage-sprint-lifecycle.schema.ts
+@@ -1,26 +1,49 @@
+ /**
+  * Zod схема для валидации параметров ManageSprintLifecycleTool
+  *
+- * ВАЖНО: start/archive/delete — одинаковая форма запроса ({sprintId, action}),
+- * без action-специфичных полей тела, поэтому безопасно объединены в один
+- * инструмент (см. примечание в `#tracker_api/dto/sprint/
+- * manage-sprint-lifecycle.dto.js`). Для name/dates/status — `update_sprint`.
++ * start/archive/delete объединены в один инструмент с параметром `action`
++ * (см. примечание в `#tracker_api/dto/sprint/manage-sprint-lifecycle.dto.js`).
++ * Для name/dates/status — `update_sprint`.
++ *
++ * `version` — query-параметр `_start`/`_archive` (не тело): без него API отвечает
++ * `428` (живая проба 2026-08-26). `delete` версию не принимает вовсе — `.refine()`
++ * ниже отклоняет её схемой, а не молча игнорирует, иначе передавший version с
++ * `action: 'delete'` решил бы, что получил оптимистичную блокировку, которой нет.
+  */
+ 
+ import { z } from 'zod';
+ import {
++  FieldsSchema,
+   FilteredEntitySchema,
+   buildOutputSchema,
+   buildEntityIdSchema,
+ } from '#common/schemas/index.js';
+ 
+-export const ManageSprintLifecycleParamsSchema = z.object({
+-  /** Идентификатор спринта (обязательно) */
+-  sprintId: buildEntityIdSchema('Sprint'),
++export const ManageSprintLifecycleParamsSchema = z
++  .object({
++    /** Идентификатор спринта (обязательно) */
++    sprintId: buildEntityIdSchema('Sprint'),
+ 
+-  /** Действие: запустить / архивировать / удалить спринт (обязательно) */
+-  action: z.enum(['start', 'archive', 'delete']),
+-});
++    /** Действие: запустить / архивировать / удалить спринт (обязательно) */
++    action: z.enum(['start', 'archive', 'delete']),
++
++    /**
++     * Версия спринта для оптимистичной блокировки (опционально; только для
++     * `start`/`archive`). Не передана — операция читает текущую версию сама.
++     */
++    version: z.number().int().positive().optional(),
++
++    /**
++     * Список полей для возврата (обязательный, как у всех инструментов сервера —
++     * корневой CLAUDE.md, «Фильтрация полей»). У `delete` спринт в ответе `null` —
++     * значение задекларировано, но фильтровать нечего.
++     */
++    fields: FieldsSchema,
++  })
++  .refine((data) => !(data.action === 'delete' && data.version !== undefined), {
++    message: "version недоступна для action 'delete': эндпоинт удаления версию не принимает",
++    path: ['version'],
++  });
+ 
+ export type ManageSprintLifecycleParams = z.infer<typeof ManageSprintLifecycleParamsSchema>;
+ 
+diff --git a/packages/servers/yandex-tracker/src/tools/api/sprints/manage-sprint-lifecycle.tool.ts b/packages/servers/yandex-tracker/src/tools/api/sprints/manage-sprint-lifecycle.tool.ts
+index 2e87fac1..de977b69 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/sprints/manage-sprint-lifecycle.tool.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/sprints/manage-sprint-lifecycle.tool.ts
+@@ -2,9 +2,10 @@
+  * MCP Tool для управления жизненным циклом спринта (старт/архивация/удаление)
+  */
+ 
+-import { BaseTool } from '@fractalizer/mcp-core';
++import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
+ import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
+ import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
++import type { SprintWithUnknownFields } from '#tracker_api/entities/index.js';
+ import { ManageSprintLifecycleParamsSchema } from './manage-sprint-lifecycle.schema.js';
+ 
+ import { MANAGE_SPRINT_LIFECYCLE_TOOL_METADATA } from './manage-sprint-lifecycle.metadata.js';
+@@ -28,19 +29,37 @@ export class ManageSprintLifecycleTool extends BaseTool<YandexTrackerFacade> {
+       return validation.error;
+     }
+ 
+-    const { sprintId, action } = validation.data;
++    const { sprintId, action, version, fields } = validation.data;
+ 
+     try {
+       this.logger.info('Управление жизненным циклом спринта', { sprintId, action });
+ 
+-      const sprint = await this.facade.manageSprintLifecycle({ sprintId, action });
++      const sprint = await this.facade.manageSprintLifecycle({ sprintId, action, version });
+ 
+-      return this.formatSuccess({
+-        sprintId,
+-        action,
+-        sprint,
+-        message: `Спринт ${sprintId} успешно ${ACTION_MESSAGES[action]}`,
+-      });
++      // `delete` отдаёт `null` (204 без тела) — фильтровать нечего, и предупреждение
++      // о недостающих полях было бы ложным сигналом: поля не то что отсутствуют в
++      // ответе, ответа не существует вовсе.
++      if (sprint === null) {
++        return this.formatSuccess({
++          sprintId,
++          action,
++          sprint: null,
++          message: `Спринт ${sprintId} успешно ${ACTION_MESSAGES[action]}`,
++        });
++      }
++
++      const { result: filtered, fieldsWithoutValue } =
++        ResponseFieldFilter.filterWithReport<SprintWithUnknownFields>(sprint, fields);
++
++      return this.formatSuccess(
++        {
++          sprintId,
++          action,
++          sprint: filtered,
++          message: `Спринт ${sprintId} успешно ${ACTION_MESSAGES[action]}`,
++        },
++        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
++      );
+     } catch (error: unknown) {
+       return this.formatError(
+         `Ошибка при выполнении действия "${action}" над спринтом ${sprintId}`,
+diff --git a/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.metadata.ts b/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.metadata.ts
+index ac0c34d2..4496cf13 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.metadata.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.metadata.ts
+@@ -16,16 +16,7 @@ export const UPDATE_SPRINT_TOOL_METADATA: StaticToolMetadata = {
+   tags: ['sprint', 'update', 'write', 'agile'],
+   isHelper: false,
+   requiresExplicitUserConsent: false,
+-  redactionAllowlist: [
+-    'sprintId',
+-    'version',
+-    'startDate',
+-    'endDate',
+-    'startDateTime',
+-    'endDateTime',
+-    'status',
+-    'fields',
+-  ],
++  redactionAllowlist: ['sprintId', 'version', 'startDate', 'endDate', 'status', 'fields'],
+   title: 'Обновить спринт',
+   outputSchema: UpdateSprintOutputSchema,
+   annotations: {
+diff --git a/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.schema.ts b/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.schema.ts
+index e6b1710f..936e2f90 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.schema.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.schema.ts
+@@ -19,6 +19,13 @@ const SprintStatusSchema = z.enum(['draft', 'in_progress', 'released']);
+  * инструмент `manage_sprint_lifecycle` — API Трекера обслуживает их
+  * специализированными POST/DELETE-эндпоинтами (`_start`/`_archive`/DELETE),
+  * а не универсальным PATCH, которым покрыты только name/dates/status здесь.
++ *
++ * Параметров `startDateTime`/`endDateTime` здесь нет намеренно: `PATCH
++ * /v3/sprints/{id}` отвергает их ключом тела — `400 …: Incorrect data format` на
++ * всех проверенных формах ISO 8601, включая ту, что сам API отдаёт в ответе
++ * (`2026-09-01T00:00:00.000+0000`) (живая проба 2026-08-26). В разделе запроса
++ * документации patch-sprint этих имён нет вовсе — они встречаются только в
++ * примере ответа. Даты задаются только `startDate`/`endDate` (YYYY-MM-DD).
+  */
+ export const UpdateSprintParamsSchema = z.object({
+   /** Идентификатор спринта (обязательно) */
+@@ -36,12 +43,6 @@ export const UpdateSprintParamsSchema = z.object({
+   /** Дата окончания спринта YYYY-MM-DD (опционально) */
+   endDate: z.string().optional(),
+ 
+-  /** Дата и время начала спринта ISO 8601 (опционально) */
+-  startDateTime: z.string().optional(),
+-
+-  /** Дата и время окончания спринта ISO 8601 (опционально) */
+-  endDateTime: z.string().optional(),
+-
+   /** Статус спринта (опционально) */
+   status: SprintStatusSchema.optional(),
+ 
+diff --git a/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.tool.ts b/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.tool.ts
+index 73b3284e..4356e3d2 100644
+--- a/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.tool.ts
++++ b/packages/servers/yandex-tracker/src/tools/api/sprints/update-sprint.tool.ts
+@@ -2,7 +2,7 @@
+  * MCP Tool для обновления спринта в Яндекс.Трекере
+  */
+ 
+-import { BaseTool, ResponseFieldFilter } from '@fractalizer/mcp-core';
++import { BaseTool, ResponseFieldFilter, ToolWarningCode } from '@fractalizer/mcp-core';
+ import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
+ import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
+ import type { SprintWithUnknownFields } from '#tracker_api/entities/index.js';
+@@ -23,23 +23,41 @@ export class UpdateSprintTool extends BaseTool<YandexTrackerFacade> {
+       return validation.error;
+     }
+ 
+-    const { sprintId, fields, ...updateData } = validation.data;
++    // `version` уходит query-параметром (PATCH /v3/sprints/{id}?version=…), не
++    // телом: явная деструктуризация — единственная гарантия, что она не
++    // просочится в `updateData` через индексную сигнатуру `UpdateSprintDto`.
++    const { sprintId, fields, version, ...updateData } = validation.data;
+ 
+     try {
+       this.logger.info('Обновление спринта', { sprintId });
+ 
+-      const sprint = await this.facade.updateSprint(sprintId, updateData);
++      const sprint = await this.facade.updateSprint(sprintId, updateData, version);
+ 
+       this.logger.info('Спринт обновлён', { sprintId: sprint.id });
+ 
+       const { result: filtered, fieldsWithoutValue } =
+         ResponseFieldFilter.filterWithReport<SprintWithUnknownFields>(sprint, fields);
+ 
++      // Версию не передали — операция прочитала текущую сама, и правка прошла как
++      // «последний выигрывает»: чужая параллельная правка перезаписана без конфликта.
++      const lockWarnings =
++        version === undefined
++          ? [
++              {
++                code: ToolWarningCode.VERSION_NOT_PROVIDED,
++                message:
++                  'Версия не передана: операция прочитала текущую сама, поэтому чужая ' +
++                  'параллельная правка перезаписана без конфликта. Передавай version ' +
++                  'из поля version спринта, чтобы получить отказ вместо перезаписи.',
++              },
++            ]
++          : [];
++
+       return this.formatSuccess(
+         {
+           sprint: filtered,
+         },
+-        ResponseFieldFilter.toWarnings(fieldsWithoutValue)
++        [...ResponseFieldFilter.toWarnings(fieldsWithoutValue), ...lockWarnings]
+       );
+     } catch (error: unknown) {
+       return this.formatError(`Ошибка при обновлении спринта ${sprintId}`, error);
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/api_operations/README.md b/packages/servers/yandex-tracker/src/tracker_api/api_operations/README.md
+index 31b8be6d..5a6f61e6 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/api_operations/README.md
++++ b/packages/servers/yandex-tracker/src/tracker_api/api_operations/README.md
+@@ -450,11 +450,12 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
+ - Возвращает настраиваемые поля очереди
+ 
+ ### 6. ManageQueueAccessOperation
+-**API:** `POST /v3/queues/{queueId}/permissions`
++**API:** `PATCH /v3/queues/{queueId}/permissions`
+ **Назначение:** Управление доступом к очереди
+ - Кеш: ❌ инвалидирует permissions cache
+-- Роли: queue-lead, team-member, follower, access
+-- Batch операция для добавления/удаления прав
++- Разрешения: create, write, read, grant, deny (не «роли» — прежнее
++  queue-lead/team-member/follower/access топ-уровневым ключом тела API отклоняет)
++- Вид субъекта × действие за запрос: `{ <разрешение>: { users|groups|roles: { add|remove: [...] } } }`
+ 
+ **Ключевые аспекты:**
+ - **API версия:** v3 (актуальная версия API)
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/api_operations/queue/manage-queue-access.operation.ts b/packages/servers/yandex-tracker/src/tracker_api/api_operations/queue/manage-queue-access.operation.ts
+index e0a0eb1a..c2fde2ca 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/api_operations/queue/manage-queue-access.operation.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/api_operations/queue/manage-queue-access.operation.ts
+@@ -3,10 +3,12 @@
+  *
+  * Ответственность (SRP):
+  * - ТОЛЬКО управление правами доступа к очереди
+- * - Добавление/удаление пользователей из ролей
++ * - Добавление/удаление субъектов (пользователей/групп/ролей) из разрешений
+  * - НЕТ создания/обновления очередей
+  *
+  * API: PATCH /v3/queues/{queueId}/permissions
++ * Тело — `{ <разрешение>: { <вид субъекта>: { <действие>: [субъекты] } } }`
++ * (api-ref/queues/manage-access, раздел «Параметры тела запроса»).
+  */
+ 
+ import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
+@@ -19,29 +21,31 @@ export interface ManageQueueAccessParams {
+ 
+ export class ManageQueueAccessOperation extends BaseOperation {
+   /**
+-   * Управляет правами доступа к очереди (добавление/удаление пользователей из ролей)
++   * Управляет правами доступа к очереди (добавление/удаление субъектов из разрешения)
+    *
+    * @param params - параметры (queueId и accessData)
+-   * @returns массив прав доступа
++   * @returns права доступа очереди
+    *
+    * ВАЖНО:
+-   * - action='add' - добавляет пользователей в роль
+-   * - action='remove' - удаляет пользователей из роли
++   * - action='add' - добавляет субъекты в разрешение
++   * - action='remove' - удаляет субъекты из разрешения
+    * - Retry делается ТОЛЬКО в HttpClient.patch (нет двойного retry)
+    */
+   async execute(params: ManageQueueAccessParams): Promise<QueuePermissionsOutput> {
+     const { queueId, accessData } = params;
+-    const { role, subjects, action } = accessData;
++    const { permission, subjectKind, subjects, action } = accessData;
+ 
+     this.logger.info(
+-      `${action === 'add' ? 'Добавление' : 'Удаление'} пользователей ${subjects.join(', ')} ` +
+-        `${action === 'add' ? 'в' : 'из'} роли ${role} для очереди ${queueId}`
++      `${action === 'add' ? 'Добавление' : 'Удаление'} субъектов ${subjects.join(', ')} ` +
++        `(${subjectKind}) для разрешения ${permission} очереди ${queueId}`
+     );
+ 
+-    // Формируем payload для PATCH запроса
++    // Формируем payload для PATCH запроса: { [разрешение]: { [вид субъекта]: { [действие]: [субъекты] } } }
+     const payload = {
+-      [role]: {
+-        [action]: subjects,
++      [permission]: {
++        [subjectKind]: {
++          [action]: subjects,
++        },
+       },
+     };
+ 
+@@ -51,7 +55,7 @@ export class ManageQueueAccessOperation extends BaseOperation {
+     );
+ 
+     this.logger.info(
+-      `Права доступа успешно обновлены для очереди ${queueId} (${action} ${subjects.length} пользователей)`
++      `Права доступа успешно обновлены для очереди ${queueId} (${action} ${subjects.length} субъектов)`
+     );
+ 
+     return permissions;
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.ts b/packages/servers/yandex-tracker/src/tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.ts
+index c52f4cf5..b9cd6a6c 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.ts
+@@ -6,14 +6,18 @@
+  *   (для этого — `UpdateSprintOperation`/`update_sprint`)
+  *
+  * API:
+- * - start:   POST /v3/sprints/{id}/_start
+- * - archive: POST /v3/sprints/{id}/_archive
++ * - start:   POST /v3/sprints/{id}/_start?version={version}
++ * - archive: POST /v3/sprints/{id}/_archive?version={version}
+  * - delete:  DELETE /v3/sprints/{id}
+  *
+  * Источник форм запроса — официальная документация (`api-ref/boards/
+  * start-sprint.md`/`archive-sprint.md`/`delete-sprint.md`): референсный
+  * клиент lifecycle-методов для Sprints НЕ содержит (только generic
+  * update/delete на базовом `Collection`), поэтому пути взяты из доки.
++ *
++ * `version` у `_start`/`_archive` обязателен — без него API отвечает `428`
++ * (живая проба 2026-08-26), ровно как у `PATCH /v3/sprints/{id}`. `delete`
++ * версию не требует и не шлёт — лишний GET для её чтения был бы платой ни за что.
+  */
+ 
+ import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
+@@ -26,19 +30,27 @@ export class ManageSprintLifecycleOperation extends BaseOperation {
+    *   (эндпоинт возвращает 204 без тела)
+    */
+   async execute(dto: ManageSprintLifecycleDto): Promise<SprintOutput | null> {
+-    const { sprintId, action } = dto;
++    const { sprintId, action, version } = dto;
+     this.logger.info(`Управление жизненным циклом спринта ${sprintId}: ${action}`);
+ 
+     const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, sprintId);
+ 
+     let result: SprintOutput | null;
+     switch (action) {
+-      case 'start':
+-        result = await this.httpClient.post<SprintOutput>(`/v3/sprints/${sprintId}/_start`);
++      case 'start': {
++        const effectiveVersion = version ?? (await this.readCurrentVersion(sprintId));
++        result = await this.httpClient.post<SprintOutput>(
++          `/v3/sprints/${sprintId}/_start?version=${effectiveVersion}`
++        );
+         break;
+-      case 'archive':
+-        result = await this.httpClient.post<SprintOutput>(`/v3/sprints/${sprintId}/_archive`);
++      }
++      case 'archive': {
++        const effectiveVersion = version ?? (await this.readCurrentVersion(sprintId));
++        result = await this.httpClient.post<SprintOutput>(
++          `/v3/sprints/${sprintId}/_archive?version=${effectiveVersion}`
++        );
+         break;
++      }
+       case 'delete':
+         await this.httpClient.delete<void>(`/v3/sprints/${sprintId}`);
+         result = null;
+@@ -48,4 +60,25 @@ export class ManageSprintLifecycleOperation extends BaseOperation {
+     await this.cacheManager.delete(cacheKey);
+     return result;
+   }
++
++  /**
++   * Читает текущую версию спринта.
++   *
++   * Лишний GET осознан: без версии `_start`/`_archive` отвечают 428, а вызывающий
++   * её обычно не держит. Передавшему версию явно этот запрос не делается — там
++   * работает настоящая оптимистичная блокировка.
++   */
++  private async readCurrentVersion(sprintId: string): Promise<number> {
++    const sprint = await this.httpClient.get<SprintOutput>(`/v3/sprints/${sprintId}`);
++    const version = sprint.version;
++    // Без этой проверки в URL уехало бы `?version=undefined`, и API отверг бы запрос
++    // сообщением про формат, а не про причину — читать его пришлось бы наугад.
++    if (typeof version !== 'number') {
++      throw new Error(
++        `Не удалось прочитать версию спринта ${sprintId}: ответ API её не содержит. ` +
++          'Передай version параметром инструмента.'
++      );
++    }
++    return version;
++  }
+ }
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/api_operations/sprint/update-sprint.operation.ts b/packages/servers/yandex-tracker/src/tracker_api/api_operations/sprint/update-sprint.operation.ts
+index 33835dd7..dffddd17 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/api_operations/sprint/update-sprint.operation.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/api_operations/sprint/update-sprint.operation.ts
+@@ -6,7 +6,14 @@
+  * - Инвалидация кеша после обновления
+  * - НЕТ создания/получения/удаления
+  *
+- * API: PATCH /v3/sprints/{sprintId}
++ * API: PATCH /v3/sprints/{sprintId}?version={version}
++ *
++ * ВАЖНО:
++ * - Все поля тела опциональны (частичное обновление)
++ * - Версия обязательна: без неё API отвечает 428 и правка не проходит вовсе
++ *   (живая проба 2026-08-26); версией в ТЕЛЕ API тоже недоволен —
++ *   `400 version: Incorrect data format`. Рабочая форма — query-параметр,
++ *   как у `UpdateComponentOperation` после его починки.
+  */
+ 
+ import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
+@@ -17,24 +24,26 @@ export class UpdateSprintOperation extends BaseOperation {
+   /**
+    * Обновляет существующий спринт
+    *
+-   * @param dto - данные для обновления спринта
+-   * @returns обновленный спринт
++   * @param sprintId - ID спринта для обновления
++   * @param data - данные для обновления (все поля опциональны)
++   * @param version - версия для оптимистичной блокировки; не передана — операция
++   *   читает текущую версию сама (см. `readCurrentVersion`)
++   * @returns обновлённый спринт
+    *
+    * ВАЖНО:
+    * - После обновления инвалидируется кеш спринта
+    * - Retry делается ТОЛЬКО в HttpClient.patch (нет двойного retry)
+-   * - Поддержка version для оптимистичных блокировок
+    */
+-  async execute(dto: UpdateSprintDto): Promise<SprintOutput> {
+-    const { sprintId, ...updateData } = dto;
+-
++  async execute(sprintId: string, data: UpdateSprintDto, version?: number): Promise<SprintOutput> {
+     this.logger.info(`Обновление спринта: ${sprintId}`);
+ 
+-    const endpoint = `/v3/sprints/${sprintId}`;
++    const effectiveVersion = version ?? (await this.readCurrentVersion(sprintId));
+ 
+-    const sprint = await this.httpClient.patch<SprintOutput>(endpoint, updateData);
++    const sprint = await this.httpClient.patch<SprintOutput>(
++      `/v3/sprints/${sprintId}?version=${effectiveVersion}`,
++      data
++    );
+ 
+-    // Инвалидация кеша обновленного спринта
+     const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, String(sprint.id));
+     await this.cacheManager.delete(cacheKey);
+ 
+@@ -42,4 +51,25 @@ export class UpdateSprintOperation extends BaseOperation {
+ 
+     return sprint;
+   }
++
++  /**
++   * Читает текущую версию спринта.
++   *
++   * Лишний GET осознан: без версии API отвечает 428, а вызывающий её обычно не
++   * держит. Передавшему версию явно этот запрос не делается — там работает
++   * настоящая оптимистичная блокировка.
++   */
++  private async readCurrentVersion(sprintId: string): Promise<number> {
++    const sprint = await this.httpClient.get<SprintOutput>(`/v3/sprints/${sprintId}`);
++    const version = sprint.version;
++    // Без этой проверки в URL уехало бы `?version=undefined`, и API отверг бы запрос
++    // сообщением про формат, а не про причину — читать его пришлось бы наугад.
++    if (typeof version !== 'number') {
++      throw new Error(
++        `Не удалось прочитать версию спринта ${sprintId}: ответ API её не содержит. ` +
++          'Передай version параметром инструмента.'
++      );
++    }
++    return version;
++  }
+ }
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/dto/board/update-board.dto.ts b/packages/servers/yandex-tracker/src/tracker_api/dto/board/update-board.dto.ts
+index 0a9da785..9f470129 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/dto/board/update-board.dto.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/dto/board/update-board.dto.ts
+@@ -37,9 +37,6 @@ export interface UpdateBoardDto {
+   /** Использовать ранжирование задач */
+   useRanking?: boolean | undefined;
+ 
+-  /** ID страны для региональных настроек */
+-  country?: string | undefined;
+-
+   /** Дополнительные поля */
+   [key: string]: unknown;
+ }
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/dto/queue/dto.factories.ts b/packages/servers/yandex-tracker/src/tracker_api/dto/queue/dto.factories.ts
+index 090c25c4..268e9b42 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/dto/queue/dto.factories.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/dto/queue/dto.factories.ts
+@@ -98,7 +98,8 @@ export function createAddQueueAccessDto(
+   overrides?: Partial<ManageQueueAccessDto>
+ ): ManageQueueAccessDto {
+   return {
+-    role: 'team-member',
++    permission: 'write',
++    subjectKind: 'users',
+     subjects: ['user123', 'user456'],
+     action: 'add',
+     ...overrides,
+@@ -112,7 +113,8 @@ export function createRemoveQueueAccessDto(
+   overrides?: Partial<ManageQueueAccessDto>
+ ): ManageQueueAccessDto {
+   return {
+-    role: 'team-member',
++    permission: 'write',
++    subjectKind: 'users',
+     subjects: ['user123'],
+     action: 'remove',
+     ...overrides,
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/dto/queue/manage-queue-access.dto.ts b/packages/servers/yandex-tracker/src/tracker_api/dto/queue/manage-queue-access.dto.ts
+index c291b257..a548850e 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/dto/queue/manage-queue-access.dto.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/dto/queue/manage-queue-access.dto.ts
+@@ -1,23 +1,52 @@
+ /**
+  * DTO для управления доступом к очереди в Яндекс.Трекере
++ *
++ * Документированная форма тела (api-ref/queues/manage-access, раздел «Параметры
++ * тела запроса»): `{ <разрешение>: { users|groups|roles: [...] | { add|remove: [...] } } }`.
++ * Прежняя форма `{ <роль>: { <действие>: [субъекты] } }` (роли `queue-lead`,
++ * `team-member`, `follower`, `access`) не документирована и живой пробой
++ * 2026-08-26 отклонена API на всех четырёх ролях (`400 <роль>: Incorrect data
++ * format`) — контракт переписан целиком.
+  */
+ 
+-import type { QueueRole } from '#tracker_api/entities/index.js';
+-
+ /**
+- * Действие для управления доступом
++ * Разрешение — единственный ключ верхнего уровня тела запроса.
++ * `deny` допускает только `subjectKind: 'users' | 'groups'` — ролям запретить
++ * доступ нельзя (документация, раздел «Параметры тела запроса»).
+  */
++export type QueueAccessPermission = 'create' | 'write' | 'read' | 'grant' | 'deny';
++
++/** Вид субъекта: пользователь, группа (числовой id) или встроенная роль задачи. */
++export type QueueAccessSubjectKind = 'users' | 'groups' | 'roles';
++
++/** Действие над списком субъектов. */
+ export type AccessAction = 'add' | 'remove';
+ 
+ /**
+- * DTO для управления правами доступа к очереди
++ * Встроенные роли задачи, доступные как субъект (`subjectKind: 'roles'`).
++ * `queue-lead` сюда не входит: документация «Допустимые идентификаторы» не
++ * объявляет его назначаемой ролью — он встречается только в ответах API.
++ */
++export type QueueAccessRoleSubject = 'author' | 'assignee' | 'follower' | 'access';
++
++/**
++ * DTO для управления правами доступа к очереди.
++ *
++ * Форма «одно разрешение × один вид субъекта × одно действие за запрос» — осознанное
++ * сужение документированной мультиформы (несколько разрешений в одном теле, а также
++ * форма-замена `users: [...]` без `add`/`remove`). Причина сужения — предсказуемость
++ * инструмента для агента: один вызов производит один понятный эффект, а не набор
++ * параллельных.
+  */
+ export interface ManageQueueAccessDto {
+-  /** Роль в очереди */
+-  role: QueueRole;
++  /** Разрешение, которым управляем */
++  permission: QueueAccessPermission;
++
++  /** Вид субъекта: пользователи, группы (числовой id) или роли задачи */
++  subjectKind: QueueAccessSubjectKind;
+ 
+-  /** Массив ID пользователей или групп */
+-  subjects: string[];
++  /** Массив ID пользователей, ЧИСЛОВЫХ id групп либо идентификаторов ролей */
++  subjects: (string | number)[];
+ 
+   /** Действие: добавить или удалить */
+   action: AccessAction;
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/dto/queue/queue-permissions.output.ts b/packages/servers/yandex-tracker/src/tracker_api/dto/queue/queue-permissions.output.ts
+index 6976789e..691e77a8 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/dto/queue/queue-permissions.output.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/dto/queue/queue-permissions.output.ts
+@@ -2,11 +2,13 @@
+  * Output DTO для результата управления доступом к очереди
+  *
+  * ВАЖНО: Используется как возвращаемый тип из ManageQueueAccessOperation.
++ * Форма — объект, ключёванный разрешением (`{self, version, create?, write?, ...}`),
++ * а НЕ массив прав — см. `#tracker_api/entities/queue-permission.entity.js`.
+  */
+ 
+-import type { QueuePermissionWithUnknownFields } from '#tracker_api/entities/index.js';
++import type { QueuePermissionsWithUnknownFields } from '#tracker_api/entities/index.js';
+ 
+ /**
+  * Результат операции управления доступом к очереди
+  */
+-export type QueuePermissionsOutput = ReadonlyArray<QueuePermissionWithUnknownFields>;
++export type QueuePermissionsOutput = QueuePermissionsWithUnknownFields;
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/create-sprint.dto.ts b/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/create-sprint.dto.ts
+index 31547dcb..b8ad160e 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/create-sprint.dto.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/create-sprint.dto.ts
+@@ -17,12 +17,6 @@ export interface CreateSprintDto {
+   /** Дата окончания спринта (формат YYYY-MM-DD) */
+   endDate?: string | undefined;
+ 
+-  /** Дата и время начала спринта в формате ISO 8601 */
+-  startDateTime?: string | undefined;
+-
+-  /** Дата и время окончания спринта в формате ISO 8601 */
+-  endDateTime?: string | undefined;
+-
+   /** Статус спринта */
+   status?: SprintStatus | undefined;
+ 
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/manage-sprint-lifecycle.dto.ts b/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/manage-sprint-lifecycle.dto.ts
+index 48c11ea0..371d7901 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/manage-sprint-lifecycle.dto.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/manage-sprint-lifecycle.dto.ts
+@@ -1,14 +1,19 @@
+ /**
+  * DTO для управления жизненным циклом спринта (старт/архивация/удаление)
+  *
+- * ВАЖНО: все три действия имеют ОДИНАКОВУЮ форму запроса ({sprintId, action}),
+- * без action-специфичных полей тела — поэтому, в отличие от Entity API
++ * Все три действия ({sprintId, action}) — поэтому, в отличие от Entity API
+  * create/update/delete (разные тела запроса), безопасно объединены в один
+  * MCP-инструмент с параметром `action` (аналог `manage_queue_access`).
+- * Единая форма также означает, что автоматическая проверка достижимости
+- * параметров (`tests/smoke/tool-params-reach-api.smoke.test.ts`) проходит
+- * без исключений: каждое поле схемы реально уходит в HTTP-запрос независимо
+- * от того, какое значение `action` сгенерировал тест.
++ *
++ * `version` — не тело, а query-параметр `_start`/`_archive`: без него API отвечает
++ * `428 Необходимо указать либо параметр 'версия', либо значение заголовка If-Match`
++ * (живая проба 2026-08-26). У `delete` версии нет вовсе — эндпоинт её не требует, и
++ * лишний GET для её чтения был бы платой ни за что.
++ *
++ * Автоматическая проверка достижимости параметров
++ * (`tests/smoke/tool-params-reach-api.smoke.test.ts`) генерирует образец с первым
++ * значением enum (`action: 'start'`), поэтому `version` доезжает до запроса и на
++ * синтетическом образце — исключений не требуется.
+  */
+ 
+ export type SprintLifecycleAction = 'start' | 'archive' | 'delete';
+@@ -19,4 +24,10 @@ export interface ManageSprintLifecycleDto {
+ 
+   /** Действие: запустить / архивировать / удалить спринт */
+   action: SprintLifecycleAction;
++
++  /**
++   * Версия спринта для оптимистичной блокировки — применима только к `start`/
++   * `archive`. Не передана — операция читает текущую версию сама. У `delete` игнорируется.
++   */
++  version?: number | undefined;
+ }
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/update-sprint.dto.ts b/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/update-sprint.dto.ts
+index ce08430c..8a64d87f 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/update-sprint.dto.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/dto/sprint/update-sprint.dto.ts
+@@ -1,31 +1,26 @@
+ /**
+  * DTO для обновления спринта в Яндекс.Трекере
++ *
++ * `sprintId` и `version` сюда не входят: `sprintId` — отдельный параметр операции
++ * (адресует URL, не тело), `version` — отдельный параметр query-строки
++ * (`UpdateSprintOperation.execute`). Оба поля, окажись они здесь, ушли бы в тело
++ * PATCH через индексную сигнатуру ниже — ровно тот дефект, который чинит этот DTO
++ * (живая проба 2026-08-26: `PATCH /v3/sprints/{id}` отвечает `428` без версии в
++ * query и `400 version: Incorrect data format`, когда версия попадает в тело).
+  */
+ 
+ import type { SprintStatus } from '#tracker_api/entities/index.js';
+ 
+ export interface UpdateSprintDto {
+-  /** ID спринта для обновления */
+-  sprintId: string;
+-
+   /** Новое название спринта */
+   name?: string | undefined;
+ 
+-  /** Версия спринта (для оптимистичной блокировки) */
+-  version?: number | undefined;
+-
+   /** Дата начала спринта (формат YYYY-MM-DD) */
+   startDate?: string | undefined;
+ 
+   /** Дата окончания спринта (формат YYYY-MM-DD) */
+   endDate?: string | undefined;
+ 
+-  /** Дата и время начала спринта в формате ISO 8601 */
+-  startDateTime?: string | undefined;
+-
+-  /** Дата и время окончания спринта в формате ISO 8601 */
+-  endDateTime?: string | undefined;
+-
+   /** Статус спринта */
+   status?: SprintStatus | undefined;
+ 
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/entities/README.md b/packages/servers/yandex-tracker/src/tracker_api/entities/README.md
+index c7bd5b89..3c4d1771 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/entities/README.md
++++ b/packages/servers/yandex-tracker/src/tracker_api/entities/README.md
+@@ -423,24 +423,40 @@ export type QueueFieldWithUnknownFields = WithUnknownFields<QueueField>;
+ 
+ **Файл:** `src/tracker_api/entities/queue-permission.entity.ts`
+ 
+-Описывает права доступа к очереди:
++Описывает ответ `GET/PATCH /v3/queues/{queueId}/permissions` — объект, ключёванный
++разрешением (`create`/`write`/`read`/`grant`/`deny`), а НЕ массив. Форма снята живой
++пробой 2026-08-26 (было: старые «роли» `queue-lead`/`team-member`/`follower`/`access`
++как топ-уровневый ключ — не подтверждено ни документацией, ни живым ответом):
+ 
+ ```typescript
+-export interface QueuePermission {
+-  readonly role: QueueRole;      // Роль пользователя
+-  readonly users?: UserRef[];    // Пользователи с этой ролью
+-  readonly groups?: string[];    // Группы с этой ролью
++export interface QueueAccessSubject {
++  readonly self: string;
++  readonly id: string;
++  readonly display: string;
++  readonly cloudUid?: string;
++  readonly passportUid?: number;
+ }
+ 
+-export type QueueRole = 'queue-lead' | 'team-member' | 'follower' | 'access';
+-export type QueuePermissionWithUnknownFields = WithUnknownFields<QueuePermission>;
++export interface QueuePermissionEntry {
++  readonly self: string;
++  readonly users?: readonly QueueAccessSubjectWithUnknownFields[];
++  readonly groups?: readonly QueueAccessSubjectWithUnknownFields[];
++  readonly roles?: readonly QueueAccessSubjectWithUnknownFields[];
++}
++
++export interface QueuePermissions {
++  readonly self: string;
++  readonly version: number;
++  readonly create?: QueuePermissionEntryWithUnknownFields;
++  readonly write?: QueuePermissionEntryWithUnknownFields;
++  readonly read?: QueuePermissionEntryWithUnknownFields;
++  readonly grant?: QueuePermissionEntryWithUnknownFields;
++  readonly deny?: QueuePermissionEntryWithUnknownFields; // не наблюдался живьём
++}
+ ```
+ 
+-**Роли очереди:**
+-- `queue-lead` — руководитель очереди (полные права)
+-- `team-member` — член команды (создание/редактирование задач)
+-- `follower` — наблюдатель (только чтение)
+-- `access` — базовый доступ к очереди
++Все ключи разрешений опциональны — очередь может не иметь записей по какому-то из
++них; ответ, состоящий из одной версии (`{self, version}`), — законная форма.
+ 
+ ### Entity для компонентов
+ 
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/entities/entity.factories.ts b/packages/servers/yandex-tracker/src/tracker_api/entities/entity.factories.ts
+index 5745cdf9..ec96f628 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/entities/entity.factories.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/entities/entity.factories.ts
+@@ -9,7 +9,7 @@ import type { User } from './user.entity.js';
+ import type { UserRef } from './common/user-ref.entity.js';
+ import type { Queue, QueueDictionaryRef } from './queue.entity.js';
+ import type { QueueField, QueueFieldCategory } from './queue-field.entity.js';
+-import type { QueuePermission } from './queue-permission.entity.js';
++import type { QueueAccessSubject } from './queue-permission.entity.js';
+ import type { Status } from './status.entity.js';
+ import type { Priority } from './priority.entity.js';
+ import type { IssueType } from './issue-type.entity.js';
+@@ -147,9 +147,12 @@ export function createQueueFieldWithCategory(overrides?: Partial<QueueField>): Q
+ }
+ 
+ /**
+- * Создает валидный QueuePermission entity
++ * Создает валидный QueueAccessSubject entity (элемент `users`/`groups`/`roles`
++ * внутри записи разрешения `QueuePermissionEntry`)
+  */
+-export function createQueuePermission(overrides?: Partial<QueuePermission>): QueuePermission {
++export function createQueueAccessSubject(
++  overrides?: Partial<QueueAccessSubject>
++): QueueAccessSubject {
+   return {
+     id: 'user123',
+     self: 'https://api.tracker.yandex.net/v3/users/user123',
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/entities/index.ts b/packages/servers/yandex-tracker/src/tracker_api/entities/index.ts
+index 2af830f2..a1ff01a9 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/entities/index.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/entities/index.ts
+@@ -44,9 +44,12 @@ export type {
+ 
+ // Queue Permission
+ export type {
+-  QueuePermission,
+-  QueuePermissionWithUnknownFields,
+-  QueueRole,
++  QueueAccessSubject,
++  QueueAccessSubjectWithUnknownFields,
++  QueuePermissionEntry,
++  QueuePermissionEntryWithUnknownFields,
++  QueuePermissions,
++  QueuePermissionsWithUnknownFields,
+ } from './queue-permission.entity.js';
+ 
+ // Status
+@@ -150,7 +153,7 @@ export {
+   createFullQueue,
+   createQueueField,
+   createQueueFieldWithCategory,
+-  createQueuePermission,
++  createQueueAccessSubject,
+   createStatus,
+   createPriority,
+   createIssueType,
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/entities/queue-permission.entity.ts b/packages/servers/yandex-tracker/src/tracker_api/entities/queue-permission.entity.ts
+index 9d6b0803..13c5a0a4 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/entities/queue-permission.entity.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/entities/queue-permission.entity.ts
+@@ -1,37 +1,65 @@
+ /**
+  * Доменный тип: Права доступа к очереди в Яндекс.Трекере
+  *
+- * Соответствует API v3: /v3/queues/{queueId}/permissions
++ * Соответствует API v3: `GET/PATCH /v3/queues/{queueId}/permissions`. Форма — объект,
++ * ключёванный разрешением (`create`/`write`/`read`/`grant`/`deny`), а НЕ массив прав —
++ * снята живой пробой 2026-08-26 на очереди `TESTSWEEPB`
++ * (`.agentic-planning/plan_tracker_sweep7_fixes/inventory/queue-permissions-response-2026-08-26.json`;
++ * `PATCH` отвечает той же формой, что и `GET` того же ресурса).
+  */
+ 
+ import type { WithUnknownFields } from './types.js';
+ 
+ /**
+- * Роли пользователей в очереди
+- *
+- * @see https://cloud.yandex.ru/docs/tracker/manager/queue-access
++ * Субъект права доступа: пользователь, группа или встроенная роль задачи.
++ * `cloudUid`/`passportUid` наблюдались только у субъектов-пользователей.
+  */
+-export type QueueRole = 'queue-lead' | 'team-member' | 'follower' | 'access';
++export interface QueueAccessSubject {
++  readonly self: string;
++  readonly id: string;
++  readonly display: string;
++  readonly cloudUid?: string;
++  readonly passportUid?: number;
++}
++
++export type QueueAccessSubjectWithUnknownFields = WithUnknownFields<QueueAccessSubject>;
+ 
+ /**
+- * Права доступа к очереди
+- *
+- * ВАЖНО: Типизация основана на реальных ответах API v3.
+- * Обязательные поля (без ?) всегда присутствуют в ответе.
++ * Одна запись разрешения. Все три вида субъекта опциональны — очередь может не
++ * иметь ни одной записи по какому-то виду (например, `read` в живой пробе нёс
++ * только `roles`, без `users`/`groups`).
+  */
+-export interface QueuePermission {
+-  /** Идентификатор права доступа (всегда присутствует) */
+-  readonly id: string;
+-
+-  /** URL ссылка на объект в API (всегда присутствует) */
++export interface QueuePermissionEntry {
+   readonly self: string;
+-
+-  /** Отображаемое имя (всегда присутствует) */
+-  readonly display: string;
++  readonly users?: readonly QueueAccessSubjectWithUnknownFields[];
++  readonly groups?: readonly QueueAccessSubjectWithUnknownFields[];
++  readonly roles?: readonly QueueAccessSubjectWithUnknownFields[];
+ }
+ 
++export type QueuePermissionEntryWithUnknownFields = WithUnknownFields<QueuePermissionEntry>;
++
+ /**
+- * Права доступа с возможными unknown полями из API.
+- * Используется при получении данных от API Трекера.
++ * Права доступа к очереди целиком.
++ *
++ * Все пять ключей разрешений опциональны. `deny` живьём НЕ наблюдался — проба
++ * 2026-08-26 вернула только `create`/`write`/`read`/`grant`; референсный клиент
++ * (`yandex_tracker_client/collections.py`, класс `Permissions`) тоже перечисляет
++ * только `self/create/read/write/grant`, без `deny`. Оставлен в типе, потому что
++ * документация его объявляет, но помечен как непроверенный, а не наблюдённый факт.
++ *
++ * Ответ, состоящий из одной версии (`{self, version}`, без единого разрешения) —
++ * законная форма, а не ошибка парсинга: смоук-тест референсного клиента мокает
++ * ответ `Permissions` ровно так (`{"version": 11}`).
+  */
+-export type QueuePermissionWithUnknownFields = WithUnknownFields<QueuePermission>;
++export interface QueuePermissions {
++  readonly self: string;
++  readonly version: number;
++  readonly create?: QueuePermissionEntryWithUnknownFields;
++  readonly write?: QueuePermissionEntryWithUnknownFields;
++  readonly read?: QueuePermissionEntryWithUnknownFields;
++  readonly grant?: QueuePermissionEntryWithUnknownFields;
++  /** Не наблюдался живьём — см. комментарий к интерфейсу. */
++  readonly deny?: QueuePermissionEntryWithUnknownFields;
++}
++
++export type QueuePermissionsWithUnknownFields = WithUnknownFields<QueuePermissions>;
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/facade/services/queue.service.ts b/packages/servers/yandex-tracker/src/tracker_api/facade/services/queue.service.ts
+index bfa9a42e..8bc5a0fa 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/facade/services/queue.service.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/facade/services/queue.service.ts
+@@ -86,7 +86,7 @@ export class QueueService {
+   /**
+    * Управляет правами доступа к очереди
+    * @param params - параметры (queueId и accessData)
+-   * @returns массив прав доступа
++   * @returns права доступа очереди (объект, ключёванный разрешением)
+    */
+   async manageQueueAccess(params: ManageQueueAccessParams): Promise<QueuePermissionsOutput> {
+     return this.ops.manageQueueAccess.execute(params);
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/facade/services/sprint.service.ts b/packages/servers/yandex-tracker/src/tracker_api/facade/services/sprint.service.ts
+index 7e235836..36cf2fd9 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/facade/services/sprint.service.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/facade/services/sprint.service.ts
+@@ -76,14 +76,17 @@ export class SprintService {
+   /**
+    * Обновляет спринт
+    * @param sprintId - идентификатор спринта
+-   * @param input - данные для обновления
++   * @param input - данные для обновления (тело PATCH, без version)
++   * @param version - версия для оптимистичной блокировки (query-параметр);
++   *   не передана — операция читает текущую версию сама
+    * @returns обновленный спринт
+    */
+   async updateSprint(
+     sprintId: string,
+-    input: Omit<UpdateSprintDto, 'sprintId'>
++    input: UpdateSprintDto,
++    version?: number
+   ): Promise<SprintOutput> {
+-    return this.updateSprintOp.execute({ sprintId, ...input });
++    return this.updateSprintOp.execute(sprintId, input, version);
+   }
+ 
+   /**
+diff --git a/packages/servers/yandex-tracker/src/tracker_api/facade/yandex-tracker.facade.ts b/packages/servers/yandex-tracker/src/tracker_api/facade/yandex-tracker.facade.ts
+index 36d2dad0..32b15994 100644
+--- a/packages/servers/yandex-tracker/src/tracker_api/facade/yandex-tracker.facade.ts
++++ b/packages/servers/yandex-tracker/src/tracker_api/facade/yandex-tracker.facade.ts
+@@ -311,7 +311,7 @@ export class YandexTrackerFacade implements RawApiCapable {
+   /**
+    * Управляет правами доступа к очереди
+    * @param params - параметры (queueId и accessData)
+-   * @returns массив прав доступа
++   * @returns права доступа очереди (объект, ключёванный разрешением)
+    */
+   async manageQueueAccess(params: ManageQueueAccessParams): Promise<QueuePermissionsOutput> {
+     return this.queues.queue.manageQueueAccess(params);
+@@ -1024,14 +1024,17 @@ export class YandexTrackerFacade implements RawApiCapable {
+   /**
+    * Обновляет спринт
+    * @param sprintId - идентификатор спринта
+-   * @param input - данные для обновления
++   * @param input - данные для обновления (тело PATCH, без version)
++   * @param version - версия для оптимистичной блокировки (query-параметр);
++   *   не передана — операция читает текущую версию сама
+    * @returns обновленный спринт
+    */
+   async updateSprint(
+     sprintId: string,
+-    input: Omit<UpdateSprintDto, 'sprintId'>
++    input: UpdateSprintDto,
++    version?: number
+   ): Promise<SprintOutput> {
+-    return this.projectAgile.sprint.updateSprint(sprintId, input);
++    return this.projectAgile.sprint.updateSprint(sprintId, input, version);
+   }
+ 
+   /**
+diff --git a/packages/servers/yandex-tracker/tests/TESTING_STRATEGY.md b/packages/servers/yandex-tracker/tests/TESTING_STRATEGY.md
+index ac01beb4..5d110eeb 100644
+--- a/packages/servers/yandex-tracker/tests/TESTING_STRATEGY.md
++++ b/packages/servers/yandex-tracker/tests/TESTING_STRATEGY.md
+@@ -218,6 +218,12 @@ submodule подтверждает версию тавтологически и
+ который на странице есть, но в другой роли. Отсутствие страницы — не приговор:
+ часть живых маршрутов не описана, и каждый такой пункт закрывается живой пробой.
+ 
++Поиск ограничен разделом «Формат запроса»: имя, встречающееся только в разделе ответа,
++за документированный параметр запроса не считается. Доказанный пример — `startDateTime`
++у `create_sprint`/`update_sprint`: имя есть в примере ответа страницы, а API отвергает
++даже ту форму даты, которую сам же отдаёт (`400 …: Incorrect data format`, живая проба
++2026-08-26).
++
+ Инструменты, чей запрос перечислитель не ловит (возврат до HTTP на синтетическом
+ образце), перечислены в скрипте как `MANUAL_ROUTES` — при переносе маршрута правится
+ там же, иначе сверка молча перестанет их покрывать. Первый прогон:
+diff --git a/packages/servers/yandex-tracker/tests/coverage-exceptions/legacy-mock-tests.ts b/packages/servers/yandex-tracker/tests/coverage-exceptions/legacy-mock-tests.ts
+index 9328ec10..7f4bacdc 100644
+--- a/packages/servers/yandex-tracker/tests/coverage-exceptions/legacy-mock-tests.ts
++++ b/packages/servers/yandex-tracker/tests/coverage-exceptions/legacy-mock-tests.ts
+@@ -69,7 +69,6 @@ export const LEGACY_MOCK_TEST_PATHS: ReadonlySet<string> = new Set([
+   'tests/integration/tools/api/issues/transition/transition-issue.tool.integration.test.ts',
+   'tests/integration/tools/api/issues/transitions/get-issue-transitions.tool.integration.test.ts',
+   'tests/integration/tools/api/issues/update/update-issue.tool.integration.test.ts',
+-  'tests/integration/tools/api/queues/access/manage-queue-access.tool.integration.test.ts',
+   'tests/integration/tools/api/queues/fields/get-queue-fields.tool.integration.test.ts',
+   'tests/integration/tools/api/queues/get-queue/get-queue.tool.integration.test.ts',
+   'tests/integration/tools/api/queues/get/get-queues.tool.integration.test.ts',
+@@ -81,7 +80,7 @@ export const LEGACY_MOCK_TEST_PATHS: ReadonlySet<string> = new Set([
+  * `LEGACY_MOCK_TEST_PATHS.size` с этой константой роняет `coverage:check` — растущий
+  * перечень без видимой правки этого числа невозможен.
+  */
+-export const LEGACY_MOCK_TEST_BASELINE_COUNT = 30;
++export const LEGACY_MOCK_TEST_BASELINE_COUNT = 29;
+ 
+ const MIN_IT_CALLS = 1;
+ const MIN_EXPECT_CALLS = 1;
+diff --git a/packages/servers/yandex-tracker/tests/helpers/queue-dto.fixture.ts b/packages/servers/yandex-tracker/tests/helpers/queue-dto.fixture.ts
+index 254c1de3..576094cd 100644
+--- a/packages/servers/yandex-tracker/tests/helpers/queue-dto.fixture.ts
++++ b/packages/servers/yandex-tracker/tests/helpers/queue-dto.fixture.ts
+@@ -112,7 +112,8 @@ export function createGetQueueFieldsDto(overrides?: Partial<GetQueueFieldsDto>):
+  * ```typescript
+  * const dto = createManageQueueAccessDto({
+  *   action: 'add',
+- *   role: 'team-member',
++ *   permission: 'write',
++ *   subjectKind: 'users',
+  *   subjects: ['user-123', 'user-456']
+  * });
+  * ```
+@@ -122,7 +123,8 @@ export function createManageQueueAccessDto(
+ ): ManageQueueAccessDto {
+   return {
+     action: 'add',
+-    role: 'team-member',
++    permission: 'write',
++    subjectKind: 'users',
+     subjects: ['user-1', 'user-2'],
+     ...overrides,
+   };
+@@ -133,16 +135,18 @@ export function createManageQueueAccessDto(
+  *
+  * @example
+  * ```typescript
+- * const dto = createRemoveQueueAccessDto('team-member', ['user-123']);
++ * const dto = createRemoveQueueAccessDto('write', ['user-123']);
+  * ```
+  */
+ export function createRemoveQueueAccessDto(
+-  role: ManageQueueAccessDto['role'],
+-  subjects: string[]
++  permission: ManageQueueAccessDto['permission'],
++  subjects: (string | number)[],
++  subjectKind: ManageQueueAccessDto['subjectKind'] = 'users'
+ ): ManageQueueAccessDto {
+   return {
+     action: 'remove',
+-    role,
++    permission,
++    subjectKind,
+     subjects,
+   };
+ }
+diff --git a/packages/servers/yandex-tracker/tests/helpers/queue-permission.fixture.ts b/packages/servers/yandex-tracker/tests/helpers/queue-permission.fixture.ts
+index 9792ee3b..6453ca6f 100644
+--- a/packages/servers/yandex-tracker/tests/helpers/queue-permission.fixture.ts
++++ b/packages/servers/yandex-tracker/tests/helpers/queue-permission.fixture.ts
+@@ -1,147 +1,98 @@
+ /**
+- * Фикстуры для QueuePermission entity
+- *
+- * Используются в тестах для создания mock данных прав доступа к очереди.
++ * Фикстуры для формы ответа `GET/PATCH /v3/queues/{queueId}/permissions`
++ * (`QueuePermissions` entity) — объект, ключёванный разрешением, а не массив.
++ * Форма снята живой пробой 2026-08-26:
++ * `.agentic-planning/plan_tracker_sweep7_fixes/inventory/queue-permissions-response-2026-08-26.json`.
+  */
+ 
+ import type {
+-  QueuePermission,
+-  QueuePermissionWithUnknownFields,
+-  QueueRole,
++  QueueAccessSubject,
++  QueueAccessSubjectWithUnknownFields,
++  QueuePermissionEntry,
++  QueuePermissionEntryWithUnknownFields,
++  QueuePermissions,
++  QueuePermissionsWithUnknownFields,
+ } from '../../src/tracker_api/entities/queue-permission.entity.js';
+ 
+ /**
+- * Создать QueuePermission для тестов
++ * Создать субъект права доступа (элемент `users`/`groups`/`roles`) для тестов.
+  *
+  * @example
+  * ```typescript
+- * // Создать право доступа с дефолтными значениями
+- * const permission = createQueuePermissionFixture();
+- *
+- * // Создать право доступа для конкретного пользователя
+- * const permission = createQueuePermissionFixture({
+- *   id: 'user-123',
+- *   display: 'John Doe'
+- * });
++ * const subject = createQueueAccessSubjectFixture({ id: 'user1', display: 'User 1' });
+  * ```
+  */
+-export function createQueuePermissionFixture(
+-  overrides?: Partial<QueuePermission>
+-): QueuePermissionWithUnknownFields {
+-  const id = overrides?.id || 'user-1234567890';
+-  const display = overrides?.display || 'Test User';
++export function createQueueAccessSubjectFixture(
++  overrides?: Partial<QueueAccessSubject>
++): QueueAccessSubjectWithUnknownFields {
++  const id = overrides?.id ?? 'user-1234567890';
+ 
+   return {
+     id,
+     self: `https://api.tracker.yandex.net/v3/users/${id}`,
+-    display,
++    display: 'Test User',
+     ...overrides,
+   };
+ }
+ 
+ /**
+- * Создать массив QueuePermission для тестов
+- *
+- * @example
+- * ```typescript
+- * const permissions = createQueuePermissionListFixture(3);
+- * // Вернёт массив из 3 прав доступа с уникальными пользователями
+- * ```
+- */
+-export function createQueuePermissionListFixture(
+-  count: number,
+-  baseOverrides?: Partial<QueuePermission>
+-): QueuePermissionWithUnknownFields[] {
+-  return Array.from({ length: count }, (_, index) => {
+-    const userId = `user-${1000 + index}`;
+-    return createQueuePermissionFixture({
+-      id: userId,
+-      display: `Test User ${index + 1}`,
+-      ...baseOverrides,
+-    });
+-  });
+-}
+-
+-/**
+- * Создать права доступа для конкретной роли (для documentation)
++ * Создать одну запись разрешения (`create`/`write`/`read`/`grant`/`deny`).
+  *
+  * @example
+  * ```typescript
+- * const leadPermission = createQueuePermissionForRole('queue-lead', {
+- *   id: 'user-123',
+- *   display: 'Queue Lead User'
++ * const write = createQueuePermissionEntryFixture('write', {
++ *   users: [createQueueAccessSubjectFixture({ id: 'user1' })],
+  * });
+  * ```
+  */
+-export function createQueuePermissionForRole(
+-  _role: QueueRole,
+-  overrides?: Partial<QueuePermission>
+-): QueuePermissionWithUnknownFields {
+-  // Примечание: API возвращает одинаковую структуру для всех ролей
+-  // Роль указывается только в запросе, не в ответе
+-  return createQueuePermissionFixture(overrides);
++export function createQueuePermissionEntryFixture(
++  permission: string,
++  overrides?: Partial<QueuePermissionEntry>
++): QueuePermissionEntryWithUnknownFields {
++  return {
++    self: `https://api.tracker.yandex.net/v3/queues/TEST/permissions/${permission}`,
++    users: [createQueueAccessSubjectFixture()],
++    ...overrides,
++  };
+ }
+ 
+ /**
+- * Создать минимальное право доступа
++ * Создать полный ответ `QueuePermissions` для тестов — по умолчанию несёт запись
++ * `write` с одним пользователем; `overrides` заменяют/добавляют любые ключи, включая
++ * полное отсутствие записей (объект `{self, version}` — законная форма, см.
++ * комментарий к `QueuePermissions`).
+  *
+  * @example
+  * ```typescript
+- * const minimal = createMinimalQueuePermissionFixture('user-999');
++ * // Полный ответ с одной записью write
++ * const response = createQueuePermissionsFixture();
++ *
++ * // Ответ без единого разрешения ({self, version})
++ * const empty = createQueuePermissionsFixture({ write: undefined });
+  * ```
+  */
+-export function createMinimalQueuePermissionFixture(userId = 'user-1234567890'): QueuePermission {
+-  return {
+-    id: userId,
+-    self: `https://api.tracker.yandex.net/v3/users/${userId}`,
+-    display: 'Minimal User',
++export function createQueuePermissionsFixture(
++  overrides?: Partial<QueuePermissions>
++): QueuePermissionsWithUnknownFields {
++  const base: QueuePermissions = {
++    self: 'https://api.tracker.yandex.net/v3/queues/TEST/permissions',
++    version: 1,
++    write: createQueuePermissionEntryFixture('write'),
+   };
++
++  return { ...base, ...overrides };
+ }
+ 
+ /**
+- * Создать стандартный набор прав доступа для разных ролей
+- * (для документации и примеров)
+- *
+- * @example
+- * ```typescript
+- * const standardPermissions = createStandardPermissionsSet('TEST');
+- * ```
++ * Ответ, состоящий из одной версии, без единого разрешения — форма, которую мокает
++ * смоук-тест референсного клиента (`yandex_tracker_client`, `Permissions`:
++ * `{"version": 11}`).
+  */
+-export function createStandardPermissionsSet(
+-  _queueKey = 'TEST'
+-): Record<QueueRole, QueuePermissionWithUnknownFields[]> {
++export function createVersionOnlyQueuePermissionsFixture(
++  version = 11
++): QueuePermissionsWithUnknownFields {
+   return {
+-    'queue-lead': [
+-      createQueuePermissionFixture({
+-        id: 'user-lead-1',
+-        display: 'Queue Lead',
+-      }),
+-    ],
+-    'team-member': [
+-      createQueuePermissionFixture({
+-        id: 'user-member-1',
+-        display: 'Team Member 1',
+-      }),
+-      createQueuePermissionFixture({
+-        id: 'user-member-2',
+-        display: 'Team Member 2',
+-      }),
+-    ],
+-    follower: [
+-      createQueuePermissionFixture({
+-        id: 'user-follower-1',
+-        display: 'Follower 1',
+-      }),
+-    ],
+-    access: [
+-      createQueuePermissionFixture({
+-        id: 'user-access-1',
+-        display: 'Access User 1',
+-      }),
+-      createQueuePermissionFixture({
+-        id: 'user-access-2',
+-        display: 'Access User 2',
+-      }),
+-    ],
++    self: 'https://api.tracker.yandex.net/v3/queues/TEST/permissions',
++    version,
+   };
+ }
+diff --git a/packages/servers/yandex-tracker/tests/helpers/test-fields.ts b/packages/servers/yandex-tracker/tests/helpers/test-fields.ts
+index 8a7ae1f1..ddabd5f7 100644
+--- a/packages/servers/yandex-tracker/tests/helpers/test-fields.ts
++++ b/packages/servers/yandex-tracker/tests/helpers/test-fields.ts
+@@ -67,4 +67,9 @@ export function createFieldsSet(...fields: string[]): string[] {
+ 
+ export const STANDARD_QUEUE_FIELD_FIELDS = ['id', 'key', 'name', 'required', 'type'] as const;
+ 
+-export const STANDARD_QUEUE_PERMISSION_FIELDS = ['id', 'self', 'display'] as const;
++/**
++ * Ответ `manage_queue_access` — объект `{self, version, create?, write?, ...}`
++ * (`QueuePermissions` entity), а не список сущностей вида `{id, self, display}` —
++ * см. `.agentic-planning/plan_tracker_sweep7_fixes/inventory/queue-permissions-response-2026-08-26.json`.
++ */
++export const STANDARD_QUEUE_PERMISSION_FIELDS = ['self', 'version', 'write.users.display'] as const;
+diff --git a/packages/servers/yandex-tracker/tests/integration/helpers/mock-server.ts b/packages/servers/yandex-tracker/tests/integration/helpers/mock-server.ts
+index 7dc92f8e..0052c5ed 100644
+--- a/packages/servers/yandex-tracker/tests/integration/helpers/mock-server.ts
++++ b/packages/servers/yandex-tracker/tests/integration/helpers/mock-server.ts
+@@ -1246,46 +1246,10 @@ export class MockServer {
+     return this;
+   }
+ 
+-  /**
+-   * Mock успешного управления доступом к очереди
+-   */
+-  mockManageQueueAccessSuccess(queueKey: string): this {
+-    // API возвращает массив прав доступа (QueuePermissionsOutput)
+-    const permissions = [
+-      {
+-        id: 'user-1234567890',
+-        self: 'https://api.tracker.yandex.net/v3/users/user-1234567890',
+-        display: 'Test User',
+-      },
+-    ];
+-    const mockKey = `PATCH ${TRACKER_API_V3}/queues/${queueKey}/permissions`;
+-    this.mockAdapter.onPatch(`${TRACKER_API_V3}/queues/${queueKey}/permissions`).reply(() => {
+-      const index = this.pendingMocks.indexOf(mockKey);
+-      if (index !== -1) {
+-        this.pendingMocks.splice(index, 1);
+-      }
+-      return [200, permissions];
+-    });
+-    this.pendingMocks.push(mockKey);
+-    return this;
+-  }
+-
+-  /**
+-   * Mock ошибки 403 при управлении доступом (нет прав)
+-   */
+-  mockManageQueueAccess403(queueKey: string): this {
+-    const response = generateError403();
+-    const mockKey = `PATCH ${TRACKER_API_V3}/queues/${queueKey}/permissions`;
+-    this.mockAdapter.onPatch(`${TRACKER_API_V3}/queues/${queueKey}/permissions`).reply(() => {
+-      const index = this.pendingMocks.indexOf(mockKey);
+-      if (index !== -1) {
+-        this.pendingMocks.splice(index, 1);
+-      }
+-      return [403, response];
+-    });
+-    this.pendingMocks.push(mockKey);
+-    return this;
+-  }
++  // manage_queue_access переведён на describeToolIntegration/ApiExpectationSet
++  // (tests/integration/tools/api/queues/access/manage-queue-access.tool.integration.test.ts,
++  // пакет C2) — mockManageQueueAccessSuccess/mockManageQueueAccess403 больше не нужны,
++  // тот же путь, которым create_queue лишился mockCreateQueueSuccess/mockCreateQueue403.
+ 
+   // ============================================================
+   // COMPONENTS API МЕТОДЫ
+diff --git a/packages/servers/yandex-tracker/tests/integration/tools/api/queues/access/manage-queue-access.tool.integration.test.ts b/packages/servers/yandex-tracker/tests/integration/tools/api/queues/access/manage-queue-access.tool.integration.test.ts
+index c0162e0a..ee44bd9f 100644
+--- a/packages/servers/yandex-tracker/tests/integration/tools/api/queues/access/manage-queue-access.tool.integration.test.ts
++++ b/packages/servers/yandex-tracker/tests/integration/tools/api/queues/access/manage-queue-access.tool.integration.test.ts
+@@ -1,134 +1,146 @@
+ /**
+- * Интеграционные тесты для manage-queue-access tool
++ * Интеграционные тесты для `manage_queue_access` на фабрике `describeToolIntegration`.
++ *
++ * Сторона ответа переписана пакетом C2 после живого наблюдения 2026-08-26: `PATCH
++ * /v3/queues/{queueId}/permissions` отдаёт объект, ключёванный разрешением
++ * (`{self, version, create?, write?, read?, grant?, deny?}`), а не массив —
++ * `.agentic-planning/plan_tracker_sweep7_fixes/inventory/queue-permissions-response-2026-08-26.json`.
++ * Прежняя типизация (`z.array(FilteredEntitySchema)`) отвергалась MCP-клиентом на
++ * границе схемы (`data/data/permissions must be array`) — инструмент был нерабочим.
++ *
++ * `deny` живьём не наблюдался (см. `queue-permission.entity.ts`) — используется как
++ * пример поля, отсутствующего в ответе, для кейса `FIELDS_WITHOUT_VALUE` ниже.
+  */
+ 
+-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+-import { createTestClient } from '#integration/helpers/mcp-client.js';
+-import { createMockServer } from '#integration/helpers/mock-server.js';
+-import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
+-import type { MockServer } from '#integration/helpers/mock-server.js';
++import { describe, expect, it } from 'vitest';
++import {
++  generateError403,
++  generateError404,
++} from '#integration/helpers/template-based-generator.js';
++import {
++  createQueuePermissionsFixture,
++  createVersionOnlyQueuePermissionsFixture,
++} from '#helpers/queue-permission.fixture.js';
++import { MANAGE_QUEUE_ACCESS_TOOL_METADATA } from '#tools/api/queues/manage-queue-access.metadata.js';
++import { ManageQueueAccessOutputDataSchema } from '#tools/api/queues/manage-queue-access.schema.js';
+ import { STANDARD_QUEUE_PERMISSION_FIELDS } from '#helpers/test-fields.js';
+-import { getTextContent } from '#helpers/tool-result.helper.js';
+-
+-describe('manage-queue-access integration tests', () => {
+-  let client: TestMCPClient;
+-  let mockServer: MockServer;
+-
+-  beforeEach(async () => {
+-    client = await createTestClient({ logLevel: 'silent' });
+-    mockServer = createMockServer(client.getAxiosInstance());
+-  });
+-
+-  afterEach(() => {
+-    mockServer.cleanup();
+-  });
+-
+-  describe('Happy Path', () => {
+-    it('должен добавить пользователю доступ к очереди', async () => {
+-      // Arrange
+-      const queueKey = 'TEST';
+-      mockServer.mockManageQueueAccessSuccess(queueKey);
+-
+-      // Act
+-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
+-        queueId: queueKey,
+-        action: 'add',
+-        subjects: ['testuser'],
+-        role: 'follower',
+-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
+-      });
+-
+-      // Assert
+-      expect(result.isError).toBeUndefined();
+-      const response = JSON.parse(getTextContent(result));
+-      expect(response.data).toBeDefined();
+-      expect(response.data.permissions).toBeDefined();
+-      expect(Array.isArray(response.data.permissions)).toBe(true);
+-      mockServer.assertAllRequestsDone();
+-    });
+-
+-    it('должен удалить у пользователя доступ к очереди', async () => {
+-      // Arrange
+-      const queueKey = 'PROJ';
+-      mockServer.mockManageQueueAccessSuccess(queueKey);
+-
+-      // Act
+-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
+-        queueId: queueKey,
+-        action: 'remove',
+-        subjects: ['testuser'],
+-        role: 'follower',
+-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
+-      });
+-
+-      // Assert
+-      expect(result.isError).toBeUndefined();
+-      const response = JSON.parse(getTextContent(result));
+-      expect(response.data).toBeDefined();
+-      mockServer.assertAllRequestsDone();
+-    });
+-
+-    it('должен добавить доступ с ролью teamMember', async () => {
+-      // Arrange
+-      const queueKey = 'TEST';
+-      mockServer.mockManageQueueAccessSuccess(queueKey);
+-
+-      // Act
+-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
+-        queueId: queueKey,
+-        action: 'add',
+-        subjects: ['developer'],
+-        role: 'team-member',
+-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
+-      });
+-
+-      // Assert
+-      expect(result.isError).toBeUndefined();
+-      const response = JSON.parse(getTextContent(result));
+-      expect(response.data).toBeDefined();
+-      mockServer.assertAllRequestsDone();
+-    });
+-
+-    it('должен добавить доступ с ролью access', async () => {
+-      // Arrange
+-      const queueKey = 'TEST';
+-      mockServer.mockManageQueueAccessSuccess(queueKey);
+-
+-      // Act
+-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
+-        queueId: queueKey,
+-        action: 'add',
+-        subjects: ['assignee1'],
+-        role: 'access',
+-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
+-      });
++import {
++  describeToolIntegration,
++  useToolIntegrationContext,
++  assertMatchesOutputSchema,
++} from '#integration/helpers/tool-integration-suite.js';
++
++const BASE_INPUT = {
++  queueId: 'TEST',
++  action: 'add' as const,
++  subjects: ['testuser'],
++  permission: 'write' as const,
++  subjectKind: 'users' as const,
++};
++
++const PERMISSIONS_PATH = '/v3/queues/TEST/permissions';
++
++describeToolIntegration({
++  tool: MANAGE_QUEUE_ACCESS_TOOL_METADATA.name,
++
++  expectedRequests: [{ method: 'patch', path: PERMISSIONS_PATH, apiVersion: 'v3' }],
++
++  happyPath: {
++    // Ответ разбирается как объект, ключёванный разрешением (не массив), а
++    // `write.users.display` доказывает, что вложенный путь проходит ResponseFieldFilter.
++    input: { ...BASE_INPUT, fields: [...STANDARD_QUEUE_PERMISSION_FIELDS] },
++    arrange: (api) => {
++      api
++        .expectRequest({
++          method: 'patch',
++          path: PERMISSIONS_PATH,
++          apiVersion: 'v3',
++          body: { write: { users: { add: ['testuser'] } } },
++        })
++        .reply(200, createQueuePermissionsFixture());
++    },
++    outputDataSchema: ManageQueueAccessOutputDataSchema,
++    assertData: (data) => {
++      expect(Array.isArray(data.permissions)).toBe(false);
++      const permissions = data.permissions as {
++        self: string;
++        version: number;
++        write?: { users?: Array<{ display: string }> };
++      };
++      expect(permissions.self).toBeDefined();
++      expect(permissions.version).toBeDefined();
++      expect(permissions.write?.users?.[0]?.display).toBeDefined();
++      expect(data.subjectsProcessed).toBe(1);
++    },
++  },
++
++  invalidInput: {
++    // permission вне справочника (queue-lead ролью запроса не является) —
++    // отклоняется схемой до HTTP.
++    input: { ...BASE_INPUT, permission: 'queue-lead' },
++  },
++
++  errors: {
++    forbidden: {
++      arrange: (api) => {
++        api
++          .expectRequest({ method: 'patch', path: PERMISSIONS_PATH, apiVersion: 'v3' })
++          .reply(403, generateError403());
++      },
++      input: { ...BASE_INPUT, fields: [...STANDARD_QUEUE_PERMISSION_FIELDS] },
++    },
++    notFound: {
++      arrange: (api) => {
++        api
++          .expectRequest({ method: 'patch', path: PERMISSIONS_PATH, apiVersion: 'v3' })
++          .reply(404, generateError404());
++      },
++      input: { ...BASE_INPUT, fields: [...STANDARD_QUEUE_PERMISSION_FIELDS] },
++    },
++  },
++
++  // manage_queue_access — единичная операция без batch-режима.
++  batch: 'not-applicable',
++
++  // Не list-эндпоинт — пагинация неприменима.
++  pagination: 'none',
++
++  warnings: {
++    // `deny` живьём не наблюдался и отсутствует в мокнутом ответе —
++    // ResponseFieldFilter обязан дать FIELDS_WITHOUT_VALUE, а не пустой успех и не
++    // исключение.
++    arrange: (api) => {
++      api
++        .expectRequest({ method: 'patch', path: PERMISSIONS_PATH, apiVersion: 'v3' })
++        .reply(200, createQueuePermissionsFixture());
++    },
++    input: { ...BASE_INPUT, fields: ['self', 'version', 'deny'] },
++    codes: ['FIELDS_WITHOUT_VALUE'],
++  },
++});
+ 
+-      // Assert
+-      expect(result.isError).toBeUndefined();
+-      const response = JSON.parse(getTextContent(result));
+-      expect(response.data).toBeDefined();
+-      mockServer.assertAllRequestsDone();
++describe(`${MANAGE_QUEUE_ACCESS_TOOL_METADATA.name} — ответ без единого разрешения`, () => {
++  const ctx = useToolIntegrationContext();
++
++  it('переживает ответ {self, version} без исключения (форма смоука референсного клиента)', async () => {
++    ctx.api
++      .expectRequest({
++        method: 'patch',
++        path: PERMISSIONS_PATH,
++        apiVersion: 'v3',
++        body: { write: { users: { add: ['testuser'] } } },
++      })
++      .reply(200, createVersionOnlyQueuePermissionsFixture());
++
++    const result = await ctx.client.callTool(MANAGE_QUEUE_ACCESS_TOOL_METADATA.name, {
++      ...BASE_INPUT,
++      fields: ['self', 'version'],
+     });
+-  });
+ 
+-  describe('Error Handling', () => {
+-    it('должен обработать ошибку 403 (нет прав)', async () => {
+-      // Arrange
+-      const queueKey = 'TEST';
+-      mockServer.mockManageQueueAccess403(queueKey);
+-
+-      // Act
+-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
+-        queueId: queueKey,
+-        action: 'add',
+-        subjects: ['testuser'],
+-        role: 'follower',
+-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
+-      });
+-
+-      // Assert
+-      expect(result.isError).toBe(true);
+-      mockServer.assertAllRequestsDone();
+-    });
++    expect(result.isError).toBeUndefined();
++    const data = assertMatchesOutputSchema(result, ManageQueueAccessOutputDataSchema);
++    const permissions = data.permissions as { self: string; version: number };
++    expect(permissions.version).toBe(11);
++    ctx.api.assertAllExpectationsMet();
+   });
+ });
+diff --git a/packages/servers/yandex-tracker/tests/integration/tools/api/sprints/manage-sprint-lifecycle.tool.integration.test.ts b/packages/servers/yandex-tracker/tests/integration/tools/api/sprints/manage-sprint-lifecycle.tool.integration.test.ts
+index e083aed0..2440c1fd 100644
+--- a/packages/servers/yandex-tracker/tests/integration/tools/api/sprints/manage-sprint-lifecycle.tool.integration.test.ts
++++ b/packages/servers/yandex-tracker/tests/integration/tools/api/sprints/manage-sprint-lifecycle.tool.integration.test.ts
+@@ -4,6 +4,19 @@
+  * а не `мок`. Пути и версии сверены с официальной документацией Яндекс.Трекера —
+  * см. `manage-sprint-lifecycle.operation.ts` и отчёт пакета P5.
+  *
++ * `_start`/`_archive` требуют версию query-параметром (`428` без неё — живая проба
++ * 2026-08-26, пакет sweep7 §B): по умолчанию (вход без `version`) операция читает
++ * её сама через предварительный `GET /v3/sprints/{id}`, поэтому GET предшествует
++ * POST в КАЖДОМ arrange ниже, включая errors.forbidden/notFound — GET читает
++ * версию успешно, ошибку 403/404 несёт POST (симметрично `update_component`).
++ * `delete` версии не требует — своего GET не имеет вовсе.
++ *
++ * `fields` — обязательный параметр схемы (живая проба 2026-08-26, спринт 238:
++ * без реальной фильтрации в тело ответа уходили ключи, которых `fields` не
++ * запрашивал вовсе, — инструмент декларировал `FilteredEntitySchema`, но не
++ * фильтровал). Инструмент фильтрует ответ через `ResponseFieldFilter`, кроме
++ * `delete` — там `sprint` равен `null`, фильтровать нечего.
++ *
+  * Обязательный состав фабрики покрыт на режиме `start`; `archive` и `delete`
+  * (разные endpoint/версия действия) — отдельными `it()` ниже на
+  * `useToolIntegrationContext()`/`assertMatchesOutputSchema` (план §P5).
+@@ -20,26 +33,48 @@ import {
+   describeToolIntegration,
+   useToolIntegrationContext,
+   assertMatchesOutputSchema,
++  assertWarnings,
+ } from '#integration/helpers/tool-integration-suite.js';
+ import { describe, it, expect } from 'vitest';
+ 
+ describeToolIntegration({
+   tool: MANAGE_SPRINT_LIFECYCLE_TOOL_METADATA.name,
+ 
+-  expectedRequests: [{ method: 'post', path: '/v3/sprints/100/_start', apiVersion: 'v3' }],
++  expectedRequests: [
++    { method: 'get', path: '/v3/sprints/100', apiVersion: 'v3' },
++    { method: 'post', path: '/v3/sprints/100/_start', apiVersion: 'v3', query: { version: 4 } },
++  ],
+ 
+   happyPath: {
+-    input: { sprintId: '100', action: 'start' },
++    input: { sprintId: '100', action: 'start', fields: ['id', 'status'] },
+     arrange: (api) => {
+       api
+-        .expectRequest({ method: 'post', path: '/v3/sprints/100/_start', apiVersion: 'v3' })
+-        .reply(200, createSprintFixture({ id: 100, name: 'Sprint 1', status: 'in_progress' }));
++        .expectRequest({ method: 'get', path: '/v3/sprints/100', apiVersion: 'v3' })
++        .reply(200, createSprintFixture({ id: 100, version: 4 }));
++      api
++        .expectRequest({
++          method: 'post',
++          path: '/v3/sprints/100/_start',
++          apiVersion: 'v3',
++          query: { version: 4 },
++        })
++        .reply(
++          200,
++          createSprintFixture({
++            id: 100,
++            version: 4,
++            name: 'Sprint 1',
++            status: 'in_progress',
++            board: { id: 20, self: 'url', display: 'Board' },
++          })
++        );
+     },
+     outputDataSchema: ManageSprintLifecycleOutputDataSchema,
+     assertData: (data) => {
+       expect(data.sprintId).toBe('100');
+       expect(data.action).toBe('start');
+-      expect(data.sprint).toMatchObject({ id: 100, status: 'in_progress' });
++      // Только запрошенные поля — незапрошенные (name, board, version, self) отсутствуют.
++      expect(data.sprint).toEqual({ id: 100, status: 'in_progress' });
+       expect(data.message).toContain('100');
+     },
+   },
+@@ -47,25 +82,41 @@ describeToolIntegration({
+   invalidInput: {
+     // `action` — замкнутый enum ('start' | 'archive' | 'delete'); значение вне
+     // перечисления отклоняется до HTTP.
+-    input: { sprintId: '100', action: 'pause' },
++    input: { sprintId: '100', action: 'pause', fields: ['id'] },
+   },
+ 
+   errors: {
+     forbidden: {
+       arrange: (api) => {
+         api
+-          .expectRequest({ method: 'post', path: '/v3/sprints/100/_start', apiVersion: 'v3' })
++          .expectRequest({ method: 'get', path: '/v3/sprints/100', apiVersion: 'v3' })
++          .reply(200, createSprintFixture({ id: 100, version: 4 }));
++        api
++          .expectRequest({
++            method: 'post',
++            path: '/v3/sprints/100/_start',
++            apiVersion: 'v3',
++            query: { version: 4 },
++          })
+           .reply(403, generateError403());
+       },
+-      input: { sprintId: '100', action: 'start' },
++      input: { sprintId: '100', action: 'start', fields: ['id'] },
+     },
+     notFound: {
+       arrange: (api) => {
+         api
+-          .expectRequest({ method: 'post', path: '/v3/sprints/100/_start', apiVersion: 'v3' })
++          .expectRequest({ method: 'get', path: '/v3/sprints/100', apiVersion: 'v3' })
++          .reply(200, createSprintFixture({ id: 100, version: 4 }));
++        api
++          .expectRequest({
++            method: 'post',
++            path: '/v3/sprints/100/_start',
++            apiVersion: 'v3',
++            query: { version: 4 },
++          })
+           .reply(404, generateError404());
+       },
+-      input: { sprintId: '100', action: 'start' },
++      input: { sprintId: '100', action: 'start', fields: ['id'] },
+     },
+   },
+ 
+@@ -75,34 +126,81 @@ describeToolIntegration({
+   // Не list-эндпоинт — пагинация неприменима.
+   pagination: 'none',
+ 
+-  // Инструмент не принимает `fields` и не фильтрует ответ через
+-  // ResponseFieldFilter (см. manage-sprint-lifecycle.tool.ts) — предупреждения
+-  // физически недостижимы.
+-  warnings: 'not-applicable',
++  // Инструмент фильтрует ответ через `ResponseFieldFilter` (кроме `delete`, где
++  // `sprint` равен `null`) — запрошенное отсутствующее поле даёт FIELDS_WITHOUT_VALUE.
++  warnings: {
++    arrange: (api) => {
++      api
++        .expectRequest({ method: 'get', path: '/v3/sprints/100', apiVersion: 'v3' })
++        .reply(200, createSprintFixture({ id: 100, version: 4 }));
++      api
++        .expectRequest({
++          method: 'post',
++          path: '/v3/sprints/100/_start',
++          apiVersion: 'v3',
++          query: { version: 4 },
++        })
++        .reply(200, createSprintFixture({ id: 100, version: 4, status: 'in_progress' }));
++    },
++    input: { sprintId: '100', action: 'start', fields: ['id', 'missingField'] },
++    codes: ['FIELDS_WITHOUT_VALUE'],
++  },
+ });
+ 
+ describe('manage_sprint_lifecycle — режимы archive/delete (path/версия действия отличаются от start)', () => {
+   const ctx = useToolIntegrationContext();
+ 
+-  it('archive: POST /v3/sprints/{id}/_archive возвращает архивированный спринт', async () => {
++  it('archive: без version читает её GET, POST /v3/sprints/{id}/_archive?version=… возвращает архивированный спринт', async () => {
+     ctx.api
+-      .expectRequest({ method: 'post', path: '/v3/sprints/200/_archive', apiVersion: 'v3' })
+-      .reply(200, createSprintFixture({ id: 200, name: 'Sprint 2', archived: true }));
++      .expectRequest({ method: 'get', path: '/v3/sprints/200', apiVersion: 'v3' })
++      .reply(200, createSprintFixture({ id: 200, version: 9 }));
++    ctx.api
++      .expectRequest({
++        method: 'post',
++        path: '/v3/sprints/200/_archive',
++        apiVersion: 'v3',
++        query: { version: 9 },
++      })
++      .reply(200, createSprintFixture({ id: 200, version: 9, name: 'Sprint 2', archived: true }));
+ 
+     const result = await ctx.client.callTool(MANAGE_SPRINT_LIFECYCLE_TOOL_METADATA.name, {
+       sprintId: '200',
+       action: 'archive',
++      fields: ['id', 'archived'],
+     });
+ 
+     expect(result.isError).toBeUndefined();
+     const data = assertMatchesOutputSchema(result, ManageSprintLifecycleOutputDataSchema);
+     expect(data.sprintId).toBe('200');
+     expect(data.action).toBe('archive');
+-    expect(data.sprint).toMatchObject({ id: 200, archived: true });
++    expect(data.sprint).toEqual({ id: 200, archived: true });
++    ctx.api.assertAllExpectationsMet();
++  });
++
++  it('archive: version передана явно — GET не делается, в URL уходит переданная', async () => {
++    ctx.api
++      .expectRequest({
++        method: 'post',
++        path: '/v3/sprints/201/_archive',
++        apiVersion: 'v3',
++        query: { version: 3 },
++      })
++      .reply(200, createSprintFixture({ id: 201, version: 4, archived: true }));
++
++    const result = await ctx.client.callTool(MANAGE_SPRINT_LIFECYCLE_TOOL_METADATA.name, {
++      sprintId: '201',
++      action: 'archive',
++      version: 3,
++      fields: ['id', 'archived'],
++    });
++
++    expect(result.isError, JSON.stringify(result)).toBeUndefined();
++    const data = assertMatchesOutputSchema(result, ManageSprintLifecycleOutputDataSchema);
++    expect(data.sprint).toEqual({ id: 201, archived: true });
+     ctx.api.assertAllExpectationsMet();
+   });
+ 
+-  it('delete: DELETE /v3/sprints/{id} отвечает 204 без тела — sprint равен null', async () => {
++  it('delete: DELETE /v3/sprints/{id} без query, отвечает 204 без тела — sprint равен null, без warnings', async () => {
+     ctx.api
+       .expectRequest({ method: 'delete', path: '/v3/sprints/300', apiVersion: 'v3' })
+       .reply(204);
+@@ -110,6 +208,7 @@ describe('manage_sprint_lifecycle — режимы archive/delete (path/верс
+     const result = await ctx.client.callTool(MANAGE_SPRINT_LIFECYCLE_TOOL_METADATA.name, {
+       sprintId: '300',
+       action: 'delete',
++      fields: ['id'],
+     });
+ 
+     expect(result.isError).toBeUndefined();
+@@ -117,6 +216,44 @@ describe('manage_sprint_lifecycle — режимы archive/delete (path/верс
+     expect(data.sprintId).toBe('300');
+     expect(data.action).toBe('delete');
+     expect(data.sprint).toBeNull();
++    const structured = result['structuredContent'] as { warnings?: unknown };
++    expect(structured.warnings).toBeUndefined();
++    ctx.api.assertAllExpectationsMet();
++  });
++
++  it('delete: version в параметрах инструмента отклоняется валидацией до HTTP', async () => {
++    const result = await ctx.client.callTool(MANAGE_SPRINT_LIFECYCLE_TOOL_METADATA.name, {
++      sprintId: '300',
++      action: 'delete',
++      version: 1,
++      fields: ['id'],
++    });
++
++    expect(result.isError).toBe(true);
++    expect(ctx.api.attemptedCount).toBe(0);
++  });
++
++  it('start: warnings присутствуют и непусты на обеих проекциях при недостающем поле (регресс для отдельных it())', async () => {
++    ctx.api
++      .expectRequest({ method: 'get', path: '/v3/sprints/400', apiVersion: 'v3' })
++      .reply(200, createSprintFixture({ id: 400, version: 1 }));
++    ctx.api
++      .expectRequest({
++        method: 'post',
++        path: '/v3/sprints/400/_start',
++        apiVersion: 'v3',
++        query: { version: 1 },
++      })
++      .reply(200, createSprintFixture({ id: 400, version: 1, status: 'in_progress' }));
++
++    const result = await ctx.client.callTool(MANAGE_SPRINT_LIFECYCLE_TOOL_METADATA.name, {
++      sprintId: '400',
++      action: 'start',
++      fields: ['id', 'missingField'],
++    });
++
++    expect(result.isError).toBeUndefined();
++    assertWarnings(result, ['FIELDS_WITHOUT_VALUE']);
+     ctx.api.assertAllExpectationsMet();
+   });
+ });
+diff --git a/packages/servers/yandex-tracker/tests/integration/tools/api/sprints/update-sprint.tool.integration.test.ts b/packages/servers/yandex-tracker/tests/integration/tools/api/sprints/update-sprint.tool.integration.test.ts
+index eb6671b1..bd174f54 100644
+--- a/packages/servers/yandex-tracker/tests/integration/tools/api/sprints/update-sprint.tool.integration.test.ts
++++ b/packages/servers/yandex-tracker/tests/integration/tools/api/sprints/update-sprint.tool.integration.test.ts
+@@ -4,6 +4,18 @@
+  * а не `мок`. Путь и версия сверены с официальной документацией Яндекс.Трекера.
+  * Пакет `sprints` этапа 4.1 перевёл операцию на `PATCH /v3/sprints/{id}` —
+  * расхождение с документацией, отмеченное отчётом пакета P5, устранено.
++ *
++ * `PATCH /v3/sprints/{id}` требует версию (`428` без неё, `400 version: Incorrect
++ * data format` — версией в теле): версия — query-параметр `?version=`, и по
++ * умолчанию (вход без `version`) операция читает её сама через предварительный
++ * `GET /v3/sprints/{id}` (живая проба 2026-08-26, пакет sweep7 §B).
++ *
++ * `happyPath` передаёт `version` явно (без GET, без `VERSION_NOT_PROVIDED`) —
++ * фабрика проверяет happy path на отсутствие warnings, а версия по умолчанию
++ * ровно его и порождает. Дефолтный путь (без `version` — GET читает её сам)
++ * покрыт `errors.forbidden`/`errors.notFound`/`warnings` ниже: GET читает версию
++ * успешно, а ошибку 403/404 несёт именно PATCH — симметрично `update_component`,
++ * где тот же приём уже принят (`mockUpdateComponent404`).
+  */
+ 
+ import {
+@@ -13,25 +25,33 @@ import {
+ import { createSprintFixture } from '#helpers/agile.fixture.js';
+ import { UPDATE_SPRINT_TOOL_METADATA } from '#tools/api/sprints/update-sprint.metadata.js';
+ import { UpdateSprintOutputDataSchema } from '#tools/api/sprints/update-sprint.schema.js';
+-import { describeToolIntegration } from '#integration/helpers/tool-integration-suite.js';
+-import { expect } from 'vitest';
++import {
++  describeToolIntegration,
++  useToolIntegrationContext,
++  assertMatchesOutputSchema,
++} from '#integration/helpers/tool-integration-suite.js';
++import { describe, it, expect } from 'vitest';
+ 
+ describeToolIntegration({
+   tool: UPDATE_SPRINT_TOOL_METADATA.name,
+ 
+-  expectedRequests: [{ method: 'patch', path: '/v3/sprints/77', apiVersion: 'v3' }],
++  expectedRequests: [
++    { method: 'get', path: '/v3/sprints/77', apiVersion: 'v3' },
++    { method: 'patch', path: '/v3/sprints/77', apiVersion: 'v3', query: { version: 5 } },
++  ],
+ 
+   happyPath: {
+-    input: { sprintId: '77', name: 'Renamed Sprint', fields: ['id', 'name'] },
++    input: { sprintId: '77', name: 'Renamed Sprint', version: 5, fields: ['id', 'name'] },
+     arrange: (api) => {
+       api
+         .expectRequest({
+           method: 'patch',
+           path: '/v3/sprints/77',
+           apiVersion: 'v3',
++          query: { version: 5 },
+           body: { name: 'Renamed Sprint' },
+         })
+-        .reply(200, createSprintFixture({ id: 77, name: 'Renamed Sprint' }));
++        .reply(200, createSprintFixture({ id: 77, version: 5, name: 'Renamed Sprint' }));
+     },
+     outputDataSchema: UpdateSprintOutputDataSchema,
+     assertData: (data) => {
+@@ -48,7 +68,15 @@ describeToolIntegration({
+     forbidden: {
+       arrange: (api) => {
+         api
+-          .expectRequest({ method: 'patch', path: '/v3/sprints/77', apiVersion: 'v3' })
++          .expectRequest({ method: 'get', path: '/v3/sprints/77', apiVersion: 'v3' })
++          .reply(200, createSprintFixture({ id: 77, version: 5 }));
++        api
++          .expectRequest({
++            method: 'patch',
++            path: '/v3/sprints/77',
++            apiVersion: 'v3',
++            query: { version: 5 },
++          })
+           .reply(403, generateError403());
+       },
+       input: { sprintId: '77', name: 'Restricted rename', fields: ['id'] },
+@@ -56,7 +84,15 @@ describeToolIntegration({
+     notFound: {
+       arrange: (api) => {
+         api
+-          .expectRequest({ method: 'patch', path: '/v3/sprints/77', apiVersion: 'v3' })
++          .expectRequest({ method: 'get', path: '/v3/sprints/77', apiVersion: 'v3' })
++          .reply(200, createSprintFixture({ id: 77, version: 5 }));
++        api
++          .expectRequest({
++            method: 'patch',
++            path: '/v3/sprints/77',
++            apiVersion: 'v3',
++            query: { version: 5 },
++          })
+           .reply(404, generateError404());
+       },
+       input: { sprintId: '77', name: 'Rename missing sprint', fields: ['id'] },
+@@ -72,10 +108,51 @@ describeToolIntegration({
+   warnings: {
+     arrange: (api) => {
+       api
+-        .expectRequest({ method: 'patch', path: '/v3/sprints/77', apiVersion: 'v3' })
+-        .reply(200, createSprintFixture({ id: 77, name: 'Sprint With Gaps' }));
++        .expectRequest({ method: 'get', path: '/v3/sprints/77', apiVersion: 'v3' })
++        .reply(200, createSprintFixture({ id: 77, version: 5 }));
++      api
++        .expectRequest({
++          method: 'patch',
++          path: '/v3/sprints/77',
++          apiVersion: 'v3',
++          query: { version: 5 },
++        })
++        .reply(200, createSprintFixture({ id: 77, version: 5, name: 'Sprint With Gaps' }));
+     },
+     input: { sprintId: '77', name: 'Sprint With Gaps', fields: ['id', 'name', 'missingField'] },
+     codes: ['FIELDS_WITHOUT_VALUE'],
+   },
+ });
++
++describe('update_sprint — версия не передана: ровно один GET, PATCH несёт прочитанную', () => {
++  const ctx = useToolIntegrationContext();
++
++  it('успех + предупреждение VERSION_NOT_PROVIDED, GET вызван ровно один раз', async () => {
++    ctx.api
++      .expectRequest({ method: 'get', path: '/v3/sprints/78', apiVersion: 'v3' })
++      .reply(200, createSprintFixture({ id: 78, version: 6 }));
++    ctx.api
++      .expectRequest({
++        method: 'patch',
++        path: '/v3/sprints/78',
++        apiVersion: 'v3',
++        query: { version: 6 },
++        body: { name: 'Renamed Without Version' },
++      })
++      .reply(200, createSprintFixture({ id: 78, version: 6, name: 'Renamed Without Version' }));
++
++    const result = await ctx.client.callTool(UPDATE_SPRINT_TOOL_METADATA.name, {
++      sprintId: '78',
++      name: 'Renamed Without Version',
++      fields: ['id', 'name'],
++    });
++
++    expect(result.isError, JSON.stringify(result)).toBeUndefined();
++    expect(ctx.api.attemptedCount).toBe(2);
++    const data = assertMatchesOutputSchema(result, UpdateSprintOutputDataSchema);
++    expect(data.sprint).toMatchObject({ id: 78, name: 'Renamed Without Version' });
++    const structured = result['structuredContent'] as { warnings?: Array<{ code: string }> };
++    expect(structured.warnings?.map((w) => w.code)).toContain('VERSION_NOT_PROVIDED');
++    ctx.api.assertAllExpectationsMet();
++  });
++});
+diff --git a/packages/servers/yandex-tracker/tests/live_scope/body-inspection.test.ts b/packages/servers/yandex-tracker/tests/live_scope/body-inspection.test.ts
+index 39140e46..ba500554 100644
+--- a/packages/servers/yandex-tracker/tests/live_scope/body-inspection.test.ts
++++ b/packages/servers/yandex-tracker/tests/live_scope/body-inspection.test.ts
+@@ -186,18 +186,39 @@ describe('пункт 2: тело сущности организации раз
+     });
+   });
+ 
+-  it('роль и действие правки доступов очереди тоже перечислены', () => {
+-    const unknownRole = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+-      'super-admin': { add: [RUN_OWNER] },
++  it('разрешение, вид субъекта и действие правки доступов очереди тоже перечислены', () => {
++    const unknownPermission = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
++      'super-admin': { users: { add: [RUN_OWNER] } },
++    });
++    const unknownSubjectKind = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
++      write: { teams: { add: [RUN_OWNER] } },
+     });
+     const unknownAction = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+-      access: { grantAll: [RUN_OWNER] },
++      write: { users: { grantAll: [RUN_OWNER] } },
+     });
+-    expect(unknownRole.allowed).toBe(false);
+-    expect(unknownRole.reason).toContain('super-admin');
++    expect(unknownPermission.allowed).toBe(false);
++    expect(unknownPermission.reason).toContain('super-admin');
++    expect(unknownSubjectKind.allowed).toBe(false);
++    expect(unknownSubjectKind.reason).toContain('teams');
+     expect(unknownAction.allowed).toBe(false);
+     expect(unknownAction.reason).toContain('grantAll');
+   });
++
++  it('обёртка {add}/{remove} доступов очереди распознаётся гейтом людей на любом теле', () => {
++    // `personRefs` обязана распаковывать обёртку `{ add: [...] }`/`{ remove: [...] }`,
++    // иначе глобальный обход тела (`live-scope.guard.ts`, до правил семейства)
++    // отклонил бы ЛЮБОЕ новое тело `manage_queue_access` как «ссылка на человека
++    // не распознана» — доказано чтением `personRefs`, а не наблюдением.
++    const foreign = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
++      write: { users: { remove: [FOREIGN_PERSON] } },
++    });
++    const owner = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
++      write: { users: { remove: [RUN_OWNER] } },
++    });
++    expect(foreign.allowed).toBe(false);
++    expect(foreign.reason).toContain(FOREIGN_PERSON);
++    expect(owner.allowed, owner.reason).toBe(true);
++  });
+ });
+ 
+ describe('пункт 2а: пользовательское поле — только системное либо созданное прогоном', () => {
+diff --git a/packages/servers/yandex-tracker/tests/live_scope/known-mutating-requests.ts b/packages/servers/yandex-tracker/tests/live_scope/known-mutating-requests.ts
+index 775ddf13..739877bb 100644
+--- a/packages/servers/yandex-tracker/tests/live_scope/known-mutating-requests.ts
++++ b/packages/servers/yandex-tracker/tests/live_scope/known-mutating-requests.ts
+@@ -237,11 +237,12 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
+     expectation: 'allowed-in-sandbox',
+   },
+   {
+-    // Форма тела — та, что строит операция: `{ [роль]: { [действие]: [субъекты] } }`.
++    // Форма тела — та, что строит операция после переработки контракта (пакет C1
++    // плана `plan_tracker_sweep7_fixes`): `{ [разрешение]: { [вид субъекта]: { [действие]: [субъекты] } } }`.
+     tool: 'manage_queue_access',
+     method: 'patch',
+     path: `/v3/queues/${DISPOSABLE_QUEUE}/permissions`,
+-    body: { access: { add: [RUN_OWNER] } },
++    body: { write: { users: { add: [RUN_OWNER] } } },
+     expectation: 'allowed-in-sandbox',
+   },
+   {
+@@ -250,7 +251,7 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
+     tool: 'manage_queue_access (чужая очередь)',
+     method: 'patch',
+     path: `/v3/queues/${SANDBOX_QUEUE}/permissions`,
+-    body: { access: { add: [RUN_OWNER] } },
++    body: { write: { users: { add: [RUN_OWNER] } } },
+     expectation: 'denied',
+   },
+   {
+@@ -377,16 +378,20 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
+     expectation: 'allowed-in-sandbox',
+   },
+   {
++    // `?version=` — обязательный query-параметр PATCH (пакет sweep7 §B, 428 без
++    // него). Путь с query всё ещё обязан сопоставляться правилом спринта:
++    // `canonicalRequestPath` срезает query до сравнения с regex правила.
+     tool: 'update_sprint',
+     method: 'patch',
+-    path: `/v3/sprints/${SANDBOX_SPRINT}`,
++    path: `/v3/sprints/${SANDBOX_SPRINT}?version=1`,
+     body: { name: `${RUN_PREFIX}-sprint-updated` },
+     expectation: 'allowed-in-sandbox',
+   },
+   {
++    // Тот же query-параметр у `_start` (пакет sweep7 §B).
+     tool: 'manage_sprint_lifecycle',
+     method: 'post',
+-    path: `/v3/sprints/${SANDBOX_SPRINT}/_start`,
++    path: `/v3/sprints/${SANDBOX_SPRINT}/_start?version=1`,
+     expectation: 'allowed-in-sandbox',
+   },
+   {
+diff --git a/packages/servers/yandex-tracker/tests/live_scope/organization-rules.test.ts b/packages/servers/yandex-tracker/tests/live_scope/organization-rules.test.ts
+index f40c5285..990c821c 100644
+--- a/packages/servers/yandex-tracker/tests/live_scope/organization-rules.test.ts
++++ b/packages/servers/yandex-tracker/tests/live_scope/organization-rules.test.ts
+@@ -135,9 +135,10 @@ describe('ссылка на живого человека — только вл
+   });
+ 
+   it('доступы очереди прогона чужому человеку не выдаются', () => {
+-    // Форма тела — та, что строит ManageQueueAccessOperation.
++    // Форма тела — та, что строит ManageQueueAccessOperation после переработки
++    // контракта (пакет C1): `{ [разрешение]: { users: { [действие]: [...] } } }`.
+     const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+-      access: { add: [RUN_OWNER, FOREIGN_PERSON] },
++      write: { users: { add: [RUN_OWNER, FOREIGN_PERSON] } },
+     });
+     expect(decision.allowed).toBe(false);
+     expect(decision.reason).toContain(FOREIGN_PERSON);
+@@ -145,15 +146,39 @@ describe('ссылка на живого человека — только вл
+ 
+   it('доступы очереди прогона владельцу прогона выдаются', () => {
+     const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+-      access: { add: [RUN_OWNER] },
++      write: { users: { add: [RUN_OWNER] } },
+     });
+     expect(decision.allowed, decision.reason).toBe(true);
+   });
+ 
++  it('группы и роли людьми не считаются: числовой id группы владельца прогона не касается', () => {
++    const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
++      write: { groups: { add: [42] } },
++    });
++    expect(decision.allowed, decision.reason).toBe(true);
++  });
++
++  it('роль как субъект владельца прогона не касается', () => {
++    const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
++      grant: { roles: { add: ['assignee'] } },
++    });
++    expect(decision.allowed, decision.reason).toBe(true);
++  });
++
++  it('старая форма тела ({роль: {действие: субъекты}}) отклоняется рубежом', () => {
++    // Верхний уровень тела теперь перечень разрешений, а не ролей: `queue-lead`
++    // разрешением не является.
++    const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
++      'queue-lead': { add: [RUN_OWNER] },
++    });
++    expect(decision.allowed).toBe(false);
++    expect(decision.reason).toContain('queue-lead');
++  });
++
+   it('доступы чужой очереди отклоняются: песочная очередь прогоном не создавалась', () => {
+     // Правка доступов боевой очереди — самая разрушительная мутация Трекера.
+     const decision = decide('patch', `/v3/queues/${SANDBOX_QUEUE}/permissions`, {
+-      access: { add: [RUN_OWNER] },
++      write: { users: { add: [RUN_OWNER] } },
+     });
+     expect(decision.allowed).toBe(false);
+     expect(decision.reason).toContain('доступы очереди');
+@@ -163,8 +188,12 @@ describe('ссылка на живого человека — только вл
+     const decisions = [
+       decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`),
+       decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {}),
+-      decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, { access: 'add-everyone' }),
+-      decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, { access: { add: [{}] } }),
++      decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
++        write: 'add-everyone',
++      }),
++      decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
++        write: { users: { add: [{}] } },
++      }),
+     ];
+     decisions.forEach((decision) => {
+       expect(decision.allowed, decision.reason).toBe(false);
+diff --git a/packages/servers/yandex-tracker/tests/tools/api/queues/manage-queue-access.tool.test.ts b/packages/servers/yandex-tracker/tests/tools/api/queues/manage-queue-access.tool.test.ts
+index 5d0cb56f..78e0a110 100644
+--- a/packages/servers/yandex-tracker/tests/tools/api/queues/manage-queue-access.tool.test.ts
++++ b/packages/servers/yandex-tracker/tests/tools/api/queues/manage-queue-access.tool.test.ts
+@@ -8,7 +8,10 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
+ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
+ import { buildToolName } from '@fractalizer/mcp-core';
+ import { MCP_TOOL_PREFIX } from '#constants';
+-import { createQueuePermissionListFixture } from '#helpers/queue-permission.fixture.js';
++import {
++  createQueuePermissionsFixture,
++  createVersionOnlyQueuePermissionsFixture,
++} from '#helpers/queue-permission.fixture.js';
+ import { getTextContent } from '#helpers/tool-result.helper.js';
+ 
+ describe('ManageQueueAccessTool', () => {
+@@ -39,11 +42,13 @@ describe('ManageQueueAccessTool', () => {
+       expect(definition.description).toContain('Управление доступом к очереди');
+       expect(definition.inputSchema.type).toBe('object');
+       expect(definition.inputSchema.required).toContain('queueId');
+-      expect(definition.inputSchema.required).toContain('role');
++      expect(definition.inputSchema.required).toContain('permission');
++      expect(definition.inputSchema.required).toContain('subjectKind');
+       expect(definition.inputSchema.required).toContain('subjects');
+       expect(definition.inputSchema.required).toContain('action');
+       expect(definition.inputSchema.properties?.['queueId']).toBeDefined();
+-      expect(definition.inputSchema.properties?.['role']).toBeDefined();
++      expect(definition.inputSchema.properties?.['permission']).toBeDefined();
++      expect(definition.inputSchema.properties?.['subjectKind']).toBeDefined();
+       expect(definition.inputSchema.properties?.['subjects']).toBeDefined();
+       expect(definition.inputSchema.properties?.['action']).toBeDefined();
+     });
+@@ -59,7 +64,7 @@ describe('ManageQueueAccessTool', () => {
+   describe('execute', () => {
+     describe('валидация параметров (Zod)', () => {
+       it('должен вернуть ошибку если обязательные поля не указаны', async () => {
+-        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
++        const result = await tool.execute({ fields: ['self', 'version'] });
+ 
+         expect(result.isError).toBe(true);
+         const parsed = JSON.parse(getTextContent(result)) as {
+@@ -73,10 +78,11 @@ describe('ManageQueueAccessTool', () => {
+       it('должен вернуть ошибку для пустого queueId', async () => {
+         const result = await tool.execute({
+           queueId: '',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['user1'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBe(true);
+@@ -88,13 +94,14 @@ describe('ManageQueueAccessTool', () => {
+         expect(parsed.message).toContain('валидации');
+       });
+ 
+-      it('должен вернуть ошибку для некорректной роли', async () => {
++      it('должен вернуть ошибку для некорректного разрешения', async () => {
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'invalid-role',
++          permission: 'queue-lead',
++          subjectKind: 'users',
+           subjects: ['user1'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBe(true);
+@@ -106,32 +113,129 @@ describe('ManageQueueAccessTool', () => {
+         expect(parsed.message).toContain('валидации');
+       });
+ 
+-      it('должен принимать все валидные роли', async () => {
+-        const mockPermissions = createQueuePermissionListFixture(1);
+-        vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
++      it('должен вернуть ошибку для некорректного вида субъекта', async () => {
++        const result = await tool.execute({
++          queueId: 'TEST',
++          permission: 'write',
++          subjectKind: 'teams',
++          subjects: ['user1'],
++          action: 'add',
++          fields: ['self', 'version'],
++        });
+ 
+-        const roles = ['queue-lead', 'team-member', 'follower', 'access'] as const;
++        expect(result.isError).toBe(true);
++        const parsed = JSON.parse(getTextContent(result)) as {
++          success: boolean;
++          message: string;
++        };
++        expect(parsed.success).toBe(false);
++        expect(parsed.message).toContain('валидации');
++      });
+ 
+-        for (const role of roles) {
++      it('должен принимать все пять разрешений и три вида субъекта', async () => {
++        const mockPermissions = createQueuePermissionsFixture();
++        vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
++
++        const permissions = ['create', 'write', 'read', 'grant', 'deny'] as const;
++        for (const permission of permissions) {
+           const result = await tool.execute({
+             queueId: 'TEST',
+-            role,
++            permission,
++            subjectKind: 'users',
+             subjects: ['user1'],
+             action: 'add',
+-            fields: ['id', 'key', 'name'],
++            fields: ['self', 'version'],
++          });
++
++          expect(result.isError).toBeUndefined();
++        }
++
++        const subjectKinds: readonly ['users' | 'groups' | 'roles', (string | number)[]][] = [
++          ['users', ['user1']],
++          ['groups', [42]],
++          ['roles', ['assignee']],
++        ];
++        for (const [subjectKind, subjects] of subjectKinds) {
++          const result = await tool.execute({
++            queueId: 'TEST',
++            permission: 'write',
++            subjectKind,
++            subjects,
++            action: 'add',
++            fields: ['self', 'version'],
+           });
+ 
+           expect(result.isError).toBeUndefined();
+         }
+       });
+ 
++      it('deny + roles отклоняется схемой до HTTP-запроса', async () => {
++        const result = await tool.execute({
++          queueId: 'TEST',
++          permission: 'deny',
++          subjectKind: 'roles',
++          subjects: ['assignee'],
++          action: 'add',
++          fields: ['self', 'version'],
++        });
++
++        expect(result.isError).toBe(true);
++        const parsed = JSON.parse(getTextContent(result)) as {
++          success: boolean;
++          message: string;
++        };
++        expect(parsed.success).toBe(false);
++        expect(parsed.message).toContain('валидации');
++        expect(mockTrackerFacade.manageQueueAccess).not.toHaveBeenCalled();
++      });
++
++      it('роль вне справочника (author/assignee/follower/access) отклоняется схемой', async () => {
++        const result = await tool.execute({
++          queueId: 'TEST',
++          permission: 'write',
++          subjectKind: 'roles',
++          subjects: ['queue-lead'],
++          action: 'add',
++          fields: ['self', 'version'],
++        });
++
++        expect(result.isError).toBe(true);
++        const parsed = JSON.parse(getTextContent(result)) as {
++          success: boolean;
++          message: string;
++        };
++        expect(parsed.success).toBe(false);
++        expect(parsed.message).toContain('валидации');
++        expect(mockTrackerFacade.manageQueueAccess).not.toHaveBeenCalled();
++      });
++
++      it('группа-строка вместо числа отклоняется схемой', async () => {
++        const result = await tool.execute({
++          queueId: 'TEST',
++          permission: 'write',
++          subjectKind: 'groups',
++          subjects: ['42'],
++          action: 'add',
++          fields: ['self', 'version'],
++        });
++
++        expect(result.isError).toBe(true);
++        const parsed = JSON.parse(getTextContent(result)) as {
++          success: boolean;
++          message: string;
++        };
++        expect(parsed.success).toBe(false);
++        expect(parsed.message).toContain('валидации');
++      });
++
+       it('должен вернуть ошибку для пустого массива subjects', async () => {
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: [],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBe(true);
+@@ -146,10 +250,11 @@ describe('ManageQueueAccessTool', () => {
+       it('должен вернуть ошибку для некорректного action', async () => {
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['user1'],
+           action: 'invalid-action',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBe(true);
+@@ -163,30 +268,33 @@ describe('ManageQueueAccessTool', () => {
+     });
+ 
+     describe('управление доступом', () => {
+-      it('должен добавить одного пользователя в роль team-member', async () => {
+-        const mockPermissions = createQueuePermissionListFixture(1);
++      it('должен добавить одного пользователя в разрешение write', async () => {
++        const mockPermissions = createQueuePermissionsFixture();
+         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
+ 
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['user1'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBeUndefined();
+         expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
+           queueId: 'TEST',
+           accessData: {
+-            role: 'team-member',
++            permission: 'write',
++            subjectKind: 'users',
+             subjects: ['user1'],
+             action: 'add',
+           },
+         });
+         expect(mockLogger.info).toHaveBeenCalledWith('Управление доступом к очереди', {
+           queueId: 'TEST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjectsCount: 1,
+           action: 'add',
+         });
+@@ -200,74 +308,75 @@ describe('ManageQueueAccessTool', () => {
+           success: boolean;
+           data: {
+             queueId: string;
+-            role: string;
++            permission: string;
++            subjectKind: string;
+             action: string;
+             subjectsProcessed: number;
+           };
+         };
+         expect(parsed.success).toBe(true);
+         expect(parsed.data.queueId).toBe('TEST');
+-        expect(parsed.data.role).toBe('team-member');
++        expect(parsed.data.permission).toBe('write');
++        expect(parsed.data.subjectKind).toBe('users');
+         expect(parsed.data.action).toBe('add');
+         expect(parsed.data.subjectsProcessed).toBe(1);
+       });
+ 
+-      it('должен удалить пользователя из роли', async () => {
+-        const mockPermissions = createQueuePermissionListFixture(0);
++      it('должен удалить пользователя из разрешения', async () => {
++        const mockPermissions = createVersionOnlyQueuePermissionsFixture();
+         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
+ 
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['user1'],
+           action: 'remove',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBeUndefined();
+         expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
+           queueId: 'TEST',
+           accessData: {
+-            role: 'team-member',
++            permission: 'write',
++            subjectKind: 'users',
+             subjects: ['user1'],
+             action: 'remove',
+           },
+         });
+         expect(mockLogger.info).toHaveBeenCalledWith('Управление доступом к очереди', {
+           queueId: 'TEST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjectsCount: 1,
+           action: 'remove',
+         });
+       });
+ 
+-      it('должен добавить нескольких пользователей', async () => {
+-        const mockPermissions = createQueuePermissionListFixture(3);
++      it('должен добавить несколько групп числами', async () => {
++        const mockPermissions = createQueuePermissionsFixture();
+         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
+ 
+         const result = await tool.execute({
+           queueId: 'PROJ',
+-          role: 'follower',
+-          subjects: ['user1', 'user2', 'user3'],
++          permission: 'read',
++          subjectKind: 'groups',
++          subjects: [1, 2, 3],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBeUndefined();
+         expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
+           queueId: 'PROJ',
+           accessData: {
+-            role: 'follower',
+-            subjects: ['user1', 'user2', 'user3'],
++            permission: 'read',
++            subjectKind: 'groups',
++            subjects: [1, 2, 3],
+             action: 'add',
+           },
+         });
+-        expect(mockLogger.info).toHaveBeenCalledWith('Управление доступом к очереди', {
+-          queueId: 'PROJ',
+-          role: 'follower',
+-          subjectsCount: 3,
+-          action: 'add',
+-        });
+ 
+         const parsed = JSON.parse(getTextContent(result)) as {
+           success: boolean;
+@@ -278,73 +387,76 @@ describe('ManageQueueAccessTool', () => {
+         expect(parsed.data.subjectsProcessed).toBe(3);
+       });
+ 
+-      it('должен добавить пользователя в роль queue-lead', async () => {
+-        const mockPermissions = createQueuePermissionListFixture(1);
++      it('должен управлять доступом для разрешения grant с ролью', async () => {
++        const mockPermissions = createQueuePermissionsFixture();
+         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
+ 
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'queue-lead',
+-          subjects: ['admin'],
++          permission: 'grant',
++          subjectKind: 'roles',
++          subjects: ['author'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBeUndefined();
+         expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
+           queueId: 'TEST',
+           accessData: {
+-            role: 'queue-lead',
+-            subjects: ['admin'],
++            permission: 'grant',
++            subjectKind: 'roles',
++            subjects: ['author'],
+             action: 'add',
+           },
+         });
+       });
+ 
+-      it('должен управлять доступом для роли access', async () => {
+-        const mockPermissions = createQueuePermissionListFixture(2);
++      it('должен вернуть права доступа объектом, ключёванным разрешением (не массивом)', async () => {
++        const mockPermissions = createQueuePermissionsFixture();
+         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
+ 
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'access',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['user1', 'user2'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version', 'write.users.display'],
+         });
+ 
+         expect(result.isError).toBeUndefined();
+-        expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
+-          queueId: 'TEST',
+-          accessData: {
+-            role: 'access',
+-            subjects: ['user1', 'user2'],
+-            action: 'add',
+-          },
+-        });
++
++        const parsed = JSON.parse(getTextContent(result)) as {
++          success: boolean;
++          data: {
++            permissions: {
++              self: string;
++              version: number;
++              write?: { users?: Array<{ display: string }> };
++            };
++          };
++        };
++        expect(Array.isArray(parsed.data.permissions)).toBe(false);
++        expect(parsed.data.permissions.self).toBeDefined();
++        expect(parsed.data.permissions.version).toBeDefined();
++        expect(parsed.data.permissions.write?.users?.[0]?.display).toBeDefined();
+       });
+ 
+-      it('должен вернуть обновленный список прав доступа', async () => {
+-        const mockPermissions = createQueuePermissionListFixture(2);
++      it('переживает ответ без единого разрешения ({self, version})', async () => {
++        const mockPermissions = createVersionOnlyQueuePermissionsFixture();
+         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
+ 
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'team-member',
+-          subjects: ['user1', 'user2'],
++          permission: 'write',
++          subjectKind: 'users',
++          subjects: ['user1'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBeUndefined();
+-
+-        const parsed = JSON.parse(getTextContent(result)) as {
+-          success: boolean;
+-          data: {
+-            permissions: unknown[];
+-          };
+-        };
+-        expect(parsed.data.permissions).toHaveLength(2);
+       });
+     });
+ 
+@@ -355,10 +467,11 @@ describe('ManageQueueAccessTool', () => {
+ 
+         const result = await tool.execute({
+           queueId: 'NOTEXIST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['user1'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBe(true);
+@@ -378,10 +491,11 @@ describe('ManageQueueAccessTool', () => {
+ 
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['user1'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBe(true);
+@@ -399,10 +513,11 @@ describe('ManageQueueAccessTool', () => {
+ 
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['invalid-user'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBe(true);
+@@ -420,10 +535,11 @@ describe('ManageQueueAccessTool', () => {
+ 
+         const result = await tool.execute({
+           queueId: 'TEST',
+-          role: 'team-member',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['user1'],
+           action: 'add',
+-          fields: ['id', 'key', 'name'],
++          fields: ['self', 'version'],
+         });
+ 
+         expect(result.isError).toBe(true);
+@@ -434,27 +550,6 @@ describe('ManageQueueAccessTool', () => {
+         expect(parsed.success).toBe(false);
+         expect(parsed.error).toBe('Network timeout');
+       });
+-
+-      it('должен обработать ошибку "попытка удалить последнего queue-lead"', async () => {
+-        const error = new Error('Cannot remove last queue lead');
+-        vi.mocked(mockTrackerFacade.manageQueueAccess).mockRejectedValue(error);
+-
+-        const result = await tool.execute({
+-          queueId: 'TEST',
+-          role: 'queue-lead',
+-          subjects: ['last-lead'],
+-          action: 'remove',
+-          fields: ['id', 'key', 'name'],
+-        });
+-
+-        expect(result.isError).toBe(true);
+-        const parsed = JSON.parse(getTextContent(result)) as {
+-          success: boolean;
+-          error: string;
+-        };
+-        expect(parsed.success).toBe(false);
+-        expect(parsed.error).toBe('Cannot remove last queue lead');
+-      });
+     });
+   });
+ });
+diff --git a/packages/servers/yandex-tracker/tests/tools/api/sprints/manage-sprint-lifecycle.tool.test.ts b/packages/servers/yandex-tracker/tests/tools/api/sprints/manage-sprint-lifecycle.tool.test.ts
+index cb2696b5..b8f75544 100644
+--- a/packages/servers/yandex-tracker/tests/tools/api/sprints/manage-sprint-lifecycle.tool.test.ts
++++ b/packages/servers/yandex-tracker/tests/tools/api/sprints/manage-sprint-lifecycle.tool.test.ts
+@@ -26,11 +26,16 @@ describe('ManageSprintLifecycleTool', () => {
+   });
+ 
+   it('вернёт ошибку валидации при неизвестном action', async () => {
+-    const result = await tool.execute({ sprintId: '1', action: 'pause' });
++    const result = await tool.execute({ sprintId: '1', action: 'pause', fields: ['id'] });
+     expect(result.isError).toBe(true);
+   });
+ 
+-  it('запустит спринт (start)', async () => {
++  it('вернёт ошибку валидации при отсутствующем fields', async () => {
++    const result = await tool.execute({ sprintId: '1', action: 'start' });
++    expect(result.isError).toBe(true);
++  });
++
++  it('запустит спринт (start) без version', async () => {
+     const sprint = createSprintFixture({
+       id: 1,
+       version: 2,
+@@ -39,20 +44,98 @@ describe('ManageSprintLifecycleTool', () => {
+     });
+     vi.mocked(mockTrackerFacade.manageSprintLifecycle).mockResolvedValue(sprint);
+ 
+-    const result = await tool.execute({ sprintId: '1', action: 'start' });
++    const result = await tool.execute({ sprintId: '1', action: 'start', fields: ['id', 'status'] });
+ 
+     expect(result.isError).toBeUndefined();
+     expect(mockTrackerFacade.manageSprintLifecycle).toHaveBeenCalledWith({
+       sprintId: '1',
+       action: 'start',
++      version: undefined,
+     });
+     const parsed = JSON.parse(getTextContent(result)) as {
+       data: { sprint: unknown; message: string };
+     };
+-    expect(parsed.data.sprint).toEqual(sprint);
++    expect(parsed.data.sprint).toEqual({ id: 1, status: 'in_progress' });
+     expect(parsed.data.message).toContain('запущен');
+   });
+ 
++  it('запрошенные поля возвращаются, незапрошенные — отсутствуют', async () => {
++    const sprint = createSprintFixture({
++      id: 1,
++      version: 4,
++      name: 'Sprint 1',
++      status: 'in_progress',
++      board: { id: 20, self: 'url', display: 'Board' },
++    });
++    vi.mocked(mockTrackerFacade.manageSprintLifecycle).mockResolvedValue(sprint);
++
++    const result = await tool.execute({
++      sprintId: '1',
++      action: 'start',
++      fields: ['id', 'status', 'version'],
++    });
++
++    expect(result.isError).toBeUndefined();
++    const parsed = JSON.parse(getTextContent(result)) as { data: { sprint: unknown } };
++    expect(parsed.data.sprint).toEqual({ id: 1, status: 'in_progress', version: 4 });
++    expect(parsed.data.sprint).not.toHaveProperty('name');
++    expect(parsed.data.sprint).not.toHaveProperty('board');
++    expect(parsed.data.sprint).not.toHaveProperty('self');
++  });
++
++  it('запрошенное отсутствующее в ответе поле даёт FIELDS_WITHOUT_VALUE', async () => {
++    const sprint = createSprintFixture({ id: 1, version: 2, status: 'in_progress' });
++    vi.mocked(mockTrackerFacade.manageSprintLifecycle).mockResolvedValue(sprint);
++
++    const result = await tool.execute({
++      sprintId: '1',
++      action: 'start',
++      fields: ['id', 'missingField'],
++    });
++
++    expect(result.isError).toBeUndefined();
++    const parsed = JSON.parse(getTextContent(result)) as {
++      warnings?: Array<{ code: string }>;
++    };
++    expect(parsed.warnings?.map((w) => w.code)).toContain('FIELDS_WITHOUT_VALUE');
++  });
++
++  it('запустит спринт (start) с явной version — уходит вместе с action, а не в теле', async () => {
++    const sprint = createSprintFixture({
++      id: 1,
++      version: 6,
++      name: 'Sprint 1',
++      status: 'in_progress',
++    });
++    vi.mocked(mockTrackerFacade.manageSprintLifecycle).mockResolvedValue(sprint);
++
++    const result = await tool.execute({
++      sprintId: '1',
++      action: 'start',
++      version: 5,
++      fields: ['id'],
++    });
++
++    expect(result.isError).toBeUndefined();
++    expect(mockTrackerFacade.manageSprintLifecycle).toHaveBeenCalledWith({
++      sprintId: '1',
++      action: 'start',
++      version: 5,
++    });
++  });
++
++  it('отклонит version вместе с action delete до вызова facade', async () => {
++    const result = await tool.execute({
++      sprintId: '1',
++      action: 'delete',
++      version: 5,
++      fields: ['id'],
++    });
++
++    expect(result.isError).toBe(true);
++    expect(mockTrackerFacade.manageSprintLifecycle).not.toHaveBeenCalled();
++  });
++
+   it('примет числовой sprintId (как отдаёт get_sprints) и дойдёт до того же запроса', async () => {
+     const sprint = createSprintFixture({
+       id: 1,
+@@ -62,33 +145,41 @@ describe('ManageSprintLifecycleTool', () => {
+     });
+     vi.mocked(mockTrackerFacade.manageSprintLifecycle).mockResolvedValue(sprint);
+ 
+-    const result = await tool.execute({ sprintId: 1, action: 'start' });
++    const result = await tool.execute({ sprintId: 1, action: 'start', fields: ['id'] });
+ 
+     expect(result.isError).toBeUndefined();
+     expect(mockTrackerFacade.manageSprintLifecycle).toHaveBeenCalledWith({
+       sprintId: '1',
+       action: 'start',
++      version: undefined,
+     });
+   });
+ 
+-  it('удалит спринт (delete) — sprint в ответе null', async () => {
++  it('удалит спринт (delete) — sprint в ответе null, версия не уходит, без warnings', async () => {
+     vi.mocked(mockTrackerFacade.manageSprintLifecycle).mockResolvedValue(null);
+ 
+-    const result = await tool.execute({ sprintId: '1', action: 'delete' });
++    const result = await tool.execute({ sprintId: '1', action: 'delete', fields: ['id'] });
+ 
+     expect(result.isError).toBeUndefined();
++    expect(mockTrackerFacade.manageSprintLifecycle).toHaveBeenCalledWith({
++      sprintId: '1',
++      action: 'delete',
++      version: undefined,
++    });
+     const parsed = JSON.parse(getTextContent(result)) as {
+       data: { sprint: unknown; message: string };
++      warnings?: Array<{ code: string }>;
+     };
+     expect(parsed.data.sprint).toBeNull();
+     expect(parsed.data.message).toContain('удалён');
++    expect(parsed.warnings).toBeUndefined();
+   });
+ 
+   it('обработает ошибку facade', async () => {
+     vi.mocked(mockTrackerFacade.manageSprintLifecycle).mockRejectedValue(
+       new Error('Sprint already archived')
+     );
+-    const result = await tool.execute({ sprintId: '1', action: 'archive' });
++    const result = await tool.execute({ sprintId: '1', action: 'archive', fields: ['id'] });
+     expect(result.isError).toBe(true);
+   });
+ });
+diff --git a/packages/servers/yandex-tracker/tests/tools/api/sprints/update-sprint.tool.test.ts b/packages/servers/yandex-tracker/tests/tools/api/sprints/update-sprint.tool.test.ts
+index 67bcf95b..dc8a0fdc 100644
+--- a/packages/servers/yandex-tracker/tests/tools/api/sprints/update-sprint.tool.test.ts
++++ b/packages/servers/yandex-tracker/tests/tools/api/sprints/update-sprint.tool.test.ts
+@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
+ import { UpdateSprintTool } from '#tools/api/sprints/update-sprint.tool.js';
+ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.facade.js';
+ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
++import { getTextContent } from '#helpers/tool-result.helper.js';
+ 
+ describe('UpdateSprintTool', () => {
+   let mockTrackerFacade: YandexTrackerFacade;
+@@ -28,7 +29,7 @@ describe('UpdateSprintTool', () => {
+     expect(result.isError).toBe(true);
+   });
+ 
+-  it('обновит спринт', async () => {
++  it('обновит спринт без version — предупреждает VERSION_NOT_PROVIDED', async () => {
+     const sprint = { id: 1, self: 'url', version: 2, name: 'Renamed' };
+     vi.mocked(mockTrackerFacade.updateSprint).mockResolvedValue(sprint);
+ 
+@@ -41,8 +42,34 @@ describe('UpdateSprintTool', () => {
+     expect(result.isError).toBeUndefined();
+     expect(mockTrackerFacade.updateSprint).toHaveBeenCalledWith(
+       '1',
+-      expect.objectContaining({ name: 'Renamed' })
++      { name: 'Renamed' },
++      undefined
+     );
++    const parsed = JSON.parse(getTextContent(result)) as {
++      warnings?: Array<{ code: string }>;
++    };
++    expect(parsed.warnings?.map((w) => w.code)).toContain('VERSION_NOT_PROVIDED');
++  });
++
++  it('обновит спринт с явной version — version уходит третьим аргументом, не в теле', async () => {
++    const sprint = { id: 1, self: 'url', version: 6, name: 'Renamed' };
++    vi.mocked(mockTrackerFacade.updateSprint).mockResolvedValue(sprint);
++
++    const result = await tool.execute({
++      sprintId: '1',
++      name: 'Renamed',
++      version: 5,
++      fields: ['id', 'name'],
++    });
++
++    expect(result.isError).toBeUndefined();
++    expect(mockTrackerFacade.updateSprint).toHaveBeenCalledWith('1', { name: 'Renamed' }, 5);
++    const [, body] = vi.mocked(mockTrackerFacade.updateSprint).mock.calls[0] ?? [];
++    expect(body).not.toHaveProperty('version');
++    const parsed = JSON.parse(getTextContent(result)) as {
++      warnings?: Array<{ code: string }>;
++    };
++    expect(parsed.warnings?.map((w) => w.code) ?? []).not.toContain('VERSION_NOT_PROVIDED');
+   });
+ 
+   it('примет числовой sprintId (как отдаёт get_sprints) и дойдёт до того же запроса', async () => {
+@@ -58,7 +85,8 @@ describe('UpdateSprintTool', () => {
+     expect(result.isError).toBeUndefined();
+     expect(mockTrackerFacade.updateSprint).toHaveBeenCalledWith(
+       '1',
+-      expect.objectContaining({ name: 'Renamed' })
++      { name: 'Renamed' },
++      undefined
+     );
+   });
+ 
+diff --git a/packages/servers/yandex-tracker/tests/tracker_api/api_operations/queue/manage-queue-access.operation.test.ts b/packages/servers/yandex-tracker/tests/tracker_api/api_operations/queue/manage-queue-access.operation.test.ts
+index 01d972b4..31232eb0 100644
+--- a/packages/servers/yandex-tracker/tests/tracker_api/api_operations/queue/manage-queue-access.operation.test.ts
++++ b/packages/servers/yandex-tracker/tests/tracker_api/api_operations/queue/manage-queue-access.operation.test.ts
+@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
+ import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
+ import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
+ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
+-import type { QueuePermissionWithUnknownFields } from '#tracker_api/entities/index.js';
++import type { QueuePermissionsWithUnknownFields } from '#tracker_api/entities/index.js';
+ import { ManageQueueAccessOperation } from '#tracker_api/api_operations/queue/manage-queue-access.operation.js';
+-import { createQueuePermissionListFixture } from '#helpers/queue-permission.fixture.js';
++import { createQueuePermissionsFixture } from '#helpers/queue-permission.fixture.js';
+ import {
+   createManageQueueAccessDto,
+   createRemoveQueueAccessDto,
+@@ -45,131 +45,104 @@ describe('ManageQueueAccessOperation', () => {
+   });
+ 
+   describe('execute', () => {
+-    it('should add users to role with correct payload', async () => {
+-      const accessData = createManageQueueAccessDto({
+-        action: 'add',
+-        role: 'team-member',
+-        subjects: ['user-1', 'user-2'],
+-      });
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(2);
++    it('should build body for each of the five permissions', async () => {
++      const permissions = ['create', 'write', 'read', 'grant', 'deny'] as const;
++      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+-      await operation.execute({ queueId: 'TEST', accessData });
+-
+-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
+-        'team-member': {
+-          add: ['user-1', 'user-2'],
+-        },
+-      });
+-    });
++      for (const permission of permissions) {
++        const accessData = createManageQueueAccessDto({
++          permission,
++          subjectKind: 'users',
++          action: 'add',
++          subjects: ['user-1'],
++        });
+ 
+-    it('should remove users from role with correct payload', async () => {
+-      const accessData = createRemoveQueueAccessDto('follower', ['user-3', 'user-4']);
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(0);
+-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
++        await operation.execute({ queueId: 'TEST', accessData });
+ 
+-      await operation.execute({ queueId: 'PROJ', accessData });
+-
+-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/PROJ/permissions', {
+-        follower: {
+-          remove: ['user-3', 'user-4'],
+-        },
+-      });
++        expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
++          [permission]: { users: { add: ['user-1'] } },
++        });
++      }
+     });
+ 
+-    it('should support queue-lead role', async () => {
+-      const accessData = createManageQueueAccessDto({
+-        action: 'add',
+-        role: 'queue-lead',
+-        subjects: ['lead-user'],
+-      });
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(1);
++    it('should build body for each of the three subject kinds', async () => {
++      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+-      await operation.execute({ queueId: 'TEST', accessData });
+-
+-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
+-        'queue-lead': {
+-          add: ['lead-user'],
+-        },
+-      });
++      const cases: readonly [
++        subjectKind: 'users' | 'groups' | 'roles',
++        subjects: (string | number)[],
++      ][] = [
++        ['users', ['user-1']],
++        ['groups', [42]],
++        ['roles', ['assignee']],
++      ];
++
++      for (const [subjectKind, subjects] of cases) {
++        const accessData = createManageQueueAccessDto({
++          permission: 'write',
++          subjectKind,
++          action: 'add',
++          subjects,
++        });
++
++        await operation.execute({ queueId: 'TEST', accessData });
++
++        expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
++          write: { [subjectKind]: { add: subjects } },
++        });
++      }
+     });
+ 
+-    it('should support team-member role', async () => {
+-      const accessData = createManageQueueAccessDto({
+-        action: 'add',
+-        role: 'team-member',
+-        subjects: ['member-1'],
+-      });
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(1);
++    it('should send group id as a number, not a string, in the body', async () => {
++      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+-      await operation.execute({ queueId: 'PROJ', accessData });
+-
+-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/PROJ/permissions', {
+-        'team-member': {
+-          add: ['member-1'],
+-        },
+-      });
+-    });
+-
+-    it('should support follower role', async () => {
+       const accessData = createManageQueueAccessDto({
++        permission: 'write',
++        subjectKind: 'groups',
+         action: 'add',
+-        role: 'follower',
+-        subjects: ['follower-1'],
++        subjects: [36],
+       });
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(1);
+-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+       await operation.execute({ queueId: 'TEST', accessData });
+ 
+-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
+-        follower: {
+-          add: ['follower-1'],
+-        },
+-      });
++      const [, body] = vi.mocked(mockHttpClient.patch).mock.calls[0] as [string, unknown];
++      const groups = (body as { write: { groups: { add: unknown[] } } }).write.groups.add;
++      expect(groups).toEqual([36]);
++      expect(typeof groups[0]).toBe('number');
+     });
+ 
+-    it('should support access role', async () => {
+-      const accessData = createManageQueueAccessDto({
+-        action: 'add',
+-        role: 'access',
+-        subjects: ['access-user-1'],
+-      });
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(1);
++    it('should remove subjects with correct payload', async () => {
++      const accessData = createRemoveQueueAccessDto('write', ['user-3', 'user-4']);
++      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+-      await operation.execute({ queueId: 'TEST', accessData });
++      await operation.execute({ queueId: 'PROJ', accessData });
+ 
+-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
+-        access: {
+-          add: ['access-user-1'],
++      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/PROJ/permissions', {
++        write: {
++          users: { remove: ['user-3', 'user-4'] },
+         },
+       });
+     });
+ 
+-    it('should handle multiple users in one request', async () => {
++    it('should handle multiple subjects in one request', async () => {
+       const accessData = createManageQueueAccessDto({
+         action: 'add',
+-        role: 'team-member',
++        permission: 'write',
++        subjectKind: 'users',
+         subjects: ['user-1', 'user-2', 'user-3', 'user-4', 'user-5'],
+       });
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(5);
++      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+       await operation.execute({ queueId: 'TEST', accessData });
+ 
+       expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
+-        'team-member': {
+-          add: ['user-1', 'user-2', 'user-3', 'user-4', 'user-5'],
++        write: {
++          users: { add: ['user-1', 'user-2', 'user-3', 'user-4', 'user-5'] },
+         },
+       });
+     });
+@@ -187,43 +160,41 @@ describe('ManageQueueAccessOperation', () => {
+     it('should log info messages for add action', async () => {
+       const accessData = createManageQueueAccessDto({
+         action: 'add',
+-        role: 'team-member',
++        permission: 'write',
++        subjectKind: 'users',
+         subjects: ['user-1', 'user-2'],
+       });
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(2);
++      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+       await operation.execute({ queueId: 'PROJ', accessData });
+ 
+       expect(mockLogger.info).toHaveBeenCalledWith(
+-        'Добавление пользователей user-1, user-2 в роли team-member для очереди PROJ'
++        'Добавление субъектов user-1, user-2 (users) для разрешения write очереди PROJ'
+       );
+       expect(mockLogger.info).toHaveBeenCalledWith(
+-        'Права доступа успешно обновлены для очереди PROJ (add 2 пользователей)'
++        'Права доступа успешно обновлены для очереди PROJ (add 2 субъектов)'
+       );
+     });
+ 
+     it('should log info messages for remove action', async () => {
+-      const accessData = createRemoveQueueAccessDto('follower', ['user-3']);
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(0);
++      const accessData = createRemoveQueueAccessDto('write', ['user-3']);
++      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+       await operation.execute({ queueId: 'TEST', accessData });
+ 
+       expect(mockLogger.info).toHaveBeenCalledWith(
+-        'Удаление пользователей user-3 из роли follower для очереди TEST'
++        'Удаление субъектов user-3 (users) для разрешения write очереди TEST'
+       );
+       expect(mockLogger.info).toHaveBeenCalledWith(
+-        'Права доступа успешно обновлены для очереди TEST (remove 1 пользователей)'
++        'Права доступа успешно обновлены для очереди TEST (remove 1 субъектов)'
+       );
+     });
+ 
+     it('should work with queue ID instead of key', async () => {
+       const accessData = createManageQueueAccessDto();
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(1);
++      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+       await operation.execute({ queueId: 'queue-123', accessData });
+@@ -234,16 +205,15 @@ describe('ManageQueueAccessOperation', () => {
+       );
+     });
+ 
+-    it('should return permissions list after update', async () => {
++    it('should return permissions after update', async () => {
+       const accessData = createManageQueueAccessDto();
+-      const mockPermissions: QueuePermissionWithUnknownFields[] =
+-        createQueuePermissionListFixture(3);
++      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+ 
+       const result = await operation.execute({ queueId: 'TEST', accessData });
+ 
+       expect(result).toEqual(mockPermissions);
+-      expect(result).toHaveLength(3);
++      expect(result.write?.users).toHaveLength(1);
+     });
+   });
+ });
+diff --git a/packages/servers/yandex-tracker/tests/tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.test.ts b/packages/servers/yandex-tracker/tests/tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.test.ts
+index 16d9d1e7..013fd9c1 100644
+--- a/packages/servers/yandex-tracker/tests/tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.test.ts
++++ b/packages/servers/yandex-tracker/tests/tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.test.ts
+@@ -4,6 +4,7 @@ import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-m
+ import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
+ import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
+ import { ManageSprintLifecycleOperation } from '#tracker_api/api_operations/sprint/manage-sprint-lifecycle.operation.js';
++import { createSprintFixture } from '#helpers/agile.fixture.js';
+ 
+ describe('ManageSprintLifecycleOperation', () => {
+   let operation: ManageSprintLifecycleOperation;
+@@ -13,7 +14,7 @@ describe('ManageSprintLifecycleOperation', () => {
+ 
+   beforeEach(() => {
+     mockHttpClient = {
+-      get: vi.fn(),
++      get: vi.fn().mockResolvedValue(createSprintFixture({ id: 1, version: 7 })),
+       post: vi.fn(),
+       patch: vi.fn(),
+       delete: vi.fn().mockResolvedValue(undefined),
+@@ -38,29 +39,51 @@ describe('ManageSprintLifecycleOperation', () => {
+     operation = new ManageSprintLifecycleOperation(mockHttpClient, mockCacheManager, mockLogger);
+   });
+ 
+-  it('start: POST /v3/sprints/{id}/_start, возвращает спринт', async () => {
+-    const sprint = { id: 1, self: 'url', version: 2, name: 'Sprint 1', status: 'in_progress' };
++  it('start: без версии читает текущую и шлёт её в query', async () => {
++    const sprint = createSprintFixture({ id: 1, version: 7, status: 'in_progress' });
+     vi.mocked(mockHttpClient.post).mockResolvedValue(sprint);
+ 
+     const result = await operation.execute({ sprintId: '1', action: 'start' });
+ 
+-    expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/sprints/1/_start');
++    expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/sprints/1');
++    expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/sprints/1/_start?version=7');
+     expect(result).toEqual(sprint);
+   });
+ 
+-  it('archive: POST /v3/sprints/{id}/_archive, возвращает спринт', async () => {
+-    const sprint = { id: 1, self: 'url', version: 3, name: 'Sprint 1', archived: true };
++  it('start: переданную версию берёт как есть и лишнего GET не делает', async () => {
++    const sprint = createSprintFixture({ id: 1, version: 3, status: 'in_progress' });
+     vi.mocked(mockHttpClient.post).mockResolvedValue(sprint);
+ 
+-    const result = await operation.execute({ sprintId: '1', action: 'archive' });
++    await operation.execute({ sprintId: '1', action: 'start', version: 3 });
+ 
+-    expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/sprints/1/_archive');
++    expect(mockHttpClient.get).not.toHaveBeenCalled();
++    expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/sprints/1/_start?version=3');
++  });
++
++  it('start: ответ GET без числовой версии даёт понятный отказ, а не ?version=undefined', async () => {
++    vi.mocked(mockHttpClient.get).mockResolvedValue({ id: 1 });
++
++    await expect(operation.execute({ sprintId: '1', action: 'start' })).rejects.toThrow(
++      /версию спринта/
++    );
++    expect(mockHttpClient.post).not.toHaveBeenCalled();
++  });
++
++  it('archive: POST /v3/sprints/{id}/_archive?version=…, возвращает спринт', async () => {
++    const sprint = createSprintFixture({ id: 1, version: 8, archived: true });
++    vi.mocked(mockHttpClient.post).mockResolvedValue(sprint);
++
++    const result = await operation.execute({ sprintId: '1', action: 'archive', version: 8 });
++
++    expect(mockHttpClient.get).not.toHaveBeenCalled();
++    expect(mockHttpClient.post).toHaveBeenCalledWith('/v3/sprints/1/_archive?version=8');
+     expect(result).toEqual(sprint);
+   });
+ 
+-  it('delete: DELETE /v3/sprints/{id}, возвращает null (204 без тела)', async () => {
++  it('delete: DELETE /v3/sprints/{id} без версии в query, возвращает null (204 без тела)', async () => {
+     const result = await operation.execute({ sprintId: '1', action: 'delete' });
+ 
++    expect(mockHttpClient.get).not.toHaveBeenCalled();
+     expect(mockHttpClient.delete).toHaveBeenCalledWith('/v3/sprints/1');
+     expect(mockHttpClient.post).not.toHaveBeenCalled();
+     expect(result).toBeNull();
+@@ -68,17 +91,28 @@ describe('ManageSprintLifecycleOperation', () => {
+ 
+   it('инвалидирует кеш спринта независимо от действия', async () => {
+     vi.mocked(mockHttpClient.post).mockResolvedValue({ id: 1 });
+-    await operation.execute({ sprintId: '1', action: 'start' });
++    await operation.execute({ sprintId: '1', action: 'start', version: 1 });
+ 
+     const cacheKey = EntityCacheKey.createKey(EntityType.SPRINT, '1');
+     expect(mockCacheManager.delete).toHaveBeenCalledWith(cacheKey);
+   });
+ 
+-  it('пробрасывает ошибку API', async () => {
++  it('ошибка POST после прочитанной версии не инвалидирует кеш спринта', async () => {
+     vi.mocked(mockHttpClient.post).mockRejectedValue(new Error('Sprint already archived'));
+ 
+     await expect(operation.execute({ sprintId: '1', action: 'archive' })).rejects.toThrow(
+       'Sprint already archived'
+     );
++
++    expect(mockHttpClient.get).toHaveBeenCalledWith('/v3/sprints/1');
++    expect(mockCacheManager.delete).not.toHaveBeenCalled();
++  });
++
++  it('пробрасывает ошибку API', async () => {
++    vi.mocked(mockHttpClient.post).mockRejectedValue(new Error('Sprint already archived'));
++
++    await expect(
++      operation.execute({ sprintId: '1', action: 'archive', version: 1 })
++    ).rejects.toThrow('Sprint already archived');
+   });
+ });
+diff --git a/packages/servers/yandex-tracker/tests/tracker_api/facade/services/queue.service.test.ts b/packages/servers/yandex-tracker/tests/tracker_api/facade/services/queue.service.test.ts
+index 04415ebd..03a24a9f 100644
+--- a/packages/servers/yandex-tracker/tests/tracker_api/facade/services/queue.service.test.ts
++++ b/packages/servers/yandex-tracker/tests/tracker_api/facade/services/queue.service.test.ts
+@@ -40,7 +40,7 @@ import type {
+ } from '#tracker_api/api_operations/index.js';
+ import { createQueueFixture } from '#helpers/queue.fixture.js';
+ import { createQueueFieldFixture } from '#helpers/queue-field.fixture.js';
+-import { createQueuePermissionFixture } from '#helpers/queue-permission.fixture.js';
++import { createQueuePermissionsFixture } from '#helpers/queue-permission.fixture.js';
+ 
+ describe('QueueService', () => {
+   let service: QueueService;
+@@ -207,14 +207,13 @@ describe('QueueService', () => {
+       const params: ManageQueueAccessParams = {
+         queueId: 'TEST',
+         accessData: {
+-          role: 'access',
++          permission: 'write',
++          subjectKind: 'users',
+           subjects: ['user1'],
+           action: 'add',
+         },
+       };
+-      const mockResult: QueuePermissionsOutput = [
+-        createQueuePermissionFixture({ id: 'user1', display: 'User 1' }),
+-      ];
++      const mockResult: QueuePermissionsOutput = createQueuePermissionsFixture();
+ 
+       vi.mocked(mockOpsContainer.manageQueueAccess.execute).mockResolvedValue(mockResult);
+ 
+diff --git a/packages/servers/yandex-tracker/tests/tracker_api/facade/yandex-tracker.facade.test.ts b/packages/servers/yandex-tracker/tests/tracker_api/facade/yandex-tracker.facade.test.ts
+index cc3ef350..816038e5 100644
+--- a/packages/servers/yandex-tracker/tests/tracker_api/facade/yandex-tracker.facade.test.ts
++++ b/packages/servers/yandex-tracker/tests/tracker_api/facade/yandex-tracker.facade.test.ts
+@@ -970,9 +970,13 @@ describe('YandexTrackerFacade', () => {
+ 
+         vi.mocked(mockProjectAgileContainer.sprint.updateSprint).mockResolvedValue(mockResult);
+ 
+-        const result = await facade.updateSprint(sprintId, input);
++        const result = await facade.updateSprint(sprintId, input, 3);
+ 
+-        expect(mockProjectAgileContainer.sprint.updateSprint).toHaveBeenCalledWith(sprintId, input);
++        expect(mockProjectAgileContainer.sprint.updateSprint).toHaveBeenCalledWith(
++          sprintId,
++          input,
++          3
++        );
+         expect(result).toEqual(mockResult);
+       });
+     });

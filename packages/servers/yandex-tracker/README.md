@@ -265,7 +265,7 @@ rate limits), частичная обработка ошибок, единооб
 - `fr_yandex_tracker_get_queue` — Получить информацию об очереди
 - `fr_yandex_tracker_update_queue` — Обновить очередь
 - `fr_yandex_tracker_get_queue_fields` — Получить поля очереди
-- `fr_yandex_tracker_manage_queue_access` — Управление доступом к очереди
+- `fr_yandex_tracker_manage_queue_access` — Управление доступом к очереди (`permission` × `subjectKind` × `action`, один субъект-вид за вызов)
 
 </details>
 
