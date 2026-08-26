@@ -19,7 +19,11 @@
  */
 
 import { resolve } from 'node:path';
-import { getScriptDir, validateToolRegistration } from '@fractalizer/mcp-core';
+import {
+  getScriptDir,
+  validateToolRegistration,
+  validateRedactionAllowlist,
+} from '@fractalizer/mcp-core';
 import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
 import { OPERATION_CLASSES } from '../src/composition-root/definitions/operation-definitions.js';
 
@@ -58,6 +62,8 @@ function validateConsentMatchesDestructiveHint(): string[] {
 }
 
 async function main(): Promise<void> {
+  console.log('🔍 Проверка регистрации компонентов yandex-tracker...\n');
+
   // 1. Регистрация Tools/Operations — используем существующий валидатор
   // framework, но игнорируем его safetyErrors/safetyWarnings (name-heuristic,
   // заменена проверкой ниже).
@@ -98,7 +104,14 @@ async function main(): Promise<void> {
     consentErrors.forEach((error) => console.error(`${error}\n`));
   }
 
-  console.log(`🔍 Проверка регистрации компонентов yandex-tracker...\n`);
+  // 3. redactionAllowlist называет только реально существующие параметры схемы
+  const redactionAllowlistErrors = validateRedactionAllowlist(TOOL_CLASSES);
+  if (redactionAllowlistErrors.length > 0) {
+    hasErrors = true;
+    console.error('❌ redactionAllowlist расходится со схемой параметров:\n');
+    redactionAllowlistErrors.forEach((error) => console.error(`   ${error}`));
+    console.error('');
+  }
 
   if (hasErrors) {
     process.exit(1);

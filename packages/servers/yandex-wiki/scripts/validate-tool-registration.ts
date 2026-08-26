@@ -9,7 +9,11 @@
  */
 
 import { resolve } from 'node:path';
-import { validateToolRegistration, getScriptDir } from '@fractalizer/mcp-core';
+import {
+  validateToolRegistration,
+  getScriptDir,
+  validateRedactionAllowlist,
+} from '@fractalizer/mcp-core';
 import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
 
 const scriptDir = getScriptDir(import.meta.url);
@@ -88,6 +92,14 @@ async function main(): Promise<void> {
         'замена списка целиком) — requiresExplicitUserConsent: true и destructiveHint: true.\n' +
         '   Остальные — оба false.\n'
     );
+  }
+
+  const redactionAllowlistErrors = validateRedactionAllowlist(TOOL_CLASSES);
+  if (redactionAllowlistErrors.length > 0) {
+    hasErrors = true;
+    console.error('❌ redactionAllowlist расходится со схемой параметров:\n');
+    redactionAllowlistErrors.forEach((error) => console.error(`   ${error}`));
+    console.error('');
   }
 
   if (hasErrors) {

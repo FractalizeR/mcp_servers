@@ -8,3 +8,6 @@ export type { ToolDefinition } from './base-definition.js';
 export type { JsonObjectSchema, ToolAnnotations } from './base.types.js';
 export { ToolCategory, ToolPriority } from './tool-metadata.js';
 export type { ToolMetadata, StaticToolMetadata } from './tool-metadata.js';
+export { validateRedactionAllowlist } from './redaction-allowlist-validator.js';
+export { readToolInputSchema } from './tool-input-schema.js';
+export type { ToolClassLike } from './tool-input-schema.js';
