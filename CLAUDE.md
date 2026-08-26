@@ -171,9 +171,13 @@ import { Foo } from '@tracker_api/foo.js'; // WRONG! Use #tracker_api
 - Делегирует команды через `--workspaces --if-present`
 - `clean` — только артефакты, `clean:all` — включая node_modules
 - `validate` / `validate:quiet` — единый пайплайн через `scripts/validate.sh [--quiet]`
-  - Шаги: build, lint, typecheck, typecheck:scripts, typecheck:tests, test, test:smoke, test:smoke:server, cpd, depcruise, validate:docs, validate:tools, knip:root, lint:servers-scripts, lint:root-scripts, typecheck:scripts:root
+  - Шаги: build, lint, typecheck, typecheck:scripts, typecheck:tests, test, test:smoke, test:smoke:server, cpd, depcruise, validate:docs, validate:tools, coverage:check, knip:root, lint:servers-scripts, lint:root-scripts, typecheck:scripts:root
   - Quiet mode: lint:quiet, test:quiet, cpd:quiet + `--output-logs=errors-only`
   - **Добавить новый шаг:** только в `scripts/validate.sh` — оба режима обновятся автоматически
+  - ⚠️ Шаг в `TURBO_TASKS_COMMON` действует **только на пакеты, где задача объявлена**:
+    `turbo run` остальные молча пропускает. `coverage:check` есть только у трекера —
+    это «шаг одного пакета», а не общий гейт, и появление третьего сервера этого не
+    заметит
 
 **Режимы вывода (для экономии токенов ИИ):**
 - **Обычный** (`test`, `lint`) — для разработчиков, подробный вывод

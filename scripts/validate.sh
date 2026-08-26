@@ -35,7 +35,18 @@ QUIET=false
 # branches 75%, statements 80%). Before this line was added, those
 # thresholds were declared but never checked by anything in the validation
 # pipeline — the gate looked enforced only because nothing measured it.
-TURBO_TASKS_COMMON="build typecheck typecheck:scripts typecheck:tests test:coverage test:smoke test:smoke:server test:raw-wire depcruise validate:docs validate:tools"
+#
+# coverage:check: сверяет tests/COVERAGE_MATRIX.md со сгенерированной и держит
+# храповик дыр покрытия (tests/coverage-exceptions/coverage-gate-baseline.ts —
+# замороженный НАБОР пар «инструмент × свойство», отказ в обе стороны). До этой
+# строки задача существовала, но не запускалась ничем: расхождение матрицы с кодом
+# молчало. Кэш от подключения не страдает — `--check` файла не пишет (M-6).
+#
+# ОГОВОРКА: `turbo run` молча пропускает пакеты без такой задачи, поэтому строка
+# фактически означает «только трекер». У Wiki матрицы покрытия нет, и под гейт он не
+# попадёт никогда; появление третьего сервера этого тоже не заметит. Одна строка
+# сейчас вместо сюрприза потом.
+TURBO_TASKS_COMMON="build typecheck typecheck:scripts typecheck:tests test:coverage test:smoke test:smoke:server test:raw-wire depcruise validate:docs validate:tools coverage:check"
 
 if $QUIET; then
   TURBO_TASKS="$TURBO_TASKS_COMMON lint:quiet cpd:quiet"

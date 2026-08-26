@@ -289,6 +289,33 @@ export const TOOL_SYMBOLS = TOOL_CLASSES.reduce((acc, ToolClass) => {
 - Имеют корректный `METADATA`
 - Имеют метод `getParamsSchema()`
 
+**Барьеры фреймворка подключаются вручную в каждом сервере** — забыть их нечем
+поймать, потому что скрипт свой у каждого сервера:
+- [ ] `validateRedactionAllowlist(TOOL_CLASSES)` из `@fractalizer/mcp-core`
+      вызван в `main()`, его ошибки роняют скрипт. Барьер сверяет, что каждый ключ
+      `METADATA.redactionAllowlist` называет параметр, реально существующий в схеме.
+      Границы обещания (тип параметра не проверяется) — JSDoc
+      `packages/framework/core/src/tools/base/redaction-allowlist-validator.ts`
+- [ ] Осмысленность самих допусков — отдельный смоук по образцу
+      `packages/servers/yandex-tracker/tests/smoke/tool-redaction-allowlist.smoke.test.ts`
+      (барьер регистрации её не проверяет)
+- [ ] Порядок вывода: заголовок `🔍 Проверка регистрации...` печатается ПЕРВЫМ,
+      до ошибок любой проверки
+
+### 8.4 coverage:check (матрица наблюдаемого покрытия)
+Заводится, когда у сервера появляется больше десятка инструментов: без него
+«инструмент работает» — утверждение без машинной опоры.
+- [ ] `coverage:matrix` / `coverage:check` в `package.json` (образец —
+      `packages/servers/yandex-tracker/scripts/build-coverage-matrix.ts`);
+      `coverage:check` уже перечислен в `scripts/validate.sh` и выполнится
+      автоматически, как только скрипт появится
+- [ ] `tests/COVERAGE_MATRIX.md` закоммичен; `--check` сравнивает с ним и НЕ
+      переписывает файл
+- [ ] Храповик дыр (`tests/coverage-exceptions/`) заведён и может только сокращаться
+- [ ] `inputs` задач `coverage:*` в `turbo.json` перечисляют всё, чем клетка
+      доказывается (тесты, реестры, отчёты живых прогонов) — иначе кэш-хит даст
+      зелёный гейт при исчезнувшем доказательстве
+
 ---
 
 ## 9. Архитектура Facade → Services → Operations
@@ -409,6 +436,8 @@ npm run validate  # lint + typecheck + test + test:smoke + cpd + depcruise + val
 - [ ] `npm run test:smoke` — все 4 smoke теста проходят
 - [ ] `npm run test:smoke:server` — JSON-RPC тест проходит
 - [ ] `npm run test:coverage` — покрытие достигает порогов
+- [ ] `npm run validate:tools` — регистрация и `redactionAllowlist` сходятся со схемами
+- [ ] `npm run coverage:check` (где заведён) — матрица актуальна, новых дыр нет
 - [ ] Новые tools добавлены в `tool-definitions.ts`
 - [ ] Новые tools имеют `category` в METADATA
 - [ ] Read tools используют `FieldsSchema`
