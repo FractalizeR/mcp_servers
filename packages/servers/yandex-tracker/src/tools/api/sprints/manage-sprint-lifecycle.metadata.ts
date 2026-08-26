@@ -21,7 +21,7 @@ export const MANAGE_SPRINT_LIFECYCLE_TOOL_METADATA: StaticToolMetadata = {
   tags: ['sprint', 'lifecycle', 'start', 'archive', 'delete', 'write', 'agile'],
   isHelper: false,
   requiresExplicitUserConsent: true,
-  redactionAllowlist: ['sprintId', 'action'],
+  redactionAllowlist: ['sprintId', 'action', 'version', 'fields'],
   title: 'Жизненный цикл спринта',
   outputSchema: ManageSprintLifecycleOutputSchema,
   annotations: {

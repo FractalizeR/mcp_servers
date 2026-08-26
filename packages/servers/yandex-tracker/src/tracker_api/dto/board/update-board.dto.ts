@@ -37,9 +37,6 @@ export interface UpdateBoardDto {
   /** Использовать ранжирование задач */
   useRanking?: boolean | undefined;
 
-  /** ID страны для региональных настроек */
-  country?: string | undefined;
-
   /** Дополнительные поля */
   [key: string]: unknown;
 }

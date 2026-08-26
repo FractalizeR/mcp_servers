@@ -14,6 +14,13 @@ const SprintStatusSchema = z.enum(['draft', 'in_progress', 'released']);
 
 /**
  * Схема параметров для создания спринта
+ *
+ * Параметров `startDateTime`/`endDateTime` здесь нет намеренно: `POST /v3/sprints`
+ * отвергает их ключом тела — `400 …: Incorrect data format` на всех проверенных
+ * формах ISO 8601, включая ту, что сам API отдаёт в ответе
+ * (`2026-09-01T00:00:00.000+0000`) (живая проба 2026-08-26). В разделе запроса
+ * документации post-sprint этих имён нет вовсе — они встречаются только в примере
+ * ответа. Даты задаются только `startDate`/`endDate` (YYYY-MM-DD).
  */
 export const CreateSprintParamsSchema = z.object({
   /** Название спринта (обязательно) */
@@ -27,12 +34,6 @@ export const CreateSprintParamsSchema = z.object({
 
   /** Дата окончания спринта YYYY-MM-DD (опционально) */
   endDate: z.string().optional(),
-
-  /** Дата и время начала спринта ISO 8601 (опционально) */
-  startDateTime: z.string().optional(),
-
-  /** Дата и время окончания спринта ISO 8601 (опционально) */
-  endDateTime: z.string().optional(),
 
   /** Статус спринта (опционально) */
   status: SprintStatusSchema.optional(),

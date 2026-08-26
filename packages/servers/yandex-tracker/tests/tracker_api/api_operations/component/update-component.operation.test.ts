@@ -80,6 +80,20 @@ describe('UpdateComponentOperation', () => {
       );
     });
 
+    it('version внутри данных не уходит в тело PATCH даже при вызове операции напрямую', async () => {
+      // `UpdateComponentDto` несёт индексную сигнатуру `[key: string]: unknown` —
+      // без явной деструктуризации в операции версия внутри `componentData` ушла бы
+      // в тело. Регрессия ревью 2026-08-26 (та же гарантия у `UpdateSprintOperation`).
+      const mockComponent = createComponentFixture({ id: 1, version: 3 });
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockComponent);
+
+      await operation.execute('1', createUpdateComponentDto({ name: 'X', version: 99 }), 3);
+
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/components/1?version=3', {
+        name: 'X',
+      });
+    });
+
     it('should call httpClient.patch with correct endpoint and data', async () => {
       const updates = createUpdateComponentDto({ name: 'Updated Name' });
       const mockComponent: ComponentOutput = createComponentFixture({

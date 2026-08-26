@@ -36,6 +36,11 @@ const UpdateBoardFilterSchema = z.record(
  * ключом тела — `400 version: Incorrect data format` при любом значении, включая
  * текущую версию доски (живая проба 2026-08-25). Оптимистичной блокировки у правки
  * доски нет ни в теле, ни заголовком `If-Match` — в документации она не описана.
+ *
+ * Параметра `country` здесь тоже нет: `PATCH /v3/boards/{id}` отвергает его ключом
+ * тела — `400 country: Incorrect data format` и на "2", и на текущем значении доски
+ * "1" (живая проба 2026-08-26). Документация patch-board объявляет `country`
+ * объектом и помечает параметр как устаревший, не влияющий на работу доски.
  */
 export const UpdateBoardParamsSchema = z
   .object({
@@ -62,9 +67,6 @@ export const UpdateBoardParamsSchema = z
 
     /** Использовать ранжирование задач (опционально) */
     useRanking: z.boolean().optional(),
-
-    /** ID страны для региональных настроек (опционально) */
-    country: z.string().optional(),
 
     /** Список полей для возврата (обязательный) */
     fields: FieldsSchema,

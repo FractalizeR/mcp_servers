@@ -19,6 +19,13 @@ const SprintStatusSchema = z.enum(['draft', 'in_progress', 'released']);
  * инструмент `manage_sprint_lifecycle` — API Трекера обслуживает их
  * специализированными POST/DELETE-эндпоинтами (`_start`/`_archive`/DELETE),
  * а не универсальным PATCH, которым покрыты только name/dates/status здесь.
+ *
+ * Параметров `startDateTime`/`endDateTime` здесь нет намеренно: `PATCH
+ * /v3/sprints/{id}` отвергает их ключом тела — `400 …: Incorrect data format` на
+ * всех проверенных формах ISO 8601, включая ту, что сам API отдаёт в ответе
+ * (`2026-09-01T00:00:00.000+0000`) (живая проба 2026-08-26). В разделе запроса
+ * документации patch-sprint этих имён нет вовсе — они встречаются только в
+ * примере ответа. Даты задаются только `startDate`/`endDate` (YYYY-MM-DD).
  */
 export const UpdateSprintParamsSchema = z.object({
   /** Идентификатор спринта (обязательно) */
@@ -35,12 +42,6 @@ export const UpdateSprintParamsSchema = z.object({
 
   /** Дата окончания спринта YYYY-MM-DD (опционально) */
   endDate: z.string().optional(),
-
-  /** Дата и время начала спринта ISO 8601 (опционально) */
-  startDateTime: z.string().optional(),
-
-  /** Дата и время окончания спринта ISO 8601 (опционально) */
-  endDateTime: z.string().optional(),
 
   /** Статус спринта (опционально) */
   status: SprintStatusSchema.optional(),

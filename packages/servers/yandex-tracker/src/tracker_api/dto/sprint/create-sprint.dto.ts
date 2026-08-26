@@ -17,12 +17,6 @@ export interface CreateSprintDto {
   /** Дата окончания спринта (формат YYYY-MM-DD) */
   endDate?: string | undefined;
 
-  /** Дата и время начала спринта в формате ISO 8601 */
-  startDateTime?: string | undefined;
-
-  /** Дата и время окончания спринта в формате ISO 8601 */
-  endDateTime?: string | undefined;
-
   /** Статус спринта */
   status?: SprintStatus | undefined;
 

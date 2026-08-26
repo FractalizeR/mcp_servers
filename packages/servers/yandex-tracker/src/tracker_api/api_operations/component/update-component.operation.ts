@@ -16,6 +16,7 @@
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
+import { readCurrentVersion } from '#tracker_api/api_operations/read-current-version.util.js';
 import { EntityCacheKey, EntityType } from '@fractalizer/mcp-infrastructure';
 import type { UpdateComponentDto, ComponentOutput } from '#tracker_api/dto/index.js';
 
@@ -50,11 +51,24 @@ export class UpdateComponentOperation extends BaseOperation {
   ): Promise<ComponentOutput> {
     this.logger.info(`Обновление компонента ${componentId}`);
 
-    const effectiveVersion = version ?? (await this.readCurrentVersion(componentId));
+    // `version` уходит query-параметром, не телом: явная деструктуризация — гарантия
+    // на уровне операции, а не только у вызывающего инструмента (`UpdateComponentDto`
+    // несёт индексную сигнатуру `[key: string]: unknown`, и без деструктуризации
+    // вызов операции напрямую с версией в данных отправил бы её телом).
+    const { version: _ignoredBodyVersion, ...body } = componentData;
+
+    const effectiveVersion =
+      version ??
+      (await readCurrentVersion(
+        this.httpClient,
+        `/v3/components/${componentId}`,
+        componentId,
+        'компонента'
+      ));
 
     const updatedComponent = await this.httpClient.patch<ComponentOutput>(
       `/v3/components/${componentId}?version=${effectiveVersion}`,
-      componentData
+      body
     );
 
     // Инвалидируем кеш компонента
@@ -66,27 +80,6 @@ export class UpdateComponentOperation extends BaseOperation {
     this.logger.info(`Компонент ${componentId} успешно обновлён`);
 
     return updatedComponent;
-  }
-
-  /**
-   * Читает текущую версию компонента.
-   *
-   * Лишний GET осознан: без версии API отвечает 428, а вызывающий её обычно не
-   * держит. Передавшему версию явно этот запрос не делается — там работает
-   * настоящая оптимистичная блокировка.
-   */
-  private async readCurrentVersion(componentId: string): Promise<number> {
-    const component = await this.httpClient.get<ComponentOutput>(`/v3/components/${componentId}`);
-    const version = component.version;
-    // Без этой проверки в URL уехало бы `?version=undefined`, и API отверг бы запрос
-    // сообщением про формат, а не про причину — читать его пришлось бы наугад.
-    if (typeof version !== 'number') {
-      throw new Error(
-        `Не удалось прочитать версию компонента ${componentId}: ответ API её не содержит. ` +
-          'Передай version параметром инструмента.'
-      );
-    }
-    return version;
   }
 
   /**

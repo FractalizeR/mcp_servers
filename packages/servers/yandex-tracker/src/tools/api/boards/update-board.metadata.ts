@@ -19,7 +19,7 @@ export const UPDATE_BOARD_TOOL_METADATA: StaticToolMetadata = {
   tags: ['board', 'update', 'write', 'agile'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: ['boardId', 'version', 'orderAsc', 'useRanking', 'country', 'fields'],
+  redactionAllowlist: ['boardId', 'orderAsc', 'useRanking', 'fields'],
   title: 'Обновить доску',
   outputSchema: UpdateBoardOutputSchema,
   annotations: {

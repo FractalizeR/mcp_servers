@@ -970,9 +970,13 @@ describe('YandexTrackerFacade', () => {
 
         vi.mocked(mockProjectAgileContainer.sprint.updateSprint).mockResolvedValue(mockResult);
 
-        const result = await facade.updateSprint(sprintId, input);
+        const result = await facade.updateSprint(sprintId, input, 3);
 
-        expect(mockProjectAgileContainer.sprint.updateSprint).toHaveBeenCalledWith(sprintId, input);
+        expect(mockProjectAgileContainer.sprint.updateSprint).toHaveBeenCalledWith(
+          sprintId,
+          input,
+          3
+        );
         expect(result).toEqual(mockResult);
       });
     });

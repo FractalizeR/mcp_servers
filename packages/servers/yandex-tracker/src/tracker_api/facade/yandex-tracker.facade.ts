@@ -311,7 +311,7 @@ export class YandexTrackerFacade implements RawApiCapable {
   /**
    * Управляет правами доступа к очереди
    * @param params - параметры (queueId и accessData)
-   * @returns массив прав доступа
+   * @returns права доступа очереди (объект, ключёванный разрешением)
    */
   async manageQueueAccess(params: ManageQueueAccessParams): Promise<QueuePermissionsOutput> {
     return this.queues.queue.manageQueueAccess(params);
@@ -1024,14 +1024,17 @@ export class YandexTrackerFacade implements RawApiCapable {
   /**
    * Обновляет спринт
    * @param sprintId - идентификатор спринта
-   * @param input - данные для обновления
+   * @param input - данные для обновления (тело PATCH, без version)
+   * @param version - версия для оптимистичной блокировки (query-параметр);
+   *   не передана — операция читает текущую версию сама
    * @returns обновленный спринт
    */
   async updateSprint(
     sprintId: string,
-    input: Omit<UpdateSprintDto, 'sprintId'>
+    input: UpdateSprintDto,
+    version?: number
   ): Promise<SprintOutput> {
-    return this.projectAgile.sprint.updateSprint(sprintId, input);
+    return this.projectAgile.sprint.updateSprint(sprintId, input, version);
   }
 
   /**

@@ -16,16 +16,7 @@ export const UPDATE_SPRINT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['sprint', 'update', 'write', 'agile'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: [
-    'sprintId',
-    'version',
-    'startDate',
-    'endDate',
-    'startDateTime',
-    'endDateTime',
-    'status',
-    'fields',
-  ],
+  redactionAllowlist: ['sprintId', 'version', 'startDate', 'endDate', 'status', 'fields'],
   title: 'Обновить спринт',
   outputSchema: UpdateSprintOutputSchema,
   annotations: {

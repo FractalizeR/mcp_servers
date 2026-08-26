@@ -16,15 +16,7 @@ export const CREATE_SPRINT_TOOL_METADATA: StaticToolMetadata = {
   tags: ['sprint', 'create', 'write', 'agile'],
   isHelper: false,
   requiresExplicitUserConsent: false,
-  redactionAllowlist: [
-    'board',
-    'startDate',
-    'endDate',
-    'startDateTime',
-    'endDateTime',
-    'status',
-    'fields',
-  ],
+  redactionAllowlist: ['board', 'startDate', 'endDate', 'status', 'fields'],
   title: 'Создать спринт',
   outputSchema: CreateSprintOutputSchema,
   annotations: {

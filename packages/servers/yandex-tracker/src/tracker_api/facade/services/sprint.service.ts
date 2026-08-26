@@ -76,14 +76,17 @@ export class SprintService {
   /**
    * Обновляет спринт
    * @param sprintId - идентификатор спринта
-   * @param input - данные для обновления
+   * @param input - данные для обновления (тело PATCH, без version)
+   * @param version - версия для оптимистичной блокировки (query-параметр);
+   *   не передана — операция читает текущую версию сама
    * @returns обновленный спринт
    */
   async updateSprint(
     sprintId: string,
-    input: Omit<UpdateSprintDto, 'sprintId'>
+    input: UpdateSprintDto,
+    version?: number
   ): Promise<SprintOutput> {
-    return this.updateSprintOp.execute({ sprintId, ...input });
+    return this.updateSprintOp.execute(sprintId, input, version);
   }
 
   /**
