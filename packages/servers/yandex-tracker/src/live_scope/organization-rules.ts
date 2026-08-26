@@ -54,9 +54,12 @@ const QUEUE_KEYS = [
   'issueTypesConfig',
 ] as const;
 /**
- * `queue` и `version` из перечня убраны: `PATCH /v3/boards/{id}` их не принимает
- * (живая проба 2026-08-25 — `400 version: Incorrect data format`), а очередь доски
- * задаётся внутри `filter` картой «поле → значения».
+ * `queue`, `version` и `country` из перечня убраны: `PATCH /v3/boards/{id}` их не
+ * принимает при любом значении, включая текущее значение доски —
+ * `400 version: Incorrect data format` (живая проба 2026-08-25) и
+ * `400 country: Incorrect data format` (живая проба 2026-08-26). Очередь доски задаётся внутри `filter` картой «поле →
+ * значения»; `country` документация объявляет объектом и устаревшим параметром,
+ * не влияющим на работу доски.
  */
 const BOARD_KEYS = [
   'name',
@@ -66,7 +69,6 @@ const BOARD_KEYS = [
   'orderAsc',
   'query',
   'useRanking',
-  'country',
 ] as const;
 /** `POST /v3/liveBoards` (0_CONTRACTS.md, D9): очередь — внутри `autoFilters`. */
 const BOARD_CREATE_KEYS = [
@@ -81,17 +83,20 @@ const BOARD_CREATE_KEYS = [
   'autoFilters',
 ] as const;
 const BOARD_COLUMN_KEYS = ['name', 'statuses', 'limit'] as const;
-const SPRINT_KEYS = [
-  'name',
-  'board',
-  'startDate',
-  'endDate',
-  'startDateTime',
-  'endDateTime',
-  'status',
-  'version',
-  'archived',
-] as const;
+/**
+ * `startDateTime`/`endDateTime` из перечня убраны: `POST /v3/sprints` и `PATCH
+ * /v3/sprints/{id}` отвергают их ключом тела — `400 …: Incorrect data format` на
+ * всех проверенных формах ISO 8601, включая ту, что сам API отдаёт в ответе
+ * (живая проба 2026-08-26). В разделе запроса документации post-sprint и
+ * patch-sprint этих имён нет вовсе — они встречаются только в примере ответа.
+ *
+ * `version` из перечня тоже убран: `UpdateSprintTool`/`ManageSprintLifecycleTool`
+ * шлют её query-параметром (`?version=`), а не телом — `PATCH /v3/sprints/{id}` с
+ * версией в теле отвечает `400 version: Incorrect data format`, без версии
+ * (телом или query) — `428` (живая проба 2026-08-26). Белый список ключей тела,
+ * разрешающий ключ, которого в теле больше нет, — дрейф, ради которого он заведён.
+ */
+const SPRINT_KEYS = ['name', 'board', 'startDate', 'endDate', 'status'] as const;
 const GLOBAL_FIELD_KEYS = [
   'name',
   'description',
@@ -137,13 +142,21 @@ const ENTITY_FIELD_KEYS = [
   'weight',
 ] as const;
 
-/** Роли и действия правки доступов очереди — из схемы `manage_queue_access`. */
-const QUEUE_ACCESS_ROLES: ReadonlySet<string> = new Set([
-  'queue-lead',
-  'team-member',
-  'follower',
-  'access',
+/**
+ * Разрешения, виды субъектов и действия правки доступов очереди — из схемы
+ * `manage_queue_access` (`manage-queue-access.schema.ts`). Тело —
+ * `{ <разрешение>: { <вид субъекта>: { <действие>: [субъекты] } } }`; прежняя форма
+ * `{ <роль>: { <действие>: [...] } }` рубежом больше не распознаётся — роли
+ * `queue-lead`/`team-member`/`follower`/`access` разрешениями не являются.
+ */
+const QUEUE_ACCESS_PERMISSIONS: ReadonlySet<string> = new Set([
+  'create',
+  'write',
+  'read',
+  'grant',
+  'deny',
 ]);
+const QUEUE_ACCESS_SUBJECT_KINDS: ReadonlySet<string> = new Set(['users', 'groups', 'roles']);
 const QUEUE_ACCESS_ACTIONS: ReadonlySet<string> = new Set(['add', 'remove']);
 
 /** `lead` — обязательное поле схемы создания очереди: живой руководитель. */
@@ -203,27 +216,45 @@ const sprintCreateViolation: BodyViolation = (body) =>
     : undefined;
 
 /**
- * Тело правки доступов: `{ [роль]: { [действие]: [люди] } }`
- * (`manage-queue-access.operation.ts`). Каждый субъект — реальный логин, поэтому
- * список проверяется поимённо; нераспознанная форма — отказ.
+ * Тело правки доступов: `{ [разрешение]: { [вид субъекта]: { [действие]: [субъекты] } } }`
+ * (`manage-queue-access.operation.ts`). Ссылки на людей проверяются только у
+ * `subjectKind: 'users'` — числовые id групп и идентификаторы ролей (`author`,
+ * `assignee`, ...) людьми не являются и владельца прогона не касаются.
+ *
+ * Прежняя форма `{ [роль]: { [действие]: [...] } }` (роли `queue-lead`,
+ * `team-member`, `follower`, `access` верхним ключом) рубежом больше не
+ * распознаётся — верхний уровень тела теперь перечень разрешений, а не ролей.
  */
 const queueAccessViolation: BodyViolation = (body, context) => {
   if (body === undefined || Object.keys(body).length === 0) {
     return 'тело правки доступов очереди не распознано';
   }
-  for (const [role, roleValue] of Object.entries(body)) {
-    if (!QUEUE_ACCESS_ROLES.has(role)) {
-      return `доступы очереди: роль ${role} рубежу неизвестна`;
+  for (const [permission, permissionValue] of Object.entries(body)) {
+    if (!QUEUE_ACCESS_PERMISSIONS.has(permission)) {
+      return `доступы очереди: разрешение ${permission} рубежу неизвестно`;
     }
-    if (!isRecord(roleValue) || Object.keys(roleValue).length === 0) {
-      return `доступы очереди: форма роли ${role} не распознана`;
+    if (!isRecord(permissionValue) || Object.keys(permissionValue).length === 0) {
+      return `доступы очереди: форма разрешения ${permission} не распознана`;
     }
-    for (const [action, subjects] of Object.entries(roleValue)) {
-      if (!QUEUE_ACCESS_ACTIONS.has(action)) {
-        return `доступы очереди: действие ${action} рубежу неизвестно`;
+    for (const [subjectKind, subjectKindValue] of Object.entries(permissionValue)) {
+      if (!QUEUE_ACCESS_SUBJECT_KINDS.has(subjectKind)) {
+        return `доступы очереди: вид субъекта ${subjectKind} рубежу неизвестен`;
       }
-      const problem = personViolation(`доступы очереди (${role}/${action})`, subjects, context);
-      if (problem !== undefined) return problem;
+      if (!isRecord(subjectKindValue) || Object.keys(subjectKindValue).length === 0) {
+        return `доступы очереди: форма вида субъекта ${subjectKind} не распознана`;
+      }
+      for (const [action, subjects] of Object.entries(subjectKindValue)) {
+        if (!QUEUE_ACCESS_ACTIONS.has(action)) {
+          return `доступы очереди: действие ${action} рубежу неизвестно`;
+        }
+        if (subjectKind !== 'users') continue;
+        const problem = personViolation(
+          `доступы очереди (${permission}/${subjectKind}/${action})`,
+          subjects,
+          context
+        );
+        if (problem !== undefined) return problem;
+      }
     }
   }
   return undefined;

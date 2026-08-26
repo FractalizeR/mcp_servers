@@ -237,11 +237,12 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
     expectation: 'allowed-in-sandbox',
   },
   {
-    // Форма тела — та, что строит операция: `{ [роль]: { [действие]: [субъекты] } }`.
+    // Форма тела — та, что строит операция после переработки контракта (пакет C1
+    // плана `plan_tracker_sweep7_fixes`): `{ [разрешение]: { [вид субъекта]: { [действие]: [субъекты] } } }`.
     tool: 'manage_queue_access',
     method: 'patch',
     path: `/v3/queues/${DISPOSABLE_QUEUE}/permissions`,
-    body: { access: { add: [RUN_OWNER] } },
+    body: { write: { users: { add: [RUN_OWNER] } } },
     expectation: 'allowed-in-sandbox',
   },
   {
@@ -250,7 +251,7 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
     tool: 'manage_queue_access (чужая очередь)',
     method: 'patch',
     path: `/v3/queues/${SANDBOX_QUEUE}/permissions`,
-    body: { access: { add: [RUN_OWNER] } },
+    body: { write: { users: { add: [RUN_OWNER] } } },
     expectation: 'denied',
   },
   {
@@ -377,16 +378,20 @@ export const KNOWN_MUTATING_REQUESTS: readonly KnownRequest[] = [
     expectation: 'allowed-in-sandbox',
   },
   {
+    // `?version=` — обязательный query-параметр PATCH (пакет sweep7 §B, 428 без
+    // него). Путь с query всё ещё обязан сопоставляться правилом спринта:
+    // `canonicalRequestPath` срезает query до сравнения с regex правила.
     tool: 'update_sprint',
     method: 'patch',
-    path: `/v3/sprints/${SANDBOX_SPRINT}`,
+    path: `/v3/sprints/${SANDBOX_SPRINT}?version=1`,
     body: { name: `${RUN_PREFIX}-sprint-updated` },
     expectation: 'allowed-in-sandbox',
   },
   {
+    // Тот же query-параметр у `_start` (пакет sweep7 §B).
     tool: 'manage_sprint_lifecycle',
     method: 'post',
-    path: `/v3/sprints/${SANDBOX_SPRINT}/_start`,
+    path: `/v3/sprints/${SANDBOX_SPRINT}/_start?version=1`,
     expectation: 'allowed-in-sandbox',
   },
   {

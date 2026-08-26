@@ -55,7 +55,23 @@ const PERSON_FIELDS: ReadonlySet<string> = new Set(
 
 export const isPersonField = (key: string): boolean => PERSON_FIELDS.has(key.toLowerCase());
 
-/** Ссылки на людей: строка/число, объект `{id}`/`{login}` либо список того же. */
+/**
+ * Обёртка `{ add: [...] }` / `{ remove: [...] }` распознаётся, только когда это
+ * ЕДИНСТВЕННЫЕ ключи объекта. Рубеж обязан быть fail-closed: объект вида
+ * `{ add: [...], id: 'кто-то' }` — форма, которую этот код не понимает, а не
+ * законная обёртка с довеском, — иначе `id` молча пропадал бы из проверки и рубеж
+ * разрешал бы то, что раньше отклонял (найдено ревью 2026-08-26).
+ */
+function isAddRemoveWrapper(value: Record<string, unknown>): boolean {
+  const keys = Object.keys(value);
+  return keys.length > 0 && keys.every((key) => key === 'add' || key === 'remove');
+}
+
+/**
+ * Ссылки на людей: строка/число, объект `{id}`/`{login}`, список того же либо
+ * обёртка `{ add: [...] }` / `{ remove: [...] }` (`manage_queue_access`,
+ * `api-ref/queues/manage-access`) — рекурсия распаковывает её так же, как массив.
+ */
 function personRefs(value: unknown): readonly string[] | undefined {
   // `null` — не ссылка, а снятие ссылки: `assignee: null` освобождает исполнителя.
   if (value === null) return [];
@@ -63,6 +79,16 @@ function personRefs(value: unknown): readonly string[] | undefined {
     const collected: string[] = [];
     for (const entry of value) {
       const nested = personRefs(entry);
+      if (nested === undefined) return undefined;
+      collected.push(...nested);
+    }
+    return collected;
+  }
+  if (isRecord(value) && isAddRemoveWrapper(value)) {
+    const collected: string[] = [];
+    for (const key of ['add', 'remove'] as const) {
+      if (!(key in value)) continue;
+      const nested = personRefs(value[key]);
       if (nested === undefined) return undefined;
       collected.push(...nested);
     }

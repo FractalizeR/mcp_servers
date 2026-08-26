@@ -135,9 +135,10 @@ describe('ссылка на живого человека — только вл�
   });
 
   it('доступы очереди прогона чужому человеку не выдаются', () => {
-    // Форма тела — та, что строит ManageQueueAccessOperation.
+    // Форма тела — та, что строит ManageQueueAccessOperation после переработки
+    // контракта (пакет C1): `{ [разрешение]: { users: { [действие]: [...] } } }`.
     const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
-      access: { add: [RUN_OWNER, FOREIGN_PERSON] },
+      write: { users: { add: [RUN_OWNER, FOREIGN_PERSON] } },
     });
     expect(decision.allowed).toBe(false);
     expect(decision.reason).toContain(FOREIGN_PERSON);
@@ -145,15 +146,39 @@ describe('ссылка на живого человека — только вл�
 
   it('доступы очереди прогона владельцу прогона выдаются', () => {
     const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
-      access: { add: [RUN_OWNER] },
+      write: { users: { add: [RUN_OWNER] } },
     });
     expect(decision.allowed, decision.reason).toBe(true);
+  });
+
+  it('группы и роли людьми не считаются: числовой id группы владельца прогона не касается', () => {
+    const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+      write: { groups: { add: [42] } },
+    });
+    expect(decision.allowed, decision.reason).toBe(true);
+  });
+
+  it('роль как субъект владельца прогона не касается', () => {
+    const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+      grant: { roles: { add: ['assignee'] } },
+    });
+    expect(decision.allowed, decision.reason).toBe(true);
+  });
+
+  it('старая форма тела ({роль: {действие: субъекты}}) отклоняется рубежом', () => {
+    // Верхний уровень тела теперь перечень разрешений, а не ролей: `queue-lead`
+    // разрешением не является.
+    const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+      'queue-lead': { add: [RUN_OWNER] },
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason).toContain('queue-lead');
   });
 
   it('доступы чужой очереди отклоняются: песочная очередь прогоном не создавалась', () => {
     // Правка доступов боевой очереди — самая разрушительная мутация Трекера.
     const decision = decide('patch', `/v3/queues/${SANDBOX_QUEUE}/permissions`, {
-      access: { add: [RUN_OWNER] },
+      write: { users: { add: [RUN_OWNER] } },
     });
     expect(decision.allowed).toBe(false);
     expect(decision.reason).toContain('доступы очереди');
@@ -163,8 +188,12 @@ describe('ссылка на живого человека — только вл�
     const decisions = [
       decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`),
       decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {}),
-      decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, { access: 'add-everyone' }),
-      decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, { access: { add: [{}] } }),
+      decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+        write: 'add-everyone',
+      }),
+      decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+        write: { users: { add: [{}] } },
+      }),
     ];
     decisions.forEach((decision) => {
       expect(decision.allowed, decision.reason).toBe(false);

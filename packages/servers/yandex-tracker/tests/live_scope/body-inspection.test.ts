@@ -186,17 +186,64 @@ describe('пункт 2: тело сущности организации раз�
     });
   });
 
-  it('роль и действие правки доступов очереди тоже перечислены', () => {
-    const unknownRole = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
-      'super-admin': { add: [RUN_OWNER] },
+  it('разрешение, вид субъекта и действие правки доступов очереди тоже перечислены', () => {
+    const unknownPermission = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+      'super-admin': { users: { add: [RUN_OWNER] } },
+    });
+    const unknownSubjectKind = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+      write: { teams: { add: [RUN_OWNER] } },
     });
     const unknownAction = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
-      access: { grantAll: [RUN_OWNER] },
+      write: { users: { grantAll: [RUN_OWNER] } },
     });
-    expect(unknownRole.allowed).toBe(false);
-    expect(unknownRole.reason).toContain('super-admin');
+    expect(unknownPermission.allowed).toBe(false);
+    expect(unknownPermission.reason).toContain('super-admin');
+    expect(unknownSubjectKind.allowed).toBe(false);
+    expect(unknownSubjectKind.reason).toContain('teams');
     expect(unknownAction.allowed).toBe(false);
     expect(unknownAction.reason).toContain('grantAll');
+  });
+
+  it('обёртка {add}/{remove} доступов очереди распознаётся гейтом людей на любом теле', () => {
+    // `personRefs` обязана распаковывать обёртку `{ add: [...] }`/`{ remove: [...] }`,
+    // иначе глобальный обход тела (`live-scope.guard.ts`, до правил семейства)
+    // отклонил бы ЛЮБОЕ новое тело `manage_queue_access` как «ссылка на человека
+    // не распознана» — доказано чтением `personRefs`, а не наблюдением.
+    const foreign = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+      write: { users: { remove: [FOREIGN_PERSON] } },
+    });
+    const owner = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+      write: { users: { remove: [RUN_OWNER] } },
+    });
+    expect(foreign.allowed).toBe(false);
+    expect(foreign.reason).toContain(FOREIGN_PERSON);
+    expect(owner.allowed, owner.reason).toBe(true);
+  });
+
+  it('объект с ключом add и ПОСТОРОННИМ ключом — не обёртка, рубеж fail-closed', () => {
+    // Ревью 2026-08-26: `{ add: [владелец], id: чужой }` раньше проходил — код
+    // распаковывал только `add`/`remove` и молча игнорировал соседний `id`.
+    // Форма не распознана целиком — это отказ, а не разрешение по известной части.
+    const decision = decide('patch', `/v3/issues/${SANDBOX_ISSUE}`, {
+      assignee: { add: [RUN_OWNER], id: FOREIGN_PERSON },
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason).toContain(FOREIGN_PERSON);
+  });
+
+  it('законная обёртка {add: [владелец]} без посторонних ключей по-прежнему проходит', () => {
+    const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+      write: { users: { add: [RUN_OWNER] } },
+    });
+    expect(decision.allowed, decision.reason).toBe(true);
+  });
+
+  it('обёртка {add: [чужой]} без посторонних ключей по-прежнему отклоняется', () => {
+    const decision = decide('patch', `/v3/queues/${DISPOSABLE_QUEUE}/permissions`, {
+      write: { users: { add: [FOREIGN_PERSON] } },
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason).toContain(FOREIGN_PERSON);
   });
 });
 
