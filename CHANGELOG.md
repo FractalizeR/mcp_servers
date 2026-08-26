@@ -1,3 +1,44 @@
+## [5.0.0](https://github.com/FractalizeR/mcp_servers/compare/v4.0.0...v5.0.0) (2026-08-26)
+
+### ⚠ BREAKING CHANGES
+
+* **tracker:** матрица покрытия больше не выводит С-4/С-5 из категории
+инструмента; клетка производится потульной записью реестра.
+
+Детали:
+- категорийное исключение на 36 инструментов снято: посылка «живьём не
+  наблюдается никогда» устарела, прогоны 25 и 26 августа их наблюдали
+- клетка «живьём» наконец производится: 21 запись на С-4, 19 на С-5
+- запись обязана нести прочитанный обратно эффект; код ответа наблюдением
+  не считается, отчёт обязан называть инструмент и метку прогона
+- schemaFingerprint гасит запись при смене схемы инструмента; слепые пятна
+  (маршрут и форма ответа) названы в тексте отказа и в TESTING_STRATEGY
+- отчёты прогонов и сверка истории схем переехали в tests/live-runs/:
+  каталог плана удаляется, доказательство переживать его обязано
+- полноценный «мок» на С-4 снят у всех: мок свидетельствует совпадение
+  запроса с нашим представлением об API, а не то, что API его принимает
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude <noreply@anthropic.com>
+* **queues:** параметры manage_queue_access role/subjects/action заменены на
+permission/subjectKind/action/subjects; поле ответа permissions стало объектом
+вместо массива, subjectsProcessed переименовано в subjectsSent. Прежний контракт
+не работал ни при каких аргументах, поэтому рабочих вызовов сломать не может.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+
+### Features
+
+* **build:** подключить coverage:check к конвейеру валидации ([0171a9e](https://github.com/FractalizeR/mcp_servers/commit/0171a9ec139334c886dffdde7079827d49f0ded9))
+* **core:** барьер соответствия redactionAllowlist схеме инструмента ([b9418d8](https://github.com/FractalizeR/mcp_servers/commit/b9418d86a5c6dac47843aeb724fcdadf0b097e9f))
+* **queues:** контракт manage_queue_access по документированной форме ([dbac80f](https://github.com/FractalizeR/mcp_servers/commit/dbac80f0544822271ccc64566af4bed178f57cd7))
+* **tracker:** потульный реестр живых наблюдений вместо категорийного исключения ([54ac0c3](https://github.com/FractalizeR/mcp_servers/commit/54ac0c3b470ed0b1228333c445d6d031a5250941))
+
+### Bug Fixes
+
+* **live-scope:** fail-closed на форме {add|remove} и дрейф белых списков ([31982cd](https://github.com/FractalizeR/mcp_servers/commit/31982cd023c93dfb529ea6dcc67cabcc68e420de))
+* **tracker:** починка инструментов спринтов и досок по живому прогону ([fe4ddce](https://github.com/FractalizeR/mcp_servers/commit/fe4ddcea5396d48b05b0b72f87a4a57bc04d813d))
+
 ## [4.0.0](https://github.com/FractalizeR/mcp_servers/compare/v3.2.0...v4.0.0) (2026-08-25)
 
 ### ⚠ BREAKING CHANGES
