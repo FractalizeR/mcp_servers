@@ -86,7 +86,12 @@
     "coverage:matrix": {
       "dependsOn": ["^build"],
       "cache": true,
-      "inputs": ["src/**/*.ts", "tests/**/*.ts", "scripts/build-coverage-matrix.ts"],
+      "inputs": [
+        "src/**/*.ts",
+        "tests/**/*.ts",
+        "tests/live-runs/**",
+        "scripts/build-coverage-matrix.ts"
+      ],
       "outputs": ["tests/COVERAGE_MATRIX.md"]
     },
     "coverage:check": {
@@ -95,6 +100,7 @@
       "inputs": [
         "src/**/*.ts",
         "tests/**/*.ts",
+        "tests/live-runs/**",
         "tests/COVERAGE_MATRIX.md",
         "scripts/build-coverage-matrix.ts"
       ],
@@ -133,15 +139,19 @@
     },
     "knip": {
       "cache": true,
-      "inputs": [
-        "packages/**/*.ts",
-        "knip.json",
-        "package.json",
-        "packages/**/package.json"
-      ],
+      "inputs": ["packages/**/*.ts", "knip.json", "package.json", "packages/**/package.json"],
       "outputs": ["knip-report.json"]
     }
   },
-  "globalDependencies": [".npmrc", "package-lock.json", ".jscpd.json", ".dependency-cruiser.cjs", "eslint.shared.config.js", "tsconfig.base.json", "packages/framework/tsconfig.base.json", "packages/servers/tsconfig.base.json"],
+  "globalDependencies": [
+    ".npmrc",
+    "package-lock.json",
+    ".jscpd.json",
+    ".dependency-cruiser.cjs",
+    "eslint.shared.config.js",
+    "tsconfig.base.json",
+    "packages/framework/tsconfig.base.json",
+    "packages/servers/tsconfig.base.json"
+  ],
   "globalEnv": ["NODE_ENV"]
 }

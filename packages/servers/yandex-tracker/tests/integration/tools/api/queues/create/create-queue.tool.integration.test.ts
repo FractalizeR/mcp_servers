@@ -1,11 +1,14 @@
 /**
  * Интеграционный тест `create_queue` на фабрике `describeToolIntegration`.
  *
- * Категория `api/queues` целиком в реестре исключений живых прогонов
- * (`tests/coverage-exceptions/live-exempt-categories.ts`) — живой прогон 2026-08-25
- * дошёл до `POST /v3/queues/` и упал на отсутствовавшем тогда `issueTypesConfig` (D7,
- * `.agentic-planning/plan_tracker_test_coverage/5.2_LIVE_RUN_REPORT_2026-08-25.md`),
- * успешного создания очереди не наблюдалось. С-4 здесь честно `мок (гипотеза)`.
+ * С-4/С-5 у `create_queue` в матрице — `живьём`: реестр
+ * (`tests/coverage-exceptions/live-observations.ts`) несёт запись по прогону
+ * `sweep-2026-08-25` — очередь `TESTSWEEP` создана с `description`, чтение подтверждает
+ * описание (`tests/live-runs/2_LIVE_RUN_REPORT_2026-08-25c.md`). Это уже ПОСЛЕ починки:
+ * первый заход того же дня дошёл до `POST /v3/queues/` и упал на отсутствовавшем тогда
+ * `issueTypesConfig` (D7,
+ * `.agentic-planning/plan_tracker_test_coverage/5.2_LIVE_RUN_REPORT_2026-08-25.md`).
+ * Этот тест стоит на моке и маршрут не свидетельствует.
  *
  * Раньше тело запроса не сверялось вовсе (`mockCreateQueueSuccess` отвечал успехом
  * независимо от тела, `tests/integration/helpers/mock-server.ts`). `ApiExpectationSet.

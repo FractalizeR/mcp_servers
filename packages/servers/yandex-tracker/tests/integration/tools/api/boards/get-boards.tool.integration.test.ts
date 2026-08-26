@@ -1,6 +1,6 @@
 /**
- * `boards` целиком в реестре исключений живых прогонов
- * (`tests/coverage-exceptions/live-exempt-categories.ts`) — доски видны за
+ * Живьём инструменты досок наблюдаются потульно, по реестру
+ * (`tests/coverage-exceptions/live-observations.ts`) — доски видны за
  * пределами очереди `TEST` (`tests/TESTING_STRATEGY.md` §1). С-4 здесь
  * `мок (гипотеза)`: путь и метод сверены с внешним источником — референсным
  * клиентом `yandex_tracker_client/` (`Boards.path = '/{api_version}/boards/{id}'`,

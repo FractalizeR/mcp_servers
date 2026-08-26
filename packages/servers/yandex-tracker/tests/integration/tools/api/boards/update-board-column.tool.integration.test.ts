@@ -1,8 +1,10 @@
 /**
- * `boards` целиком в реестре исключений живых прогонов
- * (`tests/coverage-exceptions/live-exempt-categories.ts`) — колонка доски видна за
- * пределами очереди `TEST` (`tests/TESTING_STRATEGY.md` §1). С-4 здесь
- * `мок (гипотеза)`: см. расхождение версии в `delete-board-column.tool.integration.test.ts`
+ * С-4/С-5 у `update_board_column` в матрице — `живьём`: реестр
+ * (`tests/coverage-exceptions/live-observations.ts`) несёт запись по прогону
+ * `sweep-2026-08-25` — колонка `1` доски `106`, выставлен `limit: 5`, чтение
+ * подтверждает. Этот тест стоит на моке и маршрут не свидетельствует; ниже — на что
+ * опиралось наше представление об API до живой пробы:
+ * см. расхождение версии в `delete-board-column.tool.integration.test.ts`
  * (та же аномалия `tests/TESTING_STRATEGY.md` §2) — путь без завершающего слэша,
  * как и у `Collection.update()` референсного клиента (`obj._path`, без слэша).
  *

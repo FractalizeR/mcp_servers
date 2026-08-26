@@ -29,23 +29,29 @@
  *   «полная гарантия / дыра»); (3) файла нет или он пропущен/заглушка — «не
  *   наблюдалось», ровно то, что закрывал фиктивный `__probe/get-projects...test.ts`
  *   до фикса (C-2, CRITICAL, воспроизведено оркестратором лично);
- * - С-4 — та же трёхходовка, но для инструментов из реестра исключений живых прогонов
- *   (`tests/TESTING_STRATEGY.md` §1: доски, спринты, глобальные поля, цели и
- *   Entity API, сохранённые фильтры, очереди — список машинно читается из
- *   `tests/coverage-exceptions/live-exempt-categories.ts`, M-10) оценка (1) — «мок
- *   (гипотеза)», а не «мок»: канон §2 явно запрещает засчитывать мок как наблюдение
- *   С-4 там, где живой прогон в принципе недостижим;
- * - С-5 — никогда не наблюдается на моке; для инструментов из того же реестра клетка
- *   — «исключение», для остальных — «не наблюдалось» (объём работ этапа 3.1);
+ * - С-4 — «живьём: {отчёт}», если пара (инструмент, С-4) есть в реестре живых
+ *   наблюдений (`tests/coverage-exceptions/live-observations.ts`); иначе та же
+ *   трёхходовка, что у С-2/С-3/С-6, но КАЖДАЯ моковая клетка несёт пометку гипотезы:
+ *   «мок (гипотеза)» на фабрике и «мок (гипотеза, устаревшая оснастка)» на перечне
+ *   устаревшей оснастки. Мок не свидетельствует правильность маршрута ни для кого —
+ *   он подтверждает совпадение запроса с нашим представлением об API, а не то, что API
+ *   его принимает (канон §2);
+ * - С-5 — «живьём: {отчёт}» по тому же реестру, «исключение: {причина}» по записи
+ *   `LiveUnreachable`, иначе «не наблюдалось» (объём работ этапа 3.1);
  * - С-7 — вне области действия этапа 2.1 (план, `2.1.2_category_packages_parallel.md`
  *   P-этап не назначен), клетка «не наблюдалось» для всех — объём работ этапа P2.
+ *
+ * `--check` сверяет дыры с замороженным набором пар
+ * (`tests/coverage-exceptions/coverage-gate-baseline.ts`) в обе стороны: новая дыра —
+ * отказ, закрытая и не убранная из набора — тоже отказ.
  *
  * `--check` дополнительно (M-6, M-9): сравнивает сгенерированный markdown с уже
  * закоммиченным `tests/COVERAGE_MATRIX.md` и падает на расхождении, НЕ переписывая
  * файл (иначе кэш-хит Turborepo с `outputs: []` у задачи давал грязное git-дерево в
  * CI, а устаревшую матрицу можно было закоммитить незаметно); и падает на «устаревшей»
  * записи реестра исключений — той, у чьего инструмента уже есть рабочий тест на то же
- * свойство (иначе реестр копит мусор навсегда).
+ * свойство (иначе реестр копит мусор навсегда), и на устаревшей записи `LiveUnreachable`
+ * — той, чья клетка стала «живьём».
  *
  * Слепые пятна статических проверок (честно, а не подразумевается):
  * - тест, покрывающий инструмент под другим именем файла или списком внутри одного
@@ -68,16 +74,38 @@
 import { readdirSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { computeToolSchemaFingerprint } from '@fractalizer/mcp-core';
 import { TOOL_CLASSES } from '../src/composition-root/definitions/tool-definitions.js';
 import { MCP_TOOL_PREFIX } from '../src/constants.js';
-import { loadCoverageExceptions } from '../tests/coverage-exceptions/index.js';
-import { LIVE_EXEMPT_CATEGORY_FOLDERS } from '../tests/coverage-exceptions/live-exempt-categories.js';
+import { loadCoverageExceptions, knownToolBaseNames } from '../tests/coverage-exceptions/index.js';
+import {
+  collectCoverageGateViolations,
+  formatCoverageGateFailures,
+  assertBaselineOriginIntact,
+  COVERAGE_GATE_BASELINE,
+  GATED_PROPERTIES,
+} from '../tests/coverage-exceptions/coverage-gate-baseline.js';
+import {
+  LIVE_OBSERVATIONS,
+  LIVE_UNREACHABLE,
+  RETIRED_LIVE_OBSERVATIONS,
+  validateLiveRegistry,
+  formatStaleLiveRegistryFailures,
+  collectFingerprintMismatches,
+  formatFingerprintMismatchFailure,
+  retiredLiveKeys,
+} from '../tests/coverage-exceptions/live-observations.js';
 import {
   LEGACY_MOCK_TEST_PATHS,
   LEGACY_MOCK_TEST_BASELINE_COUNT,
   validateLegacyMockTestList,
 } from '../tests/coverage-exceptions/legacy-mock-tests.js';
-import type { CoverageException, CoverageProperty } from '../tests/coverage-exceptions/types.js';
+import type {
+  CoverageException,
+  CoverageProperty,
+  LiveObservableProperty,
+  LiveObservation,
+} from '../tests/coverage-exceptions/types.js';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = join(SCRIPT_DIR, '..');
@@ -96,7 +124,13 @@ const OUTPUT_PATH = join(PACKAGE_ROOT, 'tests', 'COVERAGE_MATRIX.md');
  */
 type Cell =
   | { readonly kind: 'unit' | 'мок' | 'живьём'; readonly ref: string }
-  | { readonly kind: 'мок (гипотеза)' | 'мок (устаревшая оснастка)'; readonly ref: string }
+  | {
+      readonly kind:
+        | 'мок (гипотеза)'
+        | 'мок (устаревшая оснастка)'
+        | 'мок (гипотеза, устаревшая оснастка)';
+      readonly ref: string;
+    }
   | { readonly kind: 'не наблюдалось' }
   | { readonly kind: 'исключение' | 'неприменимо'; readonly reason: string };
 
@@ -107,6 +141,7 @@ function cellText(cell: Cell): string {
     case 'живьём':
     case 'мок (гипотеза)':
     case 'мок (устаревшая оснастка)':
+    case 'мок (гипотеза, устаревшая оснастка)':
       return `${cell.kind}: ${cell.ref}`;
     case 'исключение':
     case 'неприменимо':
@@ -364,6 +399,58 @@ function toolBaseNameToTestFileName(baseName: string): string {
   return baseName.replace(/_/g, '-');
 }
 
+/**
+ * Отпечаток схемы каждого зарегистрированного инструмента — на нём держится
+ * привязка записи `LiveObservation` к состоянию кода.
+ *
+ * Нечитаемая схема даёт `undefined`, а не бросок: инструмент без записи в реестре
+ * прогон ронять не должен, а инструмент с записью получит расхождение —
+ * `collectFingerprintMismatches` считает `undefined` расхождением.
+ */
+function buildFingerprintIndex(): {
+  readonly fingerprints: Map<string, string>;
+  readonly readErrors: Map<string, string>;
+} {
+  const fingerprints = new Map<string, string>();
+  const readErrors = new Map<string, string>();
+  for (const ToolClass of TOOL_CLASSES) {
+    const fullName = ToolClass.METADATA.name;
+    const baseName = fullName.startsWith(MCP_TOOL_PREFIX)
+      ? fullName.slice(MCP_TOOL_PREFIX.length)
+      : fullName;
+    try {
+      fingerprints.set(baseName, computeToolSchemaFingerprint(ToolClass));
+    } catch (error: unknown) {
+      // Причина сохраняется, а не теряется: у инструмента С записью реестра она
+      // попадёт в текст расхождения, у инструмента БЕЗ записи — останется единственным
+      // следом того, что схему прочитать не удалось.
+      readErrors.set(baseName, error instanceof Error ? error.message : String(error));
+    }
+  }
+  return { fingerprints, readErrors };
+}
+
+/**
+ * Пере-штамповка обязана быть видна в артефакте, а не только в исходнике реестра:
+ * иначе самый дешёвый выход из расхождения отпечатка (правка 12 hex-символов) не
+ * оставляет следа ни в диффе матрицы, ни у читателя клетки.
+ */
+function liveCellRef(observation: LiveObservation): string {
+  return observation.fingerprintRestamp === undefined
+    ? observation.report
+    : `${observation.report} (отпечаток пере-штампован после ${observation.fingerprintRestamp.afterCommit})`;
+}
+
+function findLiveObservation(tool: string, property: LiveObservableProperty) {
+  return LIVE_OBSERVATIONS.find(
+    (observation) => observation.tool === tool && observation.property === property
+  );
+}
+
+function findLiveUnreachable(tool: string, property: LiveObservableProperty) {
+  return LIVE_UNREACHABLE.find((record) => record.tool === tool && record.property === property);
+}
+
 function findExceptionsFor(
   exceptions: readonly CoverageException[],
   tool: string,
@@ -394,8 +481,6 @@ function computeRow(
   // переобещать, а как дыру — заведомо ложно требовать несуществующего свидетельства.
   const hasNoHttpFactoryTest =
     testFile !== undefined && !testFile.hasSkip && testFile.factoryKind === 'no-http';
-  const isLiveExempt = LIVE_EXEMPT_CATEGORY_FOLDERS.has(row.categoryFolder);
-
   // Тест существует, не пропущен, не вызывает НИ ОДНУ форму фабрики И числится в
   // закрытом перечне `LEGACY_MOCK_TEST_PATHS` (храповик, найдено ревью оркестратора:
   // без привязки к перечню файл-заглушка из одной строки-комментария повторно обходил
@@ -438,18 +523,35 @@ function computeRow(
     return { kind: 'не наблюдалось' };
   };
 
+  // Мок не свидетельствует правильность маршрута НИ ДЛЯ КОГО (решение пользователя,
+  // 2026-08-26): он подтверждает совпадение запроса с нашим представлением об API, а не
+  // то, что API его принимает. Прежнее деление «инструментам исключённых категорий —
+  // гипотеза, остальным — полноценный мок» само было выведено, а не подтверждено;
+  // цена перехода измерена и составила один инструмент.
+  //
+  // `LiveUnreachable` на С-4 клетку `исключение` НЕ производит и от «записи нет» ничем
+  // не отличается: `collectCheckFailures` считает дырой только `не наблюдалось`, то
+  // есть любое `исключение` снимает дыру гейта, а `collectStaleExceptions` обходит
+  // только `CoverageException` — запись «недостижимо» не устарела бы никогда. На С-4
+  // она остаётся объяснением, а не пропуском гейта.
   const c4: Cell = (() => {
+    const observation = findLiveObservation(row.baseName, 'С-4');
+    if (observation) {
+      return { kind: 'живьём', ref: liveCellRef(observation) };
+    }
     if (hasFullFactoryTest) {
-      return isLiveExempt
-        ? { kind: 'мок (гипотеза)', ref: (testFile as ToolTestFile).path }
-        : { kind: 'мок', ref: (testFile as ToolTestFile).path };
+      return { kind: 'мок (гипотеза)', ref: (testFile as ToolTestFile).path };
     }
     if (hasNoHttpFactoryTest) {
       // Версия API не объявляется — нет запроса, который бы её нёс.
       return NOT_APPLICABLE_NO_HTTP;
     }
     if (hasLegacyMockTest) {
-      return { kind: 'мок (устаревшая оснастка)', ref: (testFile as ToolTestFile).path };
+      // Обе оговорки ортогональны и обязаны стоять вместе: «маршрут не подтверждён»
+      // (гипотеза) и «состав кейсов не гарантирован» (устаревшая оснастка). Прежний
+      // порядок проверок терял первую — `hasFullFactoryTest`/`hasLegacyMockTest`
+      // стояли раньше признака исключения.
+      return { kind: 'мок (гипотеза, устаревшая оснастка)', ref: (testFile as ToolTestFile).path };
     }
     const exception = findExceptionsFor(exceptions, row.baseName, 'С-4');
     return exception
@@ -457,12 +559,18 @@ function computeRow(
       : { kind: 'не наблюдалось' };
   })();
 
-  const c5: Cell = isLiveExempt
-    ? {
-        kind: 'исключение',
-        reason: 'tests/TESTING_STRATEGY.md §1 — вне очереди TEST, живьём не наблюдается никогда',
-      }
-    : { kind: 'не наблюдалось' };
+  // С-5 в гейт не входит вовсе (`GATED_PROPERTIES`), поэтому `исключение`
+  // здесь безвредно и остаётся честным именем недостижимости.
+  const c5: Cell = (() => {
+    const observation = findLiveObservation(row.baseName, 'С-5');
+    if (observation) {
+      return { kind: 'живьём', ref: liveCellRef(observation) };
+    }
+    const unreachable = findLiveUnreachable(row.baseName, 'С-5');
+    return unreachable
+      ? { kind: 'исключение', reason: unreachable.reason }
+      : { kind: 'не наблюдалось' };
+  })();
 
   return {
     row,
@@ -490,10 +598,12 @@ interface ToolMetadataLike {
  * `categoryFolder` неразрешим, только когда `buildCategoryIndex()` не нашла
  * `buildToolName('{baseName}', ...)` ни в одном `*.metadata.ts` — то есть
  * зарегистрированный в `TOOL_CLASSES` инструмент и его файл метаданных разошлись.
- * Раньше это тихо превращалось в `categoryFolder: '?'`, из-за чего С-4 молча
- * становился «мок (гипотеза)» вместо «мок», а С-5 — «не наблюдалось» вместо
- * «исключение» (M-8, найдено ревью пакета): матрица врала бы именно в клетке, ради
- * честности которой заведён этот тип клетки. Теперь это явная ошибка сборки.
+ * Раньше это тихо превращалось в `categoryFolder: '?'`, из-за чего клетки С-4/С-5
+ * молча меняли значение (M-8, найдено ревью пакета): матрица врала бы именно в
+ * клетке, ради честности которой заведён этот тип клетки. С переходом на потульный
+ * реестр живых наблюдений категория перестала влиять на клетки и осталась колонкой
+ * навигации и ключом сортировки — но неразрешимая категория по-прежнему означает
+ * разошедшиеся `TOOL_CLASSES` и `*.metadata.ts`, и это явная ошибка сборки.
  */
 function buildToolRows(categoryIndex: Map<string, string>): ToolRow[] {
   return TOOL_CLASSES.map((ToolClass) => {
@@ -534,8 +644,10 @@ function renderHeader(toolCount: number): string {
 
 | Значение | Смысл |
 |---|---|
-| \`unit\`/\`мок\`/\`живьём\` | свойство наблюдалось на этом уровне, состав кейсов принуждён типами фабрики \`describeToolIntegration\` (план §A) — ссылка на тест |
-| \`мок (гипотеза)\` | наблюдалось только на моке там, где канон объявляет мок неспособным свидетельствовать (С-4 для инструментов вне очереди \`TEST\`, см. \`tests/TESTING_STRATEGY.md\` §1) |
+| \`unit\`/\`мок\` | свойство наблюдалось на этом уровне, состав кейсов принуждён типами фабрики \`describeToolIntegration\` (план §A) — ссылка на тест |
+| \`живьём\` | свойство наблюдалось в живом прогоне против боевого API — ссылка на ОТЧЁТ прогона (\`tests/live-runs/\`), не на тест. Ни фабрики, ни машинно принуждённого состава кейсов здесь нет вовсе: состав проб определял автор прогона, а критерий записи (эффект прочитан обратно) держится на ревью реестра \`tests/coverage-exceptions/live-observations.ts\`. Наблюдение единично: повторяемость не гарантирована, а привязка к коду держится на отпечатке схемы ПАРАМЕТРОВ — ни маршрут, ни форму ОТВЕТА он не видит. Пометка «отпечаток пере-штампован после \`{коммит}\`» означает, что схему правили после прогона, а запись сохранили с обоснованием (\`fingerprintRestamp\`) |
+| \`мок (гипотеза)\` | С-4 наблюдался только на моке: состав кейсов принуждён фабрикой, но маршрут не подтверждён — мок свидетельствует совпадение запроса с нашим представлением об API, а не то, что API его принимает (канон §2) |
+| \`мок (гипотеза, устаревшая оснастка)\` | обе оговорки сразу: маршрут не подтверждён И состав кейсов не гарантирован |
 | \`мок (устаревшая оснастка)\` | интеграционный тест существует и не пропущен, но написан ДО фабрики, на \`mock-server.ts\` (план §D.3) — свойство наблюдалось, но обязательный состав кейсов НЕ гарантирован: он на совести автора теста, а не типов |
 | \`неприменимо: причина\` | свойство физически недостижимо для этого класса инструментов (С-4/С-6 у инструмента без HTTP-запросов — \`describeNoHttpToolIntegration\`, M-4) — не дыра, но и не \`мок\`: наблюдать нечего по построению |
 | \`не наблюдалось\` | ни один уровень свойства не проверял |
@@ -585,9 +697,46 @@ function renderHeader(toolCount: number): string {
   реальный тест (меньше минимума вызовов \`it(\`/\`expect(\`), или файл из перечня уже
   вызывает фабрику для своего инструмента (перечень — храповик: может только
   сокращаться, новый тест — всегда на фабрике).
-- С-5 не наблюдается на моке никогда; для категорий из реестра
-  \`tests/TESTING_STRATEGY.md\` §1 (вне очереди \`TEST\`) клетка — исключение, для
-  остальных — «не наблюдалось» (объём работ этапа 3.1).
+- **Дыры сверяются с замороженным НАБОРОМ пар**, а не с числом
+  (\`tests/coverage-exceptions/coverage-gate-baseline.ts\`): пара вне набора, ставшая
+  дырой, роняет \`--check\` с её именем; пара из набора, переставшая быть дырой, роняет
+  тоже — с требованием убрать строку, иначе храповик разрешал бы вернуть закрытую дыру
+  навсегда. Скаляр этого не отличает: закрытие одной клетки с одновременной потерей
+  теста у другого инструмента оставило бы прежнее число и зелёный гейт.
+  **Рост набора тоже роняет:** каждая строка базлайна сверяется с замороженным снимком
+  \`COVERAGE_GATE_BASELINE_ORIGIN\`, и ключ вне снимка законен только при записи
+  \`RetiredLiveObservation\` на ту же пару. Без этой сверки запрет «дописывать строку
+  нельзя» держался бы на комментарии: дописанная пара выглядит унаследованной.
+  Строка нужна только для свойств гейта (${GATED_PROPERTIES.join('/')}) — снятие
+  наблюдения по С-5 клетки гейта не создаёт, и строка \`tool[С-5]\` сразу становится
+  нарушением «перестала быть дырой».
+- **Живое наблюдение потульно, а не категорийно.** Клетки С-4/С-5 читают реестр
+  \`tests/coverage-exceptions/live-observations.ts\`: пара (инструмент, свойство) с
+  записью \`LiveObservation\` даёт \`живьём: {отчёт}\` (отчёты — \`tests/live-runs/\`),
+  запись \`LiveUnreachable\` даёт \`исключение: {причина}\` на С-5 и НЕ даёт исключения
+  на С-4 (иначе она снимала бы дыру гейта и не устаревала бы никогда) — на С-4 её
+  причина печатается разделом «С-4: живой прогон недостижим» под таблицей, чтобы
+  \`не наблюдалось\` не читалось как «причина неизвестна». Прежний список
+  из шести папок \`src/tools/api/*\` объявлял «живьём не наблюдается никогда» сразу 36
+  инструментам, и посылка устарела молча: допуск по владению прогоном
+  (\`tests/TESTING_STRATEGY.md\` §1) открыл доски, спринты, фильтры и очереди.
+  \`tests/TESTING_STRATEGY.md\` §1 остаётся источником ПРИЧИНЫ, реестр — источником
+  СПИСКА.
+- **Запись живого наблюдения привязана к коду отпечатком схемы параметров**
+  (\`schemaFingerprint\`, \`computeToolSchemaFingerprint\` из \`@fractalizer/mcp-core\`):
+  правка схемы инструмента роняет \`coverage:check\` с требованием перепроверить
+  инструмент живьём, пере-штамповать запись с обоснованием (\`fingerprintRestamp\`) либо
+  снять наблюдение записью \`RetiredLiveObservation\` — третий выход законный и от
+  «потеряли тест» гейтом отличается. Чего отпечаток НЕ ловит — двух вещей: **маршрут**
+  живёт в операции API (смена URL, метода или формы тела запроса клетку \`живьём\` не
+  гасит) и **форма ответа** (\`outputSchema\`, DTO разбора) в отпечаток не входит вовсе,
+  хотя правдивость эффекта С-5 читается именно через ответ — прогон 26 августа вскрыл
+  ровно этот класс (\`PATCH .../permissions\` отвечает \`{self, version}\` при
+  объявленном массиве).
+- **С-4 на моке — всегда гипотеза.** Ни у одного инструмента мок не свидетельствует
+  правильность маршрута; полноценный \`мок\` в этой колонке не появляется вовсе.
+- С-5 не наблюдается на моке никогда: либо \`живьём\` по реестру, либо \`исключение\`
+  по записи \`LiveUnreachable\`, либо «не наблюдалось» (объём работ этапа 3.1).
 - С-7 вне области действия этапа 2.1 — «не наблюдалось» для всех строк (объём работ
   этапа P2).
 - **С-6 в этой колонке — не весь С-6.** Канон
@@ -619,7 +768,83 @@ function renderTable(results: readonly RowResult[]): string {
 }
 
 /**
- * Число инструментов, у которых хотя бы одна клетка — `мок (устаревшая оснастка)`
+ * Раздел под таблицей: причины недостижимости живого прогона по С-4.
+ *
+ * На С-5 запись `LiveUnreachable` печатается прямо в клетке (`исключение: причина`),
+ * а на С-4 клетки не производит вовсе — иначе она снимала бы дыру гейта и не
+ * устаревала бы никогда (см. `computeRow`). Без этого раздела читатель матрицы видел
+ * бы на С-4 голое `не наблюдалось` там, где причина известна и записана, и полез бы
+ * заводить пробу, которую уже пробовали.
+ *
+ * Выбран раздел под таблицей, а не сноска в клетке: словарь клеток С-4 читает
+ * `collectCheckFailures` и храповик базлайна, и любой маркер в тексте клетки пришлось
+ * бы либо вносить в этот словарь, либо чистить перед сверкой.
+ */
+function renderLiveUnreachableSection(): string {
+  const c4Records = LIVE_UNREACHABLE.filter((record) => record.property === 'С-4');
+  if (c4Records.length === 0) {
+    return '';
+  }
+  const rows = c4Records
+    .map(
+      (record) =>
+        `| \`${record.tool}\` | ${record.reason} | ${record.whatWouldClose} | \`${record.report}\` |`
+    )
+    .join('\n');
+  return (
+    `\n## С-4: живой прогон недостижим — причины\n\n` +
+    `Клетка С-4 у этих инструментов читается \`не наблюдалось\`, но причина известна и ` +
+    `записана в \`tests/coverage-exceptions/live-observations.ts\` (\`LiveUnreachable\`). ` +
+    `Клетку запись НЕ закрывает намеренно: иначе она снимала бы дыру гейта и не устаревала ` +
+    `бы никогда.\n\n` +
+    `| Инструмент | Почему недостижим | Что снимет запись | Отчёт |\n|---|---|---|---|\n` +
+    rows +
+    '\n'
+  );
+}
+
+/**
+ * Раздел под таблицей: снятые живые наблюдения.
+ *
+ * Заведён по той же причине, что и раздел про недостижимость С-4: без него клетка
+ * снятой пары читается «не наблюдалось» и от «никогда не наблюдалось» неотличима, а
+ * причина снятия и условие возврата живут только в исходнике реестра. Пуст — раздела
+ * нет вовсе: пустая таблица в артефакте сообщала бы о механизме, а не о факте.
+ */
+function renderRetiredObservationsSection(): string {
+  if (RETIRED_LIVE_OBSERVATIONS.length === 0) {
+    return '';
+  }
+  const rows = RETIRED_LIVE_OBSERVATIONS.map(
+    (record) =>
+      `| \`${record.tool}\` | ${record.property} | ${record.reason} | ${record.whatWouldClose} | \`${record.runLabel}\` | \`${record.report}\` |`
+  ).join('\n');
+  return (
+    `\n## Снятые живые наблюдения\n\n` +
+    `Наблюдение относилось к другой версии контракта и снято сознательно ` +
+    `(\`RetiredLiveObservation\`, \`tests/coverage-exceptions/live-observations.ts\`). ` +
+    `Клетка читается \`не наблюдалось\`, и это не «потеряли тест»: для свойств гейта ` +
+    `(${GATED_PROPERTIES.join('/')}) пара обязана стоять в \`COVERAGE_GATE_BASELINE\`, для ` +
+    `С-5 — не должна там стоять вовсе.\n\n` +
+    `| Инструмент | Свойство | Почему снято | Что вернёт клетку | Метка снятого прогона | Отчёт |\n|---|---|---|---|---|---|\n` +
+    rows +
+    '\n'
+  );
+}
+
+/**
+ * Виды клеток, означающие «состав кейсов не гарантирован». Перечень явный, а не
+ * подстрока: клетка С-4 несёт ту же оговорку под другим именем
+ * (`мок (гипотеза, устаревшая оснастка)`), и до перевода С-4 на гипотезу счётчик
+ * совпадал с фактом случайно — по клеткам С-2/С-3/С-6 того же инструмента.
+ */
+const LEGACY_HARNESS_CELL_KINDS: ReadonlySet<Cell['kind']> = new Set([
+  'мок (устаревшая оснастка)',
+  'мок (гипотеза, устаревшая оснастка)',
+]);
+
+/**
+ * Число инструментов, у которых хотя бы одна клетка стоит на устаревшей оснастке
  * (третье число долга, решение оркестратора по находке C-2): величина, которую
  * обязан уменьшать возможный будущий этап миграции старых тестов на фабрику
  * `describeToolIntegration`. Должно быть видимым числом в отчёте, а не растворяться
@@ -627,7 +852,7 @@ function renderTable(results: readonly RowResult[]): string {
  */
 function collectLegacyMockToolCount(results: readonly RowResult[]): number {
   return results.filter((result) =>
-    Object.values(result.cells).some((cell) => cell.kind === 'мок (устаревшая оснастка)')
+    Object.values(result.cells).some((cell) => LEGACY_HARNESS_CELL_KINDS.has(cell.kind))
   ).length;
 }
 
@@ -650,13 +875,13 @@ interface CheckFailure {
   readonly reason: string;
 }
 
-/** Свойства, которые уровень мока способен наблюдать — предмет `coverage:check`. */
-const MOCK_OBSERVABLE_PROPERTIES: CoverageProperty[] = ['С-2', 'С-3', 'С-4', 'С-6'];
-
 function collectCheckFailures(results: readonly RowResult[]): CheckFailure[] {
   const failures: CheckFailure[] = [];
   for (const result of results) {
-    for (const property of MOCK_OBSERVABLE_PROPERTIES) {
+    // Перечень свойств гейта живёт в `coverage-gate-baseline.ts`: его читает и текст
+    // отказа по расхождению отпечатка, где ошибка в составе давала бы совет «допиши
+    // строку базлайна» для свойства, которого гейт не сверяет вовсе (С-5).
+    for (const property of GATED_PROPERTIES) {
       const cell = result.cells[property];
       if (cell.kind === 'не наблюдалось') {
         failures.push({
@@ -676,12 +901,23 @@ interface StaleException {
   readonly property: CoverageProperty;
 }
 
-/** Клетки, где свойство реально наблюдалось (в отличие от гипотезы или исключения). */
+/**
+ * Клетки, где свойство реально наблюдалось (в отличие от гипотезы или исключения).
+ *
+ * Клетки с пометкой гипотезы сюда НЕ входят, и это следствие перевода всех С-4 на
+ * гипотезу: пока `мок (гипотеза)` считался наблюдением, любая будущая запись
+ * `CoverageException` на С-4 объявлялась бы устаревшей сразу — «исключение на С-4»
+ * стало бы недостижимым навсегда. Сегодня это не ломается только потому, что реестр
+ * `CoverageException` пуст. Гипотеза наблюдением не является по определению.
+ *
+ * Множество используется ровно в одном месте (`collectStaleExceptions`); гейт живёт
+ * на `GATED_PROPERTIES` и клетке `не наблюдалось`, поэтому правка состава
+ * гейта не касается.
+ */
 const OBSERVED_CELL_KINDS: ReadonlySet<Cell['kind']> = new Set([
   'unit',
   'мок',
   'живьём',
-  'мок (гипотеза)',
   'мок (устаревшая оснастка)',
 ]);
 
@@ -725,6 +961,32 @@ async function main(): Promise<void> {
     packageRoot: PACKAGE_ROOT,
   });
 
+  // Снимок базлайна — то, относительно чего считается «строку дописали». Проверяется в
+  // ОБОИХ режимах: барьер, снимаемый запуском `coverage:matrix`, барьером не является.
+  assertBaselineOriginIntact();
+
+  validateLiveRegistry({
+    observations: LIVE_OBSERVATIONS,
+    unreachable: LIVE_UNREACHABLE,
+    validTools: knownToolBaseNames(),
+    packageRoot: PACKAGE_ROOT,
+  });
+
+  // Отказ идёт в ОБОИХ режимах, а не только под `--check`: барьер, который снимается
+  // запуском `coverage:matrix`, барьером не является — расхождение отпечатка иначе
+  // «чинилось» бы перегенерацией матрицы.
+  const { fingerprints, readErrors } = buildFingerprintIndex();
+  const mismatches = collectFingerprintMismatches(
+    LIVE_OBSERVATIONS,
+    (tool) => fingerprints.get(tool),
+    (tool) => readErrors.get(tool)
+  );
+  if (mismatches.length > 0) {
+    console.error(formatFingerprintMismatchFailure(mismatches));
+    process.exitCode = 1;
+    return;
+  }
+
   const categoryIndex = buildCategoryIndex();
   const testFileIndex = buildTestFileIndex();
   validateLegacyMockPathsNotMigrated(testFileIndex);
@@ -732,7 +994,12 @@ async function main(): Promise<void> {
   const rows = buildToolRows(categoryIndex);
   const results = rows.map((row) => computeRow(row, testFileIndex, exceptions));
 
-  const markdown = renderHeader(rows.length) + renderTable(results) + renderFooter(results);
+  const markdown =
+    renderHeader(rows.length) +
+    renderTable(results) +
+    renderLiveUnreachableSection() +
+    renderRetiredObservationsSection() +
+    renderFooter(results);
 
   if (!checkMode) {
     writeFileSync(OUTPUT_PATH, markdown, 'utf-8');
@@ -755,33 +1022,45 @@ async function main(): Promise<void> {
     );
   }
 
+  // Дыры сверяются с замороженным НАБОРОМ пар, а не с числом: скаляр не отличает
+  // новую дыру от унаследованной. Отказ идёт в обе стороны — иначе закрытая дыра
+  // остаётся разрешённой к возврату навсегда.
   const failures = collectCheckFailures(results);
-  if (failures.length > 0) {
+  const gate = collectCoverageGateViolations(failures, COVERAGE_GATE_BASELINE, retiredLiveKeys());
+  const gateLines = formatCoverageGateFailures(gate);
+  if (gateLines.length > 0) {
     ok = false;
 
-    console.error(`coverage:check: найдено ${String(failures.length)} дыр:`);
-    for (const failure of failures) {
-      console.error(`  - ${failure.tool} [${failure.property}]: ${failure.reason}`);
-    }
+    for (const line of gateLines) console.error(line);
+  }
+  if (failures.length > 0 && gate.appeared.length === 0 && gate.closed.length === 0) {
+    console.log(
+      `coverage:check: ${String(failures.length)} унаследованных дыр в базлайне — долг виден, но не растёт.`
+    );
   }
 
+  const resultByTool = new Map(results.map((result) => [result.row.baseName, result]));
+  const staleLines = formatStaleLiveRegistryFailures(
+    LIVE_UNREACHABLE,
+    RETIRED_LIVE_OBSERVATIONS,
+    (tool, property) => resultByTool.get(tool)?.cells[property].kind
+  );
   const staleExceptions = collectStaleExceptions(results, exceptions);
-  if (staleExceptions.length > 0) {
+  if (staleLines.length > 0 || staleExceptions.length > 0) {
     ok = false;
 
-    console.error(
-      `coverage:check: найдено ${String(staleExceptions.length)} устаревших записей реестра исключений:`
-    );
+    for (const line of staleLines) console.error(line);
     for (const stale of staleExceptions) {
       console.error(
-        `  - ${stale.tool} [${stale.property}]: у инструмента уже есть рабочий тест на это свойство — удали запись из tests/coverage-exceptions/`
+        `coverage:check: запись реестра исключений устарела — ${stale.tool} [${stale.property}]: ` +
+          `у инструмента уже есть рабочий тест на это свойство, удали её из tests/coverage-exceptions/`
       );
     }
   }
 
   if (ok) {
     console.log(
-      'coverage:check зелён — матрица актуальна, дыр по наблюдаемым мокой свойствам нет, устаревших исключений нет.'
+      'coverage:check зелён — матрица актуальна, новых дыр сверх базлайна нет, устаревших записей реестров нет.'
     );
     return;
   }

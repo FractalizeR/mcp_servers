@@ -1,7 +1,9 @@
 /**
  * Интеграционный тест `create_entity` на фабрике `describeToolIntegration`
- * (план 2.1.2, пакет P2). Entity API в реестре исключений живых прогонов
- * (`tests/TESTING_STRATEGY.md` §1).
+ * (план 2.1.2, пакет P2). Записей в реестре живых наблюдений
+ * (`tests/coverage-exceptions/live-observations.ts`) на Entity API нет — С-4 в матрице
+ * `мок (гипотеза)`. Категорийного «живьём не наблюдается никогда» больше нет вовсе:
+ * `tests/TESTING_STRATEGY.md` §1 — источник ПРИЧИНЫ, реестр — источник СПИСКА.
  *
  * API: `POST /v3/entities/{entityType}` с телом `{ fields: { summary, ... } }` —
  * подтверждено официальной документацией

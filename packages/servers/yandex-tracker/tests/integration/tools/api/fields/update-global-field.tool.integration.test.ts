@@ -1,8 +1,10 @@
 /**
  * Интеграционный тест `update_global_field` на фабрике `describeToolIntegration`.
  *
- * Категория `api/fields` целиком в реестре исключений живых прогонов
- * (`tests/coverage-exceptions/live-exempt-categories.ts`) — С-4 здесь `мок (гипотеза)`.
+ * Живьём `update_global_field` не наблюдался и сегодня недостижим: реестр
+ * (`tests/coverage-exceptions/live-observations.ts`) несёт на него `LiveUnreachable`
+ * с причиной D10 — С-4 здесь `мок (гипотеза)`, С-5 — `исключение`. Причина и условие
+ * её снятия печатаются разделом «С-4: живой прогон недостижим» в `COVERAGE_MATRIX.md`.
  *
  * Путь — `PATCH /v3/fields/{fieldId}` (миграция 4.1, маршрут ресурса — `inventory/
  * v2-paths-2026-08-24.md`). Референсный клиент подтверждает метод `PATCH`

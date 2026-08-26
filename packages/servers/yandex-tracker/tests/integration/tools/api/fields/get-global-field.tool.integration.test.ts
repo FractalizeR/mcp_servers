@@ -1,8 +1,8 @@
 /**
  * Интеграционный тест `get_global_field` на фабрике `describeToolIntegration`.
  *
- * Категория `api/fields` целиком в реестре исключений живых прогонов
- * (`tests/coverage-exceptions/live-exempt-categories.ts`) — С-4 здесь `мок (гипотеза)`.
+ * Живьём инструменты глобальных полей не наблюдались (реестр
+ * `tests/coverage-exceptions/live-observations.ts`) — С-4 здесь `мок (гипотеза)`.
  *
  * Путь — `GET /v3/fields/{fieldId}` (миграция 4.1). Документация не описывает получение
  * ОДНОГО поля отдельным разделом; v3 подтверждён read-only оракулом маршрутов

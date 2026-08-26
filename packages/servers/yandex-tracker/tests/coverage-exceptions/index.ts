@@ -33,8 +33,9 @@ const VALID_PROPERTIES: ReadonlySet<string> = new Set(COVERAGE_PROPERTIES);
 const NON_CATEGORY_FILES = new Set([
   'index.ts',
   'types.ts',
-  'live-exempt-categories.ts',
+  'live-observations.ts',
   'legacy-mock-tests.ts',
+  'coverage-gate-baseline.ts',
 ]);
 
 interface CategoryModule {
@@ -45,8 +46,12 @@ interface ToolMetadataLike {
   readonly name: string;
 }
 
-/** Базовые имена всех зарегистрированных инструментов — источник валидации `tool`. */
-function knownToolBaseNames(): ReadonlySet<string> {
+/**
+ * Базовые имена всех зарегистрированных инструментов — источник валидации `tool` и
+ * для этого реестра, и для реестра живых наблюдений (`live-observations.ts`), который
+ * той же проверкой ловит опечатку в имени инструмента.
+ */
+export function knownToolBaseNames(): ReadonlySet<string> {
   return new Set(
     TOOL_CLASSES.map((ToolClass) => {
       const fullName = (ToolClass as unknown as { METADATA: ToolMetadataLike }).METADATA.name;
@@ -59,7 +64,7 @@ function knownToolBaseNames(): ReadonlySet<string> {
 
 /**
  * Каталоги категорий: каждый `.ts`-файл в переданной директории (по умолчанию — эта
- * же, кроме `index.ts`/`types.ts`/`live-exempt-categories.ts`/`legacy-mock-tests.ts` и
+ * же, кроме файлов из `NON_CATEGORY_FILES` и
  * тестов самой оснастки) обязан экспортировать `EXCEPTIONS: CoverageException[]`.
  */
 function listCategoryFiles(dir: string): string[] {

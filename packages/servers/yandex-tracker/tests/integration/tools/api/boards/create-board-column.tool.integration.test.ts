@@ -1,6 +1,6 @@
 /**
- * `boards` целиком в реестре исключений живых прогонов
- * (`tests/coverage-exceptions/live-exempt-categories.ts`) — колонка доски видна за
+ * Живьём инструменты досок наблюдаются потульно, по реестру
+ * (`tests/coverage-exceptions/live-observations.ts`) — колонка доски видна за
  * пределами очереди `TEST` (`tests/TESTING_STRATEGY.md` §1). С-4 здесь
  * `мок (гипотеза)`: см. расхождение версии в `delete-board-column.tool.integration.test.ts`
  * (та же аномалия `tests/TESTING_STRATEGY.md` §2). Завершающий слэш пути

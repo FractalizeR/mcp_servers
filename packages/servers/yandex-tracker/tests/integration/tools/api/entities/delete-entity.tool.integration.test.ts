@@ -1,9 +1,11 @@
 /**
  * Интеграционный тест `delete_entity` на фабрике `describeToolIntegration`
  * (`.agentic-planning/plan_tracker_test_coverage/2.1.2_category_packages_parallel.md`,
- * пакет P2). Entity API целиком в реестре исключений живых прогонов
- * (`tests/TESTING_STRATEGY.md` §1) — путь/метод сверены с внешним источником
- * истины (см. отчёт исполнителя пакета), а не с собственным кодом операции.
+ * пакет P2). Записей в реестре живых наблюдений
+ * (`tests/coverage-exceptions/live-observations.ts`) на Entity API нет — С-4 в матрице
+ * `мок (гипотеза)`; категорийного «живьём не наблюдается никогда» больше нет вовсе.
+ * Путь/метод сверены с внешним источником истины (см. отчёт исполнителя пакета), а не
+ * с собственным кодом операции.
  *
  * API: `DELETE /v3/entities/{entityType}/{entityId}` — подтверждено официальной
  * документацией (yandex.ru/support/tracker/en/api-ref/entities/delete-entity).

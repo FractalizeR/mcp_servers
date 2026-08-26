@@ -1,9 +1,14 @@
 /**
  * Образцовый интеграционный тест на фабрике `describeToolIntegration`
  * (`.agentic-planning/plan_tracker_test_coverage/2.1.1_matrix_and_harness_sequential.md`
- * §E). Категория `boards` живьём не проверяется вовсе (вне очереди `TEST`,
- * `tests/TESTING_STRATEGY.md` §1) — С-4 здесь честно `мок (гипотеза)` в матрице, а не
- * `мок`. После сдачи пакета 2.1.1 файл доступен пакету P1 только на чтение (план §E).
+ * С-4/С-5 у `create_board` в матрице — `живьём`: реестр
+ * (`tests/coverage-exceptions/live-observations.ts`) несёт запись по прогону
+ * `sweep7-2026-08-26` — доска `108`, обратное чтение отдаёт очередь в
+ * `autoFilterSettings.addFilterSettings.liveFilter`. Клетку производит реестр, а не этот
+ * тест: он стоит на моке и свидетельствует лишь совпадение запроса с нашим
+ * представлением об API (`tests/TESTING_STRATEGY.md` §1, канон §2).
+ *
+ * После сдачи пакета 2.1.1 файл доступен пакету P1 только на чтение (план §E).
  *
  * Маршрут — `POST /v3/liveBoards/`: `POST /v3/boards` объявлен устаревшим и молча
  * игнорирует тело запроса (0_CONTRACTS.md, D9).

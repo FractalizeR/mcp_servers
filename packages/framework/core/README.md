@@ -269,6 +269,63 @@ ResultLogger.logSuccess(logger, 'get_item', result, { itemId: '123' });
 ResultLogger.logError(logger, 'get_item', error, { itemId: '123' });
 ```
 
+### validateRedactionAllowlist()
+
+**Барьер соответствия `METADATA.redactionAllowlist` схеме параметров.** Подключается
+вручную в `scripts/validate-tool-registration.ts` каждого сервера — сам себя он нигде
+не запускает (чек-лист: [MCP_SERVER_CHECKLIST.md](../../../MCP_SERVER_CHECKLIST.md) §8.3).
+
+```typescript
+import { validateRedactionAllowlist } from '@fractalizer/mcp-core';
+
+const errors = validateRedactionAllowlist(TOOL_CLASSES); // [] — расхождений нет
+```
+
+**Обещает:** каждый ключ allow-list называет параметр, реально существующий в
+`getDefinition().inputSchema`, на любой глубине вложенности. Опечатка, переименованный
+параметр и допуск, переживший удаление параметра, роняют проверку. Нечитаемая схема при
+непустом allow-list — тоже ошибка, а не пропуск.
+
+**НЕ проверяет:**
+- **тип допущенного параметра** — сверяется только ИМЯ. Допуск на параметр со свободным
+  пользовательским текстом пройдёт зелёным, инертный допуск на нередактируемый параметр —
+  тоже. Осмысленность допусков проверяет ревью и отдельный смоук на стороне сервера
+  (образец — `tests/smoke/tool-redaction-allowlist.smoke.test.ts` у yandex-tracker);
+- **обратное направление** — параметр вне allow-list штатен по построению;
+- **путь до параметра** — совпадение имени на любой глубине принимается за существование,
+  как и в самом `redactParams`.
+
+Границы и формы JSON Schema, которые знает обходчик, — JSDoc
+`src/tools/base/redaction-allowlist-validator.ts`.
+
+### computeToolSchemaFingerprint()
+
+**Отпечаток схемы параметров инструмента** — способ привязать утверждение, записанное
+о инструменте однажды, к состоянию его кода (потребитель — реестр живых наблюдений
+yandex-tracker, `tests/coverage-exceptions/live-observations.ts`).
+
+```typescript
+const fingerprint = computeToolSchemaFingerprint(GetIssuesTool); // 'e170b50752de'
+```
+
+Схема берётся тем же единственным способом, что и у барьера допусков —
+`readToolInputSchema` (`getDefinition().inputSchema`). Отпечаток детерминирован:
+порядок ключей на него не влияет, порядок элементов массива — влияет (в схеме он
+значим). 12 hex-символов — чтобы строка читалась в диффе; коллизии моделью угроз не
+являются.
+
+**НЕ ловит** — всё за пределами схемы параметров, и таких классов два:
+- **маршрут** (URL, метод, форма тела запроса) живёт в операции API, и его смена без
+  смены схемы отпечатком не видна;
+- **форма ответа** — `outputSchema` и DTO разбора в отпечаток не входят вовсе, хотя
+  утверждение «эффект правдив» читается именно через ответ (живой прогон трекера
+  26.08.2026: `PATCH .../permissions` отдаёт `{self, version}` при типе-массиве).
+
+Названный риск: отпечаток зависит от адаптера zod→JSON Schema и версии `zod` — их
+смена меняет ВСЕ отпечатки разом, и массовая пере-штамповка была бы ложью (см. JSDoc
+`tool-schema-fingerprint.ts`). `computeSchemaFingerprint(schema)` считает то же по
+готовой схеме.
+
 ---
 
 ## 🚨 Critical Rules
@@ -373,6 +430,13 @@ return { content: [{ type: 'text', text: JSON.stringify(data) }] };
 export { BaseTool } from './tools/base/base-tool.js';
 export { BaseDefinition } from './tools/base/base-definition.js';
 export type { StaticToolMetadata } from './tools/base/tool-metadata.js';
+export { validateRedactionAllowlist } from './tools/base/redaction-allowlist-validator.js';
+export { readToolInputSchema } from './tools/base/tool-input-schema.js';
+export type { ToolClassLike } from './tools/base/tool-input-schema.js';
+export {
+  computeSchemaFingerprint,
+  computeToolSchemaFingerprint,
+} from './tools/base/tool-schema-fingerprint.js';
 
 // Utilities
 export { ResponseFieldFilter } from './utils/response-field-filter.js';

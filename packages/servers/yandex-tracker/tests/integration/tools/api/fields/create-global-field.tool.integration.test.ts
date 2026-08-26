@@ -1,8 +1,10 @@
 /**
  * Интеграционный тест `create_global_field` на фабрике `describeToolIntegration`.
  *
- * Категория `api/fields` целиком в реестре исключений живых прогонов
- * (`tests/coverage-exceptions/live-exempt-categories.ts`) — С-4 здесь `мок (гипотеза)`.
+ * Живьём `create_global_field` не наблюдался и сегодня недостижим: реестр
+ * (`tests/coverage-exceptions/live-observations.ts`) несёт на него `LiveUnreachable`
+ * с причиной D10 — С-4 здесь `мок (гипотеза)`, С-5 — `исключение`. Причина и условие
+ * её снятия печатаются разделом «С-4: живой прогон недостижим» в `COVERAGE_MATRIX.md`.
  *
  * Путь и форма тела — `POST /v3/fields` (D10, `.agentic-planning/
  * plan_tracker_fix_create_tools/0_CONTRACTS.md`): `id`/`name{en,ru}`/`category`/`type`

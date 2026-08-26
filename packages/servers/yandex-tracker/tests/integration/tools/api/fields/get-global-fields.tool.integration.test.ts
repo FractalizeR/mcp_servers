@@ -1,8 +1,8 @@
 /**
  * Интеграционный тест `get_global_fields` на фабрике `describeToolIntegration`.
  *
- * Категория `api/fields` целиком в реестре исключений живых прогонов
- * (`tests/coverage-exceptions/live-exempt-categories.ts`) — С-4 здесь `мок (гипотеза)`.
+ * Живьём инструменты глобальных полей не наблюдались (реестр
+ * `tests/coverage-exceptions/live-observations.ts`) — С-4 здесь `мок (гипотеза)`.
  *
  * Путь — `GET /v3/fields` (миграция 4.1, `.agentic-planning/plan_tracker_test_coverage/
  * 4.1_v3_migration_parallel.md`): документация (`https://yandex.ru/support/tracker/ru/

@@ -1,9 +1,12 @@
 /**
  * Интеграционный тест `create_component` на фабрике `describeToolIntegration`.
  *
- * Категория `api/components` НЕ входит в реестр исключений живых прогонов
- * (`tests/coverage-exceptions/live-exempt-categories.ts`) — маршрут подтверждён живьём
- * (D1, `.agentic-planning/plan_tracker_test_coverage/5.2_LIVE_RUN_REPORT_2026-08-25.md`).
+ * С-4/С-5 у `create_component` в матрице — `живьём`: реестр
+ * (`tests/coverage-exceptions/live-observations.ts`) несёт запись по прогону
+ * `sweep-2026-08-25` (компонент `31` очереди `TEST`, версия 1→2, независимое чтение —
+ * `tests/live-runs/2_LIVE_RUN_REPORT_2026-08-25c.md`). Клетку производит реестр, а не
+ * этот тест: он стоит на моке (D1,
+ * `.agentic-planning/plan_tracker_test_coverage/5.2_LIVE_RUN_REPORT_2026-08-25.md`).
  *
  * Путь и форма тела — `POST /v3/components` (D1, `0_CONTRACTS.md`): маршрута
  * `POST /v3/queues/{q}/components` в API нет, очередь передаётся ключом в теле (`queue`).

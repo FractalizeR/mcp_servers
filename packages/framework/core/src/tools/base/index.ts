@@ -11,3 +11,7 @@ export type { ToolMetadata, StaticToolMetadata } from './tool-metadata.js';
 export { validateRedactionAllowlist } from './redaction-allowlist-validator.js';
 export { readToolInputSchema } from './tool-input-schema.js';
 export type { ToolClassLike } from './tool-input-schema.js';
+export {
+  computeSchemaFingerprint,
+  computeToolSchemaFingerprint,
+} from './tool-schema-fingerprint.js';
