@@ -1246,46 +1246,10 @@ export class MockServer {
     return this;
   }
 
-  /**
-   * Mock успешного управления доступом к очереди
-   */
-  mockManageQueueAccessSuccess(queueKey: string): this {
-    // API возвращает массив прав доступа (QueuePermissionsOutput)
-    const permissions = [
-      {
-        id: 'user-1234567890',
-        self: 'https://api.tracker.yandex.net/v3/users/user-1234567890',
-        display: 'Test User',
-      },
-    ];
-    const mockKey = `PATCH ${TRACKER_API_V3}/queues/${queueKey}/permissions`;
-    this.mockAdapter.onPatch(`${TRACKER_API_V3}/queues/${queueKey}/permissions`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [200, permissions];
-    });
-    this.pendingMocks.push(mockKey);
-    return this;
-  }
-
-  /**
-   * Mock ошибки 403 при управлении доступом (нет прав)
-   */
-  mockManageQueueAccess403(queueKey: string): this {
-    const response = generateError403();
-    const mockKey = `PATCH ${TRACKER_API_V3}/queues/${queueKey}/permissions`;
-    this.mockAdapter.onPatch(`${TRACKER_API_V3}/queues/${queueKey}/permissions`).reply(() => {
-      const index = this.pendingMocks.indexOf(mockKey);
-      if (index !== -1) {
-        this.pendingMocks.splice(index, 1);
-      }
-      return [403, response];
-    });
-    this.pendingMocks.push(mockKey);
-    return this;
-  }
+  // manage_queue_access переведён на describeToolIntegration/ApiExpectationSet
+  // (tests/integration/tools/api/queues/access/manage-queue-access.tool.integration.test.ts,
+  // пакет C2) — mockManageQueueAccessSuccess/mockManageQueueAccess403 больше не нужны,
+  // тот же путь, которым create_queue лишился mockCreateQueueSuccess/mockCreateQueue403.
 
   // ============================================================
   // COMPONENTS API МЕТОДЫ

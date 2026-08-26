@@ -44,9 +44,12 @@ export type {
 
 // Queue Permission
 export type {
-  QueuePermission,
-  QueuePermissionWithUnknownFields,
-  QueueRole,
+  QueueAccessSubject,
+  QueueAccessSubjectWithUnknownFields,
+  QueuePermissionEntry,
+  QueuePermissionEntryWithUnknownFields,
+  QueuePermissions,
+  QueuePermissionsWithUnknownFields,
 } from './queue-permission.entity.js';
 
 // Status
@@ -150,7 +153,7 @@ export {
   createFullQueue,
   createQueueField,
   createQueueFieldWithCategory,
-  createQueuePermission,
+  createQueueAccessSubject,
   createStatus,
   createPriority,
   createIssueType,

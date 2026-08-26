@@ -1,134 +1,142 @@
 /**
- * Интеграционные тесты для manage-queue-access tool
+ * Интеграционные тесты для `manage_queue_access` на фабрике `describeToolIntegration`.
+ *
+ * Сторона ответа переписана пакетом C2 после живого наблюдения 2026-08-26: `PATCH
+ * /v3/queues/{queueId}/permissions` отдаёт объект, ключёванный разрешением
+ * (`{self, version, create?, write?, read?, grant?, deny?}`), а не массив —
+ * `.agentic-planning/plan_tracker_sweep7_fixes/inventory/queue-permissions-response-2026-08-26.json`.
+ * Прежняя типизация (`z.array(FilteredEntitySchema)`) отвергалась MCP-клиентом на
+ * границе схемы (`data/data/permissions must be array`) — инструмент был нерабочим.
+ *
+ * `deny` живьём не наблюдался (см. `queue-permission.entity.ts`) — используется как
+ * пример поля, отсутствующего в ответе, для кейса `FIELDS_WITHOUT_VALUE` ниже.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createTestClient } from '#integration/helpers/mcp-client.js';
-import { createMockServer } from '#integration/helpers/mock-server.js';
-import type { TestMCPClient } from '#integration/helpers/mcp-client.js';
-import type { MockServer } from '#integration/helpers/mock-server.js';
+import { describe, expect, it } from 'vitest';
+import {
+  generateError403,
+  generateError404,
+} from '#integration/helpers/template-based-generator.js';
+import { createVersionOnlyQueuePermissionsFixture } from '#helpers/queue-permission.fixture.js';
+import { MANAGE_QUEUE_ACCESS_TOOL_METADATA } from '#tools/api/queues/manage-queue-access.metadata.js';
+import { ManageQueueAccessOutputDataSchema } from '#tools/api/queues/manage-queue-access.schema.js';
 import { STANDARD_QUEUE_PERMISSION_FIELDS } from '#helpers/test-fields.js';
-import { getTextContent } from '#helpers/tool-result.helper.js';
+import {
+  describeToolIntegration,
+  useToolIntegrationContext,
+  assertMatchesOutputSchema,
+} from '#integration/helpers/tool-integration-suite.js';
 
-describe('manage-queue-access integration tests', () => {
-  let client: TestMCPClient;
-  let mockServer: MockServer;
+const BASE_INPUT = {
+  queueId: 'TEST',
+  action: 'add' as const,
+  subjects: ['testuser'],
+  permission: 'write' as const,
+  subjectKind: 'users' as const,
+};
 
-  beforeEach(async () => {
-    client = await createTestClient({ logLevel: 'silent' });
-    mockServer = createMockServer(client.getAxiosInstance());
-  });
+const PERMISSIONS_PATH = '/v3/queues/TEST/permissions';
 
-  afterEach(() => {
-    mockServer.cleanup();
-  });
+describeToolIntegration({
+  tool: MANAGE_QUEUE_ACCESS_TOOL_METADATA.name,
 
-  describe('Happy Path', () => {
-    it('должен добавить пользователю доступ к очереди', async () => {
-      // Arrange
-      const queueKey = 'TEST';
-      mockServer.mockManageQueueAccessSuccess(queueKey);
+  expectedRequests: [{ method: 'patch', path: PERMISSIONS_PATH, apiVersion: 'v3' }],
 
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
-        queueId: queueKey,
-        action: 'add',
-        subjects: ['testuser'],
-        role: 'follower',
-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
-      });
+  happyPath: {
+    // `PATCH .../permissions` живьём отвечает ТОЛЬКО `{self, version}` — живая проба
+    // 2026-08-26 (`queue-permission.entity.ts`). Мок happy path обязан отражать эту
+    // форму, а не полный набор разрешений, который PATCH никогда не возвращает;
+    // полную форму фильтрации покрывает unit-тест
+    // `manage-queue-access.tool.test.ts` («…объектом, ключёванным разрешением…»).
+    input: { ...BASE_INPUT, fields: ['self', 'version'] },
+    arrange: (api) => {
+      api
+        .expectRequest({
+          method: 'patch',
+          path: PERMISSIONS_PATH,
+          apiVersion: 'v3',
+          body: { write: { users: { add: ['testuser'] } } },
+        })
+        .reply(200, createVersionOnlyQueuePermissionsFixture());
+    },
+    outputDataSchema: ManageQueueAccessOutputDataSchema,
+    assertData: (data) => {
+      expect(Array.isArray(data.permissions)).toBe(false);
+      const permissions = data.permissions as { self: string; version: number };
+      expect(permissions.self).toBeDefined();
+      expect(permissions.version).toBeDefined();
+      expect(data.subjectsSent).toBe(1);
+    },
+  },
 
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      expect(response.data).toBeDefined();
-      expect(response.data.permissions).toBeDefined();
-      expect(Array.isArray(response.data.permissions)).toBe(true);
-      mockServer.assertAllRequestsDone();
+  invalidInput: {
+    // permission вне справочника (queue-lead ролью запроса не является) —
+    // отклоняется схемой до HTTP.
+    input: { ...BASE_INPUT, permission: 'queue-lead' },
+  },
+
+  errors: {
+    forbidden: {
+      arrange: (api) => {
+        api
+          .expectRequest({ method: 'patch', path: PERMISSIONS_PATH, apiVersion: 'v3' })
+          .reply(403, generateError403());
+      },
+      input: { ...BASE_INPUT, fields: [...STANDARD_QUEUE_PERMISSION_FIELDS] },
+    },
+    notFound: {
+      arrange: (api) => {
+        api
+          .expectRequest({ method: 'patch', path: PERMISSIONS_PATH, apiVersion: 'v3' })
+          .reply(404, generateError404());
+      },
+      input: { ...BASE_INPUT, fields: [...STANDARD_QUEUE_PERMISSION_FIELDS] },
+    },
+  },
+
+  // manage_queue_access — единичная операция без batch-режима.
+  batch: 'not-applicable',
+
+  // Не list-эндпоинт — пагинация неприменима.
+  pagination: 'none',
+
+  warnings: {
+    // `STANDARD_QUEUE_PERMISSION_FIELDS` — тот набор полей, который агент запросит
+    // по умолчанию (включает `write.users.display`). PATCH живьём отвечает только
+    // `{self, version}`, поэтому в бою этот вызов ВСЕГДА даёт FIELDS_WITHOUT_VALUE —
+    // не частный случай `deny`, а следствие формы ответа.
+    arrange: (api) => {
+      api
+        .expectRequest({ method: 'patch', path: PERMISSIONS_PATH, apiVersion: 'v3' })
+        .reply(200, createVersionOnlyQueuePermissionsFixture());
+    },
+    input: { ...BASE_INPUT, fields: [...STANDARD_QUEUE_PERMISSION_FIELDS] },
+    codes: ['FIELDS_WITHOUT_VALUE'],
+  },
+});
+
+describe(`${MANAGE_QUEUE_ACCESS_TOOL_METADATA.name} — ответ без единого разрешения`, () => {
+  const ctx = useToolIntegrationContext();
+
+  it('переживает ответ {self, version} без исключения (форма смоука референсного клиента)', async () => {
+    ctx.api
+      .expectRequest({
+        method: 'patch',
+        path: PERMISSIONS_PATH,
+        apiVersion: 'v3',
+        body: { write: { users: { add: ['testuser'] } } },
+      })
+      .reply(200, createVersionOnlyQueuePermissionsFixture());
+
+    const result = await ctx.client.callTool(MANAGE_QUEUE_ACCESS_TOOL_METADATA.name, {
+      ...BASE_INPUT,
+      fields: ['self', 'version'],
     });
 
-    it('должен удалить у пользователя доступ к очереди', async () => {
-      // Arrange
-      const queueKey = 'PROJ';
-      mockServer.mockManageQueueAccessSuccess(queueKey);
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
-        queueId: queueKey,
-        action: 'remove',
-        subjects: ['testuser'],
-        role: 'follower',
-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      expect(response.data).toBeDefined();
-      mockServer.assertAllRequestsDone();
-    });
-
-    it('должен добавить доступ с ролью teamMember', async () => {
-      // Arrange
-      const queueKey = 'TEST';
-      mockServer.mockManageQueueAccessSuccess(queueKey);
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
-        queueId: queueKey,
-        action: 'add',
-        subjects: ['developer'],
-        role: 'team-member',
-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      expect(response.data).toBeDefined();
-      mockServer.assertAllRequestsDone();
-    });
-
-    it('должен добавить доступ с ролью access', async () => {
-      // Arrange
-      const queueKey = 'TEST';
-      mockServer.mockManageQueueAccessSuccess(queueKey);
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
-        queueId: queueKey,
-        action: 'add',
-        subjects: ['assignee1'],
-        role: 'access',
-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getTextContent(result));
-      expect(response.data).toBeDefined();
-      mockServer.assertAllRequestsDone();
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('должен обработать ошибку 403 (нет прав)', async () => {
-      // Arrange
-      const queueKey = 'TEST';
-      mockServer.mockManageQueueAccess403(queueKey);
-
-      // Act
-      const result = await client.callTool('fr_yandex_tracker_manage_queue_access', {
-        queueId: queueKey,
-        action: 'add',
-        subjects: ['testuser'],
-        role: 'follower',
-        fields: STANDARD_QUEUE_PERMISSION_FIELDS,
-      });
-
-      // Assert
-      expect(result.isError).toBe(true);
-      mockServer.assertAllRequestsDone();
-    });
+    expect(result.isError).toBeUndefined();
+    const data = assertMatchesOutputSchema(result, ManageQueueAccessOutputDataSchema);
+    const permissions = data.permissions as { self: string; version: number };
+    expect(permissions.version).toBe(11);
+    ctx.api.assertAllExpectationsMet();
   });
 });

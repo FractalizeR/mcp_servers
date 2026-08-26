@@ -450,11 +450,12 @@ async execute(): Promise<Issue> { ... } // Теряем unknown поля
 - Возвращает настраиваемые поля очереди
 
 ### 6. ManageQueueAccessOperation
-**API:** `POST /v3/queues/{queueId}/permissions`
+**API:** `PATCH /v3/queues/{queueId}/permissions`
 **Назначение:** Управление доступом к очереди
 - Кеш: ❌ инвалидирует permissions cache
-- Роли: queue-lead, team-member, follower, access
-- Batch операция для добавления/удаления прав
+- Разрешения: create, write, read, grant, deny (не «роли» — прежнее
+  queue-lead/team-member/follower/access топ-уровневым ключом тела API отклоняет)
+- Вид субъекта × действие за запрос: `{ <разрешение>: { users|groups|roles: { add|remove: [...] } } }`
 
 **Ключевые аспекты:**
 - **API версия:** v3 (актуальная версия API)

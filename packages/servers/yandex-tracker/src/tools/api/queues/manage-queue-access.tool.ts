@@ -7,7 +7,7 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import type { ToolCallParams, ToolResult } from '@fractalizer/mcp-infrastructure';
 import { ManageQueueAccessParamsSchema } from './manage-queue-access.schema.js';
 
-import type { QueuePermissionWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { QueuePermissionsWithUnknownFields } from '#tracker_api/entities/index.js';
 import { MANAGE_QUEUE_ACCESS_TOOL_METADATA } from './manage-queue-access.metadata.js';
 
 export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
@@ -22,19 +22,20 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
       return validation.error;
     }
 
-    const { fields, queueId, role, subjects, action } = validation.data;
+    const { fields, queueId, permission, subjectKind, subjects, action } = validation.data;
 
     try {
       this.logger.info('Управление доступом к очереди', {
         queueId,
-        role,
+        permission,
+        subjectKind,
         subjectsCount: subjects.length,
         action,
       });
 
       const permissions = await this.facade.manageQueueAccess({
         queueId,
-        accessData: { role, subjects, action },
+        accessData: { permission, subjectKind, subjects, action },
       });
 
       this.logger.info('Права доступа успешно обновлены', {
@@ -44,7 +45,7 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
       });
 
       const { result: filteredPermissions, fieldsWithoutValue } =
-        ResponseFieldFilter.filterWithReport<readonly QueuePermissionWithUnknownFields[]>(
+        ResponseFieldFilter.filterWithReport<QueuePermissionsWithUnknownFields>(
           permissions,
           fields
         );
@@ -52,9 +53,10 @@ export class ManageQueueAccessTool extends BaseTool<YandexTrackerFacade> {
       return this.formatSuccess(
         {
           queueId,
-          role,
+          permission,
+          subjectKind,
           action,
-          subjectsProcessed: subjects.length,
+          subjectsSent: subjects.length,
           permissions: filteredPermissions,
         },
         ResponseFieldFilter.toWarnings(fieldsWithoutValue)

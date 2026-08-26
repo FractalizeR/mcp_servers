@@ -40,7 +40,7 @@ import type {
 } from '#tracker_api/api_operations/index.js';
 import { createQueueFixture } from '#helpers/queue.fixture.js';
 import { createQueueFieldFixture } from '#helpers/queue-field.fixture.js';
-import { createQueuePermissionFixture } from '#helpers/queue-permission.fixture.js';
+import { createQueuePermissionsFixture } from '#helpers/queue-permission.fixture.js';
 
 describe('QueueService', () => {
   let service: QueueService;
@@ -207,14 +207,13 @@ describe('QueueService', () => {
       const params: ManageQueueAccessParams = {
         queueId: 'TEST',
         accessData: {
-          role: 'access',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['user1'],
           action: 'add',
         },
       };
-      const mockResult: QueuePermissionsOutput = [
-        createQueuePermissionFixture({ id: 'user1', display: 'User 1' }),
-      ];
+      const mockResult: QueuePermissionsOutput = createQueuePermissionsFixture();
 
       vi.mocked(mockOpsContainer.manageQueueAccess.execute).mockResolvedValue(mockResult);
 

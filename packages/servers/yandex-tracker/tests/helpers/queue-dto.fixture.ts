@@ -112,7 +112,8 @@ export function createGetQueueFieldsDto(overrides?: Partial<GetQueueFieldsDto>):
  * ```typescript
  * const dto = createManageQueueAccessDto({
  *   action: 'add',
- *   role: 'team-member',
+ *   permission: 'write',
+ *   subjectKind: 'users',
  *   subjects: ['user-123', 'user-456']
  * });
  * ```
@@ -122,7 +123,8 @@ export function createManageQueueAccessDto(
 ): ManageQueueAccessDto {
   return {
     action: 'add',
-    role: 'team-member',
+    permission: 'write',
+    subjectKind: 'users',
     subjects: ['user-1', 'user-2'],
     ...overrides,
   };
@@ -133,16 +135,18 @@ export function createManageQueueAccessDto(
  *
  * @example
  * ```typescript
- * const dto = createRemoveQueueAccessDto('team-member', ['user-123']);
+ * const dto = createRemoveQueueAccessDto('write', ['user-123']);
  * ```
  */
 export function createRemoveQueueAccessDto(
-  role: ManageQueueAccessDto['role'],
-  subjects: string[]
+  permission: ManageQueueAccessDto['permission'],
+  subjects: (string | number)[],
+  subjectKind: ManageQueueAccessDto['subjectKind'] = 'users'
 ): ManageQueueAccessDto {
   return {
     action: 'remove',
-    role,
+    permission,
+    subjectKind,
     subjects,
   };
 }

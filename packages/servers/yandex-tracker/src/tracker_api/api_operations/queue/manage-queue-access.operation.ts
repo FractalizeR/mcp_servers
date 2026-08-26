@@ -3,10 +3,12 @@
  *
  * Ответственность (SRP):
  * - ТОЛЬКО управление правами доступа к очереди
- * - Добавление/удаление пользователей из ролей
+ * - Добавление/удаление субъектов (пользователей/групп/ролей) из разрешений
  * - НЕТ создания/обновления очередей
  *
  * API: PATCH /v3/queues/{queueId}/permissions
+ * Тело — `{ <разрешение>: { <вид субъекта>: { <действие>: [субъекты] } } }`
+ * (api-ref/queues/manage-access, раздел «Параметры тела запроса»).
  */
 
 import { BaseOperation } from '#tracker_api/api_operations/base-operation.js';
@@ -19,29 +21,31 @@ export interface ManageQueueAccessParams {
 
 export class ManageQueueAccessOperation extends BaseOperation {
   /**
-   * Управляет правами доступа к очереди (добавление/удаление пользователей из ролей)
+   * Управляет правами доступа к очереди (добавление/удаление субъектов из разрешения)
    *
    * @param params - параметры (queueId и accessData)
-   * @returns массив прав доступа
+   * @returns права доступа очереди
    *
    * ВАЖНО:
-   * - action='add' - добавляет пользователей в роль
-   * - action='remove' - удаляет пользователей из роли
+   * - action='add' - добавляет субъекты в разрешение
+   * - action='remove' - удаляет субъекты из разрешения
    * - Retry делается ТОЛЬКО в HttpClient.patch (нет двойного retry)
    */
   async execute(params: ManageQueueAccessParams): Promise<QueuePermissionsOutput> {
     const { queueId, accessData } = params;
-    const { role, subjects, action } = accessData;
+    const { permission, subjectKind, subjects, action } = accessData;
 
     this.logger.info(
-      `${action === 'add' ? 'Добавление' : 'Удаление'} пользователей ${subjects.join(', ')} ` +
-        `${action === 'add' ? 'в' : 'из'} роли ${role} для очереди ${queueId}`
+      `${action === 'add' ? 'Добавление' : 'Удаление'} субъектов ${subjects.join(', ')} ` +
+        `(${subjectKind}) для разрешения ${permission} очереди ${queueId}`
     );
 
-    // Формируем payload для PATCH запроса
+    // Формируем payload для PATCH запроса: { [разрешение]: { [вид субъекта]: { [действие]: [субъекты] } } }
     const payload = {
-      [role]: {
-        [action]: subjects,
+      [permission]: {
+        [subjectKind]: {
+          [action]: subjects,
+        },
       },
     };
 
@@ -51,7 +55,7 @@ export class ManageQueueAccessOperation extends BaseOperation {
     );
 
     this.logger.info(
-      `Права доступа успешно обновлены для очереди ${queueId} (${action} ${subjects.length} пользователей)`
+      `Права доступа успешно обновлены для очереди ${queueId} (${action} ${subjects.length} субъектов)`
     );
 
     return permissions;

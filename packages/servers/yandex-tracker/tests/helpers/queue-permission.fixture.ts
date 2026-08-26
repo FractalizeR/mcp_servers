@@ -1,147 +1,100 @@
 /**
- * Фикстуры для QueuePermission entity
- *
- * Используются в тестах для создания mock данных прав доступа к очереди.
+ * Фикстуры для формы ответа `GET/PATCH /v3/queues/{queueId}/permissions`
+ * (`QueuePermissions` entity) — объект, ключёванный разрешением, а не массив.
+ * Форма снята живой пробой 2026-08-26:
+ * `.agentic-planning/plan_tracker_sweep7_fixes/inventory/queue-permissions-response-2026-08-26.json`.
  */
 
 import type {
-  QueuePermission,
-  QueuePermissionWithUnknownFields,
-  QueueRole,
+  QueueAccessSubject,
+  QueueAccessSubjectWithUnknownFields,
+  QueuePermissionEntry,
+  QueuePermissionEntryWithUnknownFields,
+  QueuePermissions,
+  QueuePermissionsWithUnknownFields,
 } from '../../src/tracker_api/entities/queue-permission.entity.js';
 
 /**
- * Создать QueuePermission для тестов
+ * Создать субъект права доступа (элемент `users`/`groups`/`roles`) для тестов.
  *
  * @example
  * ```typescript
- * // Создать право доступа с дефолтными значениями
- * const permission = createQueuePermissionFixture();
- *
- * // Создать право доступа для конкретного пользователя
- * const permission = createQueuePermissionFixture({
- *   id: 'user-123',
- *   display: 'John Doe'
- * });
+ * const subject = createQueueAccessSubjectFixture({ id: 'user1', display: 'User 1' });
  * ```
  */
-export function createQueuePermissionFixture(
-  overrides?: Partial<QueuePermission>
-): QueuePermissionWithUnknownFields {
-  const id = overrides?.id || 'user-1234567890';
-  const display = overrides?.display || 'Test User';
+export function createQueueAccessSubjectFixture(
+  overrides?: Partial<QueueAccessSubject>
+): QueueAccessSubjectWithUnknownFields {
+  const id = overrides?.id ?? 'user-1234567890';
 
   return {
     id,
     self: `https://api.tracker.yandex.net/v3/users/${id}`,
-    display,
+    display: 'Test User',
     ...overrides,
   };
 }
 
 /**
- * Создать массив QueuePermission для тестов
+ * Создать одну запись разрешения (`create`/`write`/`read`/`grant`/`deny`).
  *
  * @example
  * ```typescript
- * const permissions = createQueuePermissionListFixture(3);
- * // Вернёт массив из 3 прав доступа с уникальными пользователями
- * ```
- */
-export function createQueuePermissionListFixture(
-  count: number,
-  baseOverrides?: Partial<QueuePermission>
-): QueuePermissionWithUnknownFields[] {
-  return Array.from({ length: count }, (_, index) => {
-    const userId = `user-${1000 + index}`;
-    return createQueuePermissionFixture({
-      id: userId,
-      display: `Test User ${index + 1}`,
-      ...baseOverrides,
-    });
-  });
-}
-
-/**
- * Создать права доступа для конкретной роли (для documentation)
- *
- * @example
- * ```typescript
- * const leadPermission = createQueuePermissionForRole('queue-lead', {
- *   id: 'user-123',
- *   display: 'Queue Lead User'
+ * const write = createQueuePermissionEntryFixture('write', {
+ *   users: [createQueueAccessSubjectFixture({ id: 'user1' })],
  * });
  * ```
  */
-export function createQueuePermissionForRole(
-  _role: QueueRole,
-  overrides?: Partial<QueuePermission>
-): QueuePermissionWithUnknownFields {
-  // Примечание: API возвращает одинаковую структуру для всех ролей
-  // Роль указывается только в запросе, не в ответе
-  return createQueuePermissionFixture(overrides);
-}
-
-/**
- * Создать минимальное право доступа
- *
- * @example
- * ```typescript
- * const minimal = createMinimalQueuePermissionFixture('user-999');
- * ```
- */
-export function createMinimalQueuePermissionFixture(userId = 'user-1234567890'): QueuePermission {
+export function createQueuePermissionEntryFixture(
+  permission: string,
+  overrides?: Partial<QueuePermissionEntry>
+): QueuePermissionEntryWithUnknownFields {
   return {
-    id: userId,
-    self: `https://api.tracker.yandex.net/v3/users/${userId}`,
-    display: 'Minimal User',
+    self: `https://api.tracker.yandex.net/v3/queues/TEST/permissions/${permission}`,
+    users: [createQueueAccessSubjectFixture()],
+    ...overrides,
   };
 }
 
 /**
- * Создать стандартный набор прав доступа для разных ролей
- * (для документации и примеров)
+ * Создать полный ответ `QueuePermissions` для тестов — по умолчанию несёт запись
+ * `write` с одним пользователем; `overrides` заменяют/добавляют любые ключи, включая
+ * полное отсутствие записей (объект `{self, version}` — законная форма, см.
+ * комментарий к `QueuePermissions`).
  *
  * @example
  * ```typescript
- * const standardPermissions = createStandardPermissionsSet('TEST');
+ * // Полный ответ с одной записью write
+ * const response = createQueuePermissionsFixture();
+ *
+ * // Ответ без единого разрешения ({self, version})
+ * const empty = createQueuePermissionsFixture({ write: undefined });
  * ```
  */
-export function createStandardPermissionsSet(
-  _queueKey = 'TEST'
-): Record<QueueRole, QueuePermissionWithUnknownFields[]> {
+export function createQueuePermissionsFixture(
+  overrides?: Partial<QueuePermissions>
+): QueuePermissionsWithUnknownFields {
+  const base: QueuePermissions = {
+    self: 'https://api.tracker.yandex.net/v3/queues/TEST/permissions',
+    version: 1,
+    write: createQueuePermissionEntryFixture('write'),
+  };
+
+  return { ...base, ...overrides };
+}
+
+/**
+ * Ответ, состоящий из одной версии, без единого разрешения — форма, которую живьём
+ * отдаёт `PATCH .../permissions` (см. `queue-permission.entity.ts`). Смоук-тест
+ * референсного клиента (`yandex_tracker_client`, `Permissions`) мокает ответ ещё
+ * скупее — `{"version": 11}`, без `self`; здесь `self` добавлен, потому что
+ * `QueuePermissions.self` обязателен по типу.
+ */
+export function createVersionOnlyQueuePermissionsFixture(
+  version = 11
+): QueuePermissionsWithUnknownFields {
   return {
-    'queue-lead': [
-      createQueuePermissionFixture({
-        id: 'user-lead-1',
-        display: 'Queue Lead',
-      }),
-    ],
-    'team-member': [
-      createQueuePermissionFixture({
-        id: 'user-member-1',
-        display: 'Team Member 1',
-      }),
-      createQueuePermissionFixture({
-        id: 'user-member-2',
-        display: 'Team Member 2',
-      }),
-    ],
-    follower: [
-      createQueuePermissionFixture({
-        id: 'user-follower-1',
-        display: 'Follower 1',
-      }),
-    ],
-    access: [
-      createQueuePermissionFixture({
-        id: 'user-access-1',
-        display: 'Access User 1',
-      }),
-      createQueuePermissionFixture({
-        id: 'user-access-2',
-        display: 'Access User 2',
-      }),
-    ],
+    self: 'https://api.tracker.yandex.net/v3/queues/TEST/permissions',
+    version,
   };
 }

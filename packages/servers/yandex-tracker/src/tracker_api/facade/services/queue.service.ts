@@ -86,7 +86,7 @@ export class QueueService {
   /**
    * Управляет правами доступа к очереди
    * @param params - параметры (queueId и accessData)
-   * @returns массив прав доступа
+   * @returns права доступа очереди (объект, ключёванный разрешением)
    */
   async manageQueueAccess(params: ManageQueueAccessParams): Promise<QueuePermissionsOutput> {
     return this.ops.manageQueueAccess.execute(params);

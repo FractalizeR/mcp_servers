@@ -98,7 +98,8 @@ export function createAddQueueAccessDto(
   overrides?: Partial<ManageQueueAccessDto>
 ): ManageQueueAccessDto {
   return {
-    role: 'team-member',
+    permission: 'write',
+    subjectKind: 'users',
     subjects: ['user123', 'user456'],
     action: 'add',
     ...overrides,
@@ -112,7 +113,8 @@ export function createRemoveQueueAccessDto(
   overrides?: Partial<ManageQueueAccessDto>
 ): ManageQueueAccessDto {
   return {
-    role: 'team-member',
+    permission: 'write',
+    subjectKind: 'users',
     subjects: ['user123'],
     action: 'remove',
     ...overrides,

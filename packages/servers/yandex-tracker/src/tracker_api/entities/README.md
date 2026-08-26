@@ -423,24 +423,40 @@ export type QueueFieldWithUnknownFields = WithUnknownFields<QueueField>;
 
 **Файл:** `src/tracker_api/entities/queue-permission.entity.ts`
 
-Описывает права доступа к очереди:
+Описывает ответ `GET/PATCH /v3/queues/{queueId}/permissions` — объект, ключёванный
+разрешением (`create`/`write`/`read`/`grant`/`deny`), а НЕ массив. Форма снята живой
+пробой 2026-08-26 (было: старые «роли» `queue-lead`/`team-member`/`follower`/`access`
+как топ-уровневый ключ — не подтверждено ни документацией, ни живым ответом):
 
 ```typescript
-export interface QueuePermission {
-  readonly role: QueueRole;      // Роль пользователя
-  readonly users?: UserRef[];    // Пользователи с этой ролью
-  readonly groups?: string[];    // Группы с этой ролью
+export interface QueueAccessSubject {
+  readonly self: string;
+  readonly id: string;
+  readonly display: string;
+  readonly cloudUid?: string;
+  readonly passportUid?: number;
 }
 
-export type QueueRole = 'queue-lead' | 'team-member' | 'follower' | 'access';
-export type QueuePermissionWithUnknownFields = WithUnknownFields<QueuePermission>;
+export interface QueuePermissionEntry {
+  readonly self: string;
+  readonly users?: readonly QueueAccessSubjectWithUnknownFields[];
+  readonly groups?: readonly QueueAccessSubjectWithUnknownFields[];
+  readonly roles?: readonly QueueAccessSubjectWithUnknownFields[];
+}
+
+export interface QueuePermissions {
+  readonly self: string;
+  readonly version: number;
+  readonly create?: QueuePermissionEntryWithUnknownFields;
+  readonly write?: QueuePermissionEntryWithUnknownFields;
+  readonly read?: QueuePermissionEntryWithUnknownFields;
+  readonly grant?: QueuePermissionEntryWithUnknownFields;
+  readonly deny?: QueuePermissionEntryWithUnknownFields; // не наблюдался живьём
+}
 ```
 
-**Роли очереди:**
-- `queue-lead` — руководитель очереди (полные права)
-- `team-member` — член команды (создание/редактирование задач)
-- `follower` — наблюдатель (только чтение)
-- `access` — базовый доступ к очереди
+Все ключи разрешений опциональны — очередь может не иметь записей по какому-то из
+них; ответ, состоящий из одной версии (`{self, version}`), — законная форма.
 
 ### Entity для компонентов
 

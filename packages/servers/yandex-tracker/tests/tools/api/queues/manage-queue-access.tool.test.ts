@@ -8,7 +8,10 @@ import type { YandexTrackerFacade } from '#tracker_api/facade/yandex-tracker.fac
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/index.js';
 import { buildToolName } from '@fractalizer/mcp-core';
 import { MCP_TOOL_PREFIX } from '#constants';
-import { createQueuePermissionListFixture } from '#helpers/queue-permission.fixture.js';
+import {
+  createQueuePermissionsFixture,
+  createVersionOnlyQueuePermissionsFixture,
+} from '#helpers/queue-permission.fixture.js';
 import { getTextContent } from '#helpers/tool-result.helper.js';
 
 describe('ManageQueueAccessTool', () => {
@@ -39,11 +42,13 @@ describe('ManageQueueAccessTool', () => {
       expect(definition.description).toContain('Управление доступом к очереди');
       expect(definition.inputSchema.type).toBe('object');
       expect(definition.inputSchema.required).toContain('queueId');
-      expect(definition.inputSchema.required).toContain('role');
+      expect(definition.inputSchema.required).toContain('permission');
+      expect(definition.inputSchema.required).toContain('subjectKind');
       expect(definition.inputSchema.required).toContain('subjects');
       expect(definition.inputSchema.required).toContain('action');
       expect(definition.inputSchema.properties?.['queueId']).toBeDefined();
-      expect(definition.inputSchema.properties?.['role']).toBeDefined();
+      expect(definition.inputSchema.properties?.['permission']).toBeDefined();
+      expect(definition.inputSchema.properties?.['subjectKind']).toBeDefined();
       expect(definition.inputSchema.properties?.['subjects']).toBeDefined();
       expect(definition.inputSchema.properties?.['action']).toBeDefined();
     });
@@ -59,7 +64,7 @@ describe('ManageQueueAccessTool', () => {
   describe('execute', () => {
     describe('валидация параметров (Zod)', () => {
       it('должен вернуть ошибку если обязательные поля не указаны', async () => {
-        const result = await tool.execute({ fields: ['id', 'key', 'name'] });
+        const result = await tool.execute({ fields: ['self', 'version'] });
 
         expect(result.isError).toBe(true);
         const parsed = JSON.parse(getTextContent(result)) as {
@@ -73,10 +78,11 @@ describe('ManageQueueAccessTool', () => {
       it('должен вернуть ошибку для пустого queueId', async () => {
         const result = await tool.execute({
           queueId: '',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['user1'],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBe(true);
@@ -88,13 +94,14 @@ describe('ManageQueueAccessTool', () => {
         expect(parsed.message).toContain('валидации');
       });
 
-      it('должен вернуть ошибку для некорректной роли', async () => {
+      it('должен вернуть ошибку для некорректного разрешения', async () => {
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'invalid-role',
+          permission: 'queue-lead',
+          subjectKind: 'users',
           subjects: ['user1'],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBe(true);
@@ -106,32 +113,129 @@ describe('ManageQueueAccessTool', () => {
         expect(parsed.message).toContain('валидации');
       });
 
-      it('должен принимать все валидные роли', async () => {
-        const mockPermissions = createQueuePermissionListFixture(1);
+      it('должен вернуть ошибку для некорректного вида субъекта', async () => {
+        const result = await tool.execute({
+          queueId: 'TEST',
+          permission: 'write',
+          subjectKind: 'teams',
+          subjects: ['user1'],
+          action: 'add',
+          fields: ['self', 'version'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
+      it('должен принимать все пять разрешений и три вида субъекта', async () => {
+        const mockPermissions = createQueuePermissionsFixture();
         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
 
-        const roles = ['queue-lead', 'team-member', 'follower', 'access'] as const;
-
-        for (const role of roles) {
+        const permissions = ['create', 'write', 'read', 'grant', 'deny'] as const;
+        for (const permission of permissions) {
           const result = await tool.execute({
             queueId: 'TEST',
-            role,
+            permission,
+            subjectKind: 'users',
             subjects: ['user1'],
             action: 'add',
-            fields: ['id', 'key', 'name'],
+            fields: ['self', 'version'],
+          });
+
+          expect(result.isError).toBeUndefined();
+        }
+
+        const subjectKinds: readonly ['users' | 'groups' | 'roles', (string | number)[]][] = [
+          ['users', ['user1']],
+          ['groups', [42]],
+          ['roles', ['assignee']],
+        ];
+        for (const [subjectKind, subjects] of subjectKinds) {
+          const result = await tool.execute({
+            queueId: 'TEST',
+            permission: 'write',
+            subjectKind,
+            subjects,
+            action: 'add',
+            fields: ['self', 'version'],
           });
 
           expect(result.isError).toBeUndefined();
         }
       });
 
+      it('deny + roles отклоняется схемой до HTTP-запроса', async () => {
+        const result = await tool.execute({
+          queueId: 'TEST',
+          permission: 'deny',
+          subjectKind: 'roles',
+          subjects: ['assignee'],
+          action: 'add',
+          fields: ['self', 'version'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+        expect(mockTrackerFacade.manageQueueAccess).not.toHaveBeenCalled();
+      });
+
+      it('роль вне справочника (author/assignee/follower/access) отклоняется схемой', async () => {
+        const result = await tool.execute({
+          queueId: 'TEST',
+          permission: 'write',
+          subjectKind: 'roles',
+          subjects: ['queue-lead'],
+          action: 'add',
+          fields: ['self', 'version'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+        expect(mockTrackerFacade.manageQueueAccess).not.toHaveBeenCalled();
+      });
+
+      it('группа-строка вместо числа отклоняется схемой', async () => {
+        const result = await tool.execute({
+          queueId: 'TEST',
+          permission: 'write',
+          subjectKind: 'groups',
+          subjects: ['42'],
+          action: 'add',
+          fields: ['self', 'version'],
+        });
+
+        expect(result.isError).toBe(true);
+        const parsed = JSON.parse(getTextContent(result)) as {
+          success: boolean;
+          message: string;
+        };
+        expect(parsed.success).toBe(false);
+        expect(parsed.message).toContain('валидации');
+      });
+
       it('должен вернуть ошибку для пустого массива subjects', async () => {
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: [],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBe(true);
@@ -146,10 +250,11 @@ describe('ManageQueueAccessTool', () => {
       it('должен вернуть ошибку для некорректного action', async () => {
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['user1'],
           action: 'invalid-action',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBe(true);
@@ -163,30 +268,33 @@ describe('ManageQueueAccessTool', () => {
     });
 
     describe('управление доступом', () => {
-      it('должен добавить одного пользователя в роль team-member', async () => {
-        const mockPermissions = createQueuePermissionListFixture(1);
+      it('должен добавить одного пользователя в разрешение write', async () => {
+        const mockPermissions = createQueuePermissionsFixture();
         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
 
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['user1'],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
           queueId: 'TEST',
           accessData: {
-            role: 'team-member',
+            permission: 'write',
+            subjectKind: 'users',
             subjects: ['user1'],
             action: 'add',
           },
         });
         expect(mockLogger.info).toHaveBeenCalledWith('Управление доступом к очереди', {
           queueId: 'TEST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjectsCount: 1,
           action: 'add',
         });
@@ -200,140 +308,121 @@ describe('ManageQueueAccessTool', () => {
           success: boolean;
           data: {
             queueId: string;
-            role: string;
+            permission: string;
+            subjectKind: string;
             action: string;
-            subjectsProcessed: number;
+            subjectsSent: number;
           };
         };
         expect(parsed.success).toBe(true);
         expect(parsed.data.queueId).toBe('TEST');
-        expect(parsed.data.role).toBe('team-member');
+        expect(parsed.data.permission).toBe('write');
+        expect(parsed.data.subjectKind).toBe('users');
         expect(parsed.data.action).toBe('add');
-        expect(parsed.data.subjectsProcessed).toBe(1);
+        expect(parsed.data.subjectsSent).toBe(1);
       });
 
-      it('должен удалить пользователя из роли', async () => {
-        const mockPermissions = createQueuePermissionListFixture(0);
+      it('должен удалить пользователя из разрешения', async () => {
+        const mockPermissions = createVersionOnlyQueuePermissionsFixture();
         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
 
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['user1'],
           action: 'remove',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
           queueId: 'TEST',
           accessData: {
-            role: 'team-member',
+            permission: 'write',
+            subjectKind: 'users',
             subjects: ['user1'],
             action: 'remove',
           },
         });
         expect(mockLogger.info).toHaveBeenCalledWith('Управление доступом к очереди', {
           queueId: 'TEST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjectsCount: 1,
           action: 'remove',
         });
       });
 
-      it('должен добавить нескольких пользователей', async () => {
-        const mockPermissions = createQueuePermissionListFixture(3);
+      it('должен добавить несколько групп числами', async () => {
+        const mockPermissions = createQueuePermissionsFixture();
         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
 
         const result = await tool.execute({
           queueId: 'PROJ',
-          role: 'follower',
-          subjects: ['user1', 'user2', 'user3'],
+          permission: 'read',
+          subjectKind: 'groups',
+          subjects: [1, 2, 3],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
           queueId: 'PROJ',
           accessData: {
-            role: 'follower',
-            subjects: ['user1', 'user2', 'user3'],
+            permission: 'read',
+            subjectKind: 'groups',
+            subjects: [1, 2, 3],
             action: 'add',
           },
-        });
-        expect(mockLogger.info).toHaveBeenCalledWith('Управление доступом к очереди', {
-          queueId: 'PROJ',
-          role: 'follower',
-          subjectsCount: 3,
-          action: 'add',
         });
 
         const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
-            subjectsProcessed: number;
+            subjectsSent: number;
           };
         };
-        expect(parsed.data.subjectsProcessed).toBe(3);
+        expect(parsed.data.subjectsSent).toBe(3);
       });
 
-      it('должен добавить пользователя в роль queue-lead', async () => {
-        const mockPermissions = createQueuePermissionListFixture(1);
+      it('должен управлять доступом для разрешения grant с ролью', async () => {
+        const mockPermissions = createQueuePermissionsFixture();
         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
 
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'queue-lead',
-          subjects: ['admin'],
+          permission: 'grant',
+          subjectKind: 'roles',
+          subjects: ['author'],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBeUndefined();
         expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
           queueId: 'TEST',
           accessData: {
-            role: 'queue-lead',
-            subjects: ['admin'],
+            permission: 'grant',
+            subjectKind: 'roles',
+            subjects: ['author'],
             action: 'add',
           },
         });
       });
 
-      it('должен управлять доступом для роли access', async () => {
-        const mockPermissions = createQueuePermissionListFixture(2);
+      it('должен вернуть права доступа объектом, ключёванным разрешением (не массивом)', async () => {
+        const mockPermissions = createQueuePermissionsFixture();
         vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
 
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'access',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['user1', 'user2'],
           action: 'add',
-          fields: ['id', 'key', 'name'],
-        });
-
-        expect(result.isError).toBeUndefined();
-        expect(mockTrackerFacade.manageQueueAccess).toHaveBeenCalledWith({
-          queueId: 'TEST',
-          accessData: {
-            role: 'access',
-            subjects: ['user1', 'user2'],
-            action: 'add',
-          },
-        });
-      });
-
-      it('должен вернуть обновленный список прав доступа', async () => {
-        const mockPermissions = createQueuePermissionListFixture(2);
-        vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
-
-        const result = await tool.execute({
-          queueId: 'TEST',
-          role: 'team-member',
-          subjects: ['user1', 'user2'],
-          action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version', 'write.users.display'],
         });
 
         expect(result.isError).toBeUndefined();
@@ -341,10 +430,33 @@ describe('ManageQueueAccessTool', () => {
         const parsed = JSON.parse(getTextContent(result)) as {
           success: boolean;
           data: {
-            permissions: unknown[];
+            permissions: {
+              self: string;
+              version: number;
+              write?: { users?: Array<{ display: string }> };
+            };
           };
         };
-        expect(parsed.data.permissions).toHaveLength(2);
+        expect(Array.isArray(parsed.data.permissions)).toBe(false);
+        expect(parsed.data.permissions.self).toBeDefined();
+        expect(parsed.data.permissions.version).toBeDefined();
+        expect(parsed.data.permissions.write?.users?.[0]?.display).toBeDefined();
+      });
+
+      it('переживает ответ без единого разрешения ({self, version})', async () => {
+        const mockPermissions = createVersionOnlyQueuePermissionsFixture();
+        vi.mocked(mockTrackerFacade.manageQueueAccess).mockResolvedValue(mockPermissions);
+
+        const result = await tool.execute({
+          queueId: 'TEST',
+          permission: 'write',
+          subjectKind: 'users',
+          subjects: ['user1'],
+          action: 'add',
+          fields: ['self', 'version'],
+        });
+
+        expect(result.isError).toBeUndefined();
       });
     });
 
@@ -355,10 +467,11 @@ describe('ManageQueueAccessTool', () => {
 
         const result = await tool.execute({
           queueId: 'NOTEXIST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['user1'],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBe(true);
@@ -378,10 +491,11 @@ describe('ManageQueueAccessTool', () => {
 
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['user1'],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBe(true);
@@ -399,10 +513,11 @@ describe('ManageQueueAccessTool', () => {
 
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['invalid-user'],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBe(true);
@@ -420,10 +535,11 @@ describe('ManageQueueAccessTool', () => {
 
         const result = await tool.execute({
           queueId: 'TEST',
-          role: 'team-member',
+          permission: 'write',
+          subjectKind: 'users',
           subjects: ['user1'],
           action: 'add',
-          fields: ['id', 'key', 'name'],
+          fields: ['self', 'version'],
         });
 
         expect(result.isError).toBe(true);
@@ -433,27 +549,6 @@ describe('ManageQueueAccessTool', () => {
         };
         expect(parsed.success).toBe(false);
         expect(parsed.error).toBe('Network timeout');
-      });
-
-      it('должен обработать ошибку "попытка удалить последнего queue-lead"', async () => {
-        const error = new Error('Cannot remove last queue lead');
-        vi.mocked(mockTrackerFacade.manageQueueAccess).mockRejectedValue(error);
-
-        const result = await tool.execute({
-          queueId: 'TEST',
-          role: 'queue-lead',
-          subjects: ['last-lead'],
-          action: 'remove',
-          fields: ['id', 'key', 'name'],
-        });
-
-        expect(result.isError).toBe(true);
-        const parsed = JSON.parse(getTextContent(result)) as {
-          success: boolean;
-          error: string;
-        };
-        expect(parsed.success).toBe(false);
-        expect(parsed.error).toBe('Cannot remove last queue lead');
       });
     });
   });

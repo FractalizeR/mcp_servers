@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IHttpClient } from '@fractalizer/mcp-infrastructure/http/client/i-http-client.interface.js';
 import type { CacheManager } from '@fractalizer/mcp-infrastructure/cache/cache-manager.interface.js';
 import type { Logger } from '@fractalizer/mcp-infrastructure/logging/logger.js';
-import type { QueuePermissionWithUnknownFields } from '#tracker_api/entities/index.js';
+import type { QueuePermissionsWithUnknownFields } from '#tracker_api/entities/index.js';
 import { ManageQueueAccessOperation } from '#tracker_api/api_operations/queue/manage-queue-access.operation.js';
-import { createQueuePermissionListFixture } from '#helpers/queue-permission.fixture.js';
+import { createQueuePermissionsFixture } from '#helpers/queue-permission.fixture.js';
 import {
   createManageQueueAccessDto,
   createRemoveQueueAccessDto,
@@ -45,131 +45,104 @@ describe('ManageQueueAccessOperation', () => {
   });
 
   describe('execute', () => {
-    it('should add users to role with correct payload', async () => {
-      const accessData = createManageQueueAccessDto({
-        action: 'add',
-        role: 'team-member',
-        subjects: ['user-1', 'user-2'],
-      });
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(2);
+    it('should build body for each of the five permissions', async () => {
+      const permissions = ['create', 'write', 'read', 'grant', 'deny'] as const;
+      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+
+      for (const permission of permissions) {
+        const accessData = createManageQueueAccessDto({
+          permission,
+          subjectKind: 'users',
+          action: 'add',
+          subjects: ['user-1'],
+        });
+
+        await operation.execute({ queueId: 'TEST', accessData });
+
+        expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
+          [permission]: { users: { add: ['user-1'] } },
+        });
+      }
+    });
+
+    it('should build body for each of the three subject kinds', async () => {
+      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+
+      const cases: readonly [
+        subjectKind: 'users' | 'groups' | 'roles',
+        subjects: (string | number)[],
+      ][] = [
+        ['users', ['user-1']],
+        ['groups', [42]],
+        ['roles', ['assignee']],
+      ];
+
+      for (const [subjectKind, subjects] of cases) {
+        const accessData = createManageQueueAccessDto({
+          permission: 'write',
+          subjectKind,
+          action: 'add',
+          subjects,
+        });
+
+        await operation.execute({ queueId: 'TEST', accessData });
+
+        expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
+          write: { [subjectKind]: { add: subjects } },
+        });
+      }
+    });
+
+    it('should send group id as a number, not a string, in the body', async () => {
+      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
+      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
+
+      const accessData = createManageQueueAccessDto({
+        permission: 'write',
+        subjectKind: 'groups',
+        action: 'add',
+        subjects: [36],
+      });
 
       await operation.execute({ queueId: 'TEST', accessData });
 
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
-        'team-member': {
-          add: ['user-1', 'user-2'],
-        },
-      });
+      const [, body] = vi.mocked(mockHttpClient.patch).mock.calls[0] as [string, unknown];
+      const groups = (body as { write: { groups: { add: unknown[] } } }).write.groups.add;
+      expect(groups).toEqual([36]);
+      expect(typeof groups[0]).toBe('number');
     });
 
-    it('should remove users from role with correct payload', async () => {
-      const accessData = createRemoveQueueAccessDto('follower', ['user-3', 'user-4']);
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(0);
+    it('should remove subjects with correct payload', async () => {
+      const accessData = createRemoveQueueAccessDto('write', ['user-3', 'user-4']);
+      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
 
       await operation.execute({ queueId: 'PROJ', accessData });
 
       expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/PROJ/permissions', {
-        follower: {
-          remove: ['user-3', 'user-4'],
+        write: {
+          users: { remove: ['user-3', 'user-4'] },
         },
       });
     });
 
-    it('should support queue-lead role', async () => {
+    it('should handle multiple subjects in one request', async () => {
       const accessData = createManageQueueAccessDto({
         action: 'add',
-        role: 'queue-lead',
-        subjects: ['lead-user'],
-      });
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(1);
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
-
-      await operation.execute({ queueId: 'TEST', accessData });
-
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
-        'queue-lead': {
-          add: ['lead-user'],
-        },
-      });
-    });
-
-    it('should support team-member role', async () => {
-      const accessData = createManageQueueAccessDto({
-        action: 'add',
-        role: 'team-member',
-        subjects: ['member-1'],
-      });
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(1);
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
-
-      await operation.execute({ queueId: 'PROJ', accessData });
-
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/PROJ/permissions', {
-        'team-member': {
-          add: ['member-1'],
-        },
-      });
-    });
-
-    it('should support follower role', async () => {
-      const accessData = createManageQueueAccessDto({
-        action: 'add',
-        role: 'follower',
-        subjects: ['follower-1'],
-      });
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(1);
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
-
-      await operation.execute({ queueId: 'TEST', accessData });
-
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
-        follower: {
-          add: ['follower-1'],
-        },
-      });
-    });
-
-    it('should support access role', async () => {
-      const accessData = createManageQueueAccessDto({
-        action: 'add',
-        role: 'access',
-        subjects: ['access-user-1'],
-      });
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(1);
-      vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
-
-      await operation.execute({ queueId: 'TEST', accessData });
-
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
-        access: {
-          add: ['access-user-1'],
-        },
-      });
-    });
-
-    it('should handle multiple users in one request', async () => {
-      const accessData = createManageQueueAccessDto({
-        action: 'add',
-        role: 'team-member',
+        permission: 'write',
+        subjectKind: 'users',
         subjects: ['user-1', 'user-2', 'user-3', 'user-4', 'user-5'],
       });
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(5);
+      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
 
       await operation.execute({ queueId: 'TEST', accessData });
 
       expect(mockHttpClient.patch).toHaveBeenCalledWith('/v3/queues/TEST/permissions', {
-        'team-member': {
-          add: ['user-1', 'user-2', 'user-3', 'user-4', 'user-5'],
+        write: {
+          users: { add: ['user-1', 'user-2', 'user-3', 'user-4', 'user-5'] },
         },
       });
     });
@@ -187,43 +160,41 @@ describe('ManageQueueAccessOperation', () => {
     it('should log info messages for add action', async () => {
       const accessData = createManageQueueAccessDto({
         action: 'add',
-        role: 'team-member',
+        permission: 'write',
+        subjectKind: 'users',
         subjects: ['user-1', 'user-2'],
       });
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(2);
+      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
 
       await operation.execute({ queueId: 'PROJ', accessData });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Добавление пользователей user-1, user-2 в роли team-member для очереди PROJ'
+        'Добавление субъектов user-1, user-2 (users) для разрешения write очереди PROJ'
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Права доступа успешно обновлены для очереди PROJ (add 2 пользователей)'
+        'Права доступа успешно обновлены для очереди PROJ (add 2 субъектов)'
       );
     });
 
     it('should log info messages for remove action', async () => {
-      const accessData = createRemoveQueueAccessDto('follower', ['user-3']);
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(0);
+      const accessData = createRemoveQueueAccessDto('write', ['user-3']);
+      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
 
       await operation.execute({ queueId: 'TEST', accessData });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Удаление пользователей user-3 из роли follower для очереди TEST'
+        'Удаление субъектов user-3 (users) для разрешения write очереди TEST'
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Права доступа успешно обновлены для очереди TEST (remove 1 пользователей)'
+        'Права доступа успешно обновлены для очереди TEST (remove 1 субъектов)'
       );
     });
 
     it('should work with queue ID instead of key', async () => {
       const accessData = createManageQueueAccessDto();
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(1);
+      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
 
       await operation.execute({ queueId: 'queue-123', accessData });
@@ -234,16 +205,15 @@ describe('ManageQueueAccessOperation', () => {
       );
     });
 
-    it('should return permissions list after update', async () => {
+    it('should return permissions after update', async () => {
       const accessData = createManageQueueAccessDto();
-      const mockPermissions: QueuePermissionWithUnknownFields[] =
-        createQueuePermissionListFixture(3);
+      const mockPermissions: QueuePermissionsWithUnknownFields = createQueuePermissionsFixture();
       vi.mocked(mockHttpClient.patch).mockResolvedValue(mockPermissions);
 
       const result = await operation.execute({ queueId: 'TEST', accessData });
 
       expect(result).toEqual(mockPermissions);
-      expect(result).toHaveLength(3);
+      expect(result.write?.users).toHaveLength(1);
     });
   });
 });

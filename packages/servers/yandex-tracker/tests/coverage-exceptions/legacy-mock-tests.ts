@@ -69,7 +69,6 @@ export const LEGACY_MOCK_TEST_PATHS: ReadonlySet<string> = new Set([
   'tests/integration/tools/api/issues/transition/transition-issue.tool.integration.test.ts',
   'tests/integration/tools/api/issues/transitions/get-issue-transitions.tool.integration.test.ts',
   'tests/integration/tools/api/issues/update/update-issue.tool.integration.test.ts',
-  'tests/integration/tools/api/queues/access/manage-queue-access.tool.integration.test.ts',
   'tests/integration/tools/api/queues/fields/get-queue-fields.tool.integration.test.ts',
   'tests/integration/tools/api/queues/get-queue/get-queue.tool.integration.test.ts',
   'tests/integration/tools/api/queues/get/get-queues.tool.integration.test.ts',
@@ -81,7 +80,7 @@ export const LEGACY_MOCK_TEST_PATHS: ReadonlySet<string> = new Set([
  * `LEGACY_MOCK_TEST_PATHS.size` с этой константой роняет `coverage:check` — растущий
  * перечень без видимой правки этого числа невозможен.
  */
-export const LEGACY_MOCK_TEST_BASELINE_COUNT = 30;
+export const LEGACY_MOCK_TEST_BASELINE_COUNT = 29;
 
 const MIN_IT_CALLS = 1;
 const MIN_EXPECT_CALLS = 1;

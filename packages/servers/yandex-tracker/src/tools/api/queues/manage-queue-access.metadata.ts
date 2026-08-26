@@ -24,13 +24,19 @@ export const MANAGE_QUEUE_ACCESS_TOOL_METADATA: StaticToolMetadata = {
   priority: ToolPriority.CRITICAL,
   tags: ['queue', 'access', 'permissions', 'write'],
   isHelper: false,
-  requiresExplicitUserConsent: false,
-  redactionAllowlist: ['queueId', 'role', 'subjects', 'action', 'fields'],
+  // Обязана совпадать с annotations.destructiveHint — проверяется машинно
+  // (`scripts/validate-tool-registration.ts`). `action: 'remove'`/`permission: 'deny'`
+  // делают эффект необратимым без повторного назначения — ровно тот случай.
+  requiresExplicitUserConsent: true,
+  redactionAllowlist: ['queueId', 'permission', 'subjectKind', 'action', 'subjects', 'fields'],
   title: 'Управление доступом к очереди',
   outputSchema: ManageQueueAccessOutputSchema,
   annotations: {
     readOnlyHint: false,
-    destructiveHint: false,
+    // `action: 'remove'` и `permission: 'deny'` отзывают доступ — эффект необратим
+    // без повторного назначения тем же вызывающим, ровно как у прочих
+    // разрушительных write-инструментов сервера.
+    destructiveHint: true,
     idempotentHint: true,
     openWorldHint: true,
   },

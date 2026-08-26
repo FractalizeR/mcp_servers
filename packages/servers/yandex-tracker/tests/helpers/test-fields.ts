@@ -67,4 +67,9 @@ export function createFieldsSet(...fields: string[]): string[] {
 
 export const STANDARD_QUEUE_FIELD_FIELDS = ['id', 'key', 'name', 'required', 'type'] as const;
 
-export const STANDARD_QUEUE_PERMISSION_FIELDS = ['id', 'self', 'display'] as const;
+/**
+ * Ответ `manage_queue_access` — объект `{self, version, create?, write?, ...}`
+ * (`QueuePermissions` entity), а не список сущностей вида `{id, self, display}` —
+ * см. `.agentic-planning/plan_tracker_sweep7_fixes/inventory/queue-permissions-response-2026-08-26.json`.
+ */
+export const STANDARD_QUEUE_PERMISSION_FIELDS = ['self', 'version', 'write.users.display'] as const;

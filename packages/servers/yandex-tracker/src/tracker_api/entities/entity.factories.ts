@@ -9,7 +9,7 @@ import type { User } from './user.entity.js';
 import type { UserRef } from './common/user-ref.entity.js';
 import type { Queue, QueueDictionaryRef } from './queue.entity.js';
 import type { QueueField, QueueFieldCategory } from './queue-field.entity.js';
-import type { QueuePermission } from './queue-permission.entity.js';
+import type { QueueAccessSubject } from './queue-permission.entity.js';
 import type { Status } from './status.entity.js';
 import type { Priority } from './priority.entity.js';
 import type { IssueType } from './issue-type.entity.js';
@@ -147,9 +147,12 @@ export function createQueueFieldWithCategory(overrides?: Partial<QueueField>): Q
 }
 
 /**
- * Создает валидный QueuePermission entity
+ * Создает валидный QueueAccessSubject entity (элемент `users`/`groups`/`roles`
+ * внутри записи разрешения `QueuePermissionEntry`)
  */
-export function createQueuePermission(overrides?: Partial<QueuePermission>): QueuePermission {
+export function createQueueAccessSubject(
+  overrides?: Partial<QueueAccessSubject>
+): QueueAccessSubject {
   return {
     id: 'user123',
     self: 'https://api.tracker.yandex.net/v3/users/user123',
