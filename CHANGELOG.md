@@ -1,3 +1,11 @@
+## [5.0.1](https://github.com/FractalizeR/mcp_servers/compare/v5.0.0...v5.0.1) (2026-08-28)
+
+### Bug Fixes
+
+* **apps:** починить виджет MCP Apps и привести его к SEP-1865 ([f4fefa3](https://github.com/FractalizeR/mcp_servers/commit/f4fefa38a0c11ff4daefcaf3fe181c43fc86fbbb))
+* **apps:** починить пилот MCP Apps — вызов update_issue, порча description, соответствие SEP-1865 ([#410](https://github.com/FractalizeR/mcp_servers/issues/410)) ([6ae4ed6](https://github.com/FractalizeR/mcp_servers/commit/6ae4ed63ee43fb72395a9dc6d63f26757cdf1316))
+* **tracker:** не чистить description на пути записи в задачу ([c31b140](https://github.com/FractalizeR/mcp_servers/commit/c31b1400e378019358be9b916088e99cbec6c837))
+
 ## [5.0.0](https://github.com/FractalizeR/mcp_servers/compare/v4.0.0...v5.0.0) (2026-08-26)
 
 ### ⚠ BREAKING CHANGES
