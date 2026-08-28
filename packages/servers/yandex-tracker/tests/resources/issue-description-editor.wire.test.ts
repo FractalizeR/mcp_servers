@@ -23,6 +23,7 @@ import { Container } from 'inversify';
 
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import { createTrackerResourceRegistry } from '#resources/index.js';
+import { UPDATE_ISSUE_TOOL_METADATA } from '#tools/api/issues/update/update-issue.metadata.js';
 import { ISSUE_DESCRIPTION_EDITOR_URI } from '#resources/apps-ui-uri.js';
 
 function makeMockFacade(): YandexTrackerFacade {
@@ -43,7 +44,9 @@ function makeMockLogger(): Logger {
 
 function buildTestServer(): Server {
   const facade = makeMockFacade();
-  const resourceRegistry = createTrackerResourceRegistry(facade);
+  const resourceRegistry = createTrackerResourceRegistry(facade, {
+    updateIssue: UPDATE_ISSUE_TOOL_METADATA.name,
+  });
   const toolRegistry = new ToolRegistry(new Container(), makeMockLogger(), []);
 
   const options: McpServerAdapterOptions = {

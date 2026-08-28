@@ -31,6 +31,7 @@ import type { McpServerAdapterOptions } from '@fractalizer/mcp-core';
 
 import type { YandexTrackerFacade } from '#tracker_api/facade/index.js';
 import { createTrackerResourceRegistry } from '#resources/index.js';
+import { UPDATE_ISSUE_TOOL_METADATA } from '#tools/api/issues/update/update-issue.metadata.js';
 import { buildIssueResourceUri, buildQueueResourceUri } from '#resources/tracker-resource-uri.js';
 import { createQueueListFixture } from '#helpers/queue.fixture.js';
 import type { IssueWithUnknownFields, PaginatedResult } from '#tracker_api/entities/index.js';
@@ -95,7 +96,9 @@ function makeMockLogger(): Logger {
 
 function buildTestServer(): Server {
   const facade = makeMockFacade();
-  const resourceRegistry = createTrackerResourceRegistry(facade);
+  const resourceRegistry = createTrackerResourceRegistry(facade, {
+    updateIssue: UPDATE_ISSUE_TOOL_METADATA.name,
+  });
   const toolRegistry = new ToolRegistry(new Container(), makeMockLogger(), []);
 
   const options: McpServerAdapterOptions = {
