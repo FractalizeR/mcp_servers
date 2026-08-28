@@ -5,7 +5,8 @@
  * 1. getDefinition() объявляет `_meta.ui.resourceUri` (см. предупреждение в
  *    заголовке tool-файла про потерю поля на wire в tools/list — это отдельно
  *    проверяется wire-тестом analyze-issue-description-tools-list.wire.test.ts).
- * 2. Санитайз: description с разметкой/скриптом не просачивается в результат.
+ * 2. Прозрачность данных: description доезжает до результата побайтово —
+ *    именно этот текст виджет и агент пишут обратно через update_issue.
  * 3. Fallback: результат — обычный JSON/текст, достаточный для ручной правки
  *    через update_issue без Apps (см. analyze-then-update-fallback.test.ts).
  */
@@ -77,7 +78,7 @@ describe('AnalyzeIssueDescriptionTool', () => {
     });
   });
 
-  it('санитайзит description со скриптом перед анализом и возвратом', async () => {
+  it('отдаёт description побайтово, включая разметку YFM и угловые скобки', async () => {
     const mockIssue: IssueWithUnknownFields = createIssueFixture({
       id: '1',
       key: 'QUEUE-1',
@@ -86,7 +87,7 @@ describe('AnalyzeIssueDescriptionTool', () => {
       createdBy: createUserRef({ id: 'u1', display: 'User' }),
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
-      description: 'Легитимный текст<script>alert(document.cookie)</script> и продолжение',
+      description: '<{Детали\nвнутри cut-блока\n}>\nУсловие: latency < 200 и rps > 1000.',
       version: 3,
     });
     const getIssues = vi
@@ -99,9 +100,12 @@ describe('AnalyzeIssueDescriptionTool', () => {
     expect(getIssues).toHaveBeenCalledWith(['QUEUE-1']);
     const payload = JSON.parse((result.content[0] as { text: string }).text) as SuccessPayload;
     expect(payload.success).toBe(true);
-    expect(payload.data.currentDescription).not.toMatch(/[<>]/);
-    expect(payload.data.currentDescription).not.toContain('script');
-    expect(payload.data.currentDescription).toBe('Легитимный текст и продолжение');
+    expect(payload.data.currentDescription).toBe(
+      '<{Детали\nвнутри cut-блока\n}>\nУсловие: latency < 200 и rps > 1000.'
+    );
+    expect(payload.data.suggestedDescription.startsWith(payload.data.currentDescription)).toBe(
+      true
+    );
     expect(payload.data.version).toBe(3);
     expect(result['structuredContent']).toEqual(payload);
   });

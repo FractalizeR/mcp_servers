@@ -35,7 +35,12 @@ export type AnalyzeIssueDescriptionParams = z.infer<typeof AnalyzeIssueDescripti
  */
 export const AnalyzeIssueDescriptionOutputDataSchema = z.object({
   issueId: z.string(),
-  currentDescription: z.string().describe('description задачи, санитайзенный (без HTML-тегов)'),
+  currentDescription: z
+    .string()
+    .describe(
+      'description задачи ровно в том виде, в каком его хранит Трекер: разметка YFM не ' +
+        'вычищается — этот текст применяется обратно через update_issue'
+    ),
   suggestedDescription: z
     .string()
     .describe('Предложенная правка — редактируется в виджете/диалоге'),

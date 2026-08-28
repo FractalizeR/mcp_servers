@@ -5,6 +5,5 @@
 export { AnalyzeIssueDescriptionTool } from './analyze-issue-description.tool.js';
 export { AnalyzeIssueDescriptionParamsSchema } from './analyze-issue-description.schema.js';
 export type { AnalyzeIssueDescriptionParams } from './analyze-issue-description.schema.js';
-export { sanitizeTrackerText } from './sanitize-tracker-text.js';
 export { suggestDescriptionRewrite } from './suggest-description-rewrite.js';
 export type { DescriptionSuggestion } from './suggest-description-rewrite.js';

@@ -11,6 +11,14 @@
  * как обычный JSON/текст, и агент правит description сам вызовом update_issue
  * (fallback, DoD пилота).
  *
+ * `currentDescription` отдаётся ПОБАЙТОВО таким, каким его вернул Трекер, без
+ * какой-либо чистки. Так и должно быть: и виджет, и fallback-путь применяют
+ * `suggestedDescription` как новое description задачи — любая «нормализация»
+ * на этом пути безвозвратно переписала бы разметку YFM (cut-блоки `<{…}>`,
+ * `<#…#>`, сравнения вида `latency < 200`). Безопасность рендера обеспечена
+ * не чисткой данных, а тем, что виджет вставляет их только через
+ * `textContent`/`.value` — разметка там не исполняется в принципе.
+ *
  * `getDefinition()` ниже добавляет `_meta.ui.resourceUri` на СВОЙ
  * `ToolDefinition`, и это поле доезжает до клиента в ответе `tools/list` —
  * `projectToolDefinitionForList()`
@@ -35,7 +43,6 @@ import { ResultLogger } from '@fractalizer/mcp-core';
 import { ISSUE_DESCRIPTION_EDITOR_URI } from '#resources/apps-ui-uri.js';
 import { AnalyzeIssueDescriptionParamsSchema } from './analyze-issue-description.schema.js';
 import { ANALYZE_ISSUE_DESCRIPTION_TOOL_METADATA } from './analyze-issue-description.metadata.js';
-import { sanitizeTrackerText } from './sanitize-tracker-text.js';
 import { suggestDescriptionRewrite } from './suggest-description-rewrite.js';
 
 /** Форма `_meta.ui` на `ToolDefinition` по SEP-1865 (`resourceUri`/`visibility`). */
@@ -92,8 +99,7 @@ export class AnalyzeIssueDescriptionTool extends BaseTool<YandexTrackerFacade> {
       }
 
       const issue = result.value;
-      const rawDescription = typeof issue.description === 'string' ? issue.description : '';
-      const currentDescription = sanitizeTrackerText(rawDescription);
+      const currentDescription = typeof issue.description === 'string' ? issue.description : '';
       const { suggested: suggestedDescription, notes } =
         suggestDescriptionRewrite(currentDescription);
       const rawVersion = issue['version'];

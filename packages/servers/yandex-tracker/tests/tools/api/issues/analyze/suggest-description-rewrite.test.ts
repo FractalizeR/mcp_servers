@@ -43,10 +43,32 @@ describe('suggestDescriptionRewrite', () => {
     expect(notes.some((n) => n.includes('Критерии приемки'))).toBe(true);
   });
 
-  it('схлопывает 3+ пустые строки подряд перед анализом', () => {
+  it('не переформатирует исходный текст: правка = исходник плюс дописанные разделы', () => {
     const messy =
       'Текст один.\n\n\n\nТекст два, достаточно длинный для проверки минимальной длины.';
     const { suggested } = suggestDescriptionRewrite(messy);
-    expect(suggested).not.toMatch(/\n{3,}/);
+    expect(suggested.startsWith(messy)).toBe(true);
+  });
+
+  it('разметка YFM доезжает до правки побайтово — иначе update_issue затрёт её в Трекере', () => {
+    const yfm =
+      '<{Детали реализации\nстрока 1\nстрока 2\n}>\nЕсли latency < 200 и rps > 1000 — ок.';
+    const { suggested } = suggestDescriptionRewrite(yfm);
+    expect(suggested).toContain('<{Детали реализации');
+    expect(suggested).toContain('строка 1');
+    expect(suggested).toContain('latency < 200 и rps > 1000');
+  });
+
+  it('хвостовые пробелы исходника остаются на месте — префикс побайтовый', () => {
+    const trailing = 'Достаточно длинное описание задачи для анализа.   \n\t  ';
+    const { suggested } = suggestDescriptionRewrite(trailing);
+    expect(suggested.startsWith(trailing)).toBe(true);
+  });
+
+  it('текст со всеми разделами возвращается без единого изменения', () => {
+    const complete = '## Контекст\nЗачем.\n\n## Критерии приемки\nЧто считать готовым.\n';
+    const { suggested, notes } = suggestDescriptionRewrite(complete);
+    expect(suggested).toBe(complete);
+    expect(notes.some((n) => /без изменений/i.test(n))).toBe(true);
   });
 });

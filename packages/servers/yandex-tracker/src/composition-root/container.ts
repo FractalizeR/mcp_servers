@@ -29,6 +29,7 @@ import { createLiveScopeGuardFromEnv } from '#live_scope';
 // Resource Registry (пакет 5.1.C.tracker) — provider'ы issue/queue/project
 import type { ResourceRegistry } from '@fractalizer/mcp-core';
 import { createTrackerResourceRegistry } from '#resources/index.js';
+import { UPDATE_ISSUE_TOOL_METADATA } from '#tools/api/issues/update/update-issue.metadata.js';
 
 // Prompt Registry (пакет 5.1.C.tracker) — слэш-команды triage/daily/project/epic
 import type { PromptRegistry } from '@fractalizer/mcp-core';
@@ -260,7 +261,17 @@ function bindToolRegistry(container: Container, config: ServerConfig): void {
 function bindResourceRegistry(container: Container): void {
   container.bind<ResourceRegistry>(TYPES.ResourceRegistry).toDynamicValue(() => {
     const facade = container.get<YandexTrackerFacade>(TYPES.YandexTrackerFacade);
-    return createTrackerResourceRegistry(facade);
+    // Виджет MCP Apps предлагает кнопку правки только если update_issue вообще
+    // доступен: при отключённой группе (DISABLED_TOOL_GROUPS) его нет ни в
+    // tools/list, ни в tools/call — кнопка вела бы в гарантированный отказ.
+    const toolRegistry = container.get<ToolRegistry>(TYPES.ToolRegistry);
+    const updateIssueVisible = toolRegistry
+      .getVisibleDefinitions()
+      .some((definition) => definition.name === UPDATE_ISSUE_TOOL_METADATA.name);
+
+    return createTrackerResourceRegistry(facade, {
+      ...(updateIssueVisible && { updateIssue: UPDATE_ISSUE_TOOL_METADATA.name }),
+    });
   });
 }
 
