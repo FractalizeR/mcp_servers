@@ -5,6 +5,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    // DOM нужен только тестам: единственный потребитель — прогон HTML-бандла
+    // MCP Apps в jsdom (tests/resources/issue-description-editor.widget.test.ts).
+    // Конфиг включает и src/** (нужен для резолва), поэтому здесь DOM-глобали
+    // видны и коду сервера — но барьер держит основной `npm run typecheck`:
+    // он идёт по tsconfig.json с lib ES2022 и на `document` в src/** падает
+    // TS2584. Проверено мутацией, а не рассуждением.
+    "lib": ["ES2022", "DOM"],
     "rootDir": ".",
     "composite": false,
     "declaration": false,
