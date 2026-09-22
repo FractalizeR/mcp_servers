@@ -1,0 +1,10 @@
+{
+  ".": "5.1.0",
+  "packages/framework/infrastructure": "5.1.0",
+  "packages/framework/cli": "5.1.0",
+  "packages/framework/core": "5.1.0",
+  "packages/servers/yandex-tracker": "5.1.0",
+  "packages/servers/yandex-wiki": "5.1.0",
+  "packages/wrappers/mcp-server-yandex-tracker": "5.1.0",
+  "packages/wrappers/mcp-server-yandex-wiki": "5.1.0"
+}

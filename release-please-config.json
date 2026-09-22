@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "bump-minor-pre-major": false,
+  "separate-pull-requests": false,
+  "changelog-sections": [
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "perf",
+      "section": "Performance"
+    },
+    {
+      "type": "refactor",
+      "section": "Refactoring"
+    },
+    {
+      "type": "docs",
+      "section": "Documentation",
+      "hidden": true
+    },
+    {
+      "type": "style",
+      "section": "Styles",
+      "hidden": true
+    },
+    {
+      "type": "chore",
+      "section": "Maintenance",
+      "hidden": true
+    },
+    {
+      "type": "test",
+      "section": "Tests",
+      "hidden": true
+    },
+    {
+      "type": "ci",
+      "section": "CI/CD",
+      "hidden": true
+    }
+  ],
+  "plugins": [
+    {
+      "type": "node-workspace",
+      "updatePeerDependencies": true
+    },
+    {
+      "type": "linked-versions",
+      "groupName": "mcp-servers",
+      "components": [
+        "root",
+        "mcp-infrastructure",
+        "mcp-cli",
+        "mcp-core",
+        "mcp-server-yandex-tracker",
+        "mcp-server-yandex-wiki",
+        "wrapper-yandex-tracker",
+        "wrapper-yandex-wiki"
+      ]
+    }
+  ],
+  "packages": {
+    ".": {
+      "component": "root",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false
+    },
+    "packages/framework/infrastructure": {
+      "component": "mcp-infrastructure",
+      "skip-github-release": true
+    },
+    "packages/framework/cli": {
+      "component": "mcp-cli",
+      "skip-github-release": true
+    },
+    "packages/framework/core": {
+      "component": "mcp-core",
+      "skip-github-release": true
+    },
+    "packages/servers/yandex-tracker": {
+      "component": "mcp-server-yandex-tracker",
+      "skip-github-release": true
+    },
+    "packages/servers/yandex-wiki": {
+      "component": "mcp-server-yandex-wiki",
+      "skip-github-release": true
+    },
+    "packages/wrappers/mcp-server-yandex-tracker": {
+      "component": "wrapper-yandex-tracker",
+      "skip-github-release": true
+    },
+    "packages/wrappers/mcp-server-yandex-wiki": {
+      "component": "wrapper-yandex-wiki",
+      "skip-github-release": true
+    }
+  }
+}
