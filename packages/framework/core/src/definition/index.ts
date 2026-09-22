@@ -48,3 +48,11 @@ export {
   ToolWarningsSchema,
   type ToolWarning,
 } from './tool-warning.js';
+
+// Единая формулировка подсказки об оптимистичной блокировке для `.describe()`
+export {
+  buildOptimisticLockDescription,
+  type OptimisticLockDescriptionOptions,
+  type OptimisticLockParamName,
+  type OptimisticLockConflict,
+} from './optimistic-lock-description.js';

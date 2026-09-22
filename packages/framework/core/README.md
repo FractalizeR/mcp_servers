@@ -138,6 +138,31 @@ function generateDefinitionFromSchema(
 
 ---
 
+### buildOptimisticLockDescription()
+
+Единая формулировка подсказки об оптимистичной блокировке для `.describe()` полей
+`version`/`revision`. Профилактика работает только ДО вызова: описание параметра модель
+читает, формируя аргументы, тогда как предупреждение `VERSION_NOT_PROVIDED` приходит,
+когда запись уже применена.
+
+```typescript
+function buildOptimisticLockDescription(options: {
+  paramName: 'version' | 'revision';
+  source: string;      // клауза «где взять значение» целиком
+  conflict: 'silent-overwrite' | 'unspecified';
+  lead?: string;       // оговорка области применения, встаёт перед риском
+}): string
+```
+
+`source` формулирует вызывающий: у Трекера токен приходит клиентской проекцией
+`fields`, у Вики он базовое поле ответа — зашитая во фреймворк клауза про `fields`
+была бы ложью для одного из двух серверов. `conflict` различает НАБЛЮДЁННОЕ
+поведение API, а не форму поля схемы.
+
+**Implementation:** [src/definition/optimistic-lock-description.ts](src/definition/optimistic-lock-description.ts)
+
+---
+
 ### BaseDefinition (Deprecated)
 
 **⚠️ Deprecated** in v2.0 — use `generateDefinitionFromSchema()` instead.
