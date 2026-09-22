@@ -14,20 +14,42 @@ permissions:
   id-token: write
 
 jobs:
-  # Job 1: Run semantic-release to determine version and create release
+  # Job 1: release-please держит открытым релизный PR; релиз = мерж этого PR
   release:
-    name: Semantic Release
+    name: Release Please
     runs-on: ubuntu-latest
     outputs:
-      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
-      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+      # release_created/version — корневого компонента (путь "."), он единственный,
+      # кто получает тег и GitHub Release: линия версий одна на весь монорепозиторий.
+      new_release_published: ${{ steps.release.outputs.release_created }}
+      # Именно version (чистый semver, без "v"): ниже префикс дописывается вручную
+      # в `ref:` и `gh release upload`. Подстановка tag_name дала бы "vv5.2.0".
+      new_release_version: ${{ steps.release.outputs.version }}
+
+    steps:
+      - name: Release Please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # Job 1b: барьер качества перед публикацией.
+  # Отдельным job, а не внутри publish-npm: там Node 24 (требование OIDC), и слияние
+  # переместило бы всю валидацию на другую мажорную версию рантайма. Проверки PR
+  # бегут на коммите PR, а публикуется тег — поэтому гейт нужен и здесь.
+  validate:
+    name: Validate before publish
+    needs: release
+    runs-on: ubuntu-latest
+    if: needs.release.outputs.new_release_published == 'true'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          persist-credentials: false
+          ref: v${{ needs.release.outputs.new_release_version }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,16 +68,10 @@ jobs:
       - name: Run smoke tests
         run: npm run test:smoke
 
-      - name: Semantic Release
-        id: semantic
-        uses: cycjimmy/semantic-release-action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   # Job 2: Publish to NPM using OIDC Trusted Publishing (no NPM_TOKEN needed!)
   publish-npm:
     name: Publish to NPM Registry (Trusted Publishing)
-    needs: release
+    needs: [release, validate]
     runs-on: ubuntu-latest
     if: needs.release.outputs.new_release_published == 'true'
     # id-token: write MUST be declared at job level — workflow-level permissions
@@ -290,7 +306,7 @@ jobs:
       - name: Success message
         run: |
           echo "🎉 Release ${{ needs.release.outputs.new_release_version }} completed successfully!"
-          echo "✅ Semantic Release: version determined and tagged"
+          echo "✅ Release Please: версия посчитана, тег и релиз созданы"
           echo "✅ NPM packages published with OIDC Trusted Publishing"
           echo "✅ Provenance attestations generated automatically"
           echo "✅ MCPB bundle attached to release"
