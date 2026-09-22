@@ -1,3 +1,10 @@
+## [5.1.0](https://github.com/FractalizeR/mcp_servers/compare/v5.0.1...v5.1.0) (2026-09-22)
+
+### Features
+
+* **core:** добавить билдер подсказки об оптимистичной блокировке ([bcae3bc](https://github.com/FractalizeR/mcp_servers/commit/bcae3bc3ce7d96a8f9960dc3af13597b92388564))
+* **tracker,wiki:** объяснить параметр блокировки в описаниях инструментов ([4f907c5](https://github.com/FractalizeR/mcp_servers/commit/4f907c5517a9051e1513d07a69670a912329d43c))
+
 ## [5.0.1](https://github.com/FractalizeR/mcp_servers/compare/v5.0.0...v5.0.1) (2026-08-28)
 
 ### Bug Fixes
