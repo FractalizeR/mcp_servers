@@ -53,6 +53,17 @@ const UPDATE_QUEUE_READ_BACK =
   '«описание правленое»; атрибуция выведена (правка описания очереди принадлежит только ' +
   '`update_queue`) и подтверждена отчётом 26 августа';
 
+const LOCK_HINTS_RESTAMP = {
+  afterCommit: '4f907c55',
+  why:
+    'Коммит добавил в схемы текст `.describe()` — подсказку об оптимистичной блокировке. ' +
+    'Ни один параметр не появился, не исчез и не сузился: правка меняет только описание, ' +
+    'которое отпечаток схемы видит, а наблюдение не свидетельствует. С-4 свидетельствует ' +
+    'маршрут запроса, С-5 — правдивость эффекта, прочитанного обратно (версия 1→2 без ' +
+    'токена, 2→3 с токеном); оба поведения правка не трогает — она обращена к вызывающему, ' +
+    'а не к API.',
+} as const;
+
 const UPDATE_QUEUE_RESTAMP = {
   afterCommit: 'b1198193',
   why:
@@ -118,7 +129,8 @@ export const LIVE_OBSERVATIONS: readonly LiveObservation[] = [
     runLabel: 'sweep7-2026-08-26',
     report: 'tests/live-runs/0_LIVE_RUN_REPORT_2026-08-26.md',
     readBack: '`assignee` на `TEST-25`: чтение `get_issues` отдаёт исполнителя',
-    schemaFingerprint: '1d31784ff9e0',
+    schemaFingerprint: 'a73029ca2264',
+    fingerprintRestamp: LOCK_HINTS_RESTAMP,
   },
   {
     tool: 'update_issue',
@@ -126,7 +138,8 @@ export const LIVE_OBSERVATIONS: readonly LiveObservation[] = [
     runLabel: 'sweep7-2026-08-26',
     report: 'tests/live-runs/0_LIVE_RUN_REPORT_2026-08-26.md',
     readBack: '`assignee` на `TEST-25`: чтение `get_issues` отдаёт исполнителя',
-    schemaFingerprint: '1d31784ff9e0',
+    schemaFingerprint: 'a73029ca2264',
+    fingerprintRestamp: LOCK_HINTS_RESTAMP,
   },
   {
     tool: 'get_issues',
@@ -254,7 +267,8 @@ export const LIVE_OBSERVATIONS: readonly LiveObservation[] = [
     report: 'tests/live-runs/0_LIVE_RUN_REPORT_2026-08-26.md',
     readBack:
       'спринт `236` после починки: без версии 200 и версия 1→2 (предупреждение `VERSION_NOT_PROVIDED`), с версией от вызывающего — 2→3',
-    schemaFingerprint: '2be24d7e024c',
+    schemaFingerprint: '3d8d1f90f45f',
+    fingerprintRestamp: LOCK_HINTS_RESTAMP,
   },
   {
     tool: 'update_sprint',
@@ -263,7 +277,8 @@ export const LIVE_OBSERVATIONS: readonly LiveObservation[] = [
     report: 'tests/live-runs/0_LIVE_RUN_REPORT_2026-08-26.md',
     readBack:
       'спринт `236` после починки: без версии 200 и версия 1→2 (предупреждение `VERSION_NOT_PROVIDED`), с версией от вызывающего — 2→3',
-    schemaFingerprint: '2be24d7e024c',
+    schemaFingerprint: '3d8d1f90f45f',
+    fingerprintRestamp: LOCK_HINTS_RESTAMP,
   },
   {
     tool: 'manage_sprint_lifecycle',
@@ -272,7 +287,8 @@ export const LIVE_OBSERVATIONS: readonly LiveObservation[] = [
     report: 'tests/live-runs/0_LIVE_RUN_REPORT_2026-08-26.md',
     readBack:
       '`archive` спринта `236` — версия 3→4; `delete` спринта `237` — спринт исчез. `start` спринта `238` этой записью НЕ свидетельствуется: отчёт даёт по нему только код ответа',
-    schemaFingerprint: '15ce6217fa2a',
+    schemaFingerprint: 'f9051cad9af1',
+    fingerprintRestamp: LOCK_HINTS_RESTAMP,
   },
   {
     tool: 'manage_sprint_lifecycle',
@@ -281,7 +297,8 @@ export const LIVE_OBSERVATIONS: readonly LiveObservation[] = [
     report: 'tests/live-runs/0_LIVE_RUN_REPORT_2026-08-26.md',
     readBack:
       '`archive` спринта `236` — версия 3→4; `delete` спринта `237` — спринт исчез. `start` спринта `238` этой записью НЕ свидетельствуется: отчёт даёт по нему только код ответа',
-    schemaFingerprint: '15ce6217fa2a',
+    schemaFingerprint: 'f9051cad9af1',
+    fingerprintRestamp: LOCK_HINTS_RESTAMP,
   },
   {
     tool: 'create_queue',
@@ -431,7 +448,8 @@ export const LIVE_OBSERVATIONS: readonly LiveObservation[] = [
     runLabel: 'sweep-2026-08-25',
     report: 'tests/live-runs/2_LIVE_RUN_REPORT_2026-08-25c.md',
     readBack: 'компонент `31`: без версии 200 и версия 1→2, с версией от вызывающего — 2→3',
-    schemaFingerprint: 'dec1ecc8e4eb',
+    schemaFingerprint: 'be3e20e4d26f',
+    fingerprintRestamp: LOCK_HINTS_RESTAMP,
   },
   {
     tool: 'update_component',
@@ -439,7 +457,8 @@ export const LIVE_OBSERVATIONS: readonly LiveObservation[] = [
     runLabel: 'sweep-2026-08-25',
     report: 'tests/live-runs/2_LIVE_RUN_REPORT_2026-08-25c.md',
     readBack: 'компонент `31`: без версии 200 и версия 1→2, с версией от вызывающего — 2→3',
-    schemaFingerprint: 'dec1ecc8e4eb',
+    schemaFingerprint: 'be3e20e4d26f',
+    fingerprintRestamp: LOCK_HINTS_RESTAMP,
   },
 ];
 
