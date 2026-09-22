@@ -12,6 +12,7 @@
  */
 
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import {
   FieldsSchema,
   FilteredEntitySchema,
@@ -31,7 +32,19 @@ export const ManageSprintLifecycleParamsSchema = z
      * Версия спринта для оптимистичной блокировки (опционально; только для
      * `start`/`archive`). Не передана — операция читает текущую версию сама.
      */
-    version: z.number().int().positive().optional(),
+    version: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        buildOptimisticLockDescription({
+          paramName: 'version',
+          source: 'в ответе get_sprint/get_sprints (запроси его в fields)',
+          conflict: 'silent-overwrite',
+          lead: "Только для action 'start'/'archive' — у 'delete' параметр запрещён схемой: эндпоинт удаления версию не принимает.",
+        })
+      ),
 
     /**
      * Список полей для возврата (обязательный, как у всех инструментов сервера —

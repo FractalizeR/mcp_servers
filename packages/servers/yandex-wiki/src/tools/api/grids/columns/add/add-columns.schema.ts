@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import { GridOutputSchema } from '#common/schemas/index.js';
 
 const ColumnTypeSchema = z.enum([
@@ -47,7 +48,16 @@ const ColumnSchema = z.object({
 export const AddColumnsParamsSchema = z.object({
   idx: z.string().uuid().describe('ID таблицы (UUID)'),
   columns: z.array(ColumnSchema).min(1).describe('Колонки для добавления'),
-  revision: z.string().optional().describe('Ревизия таблицы'),
+  revision: z
+    .string()
+    .optional()
+    .describe(
+      buildOptimisticLockDescription({
+        paramName: 'revision',
+        source: 'в ответе yw_get_grid',
+        conflict: 'unspecified',
+      })
+    ),
   position: z.number().int().min(0).optional().describe('Позиция вставки (0 - в начало)'),
 });
 

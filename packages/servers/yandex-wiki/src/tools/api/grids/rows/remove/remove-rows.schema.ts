@@ -1,10 +1,20 @@
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import { GridOutputSchema } from '#common/schemas/index.js';
 
 export const RemoveRowsParamsSchema = z.object({
   idx: z.string().uuid().describe('ID таблицы (UUID)'),
   row_ids: z.array(z.string()).min(1).describe('ID строк для удаления'),
-  revision: z.string().optional().describe('Ревизия таблицы'),
+  revision: z
+    .string()
+    .optional()
+    .describe(
+      buildOptimisticLockDescription({
+        paramName: 'revision',
+        source: 'в ответе yw_get_grid',
+        conflict: 'unspecified',
+      })
+    ),
 });
 
 export type RemoveRowsParams = z.infer<typeof RemoveRowsParamsSchema>;

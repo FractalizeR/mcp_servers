@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import {
   IssueKeySchema,
   FieldsSchema,
@@ -51,7 +52,10 @@ export const UpdateIssueParamsSchema = z
     customFields: z.record(z.string(), z.unknown()).optional().describe('Кастомные поля'),
 
     /**
-     * Версия задачи для optimistic locking (защита от параллельных перезаписей)
+     * Версия задачи для optimistic locking.
+     *
+     * Уходит query-параметром `version` у PATCH, не телом — деталь пути запроса,
+     * которой в описании намеренно нет: вызывающему она ничего не меняет.
      */
     version: z
       .number()
@@ -59,10 +63,11 @@ export const UpdateIssueParamsSchema = z
       .positive()
       .optional()
       .describe(
-        'Версия задачи для optimistic locking. Передаётся как query-параметр version в PATCH; ' +
-          'если версия задачи на сервере уже другая (параллельное изменение), API вернёт ошибку ' +
-          'конфликта вместо молчаливой перезаписи чужих изменений. Значение бери из поля version ' +
-          'задачи, полученного через get_issues/find_issues.'
+        buildOptimisticLockDescription({
+          paramName: 'version',
+          source: 'в ответе get_issues/find_issues (запроси его в fields)',
+          conflict: 'silent-overwrite',
+        })
       ),
 
     /**

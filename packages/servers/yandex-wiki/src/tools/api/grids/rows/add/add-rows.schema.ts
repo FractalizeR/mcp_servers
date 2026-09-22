@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import { GridOutputSchema } from '#common/schemas/index.js';
 
 const BGColorSchema = z.enum([
@@ -25,7 +26,16 @@ const RowDataSchema = z.object({
 export const AddRowsParamsSchema = z.object({
   idx: z.string().uuid().describe('ID таблицы (UUID)'),
   rows: z.array(RowDataSchema).min(1).describe('Данные строк для добавления'),
-  revision: z.string().optional().describe('Ревизия таблицы'),
+  revision: z
+    .string()
+    .optional()
+    .describe(
+      buildOptimisticLockDescription({
+        paramName: 'revision',
+        source: 'в ответе yw_get_grid',
+        conflict: 'unspecified',
+      })
+    ),
   position: z.number().int().min(0).optional().describe('Позиция вставки (0 - в начало)'),
   after_row_id: z.string().optional().describe('ID строки, после которой вставить'),
 });

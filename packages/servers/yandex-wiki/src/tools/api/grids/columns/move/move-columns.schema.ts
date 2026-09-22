@@ -1,11 +1,21 @@
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import { GridOutputSchema } from '#common/schemas/index.js';
 
 export const MoveColumnsParamsSchema = z.object({
   idx: z.string().uuid().describe('ID таблицы (UUID)'),
   column_slug: z.string().describe('Slug колонки для перемещения'),
   position: z.number().int().min(0).describe('Целевая позиция'),
-  revision: z.string().optional().describe('Ревизия таблицы'),
+  revision: z
+    .string()
+    .optional()
+    .describe(
+      buildOptimisticLockDescription({
+        paramName: 'revision',
+        source: 'в ответе yw_get_grid',
+        conflict: 'unspecified',
+      })
+    ),
   columns_count: z.number().int().min(1).optional().describe('Количество колонок для перемещения'),
 });
 

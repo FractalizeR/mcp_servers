@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import {
   FieldsSchema,
   FilteredEntitySchema,
@@ -34,8 +35,24 @@ export const UpdateSprintParamsSchema = z.object({
   /** Новое название спринта (опционально) */
   name: z.string().min(1).optional(),
 
-  /** Версия спринта для оптимистичной блокировки (опционально) */
-  version: z.number().int().positive().optional(),
+  /**
+   * Версия спринта для оптимистичной блокировки (опционально).
+   *
+   * Не передана — операция читает текущую версию сама, и правка становится
+   * «последний выигрывает»; отсюда опциональность при отсутствии отказа от API.
+   */
+  version: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe(
+      buildOptimisticLockDescription({
+        paramName: 'version',
+        source: 'в ответе get_sprint/get_sprints (запроси его в fields)',
+        conflict: 'silent-overwrite',
+      })
+    ),
 
   /** Дата начала спринта YYYY-MM-DD (опционально) */
   startDate: z.string().optional(),

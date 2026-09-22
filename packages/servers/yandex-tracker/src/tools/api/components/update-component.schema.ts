@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import { FieldsSchema, FilteredEntitySchema, buildOutputSchema } from '#common/schemas/index.js';
 
 /**
@@ -35,15 +36,26 @@ export const UpdateComponentParamsSchema = z.object({
   assignAuto: z.boolean().optional(),
 
   /**
-   * Версия компонента для optimistic locking (опционально)
+   * Версия компонента для optimistic locking (опционально).
    *
-   * API требует версию: без неё PATCH отвечает 428 «Необходимо указать либо параметр
-   * версия, либо значение заголовка If-Match» — проверено живьём 2026-08-25. Не
-   * передана — операция читает текущую версию сама, и правка становится «последний
-   * выигрывает». Значение бери из поля `version` компонента, чтобы получить отказ при
-   * конфликте вместо молчаливой перезаписи чужих изменений.
+   * API версию требует: без неё PATCH отвечает 428 «Необходимо указать либо параметр
+   * версия, либо значение заголовка If-Match» (живая проба 2026-08-25). До вызывающего
+   * этот 428 не доходит — не передана, операция читает текущую версию сама, и правка
+   * становится «последний выигрывает»; поэтому параметр объявлен опциональным, а
+   * описание не обещает отказа, которого не будет.
    */
-  version: z.number().int().positive().optional(),
+  version: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe(
+      buildOptimisticLockDescription({
+        paramName: 'version',
+        source: 'в ответе get_components (запроси его в fields)',
+        conflict: 'silent-overwrite',
+      })
+    ),
 
   /**
    * Массив полей для возврата в результате (обязательный)

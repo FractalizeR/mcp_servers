@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import { GridOutputSchema } from '#common/schemas/index.js';
 
 const SortConfigSchema = z.object({
@@ -8,7 +9,13 @@ const SortConfigSchema = z.object({
 
 export const UpdateGridParamsSchema = z.object({
   idx: z.string().uuid().describe('ID таблицы (UUID)'),
-  revision: z.string().describe('Текущая ревизия таблицы'),
+  revision: z.string().describe(
+    buildOptimisticLockDescription({
+      paramName: 'revision',
+      source: 'в ответе yw_get_grid',
+      conflict: 'unspecified',
+    })
+  ),
   title: z.string().min(1).max(255).optional().describe('Новое название таблицы'),
   default_sort: z.array(SortConfigSchema).optional().describe('Сортировка по умолчанию'),
 });

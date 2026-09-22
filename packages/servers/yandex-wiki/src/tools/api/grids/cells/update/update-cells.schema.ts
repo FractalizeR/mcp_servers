@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { buildOptimisticLockDescription } from '@fractalizer/mcp-core';
 import { GridOutputSchema } from '#common/schemas/index.js';
 
 const CellUpdateSchema = z.object({
@@ -13,7 +14,16 @@ const CellUpdateSchema = z.object({
 export const UpdateCellsParamsSchema = z.object({
   idx: z.string().uuid().describe('ID таблицы (UUID)'),
   cells: z.array(CellUpdateSchema).min(1).describe('Ячейки для обновления'),
-  revision: z.string().optional().describe('Ревизия таблицы'),
+  revision: z
+    .string()
+    .optional()
+    .describe(
+      buildOptimisticLockDescription({
+        paramName: 'revision',
+        source: 'в ответе yw_get_grid',
+        conflict: 'unspecified',
+      })
+    ),
 });
 
 export type UpdateCellsParams = z.infer<typeof UpdateCellsParamsSchema>;
