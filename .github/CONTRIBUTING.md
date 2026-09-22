@@ -97,63 +97,79 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Release (`.github/workflows/release.yml`)
 
-**Триггер:** push тега вида `v*.*.*` (например, `v1.0.0`)
+**Триггер:** push в `main`.
 
 **Этапы:**
-1. **Validate** — полная валидация перед релизом
-2. **Publish NPM** — публикация в npm registry
-3. **Build MCPB** — сборка standalone bundle
-4. **GitHub Release** — создание release с артефактами
+1. **Release Please** — держит открытым релизный PR; при его мерже ставит тег и
+   создаёт GitHub Release
+2. **Validate** — полная валидация на теге, барьер перед публикацией
+3. **Publish NPM** — публикация семи пакетов через OIDC Trusted Publishing
+4. **Build MCPB** — сборка bundle и прикрепление к релизу
+
+⚠️ Имя файла `release.yml` менять нельзя: trusted publisher на npmjs.com сверяет
+именно его. Переименование обрушит публикацию всех пакетов с ошибкой 404.
 
 ## 📦 Процесс релиза
 
-### 1. Обновить версию
+Версии не проставляются руками и теги не ставятся вручную — этим занимается
+[release-please](https://github.com/googleapis/release-please).
 
-```bash
-# Patch (0.1.0 -> 0.1.1)
-npm version patch
+### 1. Влить изменения в `main` через PR
 
-# Minor (0.1.0 -> 0.2.0)
-npm version minor
+Номер версии считается по Conventional Commits:
 
-# Major (0.1.0 -> 1.0.0)
-npm version major
-```
+| коммит | эффект |
+|---|---|
+| `fix:` | patch (5.1.0 → 5.1.1) |
+| `feat:` | minor (5.1.0 → 5.2.0) |
+| `feat!:` / `fix!:` | major (5.1.0 → 6.0.0) |
+| `docs:`, `chore:`, `test:`, `ci:` | версию не двигают |
 
-Эта команда:
-- Обновит `package.json`
-- Создаст git tag `v{version}`
-- **НЕ** запушит (делаем вручную)
+⚠️ Мажор объявляется восклицательным знаком в ЗАГОЛОВКЕ. Футер `BREAKING CHANGE:`
+при squash-мерже теряется, и мажорный релиз молча превращается в минорный.
 
-### 2. Закоммитить изменения
+### 2. Дождаться релизного PR
 
-```bash
-git add package.json package-lock.json
-git commit -m "chore: release v1.0.0"
-```
+После первого же `feat`/`fix` в `main` робот открывает PR вида
+«chore(main): release 5.2.0». Пока он открыт, новые изменения в `main` его обновляют —
+релиз копится, а не выпускается.
 
-### 3. Запушить с тегом
+В PR уже проставлены: версия во всех восьми `package.json`, перезаписанные внутренние
+зависимости между пакетами и CHANGELOG.
 
-```bash
-git push origin master
-git push origin v1.0.0  # Это триггерит release workflow
-```
+### 3. Смержить релизный PR
 
-### 5. GitHub Actions автоматически:
+Мерж = выпуск версии. Дальше автоматически: тег `vX.Y.Z`, GitHub Release, публикация
+в npm, MCPB-бандлы.
 
-- ✅ Запустит полную валидацию
-- ✅ Опубликует пакет в npm (если настроен `NPM_TOKEN`)
-- ✅ Соберет MCPB bundle
-- ✅ Создаст GitHub Release с артефактами
+Нужен внеочередной номер версии — правится прямо в релизном PR, а не тегом.
 
 ## ⚙️ Настройка Secrets (для maintainers)
 
-### NPM_TOKEN
+### Публикация в npm — токен НЕ нужен
 
-1. Создай токен на [npmjs.com](https://www.npmjs.com/settings/~/tokens)
-2. Добавь в GitHub: Settings → Secrets → New repository secret
-   - Name: `NPM_TOKEN`
-   - Value: `npm_...`
+Пакеты публикуются через OIDC Trusted Publishing: GitHub Actions обменивает
+собственный id-token на право публикации, секрет в репозитории не хранится.
+
+Настраивается на стороне npmjs.com отдельно для каждого пакета
+(Settings → Publishing access → Trusted Publisher):
+
+| поле | значение |
+|---|---|
+| Publisher | GitHub Actions |
+| Organization or user | `FractalizeR` (регистр важен!) |
+| Repository | `mcp_servers` |
+| Workflow filename | `release.yml` (только имя, без пути) |
+| Environment name | `npm-publish` |
+
+Организация в нижнем регистре молча отдаёт 404 — OIDC-claim приходит из GitHub
+как `FractalizeR`.
+
+### Права GitHub Actions
+
+Для работы release-please нужна галочка Settings → Actions → General →
+Workflow permissions → «Allow GitHub Actions to create and approve pull requests»,
+иначе робот не сможет открыть релизный PR.
 
 ### CODECOV_TOKEN (опционально)
 
